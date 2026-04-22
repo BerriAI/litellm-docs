@@ -101,7 +101,7 @@ pip show litellm
 
 Go to the proxy base url, and check the version of the installed LiteLLM.
 
-![Proxy version check](../../img/security_update_march_2026/proxy_version.png)
+![Proxy version check](../../img/security_update_march_2026/proxy_version_broken.png)
 </TabItem>
 <TabItem value="github" label="GitHub Actions">
 
