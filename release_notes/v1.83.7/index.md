@@ -1,7 +1,7 @@
 ---
-title: "[Preview] v1.83.7.rc.1 - Per-User MCP OAuth, Team Spend Logs RBAC"
-slug: "v1-83-7-rc-1"
-date: 2026-04-12T00:00:00
+title: "v1.83.7-stable - Per-User MCP OAuth, Team Spend Logs RBAC"
+slug: "v1-83-7-stable"
+date: 2026-04-18T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -38,7 +38,7 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:main-v1.83.7.rc.1
+docker.litellm.ai/berriai/litellm:main-v1.83.7-stable
 ```
 
 </TabItem>
@@ -188,6 +188,7 @@ pip install litellm==1.83.7
 
 - **Per-user OAuth token storage for interactive MCP flows** - [PR #25441](https://github.com/BerriAI/litellm/pull/25441)
 - Block arbitrary command execution via MCP `stdio` transport - [PR #25343](https://github.com/BerriAI/litellm/pull/25343)
+- Restore PKCE-triggering 401 when no stored per-user token exists - [commit e0d5c28](https://github.com/BerriAI/litellm/commit/e0d5c28db02b3219dbd944666a55f49732197922)
 - Document missing MCP per-user token environment variables in `config_settings` - [PR #25471](https://github.com/BerriAI/litellm/pull/25471)
 
 ## Performance / Loadbalancing / Reliability improvements
@@ -198,8 +199,12 @@ pip install litellm==1.83.7
 ## Documentation Updates
 
 - Add Docker Image Security Guide covering cosign verification and deployment best practices - [PR #25439](https://github.com/BerriAI/litellm/pull/25439)
+- Add cosign Docker image verification steps to security blog posts - [PR #25122](https://github.com/BerriAI/litellm/pull/25122)
 - Document April townhall announcements - [PR #25537](https://github.com/BerriAI/litellm/pull/25537)
 - Document missing MCP per-user token env vars - [PR #25471](https://github.com/BerriAI/litellm/pull/25471)
+- README refresh: updated H1, opening paragraph, website and enterprise CTAs, and GitHub stars badge - [PR #25083](https://github.com/BerriAI/litellm/pull/25083)
+- Contributor docs: enforce Black formatting instructions in `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` - [PR #25135](https://github.com/BerriAI/litellm/pull/25135)
+- Small docs fixes for image path and folder name - [PR #25171](https://github.com/BerriAI/litellm/pull/25171)
 - Add "Screenshots / Proof of Fix" section to PR template - [PR #25564](https://github.com/BerriAI/litellm/pull/25564)
 
 ## Infrastructure / Security Notes
@@ -210,9 +215,11 @@ pip install litellm==1.83.7
 - Add Playwright E2E tests with local PostgreSQL - [PR #25126](https://github.com/BerriAI/litellm/pull/25126)
 - UI E2E tests for proxy admin team and key management - [PR #25365](https://github.com/BerriAI/litellm/pull/25365)
 - Migrate Redis caching tests from GHA to CircleCI - [PR #25354](https://github.com/BerriAI/litellm/pull/25354)
+- Remove flaky `proxy_e2e_azure_batches_tests` CI workflow - [PR #25247](https://github.com/BerriAI/litellm/pull/25247)
+- Remove redundant `test-litellm-matrix.yml` workflow (coverage already provided by semantic unit test workflows) - [PR #25251](https://github.com/BerriAI/litellm/pull/25251)
 - Update `check_responses_cost` tests for `_expire_stale_rows` - [PR #25299](https://github.com/BerriAI/litellm/pull/25299)
 - Raise global vitest timeout and remove per-test overrides - [PR #25468](https://github.com/BerriAI/litellm/pull/25468)
-- Version bumps and UI rebuilds: [PR #25316](https://github.com/BerriAI/litellm/pull/25316), [PR #25528](https://github.com/BerriAI/litellm/pull/25528), [PR #25578](https://github.com/BerriAI/litellm/pull/25578), [PR #25571](https://github.com/BerriAI/litellm/pull/25571), [PR #25573](https://github.com/BerriAI/litellm/pull/25573), [PR #25577](https://github.com/BerriAI/litellm/pull/25577)
+- Version bumps and UI rebuilds: [PR #25266](https://github.com/BerriAI/litellm/pull/25266), [PR #25265](https://github.com/BerriAI/litellm/pull/25265), [PR #25316](https://github.com/BerriAI/litellm/pull/25316), [PR #25528](https://github.com/BerriAI/litellm/pull/25528), [PR #25578](https://github.com/BerriAI/litellm/pull/25578), [PR #25571](https://github.com/BerriAI/litellm/pull/25571), [PR #25573](https://github.com/BerriAI/litellm/pull/25573), [PR #25577](https://github.com/BerriAI/litellm/pull/25577)
 
 ## New Contributors
 
@@ -220,4 +227,4 @@ pip install litellm==1.83.7
 * @csoni-cweave made their first contribution in https://github.com/BerriAI/litellm/pull/25441
 * @jimmychen-p72 made their first contribution in https://github.com/BerriAI/litellm/pull/25530
 
-**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.3.rc.1...v1.83.7.rc.1
+**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.3-stable...v1.83.7-stable
