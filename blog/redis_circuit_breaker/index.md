@@ -98,14 +98,14 @@ REDIS_CIRCUIT_BREAKER_FAILURE_THRESHOLD=5   # failures before opening
 REDIS_CIRCUIT_BREAKER_RECOVERY_TIMEOUT=60  # seconds before probe
 ```
 
-The circuit breaker is on by default in all LiteLLM versions since `v1.82.0`. No configuration needed for most deployments.
+The circuit breaker ships on by default in all LiteLLM versions since `v1.82.0`. No configuration needed for most deployments.
 
 ## Key Takeaways
 
 - A slow Redis is more dangerous than a downed one: 30-second timeouts across 100+ pods overwhelm Postgres at 100× normal load
 - LiteLLM's AI Gateway uses a circuit breaker that fast-fails Redis calls at 0ms after 5 consecutive failures
 - Three states: CLOSED (normal), OPEN (fast-fail + DB fallback), HALF-OPEN (probe recovery)
-- Auth, rate limiting, and spend tracking keep working during Redis outages
+- Auth, rate limiting, and spend tracking continue working during Redis outages
 - Resilient, production-grade behavior — enabled by default since `v1.82.0`, no configuration required
 
 ---

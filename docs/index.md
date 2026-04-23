@@ -15,7 +15,7 @@ The Trivy supply-chain compromise has been contained :tada: . All affected packa
 
 <Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
 
-**LiteLLM** is an open-source library that provides a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
+**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
 
 - Call any provider using the same `completion()` interface — no re-learning the API for each one
 - Consistent output format regardless of which provider or model you use
