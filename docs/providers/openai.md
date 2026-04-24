@@ -433,7 +433,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 | fine tuned `gpt-3.5-turbo-0613` | `response = completion(model="ft:gpt-3.5-turbo-0613", messages=messages)` |
 
 ## [BETA] Route all .completions requests to Responses API (better quality)
- When enabled, LiteLLM sends OpenAI traffic from `litellm.completion()` and the proxy `/chat/completions` endpoint through the [Responses API](https://platform.openai.com/docs/api-reference/responses) instead of Chat Completions. That path generally matches OpenAI's latest model behavior and quality (for example, reasoning output on GPT‑5 class models).
+ When enabled, LiteLLM sends OpenAI traffic from `litellm.completion()` and the proxy `/chat/completions` endpoint through the [Responses API](https://platform.openai.com/docs/api-reference/responses) instead of Chat Completions. That path generally matches OpenAI’s latest model behavior and quality (for example, reasoning output on GPT‑5 class models).
 
 You can opt in globally or per request:
 
