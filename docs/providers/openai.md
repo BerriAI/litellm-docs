@@ -194,10 +194,14 @@ os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 | gpt-5.3-chat-latest | `response = completion(model="gpt-5.3-chat-latest", messages=messages)` |
 | gpt-5.4 | `response = completion(model="gpt-5.4", messages=messages)` |
 | gpt-5.4-2026-03-05 | `response = completion(model="gpt-5.4-2026-03-05", messages=messages)` |
+| gpt-5.5 | `response = completion(model="gpt-5.5", messages=messages)` |
+| gpt-5.5-2026-04-23 | `response = completion(model="gpt-5.5-2026-04-23", messages=messages)` |
 | gpt-5.2-pro | `response = completion(model="gpt-5.2-pro", messages=messages)` |
 | gpt-5.2-pro-2025-12-11 | `response = completion(model="gpt-5.2-pro-2025-12-11", messages=messages)` |
 | gpt-5.4-pro | `response = completion(model="gpt-5.4-pro", messages=messages)` |
 | gpt-5.4-pro-2026-03-05 | `response = completion(model="gpt-5.4-pro-2026-03-05", messages=messages)` |
+| gpt-5.5-pro | `response = completion(model="gpt-5.5-pro", messages=messages)` |
+| gpt-5.5-pro-2026-04-23 | `response = completion(model="gpt-5.5-pro-2026-04-23", messages=messages)` |
 | gpt-5.1 | `response = completion(model="gpt-5.1", messages=messages)` |
 | gpt-5.1-codex | `response = completion(model="gpt-5.1-codex", messages=messages)` |
 | gpt-5.1-codex-mini | `response = completion(model="gpt-5.1-codex-mini", messages=messages)` |
@@ -571,11 +575,13 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 | `gpt-5.1-codex-max` | `adaptive` | `low`, `medium`, `high`, `xhigh` (no `minimal`) |
 | `gpt-5.2` | `medium` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.2-pro` | `high` | `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.5` | `medium` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.5-pro` | `high` | `minimal`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5-pro` | `high` | `high` only |
 
 **Note:**
 - GPT-5.1 introduced a new `reasoning_effort="none"` setting for faster, lower-latency responses. This replaces the `"minimal"` setting from GPT-5.
-- `gpt-5.1-codex-max` and `gpt-5.2` models support `reasoning_effort="xhigh"`. All other models will reject this value.
+- `gpt-5.1-codex-max`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.5`, and `gpt-5.5-pro` support `reasoning_effort="xhigh"`. Models outside this set will reject the value.
 - `gpt-5-pro` only accepts `reasoning_effort="high"`. Other values will return an error.
 - When `reasoning_effort` is not set (None), OpenAI defaults to the value shown in the "Default" column.
 
@@ -720,15 +726,15 @@ LiteLLM offers a chat completion to Responses API bridge. This lets you use the 
 
 This is useful when you want to use [Responses API](https://platform.openai.com/docs/api-reference/responses) specific features (like built-in tools, web search preview, or code interpreter).
 
-:::tip gpt-5.4 + reasoning_effort + function tools
+:::tip gpt-5.4+ + reasoning_effort + function tools
 
-LiteLLM drops `reasoning_effort` from `gpt-5.4` requests to `litellm.completion()` that include tools, since that combination is supported in the Responses API.
+LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API.
 
-If you need reasoning **and** tools together, use the responses bridge instead:
+If you need reasoning **and** tools together, use the responses bridge instead (LiteLLM also auto-routes these requests to `/v1/responses` when both `tools` and `reasoning_effort` are set):
 
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5.4",  # routes to /v1/responses
+    model="openai/responses/gpt-5.5",  # routes to /v1/responses
     messages=[{"role": "user", "content": "What's the weather?"}],
     tools=[...],
     reasoning_effort="low",
