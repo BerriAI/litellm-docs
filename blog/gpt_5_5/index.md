@@ -117,7 +117,12 @@ curl -X POST "http://0.0.0.0:4000/v1/responses" \
 
 ## Reasoning Effort
 
-GPT-5.5 supports `reasoning_effort` for controlling how much thinking the model applies to a task.
+`reasoning_effort` controls how much thinking the model applies. Supported values per model (verified against OpenAI's live API on 2026-04-24):
+
+| Model | Default | Allowed values |
+|-------|---------|----------------|
+| `gpt-5.5` | `medium` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.5-pro` | `high` | `medium`, `high`, `xhigh` |
 
 ```python
 from litellm import completion
@@ -129,9 +134,12 @@ response = completion(
 )
 ```
 
+LiteLLM enforces these caps locally — passing an unsupported value (e.g. `minimal`) raises an `UnsupportedParamsError` instead of round-tripping to OpenAI for a 400.
+
 ## Notes
 
 - For cost tracking on `gpt-5.5` and `gpt-5.5-pro`, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`). Works on any LiteLLM version `v1.76.0` or newer — no container restart or image upgrade required.
-- Use `/v1/responses` for best results on agentic coding and multi-step tasks.
-- GPT-5.5 supports reasoning, function calling, vision, and tool use — see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
-- GPT-5.5 Pro is intended for the hardest reasoning workloads where latency is less critical than quality.
+- `gpt-5.5-pro` is a Responses API-only model (`mode: "responses"`). LiteLLM's Responses API bridge transparently translates `completion()` calls to `/v1/responses`, so the SDK example above works without code changes.
+- GPT-5.5 supports reasoning, function calling, parallel tool calls, vision (image input), PDF input, prompt caching, web search, and structured output — see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
+- Context window: 1.05M input tokens / 128K output tokens. Long-context tier pricing kicks in above 272K tokens.
+- Azure availability: not yet — this post covers OpenAI direct only.
