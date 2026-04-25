@@ -479,6 +479,7 @@ router_settings:
 | AZURE_SENTINEL_ENDPOINT | Endpoint for Azure Sentinel logging
 | AZURE_SENTINEL_TENANT_ID | Tenant ID for Azure Sentinel authentication
 | AZURE_SENTINEL_CLIENT_ID | Client ID for Azure Sentinel authentication
+| AZURE_SENTINEL_TRUNCATE_BYTES | Maximum character length for `messages` and `response` fields. When set to a positive integer (e.g. "262144" for Azure's 256 KB column limit), fields exceeding this length are truncated, keeping the most recent content (tail). Truncation metadata is added to the entry. Default: "0" (disabled)
 | AZURE_KEY_VAULT_URI | URI for Azure Key Vault
 | AZURE_OPERATION_POLLING_TIMEOUT | Timeout in seconds for Azure operation polling
 | AZURE_STORAGE_ACCOUNT_KEY | The Azure Storage Account Key to use for Authentication to Azure Blob Storage logging
