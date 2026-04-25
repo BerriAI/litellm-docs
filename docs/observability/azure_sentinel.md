@@ -120,7 +120,7 @@ You should see following logs in Azure Workspace.
 | `AZURE_SENTINEL_TENANT_ID` | Azure Tenant ID for OAuth2 authentication | None (falls back to `AZURE_TENANT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_ID` | Application (client) ID for OAuth2 authentication | None (falls back to `AZURE_CLIENT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_SECRET` | Client secret for OAuth2 authentication | None (falls back to `AZURE_CLIENT_SECRET`) | ✅ Yes |
-| `AZURE_SENTINEL_TRUNCATE_CONTENT` | Truncate `messages`/`response` fields to the Azure Log Analytics 256 KB column limit, keeping the most recent content (see [Handling Large Payloads](#handling-large-payloads)) | `"false"` | ❌ No |
+| `AZURE_SENTINEL_TRUNCATE_BYTES` | Maximum character length for `messages`/`response` fields (e.g. `"262144"` for the Azure 256 KB column limit). When set, fields are truncated keeping the most recent content. See [Handling Large Payloads](#handling-large-payloads). | `"0"` (disabled) | ❌ No |
 
 ## How It Works
 
@@ -151,12 +151,19 @@ When the log queue is flushed, LiteLLM estimates the uncompressed JSON size of e
 
 ### Content Truncation (Column Limit)
 
-Azure Log Analytics silently truncates any string column value longer than **262,144 characters (256 KB)**. When `AZURE_SENTINEL_TRUNCATE_CONTENT` is enabled, LiteLLM truncates `messages` and `response` fields to this limit **before** sending, keeping the **tail** (most recent content) so the latest conversation turns and response text are preserved.
+Azure Log Analytics silently truncates any string column value longer than **262,144 characters (256 KB)**. When `AZURE_SENTINEL_TRUNCATE_BYTES` is set to a positive integer, LiteLLM truncates `messages` and `response` fields to that many characters **before** sending, keeping the **tail** (most recent content) so the latest conversation turns and response text are preserved.
 
-To enable:
+To enable (using the Azure 256 KB column limit as an example):
 
 ```shell
-AZURE_SENTINEL_TRUNCATE_CONTENT="true"
+AZURE_SENTINEL_TRUNCATE_BYTES="262144"
+```
+
+Or in your `config.yaml` environment variables:
+
+```yaml
+environment_variables:
+  AZURE_SENTINEL_TRUNCATE_BYTES: "262144"
 ```
 
 
@@ -178,7 +185,7 @@ When a field is truncated, a `litellm_content_truncated` object is added to the 
 
 #### Behavior When Truncation is Disabled
 
-When `AZURE_SENTINEL_TRUNCATE_CONTENT` is `"false"` (the default), fields are sent as-is. Azure Log Analytics will silently truncate any string column values exceeding 256 KB, discarding the tail of the content without any metadata. Enabling truncation is recommended for workloads with large prompts or responses.
+When `AZURE_SENTINEL_TRUNCATE_BYTES` is unset or `"0"` (the default), fields are sent as-is. Azure Log Analytics will silently truncate any string column values exceeding 256 KB, discarding the tail of the content without any metadata. Setting `AZURE_SENTINEL_TRUNCATE_BYTES` is recommended for workloads with large prompts or responses.
 - Sends logs in the [StandardLoggingPayload](../proxy/logging_spec) format
 - Automatically handles both success and failure events
 - Caches OAuth2 tokens and refreshes them automatically
