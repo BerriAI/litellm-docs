@@ -7,11 +7,11 @@ Send LiteLLM traces to [Splunk Observability Cloud](https://www.splunk.com/en_us
 
 LiteLLM uses the same OpenTelemetry path as the [OpenTelemetry integration](./opentelemetry_integration.md). Splunk’s OTLP/HTTP trace ingest URL uses **`/v2/trace/otlp`** (not **`/v1/traces`**); LiteLLM normalizes generic collector URLs but **preserves** Splunk-style `/v2/trace/otlp` endpoints so spans reach Splunk correctly.
 
-:::tip Video walkthrough
+## Video walkthrough
 
-If you recorded a Loom demo of this setup, add a public **Loom share** or **`loom.com/embed/...`** iframe here (same pattern as other tutorials, e.g. [OpenWebUI](/docs/tutorials/openweb_ui)), or link the video in your pull request description.
+<iframe width="840" height="500" src="https://www.loom.com/embed/9dc21b753bbe4f6fb3c1b44c06e39c20" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen title="LiteLLM Splunk Observability Cloud OTEL demo"></iframe>
 
-:::
+Or [watch on Loom](https://www.loom.com/share/9dc21b753bbe4f6fb3c1b44c06e39c20).
 
 ## Prerequisites
 
