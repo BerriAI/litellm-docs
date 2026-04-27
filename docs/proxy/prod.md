@@ -68,7 +68,48 @@ These specifications provide:
 
 ## 3. On Kubernetes — Match Uvicorn Workers to CPU Count [Suggested CMD]
 
-Use this Docker `CMD`. It automatically matches Uvicorn workers to the pod’s CPU count, ensuring each worker uses one core efficiently for better throughput and stable latency.
+Match Uvicorn workers to the pod's CPU allocation so each worker uses roughly one core for better throughput and stable latency.
+
+:::warning
+
+**Do not use `$(nproc)` on Kubernetes.** `nproc` reports the underlying **node's** CPU count, not the pod's cgroup CPU request or limit. On a 16-vCPU node with a pod that has `requests.cpu: 4` and `limits.cpu: 8`, `nproc` returns `16`, spawning 2-4× more workers than the pod can actually run. The result is CPU oversubscription, context-switching overhead, and worse latency — the opposite of the goal.
+
+Use the [Kubernetes Downward API](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/) to read the pod's actual CPU request instead.
+
+:::
+
+### Recommended: Downward API + `--num_workers`
+
+In your pod spec, expose `requests.cpu` as an environment variable, then pass it to LiteLLM:
+
+```yaml
+# pod / deployment spec
+env:
+  - name: CPU_REQUEST
+    valueFrom:
+      resourceFieldRef:
+        resource: requests.cpu
+        divisor: "1"   # whole cores; use 1 m for milli-cores
+```
+
+```shell
+# container CMD
+CMD ["sh", "-c", "litellm --port 4000 --config ./proxy_server_config.yaml --num_workers ${CPU_REQUEST:-4}"]
+```
+
+The `${CPU_REQUEST:-4}` default ensures the container still starts if the env var is missing (e.g. local Docker run).
+
+### Alternative: hardcode `--num_workers`
+
+If you don't want to wire up the Downward API, hardcode the worker count to match the pod's CPU request directly in the manifest:
+
+```shell
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4"]
+```
+
+### Bare-metal / VM only: `$(nproc)`
+
+`nproc` is correct **only** when the LiteLLM process has access to all the host's CPUs (bare-metal or single-tenant VM, no cgroup CPU limit). In that case:
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)"]
@@ -78,8 +119,8 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 > You can configure this either via CLI or environment variable:
 
 ```shell
-# CLI
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)", "--max_requests_before_restart", "10000"]
+# CLI (Kubernetes — Downward API)
+CMD ["sh", "-c", "litellm --port 4000 --config ./proxy_server_config.yaml --num_workers ${CPU_REQUEST:-4} --max_requests_before_restart 10000"]
 
 # or ENV (for deployment manifests / containers)
 export MAX_REQUESTS_BEFORE_RESTART=10000
@@ -89,7 +130,7 @@ export MAX_REQUESTS_BEFORE_RESTART=10000
 
 ```shell
 # Use Gunicorn for more stable worker recycling
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)", "--run_gunicorn", "--max_requests_before_restart", "10000"]
+CMD ["sh", "-c", "litellm --port 4000 --config ./proxy_server_config.yaml --num_workers ${CPU_REQUEST:-4} --run_gunicorn --max_requests_before_restart 10000"]
 ```
 
 
