@@ -833,6 +833,9 @@ router_settings:
 | LITELLM_UI_API_DOC_BASE_URL | Optional override for the API Reference base URL (used in sample code/docs) when the admin UI runs on a different host than the proxy. Defaults to `PROXY_BASE_URL` when unset.
 | LITELLM_UI_PATH | Path to directory for Admin UI files. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/ui` in Docker.
 | LITELLM_UI_SESSION_DURATION | Duration for UI login session (username/password, SSO, invitation links). Format: "30s", "30m", "24h", "7d". Does not apply to EXPERIMENTAL_UI_LOGIN flow, which uses a fixed 10-minute expiry for security. Default is "24h"
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_BATCH_SIZE | Maximum number of expired LiteLLM dashboard session keys to delete per cleanup run. Default is 1000.
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_INTERVAL_SECONDS | Interval in seconds for how often to run the expired LiteLLM dashboard session key cleanup job. Default is 86400 (24 hours).
 | LITELM_ENVIRONMENT | Environment of LiteLLM Instance, used by logging services. Currently only used by DeepEval.
 | LITELLM_KEY_ROTATION_ENABLED | Enable auto-key rotation for LiteLLM (boolean). Default is false.
 | LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS | Interval in seconds for how often to run job that auto-rotates keys. Default is 86400 (24 hours).
