@@ -19,45 +19,10 @@ Claude Mythos (`anthropic.claude-mythos-preview`) is available on Bedrock Mantle
 
 Use the `bedrock/mantle/` route prefix with standard AWS credentials.
 
+### /messages
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
-
-```python
-from litellm import completion
-import os
-
-os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
-os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
-os.environ['AWS_REGION_NAME'] = "us-east-1"
-
-response = completion(
-    model="bedrock/mantle/anthropic.claude-mythos-preview",
-    messages=[{"role": "user", "content": "Explain quantum entanglement simply."}],
-)
-print(response)
-```
-
-</TabItem>
-<TabItem value="reasoning" label="SDK (Extended Thinking)">
-
-```python
-from litellm import completion
-import os
-
-os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
-os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
-os.environ['AWS_REGION_NAME'] = "us-east-1"
-
-response = completion(
-    model="bedrock/mantle/anthropic.claude-mythos-preview",
-    messages=[{"role": "user", "content": "Solve step by step: what is 2 + 2?"}],
-    thinking={"type": "enabled", "budget_tokens": 5000},
-)
-print(response)
-```
-
-</TabItem>
-<TabItem value="messages" label="SDK (/messages)">
 
 ```python
 import asyncio
@@ -80,7 +45,7 @@ asyncio.run(main())
 ```
 
 </TabItem>
-<TabItem value="proxy" label="LiteLLM Proxy">
+<TabItem value="ai-gateway" label="AI Gateway">
 
 **1. Add to config.yaml**
 
@@ -92,27 +57,81 @@ model_list:
       aws_region_name: us-east-1
 ```
 
-**2. Start the proxy**
+**2. Start LiteLLM AI Gateway**
 
 ```shell
 litellm --config /path/to/config.yaml
 ```
 
-**3. Call via OpenAI SDK**
+**3. Call `/v1/messages` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "claude-mythos",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Explain quantum entanglement simply."}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+### /chat/completions
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
 
 ```python
-import openai
+from litellm import completion
+import os
 
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000",
-)
+os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
+os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
+os.environ['AWS_REGION_NAME'] = "us-east-1"
 
-response = client.chat.completions.create(
-    model="claude-mythos",
+response = completion(
+    model="bedrock/mantle/anthropic.claude-mythos-preview",
     messages=[{"role": "user", "content": "Explain quantum entanglement simply."}],
 )
 print(response)
+```
+
+</TabItem>
+<TabItem value="ai-gateway-chat" label="AI Gateway">
+
+**1. Add to config.yaml**
+
+```yaml
+model_list:
+  - model_name: claude-mythos
+    litellm_params:
+      model: bedrock/mantle/anthropic.claude-mythos-preview
+      aws_region_name: us-east-1
+```
+
+**2. Start LiteLLM AI Gateway**
+
+```shell
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/chat/completions` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "claude-mythos",
+    "messages": [
+      {"role": "user", "content": "Explain quantum entanglement simply."}
+    ]
+  }'
 ```
 
 </TabItem>
