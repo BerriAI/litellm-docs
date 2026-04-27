@@ -7,14 +7,12 @@ This page covers using New Relic with LiteLLM in proxy mode. You can also use Ne
 
 # Quick Start
 
-## Enable New Relic Python Agent instrumentation
+## Use the litellm-newrelic Docker image
 
-The LiteLLM proxy has an optional configuration to enable instrumentation with the New Relic Python Agent. In order for the New Relic extension to work within the LiteLLM proxy, the New Relic Python Agent must instrument the process. This will result in the LiteLLM proxy reporting telemetry about the proxy to New Relic.
-
-In order to enable the New Relic Python Agent with the LiteLLM proxy, include the following environment variable when starting the proxy.
+The New Relic integration requires the New Relic Python Agent to instrument the LiteLLM proxy process. The `litellm-newrelic` image is a purpose-built variant of the standard `litellm` image that includes the New Relic Python Agent and starts the proxy via `newrelic-admin`. Simply use this image in place of the standard `litellm` image.
 
 ```shell
-USE_NEWRELIC=true
+docker pull litellm/litellm-newrelic:latest
 ```
 
 ## Enable New Relic LiteLLM Extension
@@ -32,13 +30,9 @@ In order for the New Relic Python Agent to report telemetry to New Relic, there 
 
 The `NEW_RELIC_APP_NAME` environment variable should have a value for the name that you wish the LiteLLM server to appear as in New Relic's UI. The `NEW_RELIC_LICENSE_KEY` environment variable value is a license key for the New Relic account you want the telemetry to be reported to.
 
-When running the LiteLLM proxy container image, `USE_NEWRELIC=true` is required to enable the New Relic Python Agent. This instructs the container entrypoint to start the proxy via `newrelic-admin`, which initializes the agent before the proxy process begins. If you are running the proxy outside of the container image, you will need to start the process with `newrelic-admin run-program` instead.
-
 ```shell
 NEW_RELIC_APP_NAME=<app name>
 NEW_RELIC_LICENSE_KEY=<license key>
-
-USE_NEWRELIC=true
 ```
 
 # Advanced Configuration
