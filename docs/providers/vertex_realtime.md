@@ -300,6 +300,11 @@ model_list:
       model: vertex_ai/gemini-live-2.5-flash-native-audio
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
+
+litellm_settings:
+  # Required for tool calling with Gemini/Vertex Live:
+  # defer setup until client sends session.update (with tools)
+  gemini_live_defer_setup: true
 ```
 
 ```bash
@@ -338,3 +343,4 @@ python test_realtime_tool_calling.py
 
 - Tool calling depends on `session.update` with `tools`.
 - If you skip `session.update`, tool calls will not be triggered.
+- `gemini_live_defer_setup` defaults to `false` for backward compatibility.

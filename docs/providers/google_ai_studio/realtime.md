@@ -190,6 +190,11 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-flash-native-audio-latest
       api_key: os.environ/GEMINI_API_KEY
+
+litellm_settings:
+  # Required for tool calling with Gemini Live:
+  # defer setup until client sends session.update (with tools)
+  gemini_live_defer_setup: true
 ```
 
 ```bash
@@ -206,6 +211,7 @@ python test_realtime_tool_calling.py
 
 - Tool calling will not work unless you send `session.update` first with your `tools`.
 - Send it as the first config message for that websocket session.
+- `gemini_live_defer_setup` defaults to `false` for backward compatibility.
 
 ## Supported OpenAI Realtime Events
 
