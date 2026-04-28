@@ -1,149 +1,53 @@
 ---
 slug: cleaner-release-versions
-title: "Cleaner LiteLLM release versions: standard PEP 440 + SemVer 2.0"
+title: "LiteLLM release versioning is changing: standard names, MINOR for weekly, PATCH for hotfixes"
 date: 2026-04-28
 authors:
   - litellm
-description: "Pre-releases follow PEP 440. Docker tags follow SemVer 2.0. New :latest, :rc, :dev floating tags. New `litellm-dev` package family for testing branches before merge."
-tags: [release, packaging, docker, helm]
+description: "Dropping `-stable` and `-nightly` suffixes. Weekly releases bump MINOR; PATCH is now reserved for actual hotfixes. Old releases keep their tags forever; new ones start with `1.84.0`."
+tags: [release, packaging, docker]
 hide_table_of_contents: false
 ---
 
-We've heard a few recurring pain points from users trying to install or pin LiteLLM in different environments:
+LiteLLM release version names are changing. Two pain points have been driving this:
 
-- **"`pip install --pre litellm` doesn't pick up anything new"** — pre-releases existed but didn't follow PEP 440 conventions, so pip's resolver couldn't reliably surface them.
-- **"Helm chart pull fails with `invalid semantic version`"** — chart versions had a `v` prefix and a `-stable` suffix, which strict SemVer 2.0 parsers (Helm v3 included) reject.
-- **"`docker pull ghcr.io/berriai/litellm:latest` doesn't work"** — `:latest` wasn't being maintained; you had to know the specific tag for whatever release you wanted.
-- **"How do I install a build from a feature branch to test it before merge?"** — there wasn't a clean answer; you had to clone and build locally.
-- **"Image scanners and SemVer-aware tooling choke on `v1.83.0-stable`"** — version strings with a `v` prefix and free-form suffix don't classify as valid versions in most ecosystems.
+**1. The `-stable` and `-nightly` suffixes aren't standard.**
 
-Starting with `1.84.0`, LiteLLM standardizes on **PEP 440** (PyPI) and strict **SemVer 2.0** (Docker + Helm). Old tags stay where they are; new releases use the new naming.
+Versions like `v1.83.3-stable` and `v1.83.0-nightly` don't match PEP 440 (PyPI) or SemVer 2.0 (Docker / Helm) conventions. Users expecting standard version strings get confused, and tooling that classifies versions has to special-case the suffix.
+
+**2. Weekly releases were bumping PATCH, leaving no room for actual hotfixes.**
+
+Under the old model, each scheduled weekly release bumped the PATCH number: `1.83.0` -> `1.83.1` -> `1.83.2` -> `1.83.3`. When a real hotfix was needed for `1.83.3`, the next PATCH (`1.83.4`) was already reserved for the following week's release. The workaround on Docker was `v1.83.3-stable.patch.1` - but PyPI doesn't accept that syntax, so a hotfix that needed both a Docker image and a Python wheel had no clean way to ship.
 
 <!-- truncate -->
 
-## What changes
+## What's new
 
-### PyPI: PEP 440 versions
+Starting with **`1.84.0`**:
 
-| Channel | Example | How to install |
+- **Drop the suffix.** Stable releases are plain PEP 440 / SemVer 2.0: `1.84.0`. Pre-releases use the standard PEP 440 (`1.84.0rc1`, `1.84.0.dev42`) and SemVer (`1.84.0-rc.1`, `1.84.0-dev.42`) shapes for PyPI and Docker respectively.
+- **MINOR bumps weekly.** Each scheduled stable bumps the MINOR component: `1.84.0` -> `1.85.0` -> `1.86.0`.
+- **PATCH is reserved for hotfixes.** When `1.84.0` needs a fix, it becomes `1.84.1`. Cleanly installs everywhere - `pip install litellm==1.84.1`, `docker pull ghcr.io/berriai/litellm:1.84.1`.
+
+## Side-by-side
+
+| Scenario | Old name | New name |
 |---|---|---|
-| Stable | `1.84.0` | `pip install litellm` |
-| Release candidate | `1.84.0rc1` | `pip install --pre 'litellm>=1.84.0rc1,<1.85'` |
-| Dev / nightly | `1.84.0.dev47` | `pip install --pre litellm` |
+| Weekly scheduled stable | `v1.83.3-stable` | `1.84.0` |
+| Hotfix on the current stable | `v1.83.3-stable.patch.1` (Docker only - no PyPI release) | `1.84.1` |
+| Release candidate | `v1.84.0-rc` | `1.84.0-rc.1` (Docker) / `1.84.0rc1` (PyPI) |
+| Nightly | `v1.83.0-nightly` | `1.84.0-dev.42` (Docker) / `1.84.0.dev42` (PyPI) |
 
-`pip install litellm` (no `--pre`) always resolves to the latest stable. `--pre` opens up RCs and dev builds. PEP 440 ordering puts `.devN < rcN < final`, so dependency resolution behaves correctly across the channels:
-
-```bash
-# Stable only
-pip install litellm
-
-# Latest pre-release (will pick the highest of rc / dev / stable available)
-pip install --pre litellm
-
-# Pin to a specific RC for testing the next release
-pip install --pre 'litellm>=1.84.0rc1,<1.85.0'
-```
-
-The lockstepped `litellm-proxy-extras` and `litellm-enterprise` packages move with each `litellm` stable release, with their own version namespaces (e.g. `litellm-proxy-extras==0.4.x`).
-
-### Docker: SemVer 2.0 tags (no `v` prefix)
-
-| Channel | Content tag (immutable) | Floating tag |
-|---|---|---|
-| Stable | `1.84.0` | `:latest` |
-| Release candidate | `1.84.0-rc.1` | `:rc` |
-| Dev / nightly | `1.84.0-dev.47` | `:dev` |
-
-Content tags are **immutable** — `1.84.0` always means that exact image. Floating tags advance with each new release in their channel:
-
-```bash
-# Always the latest stable
-docker pull ghcr.io/berriai/litellm:latest
-
-# Always the most recent release candidate
-docker pull ghcr.io/berriai/litellm:rc
-
-# Always the most recent dev / nightly build
-docker pull ghcr.io/berriai/litellm:dev
-
-# Or pin to an exact version (recommended for production)
-docker pull ghcr.io/berriai/litellm:1.84.0
-```
-
-Same shape for the database and non-root variants:
-
-```bash
-docker pull ghcr.io/berriai/litellm-database:1.84.0
-docker pull ghcr.io/berriai/litellm-non_root:1.84.0
-```
-
-And on Docker Hub:
-
-```bash
-docker pull docker.io/litellm/litellm:1.84.0
-docker pull docker.io/litellm/litellm-database:1.84.0
-docker pull docker.io/litellm/litellm-non_root:1.84.0
-```
-
-### Helm: same shape as Docker
-
-Chart versions use the same SemVer 2.0 shape as Docker tags. Strict SemVer parsers — including Helm v3 — accept these without workarounds:
-
-```bash
-helm pull oci://ghcr.io/berriai/litellm-helm --version 1.84.0
-helm pull oci://ghcr.io/berriai/litellm-helm --version 1.84.0-rc.1
-```
-
-The `appVersion` in `Chart.yaml` matches the Docker image tag a deploy will pull, so what you `helm pull` and what gets deployed are aligned.
-
-## New: ad-hoc / branch builds (`litellm-dev`)
-
-We've added a separate **`litellm-dev`** PyPI package and **`*-dev`** Docker image family for testing pre-merge code. When a fix or new feature on a branch needs validation before it's merged into the main release line, the build can be published to:
-
-```bash
-# PyPI (testing only, not for production)
-pip install --pre litellm-dev
-
-# Docker
-docker pull ghcr.io/berriai/litellm-dev:1.84.0-dev.3
-docker pull ghcr.io/berriai/litellm-database-dev:1.84.0-dev.3
-docker pull ghcr.io/berriai/litellm-non_root-dev:1.84.0-dev.3
-```
-
-These are intentionally separate from the production `litellm` package and standard Docker repos. Anything you have pinned to `litellm` or `ghcr.io/berriai/litellm` will never silently pick up an in-flight branch build. **`litellm-dev` is for testing only.**
+The hotfix row is the meaningful one. Under the old scheme there was no PyPI publication for `v1.83.3-stable.patch.1`. Under the new scheme, hotfixes ship to both registries and PyPI as a normal release.
 
 ## Backwards compatibility
 
-The old `v1.83.x-stable` tags and Helm `v1.83.x-stable` charts stay on their registries and PyPI **forever**. PyPI and OCI registry tag immutability mean you can keep pinning to anything you currently use.
+Releases that already shipped with the old naming - `v1.83.x-stable`, `v1.83.x-stable.patch.N`, and existing `1.83.x` PyPI versions - **stay on the registries and PyPI forever**. Anything you currently pin to keeps working. The new naming applies to new releases starting `1.84.0`.
 
-If a maintenance patch lands on a pre-cutover release line (e.g. a fix on `1.83.x`), that patch may continue to use the old naming convention for consistency within the line — release notes will call out the format used.
+If a maintenance patch is needed on a pre-cutover release line (e.g. a fix on `1.83.x` while `1.84.x` is current), that patch may continue to use the old naming for consistency within the line - release notes will call out which format was used. Long-term, all new releases move to the new naming.
 
-## Pinning recommendations
+## A few things worth knowing
 
-| Use case | Recommendation |
-|---|---|
-| Production, deterministic deploys | Pin to an exact stable version: `litellm==1.84.0` / `:1.84.0` |
-| Track the latest stable | `pip install litellm` / `docker pull ghcr.io/berriai/litellm:latest` |
-| Test the next release | `pip install --pre 'litellm>=1.85.0rc1'` / `docker pull ghcr.io/berriai/litellm:rc` |
-| Run nightlies | `pip install --pre litellm` / `docker pull ghcr.io/berriai/litellm:dev` |
-| Test a branch / pre-merge change | `pip install --pre litellm-dev` (we'll point you at the version when you need it) |
-
-`:latest` is useful for getting started but **not recommended for production** — pin to a content tag so your deployments are reproducible.
-
-## What this means for verification
-
-[Image signing (cosign) and SBOM attestation](https://docs.litellm.ai/blog/ci-cd-v2-improvements#verify-docker-image-signatures) continue as before. Verify with the published cosign public key:
-
-```bash
-cosign verify --key cosign.pub ghcr.io/berriai/litellm:1.84.0
-cosign verify --key cosign.pub ghcr.io/berriai/litellm:1.84.0-rc.1
-```
-
-The new tag shape is friendly to the rest of the ecosystem — image scanners (Trivy, Grype), Helm clients, version-comparison libraries, and dependency UIs all classify these as valid SemVer / PEP 440 versions and order them correctly.
-
-## tl;dr
-
-- **Stable**: `pip install litellm` and `docker pull ghcr.io/berriai/litellm:latest` now work the way you'd expect.
-- **Pre-releases**: opt in with `--pre` for PyPI or `:rc` / `:dev` floating tags on Docker.
-- **Branches**: install ad-hoc builds from `litellm-dev` — never accidentally pulled by production deploys.
-- **Existing pins**: nothing breaks. Old tags stay forever.
+- **`litellm-dev`** - there's a separate `litellm-dev` PyPI package and `*-dev` Docker image family for ad-hoc and one-off builds (e.g. testing a fix before it lands in a release). **Not for production use.** Anything pinned to the standard `litellm` package or `ghcr.io/berriai/litellm:*` Docker tags will never accidentally pick up a `litellm-dev` build.
+- **`:latest` Docker tag** points to the most recent stable release on each registry, advancing automatically when a new stable ships. For production deployments we still recommend pinning to a content tag (e.g. `:1.84.0`) so deploys are reproducible.
+- **Image signing** ([cosign verify](/blog/ci-cd-v2-improvements#verify-docker-image-signatures)) and verification commands continue to work unchanged with the new tag shapes.
