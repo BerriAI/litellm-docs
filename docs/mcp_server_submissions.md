@@ -16,11 +16,11 @@ This lets organizations give team members self-service MCP registration without 
 ## How It Works
 
 ```
-Team member submits MCP server
+Team member submits MCP server (via UI or API)
         ↓
 Server saved as "pending_review" (NOT loaded into registry)
         ↓
-Admin reviews in UI or via API
+Admin reviews in the Submitted MCPs tab
         ↓
 Approve → server goes "active" and is loaded into the registry
 Reject  → server stays out with optional review notes
@@ -28,7 +28,7 @@ Reject  → server stays out with optional review notes
 
 **Prerequisites:**
 - `store_model_in_db: true` must be set in your proxy config (required to persist MCP servers)
-- The submitting user must use a **team-scoped API key** (admin keys use `POST /v1/mcp/server` directly)
+- The submitting user must use a **team-scoped API key** (admin keys bypass the workflow and use `POST /v1/mcp/server` directly)
 
 ```yaml title="config.yaml" showLineNumbers
 general_settings:
@@ -41,19 +41,24 @@ general_settings:
 
 ### Via UI
 
-Go to **MCP Servers** in the LiteLLM dashboard and click **"Submit MCP Server"**.
+Go to **MCP Servers** in the LiteLLM dashboard. You'll see the "Submitted MCPs" tab in the navigation bar — this is where submissions are managed.
 
-Fill in the form:
-- **Server name** — unique name for the server
+<Image
+  img={require('../static/img/mcp/01_mcp_servers_list.png')}
+  style={{width: '100%', display: 'block', margin: '1rem 0'}}
+/>
+
+Click **"+ Add New MCP Server"** and fill in the form:
+- **Server name** — unique name (no hyphens; use underscores)
 - **Transport** — `sse`, `http`, or `stdio`
 - **URL** — the MCP server URL (required for `sse`/`http`)
 - Any additional fields (description, auth, etc.)
 
-The server is saved with `pending_review` status. It will not be available to users until an admin approves it.
+When submitted with a team-scoped key, the server is saved with `pending_review` status and will **not** be available to MCP clients until an admin approves it.
 
 ### Via API
 
-Use a team-scoped API key (admin keys are rejected — admins use `POST /v1/mcp/server` directly).
+Use a team-scoped API key. Admin keys are rejected at this endpoint — admins should use `POST /v1/mcp/server` directly.
 
 <Tabs>
 <TabItem value="curl" label="curl">
@@ -63,7 +68,7 @@ curl -X POST http://localhost:4000/v1/mcp/server/register \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TEAM_API_KEY" \
   -d '{
-    "server_name": "my-github-mcp",
+    "server_name": "github_mcp",
     "url": "https://api.githubcopilot.com/mcp",
     "transport": "sse",
     "description": "GitHub MCP for code search and PR management"
@@ -83,7 +88,7 @@ response = requests.post(
         "Content-Type": "application/json",
     },
     json={
-        "server_name": "my-github-mcp",
+        "server_name": "github_mcp",
         "url": "https://api.githubcopilot.com/mcp",
         "transport": "sse",
         "description": "GitHub MCP for code search and PR management",
@@ -99,18 +104,18 @@ print(response.json())
 
 ```json
 {
-  "server_id": "abc123",
-  "server_name": "my-github-mcp",
+  "server_id": "832d6abc-7a5c-457a-a9f6-cfe4ae05f776",
+  "server_name": "github_mcp",
   "url": "https://api.githubcopilot.com/mcp",
   "transport": "sse",
   "approval_status": "pending_review",
-  "submitted_by": "user-xyz",
-  "submitted_at": "2025-04-29T12:00:00Z"
+  "submitted_by": "7fd77c87-207b-4d6c-9d51-b72efb8962dc",
+  "submitted_at": "2026-04-29T18:50:34Z"
 }
 ```
 
 :::note
-The server is **not** available to MCP clients yet. It only becomes active after an admin approves it.
+The server is **not** accessible to MCP clients yet. It only becomes active after an admin approves it.
 :::
 
 ---
@@ -119,15 +124,36 @@ The server is **not** available to MCP clients yet. It only becomes active after
 
 ### Via UI
 
-Go to **MCP Servers → Submissions** tab in the LiteLLM dashboard.
+Go to **MCP Servers → Submitted MCPs** tab. You'll see:
+- Submission counts: Total Submitted, Pending Review, Active, Rejected
+- Each submission card with server name, description, URL, transport, and submission date
+- **Approve** and **Reject** buttons on each card
 
-You'll see:
-- Submission counts by status (`pending_review`, `active`, `rejected`)
-- Each submission card with server details, submitter, and submission time
-- Compliance indicators for required fields
-- **Approve** and **Reject** buttons per submission
+<Image
+  img={require('../static/img/mcp/02_submitted_mcps_tab.png')}
+  style={{width: '100%', display: 'block', margin: '1rem 0'}}
+/>
 
-Clicking **Reject** opens a dialog where you can optionally add review notes explaining why.
+**Approving** a server pops a confirmation dialog. Click **Approve** to make it active and load it into the MCP registry immediately.
+
+<Image
+  img={require('../static/img/mcp/04_approve_dialog.png')}
+  style={{width: '100%', display: 'block', margin: '1rem 0'}}
+/>
+
+After approval, the card badge changes to **Active** and the counters update:
+
+<Image
+  img={require('../static/img/mcp/05_after_approve.png')}
+  style={{width: '100%', display: 'block', margin: '1rem 0'}}
+/>
+
+**Rejecting** opens a dialog with an optional review notes field — useful for explaining why the submission was declined:
+
+<Image
+  img={require('../static/img/mcp/03_reject_dialog.png')}
+  style={{width: '100%', display: 'block', margin: '1rem 0'}}
+/>
 
 ### Via API
 
@@ -145,17 +171,17 @@ Response:
 
 ```json
 {
-  "total": 3,
-  "pending_review": 2,
-  "active": 1,
+  "total": 1,
+  "pending_review": 1,
+  "active": 0,
   "rejected": 0,
   "items": [
     {
-      "server_id": "abc123",
-      "server_name": "my-github-mcp",
+      "server_id": "832d6abc-7a5c-457a-a9f6-cfe4ae05f776",
+      "server_name": "github_mcp",
       "approval_status": "pending_review",
-      "submitted_by": "user-xyz",
-      "submitted_at": "2025-04-29T12:00:00Z"
+      "submitted_by": "7fd77c87-207b-4d6c-9d51-b72efb8962dc",
+      "submitted_at": "2026-04-29T18:50:34Z"
     }
   ]
 }
@@ -165,23 +191,23 @@ Response:
 <TabItem value="approve" label="Approve">
 
 ```bash title="Approve a submitted MCP server" showLineNumbers
-curl -X PUT http://localhost:4000/v1/mcp/server/abc123/approve \
+curl -X PUT http://localhost:4000/v1/mcp/server/{server_id}/approve \
   -H "Authorization: Bearer $ADMIN_API_KEY"
 ```
 
-The server status changes to `active` and it is immediately loaded into the MCP runtime registry — clients can start using it right away.
+The server status changes to `active` and it is immediately loaded into the MCP runtime registry.
 
 </TabItem>
 <TabItem value="reject" label="Reject">
 
 ```bash title="Reject a submitted MCP server" showLineNumbers
-curl -X PUT http://localhost:4000/v1/mcp/server/abc123/reject \
+curl -X PUT http://localhost:4000/v1/mcp/server/{server_id}/reject \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_API_KEY" \
   -d '{"review_notes": "This URL is not on the approved vendor list."}'
 ```
 
-`review_notes` is optional. The server status changes to `rejected` and it stays out of the registry.
+`review_notes` is optional. The server stays out of the registry.
 
 </TabItem>
 </Tabs>
@@ -202,15 +228,11 @@ curl -X PUT http://localhost:4000/v1/mcp/server/abc123/reject \
 
 **Can an admin re-approve a rejected server?**
 
-Yes. The approve endpoint accepts servers in `pending_review` or `rejected` status. Just call `PUT /v1/mcp/server/{id}/approve` again.
+Yes. Call `PUT /v1/mcp/server/{id}/approve` — the endpoint accepts servers in both `pending_review` and `rejected` status.
 
 **What happens if a previously-active server is rejected?**
 
 It is evicted from the runtime registry immediately — clients will no longer see its tools.
-
-**Can a team member check the status of their submission?**
-
-Not via a dedicated endpoint yet. Admins can see all submissions at `GET /v1/mcp/server/submissions`. Team members can call `GET /v1/mcp/server/{server_id}` if they have the `server_id` from the registration response.
 
 **Do I need a special config flag to enable submissions?**
 
