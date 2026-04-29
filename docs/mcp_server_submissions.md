@@ -16,7 +16,7 @@ This lets organizations give team members self-service MCP registration without 
 ## How It Works
 
 ```
-Team member submits MCP server (via UI or API)
+Team member submits MCP server via API
         ↓
 Server saved as "pending_review" (NOT loaded into registry)
         ↓
@@ -38,25 +38,6 @@ general_settings:
 ---
 
 ## User: Submit an MCP Server
-
-### Via UI
-
-Go to **MCP Servers** in the LiteLLM dashboard and click **"+ Add New MCP Server"**. Choose **"+ Custom Server"** to open the submission form:
-
-<Image
-  img={require('../static/img/mcp/01_mcp_servers_list.png')}
-  style={{width: '100%', display: 'block', margin: '1rem 0'}}
-/>
-
-Fill in the form fields:
-- **Server name** — unique name (no hyphens; use underscores)
-- **Transport** — `sse`, `http`, or `stdio`
-- **URL** — the MCP server URL (required for `sse`/`http`)
-- Any additional fields (description, auth, etc.)
-
-When submitted with a team-scoped key, the server is saved with `pending_review` status and will **not** be available to MCP clients until an admin approves it.
-
-### Via API
 
 Use a team-scoped API key. Admin keys are rejected at this endpoint — admins should use `POST /v1/mcp/server` directly.
 
