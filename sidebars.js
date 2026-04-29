@@ -333,6 +333,7 @@ const sidebars = {
                 "mcp_control",
                 "mcp_cost",
                 "mcp_guardrail",
+                "mcp_server_submissions",
                 "mcp_toolsets",
                 {
                   type: "link",
@@ -708,6 +709,7 @@ const sidebars = {
             "mcp_control",
             "mcp_cost",
             "mcp_guardrail",
+            "mcp_server_submissions",
             "mcp_zero_trust",
             "mcp_troubleshoot",
           ]
