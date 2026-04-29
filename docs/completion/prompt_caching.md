@@ -362,12 +362,11 @@ print(response.usage)
 :::tip Minimum Token Requirement
 Prompt caching requires a minimum number of tokens per model. Prompts below the minimum are processed normally without caching — no error is returned. Check `cache_creation_input_tokens` in the response to confirm caching occurred.
 
-| Model | Minimum input tokens |
+| Model family | Minimum input tokens |
 |---|---|
-| Claude Sonnet 4.x, 3.7, 3.5 | 1,024 |
-| Claude Opus 4.0, 4.1 | 1,024 |
-| Claude Haiku 3 | 1,024 |
-| Claude Haiku 3.5 | 2,048 |
+| Claude 3.x Sonnet, Opus, Haiku 3 | 1,024 |
+| Claude 3.5 Sonnet, Haiku 3.5 | 1,024–2,048 (model-specific) |
+| Claude Sonnet 4.x, Opus 4.x | 1,024–2,048 (model-specific) |
 | Claude Haiku 4.5, Opus 4.5+ | 4,096 |
 :::
 
@@ -376,7 +375,7 @@ Prompt caching requires a minimum number of tokens per model. Prompts below the 
 LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format — no changes needed to your existing code if you're already using `cache_control`.
 
 :::tip Minimum Token Requirement
-Bedrock requires a minimum of **1,024 tokens per cache checkpoint**. Prompts below this threshold are processed without caching and no error is returned — check `cache_creation_input_tokens` in the response to confirm a cache write occurred.
+Minimum tokens per cache checkpoint on Bedrock varies by model (see table below). Prompts below the minimum are processed without caching and no error is returned — check `cache_creation_input_tokens` in the response to confirm a cache write occurred.
 :::
 
 <Tabs>
@@ -459,7 +458,7 @@ curl -X POST http://localhost:4000/chat/completions \
 | Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
 | Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
 | Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
-| Claude Sonnet 4.5 | `anthropic.claude-sonnet-4-5-20250514-v1:0` | 1,024 | 5 min, 1 hour |
+| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 2,048 | 5 min, 1 hour |
 
 Cross-region inference profiles are also supported for the models above.
 
