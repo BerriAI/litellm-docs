@@ -51,7 +51,7 @@ services:
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
     ports:
-      - "5002:5002"
+      - "5002:3000"
     environment:
       - GRPC_PORT=5001
     networks:
@@ -60,7 +60,7 @@ services:
   presidio-anonymizer:
     image: mcr.microsoft.com/presidio-anonymizer:latest
     ports:
-      - "5001:5001"
+      - "5001:3000"
     networks:
       - presidio-network
 
@@ -498,14 +498,14 @@ services:
   presidio-analyzer-1:
     image: mcr.microsoft.com/presidio-analyzer:latest
     ports:
-      - "5002:5002"
+      - "5002:3000"
     deploy:
       replicas: 3
       
   presidio-anonymizer-1:
     image: mcr.microsoft.com/presidio-anonymizer:latest
     ports:
-      - "5001:5001"
+      - "5001:3000"
     deploy:
       replicas: 3
 ```
