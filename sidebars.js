@@ -1011,6 +1011,7 @@ const sidebars = {
         "providers/scaleway",
         "providers/stability",
         "providers/synthetic",
+        "providers/telnyx",
         "providers/snowflake",
         "providers/togetherai",
         "providers/topaz",
