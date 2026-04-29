@@ -119,6 +119,7 @@ general_settings:
   master_key: string
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
+  invalid_virtual_key_cache_ttl: 3600 # TTL in seconds for negative-caching unknown virtual keys. Set to 0 to disable.
   user_mcp_management_mode: restricted  # or "view_all"
 
   # Database Settings
@@ -282,6 +283,7 @@ router_settings:
 | forward_client_headers_to_llm_api | boolean | If true, forwards the client headers (any `x-` headers and `anthropic-beta` headers) to the backend LLM call |
 | maximum_spend_logs_retention_period               | str                   | Used to set the max retention time for spend logs in the db, after which they will be auto-purged                                                                                                                                                                                                                             |
 | maximum_spend_logs_retention_interval             | str                   | Used to set the interval in which the spend log cleanup task should run in.                                                                                                                                                                                                                                                   |
+| invalid_virtual_key_cache_ttl | int | TTL in seconds for negative-caching unknown virtual keys to reduce repeated DB lookups for invalid `sk-*` tokens. Set to `0` or a negative value to disable. Default is `3600`. |
 | alert_type_config | dict | Configuration mapping alert types to their handler settings |
 | always_include_stream_usage | boolean | If true, includes usage metrics in every streaming response chunk |
 | auto_redirect_ui_login_to_sso | boolean | If true, automatically redirects UI login page to SSO provider |
