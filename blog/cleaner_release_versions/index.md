@@ -3,7 +3,7 @@ slug: cleaner-release-versions
 title: "LiteLLM release versioning is changing: standard names, MINOR for weekly, PATCH for hotfixes"
 date: 2026-04-28
 authors:
-  - litellm
+  - yuneng
 description: "Dropping `-stable` and `-nightly` suffixes. Weekly releases bump MINOR; PATCH is now reserved for actual hotfixes. Old releases keep their tags forever; new ones start with `1.84.0`."
 tags: [release, packaging, docker]
 hide_table_of_contents: false
