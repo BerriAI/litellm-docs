@@ -41,14 +41,14 @@ general_settings:
 
 ### Via UI
 
-Go to **MCP Servers** in the LiteLLM dashboard. You'll see the "Submitted MCPs" tab in the navigation bar — this is where submissions are managed.
+Go to **MCP Servers** in the LiteLLM dashboard and click **"+ Add New MCP Server"**. Choose **"+ Custom Server"** to open the submission form:
 
 <Image
   img={require('../static/img/mcp/01_mcp_servers_list.png')}
   style={{width: '100%', display: 'block', margin: '1rem 0'}}
 />
 
-Click **"+ Add New MCP Server"** and fill in the form:
+Fill in the form fields:
 - **Server name** — unique name (no hyphens; use underscores)
 - **Transport** — `sse`, `http`, or `stdio`
 - **URL** — the MCP server URL (required for `sse`/`http`)
