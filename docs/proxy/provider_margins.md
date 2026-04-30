@@ -124,11 +124,12 @@ You can also configure margins directly in your `config.yaml` file.
 
 ```yaml
 # Apply margins to providers
-cost_margin_config:
-  global: 0.05            # 5% global margin on all providers
-  openai: 0.10            # 10% margin for OpenAI (overrides global)
-  anthropic:
-    fixed_amount: 0.001   # $0.001 fixed fee per request
+litellm_settings:
+  cost_margin_config:
+    global: 0.05            # 5% global margin on all providers
+    openai: 0.10            # 10% margin for OpenAI (overrides global)
+    anthropic:
+      fixed_amount: 0.001   # $0.001 fixed fee per request
 ```
 
 **Step 2: Start proxy**
@@ -157,24 +158,27 @@ The margin will be automatically applied to all cost calculations for the config
 
 **Example 1: Percentage-only margin**
 ```yaml
-cost_margin_config:
-  openai: 0.10  # 10% margin
+litellm_settings:
+  cost_margin_config:
+    openai: 0.10  # 10% margin
 ```
 If base cost is $1.00, final cost = $1.00 x 1.10 = $1.10
 
 **Example 2: Fixed amount only**
 ```yaml
-cost_margin_config:
-  anthropic:
-    fixed_amount: 0.001  # $0.001 per request
+litellm_settings:
+  cost_margin_config:
+    anthropic:
+      fixed_amount: 0.001  # $0.001 per request
 ```
 If base cost is $1.00, final cost = $1.00 + $0.001 = $1.001
 
 **Example 3: Global margin with provider override**
 ```yaml
-cost_margin_config:
-  global: 0.05   # 5% global margin
-  openai: 0.10   # 10% margin for OpenAI (overrides global)
+litellm_settings:
+  cost_margin_config:
+    global: 0.05   # 5% global margin
+    openai: 0.10   # 10% margin for OpenAI (overrides global)
 ```
 - OpenAI requests: 10% margin applied
 - All other providers: 5% margin applied
@@ -189,10 +193,11 @@ Margins and discounts are calculated independently:
 
 **Example:**
 ```yaml
-cost_discount_config:
-  openai: 0.05  # 5% discount
-cost_margin_config:
-  openai: 0.10  # 10% margin
+litellm_settings:
+  cost_discount_config:
+    openai: 0.05  # 5% discount
+  cost_margin_config:
+    openai: 0.10  # 10% margin
 ```
 
 If base cost is $1.00:
