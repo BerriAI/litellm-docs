@@ -520,6 +520,11 @@ router_settings:
 | CLOUDZERO_MAX_FETCHED_DATA_RECORDS | Maximum number of data records to fetch from CloudZero
 | CLOUDZERO_TIMEZONE | Timezone for date handling (default: UTC)
 | CONFIG_FILE_PATH | File path for configuration file
+| MAVVRIK_API_KEY | API key for Mavvrik cost analytics integration
+| MAVVRIK_API_ENDPOINT | Base URL for Mavvrik API endpoint
+| MAVVRIK_CONNECTION_ID | Connection ID for Mavvrik data submission
+| MAVVRIK_EXPORT_INTERVAL_MINUTES | Interval in minutes between Mavvrik background export jobs (default: 60)
+| MAVVRIK_MAX_FETCHED_DATA_RECORDS | Maximum number of spend records to fetch per export call (default: 50000)
 | CYBERARK_ACCOUNT | CyberArk account name for secret management
 | CYBERARK_API_BASE | Base URL for CyberArk API
 | CYBERARK_API_KEY | API key for CyberArk secret management service
