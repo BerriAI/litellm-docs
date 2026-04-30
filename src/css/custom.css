@@ -34,11 +34,7 @@
   --ifm-container-width-xl: 1560px;
 }
 
-/* =========================================
-   GLOBAL — prevent horizontal overflow on mobile
-   Defensive: ensures no page can cause body-level x-scroll
-   (e.g. wide flex/marquee containers, long unbreakable tokens).
-   ========================================= */
+
 html,
 body,
 #__docusaurus {
