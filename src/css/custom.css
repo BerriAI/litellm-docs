@@ -35,6 +35,25 @@
 }
 
 /* =========================================
+   GLOBAL — prevent horizontal overflow on mobile
+   Defensive: ensures no page can cause body-level x-scroll
+   (e.g. wide flex/marquee containers, long unbreakable tokens).
+   ========================================= */
+html,
+body,
+#__docusaurus {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Break the flex-item min-width:auto chain that lets nowrap children
+   (marquees, long pre/code blocks) push wrappers wider than the viewport. */
+#__docusaurus,
+#__docusaurus > * {
+  min-width: 0;
+}
+
+/* =========================================
    DARK MODE Variables
    ========================================= */
 [data-theme='dark'] {
