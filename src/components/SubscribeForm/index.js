@@ -1,7 +1,7 @@
 import React from 'react';
+import {LOOPS_FORM_URL} from '@site/src/config';
 import styles from './styles.module.css';
 
-const LOOPS_FORM_URL = 'https://app.loops.so/api/newsletter-form/clgnvx22100kmib0fa5ikqbb8';
 
 export default function SubscribeForm() {
   const [email, setEmail] = React.useState('');
@@ -28,7 +28,7 @@ export default function SubscribeForm() {
   }
 
   if (status === 'success') {
-    return <p className={`${styles.feedback} ${styles.success}`}>You're subscribed!</p>;
+    return <p className={`${styles.feedback} ${styles.success}`}>We'll keep you posted!</p>;
   }
 
   return (
@@ -38,7 +38,7 @@ export default function SubscribeForm() {
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          placeholder="krrish@berri.ai"
+          placeholder="you@example.com"
           required
           disabled={status === 'loading'}
           className={styles.input}
