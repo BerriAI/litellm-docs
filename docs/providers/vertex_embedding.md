@@ -262,6 +262,15 @@ model_list:
 
 `gemini-embedding-2-preview` supports **unified multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details.
 
+:::warning Response shape — Vertex returns one combined vector
+
+Vertex AI's Gemini embedding endpoint only exposes single-content `embedContent` (no `batchEmbedContents`), so passing `N` items in `input=[...]` returns **1 unified embedding** that fuses all parts—not N separate vectors. To get one vector per item, call `embedding(...)` once per input.
+
+This differs from the Gemini API path (`gemini/gemini-embedding-2-preview`), which returns one embedding per input element (OpenAI-compatible). See [Gemini embedding docs](../embedding/supported_embedding#gemini-embedding-2-preview-multimodal).
+
+:::
+
+
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
 - **GCS URLs:** `gs://bucket/path/to/file.png` (MIME type inferred from extension)
