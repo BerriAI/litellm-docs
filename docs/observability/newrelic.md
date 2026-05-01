@@ -12,7 +12,7 @@ This page covers using New Relic with LiteLLM in proxy mode. You can also use Ne
 The New Relic integration requires the New Relic Python Agent to instrument the LiteLLM proxy process. The `litellm-newrelic` image is a purpose-built variant of the standard `litellm` image that includes the New Relic Python Agent and starts the proxy via `newrelic-admin`. Simply use this image in place of the standard `litellm` image.
 
 ```shell
-docker pull litellm/litellm-newrelic:latest
+docker pull docker.litellm.ai/berriai/litellm-newrelic:latest
 ```
 
 ## Enable New Relic LiteLLM Extension
