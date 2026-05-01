@@ -181,7 +181,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ### Environment Variables
 
-You can customize token storage locations:
+You can customize token storage locations, authentication recovery, and endpoints:
 
 ```bash showLineNumbers title="Environment Variables"
 # Optional: Custom token directory
@@ -192,6 +192,11 @@ export GITHUB_COPILOT_ACCESS_TOKEN_FILE="access-token"
 
 # Optional: Custom API key file name
 export GITHUB_COPILOT_API_KEY_FILE="api-key.json"
+
+# Optional: On a 401, delete the cached OAuth access token and re-run device-flow
+# authentication. Requires an interactive terminal, so do not enable on headless
+# proxy or CI deployments. Default: false
+export GITHUB_COPILOT_ENABLE_AUTH_RECOVERY="true"
 
 # Optional: Custom Copilot endpoints for authentication and usage
 # (needed when using GitHub Enterprise subscriptions with custom endpoints or self-hosted GitHub servers
