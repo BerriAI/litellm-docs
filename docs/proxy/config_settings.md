@@ -794,6 +794,7 @@ router_settings:
 | JITTER | Jitter factor for retry delay calculations. Default is 0.75
 | JSON_LOGS | Enable JSON formatted logging
 | JWT_AUDIENCE | Expected audience for JWT tokens
+| JWT_ISSUER | Expected issuer (`iss` claim) for JWT tokens. When set, PyJWT verifies the `iss` claim and rejects tokens from other issuers
 | JWT_PUBLIC_KEY_URL | URL to fetch public key for JWT verification
 | LAGO_API_BASE | Base URL for Lago API
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
