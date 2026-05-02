@@ -1479,17 +1479,38 @@ LiteLLM translates OpenAI's `reasoning_effort` to Anthropic's `thinking` paramet
 | "high"           | "budget_tokens": 4096 |
 
 :::note
-For Claude Opus 4.6, all `reasoning_effort` values (`low`, `medium`, `high`) are mapped to `thinking: {type: "adaptive"}`. To use explicit thinking budgets, pass the native `thinking` parameter directly:
+`reasoning_effort` maps to Anthropic's [adaptive thinking](https: //docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-4-6`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
+
+```json
+{
+  "thinking": {"type": "adaptive"},
+  "output_config": {"effort": "<low|medium|high|xhigh|max>"}
+}
+```
+
+This means **any value other than `"none"` for `reasoning_effort` will automatically turn thinking on for these models**, even though the OpenAI-compatible request body does not have a separate `thinking` field. This is intended to match Anthropic's own recommended usage: budget_tokens has been deprecated on 4.6 models and rejected entirely on Opus 4.7, where only adaptive is a supported thinking mode.
+
+You can disable thinking either by omitting `reasoning_effort` entirely or setting it to `"none"`. LiteLLM will not send a `thinking` field in that case. You can still pass the native `thinking` parameter directly if you wish to explicitly control thinking with a fixed budget on prior models:
 
 ```python
 from litellm import completion
 
+# Disable thinking on Claude 4.6/4.7
 resp = completion(
-    model="anthropic/claude-opus-4-6",
+    model="anthropic/claude-opus-4-7",
+    messages=[{"role": "user", "content": "What is the capital of France?"}],
+    reasoning_effort="none",  # no thinking field sent
+)
+
+# Explicit budget (pre-4.6 models; deprecated on 4.6, rejected on Opus 4.7)
+resp = completion(
+    model="anthropic/claude-sonnet-4-5-20250929",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     thinking={"type": "enabled", "budget_tokens": 1024},
 )
 ```
+
+The Anthropic `/v1/messages` passthrough route is unaffected by this reasoning effort mapping. `thinking` is passed through unchanged.
 :::
 
 <Tabs>
