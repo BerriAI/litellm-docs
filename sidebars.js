@@ -906,6 +906,7 @@ const sidebars = {
         "providers/litellm_proxy",
         "providers/abliteration",
         "providers/ai21",
+        "providers/aihubmix",
         "providers/aiml",
         "providers/aleph_alpha",
         "providers/amazon_nova",
