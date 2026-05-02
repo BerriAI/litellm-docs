@@ -295,7 +295,15 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+For **Gemini 3+ models**, LiteLLM now follows provider defaults by default and does **not** force `thinkingLevel` when you pass Anthropic-style `thinking={"type":"enabled","budget_tokens":...}`.
 
+If you want the legacy LiteLLM behavior (force `thinkingLevel="low"` for Pro and `thinkingLevel="minimal"` for Flash), enable:
+
+```python
+import litellm
+
+litellm.enable_gemini_default_thinking_level_low = True
+```
 
 ## Usage - `service_tier`
 
