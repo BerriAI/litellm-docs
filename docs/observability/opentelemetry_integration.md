@@ -79,6 +79,19 @@ OTEL_HEADERS="authorization=Bearer <project-api-key>"
 
 </TabItem>
 
+<TabItem value="splunk" label="Splunk Observability Cloud">
+
+```shell
+OTEL_EXPORTER_OTLP_ENDPOINT="https://ingest.<realm>.observability.splunkcloud.com/v2/trace/otlp"
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_HEADERS="X-SF-Token=<your-ingest-access-token>"
+OTEL_SERVICE_NAME="litellm-proxy"
+```
+
+For **LiteLLM Proxy** setup, ingest token patterns, and trace verification, see **[Splunk Observability Cloud (OpenTelemetry)](/docs/observability/splunk_observability_cloud)**.
+
+</TabItem>
+
 </Tabs>
 
 Use just 1 line of code, to instantly log your LLM responses **across all providers** with OpenTelemetry:

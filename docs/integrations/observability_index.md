@@ -22,6 +22,7 @@ items={[
   { icon: "📊", title: "MLflow", description: "Experiment tracking.", to: "/docs/observability/mlflow" },
   { icon: "🏋️", title: "Weights & Biases", description: "ML experiment tracking.", to: "/docs/observability/wandb_integration" },
   { icon: "📉", title: "PostHog", description: "Product analytics.", to: "/docs/observability/posthog_integration" },
+  { icon: "🔭", title: "Splunk Observability Cloud", description: "OTLP traces to Splunk.", to: "/docs/observability/splunk_observability_cloud" },
 ]}
 />
 

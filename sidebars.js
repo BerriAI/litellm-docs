@@ -91,6 +91,7 @@ const sidebars = {
           "proxy/guardrails/custom_code_guardrail",
           "proxy/guardrails/prompt_injection",
           "proxy/guardrails/tool_permission",
+          "proxy/guardrails/rubrik",
           "proxy/guardrails/zscaler_ai_guard",
           "proxy/guardrails/javelin"
         ].sort(),
@@ -329,6 +330,7 @@ const sidebars = {
             "mcp_control",
             "mcp_cost",
             "mcp_guardrail",
+            "mcp_server_submissions",
             "mcp_toolsets",
             {
               type: "link",
@@ -410,6 +412,7 @@ const sidebars = {
                 "proxy/self_serve",
                 "proxy/public_teams",
                 "proxy/ui_project_management",
+                "proxy/ui_search_tools",
                 "proxy/ui/bulk_edit_users",
                 "proxy/ui/page_visibility",
               ]
@@ -456,7 +459,6 @@ const sidebars = {
           label: "All Endpoints (Swagger)",
           href: "https://litellm-api.up.railway.app/",
         },
-        "proxy/enterprise",
         {
           type: "category",
           label: "Authentication",
@@ -703,6 +705,7 @@ const sidebars = {
             "mcp_control",
             "mcp_cost",
             "mcp_guardrail",
+            "mcp_server_submissions",
             "mcp_zero_trust",
             "mcp_troubleshoot",
           ]

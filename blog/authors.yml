@@ -43,6 +43,12 @@ alexsander:
 
 yuneng:
   name: Yuneng Jiang
-  title: SWE @ LiteLLM (Full Stack)
+  title: Senior SWE @ LiteLLM
   url: https://www.linkedin.com/in/yuneng-david-jiang-455676139/
   image_url: https://avatars.githubusercontent.com/u/171294688?v=4
+
+mateo:
+  name: Mateo Wang
+  title: AI Engineer, LiteLLM
+  url: https://www.linkedin.com/in/mateo-wang
+  image_url: /img/mateo.jpeg

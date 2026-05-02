@@ -515,10 +515,18 @@ All models listed [here](https://ai.google.dev/gemini-api/docs/models/gemini) ar
 | :---               | :---                                                  |
 | text-embedding-004 | `embedding(model="gemini/text-embedding-004", input)` |
 | gemini-embedding-2-preview | `embedding(model="gemini/gemini-embedding-2-preview", input)` | [Multimodal docs](#gemini-embedding-2-preview-multimodal) |
+| gemini-embedding-2 *(GA)* | `embedding(model="gemini/gemini-embedding-2", input)` | [Multimodal docs](#gemini-embedding-2-preview-multimodal) · [GA notes](/blog/gemini_embedding_2_ga) |
 
 ### Gemini Embedding 2 Preview (Multimodal)
 
-`gemini-embedding-2-preview` supports **multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details.
+`gemini-embedding-2-preview` supports **multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior—swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
+
+:::info Response shape
+
+For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`)—same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector—see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
+
+:::
+
 
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
@@ -565,6 +573,56 @@ curl -X POST http://localhost:4000/embeddings \
 </Tabs>
 
 **Optional:** `dimensions` maps to Gemini's `outputDimensionality`.
+
+#### Combined Multimodal Embeddings
+
+By default, each element in the `input` list produces a **separate** embedding (OpenAI-compatible). To combine multiple inputs into a **single** embedding (e.g., text + image representing one entity), wrap them in a nested list:
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import embedding
+
+# Separate: 2 inputs → 2 embeddings
+response = embedding(
+    model="gemini/gemini-embedding-2-preview",
+    input=["a red shoe", "data:image/png;base64,..."],
+)
+# response.data has 2 embeddings
+
+# Combined: text + image → 1 embedding
+response = embedding(
+    model="gemini/gemini-embedding-2-preview",
+    input=[["a red shoe", "data:image/png;base64,..."]],
+)
+# response.data has 1 embedding representing both together
+
+# Mixed: 1 combined + 1 separate → 2 embeddings
+response = embedding(
+    model="gemini/gemini-embedding-2-preview",
+    input=[["a red shoe", "data:image/png;base64,..."], "just text"],
+)
+# response.data has 2 embeddings
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl -X POST http://localhost:4000/embeddings \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-embedding-2-preview",
+    "input": [["a red shoe", "data:image/png;base64,..."], "just text"]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+This is useful for representing multi-modal entities (e.g., a product with a name + photo) as a single vector for search and retrieval. Gemini API only — Vertex AI always returns a single combined vector regardless of input shape (see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal)).
 
 
 ## Vertex AI Embedding Models

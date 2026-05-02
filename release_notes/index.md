@@ -27,7 +27,7 @@ _March 16, 2026_
 | [v1.81.12](/release_notes/v1.81.12/v1-81-12) | Feb 14, 2026 | Guardrail Policy Templates & Action Builder                |
 | [v1.81.9](/release_notes/v1.81.9/v1-81-9)   | Feb 7, 2026  | Control which MCP Servers are exposed on the Internet      |
 | [v1.81.6](/release_notes/v1.81.6/v1-81-6)   | Jan 31, 2026 | Logs v2 with Tool Call Tracing                             |
-| [v1.81.3](/release_notes/v1.81.3-stable/v1-81-3)   | Jan 26, 2026 | Performance — 25% CPU Usage Reduction                      |
+| [v1.81.3](/release_notes/v1.81.3/v1-81-3)   | Jan 26, 2026 | Performance — 25% CPU Usage Reduction                      |
 | [v1.81.0](/release_notes/v1.81.0/v1-81-0)          | Jan 18, 2026 | Claude Code — Web Search Across All Providers              |
 | [v1.80.15](/release_notes/v1.80.15/v1-80-15)       | Jan 10, 2026 | Manus API Support                                          |
 | [v1.80.8](/release_notes/v1.80.8-stable/v1-80-8)   | Dec 6, 2025  | Introducing A2A Agent Gateway                              |

@@ -27,6 +27,14 @@ litellm_settings:
   # Networking settings
   request_timeout: 10 # (int) llm requesttimeout in seconds. Raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout
   force_ipv4: boolean # If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API
+
+  # Cost tracking settings
+  cost_discount_config:
+    vertex_ai: 0.05 # Apply a 5% discount to Vertex AI costs
+    gemini: 0.05 # Apply a 5% discount to Gemini costs
+  cost_margin_config:
+    global: 0.05 # Apply a 5% margin to all providers
+    openai: 0.10 # Apply a 10% margin to OpenAI costs
   
   # Debugging - see debugging docs for more options
   # Use `--debug` or `--detailed_debug` CLI flags, or set LITELLM_LOG env var to "INFO", "DEBUG", or "ERROR"
@@ -96,6 +104,11 @@ litellm_settings:
     mode: default_off # if default_off, you need to opt in to caching on a per call basis
     ttl: 600 # ttl for caching
     disable_copilot_system_to_assistant: False # DEPRECATED - GitHub Copilot API supports system prompts.
+
+  # Virtual key auth cache — shares API key / virtual-key auth across workers via Redis.
+  # Reduces DB round trips when caches are cold on new workers or pods.
+  # Requires litellm_settings.cache: true AND cache_params.type: redis above.
+  enable_redis_auth_cache: false
 
 callback_settings:
   otel:
@@ -192,11 +205,15 @@ router_settings:
 | context_window_fallbacks | array of objects | Fallbacks to use when a ContextWindowExceededError is encountered. [Further docs](./reliability#context-window-fallbacks) |
 | cache | boolean | If true, enables caching. [Further docs](./caching) |
 | cache_params | object | Parameters for the cache. [Further docs](./caching#supported-cache_params-on-proxy-configyaml) |
+| enable_redis_auth_cache | boolean | When `true`, stores virtual-key auth payloads in Redis (same client as response caching) so every worker/pod shares cached auth lookups—fewer repeated database reads on cache misses. **Requires `cache: true` and `cache_params.type: redis`** (Redis or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching#virtual-key-authentication-cache-redis) |
 | disable_end_user_cost_tracking | boolean | If true, turns off end user cost tracking on prometheus metrics + litellm spend logs table on proxy. |
 | disable_end_user_cost_tracking_prometheus_only | boolean | If true, turns off end user cost tracking on prometheus metrics only. |
+| cost_discount_config | object | Provider-specific percentage discounts applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_discounts) |
+| cost_margin_config | object | Provider-specific or global percentage/fixed margins applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_margins) |
 | key_generation_settings | object | Restricts who can generate keys. [Further docs](./virtual_keys.md#restricting-key-generation) |
 | disable_add_transform_inline_image_block | boolean | For Fireworks AI models - if true, turns off the auto-add of `#transform=inline` to the url of the image_url, if the model is not a vision model. |
 | use_chat_completions_url_for_anthropic_messages | boolean | If true, routes OpenAI `/v1/messages` requests through chat/completions instead of the Responses API. Can also be set via env var `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true`. |
+| route_all_chat_openai_to_responses | boolean | If true, routes all OpenAI `/chat/completions` requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via env var `LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true`. |
 | skip_system_message_in_guardrail | boolean | If true, unified guardrails omit `role: system` from scanned input on **chat completions** and **Anthropic `/v1/messages`** only; the LLM still receives full messages. Per-guardrail override: `litellm_params.skip_system_message_in_guardrail` on each guardrail. [Guardrails quick start](./guardrails/quick_start#skip-system-messages-in-guardrail-evaluation) |
 | disable_hf_tokenizer_download | boolean | If true, it defaults to using the openai tokenizer for all models (including huggingface models). |
 | enable_json_schema_validation | boolean | If true, enables json schema validation for all requests. |
@@ -416,6 +433,10 @@ router_settings:
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_CONNECTOR_LIMIT_PER_HOST | Connection limit per host for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_KEEPALIVE_TIMEOUT | Keep-alive timeout for aiohttp connections in seconds. **Default is 120**
+| AIOHTTP_SO_KEEPALIVE | Enable TCP `SO_KEEPALIVE` on aiohttp sockets so idle provider connections are detected and reaped before NAT/load balancers silently drop them. **Default is False**
+| AIOHTTP_TCP_KEEPCNT | Number of unacknowledged TCP keepalive probes before the connection is considered dead (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 5**
+| AIOHTTP_TCP_KEEPIDLE | Seconds an aiohttp TCP connection must be idle before keepalive probes are sent (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 60**
+| AIOHTTP_TCP_KEEPINTVL | Seconds between successive aiohttp TCP keepalive probes (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 30**
 | AIOHTTP_TRUST_ENV | Flag to enable aiohttp trust environment. When this is set to True, aiohttp will respect HTTP(S)_PROXY env vars. **Default is False**
 | AIOHTTP_TTL_DNS_CACHE | DNS cache time-to-live for aiohttp in seconds. **Default is 300**
 | ALLOWED_EMAIL_DOMAINS | List of email domains allowed for access
@@ -832,6 +853,9 @@ router_settings:
 | LITELLM_UI_API_DOC_BASE_URL | Optional override for the API Reference base URL (used in sample code/docs) when the admin UI runs on a different host than the proxy. Defaults to `PROXY_BASE_URL` when unset.
 | LITELLM_UI_PATH | Path to directory for Admin UI files. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/ui` in Docker.
 | LITELLM_UI_SESSION_DURATION | Duration for UI login session (username/password, SSO, invitation links). Format: "30s", "30m", "24h", "7d". Does not apply to EXPERIMENTAL_UI_LOGIN flow, which uses a fixed 10-minute expiry for security. Default is "24h"
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_BATCH_SIZE | Maximum number of expired LiteLLM dashboard session keys to delete per cleanup run. Default is 1000.
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.
+| LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_INTERVAL_SECONDS | Interval in seconds for how often to run the expired LiteLLM dashboard session key cleanup job. Default is 86400 (24 hours).
 | LITELM_ENVIRONMENT | Environment of LiteLLM Instance, used by logging services. Currently only used by DeepEval.
 | LITELLM_KEY_ROTATION_ENABLED | Enable auto-key rotation for LiteLLM (boolean). Default is false.
 | LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS | Interval in seconds for how often to run job that auto-rotates keys. Default is 86400 (24 hours).
@@ -868,6 +892,7 @@ router_settings:
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
 | LITELLM_TOKEN | Access token for LiteLLM integration
 | LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES | When set to "true", routes OpenAI /v1/messages requests through chat/completions instead of the Responses API for Anthropic models. Can also be set via `litellm_settings.use_chat_completions_url_for_anthropic_messages`
+| LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES | When set to "true", routes all OpenAI /chat/completions requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via `litellm_settings.route_all_chat_openai_to_responses`
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
 | LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
@@ -1020,6 +1045,10 @@ router_settings:
 | REQUEST_TIMEOUT | Timeout in seconds for requests. Default is 6000
 | ROOT_REDIRECT_URL | URL to redirect root path (/) to when DOCS_URL is set to something other than "/" (DOCS_URL is "/" by default)
 | ROUTER_MAX_FALLBACKS | Maximum number of fallbacks for router. Default is 5
+| RUBRIK_API_KEY | Bearer token for authenticating with the Rubrik webhook service
+| RUBRIK_BATCH_SIZE | Number of log entries to buffer before flushing to Rubrik. Default is 512
+| RUBRIK_SAMPLING_RATE | Fraction of requests to log to Rubrik (0.0 to 1.0). Default is 1.0
+| RUBRIK_WEBHOOK_URL | Base URL of the Rubrik webhook service for tool blocking and batch logging
 | RUNWAYML_DEFAULT_API_VERSION | Default API version for RunwayML service. Default is "2024-11-06"
 | RUNWAYML_POLLING_TIMEOUT | Timeout in seconds for RunwayML image generation polling. Default is 600 (10 minutes)
 | S3_VECTORS_DEFAULT_DIMENSION | Default vector dimension for S3 Vectors RAG ingestion. Default is 1024
@@ -1092,6 +1121,7 @@ router_settings:
 | SPEND_LOG_CLEANUP_BATCH_SIZE | Number of logs deleted per batch during cleanup. Default is 1000
 | SPEND_LOG_QUEUE_POLL_INTERVAL | Polling interval in seconds for spend log queue. Default is 2.0
 | SPEND_LOG_QUEUE_SIZE_THRESHOLD | Threshold for spend log queue size before processing. Default is 100
+| SPEND_COUNTER_RESEED_LOCKS_MAX_SIZE | Max size of the per-counter LRU lock dict used to coalesce concurrent spend-counter reseeds from the DB on the enforcement path. Default is 10000.
 | COROUTINE_CHECKER_MAX_SIZE_IN_MEMORY | Maximum size for CoroutineChecker in-memory cache. Default is 1000
 | DEFAULT_SHARED_HEALTH_CHECK_TTL | Time-to-live in seconds for cached health check results in shared health check mode. Default is 300 (5 minutes)
 | DEFAULT_SHARED_HEALTH_CHECK_LOCK_TTL | Time-to-live in seconds for health check lock in shared health check mode. Default is 60 (1 minute)

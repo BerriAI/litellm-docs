@@ -80,6 +80,7 @@ All models listed [here](https://github.com/BerriAI/litellm/blob/57f37f743886a02
 | text-embedding-preview-0409 | `embedding(model="vertex_ai/text-embedding-preview-0409", input)` |
 | text-multilingual-embedding-preview-0409 | `embedding(model="vertex_ai/text-multilingual-embedding-preview-0409", input)` | 
 | gemini-embedding-2-preview | `embedding(model="vertex_ai/gemini-embedding-2-preview", input)` | [Multimodal docs](#gemini-embedding-2-preview-multimodal) |
+| gemini-embedding-2 *(GA)* | `embedding(model="vertex_ai/gemini-embedding-2", input)` | [Multimodal docs](#gemini-embedding-2-preview-multimodal) · [GA notes](/blog/gemini_embedding_2_ga) |
 | Fine-tuned OR Custom Embedding models | `embedding(model="vertex_ai/<your-model-id>", input)` | 
 
 ### Supported OpenAI (Unified) Params
@@ -260,7 +261,16 @@ model_list:
 
 ### Gemini Embedding 2 Preview (Multimodal)
 
-`gemini-embedding-2-preview` supports **unified multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details.
+`gemini-embedding-2-preview` supports **unified multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior—swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
+
+:::warning Response shape — Vertex returns one combined vector
+
+Vertex AI's Gemini embedding endpoint only exposes single-content `embedContent` (no `batchEmbedContents`), so passing `N` items in `input=[...]` returns **1 unified embedding** that fuses all parts—not N separate vectors. To get one vector per item, call `embedding(...)` once per input.
+
+This differs from the Gemini API path (`gemini/gemini-embedding-2-preview`), which returns one embedding per input element (OpenAI-compatible). See [Gemini embedding docs](../embedding/supported_embedding#gemini-embedding-2-preview-multimodal).
+
+:::
+
 
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`

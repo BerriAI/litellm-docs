@@ -8,11 +8,12 @@ Apply percentage-based discounts to specific providers. This is useful for negot
 
 ```yaml
 # Apply 5% discount to all Vertex AI and Gemini costs
-cost_discount_config:
-  vertex_ai: 0.05  # 5% discount
-  gemini: 0.05     # 5% discount
-  openrouter: 0.05 # 5% discount
-  # openai: 0.10   # 10% discount (example)
+litellm_settings:
+  cost_discount_config:
+    vertex_ai: 0.05  # 5% discount
+    gemini: 0.05     # 5% discount
+    openrouter: 0.05 # 5% discount
+    # openai: 0.10   # 10% discount (example)
 ```
 
 **Step 2: Start proxy**
