@@ -33,8 +33,8 @@ Starting with **`1.84.0`**:
 
 | Scenario | Old name | New name |
 |---|---|---|
-| Weekly scheduled stable | `v1.83.3-stable` | `1.84.0` |
-| Hotfix on the current stable | `v1.83.3-stable.patch.1` (Docker only - no PyPI release) | `1.84.1` |
+| Weekly scheduled stable | `v1.83.3-stable` | `1.84.0` (Docker + PyPI) |
+| Hotfix on the current stable | `v1.83.3-stable.patch.1` (Docker only - no PyPI release) | `1.84.1` (Docker + PyPI) |
 | Release candidate | `v1.84.0-rc` | `1.84.0-rc.1` (Docker) / `1.84.0rc1` (PyPI) |
 | Nightly | `v1.83.0-nightly` | `1.84.0-dev.42` (Docker) / `1.84.0.dev42` (PyPI) |
 
