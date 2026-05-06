@@ -55,6 +55,7 @@ pip install litellm==1.84.0rc1
 - **Memory footprint down ~700 MB** on a two-worker Docker deployment via lazy-loaded feature routers and lazy-loaded front page. First request to a lazy route incurs the import cost; subsequent requests are unchanged.
 - **MCP OAuth + Azure Entra discovery support**, opt-in short-ID tool prefix to keep MCP tool names under the 60-char limit, and OAuth root-endpoint visibility now matches explicit server-name lookup.
 - **Durable agent workflow run tracking** via a new `/v1/workflows/runs` REST surface backed by `LiteLLM_WorkflowRun` / `LiteLLM_WorkflowEvent` / `LiteLLM_WorkflowMessage` tables. Spend logs `session_id` joins for free cost attribution.
+- **Per-model routing strategies via Routing Groups.** New `router_settings.routing_groups` schema binds a list of `model_name`s to its own routing strategy (e.g. `latency-based-routing` for `gpt-4o`, `simple-shuffle` for cheaper models) within a single router. Configurable in `proxy_config.yaml` or from the LiteLLM dashboard under General Settings → Routing Groups; UI-managed groups persist and override the YAML values.
 
 ---
 
@@ -294,6 +295,8 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 - **Teams**
     - Team-level search-tool credentials: new `search_tools` array on `LiteLLM_ObjectPermissionTable`; per-key permissions validated as a subset of the owning team's; UI selector under team management - [PR #26691](https://github.com/BerriAI/litellm/pull/26691)
+- **[Routing Groups](../../docs/proxy/ui/routing_groups)**
+    - New **General Settings → Routing Groups** page: create, edit, and delete per-model routing strategies from the dashboard without editing `proxy_config.yaml`. UI-managed groups are persisted and override values defined in YAML; per-group state is rebuilt on save - [PR #27131](https://github.com/BerriAI/litellm/pull/27131)
 - **Model Health**
     - Pagination controls on the model health status page - [PR #26826](https://github.com/BerriAI/litellm/pull/26826)
 - **CLI / Workers**
@@ -368,6 +371,8 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 ## Performance / Loadbalancing / Reliability improvements
 
+- **[Routing Groups (per-model strategies)](../../docs/routing#routing-groups---per-model-strategies)**
+    - New `router_settings.routing_groups` schema binds a list of `model_name`s to its own `routing_strategy` and optional `routing_strategy_args`; ungrouped models fall back to the top-level `routing_strategy` (the implicit `default` group, name reserved). Each `model_name` may belong to at most one group — overlap raises `ValueError` at init. Updatable at runtime via `Router.update_settings(routing_groups=[...])` or `/config/update`; per-group state is rebuilt on update - [PR #27022](https://github.com/BerriAI/litellm/pull/27022)
 - **Database reconnect**
     - Prisma reconnect no longer blocks the asyncio event loop. Replaces `await self.db.disconnect()` (which calls `subprocess.Popen.wait()` synchronously and freezes the loop for 30–120 s+ in production, failing K8s liveness probes) with SIGTERM → 0.5 s sleep → SIGKILL → fresh `Prisma()` + `connect()`. Direct-reconnect path delegates to `recreate_prisma_client` - [PR #26225](https://github.com/BerriAI/litellm/pull/26225)
     - `call_with_db_reconnect_retry` helper centralizes the reconnect-and-retry-once pattern. Restores the self-heal that 1.83.x lost on `PrismaClient.get_generic_data` (issue [#25143](https://github.com/BerriAI/litellm/issues/25143)) and harden the reconnect state machine - [PR #26756](https://github.com/BerriAI/litellm/pull/26756)
@@ -424,12 +429,12 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 * New Models / Updated Models: 19
 * LLM API Endpoints: 6
-* Management Endpoints / UI: 21
+* Management Endpoints / UI: 22
 * AI Integrations (Logging / Guardrails): 3
 * Spend Tracking, Budgets and Rate Limiting: 5
 * MCP Gateway: 6
-* Performance / Loadbalancing / Reliability improvements: 13
+* Performance / Loadbalancing / Reliability improvements: 14
 * General Proxy Improvements: 2
 * Documentation Updates: 1
 
-Total: 76 PRs
+Total: 78 PRs
