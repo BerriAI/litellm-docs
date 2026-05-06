@@ -958,3 +958,36 @@ video {
 [data-theme='dark'].blog-wrapper article .markdown a {
   color: #38bdf8;
 }
+
+/* =========================================
+   ANNOUNCEMENT BAR
+   ========================================= */
+div[class*='announcementBar'] {
+  background: #0078d4 !important;
+  border-bottom: none !important;
+  padding: 10px 0 !important;
+  font-family: var(--ifm-font-family-base);
+  font-size: 14px !important;
+  letter-spacing: 0.01em;
+}
+
+div[class*='announcementBar'] div[class*='content'] {
+  font-weight: 400 !important;
+  line-height: 1.5;
+}
+
+div[class*='announcementBar'] a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+  font-weight: 600 !important;
+  margin-left: 4px;
+}
+
+div[class*='announcementBar'] a:hover {
+  opacity: 0.9;
+}
+
+[data-theme='dark'] div[class*='announcementBar'] {
+  background: #1a5fb4 !important;
+}

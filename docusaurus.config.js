@@ -259,6 +259,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      announcementBar: {
+        id: 'may_townhall_2026',
+        content:
+          '📅 <strong>LiteLLM May Town Hall</strong> — Monday, May 18 at 7:30 AM PST. Hear product updates, roadmap, and Q&A. <a href="https://forms.gle/rVeiTtpY96EKLT9i9" target="_blank" rel="noopener noreferrer">Register now →</a>',
+        backgroundColor: '#0078d4',
+        textColor: '#ffffff',
+        isCloseable: false,
+      },
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       navbar: {
