@@ -422,12 +422,14 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 ## 05/05/2026
 
-* New Models / Updated Models: 16 new + 2 pricing updates + 2 new providers
-* LLM API Endpoints: 7
-* Management Endpoints / UI: 12
-* AI Integrations (Logging / Guardrails): 5
-* Spend Tracking, Budgets and Rate Limiting: 6
+* New Models / Updated Models: 19
+* LLM API Endpoints: 6
+* Management Endpoints / UI: 21
+* AI Integrations (Logging / Guardrails): 3
+* Spend Tracking, Budgets and Rate Limiting: 5
 * MCP Gateway: 6
-* Performance / Loadbalancing / Reliability improvements: 11
-* General Proxy Improvements: 3
+* Performance / Loadbalancing / Reliability improvements: 13
+* General Proxy Improvements: 2
 * Documentation Updates: 1
+
+Total: 76 PRs
