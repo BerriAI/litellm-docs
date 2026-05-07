@@ -126,6 +126,73 @@ litellm.callbacks = [primary, secondary]
 
 Init order does not matter. Both handlers receive their own spans regardless of which is constructed first.
 
+## Capturing Message Content
+
+LiteLLM honors the standard `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` environment variable to control whether prompts and completions are captured, and where:
+
+```shell
+# Do not capture message content
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT
+
+# Capture content on span attributes only
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=SPAN_ONLY
+
+# Capture content on event attributes only
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=EVENT_ONLY
+
+# Capture content on both spans and events
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=SPAN_AND_EVENT
+```
+
+The legacy boolean form is also accepted: `true` maps to `EVENT_ONLY`, `false` maps to `NO_CONTENT`.
+
+### Per-handler content policy
+
+When running multiple OpenTelemetry handlers, set `capture_message_content` on each `OpenTelemetryConfig` so the handlers can have different content policies. For example, send full prompts to a debugging backend while stripping content from a compliance-focused OTLP collector:
+
+```python
+import litellm
+from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
+
+stripped = OpenTelemetry(config=OpenTelemetryConfig(
+    exporter="otlp_http",
+    endpoint="https://compliance-collector/v1/traces",
+    capture_message_content="NO_CONTENT",
+))
+
+verbose = OpenTelemetry(config=OpenTelemetryConfig(
+    exporter="otlp_http",
+    endpoint="https://debug-collector/v1/traces",
+    capture_message_content="SPAN_AND_EVENT",
+    skip_set_global=True,
+))
+
+litellm.callbacks = [stripped, verbose]
+```
+
+The per-handler `capture_message_content` field overrides the env var. If neither is set, behavior falls back to the legacy `litellm.turn_off_message_logging` kill-switch (see the section below). When `litellm.turn_off_message_logging=True`, content is suppressed regardless of the per-handler setting.
+
+## Opt-In to Latest GenAI Semantic Conventions
+
+Set `OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental` to emit spans that follow the [latest OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/):
+
+```shell
+OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
+```
+
+With the flag set:
+
+- The LLM-call span is named `{operation} {model}` (for example, `chat gpt-4` or `embeddings text-embedding-3-small`) instead of `litellm_request`.
+- Span kind is `CLIENT` instead of `INTERNAL`.
+- The non-standard `raw_gen_ai_request` child span is suppressed.
+- `gen_ai.provider.name` is emitted alongside the legacy `gen_ai.system` attribute.
+- Request parameters (`gen_ai.request.frequency_penalty`, `presence_penalty`, `top_k`, `seed`, `stop_sequences`, `stream`, `choice.count`) and cache-token usage (`gen_ai.usage.cache_creation.input_tokens`, `gen_ai.usage.cache_read.input_tokens`) are emitted when present.
+- The legacy per-message and per-choice events are replaced by a single `gen_ai.client.inference.operation.details` event carrying `gen_ai.input.messages` and `gen_ai.output.messages` arrays.
+
+`OpenTelemetryConfig.semconv_stability` is the programmatic equivalent. The flag is comma-separable per the OTEL spec.
+
+Default behavior is unchanged when the variable is unset, so existing dashboards keep working. Setting the flag aligns LiteLLM with what other OTEL Python GenAI instrumentations (`opentelemetry-instrumentation-openai-v2`, Google GenAI, etc.) emit.
+
 ## Redacting Messages, Response Content from OpenTelemetry Logging
 
 ### Redact Messages and Responses from all OpenTelemetry Logging
