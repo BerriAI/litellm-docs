@@ -71,7 +71,9 @@ export default function ClaudeCodeCompatibilityTable(): JSX.Element {
         <span>
           claude code <code>{m.claude_code_version}</code>
         </span>
-        <span>generated {m.generated_at}</span>
+        <span>
+          generated <code>{m.generated_at}</code>
+        </span>
       </div>
       <table className={styles.table}>
         <thead>
