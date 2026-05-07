@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-04-29T01:08:49Z",
-  "litellm_version": "v1.83.10-stable",
-  "claude_code_version": "2.1.121",
+  "generated_at": "2026-05-07T15:28:48Z",
+  "litellm_version": "v1.83.14-stable",
+  "claude_code_version": "2.1.126",
   "providers": [
     "anthropic",
     "bedrock_invoke",
@@ -19,20 +19,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude returned empty assistant text"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\",\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -44,20 +41,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -69,20 +63,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -94,20 +85,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -116,24 +104,19 @@
       "name": "Vision",
       "providers": {
         "anthropic": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; stderr=error: unknown option '--image'"
+          "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; stderr=error: unknown option '--image'"
+          "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; stderr=error: unknown option '--image'"
+          "status": "pass"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; stderr=error: unknown option '--image'"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; stderr=error: unknown option '--image'"
+          "status": "pass"
         }
       }
     },
@@ -142,24 +125,19 @@
       "name": "Extended thinking",
       "providers": {
         "anthropic": {
-          "status": "fail",
-          "error": "[claude-sonnet-4-6] no `thinking` content block observed in stream-json events"
+          "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\",\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -171,20 +149,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -196,20 +171,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -221,20 +193,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\",\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -246,20 +215,17 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     },
@@ -268,24 +234,20 @@
       "name": "Web search (server tool)",
       "providers": {
         "anthropic": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5] no server_tool_use / web_search_tool_result block observed; the proxy may have stripped the WebSearch server tool or its result block"
+          "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"context_management: Extra inputs are not permitted\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] claude CLI failed: exit=1; api_status=403; text=Failed to authenticate. API Error: 403 {\"error\":{\"message\":\"[{\\n  \\\"error\\\": {\\n    \\\"code\\\": 403,\\n    \\\"message\\\": \\\"Request had insufficient authentication scopes.\\\",\\n    \\\"status\\\": \\\"PERMISSION_DENIED\\\",\\n    \\\"details\\\": [\\n      {\\n        \\\"@type\\\": \\\"type.googleapis.com/google.rpc.ErrorInfo\\\",\\n        \\\"reason\\\": \\\"ACCESS_TOKEN_SCOPE_INSUFFICIENT\\\",\\n        \\\"domain\\\": \\\"googleapis.com\\\",\\n        \\\"metadata\\\": {\\n          \\\"method\\\": \\\"google.cloud.aiplatform.v1.PredictionService.StreamRawPredict\\\",\\n          \\\"service\\\": \\\"aiplatform.googleapis.com\\\"\\n        }\\n      }\\n    ]\\n  }\\n}\\n]. Received Model Group=claude-haiku-4-5-vertex\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"403\"}}"
+          "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] claude CLI timed out after 120.0s"
+          "status": "pass"
         }
       }
     }
