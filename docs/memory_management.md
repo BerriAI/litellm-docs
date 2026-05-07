@@ -20,6 +20,7 @@ CRUD endpoints for storing and retrieving user/team-scoped memory entries on the
 | Pagination | ✅ | Page-based with configurable page size |
 | Key prefix filtering | ✅ | Redis-style namespace scanning |
 | Audit trail | ✅ | `created_by`, `updated_by` with timestamps |
+| Supported LiteLLM Versions | `v1.83.10+` | |
 
 ## Prerequisites
 
