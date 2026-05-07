@@ -127,6 +127,43 @@
   font-weight: 300;
 }
 
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: #111827;
+}
+
+.tabActive {
+  color: #0ea5e9;
+  border-bottom-color: #0ea5e9;
+}
+
+.emptyMsg {
+  padding: 2rem 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
 /* ── Post list ────────────────────────────────────────────────────────── */
 .list {
   margin-top: 0.5rem;
@@ -280,4 +317,21 @@
 [data-theme='dark'] .metaDash,
 [data-theme='dark'] .authorSep {
   color: #4b5563;
+}
+
+[data-theme='dark'] .tabs {
+  border-bottom-color: #374151;
+}
+
+[data-theme='dark'] .tab {
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .tab:hover {
+  color: #f9fafb;
+}
+
+[data-theme='dark'] .tabActive {
+  color: #38bdf8;
+  border-bottom-color: #38bdf8;
 }

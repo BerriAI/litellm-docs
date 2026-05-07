@@ -180,7 +180,7 @@ const config = {
         blogTitle: 'Blog',
         blogSidebarTitle: 'All Posts',
         blogSidebarCount: 'ALL',
-        postsPerPage: 10,
+        postsPerPage: 'ALL',
         showReadingTime: false,
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
