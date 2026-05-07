@@ -6,6 +6,7 @@ LiteLLM supports two OAuth 2.0 flows for MCP servers:
 |------|----------|--------------|
 | **Interactive (PKCE)** | User-facing apps (Claude Code, Cursor) | Browser-based consent, per-user tokens |
 | **Machine-to-Machine (M2M)** | Backend services, CI/CD, automated agents | `client_credentials` grant, proxy-managed tokens |
+| **On-Behalf-Of (OBO)** | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [MCP OBO Auth](./mcp_obo_auth.md). |
 
 ## Interactive OAuth (PKCE)
 
