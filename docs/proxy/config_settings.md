@@ -989,6 +989,7 @@ router_settings:
 | OTEL_TRACER_NAME | Tracer name for OpenTelemetry tracing
 | OTEL_LOGS_EXPORTER | Exporter type for OpenTelemetry logs (e.g., console)
 | OTEL_IGNORE_CONTEXT_PROPAGATION | When true, ignore parent span context propagation in OpenTelemetry callbacks
+| OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT | Controls whether prompts and completions are captured in OpenTelemetry traces. Accepts `NO_CONTENT` (default per spec), `SPAN_ONLY`, `EVENT_ONLY`, `SPAN_AND_EVENT`, or the boolean form (`true` maps to `EVENT_ONLY`, `false` to `NO_CONTENT`)
 | PAGERDUTY_API_KEY | API key for PagerDuty Alerting
 | PANW_PRISMA_AIRS_API_KEY | API key for PANW Prisma AIRS service
 | PANW_PRISMA_AIRS_API_BASE | Base URL for PANW Prisma AIRS service

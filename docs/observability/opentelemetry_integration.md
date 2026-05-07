@@ -128,7 +128,7 @@ Init order does not matter. Both handlers receive their own spans regardless of 
 
 ## Capturing Message Content
 
-LiteLLM honors the standard `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` environment variable to control whether prompts and completions are captured, and where:
+LiteLLM uses the standard `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` environment variable to control whether prompts and completions are captured, and where:
 
 ```shell
 # Do not capture message content
@@ -144,7 +144,7 @@ OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=EVENT_ONLY
 OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=SPAN_AND_EVENT
 ```
 
-The legacy boolean form is also accepted: `true` maps to `EVENT_ONLY`, `false` maps to `NO_CONTENT`.
+A boolean form is also accepted: `true` maps to `EVENT_ONLY`, `false` maps to `NO_CONTENT`.
 
 ### Per-handler content policy
 
@@ -170,7 +170,7 @@ verbose = OpenTelemetry(config=OpenTelemetryConfig(
 litellm.callbacks = [stripped, verbose]
 ```
 
-The per-handler `capture_message_content` field overrides the env var. If neither is set, behavior falls back to the legacy `litellm.turn_off_message_logging` kill-switch (see the section below). When `litellm.turn_off_message_logging=True`, content is suppressed regardless of the per-handler setting.
+The per-handler `capture_message_content` field overrides the env var. If neither is set, behavior falls back to the `litellm.turn_off_message_logging` kill-switch (see the section below). When `litellm.turn_off_message_logging=True`, content is suppressed regardless of the per-handler setting.
 
 ## Opt-In to Latest GenAI Semantic Conventions
 
@@ -180,18 +180,9 @@ Set `OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental` to emit spans tha
 OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
 ```
 
-With the flag set:
-
-- The LLM-call span is named `{operation} {model}` (for example, `chat gpt-4` or `embeddings text-embedding-3-small`) instead of `litellm_request`.
-- Span kind is `CLIENT` instead of `INTERNAL`.
-- The non-standard `raw_gen_ai_request` child span is suppressed.
-- `gen_ai.provider.name` is emitted alongside the legacy `gen_ai.system` attribute.
-- Request parameters (`gen_ai.request.frequency_penalty`, `presence_penalty`, `top_k`, `seed`, `stop_sequences`, `stream`, `choice.count`) and cache-token usage (`gen_ai.usage.cache_creation.input_tokens`, `gen_ai.usage.cache_read.input_tokens`) are emitted when present.
-- The legacy per-message and per-choice events are replaced by a single `gen_ai.client.inference.operation.details` event carrying `gen_ai.input.messages` and `gen_ai.output.messages` arrays.
+This changes the LLM-call span name, kind, and structure, suppresses the non-standard `raw_gen_ai_request` child span, adds the `gen_ai.provider.name` attribute alongside `gen_ai.system`, populates additional request and cache-token attributes when present, and consolidates the per-message events into a single `gen_ai.client.inference.operation.details` event. See the [Spans Reference](#spans-reference) and [Attributes Reference](#attributes-reference) below for the per-row differences.
 
 `OpenTelemetryConfig.semconv_stability` is the programmatic equivalent. The flag is comma-separable per the OTEL spec.
-
-Default behavior is unchanged when the variable is unset, so existing dashboards keep working. Setting the flag aligns LiteLLM with what other OTEL Python GenAI instrumentations (`opentelemetry-instrumentation-openai-v2`, Google GenAI, etc.) emit.
 
 ## Redacting Messages, Response Content from OpenTelemetry Logging
 
@@ -239,3 +230,79 @@ export OTEL_DEBUG="True"
 ```
 
 This will emit any logging issues to the console.
+
+## Appendix: Spans, Metrics, and Attributes Reference
+
+This appendix enumerates every span, metric, and AI-semantic attribute LiteLLM emits, including how each changes when [semconv mode](#opt-in-to-latest-genai-semantic-conventions) is enabled.
+
+### Spans Reference
+
+The LLM-call span is the AI-semantic core. Its name, kind, and supporting child spans depend on whether semconv mode is active.
+
+| Span | Kind | Default mode | Semconv mode |
+|---|---|---|---|
+| Proxy request frame | `SERVER` | `Received Proxy Server Request` | `Received Proxy Server Request` (unchanged) |
+| LLM-call span | `INTERNAL` (default) / `CLIENT` (semconv) | `litellm_request` (only when `USE_OTEL_LITELLM_REQUEST_SPAN=true`; otherwise attributes land on the proxy frame span) | `{operation} {model}` (always; e.g. `chat gpt-4`, `embeddings text-embedding-3-small`) |
+| Raw provider payload | `INTERNAL` | `raw_gen_ai_request` (when message content capture is permitted) | not emitted (data lives on the LLM-call span and the consolidated event) |
+| Guardrail check | `INTERNAL` | one span per guardrail invocation, named per guardrail | unchanged |
+| Management endpoint | `INTERNAL` | one span per proxy admin call, named per endpoint | unchanged |
+
+Operation names emitted in semconv mode: `chat` (default), `embeddings` (when call type contains `embedding`), `text_completion` (when call type contains `text_completion`).
+
+### Events Reference
+
+Events land on the LiteLLM-managed `LoggerProvider` when `enable_events=True` on the config.
+
+| Event | Default mode | Semconv mode |
+|---|---|---|
+| Per-message prompt | `gen_ai.content.prompt` (one event per input message) | replaced by the consolidated event |
+| Per-choice completion | `gen_ai.content.completion` (one event per choice) | replaced by the consolidated event |
+| Consolidated inference details | not emitted | `gen_ai.client.inference.operation.details` (one event per call, carrying `gen_ai.input.messages` and `gen_ai.output.messages` arrays per the spec) |
+
+### Metrics Reference
+
+LiteLLM emits the following histograms when `enable_metrics=True` is set on the `OpenTelemetryConfig`. Metric names match the OTEL GenAI semantic conventions.
+
+| Metric | Unit | Description |
+|---|---|---|
+| `gen_ai.client.operation.duration` | `s` | End-to-end operation duration including LiteLLM overhead. |
+| `gen_ai.client.token.usage` | `{token}` | Token usage. Records two histograms per call (label `gen_ai.token.type` is `"input"` or `"output"`). |
+| `gen_ai.client.token.cost` | `USD` | Computed request cost. |
+| `gen_ai.client.response.time_to_first_token` | `s` | Time from request start to first streamed token (streaming requests only). |
+| `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
+| `gen_ai.client.response.duration` | `s` | LLM API generation time, excluding LiteLLM overhead. |
+
+Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.framework="litellm"`.
+
+| Common metric ask | Metric |
+|---|---|
+| TTFT | `gen_ai.client.response.time_to_first_token` |
+| TPS | derived as `1 / gen_ai.client.response.time_per_output_token` |
+| Token usage | `gen_ai.client.token.usage` (split by `gen_ai.token.type`) |
+| Vendor/model latency (excludes overhead) | `gen_ai.client.response.duration` |
+| Vendor/model latency (includes overhead) | `gen_ai.client.operation.duration` |
+
+### Attributes Reference
+
+Attributes set on the LLM-call span. Names follow [OTEL GenAI semconv](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/).
+
+| Attribute | Default mode | Semconv mode |
+|---|---|---|
+| `gen_ai.operation.name` | the litellm `call_type` (e.g. `acompletion`) | the semconv operation (`chat`, `embeddings`, `text_completion`) |
+| `gen_ai.system` | provider name (e.g. `openai`) | unchanged |
+| `gen_ai.provider.name` | not set | provider name (the renamed Required attribute per spec) |
+| `gen_ai.framework` | `litellm` | `litellm` |
+| `gen_ai.request.model` | model | model |
+| `gen_ai.request.max_tokens`, `temperature`, `top_p` | when set in the request | when set in the request |
+| `gen_ai.request.frequency_penalty`, `presence_penalty`, `top_k`, `seed`, `stop_sequences`, `stream`, `choice.count` | not set | when set in the request |
+| `gen_ai.response.model`, `gen_ai.response.id`, `gen_ai.response.finish_reasons` | when present in the response | unchanged |
+| `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.total_tokens` | when present | unchanged |
+| `gen_ai.usage.cache_creation.input_tokens`, `gen_ai.usage.cache_read.input_tokens` | not set | when present in the response |
+| `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions` | when message content capture permits, JSON-encoded array of `{role, parts: [...]}` objects | unchanged |
+| `gen_ai.cost.input_cost`, `output_cost`, `total_cost` (and related cost breakdown attrs) | LiteLLM-specific cost attributes | unchanged |
+
+Attributes set on the proxy request frame include `metadata.user_api_key_*`, `metadata.team_id`, `metadata.requester_*`, `litellm.call_id`, and the same `gen_ai.cost.*` set when the request flows through the proxy.
+
+### Stability
+
+Span names, metric names, and the attribute set above are stable across LiteLLM patch releases. The LLM-call span name and kind change between [Default mode and Semconv mode](#opt-in-to-latest-genai-semantic-conventions) and migrate via the documented opt-in flag rather than between releases.
