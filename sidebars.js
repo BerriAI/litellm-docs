@@ -500,6 +500,7 @@ const sidebars = {
           ],
         },
         "proxy/caching",
+        "proxy/memory",
         {
           type: "category",
           label: "Guardrails",
@@ -690,6 +691,7 @@ const sidebars = {
         "apply_guardrail",
         "bedrock_invoke",
         "interactions",
+        "memory_management",
         "image_edits",
         "image_generation",
         "image_variations",
