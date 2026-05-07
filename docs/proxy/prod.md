@@ -378,47 +378,6 @@ The proxy will log a warning about the UI but API endpoints will work normally.
 3. **Server Root Path**: If using a custom `server_root_path`, you must pre-process UI files in your Dockerfile as the proxy cannot modify files at runtime with read-only filesystem
 4. **Automatic Detection**: The UI is automatically detected as pre-restructured if it contains a `.litellm_ui_ready` marker file (created by the official Docker images)
 
-## 10. Use a Separate Health Check App
-:::info
-The Separate Health Check App only runs when running via the the LiteLLM Docker Image and using Docker and setting the SEPARATE_HEALTH_APP env var to "1"
-:::
-
-Using a separate health check app ensures that your liveness and readiness probes remain responsive even when the main application is under heavy load. 
-
-**Why is this important?**
-
-- If your health endpoints share the same process as your main app, high traffic or resource exhaustion can cause health checks to hang or fail.
-- When Kubernetes liveness probes hang or time out, it may incorrectly assume your pod is unhealthy and restart it—even if the main app is just busy, not dead.
-- By running health endpoints on a separate lightweight FastAPI app (with its own port), you guarantee that health checks remain fast and reliable, preventing unnecessary pod restarts during traffic spikes or heavy workloads.
-- The way it works is, if either of the health or main proxy app dies due to whatever reason, it will kill the pod and which would be marked as unhealthy prompting the orchestrator to restart the pod
-- Since the proxy and health app are running in the same pod, if the pod dies the health check probe fails, it signifies that the pod is unhealthy and needs to restart/have action taken upon.
-
-**How to enable:**
-
-Set the following environment variable(s):
-```bash
-SEPARATE_HEALTH_APP="1" # Default "0" 
-SEPARATE_HEALTH_PORT="8001" # Default "4001", Works only if `SEPARATE_HEALTH_APP` is "1"
-SUPERVISORD_STOPWAITSECS="3600" # Optional: Upper bound timeout in seconds for graceful shutdown. Default: 3600 (1 hour). Only used when SEPARATE_HEALTH_APP=1.
-```
-
-**Graceful Shutdown:**
-
-Previously, `stopwaitsecs` was not set, defaulting to 10 seconds and causing in-flight requests to fail. `SUPERVISORD_STOPWAITSECS` (default: 3600) provides an upper bound for graceful shutdown, allowing uvicorn to wait for all in-flight requests to complete.
-
-<video controls width="100%" style={{ borderRadius: '8px', marginBottom: '1em' }}>
-  <source src="https://cdn.loom.com/sessions/thumbnails/b08be303331246b88fdc053940d03281-1718990992822.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
-Or [watch on Loom](https://www.loom.com/share/b08be303331246b88fdc053940d03281?sid=a145ec66-d55f-41f7-aade-a9f41fbe752d).
-
-
-### High Level Architecture
-
-<Image alt="Separate Health App Architecture" img={require('../../img/separate_health_app_architecture.png')} style={{ borderRadius: '8px', marginBottom: '1em', maxWidth: '100%' }} />
-
-
 ## Extras
 ### Expected Performance in Production
 
