@@ -112,7 +112,7 @@ Received Proxy Server Request                      (SpanKind.SERVER, root)
 └── Failed Proxy Server Request                    (INTERNAL — only on exception)
 ```
 
-In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), the LLM-call span is renamed to `{operation} {model}` (e.g. `chat gpt-4`), promoted to `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
+In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), when an LLM-call span is created its name becomes `{operation} {model}` (e.g. `chat gpt-4`) with `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. The same `USE_OTEL_LITELLM_REQUEST_SPAN` gating decides whether the span is emitted at all. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
 
 The SDK (no proxy) emits `litellm_request` as the root if no parent context exists — there is no `Received Proxy Server Request` span in pure-SDK use.
 
@@ -169,7 +169,7 @@ This is the right setting if:
 
 This is **not a regression**; the change is intentional. The flag is read fresh on every request, so it can be flipped without restarting.
 
-In semconv mode (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), the LLM-call span is **always** emitted (named `{operation} {model}`) and `USE_OTEL_LITELLM_REQUEST_SPAN` does not apply.
+In semconv mode (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), the same `USE_OTEL_LITELLM_REQUEST_SPAN` gating still decides whether the LLM-call span is emitted; semconv mode only changes the span's name (to `{operation} {model}`), kind (to `CLIENT`), and child structure.
 
 ### Context propagation (W3C `traceparent`)
 
@@ -264,7 +264,12 @@ verbose = OpenTelemetry(config=OpenTelemetryConfig(
 litellm.callbacks = [stripped, verbose]
 ```
 
-The per-handler `capture_message_content` field overrides the env var. If neither is set, behavior falls back to the `litellm.turn_off_message_logging` kill-switch (see the section below). When `litellm.turn_off_message_logging=True`, content is suppressed regardless of the per-handler setting.
+Resolution order (highest priority first):
+
+1. `litellm.turn_off_message_logging=True` forces `NO_CONTENT` (dynamic kill-switch; overrides everything below).
+2. `OpenTelemetryConfig.capture_message_content` (per-handler field, sampled at handler init).
+3. `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` env var (sampled at handler init).
+4. The legacy per-instance `message_logging` flag — defaults to `True`, which maps to `SPAN_AND_EVENT`.
 
 ## Opt-In to Latest GenAI Semantic Conventions
 
@@ -364,7 +369,7 @@ All flags below are read from environment variables unless noted. Boolean flags 
 |---|---|---|
 | `USE_OTEL_LITELLM_REQUEST_SPAN` | `false` | Force `litellm_request` to always be emitted as a child of the proxy root span. See [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span) |
 | `OTEL_SEMCONV_STABILITY_OPT_IN` | unset | Set to `gen_ai_latest_experimental` to switch to the [latest GenAI semantic conventions](#opt-in-to-latest-genai-semantic-conventions). Comma-separable per OTEL spec |
-| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | spec default (`NO_CONTENT`) | `NO_CONTENT` / `SPAN_ONLY` / `EVENT_ONLY` / `SPAN_AND_EVENT`. Boolean form accepted (`true`→`EVENT_ONLY`, `false`→`NO_CONTENT`) |
+| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | unset → falls back to legacy `message_logging` (default `True` → `SPAN_AND_EVENT`) | `NO_CONTENT` / `SPAN_ONLY` / `EVENT_ONLY` / `SPAN_AND_EVENT`. Boolean form accepted (`true`→`EVENT_ONLY`, `false`→`NO_CONTENT`) |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` | `false` | Enable OTLP metrics (TTFT, TPOT, response duration, cost, token usage, operation duration) |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS` | `false` | Enable OTLP semantic logs (`gen_ai.content.prompt`/`gen_ai.content.completion`, or `gen_ai.client.inference.operation.details` in semconv mode) |
 | `OTEL_IGNORE_CONTEXT_PROPAGATION` | `false` | If `true`, ignore inbound `traceparent` headers and any active span — every LiteLLM trace becomes its own root |
@@ -407,7 +412,7 @@ The LLM-call span is the AI-semantic core. Its name, kind, and supporting child 
 | Span | Kind | Default mode | Semconv mode |
 |---|---|---|---|
 | Proxy request frame | `SERVER` | `Received Proxy Server Request` | `Received Proxy Server Request` (unchanged) |
-| LLM-call span | `INTERNAL` (default) / `CLIENT` (semconv) | `litellm_request` (only when `USE_OTEL_LITELLM_REQUEST_SPAN=true`; otherwise attributes land on the proxy frame span) | `{operation} {model}` (always; e.g. `chat gpt-4`, `embeddings text-embedding-3-small`) |
+| LLM-call span | `INTERNAL` (default) / `CLIENT` (semconv) | `litellm_request` (only when `USE_OTEL_LITELLM_REQUEST_SPAN=true`; otherwise attributes land on the proxy frame span) | `{operation} {model}` (e.g. `chat gpt-4`, `embeddings text-embedding-3-small`); same `USE_OTEL_LITELLM_REQUEST_SPAN` gating as default mode |
 | Raw provider payload | `INTERNAL` | `raw_gen_ai_request` (when message content capture is permitted) | not emitted (data lives on the LLM-call span and the consolidated event) |
 | Guardrail check | `INTERNAL` | one span per guardrail invocation, named per guardrail | unchanged |
 | Management endpoint | `INTERNAL` | one span per proxy admin call, named per endpoint | unchanged |
