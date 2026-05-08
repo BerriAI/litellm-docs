@@ -1,6 +1,6 @@
 # Azure AI Speech (Cognitive Services)
 
-Azure AI Speech is Azure's Cognitive Services text-to-speech API, separate from Azure OpenAI. It provides high-quality neural voices with broader language support and advanced speech customization.
+Azure AI Speech is Azure's Cognitive Services speech API, separate from Azure OpenAI. LiteLLM supports Azure AI Speech for text-to-speech (TTS) and speech-to-text (STT) through the `azure/speech/` provider route.
 
 **When to use this vs Azure OpenAI TTS:**
 - **Azure AI Speech** - More languages, neural voices, SSML support, speech customization
@@ -11,10 +11,13 @@ Azure AI Speech is Azure's Cognitive Services text-to-speech API, separate from 
 
 | Property | Details |
 |-------|-------|
-| Description | Azure AI Speech is Azure's Cognitive Services text-to-speech API, separate from Azure OpenAI. It provides high-quality neural voices with broader language support and advanced speech customization. |
+| Description | Azure AI Speech is Azure's Cognitive Services speech API, separate from Azure OpenAI. It supports Text-to-Speech (TTS) and Speech-to-Text (STT). |
 | Provider Route on LiteLLM | `azure/speech/` |
+| Supported Endpoints | `/v1/audio/speech`, `/v1/audio/transcriptions` |
 
 ## Quick Start
+
+### Text-to-Speech
 
 **LiteLLM SDK**
 
@@ -47,23 +50,85 @@ model_list:
       api_key: os.environ/AZURE_TTS_API_KEY
 ```
 
+### Speech-to-Text
+
+Use `azure/speech/azure-stt` with the `/v1/audio/transcriptions` endpoint to call Azure AI Speech STT through LiteLLM.
+
+**LiteLLM SDK**
+
+```python showLineNumbers title="SDK Usage"
+from litellm import transcription
+
+response = transcription(
+    model="azure/speech/azure-stt",
+    file=open("audio.wav", "rb"),
+    api_base="https://eastus.api.cognitive.microsoft.com",
+    api_key="your-cognitive-services-key",
+    language="en-US",
+)
+
+print(response.text)
+```
+
+You can pass either the Cognitive Services endpoint or the regional STT endpoint:
+
+```python
+# Cognitive Services endpoint
+api_base="https://eastus.api.cognitive.microsoft.com"
+
+# STT endpoint
+api_base="https://eastus.stt.speech.microsoft.com"
+```
+
+**LiteLLM Proxy**
+
+```yaml showLineNumbers title="proxy_config.yaml"
+model_list:
+  - model_name: azure-speech-stt
+    litellm_params:
+      model: azure/speech/azure-stt
+      api_base: https://eastus.api.cognitive.microsoft.com
+      api_key: your-cognitive-services-key
+```
+
+Make a request to the proxy:
+
+```bash
+curl http://0.0.0.0:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer sk-1234" \
+  -F "model=azure-speech-stt" \
+  -F "file=@audio.wav" \
+  -F "language=en-US"
+```
+
+**Supported STT parameters**
+
+| Parameter | Description | Notes |
+|-----------|-------------|-------|
+| `language` | Recognition language | Defaults to `en-US` |
+| `response_format` | Response format | Use `verbose_json` for Azure detailed output; defaults to Azure simple output |
+
 ## Setup
 
 1. Create an Azure Cognitive Services resource in the [Azure Portal](https://portal.azure.com)
 2. Get your API key from the resource
 3. Note your region (e.g., `eastus`, `westus`, `westeurope`)
-4. Use the regional endpoint: `https://{region}.tts.speech.microsoft.com`
+4. Use the regional endpoint for your use case:
+   - TTS: `https://{region}.tts.speech.microsoft.com`
+   - STT: `https://{region}.stt.speech.microsoft.com`
+   - Cognitive Services endpoint: `https://{region}.api.cognitive.microsoft.com`
 
 ## Cost Tracking (Pricing)
 
-LiteLLM automatically tracks costs for Azure AI Speech based on the number of characters processed.
+LiteLLM automatically tracks TTS costs for Azure AI Speech based on the number of characters processed. STT usage is supported through `azure/speech/azure-stt`; configure custom pricing if you need non-zero STT spend tracking.
 
 ### Available Models
 
-| Model | Voice Type | Cost per 1M Characters |
-|-------|-----------|----------------------|
-| `azure/speech/azure-tts` | Neural | $15 |
-| `azure/speech/azure-tts-hd` | Neural HD | $30 |
+| Model | Mode | Default Cost |
+|-------|------|--------------|
+| `azure/speech/azure-tts` | TTS Neural | $15 per 1M characters |
+| `azure/speech/azure-tts-hd` | TTS Neural HD | $30 per 1M characters |
+| `azure/speech/azure-stt` | STT | $0 by default; override with custom pricing if needed |
 
 ### How Costs are Calculated
 
@@ -412,6 +477,8 @@ Replace `{region}` with your Azure resource region:
 - Europe West: `https://westeurope.tts.speech.microsoft.com`
 - Asia Southeast: `https://southeastasia.tts.speech.microsoft.com`
 
+For STT, use the corresponding `stt.speech.microsoft.com` regional host, or use the Cognitive Services endpoint (`https://{region}.api.cognitive.microsoft.com`) and LiteLLM will map it to the STT REST endpoint.
+
 [Full list of regions](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/regions)
 
 ## Advanced Features
@@ -454,4 +521,5 @@ except APIError as e:
 
 - [Azure Speech Service Documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/)
 - [Text-to-Speech REST API](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech)
+- [Speech-to-Text REST API](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-speech-to-text-short)
 
