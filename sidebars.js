@@ -458,6 +458,7 @@ const sidebars = {
             "proxy/high_availability_control_plane",
             "proxy/db_deadlocks",
             "proxy/db_info",
+            "proxy/db_read_replica",
             "proxy/image_handling",
             "proxy/jwt_auth_arch",
             "proxy/spend_logs_deletion",

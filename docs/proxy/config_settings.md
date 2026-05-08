@@ -558,6 +558,7 @@ router_settings:
 | DATABASE_PORT | Port number for database connection
 | DATABASE_SCHEMA | Schema name used in the database
 | DATABASE_URL | Connection URL for the database
+| DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Useful for Aurora-style clusters with separate reader/writer endpoints. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True`, the reader IAM token is auto-refreshed alongside the writer
 | DATABASE_USER | Username for database connection
 | DATABASE_USERNAME | Alias for database user
 | DATABRICKS_API_BASE | Base URL for Databricks API
