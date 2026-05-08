@@ -938,6 +938,7 @@ const sidebars = {
         "providers/deepinfra",
         "providers/deepseek",
         "providers/docker_model_runner",
+        "providers/edenai",
         "providers/elevenlabs",
         "providers/fal_ai",
         "providers/featherless_ai",
