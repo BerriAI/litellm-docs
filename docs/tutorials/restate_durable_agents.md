@@ -170,7 +170,7 @@ The Restate UI shows you detailed traces on your agents and workflows.
 The Restate AI examples repo includes durable patterns built directly on LiteLLM:
 
 - **Human approvals**: agent suspends until a human approves or rejects a tool call.
-- **Multi-agent orchestration**: durable hand-off between specialized agents.
+- **Multi-agent orchestration**: durable hand-off between specialized agents, including remote agents over HTTP.
 - **Parallel tool calls**: fan out tool calls and gather results, surviving partial failures.
 - **Workflow patterns**: sequential, parallel, orchestrator-worker, evaluator-optimizer.
 - **Task control**: cancel execution when new context arrives, or roll back completed tasks on a failure.
