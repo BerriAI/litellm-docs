@@ -135,11 +135,11 @@ async def message(ctx: restate.ObjectContext, user_message: str) -> str | None:
     messages = await ctx.get("memory", type_hint=list[dict]) or []
     messages.append({"role": "user", "content": user_message})
     
-    async def llm_call(messages: list[dict]) -> dict:
+    async def llm_call() -> dict:
         resp = await acompletion(model="gpt-5.2", messages=messages)
         return resp.choices[0].message.model_dump()
 
-    result = await ctx.run_typed("LLM call", llm_call, messages=messages)
+    result = await ctx.run_typed("LLM call", llm_call)
 
     messages.append({"role": "assistant", "content": result["content"]})
     # Store history for this conversation
