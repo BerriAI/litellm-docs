@@ -1,17 +1,17 @@
-# Scalekit AgentKit with LiteLLM
+# Scalekit with LiteLLM
 
-Add authenticated tool calls to your LiteLLM-powered agents. [Scalekit AgentKit](https://docs.scalekit.com/agentkit/overview/) manages OAuth flows, token storage, and API execution for 100+ third-party apps (Gmail, GitHub, Slack, Salesforce, etc.) — your agent picks tools at runtime and LiteLLM routes the model calls to any provider.
+Add authenticated tool calls to your LiteLLM-powered agents. [Scalekit](https://docs.scalekit.com/agentkit/overview/) manages OAuth flows, token storage, and API execution for 100+ third-party apps (Gmail, GitHub, Slack, Salesforce, etc.) — your agent picks tools at runtime and LiteLLM routes the model calls to any provider.
 
 ## Overview
 
-- Fetch user-scoped tool definitions from AgentKit and pass them as function schemas to `litellm.completion()`
+- Fetch user-scoped tool definitions from Scalekit and pass them as function schemas to `litellm.completion()`
 - Switch models freely — the same tool definitions work across OpenAI, Anthropic, Bedrock, Vertex AI, and every other provider LiteLLM supports
-- Execute tool calls through AgentKit — no API keys, endpoints, or auth headers to manage per third-party app
+- Execute tool calls through Scalekit — no API keys, endpoints, or auth headers to manage per third-party app
 
 ## Prerequisites
 
 - Python 3.9+
-- A [Scalekit account](https://app.scalekit.com) with an AgentKit connection configured (this tutorial uses Gmail)
+- A [Scalekit account](https://app.scalekit.com) with a connection configured (this tutorial uses Gmail)
 - API keys for at least one LLM provider, or a running LiteLLM proxy
 - Scalekit API credentials (`SCALEKIT_CLIENT_ID`, `SCALEKIT_CLIENT_SECRET`, `SCALEKIT_ENV_URL`) from Dashboard → **Developers** → **API Credentials**
 
@@ -28,7 +28,7 @@ import os
 import json
 import litellm
 import scalekit.client
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict  # installed with scalekit-sdk-python
 
 scalekit_client = scalekit.client.ScalekitClient(
     client_id=os.getenv("SCALEKIT_CLIENT_ID"),
@@ -40,7 +40,7 @@ actions = scalekit_client.actions
 
 ## 3. Authorize a User
 
-Create a connected account and complete the OAuth flow. Once the account status is `ACTIVE`, AgentKit can execute tools on behalf of the user.
+Create a connected account and complete the OAuth flow. Once the account status is `ACTIVE`, Scalekit can execute tools on behalf of the user.
 
 ```python showLineNumbers title="authorize.py"
 connection_name = os.getenv("GMAIL_CONNECTION_NAME", "gmail")
@@ -62,7 +62,7 @@ if connected_account.status != "ACTIVE":
 
 ## 4. Fetch Scoped Tools
 
-`list_scoped_tools` returns only the tools this specific user is authorized to call. Convert them to OpenAI's function-calling format — this is the format LiteLLM uses across all providers.
+`list_scoped_tools` returns only the tools this specific user is authorized to call. Convert them to OpenAI's function-calling format — the same format LiteLLM normalizes to across all providers.
 
 ```python showLineNumbers title="fetch_tools.py"
 scoped_response, _ = actions.tools.list_scoped_tools(
@@ -87,7 +87,7 @@ llm_tools = [
 
 ## 5. Run the Agent Loop
 
-Call `litellm.completion()` with the tool definitions. When the model returns tool calls, execute them through AgentKit and feed the results back. Change the `model` parameter to switch providers — no other code changes needed.
+Call `litellm.completion()` with the tool definitions. When the model returns tool calls, execute them through Scalekit and feed the results back. Change the `model` parameter to switch providers — no other code changes needed.
 
 ```python showLineNumbers title="agent_loop.py"
 messages = [{"role": "user", "content": "Fetch my last 5 unread emails and summarize them"}]
@@ -107,7 +107,7 @@ while True:
     # Append assistant message with tool calls
     messages.append(message)
 
-    # Execute each tool call through AgentKit
+    # Execute each tool call through Scalekit
     for tc in message.tool_calls:
         result = actions.execute_tool(
             tool_name=tc.function.name,
@@ -219,9 +219,9 @@ MODEL=bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0 python scalekit_agent.p
 OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL=claude-sonnet-4 python scalekit_agent.py
 ```
 
-## Using LiteLLM Proxy
+## Route Through LiteLLM Proxy for Cost Tracking and Rate Limits
 
-If you're running a LiteLLM proxy, point your agent at it for centralized model management, cost tracking, and rate limiting. The agent code stays the same — just set the proxy URL:
+If you're running a LiteLLM proxy, point your agent at it for centralized model management, cost tracking, and rate limiting. The agent code stays the same — set the proxy URL:
 
 ```python showLineNumbers title="proxy_agent.py"
 import litellm
@@ -246,17 +246,26 @@ python scalekit_agent.py
 
 ## End-to-End Example: Inbox Triage Agent
 
-For a production-style example that combines AgentKit with per-stage model routing through LiteLLM, see [litellm-agentkit-inbox-triage](https://github.com/scalekit-developers/litellm-agentkit-inbox-triage). It demonstrates:
+For a production-style example that combines Scalekit tool execution with per-stage model routing through LiteLLM, see [litellm-agentkit-inbox-triage](https://github.com/scalekit-developers/litellm-agentkit-inbox-triage). It demonstrates:
 
 - Polling Gmail and classifying threads with different models per pipeline stage
 - Routing to GitHub repos using keyword rules and LLM tie-breaking
-- Searching related GitHub issues through an AgentKit tool-calling loop
+- Searching related GitHub issues through a Scalekit tool-calling loop
 - Notifying Slack and waiting for human approval before creating issues or sending replies
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `execute_tool` returns "connection not found" | The `connection_name` must match the exact label in Dashboard → **AgentKit** → **Connections** (including case). Use an env var instead of hardcoding. |
+| Connected account stays in `PENDING` | The user hasn't completed the OAuth flow. Regenerate the authorization link and have them open it in a browser. |
+| Model returns text instead of tool calls | Not all models support function calling. Use a model that does (GPT-4o, Claude Sonnet/Opus, Gemini Pro). Check [supported providers](../providers/). |
+| `litellm.completion()` raises an auth error | Verify your LLM provider API key is set (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) or that your proxy URL and key are correct. |
 
 ## Related Resources
 
-- [Scalekit AgentKit Docs](https://docs.scalekit.com/agentkit/overview/) — Full AgentKit documentation
-- [Scalekit Tool Calling](https://docs.scalekit.com/agentkit/tools/scalekit-optimized-tools/) — Built-in tools reference
-- [Supported Connectors](https://docs.scalekit.com/agentkit/connectors/) — Gmail, GitHub, Slack, Salesforce, and 100+ more
+- [Scalekit Docs](https://docs.scalekit.com/agentkit/overview/) — Full documentation
+- [Built-in Tools Reference](https://docs.scalekit.com/agentkit/tools/scalekit-optimized-tools/) — Tool calling across 100+ connectors
+- [Supported Connectors](https://docs.scalekit.com/agentkit/connectors/) — Gmail, GitHub, Slack, Salesforce, and more
 - [LiteLLM Proxy Quick Start](../proxy/quick_start) — Set up centralized model routing
 - [LiteLLM Function Calling](../completion/function_call) — Function calling docs
