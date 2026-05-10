@@ -184,7 +184,7 @@ const sidebars = {
         "tutorials/google_genai_sdk",
         "tutorials/livekit_xai_realtime",
         "integrations/letta",
-        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit Tool Calling" },
+        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Tool Calling with LiteLLM" },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM" },
         "projects/openai-agents"
