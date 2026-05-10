@@ -84,6 +84,18 @@ For **LiteLLM Proxy** setup, ingest token patterns, and trace verification, see 
 
 </TabItem>
 
+<TabItem value="respan" label="Log to Respan">
+
+```shell
+OTEL_EXPORTER_OTLP_ENDPOINT="https://api.respan.ai/api"
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer YOUR_RESPAN_API_KEY"
+OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+```
+
+For a dedicated walkthrough including Proxy setup and metadata fields, see **[Respan](/docs/observability/respan_integration)**.
+
+</TabItem>
+
 </Tabs>
 
 Use just 1 line of code, to instantly log your LLM responses **across all providers** with OpenTelemetry:
