@@ -897,6 +897,7 @@ const sidebars = {
           label: "Bedrock",
           items: [
             "providers/bedrock",
+            "providers/bedrock_claude_platform",
             "providers/bedrock_embedding",
             "providers/bedrock_imported",
             "providers/bedrock_image_gen",
