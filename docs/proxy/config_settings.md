@@ -251,6 +251,7 @@ router_settings:
 | infer_model_from_keys | boolean | If true, infers the model from the provided keys |
 | background_health_checks | boolean | If true, enables background health checks. [Doc on health checks](health) |
 | health_check_interval | integer | The interval for health checks in seconds [Doc on health checks](health) |
+| health_check_skip_disabled_background_models | boolean | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs (not only the background loop). [Doc on health checks](health) |
 | alerting | array of strings | List of alerting methods [Doc on Slack Alerting](alerting) |
 | alerting_threshold | integer | The threshold for triggering alerts [Doc on Slack Alerting](alerting) |
 | use_client_credentials_pass_through_routes | boolean | If true, uses client credentials for all pass-through routes. [Doc on pass through routes](pass_through) |
@@ -314,6 +315,7 @@ router_settings:
 | enforce_rbac | boolean | If true, enables role-based access control (RBAC) for all proxy operations |
 | forward_llm_provider_auth_headers | boolean | If true, forwards provider-specific auth headers to LLM API calls |
 | health_check_concurrency | integer | Maximum number of concurrent health check operations |
+| health_check_skip_disabled_background_models | boolean | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs. [Doc on health checks](health) |
 | health_check_staleness_threshold | integer | Maximum age in seconds for health check results before marking deployments as stale |
 | maximum_spend_logs_cleanup_cron | string | Cron expression for scheduling automatic spend log cleanup tasks |
 | mcp_client_side_auth_header_name | string | HTTP header name for client-side MCP server credentials |
