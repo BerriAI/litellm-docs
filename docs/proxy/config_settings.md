@@ -1101,6 +1101,8 @@ router_settings:
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
 | TEST_EMAIL_ADDRESS | Email address used for testing purposes
+| TJ_ENDPOINT | TokenJam server URL used by the `tokenjam` callback integration. Default is `http://localhost:7391`
+| TJ_INGEST_SECRET | Optional bearer secret for the TokenJam ingest endpoint, used by the `tokenjam` callback integration
 | TOGETHER_AI_4_B | Size parameter for Together AI 4B model. Default is 4
 | TOGETHER_AI_8_B | Size parameter for Together AI 8B model. Default is 8
 | TOGETHER_AI_21_B | Size parameter for Together AI 21B model. Default is 21
