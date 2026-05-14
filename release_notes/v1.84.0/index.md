@@ -45,7 +45,7 @@ pip install litellm==1.84.0
 
 ## Version naming change
 
-> **Starting with `v1.84.0`, LiteLLM versions follow [PEP 440](https://peps.python.org/pep-0440/).** Stable releases drop the `-stable` suffix — the Docker tag for this release is `litellm:1.84.0`, not `litellm:1.84.0-stable`. If you pin LiteLLM in deployment tooling (Helm values, `requirements.txt`, Renovate rules, etc.), update those pins to the PEP 440 form.
+> **Starting with `v1.84.0`, LiteLLM versions follow [PEP 440](https://peps.python.org/pep-0440/).** Stable releases drop the `-stable` suffix — the Docker tag for this release is `litellm:1.84.0` (or equivalently `litellm:v1.84.0` — both Docker tags are published and resolve to the same image), not `litellm:1.84.0-stable`. PyPI versions remain the bare PEP 440 form: `pip install litellm==1.84.0`. If you pin LiteLLM in deployment tooling (Helm values, `requirements.txt`, Renovate rules, etc.), update those pins to the PEP 440 form.
 
 Mapping from the legacy suffix scheme to the new PEP 440 scheme:
 
