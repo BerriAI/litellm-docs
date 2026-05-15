@@ -10,19 +10,9 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.83.14 — GPT-5.5, Prompt Compression & Memory API](/release_notes/v1.83.14/v1-83-14)
+### [v1.84.0 — Reliability hardening + multi-pod budget accuracy](/release_notes/v1.84.0/v1-84-0)
 
-_April 27, 2026_
-
-Day-0 GPT-5.5 / GPT-5.5 Pro support, server-side Prompt Compression callback, `/v1/memory` CRUD endpoints, LLM-as-a-Judge guardrail, MCP OAuth hardening, and per-member team budgets.
-
----
-
-## Latest Release Candidate
-
-### [v1.84.0-rc.1 — Reliability hardening + multi-pod budget accuracy](/release_notes/v1.84.0-rc.1/v1-84-0-rc-1)
-
-_May 5, 2026_
+_May 14, 2026_
 
 Pass-through endpoints auth-by-default, multi-pod budget enforcement accuracy, non-blocking Prisma DB reconnect, ~700 MB lower memory via lazy-loaded routers, durable agent workflow run tracking. Read the **Important Behavior Changes** section before upgrading a production deployment.
 
@@ -32,6 +22,7 @@ Pass-through endpoints auth-by-default, multi-pod budget enforcement accuracy, n
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.84.0](/release_notes/v1.84.0/v1-84-0)   | May 14, 2026 | Reliability hardening + multi-pod budget accuracy          |
 | [v1.83.14](/release_notes/v1.83.14/v1-83-14) | Apr 27, 2026 | GPT-5.5, Prompt Compression & Memory API                   |
 | [v1.83.10](/release_notes/v1.83.10/v1-83-10) | Apr 27, 2026 | Claude Opus 4.7, Prompt Compression & Multi-Window Budgets |
 | [v1.82.3](/release_notes/v1.82.3/v1-82-3)   | Mar 16, 2026 | Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 new models |
