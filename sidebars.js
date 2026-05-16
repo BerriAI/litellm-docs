@@ -273,7 +273,7 @@ const sidebars = {
             {
               type: "link",
               label: "All Supported Endpoints →",
-              href: "https://docs.litellm.ai/docs/supported_endpoints",
+              href: "/docs/supported_endpoints",
             },
           ],
         },
