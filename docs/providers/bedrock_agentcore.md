@@ -328,7 +328,7 @@ When SigV4 mode is active, credentials are resolved in this priority order:
 2. **`aws_role_name` alone** → `sts:AssumeRole`. The proxy's ambient credentials (instance profile, IRSA, env vars) are the source identity. Session name auto-generated if omitted.
 3. **`aws_profile_name`** → resolved via the boto3 profile loader (`~/.aws/credentials`).
 4. **`aws_access_key_id` + `aws_secret_access_key` + `aws_session_token`** → explicit temporary credentials.
-5. **`aws_access_key_id` + `aws_secret_access_key`** → explicit long-lived credentials.
+5. **`aws_access_key_id` + `aws_secret_access_key` + `aws_region_name`** → explicit long-lived credentials. All three must be set; without `aws_region_name` this branch is skipped.
 6. **No credentials configured** → boto3 default chain (env vars, IRSA via `AWS_WEB_IDENTITY_TOKEN_FILE` + `AWS_ROLE_ARN`, instance metadata).
 
 Recognized fields on `litellm_params` for SigV4:
@@ -384,7 +384,7 @@ Note that the SigV4 / Bearer auth handled by `litellm_params` is **separate** fr
 
 All standard A2A controls apply:
 - **Per-agent RBAC** — [Agent Permission Management](../a2a_agent_permissions). Returns HTTP 403 when the calling key/team isn't authorized for the AgentCore agent.
-- **Access groups** — tag the agent with `agent_access_groups: ["clinical-tools"]` and grant the group to a team.
+- **Access groups** — tag the agent with one or more access groups in the LiteLLM dashboard, then grant the group to a team or key via `object_permission.agent_access_groups`. See [Agent Access Groups](../a2a_agent_permissions#agent-access-groups).
 - **Trace ID enforcement** — set `require_trace_id_on_calls_to_agent: true` on `litellm_params` to require `x-litellm-trace-id` on every inbound call. See [A2A Overview — Trace ID enforcement](../a2a#trace-id-enforcement-optional-per-agent).
 
 ## Further Reading

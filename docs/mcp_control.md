@@ -668,21 +668,6 @@ When creating API keys, you can assign them to specific access groups for permis
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
-#### Per-request Access Group Scoping — `x-mcp-access-groups` Header
-
-In addition to the `x-mcp-servers` header (which targets servers by name), clients can scope a request to one or more **access groups** using the `x-mcp-access-groups` header. LiteLLM resolves the group names to concrete server IDs and intersects with the caller's normal permissions — the header narrows the scope, it does not grant access.
-
-```bash title="Scope this request to two access groups" showLineNumbers
-curl -X POST "<your-litellm-url>/mcp" \
-  -H "x-litellm-api-key: Bearer sk-..." \
-  -H "x-mcp-access-groups: dev_group,research_tools" \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
-```
-
-Comma-separated list. Combine with `x-mcp-servers` to further narrow the set; the two headers are intersected before the per-entity intersection model runs.
-
-
 
 ## Per-entity Tool-Level Permissions {#per-entity-tool-level-permissions}
 
