@@ -1,5 +1,5 @@
 ---
-title: "v1.85.0 - Realtime GA, Routing Groups & Hardened Multi-Tenancy"
+title: "v1.85.0 - Realtime GA, MCP Gateway Expansion & Hardened Multi-Tenancy"
 slug: "v1-85-0"
 date: 2026-05-16T00:00:00
 authors:
@@ -46,9 +46,9 @@ pip install litellm==1.85.0
 ## Key Highlights
 
 - **OpenAI Realtime GA** — first-class support for the GA OpenAI Realtime API (plus beta compatibility), including `gpt-realtime-2` pricing and `/openai/v1/realtime` logging.
-- **Routing Groups** — a new way to group deployments for routing, with full proxy + UI support.
-- **Hardened multi-tenancy** — a large sweep of per-tenant scoping fixes across keys, projects, batches, files, MCP servers, and analytics endpoints, plus stricter authorization on `/key/update`, `/key/regenerate`, and admin-viewer routes.
+- **Hardened multi-tenancy** — a large sweep of per-tenant scoping fixes across keys, projects, batches, files, MCP servers, and analytics endpoints (project-hijack/key-org isolation, service-account resource isolation, per-entity team/agent activity scoping).
 - **MCP Gateway expansion** — org-level MCP server/toolset permissions, OBO (on-behalf-of) MCP auth, `delegate_auth_to_upstream` PKCE passthrough, and MCP access-group name namespacing.
+- **Observability overhaul** — broad Prometheus fixes (label-count correctness, end-user cardinality cap, PromQL escaping), OTEL handler isolation + GenAI message-content capture, and decoupled S3 audit-log config.
 - **New models** — xAI `grok-4.3` / `grok-4.3-latest`, OpenAI `gpt-realtime-2`, OpenRouter `qwen/qwen3.6-plus`, SambaNova `MiniMax-M2.7`, and Bedrock Z.AI `GLM-5`.
 
 ---
@@ -118,7 +118,7 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Pass `output_config` through to backends that accept it - [PR #26439](https://github.com/BerriAI/litellm/pull/26439)
     - Resolve provider from deployment for multi-provider default config - [PR #27517](https://github.com/BerriAI/litellm/pull/27517)
     - Return `503` from `/health` when the targeted model is unhealthy or DB is disconnected - [PR #27003](https://github.com/BerriAI/litellm/pull/27003)
-    - Tighten `extra_body` + `azure_ad_token` banned-params coverage and URL-valued model-destination handling - [PR #27898](https://github.com/BerriAI/litellm/pull/27898), [PR #26915](https://github.com/BerriAI/litellm/pull/26915), [PR #26963](https://github.com/BerriAI/litellm/pull/26963)
+    - Guard URL-valued model destinations and align resource-model auth checks - [PR #26915](https://github.com/BerriAI/litellm/pull/26915), [PR #26963](https://github.com/BerriAI/litellm/pull/26963)
 
 ## LLM API Endpoints
 
@@ -160,8 +160,6 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
 
 #### Features
 
-- **Routing Groups**
-    - Routing groups UI - [PR #27131](https://github.com/BerriAI/litellm/pull/27131)
 - **Virtual Keys**
     - Bulk key updates for a team - [PR #26468](https://github.com/BerriAI/litellm/pull/26468)
     - Rename "Default" key type to "Full Access" and reorder dropdown - [PR #27218](https://github.com/BerriAI/litellm/pull/27218)
@@ -185,9 +183,8 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Isolate managed resources for service-account API keys - [PR #27004](https://github.com/BerriAI/litellm/pull/27004)
     - Tighten resource-ownership checks and sensitive public-endpoint guards - [PR #26951](https://github.com/BerriAI/litellm/pull/26951), [PR #26912](https://github.com/BerriAI/litellm/pull/26912)
 - **Authorization hardening**
-    - Tighten `/key/update` and `/key/regenerate` ownership-rebind + premium-gate checks - [PR #27878](https://github.com/BerriAI/litellm/pull/27878), [PR #27793](https://github.com/BerriAI/litellm/pull/27793)
     - Block missing write routes for proxy admin viewers; restore admin-viewer read parity on Logs + Settings - [PR #27007](https://github.com/BerriAI/litellm/pull/27007), [PR #26846](https://github.com/BerriAI/litellm/pull/26846)
-    - Refuse remote-URL instance-fn loads outside the config-file path; encode upstream URL path identifiers; require a trusted proxy for header-identity auth - [PR #27801](https://github.com/BerriAI/litellm/pull/27801), [PR #26860](https://github.com/BerriAI/litellm/pull/26860), [PR #26825](https://github.com/BerriAI/litellm/pull/26825)
+    - Encode upstream URL path identifiers; require a trusted proxy for header-identity auth - [PR #26860](https://github.com/BerriAI/litellm/pull/26860), [PR #26825](https://github.com/BerriAI/litellm/pull/26825)
     - Bind generic SSO state to a session cookie; allow non-admin compliance-path reads - [PR #26944](https://github.com/BerriAI/litellm/pull/26944), [PR #27234](https://github.com/BerriAI/litellm/pull/27234)
 - **Keys / Teams / SCIM**
     - Honor `key access_group_ids` when a team restricts models; resolve access-group names in team filtering and same-name deployment routing - [PR #26275](https://github.com/BerriAI/litellm/pull/26275), [PR #25224](https://github.com/BerriAI/litellm/pull/25224), [PR #26161](https://github.com/BerriAI/litellm/pull/26161)
@@ -240,7 +237,7 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Atomic TPM rate limit; include model name + configured TPM/RPM in priority rate-limit 429 errors - [PR #27001](https://github.com/BerriAI/litellm/pull/27001), [PR #27216](https://github.com/BerriAI/litellm/pull/27216)
     - Load team-member RPM/TPM from membership budget in the combined view - [PR #24925](https://github.com/BerriAI/litellm/pull/24925)
 - **Budgets**
-    - Bound budget reservation per request instead of pinning to headroom; skip the personal-budget hook when a reservation covers the counter - [PR #27509](https://github.com/BerriAI/litellm/pull/27509), [PR #27021](https://github.com/BerriAI/litellm/pull/27021)
+    - Skip the personal-budget hook when a reservation covers the counter - [PR #27021](https://github.com/BerriAI/litellm/pull/27021)
     - Treat `0` `team_member_budget` as no cap; enforce team-member budget without a user row; reset org/tag/proxy budgets correctly - [PR #27133](https://github.com/BerriAI/litellm/pull/27133), [PR #27273](https://github.com/BerriAI/litellm/pull/27273), [PR #27326](https://github.com/BerriAI/litellm/pull/27326), [PR #27488](https://github.com/BerriAI/litellm/pull/27488)
     - Flush virtual-key `model_max` budget spend to Redis after success logging; tighten budget spend admission - [PR #27334](https://github.com/BerriAI/litellm/pull/27334), [PR #26845](https://github.com/BerriAI/litellm/pull/26845)
 - **Tag Budgets & Routing**
@@ -261,12 +258,11 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Sanitize tool names to Anthropic's `[a-zA-Z0-9_-]{1,128}` pattern - [PR #26788](https://github.com/BerriAI/litellm/pull/26788)
     - Require a trusted-proxy gate before honoring `X-Forwarded-*` on OAuth discovery; preserve oauth2 m2m auth for tools routes; run `pre_call_tool_check` on the OpenAPI/local-registry path - [PR #26841](https://github.com/BerriAI/litellm/pull/26841), [PR #26871](https://github.com/BerriAI/litellm/pull/26871), [PR #27016](https://github.com/BerriAI/litellm/pull/27016)
     - Redact MCP server URL/headers for non-admin viewers; replace user-API-key auth with authorization-or-cookie for MCP server creation - [PR #27027](https://github.com/BerriAI/litellm/pull/27027), [PR #27190](https://github.com/BerriAI/litellm/pull/27190)
-    - Fix MCP DB reload partial failures; forward `extra_headers` for OpenAPI MCP tools; surface upstream 401 for token-forwarding MCP servers; BYOK OAuth fix - [PR #27314](https://github.com/BerriAI/litellm/pull/27314), [PR #27383](https://github.com/BerriAI/litellm/pull/27383), [PR #27847](https://github.com/BerriAI/litellm/pull/27847), [PR #27892](https://github.com/BerriAI/litellm/pull/27892)
+    - Fix MCP DB reload partial failures; surface upstream 401 for token-forwarding MCP servers - [PR #27314](https://github.com/BerriAI/litellm/pull/27314), [PR #27847](https://github.com/BerriAI/litellm/pull/27847)
 
 ## Performance / Loadbalancing / Reliability improvements
 
 - **Routing & Reliability**
-    - Routing groups (core) - [PR #27022](https://github.com/BerriAI/litellm/pull/27022)
     - Trigger fallbacks on mid-stream `httpx.TimeoutException` - [PR #26998](https://github.com/BerriAI/litellm/pull/26998)
     - Register cooldowns on failure + fail fast on stale `encrypted_content` (Responses) - [PR #27820](https://github.com/BerriAI/litellm/pull/27820)
     - Register model info under the responses/-stripped variant - [PR #27531](https://github.com/BerriAI/litellm/pull/27531)
@@ -279,11 +275,11 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Early proxy request-size enforcement; coerce non-str `x-litellm-*` header values to avoid an httpx `TypeError` - [PR #27311](https://github.com/BerriAI/litellm/pull/27311), [PR #27504](https://github.com/BerriAI/litellm/pull/27504)
     - Separate DB read and write endpoints - [PR #27493](https://github.com/BerriAI/litellm/pull/27493)
 - **Health checks**
-    - Shared health-check polling; `health_check_reasoning_effort` for model health checks; skip `disable_background_health_check` models on `GET /health`; scope `/health` response to the caller's models; expose DB status on `/health/readiness`; remove the separate health app - [PR #26434](https://github.com/BerriAI/litellm/pull/26434), [PR #27115](https://github.com/BerriAI/litellm/pull/27115), [PR #27716](https://github.com/BerriAI/litellm/pull/27716), [PR #26935](https://github.com/BerriAI/litellm/pull/26935), [PR #27866](https://github.com/BerriAI/litellm/pull/27866), [PR #27430](https://github.com/BerriAI/litellm/pull/27430)
+    - Shared health-check polling; `health_check_reasoning_effort` for model health checks; skip `disable_background_health_check` models on `GET /health`; scope `/health` response to the caller's models; remove the separate health app - [PR #26434](https://github.com/BerriAI/litellm/pull/26434), [PR #27115](https://github.com/BerriAI/litellm/pull/27115), [PR #27716](https://github.com/BerriAI/litellm/pull/27716), [PR #26935](https://github.com/BerriAI/litellm/pull/26935), [PR #27430](https://github.com/BerriAI/litellm/pull/27430)
 - **Config / startup robustness**
-    - Hot-reload config YAML when `--reload` is set; fix lazy feature loading under `SERVER_ROOT_PATH` (404); break the managed-resources import cycle on Python 3.13; reject bare-str file-input sinks (local-file read hardening) - [PR #27274](https://github.com/BerriAI/litellm/pull/27274), [PR #27812](https://github.com/BerriAI/litellm/pull/27812), [PR #27160](https://github.com/BerriAI/litellm/pull/27160), [PR #27762](https://github.com/BerriAI/litellm/pull/27762)
+    - Hot-reload config YAML when `--reload` is set; break the managed-resources import cycle on Python 3.13; reject bare-str file-input sinks (local-file read hardening) - [PR #27274](https://github.com/BerriAI/litellm/pull/27274), [PR #27160](https://github.com/BerriAI/litellm/pull/27160), [PR #27762](https://github.com/BerriAI/litellm/pull/27762)
 - **Packaging / Docker / Helm / CI**
-    - Pin Wolfi & uv to multi-arch index digests; remove the hardcoded Prisma binary target for multi-arch builds; clear flagged OS-package advisories on the Docker image; relax core runtime pins to ranges; raise the jinja2 floor to 3.1.6; refresh dependency locks - [PR #27123](https://github.com/BerriAI/litellm/pull/27123), [PR #27170](https://github.com/BerriAI/litellm/pull/27170), [PR #27225](https://github.com/BerriAI/litellm/pull/27225), [PR #27241](https://github.com/BerriAI/litellm/pull/27241), [PR #27552](https://github.com/BerriAI/litellm/pull/27552), [PR #27126](https://github.com/BerriAI/litellm/pull/27126)
+    - Pin Wolfi & uv to multi-arch index digests; remove the hardcoded Prisma binary target for multi-arch builds; clear flagged OS-package advisories on the Docker image; refresh dependency locks - [PR #27123](https://github.com/BerriAI/litellm/pull/27123), [PR #27170](https://github.com/BerriAI/litellm/pull/27170), [PR #27225](https://github.com/BerriAI/litellm/pull/27225), [PR #27126](https://github.com/BerriAI/litellm/pull/27126)
     - Helm: skip startup `prisma db push` when a migrations Job is enabled; increase default probe timeouts, disable debug logging by default - [PR #27200](https://github.com/BerriAI/litellm/pull/27200), [PR #27237](https://github.com/BerriAI/litellm/pull/27237)
     - CI: Rerun Failed Tests for all pytest jobs, block PRs that drop coverage, Redis-backed VCR replay caches, reduce cassette bloat, mutation-testing workflow, dev-tag detection in the release workflow, Playwright apt-install skip - [PR #27155](https://github.com/BerriAI/litellm/pull/27155), [PR #27340](https://github.com/BerriAI/litellm/pull/27340), [PR #26838](https://github.com/BerriAI/litellm/pull/26838), [PR #27159](https://github.com/BerriAI/litellm/pull/27159), [PR #27409](https://github.com/BerriAI/litellm/pull/27409), [PR #27576](https://github.com/BerriAI/litellm/pull/27576), [PR #26966](https://github.com/BerriAI/litellm/pull/26966), [PR #27169](https://github.com/BerriAI/litellm/pull/27169)
     - Remove legacy deployment artifacts and litellm-js packages; remove a redundant backup pricing file; misc test/import cleanup - [PR #27541](https://github.com/BerriAI/litellm/pull/27541), [PR #16590](https://github.com/BerriAI/litellm/pull/16590), [PR #27699](https://github.com/BerriAI/litellm/pull/27699), [PR #27633](https://github.com/BerriAI/litellm/pull/27633)
@@ -316,15 +312,17 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
 
 ## 05/16/2026 (`v1.85.0`)
 
-* New Models / Updated Models: 44
+> Counts cover PRs **new in `v1.85.0`** relative to `v1.84.0` **stable**. 14 PRs that were backported into `v1.84.0` stable (and documented in the v1.84.0 release notes) are excluded here to avoid double-counting.
+
+* New Models / Updated Models: 43
 * LLM API Endpoints: 24
-* Management Endpoints / UI: 59
+* Management Endpoints / UI: 54
 * AI Integrations (Logging / Guardrails / Prompt Mgmt / Secret Managers): 32
-* Spend Tracking, Budgets and Rate Limiting: 24
-* MCP Gateway: 14
-* Performance / Loadbalancing / Reliability improvements: 46
+* Spend Tracking, Budgets and Rate Limiting: 23
+* MCP Gateway: 12
+* Performance / Loadbalancing / Reliability improvements: 41
 * Documentation Updates: 3
 
-Total: 246 PRs
+Total: 232 PRs
 
 ---
