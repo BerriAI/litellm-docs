@@ -249,3 +249,30 @@ general_settings:
 ```
 
 When empty, the standard private ranges are used (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`).
+
+---
+
+## Public Internet vs MCP Hub Visibility
+
+`available_on_public_internet` and the **MCP Hub strict whitelist** are two separate mechanisms that are easy to confuse:
+
+| Concern | Controlled by | Default |
+|---|---|---|
+| Can an external (non-private-CIDR) caller see this server? | `available_on_public_internet` on the server | `false` (internal only) |
+| Does this server appear in the published MCP Hub registry (`/v1/mcp/registry.json` when `enable_mcp_registry: true`)? | `litellm.public_mcp_servers` list, gated by `litellm.public_mcp_hub_strict_whitelist` | Hub strict whitelist is **on** by default — only servers explicitly listed in `public_mcp_servers` are advertised |
+
+In the **default strict-whitelist mode**, `available_on_public_internet: true` does not make a server appear in the hub. You also need to add it to `public_mcp_servers`:
+
+```yaml title="Both flags set — visible to external callers AND on the hub" showLineNumbers
+litellm_settings:
+  public_mcp_servers:
+    - deepwiki
+  # public_mcp_hub_strict_whitelist defaults to true
+
+mcp_servers:
+  deepwiki:
+    url: https://mcp.deepwiki.com/mcp
+    available_on_public_internet: true
+```
+
+If you set `public_mcp_hub_strict_whitelist: false`, the hub falls back to advertising every server that has `available_on_public_internet: true` — but the IP-based access filter on this page still applies independently.
