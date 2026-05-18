@@ -306,7 +306,6 @@ curl http://localhost:4000/mcp-rest/tools/call \
 | `scopes` | No | List of scopes to request. For M2M, joined into the `scope` parameter on the token request. For interactive, forwarded on the authorize request. |
 | `token_validation` | No | Dict of key-value rules checked against the OAuth token response after the `/token` exchange. Any rule mismatch fails the exchange with `token_validation_failed`. Useful for asserting a tenant claim like `{"team.enterprise_id": "T12345"}`. |
 | `token_storage_ttl_seconds` | No | Override the TTL for the per-user token cache (interactive flow). If unset, LiteLLM uses `expires_in - buffer` from the token response. |
-| `delegate_auth_to_upstream` | No | When `true`, skip LiteLLM's own API-key / SSO check and let the client's PKCE flow run end-to-end with the upstream MCP server. See [Delegate Auth to Upstream](#delegate-auth-to-upstream-pkce-passthrough) above. |
 
 ## Debugging OAuth
 

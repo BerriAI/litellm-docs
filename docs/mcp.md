@@ -226,7 +226,7 @@ mcp_servers:
 - **Description**: Optional description for the server
 - **Auth Type**: Optional authentication type. Supported values:
 
-  | Value | Header sent |
+  | Value | Header sent (managed SSE/HTTP transport) |
   |-------|-------------|
   | `none` | No auth header added |
   | `api_key` | `X-API-Key: <auth_value>` |
@@ -237,6 +237,8 @@ mcp_servers:
   | `oauth2` | `Authorization: Bearer <resolved_token>` — PKCE or M2M `client_credentials`. See [MCP OAuth](./mcp_oauth.md) |
   | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>` — RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
   | `aws_sigv4` | Per-request AWS SigV4 signature. See [MCP AWS SigV4](./mcp_aws_sigv4.md) |
+
+  Note: the header table above describes the managed SSE/HTTP transport path. The OpenAPI-tool path emits `Authorization: ApiKey <value>` instead of `X-API-Key` for `auth_type: api_key`; the deprecated `x-mcp-auth` broadcast header also uses the `ApiKey` form.
 
 - **Extra Headers**: Optional list of additional header names that should be forwarded from client to the MCP server
 - **Static Headers**: Optional map of header key/value pairs to include every request to the MCP server.

@@ -210,37 +210,23 @@ curl -X POST "http://localhost:4000/a2a/agent-456" \
 
 ## Agent Access Groups
 
-Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels, then grant the **group** to a key or team — adding a new agent to the group automatically makes it available to every key/team that holds the group.
+Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels in the dashboard, then grant the **group** to a key or team — adding a new agent to the group automatically makes it available to every key/team that holds the group.
 
 ### 1. Tag the agent with one or more groups
 
-<Tabs>
-<TabItem value="ui" label="UI">
+In the LiteLLM dashboard:
 
-1. Go to **Agents** in the LiteLLM dashboard.
+1. Go to **Agents**.
 2. Create or edit an agent.
 3. Under **Access Groups**, type a group name (e.g. `clinical-tools`) and press Enter.
 
-</TabItem>
-<TabItem value="api" label="REST API">
-
-```bash showLineNumbers
-curl -X POST http://localhost:4000/v1/agents \
-  -H "Authorization: Bearer sk-master-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_name": "patient-lookup",
-    "agent_card_params": { ... },
-    "agent_access_groups": ["clinical-tools", "phi-allowed"]
-  }'
-```
-
-</TabItem>
-</Tabs>
+:::note
+Tagging an agent with access groups is currently a dashboard-only operation. The `POST /v1/agents` body schema does not expose `agent_access_groups` as a top-level field; the group tags persist via the underlying DB column and are consumed during permission resolution.
+:::
 
 ### 2. Grant a key or team the group
 
-```bash title="Key with access to two groups" showLineNumbers
+```bash title="Key with access to two agent groups" showLineNumbers
 curl -X POST "http://localhost:4000/key/generate" \
   -H "Authorization: Bearer sk-master-key" \
   -H "Content-Type: application/json" \
@@ -259,29 +245,26 @@ When a key has **both** a direct `agents` list and `agent_access_groups`, the un
 
 ```mermaid
 flowchart TD
-    A[Request to invoke agent] --> B{Key allowlist: agents + agent_access_groups}
-    B --> C{Team allowlist: agents + agent_access_groups}
-    C -->|Both empty| D[Allow ALL agents]
-    C -->|Key only| E[Use key's allowlist]
-    C -->|Team only| F[Inherit team's allowlist]
-    C -->|Both set| G[Intersect key and team allowlists]
-    D --> H{End-user has allowlist?}
-    E --> H
-    F --> H
-    G --> H
-    H -->|Yes| I[Intersect with end-user allowlist]
-    H -->|No| J[Keep current]
-    I --> K{Org has allowlist?}
-    J --> K
-    K -->|Yes| L[Cap final set to org's allowlist - org is a ceiling]
-    K -->|No| M[Final allowlist]
-    L --> M
-    M --> N{Requested agent in final list?}
-    N -->|Yes| O[Allow request]
-    N -->|No| P[Return 403 Forbidden]
+    A[Request to invoke agent] --> B{LiteLLM Virtual Key has agent restrictions?}
+    B -->|Yes| C{LiteLLM Team has agent restrictions?}
+    B -->|No| D{LiteLLM Team has agent restrictions?}
+
+    C -->|Yes| E[Use intersection of key + team permissions]
+    C -->|No| F[Use key permissions only]
+
+    D -->|Yes| G[Inherit team permissions]
+    D -->|No| H[Allow ALL agents]
+
+    E --> I{Agent in allowed list?}
+    F --> I
+    G --> I
+    H --> J[Allow request]
+
+    I -->|Yes| J
+    I -->|No| K[Return 403 Forbidden]
 ```
 
-The model mirrors the [MCP RBAC intersection](./mcp_control#permission-hierarchy): per-level lists are intersected (most-restrictive wins) except for the organization level, which acts as a **ceiling**.
+A2A permission resolution operates over two levels: Key and Team. (MCP's [permission hierarchy](./mcp_control#permission-hierarchy) extends to End-user / Agent / Org additionally — agent permissions are a narrower model today.)
 
 | Key Permissions | Team Permissions | Result | Notes |
 |-----------------|------------------|--------|-------|

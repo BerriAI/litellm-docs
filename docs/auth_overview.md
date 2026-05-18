@@ -27,7 +27,6 @@ Both surfaces accept the same LiteLLM Virtual Key headers and the same identific
 | `x-litellm-tags` | Comma-separated tags for spend-log labeling and tag-based routing. Body field `tags` takes precedence. | — (not parsed on MCP ASGI) | ✓ |
 | `x-litellm-mcp-debug: true` | Returns masked diagnostic response headers (`x-mcp-debug-*`). See [MCP OAuth — Debugging](./mcp_oauth#debugging-oauth). | ✓ | — |
 | `x-mcp-servers` | Scope a request to specific MCP servers (comma-separated). | ✓ | — |
-| `x-mcp-access-groups` | Scope a request to specific MCP access groups. See [MCP Permission Management — Per-request Access Group Scoping](./mcp_control#per-request-access-group-scoping--x-mcp-access-groups-header). | ✓ | — |
 
 ---
 
@@ -88,7 +87,7 @@ See [MCP Overview — Forwarding Custom Headers](./mcp#forwarding-custom-headers
 
 ## 4. AuthZ — RBAC and access groups
 
-Both surfaces use the same `object_permission` model with a five-level intersection. The detailed flowcharts and tables live on the dedicated pages:
+Both surfaces use the `object_permission` model with intersection-style resolution, but at different depths today. MCP resolves across five levels; A2A across two. The detailed flowcharts and tables live on the dedicated pages:
 
 - [MCP Permission Hierarchy](./mcp_control#permission-hierarchy)
 - [A2A Agent Permission Management — How It Works](./a2a_agent_permissions#how-it-works)
@@ -96,10 +95,10 @@ Both surfaces use the same `object_permission` model with a five-level intersect
 | Level | MCP field | A2A field |
 |---|---|---|
 | **Key** | `object_permission.mcp_servers`, `object_permission.mcp_access_groups`, `object_permission.mcp_tool_permissions` | `object_permission.agents`, `object_permission.agent_access_groups` |
-| **Team** | Same | Same |
-| **End user** | Same (via `x-litellm-end-user-id`) | Same (via `x-litellm-end-user-id`) |
-| **Agent** | Same (via `x-litellm-agent-id`) | n/a (you're already targeting an agent) |
-| **Org** | Same — acts as a **ceiling** | Same — acts as a **ceiling** |
+| **Team** | Same | Same (inheritance-first: if the key has no list, it inherits the team's) |
+| **End user** | Same (via `x-litellm-end-user-id`) | — not resolved today |
+| **Agent** | Same (via `x-litellm-agent-id`) | — not applicable (the agent is the target) |
+| **Org** | Same — acts as a **ceiling** | — not resolved today |
 
 | Concern | MCP | A2A |
 |---|---|---|
@@ -151,7 +150,6 @@ x-litellm-trace-id: 8f4a-2b1c-d3e5-...
 
 # MCP — server scoping / per-user passthrough
 x-mcp-servers: github,zapier
-x-mcp-access-groups: dev_group
 x-mcp-github-authorization: Bearer ghp_<user-token>     # user passthrough to github_mcp
 x-litellm-mcp-debug: true                                # diagnostic response headers
 
