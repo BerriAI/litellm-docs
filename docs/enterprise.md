@@ -111,14 +111,21 @@ We run the proxy; you focus on your product.
 
 Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
 
-| Severity | Response SLA |
-|---|---|
-| **Sev 0** — 100% production traffic failing | 1 hour |
-| **Sev 1** — partial production impact | 6 hours |
-| **Sev 2–3** — setup issues, non-urgent bugs | 24 hours (7am–7pm PT, Mon–Sat) |
-| **Security patches** | 72 hours |
+### Supported Versions
 
-Custom SLAs available on request.
+We provide enterprise support for the **last 4 stable releases** (approximately the most recent month of `v1.x.x:main-stable` releases). Stable releases come out weekly — see the [Release Cycle](./proxy/release_cycle.md) for details on how releases are cut and promoted.
+
+If you are running an older release, we recommend upgrading to a release within the supported window before opening a support request.
+
+### Response SLAs
+
+:::info
+
+Our response SLAs are currently being updated. We will publish revised SLA details here once they are finalized.
+
+For time-sensitive issues, please reach out via your dedicated support channel or [book a call](https://enterprise.litellm.ai/demo) — custom SLAs are available on request.
+
+:::
 
 ---
 

@@ -26,6 +26,11 @@ Stable releases come out every week (typically Sunday)
 
 ### Enterprise Support
 
+:::info
 
-- Stable releases come out every week. Once a new one is available, we no longer provide support for an older one. 
-- If there is a MAJOR change (according to semvar conventions - e.g. 1.x.x -> 2.x.x), we can provide support for upto 90 days on the prior stable image. 
+This section is being updated. We are currently re-defining what our enterprise support SLAs look like and will publish updated details here soon.
+
+In the meantime, please [reach out](https://enterprise.litellm.ai/demo) if you have questions about enterprise support for a specific release.
+
+:::
+
