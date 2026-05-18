@@ -288,4 +288,22 @@ class SafeHandler(CustomLogger):
         except Exception as e:
             print(f"Callback error: {e}")  # Log but don't break the flow
 ```
+## versyn-litellm - Cryptographic audit logging
+
+Install: pip install versyn-litellm
+
+    import litellm
+    from versyn_litellm import VersyncCallback
+
+    litellm.callbacks = [VersyncCallback(api_key="vk_your_key")]
+
+    response = litellm.completion(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hello"}]
+    )
+
+    cert_id = response._hidden_params.get("versyn_certificate_id")
+
+Generates a tamper-evident Ed25519-signed certificate for every LLM response.
+Free API key at https://versyn.dev
 
