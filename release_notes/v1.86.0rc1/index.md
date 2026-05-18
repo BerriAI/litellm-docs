@@ -63,6 +63,22 @@ pip install litellm==1.86.0rc1
 - **Componentized deployment** — additive scaffold + Helm chart to split the monolithic proxy into independently scalable `gateway`, `backend`, and `ui` services.
 - **Critical rate-limit regression fixed** — the v3 limiter was leaking internal reservation keys into the upstream provider body, breaking *every* virtual key with a `tpm_limit` / `rpm_limit` set.
 
+## Stability for Claude Code & MCP
+
+The proxy's busiest interactive surfaces — Claude Code (`/v1/messages` + `/v1/chat/completions`) and MCP — picked up a batch of stability fixes this release, plus a new safety net that catches future regressions before they ship.
+
+**Claude Code × LiteLLM compatibility matrix, regenerated daily.** A new docs page renders a live pass/fail grid for every supported Claude Code feature against every provider (Anthropic, Bedrock Invoke, Bedrock Converse, Vertex AI, Azure Foundry). It's populated by a daily cron (`tests/claude_code/cron_vm/run_daily.sh`) that exercises each cell end-to-end and opens an auto-PR with the refreshed JSON; failure cells expose the upstream error on hover so you can see *why* a combination is red the same day it regresses. ([docs PR #97](https://github.com/BerriAI/litellm-docs/pull/97))
+
+**Reasoning-effort grid e2e suite.** A new regression suite drives every reasoning-effort level (`minimal` / `low` / `medium` / `high` / `xhigh` / `max`) against every provider that exposes one — Anthropic, Bedrock Converse, Vertex Anthropic, Azure AI Anthropic, Databricks. Status is classified by exception `status_code`, not class name, so the suite distinguishes a real provider 400 from a flaky 429 and catches drift between provider request shapes and the `output_config.effort` plumbing before customers do. ([PR #28036](https://github.com/BerriAI/litellm/pull/28036))
+
+**Full reasoning_effort coverage on `/v1/chat/completions` ↔ Claude (incl. 4.5 backports).** `output_config.effort` is now forwarded end-to-end across Anthropic, Bedrock, Vertex Anthropic, Azure AI Anthropic, and Databricks; garbage values fail fast with a 400 instead of being silently dropped. `xhigh` / `max` are backported to the Claude 4.5 family and older snapshots so customers on pre-4.6 deployments get the full effort range through both `/v1/chat/completions` and `/v1/messages`. ([PR #27074](https://github.com/BerriAI/litellm/pull/27074))
+
+**Bedrock Converse — empty thinking-block content.** Claude Code with extended thinking replays prior assistant turns containing an empty thinking block (`thinking=""`, `signature=""`) alongside `tool_use`. The unsigned-reasoning fallback was emitting `BedrockContentBlock(text="")`, which Converse rejects with *"The text field in the ContentBlock object … is blank."* The fallback now drops the empty block instead of stringifying it, so multi-turn tool-use replays through Bedrock Converse stop 400'ing. ([PR #27850](https://github.com/BerriAI/litellm/pull/27850))
+
+**MCP OAuth — `PROXY_BASE_URL` escape hatch for `{"detail":"invalid_request"}`.** When the proxy sits behind a reverse proxy or load balancer that rewrites the request scheme or host, the OAuth callback's `redirect_uri` validation can fail with an opaque `{"detail":"invalid_request"}`. A new `PROXY_BASE_URL` env var pins the canonical external URL used for redirect comparison, and diagnostic logging now records the exact mismatch so the next failure is debuggable from logs alone. ([PR #28086](https://github.com/BerriAI/litellm/pull/28086))
+
+**v3 rate limiter — stop leaking internal stash to provider body.** The atomic TPM reservation flow introduced in PR #27001 was stashing `_litellm_rate_limit_descriptors` / `_litellm_tpm_reserved_*` on the top level of the request data dict, where they were forwarded to the upstream provider. OpenAI rejected them as `Unknown parameter` (mapped back to a misleading 429); Anthropic as `Extra inputs are not permitted`. Any virtual key with a `tpm_limit` / `rpm_limit` set was 400'ing on the success path. The stash is now strictly metadata, and the pre-call hook strips any stash key that surfaces at the top level — which also closes a TPM-refund abuse vector where an authenticated caller could inject reservation values to refund counters against another tenant's scope. ([PR #27913](https://github.com/BerriAI/litellm/pull/27913))
+
 ## New Models / Updated Models
 
 #### New Model Support
