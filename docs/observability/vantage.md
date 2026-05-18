@@ -129,8 +129,10 @@ LiteLLM spend data is transformed into the FOCUS 1.2 schema:
 | `api_key_alias` | BillingAccountName | Human-readable key alias |
 | `team_id` | SubAccountId | Team identifier |
 | `team_alias` | SubAccountName | Team name |
+| `organization_id` | Tags | Organization identifier (resolved from API key or team) |
+| `organization_alias` | Tags | Organization display name |
 
-Additional metadata (user_id, model_group, etc.) is included in the `Tags` column as JSON.
+Additional metadata (`user_id`, `user_email`, `model`, `model_group`, etc.) is also included in the `Tags` column as JSON.
 
 ## Upload Limits
 
