@@ -433,6 +433,10 @@ router_settings:
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
+| AGENTCOGS_API_KEY | API key for [AgentCOGS](../observability/agentcogs.md) per-customer margin tracking
+| AGENTCOGS_CHARGE_BY | Proxy tenant attribution for AgentCOGS (`end_user_id`, `user_id`, or `team_id`). Default is `end_user_id`
+| AGENTCOGS_ENDPOINT | Base URL for AgentCOGS ingest API. Default is `https://api.agentcogs.dev`
+| AGENTCOGS_WORKSPACE_ID | Workspace UUID for AgentCOGS
 | AISPEND_ACCOUNT_ID | Account ID for AI Spend
 | AISPEND_API_KEY | API Key for AI Spend
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
