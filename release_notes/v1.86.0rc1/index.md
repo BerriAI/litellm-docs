@@ -18,18 +18,6 @@ authors:
 hide_table_of_contents: false
 ---
 
-{/*
-REVIEWER NOTE — remove this block before publishing.
-v1.86.0rc1 is NOT cut yet. These notes describe the current tip of
-litellm_internal_staging (1b9acecb), the predecessor is v1.85.0-rc.2
-(about to be promoted to 1.85.0 stable). Variant comparison: rc → rc.
-- Full Changelog link uses ...litellm_internal_staging; once the tag is
-  cut it becomes v1.85.0-rc.2...v1.86.0rc1.
-- Docker tag below uses the documented PEP 440 form (1.86.0rc1). Recent
-  RCs (v1.85.0-rc.2, v1.84.0-rc.1) were still cut in the legacy
-  X.Y.Z-rc.N form, so re-verify the published tag on GHCR at cut time.
-*/}
-
 ## Deploy this version
 
 import Tabs from '@theme/Tabs';
@@ -42,7 +30,7 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.86.0rc1
+docker.litellm.ai/berriai/litellm:1.86.0-rc.1
 ```
 
 </TabItem>
@@ -62,7 +50,6 @@ pip install litellm==1.86.0rc1
 - **OTel-standard server-span attributes** — the proxy SERVER span now carries `http.response.status_code`, `http.route`, `url.path`, and `litellm.preprocessing.duration_ms`, plus an opt-in for the experimental OTEL GenAI semantic conventions.
 - **Componentized deployment** — additive scaffold + Helm chart to split the monolithic proxy into independently scalable `gateway`, `backend`, and `ui` services.
 - **Critical rate-limit regression fixed** — the v3 limiter was leaking internal reservation keys into the upstream provider body, breaking *every* virtual key with a `tpm_limit` / `rpm_limit` set.
-- **Google Agent Search in the UI** — add a Google Agent Search (formerly Vertex AI Search) vector store straight from the **Add New Vector Store** form, with inline Discovery Engine setup guidance — no config file edits required.
 
 ## Stability for Claude Code & MCP
 
@@ -71,10 +58,6 @@ The proxy's busiest interactive surfaces — Claude Code (`/v1/messages` + `/v1/
 **Claude Code × LiteLLM compatibility matrix, regenerated daily.** A new docs page renders a live pass/fail grid for every supported Claude Code feature against every provider (Anthropic, Bedrock Invoke, Bedrock Converse, Vertex AI, Azure Foundry). It's populated by a daily cron (`tests/claude_code/cron_vm/run_daily.sh`) that exercises each cell end-to-end and opens an auto-PR with the refreshed JSON; failure cells expose the upstream error on hover so you can see *why* a combination is red the same day it regresses. ([docs PR #97](https://github.com/BerriAI/litellm-docs/pull/97))
 
 **Reasoning-effort grid e2e suite.** A new regression suite drives every reasoning-effort level (`minimal` / `low` / `medium` / `high` / `xhigh` / `max`) against every provider that exposes one — Anthropic, Bedrock Converse, Vertex Anthropic, Azure AI Anthropic, Databricks. Status is classified by exception `status_code`, not class name, so the suite distinguishes a real provider 400 from a flaky 429 and catches drift between provider request shapes and the `output_config.effort` plumbing before customers do. ([PR #28036](https://github.com/BerriAI/litellm/pull/28036))
-
-**Full reasoning_effort coverage on `/v1/chat/completions` ↔ Claude (incl. 4.5 backports).** `output_config.effort` is now forwarded end-to-end across Anthropic, Bedrock, Vertex Anthropic, Azure AI Anthropic, and Databricks; garbage values fail fast with a 400 instead of being silently dropped. `xhigh` / `max` are backported to the Claude 4.5 family and older snapshots so customers on pre-4.6 deployments get the full effort range through both `/v1/chat/completions` and `/v1/messages`. ([PR #27074](https://github.com/BerriAI/litellm/pull/27074))
-
-**Bedrock Converse — empty thinking-block content.** Claude Code with extended thinking replays prior assistant turns containing an empty thinking block (`thinking=""`, `signature=""`) alongside `tool_use`. The unsigned-reasoning fallback was emitting `BedrockContentBlock(text="")`, which Converse rejects with *"The text field in the ContentBlock object … is blank."* The fallback now drops the empty block instead of stringifying it, so multi-turn tool-use replays through Bedrock Converse stop 400'ing. ([PR #27850](https://github.com/BerriAI/litellm/pull/27850))
 
 **MCP OAuth — `PROXY_BASE_URL` escape hatch for `{"detail":"invalid_request"}`.** When the proxy sits behind a reverse proxy or load balancer that rewrites the request scheme or host, the OAuth callback's `redirect_uri` validation can fail with an opaque `{"detail":"invalid_request"}`. A new `PROXY_BASE_URL` env var pins the canonical external URL used for redirect comparison, and diagnostic logging now records the exact mismatch so the next failure is debuggable from logs alone. ([PR #28086](https://github.com/BerriAI/litellm/pull/28086))
 
@@ -99,12 +82,12 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 - **[Azure AI](https://docs.litellm.ai/docs/providers/azure_ai)**
     - Add Azure AI Foundry GPT-5.4 model metadata (gpt-5.4 / pro / mini / nano + dated aliases) - [PR #28030](https://github.com/BerriAI/litellm/pull/28030)
 - **[Bedrock](https://docs.litellm.ai/docs/providers/bedrock)**
-    - Add `jp.` cross-region inference profile for `claude-sonnet-4-6` - [PR #27831](https://github.com/BerriAI/litellm/pull/27831)
+    - Add `jp.` cross-region inference profile for `claude-sonnet-4-6` - [PR #27976](https://github.com/BerriAI/litellm/pull/27976)
 
 #### Bug Fixes
 
 - **[Bedrock](https://docs.litellm.ai/docs/providers/bedrock)**
-    - bedrock-mantle: use `/anthropic/v1/messages` path for Mantle (Claude Mythos Preview) endpoint — `/v1/messages` was 404ing every Mantle request - [PR #27943](https://github.com/BerriAI/litellm/pull/27943)
+    - bedrock-mantle: use `/anthropic/v1/messages` path for Mantle (Claude Mythos Preview) endpoint — `/v1/messages` was 404ing every Mantle request - [PR #27976](https://github.com/BerriAI/litellm/pull/27976)
 
 ## LLM API Endpoints
 
@@ -117,8 +100,6 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 
 #### Bugs
 
-- **Anthropic Messages API (`/v1/messages`)**
-    - Sanitize empty/whitespace-only `{"type":"text"}` content blocks before dispatch (prevents 400s on tool-use histories) - [PR #27832](https://github.com/BerriAI/litellm/pull/27832)
 - **[Batch API](https://docs.litellm.ai/docs/batches)**
     - Managed batches: convert raw provider `output_file_id` to managed ID in the `CheckBatchCost` poller so `GET /files/{id}/content` resolves routing - [PR #27984](https://github.com/BerriAI/litellm/pull/27984)
 
@@ -130,6 +111,8 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
     - Allow allowlisted redirect URIs in OAuth setup - [PR #27761](https://github.com/BerriAI/litellm/pull/27761)
 - **Config**
     - Make `/config/update` env-var encryption idempotent (fixes double-encryption on repeated updates) + endpoint-level regression test - [PR #28022](https://github.com/BerriAI/litellm/pull/28022)
+- **Models + Endpoints**
+    - Sort BYOK models by their displayed name in `/v2/model/info` - [PR #28079](https://github.com/BerriAI/litellm/pull/28079)
 
 ## AI Integrations
 
@@ -137,6 +120,7 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 
 - **[OpenTelemetry](https://docs.litellm.ai/docs/proxy/logging#opentelemetry)**
     - OTel-standard attributes on the proxy SERVER span: `http.response.status_code`, `http.route`, `url.path`, `litellm.preprocessing.duration_ms` - [PR #28040](https://github.com/BerriAI/litellm/pull/28040)
+    - Set `http.response.status_code` on the success SERVER span (not just error spans) - [PR #28090](https://github.com/BerriAI/litellm/pull/28090)
     - Opt-in support for the experimental OTEL GenAI semantic conventions (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`); default behavior unchanged - [PR #27418](https://github.com/BerriAI/litellm/pull/27418)
 
 #### Guardrails
@@ -167,6 +151,7 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 - **Weighted-Routing Failover** — on failure, retry the same model group on a different deployment while the initial pick respects configured weights; behind a router-level flag - [PR #27980](https://github.com/BerriAI/litellm/pull/27980)
 - **Chat-completions fast path** — cache callback capabilities once instead of re-scanning `litellm.callbacks` per request; skip streaming-iterator wrapping when no callback needs it - [PR #27858](https://github.com/BerriAI/litellm/pull/27858)
 - **Componentized deployment** — additive `gateway/`, `backend/`, `ui/` Dockerfiles + Helm chart (per-component Deployment/Service/HPA, no edits to existing modules) - [PR #27557](https://github.com/BerriAI/litellm/pull/27557)
+- **Terraform stacks** — AWS ECS + GCP Cloud Run stacks for deploying the componentized gateway - [PR #27673](https://github.com/BerriAI/litellm/pull/27673)
 
 ## General Proxy Improvements
 
@@ -183,28 +168,25 @@ Testing, CI & build hardening:
 - Validate response fields against the Interaction schema - [PR #28037](https://github.com/BerriAI/litellm/pull/28037)
 - De-flake `test_gemini_image_size_limit_exceeded` - [PR #28039](https://github.com/BerriAI/litellm/pull/28039)
 - Pin `openai==2.33.0` in `uv.lock` - [PR #28088](https://github.com/BerriAI/litellm/pull/28088)
-- Add one-line docstring to `_disable_debugging` - [PR #27894](https://github.com/BerriAI/litellm/pull/27894)
 
 ## New Contributors
 
 - @vladpolevoi made their first contribution in [#27648](https://github.com/BerriAI/litellm/pull/27648)
-- @Cyberfilo made their first contribution in [#27831](https://github.com/BerriAI/litellm/pull/27831)
-- @jpv-costa made their first contribution in [#27943](https://github.com/BerriAI/litellm/pull/27943)
 
-**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.85.0-rc.2...litellm_internal_staging
+**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.85.0-rc.2...v1.86.0-rc.1
 
 ---
 
 ## 05/16/2026 (`v1.86.0rc1`)
 
-* New Models / Updated Models: 3
-* LLM API Endpoints: 4
-* Management Endpoints / UI: 2
-* AI Integrations (Logging / Guardrails / Secret Managers): 5
+* New Models / Updated Models: 2
+* LLM API Endpoints: 3
+* Management Endpoints / UI: 3
+* AI Integrations (Logging / Guardrails / Secret Managers): 6
 * Spend Tracking, Budgets and Rate Limiting: 3
-* MCP Gateway: 2
-* Performance / Loadbalancing / Reliability improvements: 3
-* General Proxy Improvements (testing / CI / build): 13
+* MCP Gateway: 3
+* Performance / Loadbalancing / Reliability improvements: 4
+* General Proxy Improvements (testing / CI / build): 12
 * Documentation Updates: 0
 
-Total: 35 PRs
+Total: 36 PRs
