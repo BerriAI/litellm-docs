@@ -20,6 +20,7 @@ hide_table_of_contents: false
 
 ## Deploy this version
 
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -51,17 +52,15 @@ pip install litellm==1.86.0rc1
 - **Componentized deployment** — additive scaffold + Helm chart to split the monolithic proxy into independently scalable `gateway`, `backend`, and `ui` services.
 - **Critical rate-limit regression fixed** — the v3 limiter was leaking internal reservation keys into the upstream provider body, breaking *every* virtual key with a `tpm_limit` / `rpm_limit` set.
 
-## Stability for Claude Code & MCP
+## Claude Code compatibility coverage
 
-The proxy's busiest interactive surfaces — Claude Code (`/v1/messages` + `/v1/chat/completions`) and MCP — picked up a batch of stability fixes this release, plus a new safety net that catches future regressions before they ship.
+We expanded the set of Claude Code features that LiteLLM automatically tests against daily, and added a Known Issues section to the [Claude Code compatibility doc](https://docs.litellm.ai/docs/claude_code_compatibility) so customers can see which combinations are red, and why, before hitting them in production.
 
-**Claude Code × LiteLLM compatibility matrix, regenerated daily.** A new docs page renders a live pass/fail grid for every supported Claude Code feature against every provider (Anthropic, Bedrock Invoke, Bedrock Converse, Vertex AI, Azure Foundry). It's populated by a daily cron (`tests/claude_code/cron_vm/run_daily.sh`) that exercises each cell end-to-end and opens an auto-PR with the refreshed JSON; failure cells expose the upstream error on hover so you can see *why* a combination is red the same day it regresses. ([docs PR #97](https://github.com/BerriAI/litellm-docs/pull/97))
+This is a direct response to customer feedback on stability and regressions. The matrix is backed by a rigorous end-to-end suite that hits real provider endpoints with no mocking. The suite re-runs every day and the doc renders the latest LiteLLM stable against the latest Claude Code version.
 
-**Reasoning-effort grid e2e suite.** A new regression suite drives every reasoning-effort level (`minimal` / `low` / `medium` / `high` / `xhigh` / `max`) against every provider that exposes one — Anthropic, Bedrock Converse, Vertex Anthropic, Azure AI Anthropic, Databricks. Status is classified by exception `status_code`, not class name, so the suite distinguishes a real provider 400 from a flaky 429 and catches drift between provider request shapes and the `output_config.effort` plumbing before customers do. ([PR #28036](https://github.com/BerriAI/litellm/pull/28036))
+<Image img={require('../../img/release_notes/claude_code_compat_matrix.png')} style={{ width: '800px', height: 'auto' }} />
 
-**MCP OAuth — `PROXY_BASE_URL` escape hatch for `{"detail":"invalid_request"}`.** When the proxy sits behind a reverse proxy or load balancer that rewrites the request scheme or host, the OAuth callback's `redirect_uri` validation can fail with an opaque `{"detail":"invalid_request"}`. A new `PROXY_BASE_URL` env var pins the canonical external URL used for redirect comparison, and diagnostic logging now records the exact mismatch so the next failure is debuggable from logs alone. ([PR #28086](https://github.com/BerriAI/litellm/pull/28086))
-
-**v3 rate limiter — stop leaking internal stash to provider body.** The atomic TPM reservation flow introduced in PR #27001 was stashing `_litellm_rate_limit_descriptors` / `_litellm_tpm_reserved_*` on the top level of the request data dict, where they were forwarded to the upstream provider. OpenAI rejected them as `Unknown parameter` (mapped back to a misleading 429); Anthropic as `Extra inputs are not permitted`. Any virtual key with a `tpm_limit` / `rpm_limit` set was 400'ing on the success path. The stash is now strictly metadata, and the pre-call hook strips any stash key that surfaces at the top level — which also closes a TPM-refund abuse vector where an authenticated caller could inject reservation values to refund counters against another tenant's scope. ([PR #27913](https://github.com/BerriAI/litellm/pull/27913))
+Today's coverage sits at 76% across Anthropic, Bedrock Invoke, Bedrock Converse, Vertex AI, and Azure Foundry. Over the next week we plan to bring this to 90%. Coming soon, the same suite will gate PRs: any cell flipping green to red will fail the check and block merges into staging, making it much harder for code that breaks Claude Code to land in the next release.
 
 ## New Models / Updated Models
 
