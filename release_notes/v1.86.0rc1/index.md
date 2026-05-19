@@ -62,6 +62,7 @@ pip install litellm==1.86.0rc1
 - **OTel-standard server-span attributes** — the proxy SERVER span now carries `http.response.status_code`, `http.route`, `url.path`, and `litellm.preprocessing.duration_ms`, plus an opt-in for the experimental OTEL GenAI semantic conventions.
 - **Componentized deployment** — additive scaffold + Helm chart to split the monolithic proxy into independently scalable `gateway`, `backend`, and `ui` services.
 - **Critical rate-limit regression fixed** — the v3 limiter was leaking internal reservation keys into the upstream provider body, breaking *every* virtual key with a `tpm_limit` / `rpm_limit` set.
+- **Google Agent Search in the UI** — add a Google Agent Search (formerly Vertex AI Search) vector store straight from the **Add New Vector Store** form, with inline Discovery Engine setup guidance — no config file edits required.
 
 ## Stability for Claude Code & MCP
 
