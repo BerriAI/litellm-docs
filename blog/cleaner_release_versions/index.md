@@ -11,12 +11,18 @@ hide_table_of_contents: false
 
 *Last Updated: May 2026*
 
-:::info The rolling `main-stable` Docker tag is still being updated — that's intentional
-`main-stable` is a **moving pointer** tag (like `:latest`, but for stable releases). It advances to the newest stable image each week and exists for users who want "always the latest stable" without re-pinning — that's why you continue to see it updated.
+:::warning `main-stable` is deprecated — migrate to `:latest` by June 30, 2026
+The legacy `main-stable` Docker tag still advances each week so existing deployments keep working, but **we plan to stop publishing it on June 30, 2026 (end of Q2)**. Going forward, **`:latest`** is the canonical rolling pointer to the newest stable image — it advances automatically when each stable ships and matches the standard Docker convention.
 
-It is unrelated to the per-release `-stable` *suffix* on immutable tags (e.g. `v1.83.3-stable`) being dropped from new version names below. Existing deployments that pull `ghcr.io/berriai/litellm:main-stable` (and the equivalent `docker.litellm.ai/berriai/litellm:main-stable`) keep working unchanged.
+`main-stable` carries over from the previous naming scheme and doesn't fit modern conventions: it mixes "main" (typically a development branch) with "stable" (a release channel), and has no PyPI counterpart.
 
-For reproducible production deploys, pin to a content tag like `ghcr.io/berriai/litellm:1.84.0` instead of the rolling pointer.
+**Migration:**
+
+- **Rolling stable (Docker)** → `ghcr.io/berriai/litellm:latest`
+- **Reproducible pin (Docker)** → `ghcr.io/berriai/litellm:1.84.0`
+- **Reproducible pin (PyPI)** → `pip install litellm==1.84.0`
+
+This banner will be updated with reminders as the cutover approaches.
 :::
 
 LiteLLM release version names are changing. Two pain points have been driving this:
