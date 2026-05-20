@@ -311,7 +311,6 @@ const sidebars = {
           type: "category",
           label: "Agent & MCP Gateway",
           items: [
-            "auth_overview",
             {
               type: "category",
               label: "A2A Agent Gateway",
@@ -357,6 +356,7 @@ const sidebars = {
                 "skills_gateway",
               ],
             },
+            { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
           ],
         },
         {

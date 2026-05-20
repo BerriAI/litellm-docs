@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# AuthN/AuthZ Reference — MCP and A2A Side-by-Side
+# Gateway Auth Reference
 
 LiteLLM exposes two gateway surfaces that share most authentication and authorization primitives but diverge in a few important places. This page is the side-by-side reference: which header does what, where the two surfaces are symmetric, and where they're not. Each section links out to the dedicated page for the deep dive.
 
@@ -14,7 +14,7 @@ LiteLLM exposes two gateway surfaces that share most authentication and authoriz
 
 ## 1. Client → LiteLLM (authenticating the caller)
 
-Both surfaces accept the same LiteLLM Virtual Key headers and the same identification headers. The one place they diverge: the MCP **ASGI** routes (the streamable MCP endpoints at `/mcp`, `/{name}/mcp`, `/toolset/{name}/mcp`, `/sse`) bypass the standard FastAPI auth dependency and only check `x-litellm-api-key` and `Authorization`. The MCP **REST/management** routes (`/v1/mcp/...`, `/mcp-rest/...`) and **all** A2A routes accept the full six-header set.
+Both surfaces accept the same LiteLLM Virtual Key headers and the same identification headers. The one place they diverge: the MCP **ASGI** routes (the streamable MCP endpoints at `/mcp`, `/{name}/mcp`, `/toolset/{name}/mcp`, `/sse`) bypass the standard FastAPI auth dependency and do not parse the vendor-specific auth aliases (`API-Key`, `x-api-key`, `x-goog-api-key`, `Ocp-Apim-Subscription-Key`) or `x-litellm-tags`. The MCP **REST/management** routes (`/v1/mcp/...`, `/mcp-rest/...`) and **all** A2A routes accept the full header set.
 
 | Header | Purpose | MCP ASGI | MCP REST + A2A |
 |---|---|---|---|
@@ -53,12 +53,12 @@ There is no `auth_type` field on an agent. The provider handler picks the auth m
 | Mode | When it fires | Send to backend |
 |---|---|---|
 | **Bearer / JWT** | `litellm_params.api_key` is set | `Authorization: Bearer <api_key>` |
-| **SigV4** (AgentCore only) | `litellm_params.api_key` is unset and the provider is `bedrock` | Per-request SigV4 via the full `base_aws_llm` credential chain (six entry points: web-identity+role, role alone, profile, session-token triple, key+secret, env-vars / IRSA fallback). See [Bedrock AgentCore — A2A Gateway Authentication](./providers/bedrock_agentcore#a2a-gateway-authentication). |
+| **SigV4** (AgentCore only) | `litellm_params.api_key` is unset | Per-request SigV4 via the full AWS credential chain. See [Bedrock AgentCore — A2A Gateway Authentication](./providers/bedrock_agentcore#a2a-gateway-authentication). |
 | **Provider-native** | `litellm_params.custom_llm_provider` matches a non-Bedrock provider (Vertex AI Agent Engine, LangGraph, Azure AI Foundry, Pydantic AI) | The provider's normal auth path |
 
 The dual JWT-vs-SigV4 mode is specific to AgentCore. Other A2A providers (Vertex, LangGraph, Azure Foundry) use the provider's own credential conventions — see the relevant provider page under [Providers](./providers).
 
-### Zero-trust add-on (MCP-only today)
+### Zero-trust add-on (MCP only)
 
 If the MCP server needs to **cryptographically verify** the request came through LiteLLM, layer the [MCP JWT Signer](./mcp_zero_trust) guardrail on top. It signs every outbound tool call with a short-lived RS256 JWT and publishes a JWKS endpoint the MCP server can verify against. This is a guardrail (`guardrail: mcp_jwt_signer`, `mode: pre_mcp_call`), not an `auth_type` — it composes with any `auth_type`.
 
@@ -70,8 +70,8 @@ Both surfaces let clients forward credentials destined for a specific backend se
 
 | Surface | Prefix | Parse rule | Match against | Example |
 |---|---|---|---|---|
-| **MCP** | `x-mcp-` | Split on the **first dash** after the prefix → `(server_alias, header_name)` | Server's `alias`, then `server_name` (case-insensitive) | `x-mcp-github-authorization: Bearer ghp_...` → server `github`, header `Authorization` |
-| **A2A** | `x-a2a-` | Exact-prefix match against `x-a2a-{agent_id_lower}-` or `x-a2a-{agent_name_lower}-`; everything after the trailing dash is the header name | Agent's UUID **and** human-readable name (both tried) | `x-a2a-my-agent-x-api-key: secret` → agent `my-agent`, header `x-api-key` |
+| **MCP** | `x-mcp-` | Format: `x-mcp-{server_alias}-{header_name}` | Server's `alias`, then `server_name` (case-insensitive) | `x-mcp-github-authorization: Bearer ghp_...` → server `github`, header `Authorization` |
+| **A2A** | `x-a2a-` | Format: `x-a2a-{agent_name_or_id}-{header_name}`; matched against agent's UUID and human-readable name (both tried) | Agent's UUID **and** human-readable name (both tried) | `x-a2a-my-agent-x-api-key: secret` → agent `my-agent`, header `x-api-key` |
 
 Both surfaces also support admin-controlled alternatives that compose with the user passthrough:
 
@@ -85,7 +85,7 @@ See [MCP Overview — Forwarding Custom Headers](./mcp#forwarding-custom-headers
 
 ---
 
-## 4. AuthZ — RBAC and access groups
+## 4. Authorization — RBAC and access groups
 
 Both surfaces use the `object_permission` model with intersection-style resolution, but at different depths today. MCP resolves across five levels; A2A across two. The detailed flowcharts and tables live on the dedicated pages:
 
