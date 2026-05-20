@@ -66,6 +66,7 @@ const sidebars = {
           "proxy/guardrails/qohash_qostodian_nexus",
           "proxy/guardrails/qualifire",
           "proxy/guardrails/aim_security",
+          "proxy/guardrails/alice_wonderfence",
           "proxy/guardrails/onyx_security",
           "proxy/guardrails/aporia_api",
           "proxy/guardrails/azure_content_guardrail",
