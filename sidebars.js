@@ -795,6 +795,7 @@ const sidebars = {
             "search/searxng",
             "search/linkup",
             "search/serper",
+            "search/you_com",
           ]
         },
         "skills",
