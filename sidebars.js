@@ -311,6 +311,7 @@ const sidebars = {
           type: "category",
           label: "Agent & MCP Gateway",
           items: [
+            "auth_overview",
             {
               type: "category",
               label: "A2A Agent Gateway",
