@@ -9,6 +9,16 @@ tags: [release, packaging, docker]
 hide_table_of_contents: false
 ---
 
+*Last Updated: May 2026*
+
+:::info The rolling `main-stable` Docker tag is still being updated — that's intentional
+`main-stable` is a **moving pointer** tag (like `:latest`, but for stable releases). It advances to the newest stable image each week and exists for users who want "always the latest stable" without re-pinning — that's why you continue to see it updated.
+
+It is unrelated to the per-release `-stable` *suffix* on immutable tags (e.g. `v1.83.3-stable`) being dropped from new version names below. Existing deployments that pull `ghcr.io/berriai/litellm:main-stable` (and the equivalent `docker.litellm.ai/berriai/litellm:main-stable`) keep working unchanged.
+
+For reproducible production deploys, pin to a content tag like `ghcr.io/berriai/litellm:1.84.0` instead of the rolling pointer.
+:::
+
 LiteLLM release version names are changing. Two pain points have been driving this:
 
 **1. The `-stable` and `-nightly` suffixes aren't standard.**
