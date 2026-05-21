@@ -56,12 +56,25 @@ curl --location 'http://0.0.0.0:4000/v1/embeddings' \
     "model": "sagemaker-embeddings",
 }'
 ```
+## Default `encoding_format` {#embedding-encoding-format}
 
+For embeddings routed through LiteLLM’s **OpenAI-compatible embedding path** (for example OpenAI models, `openai/...` with a custom `api_base`, or the proxy `/v1/embeddings` route that forwards to that path), LiteLLM sends an explicit `encoding_format` when the caller omits it.
 
+**Resolution order** (first match wins):
 
+1. Value in the embedding request body (`encoding_format` in JSON).
+2. Per-model default from `litellm_params.encoding_format` in `config.yaml`.
+3. Process environment variable **`LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT`** (e.g. `float` or `base64`).
+4. Fallback **`float`**.
 
+You can still override per request from any OpenAI-compatible client:
 
+```bash
+curl --location 'http://0.0.0.0:4000/v1/embeddings' \
+  --header 'Authorization: Bearer sk-1234' \
+  --header 'Content-Type: application/json' \
+  --data '{"model": "my-embedding-model", "input": "hello", "encoding_format": "base64"}'
+```
 
-
-
+See also: [Config settings](./config_settings.md) (`LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT`).
 

@@ -153,6 +153,8 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
 ## Embeddings
 
+vLLM serves OpenAI-compatible `/v1/embeddings`. When clients omit `encoding_format`, LiteLLM defaults it for OpenAI-compatible embedding routing (request → model `litellm_params` → `LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT` → `float`). See [Embeddings](../proxy/embedding.md#embedding-encoding-format).
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 

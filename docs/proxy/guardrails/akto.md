@@ -1,27 +1,29 @@
 # Akto
 
-## Overview
-[Akto](https://www.akto.io/) provides API security guardrails and data ingestion for LLM traffic.
+Use [Akto](https://www.akto.io/) as a guardrail provider, enabling runtime security for all LLM traffic routed through the proxy. Akto is purpose-built to secure autonomous and agentic AI systems that inspects every request and response inline, risk-scores interactions, and enforces policy decisions to block harmful actions, data exposure, and unsafe behavior before they can occur.
 
-Akto now uses a **two-entry guardrail pattern** in LiteLLM:
-- `akto-validate` (`pre_call`) for request validation
-- `akto-ingest` (`post_call`) for request/response ingestion
+Akto's key capabilities include:
 
-There is no `on_flagged` setting anymore.
+- **Agentic AI Discovery** - automatically discover AI agents, MCP servers, and GenAI applications across your cloud environments
+- **Continuous AI Red Teaming** - run 4,000+ AI-specific probes to identify risks such as prompt injection, tool misuse, policy bypass, and emerging attack patterns in CI/CD
+- **Runtime Guardrails** - enforce configurable policies covering prompt injection, jailbreaks, sensitive data leakage, unauthorized tool use, schema violations, and more
+- **AI Security Posture Management** - unified visibility into risk scores, compliance gaps, and security metrics, with support for 10+ standards including OWASP GenAI, NIST AI RMF, and MITRE ATLAS
 
-Use these as two separate guardrails in `config.yaml`:
-- `guardrail_name: "akto-validate"`
-- `guardrail_name: "akto-ingest"`
+The integration with akto uses a **two-entry guardrail pattern**:
+- `akto-validate` (`pre_call`) — validates requests against your security policies before they reach the LLM
+- `akto-ingest` (`post_call`) — ingests requests and responses into Akto for monitoring and analysis
 
-## 1. Get Your Akto Credentials
+## Quick Start
+
+### 1. Get Your Akto Credentials
 
 Set up the Akto Guardrail API Service and grab:
 - `AKTO_GUARDRAIL_API_BASE` — your Guardrail API Base URL
 - `AKTO_API_KEY` — your API key
 
-## 2. Configure in `config.yaml`
+### 2. Configure in `config.yaml`
 
-### Block + Ingest (recommended)
+#### Block + Ingest (recommended)
 
 Use both entries below. This gives you:
 - pre-call block decision
@@ -52,7 +54,7 @@ guardrails:
       default_on: true
 ```
 
-### Monitor-only mode
+#### Monitor-only mode
 
 If you only want logging/ingestion and no blocking, keep only `akto-ingest`.
 
@@ -67,7 +69,7 @@ guardrails:
       default_on: true
 ```
 
-## 3. Test It
+### 3. Test request
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
@@ -94,7 +96,9 @@ If a request gets blocked:
 }
 ```
 
-## 4. How It Works
+## How It Works
+
+When an LLM request arrives, the Akto connector hands the payload to the Akto Guardrail Engine, which evaluates it against your input policies and returns the verdict. Approved requests are forwarded to the LLM provider. Responses are sent back through the engine for output guardrail checks before being delivered to the caller. Every decision flows into the Akto dashboard for monitoring, threat analysis, and remediation.
 
 **Block + Ingest mode:**
 ```
@@ -109,7 +113,7 @@ Request → LiteLLM → forward to LLM → get response
   → Send to Akto (guardrails + ingest) → log only
 ```
 
-## 5. Event behavior
+## Event Behavior
 
 | Entry | LiteLLM hook | Akto call behavior |
 |------|---|---|
@@ -118,7 +122,7 @@ Request → LiteLLM → forward to LLM → get response
 
 When blocked in `pre_call`, LiteLLM sends one fire-and-forget ingest payload with blocked metadata and returns `403`.
 
-## 6. Parameters
+## Supported Parameters
 
 | Parameter | Env Variable | Default | Description |
 |-----------|-------------|---------|-------------|
@@ -130,10 +134,12 @@ When blocked in `pre_call`, LiteLLM sends one fire-and-forget ingest payload wit
 | `guardrail_timeout` | — | `5` | Timeout in seconds |
 | `default_on` | — | `true` (recommended) | Enables the guardrail entry by default |
 
-## 7. Error Handling
+## Error Handling
 
 | Scenario | `fail_closed` (default) | `fail_open` |
 |----------|------------------------|-------------|
 | Akto unreachable | ❌ Blocked (503) | ✅ Passes through |
 | Akto returns error | ❌ Blocked (503) | ✅ Passes through |
 | Guardrail says no | ❌ Blocked (403) | ❌ Blocked (403) |
+
+In case you want to reach out to the Akto team, contact them at [support@akto.io](mailto:support@akto.io).

@@ -1,7 +1,7 @@
 ---
-title: "[Preview] v1.83.7.rc.1 - Per-User MCP OAuth, Team Spend Logs RBAC"
-slug: "v1-83-7-rc-1"
-date: 2026-04-12T00:00:00
+title: "v1.83.7-stable - Per-User MCP OAuth, Team Spend Logs RBAC"
+slug: "v1-83-7-stable"
+date: 2026-04-18T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -38,7 +38,7 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:main-v1.83.7.rc.1
+docker.litellm.ai/berriai/litellm:main-v1.83.7-stable
 ```
 
 </TabItem>
@@ -188,6 +188,7 @@ pip install litellm==1.83.7
 
 - **Per-user OAuth token storage for interactive MCP flows** - [PR #25441](https://github.com/BerriAI/litellm/pull/25441)
 - Block arbitrary command execution via MCP `stdio` transport - [PR #25343](https://github.com/BerriAI/litellm/pull/25343)
+- Restore PKCE-triggering 401 when no stored per-user token exists - [commit e0d5c28](https://github.com/BerriAI/litellm/commit/e0d5c28db02b3219dbd944666a55f49732197922)
 - Document missing MCP per-user token environment variables in `config_settings` - [PR #25471](https://github.com/BerriAI/litellm/pull/25471)
 
 ## Performance / Loadbalancing / Reliability improvements
@@ -220,4 +221,4 @@ pip install litellm==1.83.7
 * @csoni-cweave made their first contribution in https://github.com/BerriAI/litellm/pull/25441
 * @jimmychen-p72 made their first contribution in https://github.com/BerriAI/litellm/pull/25530
 
-**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.3.rc.1...v1.83.7.rc.1
+**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.3-stable...v1.83.7-stable

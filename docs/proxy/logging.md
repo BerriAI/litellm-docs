@@ -739,6 +739,12 @@ You will see `raw_request` in your Langfuse Metadata. This is the RAW CURL comma
 
 ## OpenTelemetry
 
+:::tip
+
+The full OpenTelemetry reference — span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting — lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
+
+:::
+
 :::info 
 
 [Optional] Customize OTEL Service Name and OTEL TRACER NAME by setting the following variables in your environment

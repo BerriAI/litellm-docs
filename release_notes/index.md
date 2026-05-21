@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.82.3 — Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 New Models](/release_notes/v1.82.3/v1-82-3)
+### [v1.85.0 — Realtime GA, MCP Gateway Expansion & Hardened Multi-Tenancy](/release_notes/v1.85.0/v1-85-0)
 
-_March 16, 2026_
+_May 16, 2026_
 
-116 new models including Nebius AI, gpt-5.4, Gemini 3.x, and FLUX Kontext.
+OpenAI Realtime GA (with `gpt-realtime-2` pricing and `/openai/v1/realtime` logging), a broad multi-tenancy hardening sweep across keys, projects, batches, files, and MCP servers, MCP Gateway expansion (org-level permissions, OBO auth, `delegate_auth_to_upstream` PKCE passthrough), an observability overhaul (Prometheus label/cardinality fixes + OTEL handler isolation), and new models including xAI `grok-4.3`, OpenAI `gpt-realtime-2`, OpenRouter Qwen 3.6 Plus, SambaNova MiniMax-M2.7, and Bedrock Z.AI GLM-5.
 
 ---
 
@@ -22,12 +22,17 @@ _March 16, 2026_
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.85.0](/release_notes/v1.85.0/v1-85-0)   | May 16, 2026 | Realtime GA, MCP Gateway expansion & hardened multi-tenancy |
+| [v1.84.0](/release_notes/v1.84.0/v1-84-0)   | May 14, 2026 | Reliability hardening + multi-pod budget accuracy          |
+| [v1.83.14](/release_notes/v1.83.14/v1-83-14) | Apr 27, 2026 | GPT-5.5, Prompt Compression & Memory API                   |
+| [v1.83.10](/release_notes/v1.83.10/v1-83-10) | Apr 27, 2026 | Claude Opus 4.7, Prompt Compression & Multi-Window Budgets |
+| [v1.82.3](/release_notes/v1.82.3/v1-82-3)   | Mar 16, 2026 | Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 new models |
 | [v1.82.0](/release_notes/v1.82.0/v1-82-0)   | Feb 28, 2026 | Realtime Guardrails, Projects Management, and 10+ Performance Optimizations |
 | [v1.81.14](/release_notes/v1.81.14/v1-81-14) | Feb 21, 2026 | New Gateway Level Guardrails & Compliance Playground       |
 | [v1.81.12](/release_notes/v1.81.12/v1-81-12) | Feb 14, 2026 | Guardrail Policy Templates & Action Builder                |
 | [v1.81.9](/release_notes/v1.81.9/v1-81-9)   | Feb 7, 2026  | Control which MCP Servers are exposed on the Internet      |
 | [v1.81.6](/release_notes/v1.81.6/v1-81-6)   | Jan 31, 2026 | Logs v2 with Tool Call Tracing                             |
-| [v1.81.3](/release_notes/v1.81.3-stable/v1-81-3)   | Jan 26, 2026 | Performance — 25% CPU Usage Reduction                      |
+| [v1.81.3](/release_notes/v1.81.3/v1-81-3)   | Jan 26, 2026 | Performance — 25% CPU Usage Reduction                      |
 | [v1.81.0](/release_notes/v1.81.0/v1-81-0)          | Jan 18, 2026 | Claude Code — Web Search Across All Providers              |
 | [v1.80.15](/release_notes/v1.80.15/v1-80-15)       | Jan 10, 2026 | Manus API Support                                          |
 | [v1.80.8](/release_notes/v1.80.8-stable/v1-80-8)   | Dec 6, 2025  | Introducing A2A Agent Gateway                              |

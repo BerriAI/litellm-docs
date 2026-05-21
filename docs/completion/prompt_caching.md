@@ -12,6 +12,20 @@ Supported Providers:
 - Deepseek API (`deepseek/`)
 - xAI (`xai/`)
 
+:::warning Minimum token requirements
+Prompt caching is silently skipped when the input is below the provider's minimum — **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
+
+| Provider | Minimum input tokens |
+|---|---|
+| OpenAI | 1,024 |
+| Anthropic (Claude 3.x) | 1,024 |
+| Anthropic (Claude Sonnet/Opus 4.x) | 2,048 |
+| Anthropic (Claude Haiku 4.5+, Opus 4.5+) | 4,096 |
+| Bedrock (Claude 3.5, 3.7) | 1,024 |
+| Bedrock (Claude Sonnet 4.x) | 2,048 |
+| Google Gemini | 1,024 |
+:::
+
 For the supported providers, LiteLLM follows the OpenAI prompt caching usage object format:
 
 ```bash
@@ -358,6 +372,117 @@ print(response.usage)
 
 </TabItem>
 </Tabs>
+
+:::tip Minimum tokens (Anthropic)
+Prompts below the minimum are processed without caching — no error is returned. Check `cache_creation_input_tokens` in the response.
+
+| Model | Min tokens |
+|---|---|
+| Claude 3 Haiku, 3 Sonnet, 3 Opus | 1,024 |
+| Claude 3.5 Sonnet, 3.7 Sonnet | 1,024 |
+| Claude 3.5 Haiku | 2,048 |
+| Claude Sonnet 4.5, Sonnet 4.6, Opus 4 | 2,048 |
+| Claude Haiku 4.5, Opus 4.5+ | 4,096 |
+:::
+
+### Bedrock Example
+
+LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format — no changes needed to your existing code if you're already using `cache_control`.
+
+:::tip Minimum tokens (Bedrock)
+Prompts below the minimum are processed without caching — no error is returned. Check `cache_creation_input_tokens` in the response.
+
+| Model family | Min tokens per request |
+|---|---|
+| Claude 3.5 Sonnet v2, Claude 3.7 Sonnet | 1,024 |
+| Claude Sonnet 4.5, Sonnet 4.6 | 2,048 |
+:::
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+
+response = litellm.completion(
+    model="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
+    messages=[
+        {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+                    "cache_control": {"type": "ephemeral"}
+                }
+            ]
+        },
+        {"role": "user", "content": "What is prompt caching?"}
+    ]
+)
+
+print(response.usage)
+# cache_creation_input_tokens > 0 on first call (cache written)
+# cache_read_input_tokens > 0 on subsequent calls (cache hit)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. Setup config.yaml
+
+```yaml
+model_list:
+  - model_name: bedrock-claude-sonnet
+    litellm_params:
+      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+```
+
+2. Start proxy
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+3. Test it!
+
+```bash
+curl -X POST http://localhost:4000/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -d '{
+    "model": "bedrock-claude-sonnet",
+    "messages": [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+            "cache_control": {"type": "ephemeral"}
+          }
+        ]
+      },
+      {"role": "user", "content": "What is prompt caching?"}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+**Supported Bedrock models:**
+
+| Model | Bedrock Model ID | Min Tokens | TTL Options |
+|---|---|---|---|
+| Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
+| Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
+| Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
+| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 2,048 | 5 min, 1 hour |
+
+Cross-region inference profiles are also supported for the models above.
+
+See the [AWS Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) for the full list of supported models and regions.
 
 ### Google AI Studio / Vertex AI (Gemini) Example
 

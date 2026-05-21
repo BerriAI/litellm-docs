@@ -46,6 +46,28 @@ Or from the UI: go to **MCP Servers → Add New MCP Server**, fill in the URL an
 
 **Supported spec versions:** OpenAPI 3.0.x, 3.1.x, Swagger 2.0. Each operation's `operationId` becomes the tool name — make sure they're unique.
 
+## Internal spec URLs (SSRF)
+
+When `spec_path` is an `http://` or `https://` URL, the LiteLLM proxy fetches it with **SSRF protection** enabled by default: the hostname is resolved and the request is **rejected** if any resolved address is not globally routable (e.g. `10.x`, `192.168.x`, `127.0.0.1`), unless you allowlist the **hostname from the URL** (not the resolved IP).
+
+Typical cases:
+
+- Spec URL uses `https://api.example.com/...` but DNS inside your network returns a private IP — add `api.example.com` to the allowlist (or `api.example.com:443` if you pin the port).
+- Spec URL is `http://127.0.0.1:8080/openapi.json` — add `127.0.0.1` or `127.0.0.1:8080`.
+
+Configure under **`litellm_settings`** in your proxy `config.yaml` (this is **not** read from `general_settings`):
+
+```yaml title="config.yaml" showLineNumbers
+litellm_settings:
+  user_url_validation: true # default; set false only if you fully trust URL sources
+  user_url_allowed_hosts:
+    - "api.example.com"
+    - "127.0.0.1"
+    - "127.0.0.1:8080"
+```
+
+For a full reference of these fields, see [config settings — `litellm_settings`](./proxy/config_settings.md#litellm_settings---reference).
+
 Once tools are loaded, you'll see them in the Tool Configuration section:
 
 <Image

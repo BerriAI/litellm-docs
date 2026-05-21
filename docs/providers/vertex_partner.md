@@ -3,7 +3,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 
-# Vertex AI - Anthropic, DeepSeek, Model Garden
+# Vertex AI - Anthropic, DeepSeek, Model Garden, xAI
 
 ## Supported Partner Providers
 
@@ -17,6 +17,7 @@ import TabItem from '@theme/TabItem';
 | AI21 (Jamba) | `vertex_ai/jamba-*` | [Vertex AI - AI21 Models](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/ai21) |
 | Qwen | `vertex_ai/qwen/*` | [Vertex AI - Qwen Models](https://cloud.google.com/vertex-ai/generative-ai/docs/maas/qwen) |
 | OpenAI (GPT-OSS) | `vertex_ai/openai/gpt-oss-*` | [Vertex AI - GPT-OSS Models](https://console.cloud.google.com/vertex-ai/publishers/openai/model-garden/) |
+| xAI (Grok) | `vertex_ai/xai/{MODEL}` | [xAI models (incl. Vertex)](https://docs.x.ai/docs/models), [Vertex AI Model Garden](https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models) |
 
 ## Vertex AI - Anthropic (Claude)
 
@@ -862,6 +863,87 @@ curl http://0.0.0.0:4000/v1/chat/completions \
     "messages": [{"role": "user", "content": "Solve this complex problem step by step"}],
     "reasoning_effort": "low"
   }'
+```
+
+</TabItem>
+</Tabs>
+
+## VertexAI xAI (Grok) {#vertexai-xai-grok}
+
+xAI Grok models available in **Vertex AI Model Garden** use the same OpenAI-compatible chat-completions path as other Model Garden publisher models. Use the `vertex_ai/xai/` prefix (not `xai/`, which is the direct xAI API with `XAI_API_KEY`). See also [xAI provider](./xai.md).
+
+| Property | Details |
+|----------|---------|
+| Provider Route | `vertex_ai/xai/{MODEL}` |
+| Vertex / xAI docs | [xAI models](https://docs.x.ai/docs/models), [Model Garden](https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models) |
+
+| Model Name | Usage |
+|------------|--------|
+| `vertex_ai/xai/grok-4.1-fast-non-reasoning` | `completion('vertex_ai/xai/grok-4.1-fast-non-reasoning', messages)` |
+| `vertex_ai/xai/grok-4.1-fast-reasoning` | `completion('vertex_ai/xai/grok-4.1-fast-reasoning', messages)` |
+| `vertex_ai/xai/grok-4.20-non-reasoning` | `completion('vertex_ai/xai/grok-4.20-non-reasoning', messages)` |
+| `vertex_ai/xai/grok-4.20-reasoning` | `completion('vertex_ai/xai/grok-4.20-reasoning', messages)` |
+
+#### Usage
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+import os
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
+
+vertex_ai_project = "your-vertex-project"  # or os.environ["VERTEXAI_PROJECT"]
+vertex_ai_location = "your-vertex-location"  # or os.environ["VERTEXAI_LOCATION"]
+
+response = completion(
+    model="vertex_ai/xai/grok-4.1-fast-non-reasoning",
+    messages=[{"role": "user", "content": "hi"}],
+    vertex_ai_project=vertex_ai_project,
+    vertex_ai_location=vertex_ai_location,
+)
+print("\nModel Response", response)
+```
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+**1. Add to config**
+
+```yaml
+model_list:
+    - model_name: grok-vertex
+      litellm_params:
+        model: vertex_ai/xai/grok-4.1-fast-non-reasoning
+        vertex_ai_project: "my-test-project"
+        vertex_ai_location: "us-central1"
+```
+
+**2. Start proxy**
+
+```bash
+litellm --config /path/to/config.yaml
+
+# RUNNING at http://0.0.0.0:4000
+```
+
+**3. Test it!**
+
+```bash
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+      --header 'Authorization: Bearer sk-1234' \
+      --header 'Content-Type: application/json' \
+      --data '{
+            "model": "grok-vertex",
+            "messages": [
+                {
+                "role": "user",
+                "content": "what llm are you"
+                }
+            ],
+        }'
 ```
 
 </TabItem>

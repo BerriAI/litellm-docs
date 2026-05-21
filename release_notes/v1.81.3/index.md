@@ -1,5 +1,5 @@
 ---
-title: "v1.81.3-stable - Performance - 25% CPU Usage Reduction"
+title: "v1.81.3 - Performance - 25% CPU Usage Reduction"
 slug: "v1-81-3"
 date: 2026-01-26T10:00:00
 authors:

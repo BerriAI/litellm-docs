@@ -23,6 +23,10 @@ From v1.76.0, SSO is now Free for up to 5 users.
 <Tabs>
 <TabItem value="okta" label="Okta SSO">
 
+### Video Walkthrough
+
+<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
 #### Step 1: Create an OIDC Application in Okta
 
 In your Okta Admin Console, create a new **OIDC Web Application**. See [Okta's guide on creating OIDC app integrations](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm) for detailed instructions.
