@@ -68,9 +68,10 @@ const config = {
     [
       '@inkeep/cxkit-docusaurus',
       {
-        SearchBar: {
-          ...inkeepConfig,
-        },
+        // Note: Inkeep's hosted search was reported as slow with focus/Cmd+K
+        // bugs. The navbar search is now powered by the fast offline index
+        // from @easyops-cn/docusaurus-search-local (see `themes` below).
+        // Inkeep is still used for the floating "Ask AI" chat button.
         ChatButton: {
           ...inkeepConfig,
         },
@@ -242,7 +243,33 @@ const config = {
     ],
   ],
 
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      // Fast, offline full-text search index. Replaces the slow hosted Inkeep
+      // search bar. Uses lunr under the hood and indexes both the main docs
+      // and the release_notes docs plugin instance.
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      /** @type {import('@easyops-cn/docusaurus-search-local').PluginOptions} */
+      ({
+        hashed: true,
+        docsRouteBasePath: ['docs', 'release_notes'],
+        docsDir: ['docs', 'release_notes'],
+        indexBlog: true,
+        indexPages: false,
+        language: ['en'],
+        // Programming/CLI docs frequently rely on short tokens (e.g. "is",
+        // "or", "if", "as") as searchable terms — keep stop words indexed.
+        removeDefaultStopWordFilter: true,
+        highlightSearchTermsOnTargetPage: true,
+        searchResultLimits: 8,
+        searchResultContextMaxLength: 50,
+        searchBarShortcut: true,
+        searchBarShortcutHint: true,
+        searchBarShortcutKeymap: 'mod+k',
+      }),
+    ],
+  ],
   markdown: {
     mermaid: true,
   },

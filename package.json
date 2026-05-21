@@ -19,6 +19,7 @@
     "@docusaurus/plugin-ideal-image": "3.8.1",
     "@docusaurus/preset-classic": "3.8.1",
     "@docusaurus/theme-mermaid": "3.8.1",
+    "@easyops-cn/docusaurus-search-local": "^0.55.1",
     "@inkeep/cxkit-docusaurus": "0.5.107",
     "@mdx-js/react": "3.1.1",
     "clsx": "1.2.1",
