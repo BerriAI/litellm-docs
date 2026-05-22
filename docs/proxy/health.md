@@ -301,6 +301,17 @@ model_list:
       disable_background_health_check: true
 ```
 
+### Skip the same models on `GET /health`
+
+By default, `disable_background_health_check: true` only skips those deployments in the **background** health loop. On-demand `GET /health` still probes them unless you enable this global flag:
+
+```yaml
+general_settings:
+  health_check_skip_disabled_background_models: true
+```
+
+When `true`, deployments with `model_info.disable_background_health_check: true` are omitted from on-demand `GET /health` (including `?model=` / `?model_id=`) and from health-check runs that honor `general_settings` (including Redis-backed shared health checks).
+
 ### Hide details
 
 The health check response contains details like endpoint URLs, error messages,
@@ -375,6 +386,39 @@ model_list:
 - `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` — global fallback for all models (including wildcard routes)
 
 If neither is set, non-wildcard models default to `5` and wildcard routes omit `max_tokens`.
+
+## Health check reasoning effort
+
+For reasoning models (e.g. GPT-5, o-series), you can set **only for the health-check request** how much reasoning to use via `health_check_reasoning_effort` in `model_info`. This is forwarded as `reasoning_effort` on the underlying completion call so you can use a minimal level (for example `none` or `minimal`) to reduce latency and cost during probes.
+
+Applies when `mode` is unset (chat), or explicitly `chat`, `completion`, `batch`, or `responses`. It is not applied for `embedding`, `audio_*`, `rerank`, etc.
+
+```yaml
+model_list:
+  - model_name: openai/gpt-5-nano
+    litellm_params:
+      model: openai/gpt-5-nano
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      health_check_reasoning_effort: none # options depend on provider/model map
+```
+
+### Checking which `reasoning_effort` values your model supports
+
+LiteLLM reads per-model flags from [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). For reasoning effort, entries may include `supports_none_reasoning_effort`, `supports_minimal_reasoning_effort`, `supports_low_reasoning_effort`, `supports_xhigh_reasoning_effort`, `supports_max_reasoning_effort`, and similar keys. When a key is **`true`**, LiteLLM treats that level as supported for that model.
+
+Call **`litellm.get_model_info()`** with the **same model string** you use under `litellm_params.model` (including a provider prefix such as `azure/` when you use one), then inspect the returned `supports_*_reasoning_effort` fields:
+
+```python
+import litellm
+
+info = litellm.get_model_info("azure/gpt-5.4-mini")
+for name in sorted(dir(info)):
+    if "reasoning_effort" in name and not name.startswith("_"):
+        print(name, getattr(info, name))
+```
+
+If the model is not present in the LiteLLM model map, `get_model_info` may raise. In that case add or fix the entry in the JSON, or confirm allowed values from your provider’s API documentation (Azure OpenAI, OpenAI, Anthropic, etc.)—provider docs are the final authority when the map has not caught up to a new SKU.
 
 ## `/health/readiness`
 

@@ -2,13 +2,31 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# [Beta] Service Accounts
+# Service Accounts
 
 Use this if you want to create Virtual Keys that are not owned by a specific user but instead created for production projects
 
 Why use a service account key?
   - Prevent key from being deleted when user is deleted.
   - Apply team limits, not team member limits to key.
+
+## Service Account vs Regular Keys
+
+| Feature | Regular Key | Service Account Key |
+|---------|------------|-------------------|
+| `user_id` | Optional | Always `null` |
+| `team_id` | Optional | Required |
+| Applied limits | User + Team limits | Team limits only |
+| Key deleted when user is deleted? | Yes | No — persists |
+| `service_account_id` in metadata | Not set | Immutable once set |
+| `team_member_key_duration` | Inherits | Does not inherit |
+
+## Budgets & Limits
+
+Service account keys apply budgets and rate limits at the **team level** — not per user or per key member.
+
+- Set `max_budget`, `tpm_limit`, `rpm_limit` on the key itself, or inherit them from the team.
+- `team_member_key_duration` (an enterprise feature that controls how long team-member keys last) does **not** apply to service account keys.
 
 ## Usage
 
@@ -23,6 +41,32 @@ curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
     "team_id": "my-unique-team"
 }'
 ```
+
+### `service_account_id` field
+
+You can optionally provide a `service_account_id` inside `metadata` to give the key a stable, human-readable identifier:
+
+```bash
+curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
+-H 'Authorization: Bearer sk-1234' \
+-H 'Content-Type: application/json' \
+-d '{
+    "team_id": "my-unique-team",
+    "metadata": {
+        "service_account_id": "my-ci-pipeline"
+    }
+}'
+```
+
+**Immutability rules** — once `service_account_id` is set, it cannot be changed:
+
+| Operation | Result |
+|-----------|--------|
+| Overwrite with a different value | `400` error |
+| Set to `null` explicitly | `400` error |
+| Send `metadata: null` (would clear it) | `400` error |
+| Omit `metadata` entirely on update | Safe — existing value is preserved |
+| Resend the same value | Allowed (no-op) |
 
 ## Example - require `user` param for all service account requests
 

@@ -63,6 +63,7 @@ const sidebars = {
           label: "Team Bring-Your-Own Guardrails",
         },
         ...[
+          "proxy/guardrails/qohash_qostodian_nexus",
           "proxy/guardrails/qualifire",
           "proxy/guardrails/aim_security",
           "proxy/guardrails/onyx_security",
@@ -77,6 +78,7 @@ const sidebars = {
           "proxy/guardrails/lasso_security",
           "proxy/guardrails/guardrails_ai",
           "proxy/guardrails/lakera_ai",
+          "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
           "proxy/guardrails/noma_security",
           "proxy/guardrails/dynamoai",
@@ -91,8 +93,10 @@ const sidebars = {
           "proxy/guardrails/custom_code_guardrail",
           "proxy/guardrails/prompt_injection",
           "proxy/guardrails/tool_permission",
+          "proxy/guardrails/rubrik",
           "proxy/guardrails/zscaler_ai_guard",
-          "proxy/guardrails/javelin"
+          "proxy/guardrails/javelin",
+          "proxy/guardrails/akto",
         ].sort(),
       ],
     },
@@ -139,6 +143,7 @@ const sidebars = {
           type: "category",
           label: "Claude Code",
           items: [
+            "claude_code_compatibility",
             "tutorials/claude_responses_api",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
@@ -180,6 +185,7 @@ const sidebars = {
         "tutorials/google_genai_sdk",
         "tutorials/livekit_xai_realtime",
         "integrations/letta",
+        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM" },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM" },
         "projects/openai-agents"
@@ -325,6 +331,7 @@ const sidebars = {
                 "mcp_usage",
                 "mcp_openapi",
                 "mcp_oauth",
+                "mcp_obo_auth",
                 "mcp_aws_sigv4",
                 "mcp_zero_trust",
                 "mcp_public_internet",
@@ -333,6 +340,7 @@ const sidebars = {
                 "mcp_control",
                 "mcp_cost",
                 "mcp_guardrail",
+                "mcp_server_submissions",
                 "mcp_toolsets",
                 {
                   type: "link",
@@ -348,6 +356,7 @@ const sidebars = {
                 "skills_gateway",
               ],
             },
+            { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
           ],
         },
         {
@@ -364,6 +373,7 @@ const sidebars = {
             "proxy/debugging",
             "proxy/error_diagnosis",
             "proxy/deploy",
+            "proxy/microservices_helm",
             "proxy/docker_image_security",
             "proxy/health",
             "proxy/master_key_rotations",
@@ -402,6 +412,7 @@ const sidebars = {
                 "proxy/ai_hub",
                 "proxy/model_compare_ui",
                 "proxy/ui_store_model_db_setting",
+                "proxy/ui/routing_groups",
               ]
             },
             {
@@ -416,6 +427,7 @@ const sidebars = {
                 "proxy/self_serve",
                 "proxy/public_teams",
                 "proxy/ui_project_management",
+                "proxy/ui_search_tools",
                 "proxy/ui/bulk_edit_users",
                 "proxy/ui/page_visibility",
               ]
@@ -450,6 +462,7 @@ const sidebars = {
             "proxy/high_availability_control_plane",
             "proxy/db_deadlocks",
             "proxy/db_info",
+            "proxy/db_read_replica",
             "proxy/image_handling",
             "proxy/jwt_auth_arch",
             "proxy/spend_logs_deletion",
@@ -462,7 +475,6 @@ const sidebars = {
           label: "All Endpoints (Swagger)",
           href: "https://litellm-api.up.railway.app/",
         },
-        "proxy/enterprise",
         {
           type: "category",
           label: "Authentication",
@@ -496,6 +508,7 @@ const sidebars = {
           ],
         },
         "proxy/caching",
+        "proxy/memory",
         {
           type: "category",
           label: "Guardrails",
@@ -686,6 +699,8 @@ const sidebars = {
         "apply_guardrail",
         "bedrock_invoke",
         "interactions",
+        "managed_agents",
+        "memory_management",
         "image_edits",
         "image_generation",
         "image_variations",
@@ -701,6 +716,7 @@ const sidebars = {
             "mcp_usage",
             "mcp_openapi",
             "mcp_oauth",
+            "mcp_obo_auth",
             "mcp_aws_sigv4",
             "mcp_zero_trust",
             "mcp_public_internet",
@@ -709,6 +725,7 @@ const sidebars = {
             "mcp_control",
             "mcp_cost",
             "mcp_guardrail",
+            "mcp_server_submissions",
             "mcp_zero_trust",
             "mcp_troubleshoot",
           ]
@@ -722,6 +739,7 @@ const sidebars = {
             "anthropic_unified/messages_to_responses_mapping",
           ]
         },
+        "count_tokens",
         "anthropic_count_tokens",
         "moderation",
         "ocr",
@@ -978,6 +996,7 @@ const sidebars = {
             "providers/nvidia_nim_rerank",
           ]
         },
+        "providers/nvidia_riva",
         "providers/oci",
         "providers/ollama",
         "providers/openrouter",

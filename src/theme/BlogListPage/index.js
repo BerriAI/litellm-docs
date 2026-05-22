@@ -1,7 +1,29 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
+
+const TABS = [
+  {id: 'all', label: 'All'},
+  {id: 'engineering', label: 'Engineering'},
+  {id: 'security', label: 'Security'},
+  {id: 'infrastructure', label: 'Performance / Reliability'},
+];
+
+const SECURITY_TAGS = ['security', 'incident-report'];
+const INFRA_TAGS = ['performance', 'reliability', 'infrastructure'];
+
+function hasTag(item, tagSet) {
+  const tags = item.content?.metadata?.tags || [];
+  return tags.some(t => tagSet.includes(t.label));
+}
+
+function filterItems(items, tab) {
+  if (tab === 'all') return items;
+  if (tab === 'security') return items.filter(i => hasTag(i, SECURITY_TAGS));
+  if (tab === 'infrastructure') return items.filter(i => hasTag(i, INFRA_TAGS));
+  return items.filter(i => !hasTag(i, SECURITY_TAGS) && !hasTag(i, INFRA_TAGS));
+}
 
 // ── Provider marquee ──────────────────────────────────────────────────────
 const PROVIDERS = [
@@ -101,6 +123,8 @@ function Pagination({metadata}) {
 export default function BlogListPage(props) {
   const items = props.items || [];
   const metadata = props.metadata || {};
+  const [activeTab, setActiveTab] = useState('all');
+  const filtered = filterItems(items, activeTab);
 
   return (
     <Layout
@@ -123,9 +147,26 @@ export default function BlogListPage(props) {
 
         <ProviderMarquee />
 
+        {/* Tabs */}
+        <nav className={styles.tabs} aria-label="Filter posts by category">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+              aria-pressed={activeTab === tab.id}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
         {/* Post list */}
         <main className={styles.list}>
-          {items.map(({content}) => (
+          {filtered.length === 0 && (
+            <p className={styles.emptyMsg}>No posts on this page match the selected filter.</p>
+          )}
+          {filtered.map(({content}) => (
             <PostRow key={content.metadata.permalink} post={content.metadata} />
           ))}
         </main>
