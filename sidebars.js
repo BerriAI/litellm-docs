@@ -1047,6 +1047,7 @@ const sidebars = {
         },
         "providers/volcano",
         "providers/voyage",
+        "providers/wafer",
         "providers/wandb_inference",
         {
           type: "category",
