@@ -1,88 +1,44 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+require('dotenv').config();
+
 // @ts-ignore
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 // @ts-ignore
 const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
 
-const inkeepConfig = {
-  baseSettings: {
-    apiKey: "0cb9c9916ec71bfe0e53c9d7f83ff046daee3fa9ef318f6a",
-    organizationDisplayName: 'liteLLM',
-    primaryBrandColor: '#4965f5',
-    theme: {
-      styles: [
-        {
-          key: "custom-theme",
-          type: "style",
-          value: `
-            .ikp-chat-button__button {
-              margin-right: 80px !important;
-            }
-          `,
-        },
-      ],
-      syntaxHighlighter: {
-        lightTheme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    },
-  },
-  searchSettings: {
-    searchBarPlaceholder: 'Search docs...',
-  },
-  aiChatSettings: {
-    quickQuestions: [
-      'How do I use the proxy?',
-      'How do I cache responses?',
-      'How do I stream responses?',
-    ],
-    aiAssistantAvatar: '/img/favicon.ico',
-  },
-};
+const algoliaAppId = process.env.ALGOLIA_APP_ID;
+const algoliaApiKey = process.env.ALGOLIA_API_KEY;
+const algoliaIndexName = process.env.ALGOLIA_INDEX_NAME;
+// conditional check, docs should work if these keys are missing.
+const hasAlgoliaSearch =
+  Boolean(algoliaAppId) && Boolean(algoliaApiKey) && Boolean(algoliaIndexName);
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/favicon.ico', 
+  favicon: '/img/favicon.ico',
 
-  // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
   },
   plugins: [
     [
-      '@inkeep/cxkit-docusaurus',
-      {
-        SearchBar: {
-          ...inkeepConfig,
-        },
-        ChatButton: {
-          ...inkeepConfig,
-        },
-      },
-    ],
-    [
       '@docusaurus/plugin-ideal-image',
       {
         quality: 100,
-        max: 1920, // max resized image's size.
-        min: 640, // min resized image's size. if original is lower, use that size.
-        steps: 2, // the max number of images generated between min and max (inclusive)
+        max: 1920,
+        min: 640,
+        steps: 2,
         disableInDev: false,
       },
     ],
@@ -96,7 +52,6 @@ const config = {
         async sidebarItemsGenerator({defaultSidebarItemsGenerator, docs, ...args}) {
           const items = await defaultSidebarItemsGenerator({docs, ...args});
 
-          // Build map of doc id -> year from frontmatter date
           const docYearMap = {};
           for (const doc of docs) {
             const date = doc.frontMatter && doc.frontMatter.date;
@@ -119,7 +74,6 @@ const config = {
             return bPatch - aPatch;
           }
 
-          // Flatten and transform doc items (filter index, shorten labels)
           function flattenDocs(list) {
             const result = [];
             for (const item of list) {
@@ -142,7 +96,6 @@ const config = {
 
           const docItems = flattenDocs(items);
 
-          // Group by year
           const byYear = {};
           for (const item of docItems) {
             const year = docYearMap[item.id] || 'Other';
@@ -150,14 +103,11 @@ const config = {
             byYear[year].push(item);
           }
 
-          // Sort each year's items by version descending
           for (const year of Object.keys(byYear)) {
             byYear[year].sort(compareVersionsDesc);
           }
 
-          // Build categories sorted by year descending
           const years = Object.keys(byYear).sort((a, b) => {
-            // Object.keys() returns strings; avoid numeric subtraction type errors.
             const na = Number.parseInt(a, 10);
             const nb = Number.parseInt(b, 10);
             return nb - na;
@@ -201,7 +151,6 @@ const config = {
         };
       },
     }),
-    // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
       injectHtmlTags() {
@@ -233,7 +182,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
-        blog: false, // Disable the default blog plugin from preset-classic
+        blog: false,
         pages: {},
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -253,13 +202,12 @@ const config = {
       src: 'https://www.feedbackrocket.io/sdk/v1.2.js',
       'data-fr-id': 'GQwepB0f0L-x_ZH63kR_V',
       'data-fr-theme': 'dynamic',
-    }
+    },
   ],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       navbar: {
         title: '🚅 LiteLLM',
@@ -285,10 +233,10 @@ const config = {
           {
             position: 'left',
             label: 'Enterprise',
-            to: "docs/enterprise"
+            to: 'docs/enterprise',
           },
-          { to: '/release_notes', label: 'Changelog', position: 'left' },
-          { to: '/blog', label: 'Blog', position: 'left' },
+          {to: '/release_notes', label: 'Changelog', position: 'left'},
+          {to: '/blog', label: 'Blog', position: 'left'},
           {
             href: 'https://docs.litellm-agent-platform.ai/',
             label: 'LiteLLM Agent Platform',
@@ -306,12 +254,22 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          {
-            type: 'search',
-            position: 'right',
-          },
+          ...(hasAlgoliaSearch
+            ? [{type: 'search', position: 'right'}]
+            : []),
         ],
       },
+      ...(hasAlgoliaSearch
+        ? {
+            algolia: {
+              appId: algoliaAppId,
+              apiKey: algoliaApiKey,
+              indexName: algoliaIndexName,
+              contextualSearch: true,
+              searchPagePath: 'search',
+            },
+          }
+        : {}),
       footer: {
         style: 'dark',
         links: [
