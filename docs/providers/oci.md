@@ -8,11 +8,7 @@ Check the [OCI Models List](https://docs.oracle.com/en-us/iaas/Content/generativ
 
 ## Supported Models
 
-The list below tracks OCI's on-demand model catalog. For authoritative retirement dates and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm).
-
-:::info
-OCI rotates models in and out of `ON_DEMAND` serving regularly. Models flagged below with a retirement date will continue to work in LiteLLM until OCI stops serving them — at which point requests will return a 404 from OCI. Plan migrations using the replacements OCI recommends on the retirement page.
-:::
+For model lifecycle, retirement dates, and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm) — Oracle is the authoritative source.
 
 ### Chat / Text Generation
 
@@ -21,21 +17,21 @@ OCI rotates models in and out of `ON_DEMAND` serving regularly. Models flagged b
 - `meta.llama-4-scout-17b-16e-instruct` (multimodal)
 - `meta.llama-3.3-70b-instruct`
 - `meta.llama-3.3-70b-instruct-fp8-dynamic`
-- `meta.llama-3.2-90b-vision-instruct` *(retires 2026-09-30 — replace with Llama 4)*
-- `meta.llama-3.2-11b-vision-instruct`
+- `meta.llama-3.2-90b-vision-instruct` (multimodal)
+- `meta.llama-3.2-11b-vision-instruct` (multimodal)
 
 #### xAI Grok Models
-- `xai.grok-4.3` *(latest)*
+- `xai.grok-4.3`
 - `xai.grok-4.20`
 - `xai.grok-4.20-multi-agent`
-- `xai.grok-4` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-4-fast` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-4.1-fast` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-3` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-3-fast` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-3-mini` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-3-mini-fast` *(retires 2026-08-15 — replace with Grok 4.3)*
-- `xai.grok-code-fast-1` *(retires 2026-08-15 — replace with Grok 4.3)*
+- `xai.grok-4`
+- `xai.grok-4-fast`
+- `xai.grok-4.1-fast`
+- `xai.grok-3`
+- `xai.grok-3-fast`
+- `xai.grok-3-mini`
+- `xai.grok-3-mini-fast`
+- `xai.grok-code-fast-1`
 
 #### Cohere Models
 - `cohere.command-latest`
@@ -44,8 +40,8 @@ OCI rotates models in and out of `ON_DEMAND` serving regularly. Models flagged b
 - `cohere.command-a-vision-07-2025` (multimodal)
 - `cohere.command-a-translate-08-2025`
 - `cohere.command-plus-latest`
-- `cohere.command-r-plus-08-2024` *(retires 2026-09-30 — replace with `cohere.command-a-03-2025`)*
-- `cohere.command-r-08-2024` *(retires 2026-09-30 — replace with `cohere.command-a-03-2025`)*
+- `cohere.command-r-plus-08-2024`
+- `cohere.command-r-08-2024`
 
 #### Google Gemini Models (via OCI)
 - `google.gemini-2.5-pro` (multimodal)
@@ -57,18 +53,15 @@ OCI rotates models in and out of `ON_DEMAND` serving regularly. Models flagged b
 - `openai.gpt-oss-20b`
 
 ### Embedding Models
-
-All `v3.0` embedding models retire **2026-09-30** — Oracle recommends migrating to `cohere.embed-v4.0`.
-
-- `cohere.embed-v4.0` (1536 dimensions, multimodal) — recommended
-- `cohere.embed-english-v3.0` (1024 dimensions) *(retires 2026-09-30)*
-- `cohere.embed-english-light-v3.0` (384 dimensions) *(retires 2026-09-30)*
-- `cohere.embed-multilingual-v3.0` (1024 dimensions) *(retires 2026-09-30)*
-- `cohere.embed-multilingual-light-v3.0` (384 dimensions) *(retires 2026-09-30)*
-- `cohere.embed-english-image-v3.0` (1024 dimensions, multimodal) *(retires 2026-09-30)*
-- `cohere.embed-english-light-image-v3.0` (384 dimensions, multimodal) *(retires 2026-09-30)*
-- `cohere.embed-multilingual-image-v3.0` (1024 dimensions, multimodal) *(retires 2026-09-30)*
-- `cohere.embed-multilingual-light-image-v3.0` (384 dimensions, multimodal) *(retires 2026-09-30)*
+- `cohere.embed-v4.0` (1536 dimensions, multimodal)
+- `cohere.embed-english-v3.0` (1024 dimensions)
+- `cohere.embed-english-light-v3.0` (384 dimensions)
+- `cohere.embed-multilingual-v3.0` (1024 dimensions)
+- `cohere.embed-multilingual-light-v3.0` (384 dimensions)
+- `cohere.embed-english-image-v3.0` (1024 dimensions, multimodal)
+- `cohere.embed-english-light-image-v3.0` (384 dimensions, multimodal)
+- `cohere.embed-multilingual-image-v3.0` (1024 dimensions, multimodal)
+- `cohere.embed-multilingual-light-image-v3.0` (384 dimensions, multimodal)
 
 ## Authentication
 
@@ -649,7 +642,7 @@ Vision-capable models on OCI include:
 - `meta.llama-4-maverick-17b-128e-instruct-fp8`
 - `meta.llama-4-scout-17b-16e-instruct`
 - `meta.llama-3.2-11b-vision-instruct`
-- `meta.llama-3.2-90b-vision-instruct` *(retires 2026-09-30)*
+- `meta.llama-3.2-90b-vision-instruct`
 - `cohere.command-a-vision-07-2025`
 - `google.gemini-2.5-pro`, `google.gemini-2.5-flash`, `google.gemini-2.5-flash-lite`
 
