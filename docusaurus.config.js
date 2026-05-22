@@ -19,14 +19,20 @@ const hasAlgoliaSearch =
 const config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/favicon.ico',
+  favicon: '/img/favicon.ico', 
 
+  // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
+  // Set the /<baseUrl>/ pathname under which your site is served
+  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
+  // Even if you don't use internalization, you can use this field to set useful
+  // metadata like html lang. For example, if your site is Chinese, you may want
+  // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -36,9 +42,9 @@ const config = {
       '@docusaurus/plugin-ideal-image',
       {
         quality: 100,
-        max: 1920,
-        min: 640,
-        steps: 2,
+        max: 1920, // max resized image's size.
+        min: 640, // min resized image's size. if original is lower, use that size.
+        steps: 2, // the max number of images generated between min and max (inclusive)
         disableInDev: false,
       },
     ],
@@ -52,6 +58,7 @@ const config = {
         async sidebarItemsGenerator({defaultSidebarItemsGenerator, docs, ...args}) {
           const items = await defaultSidebarItemsGenerator({docs, ...args});
 
+          // Build map of doc id -> year from frontmatter date
           const docYearMap = {};
           for (const doc of docs) {
             const date = doc.frontMatter && doc.frontMatter.date;
@@ -74,6 +81,7 @@ const config = {
             return bPatch - aPatch;
           }
 
+          // Flatten and transform doc items (filter index, shorten labels)
           function flattenDocs(list) {
             const result = [];
             for (const item of list) {
@@ -96,6 +104,7 @@ const config = {
 
           const docItems = flattenDocs(items);
 
+          // Group by year
           const byYear = {};
           for (const item of docItems) {
             const year = docYearMap[item.id] || 'Other';
@@ -103,11 +112,14 @@ const config = {
             byYear[year].push(item);
           }
 
+          // Sort each year's items by version descending
           for (const year of Object.keys(byYear)) {
             byYear[year].sort(compareVersionsDesc);
           }
 
+          // Build categories sorted by year descending
           const years = Object.keys(byYear).sort((a, b) => {
+            // Object.keys() returns strings; avoid numeric subtraction type errors.
             const na = Number.parseInt(a, 10);
             const nb = Number.parseInt(b, 10);
             return nb - na;
@@ -151,6 +163,7 @@ const config = {
         };
       },
     }),
+    // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
       injectHtmlTags() {
@@ -182,7 +195,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
-        blog: false,
+        blog: false, // Disable the default blog plugin from preset-classic
         pages: {},
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -191,6 +204,7 @@ const config = {
     ],
   ],
 
+  // Algolia search comes from preset-classic when themeConfig.algolia is set.
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
     mermaid: true,
@@ -208,6 +222,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       navbar: {
         title: '🚅 LiteLLM',
@@ -254,6 +269,7 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
+          // Shown on mobile; hidden on desktop via custom.css (sidebar has search).
           ...(hasAlgoliaSearch
             ? [{type: 'search', position: 'right'}]
             : []),
