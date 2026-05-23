@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-21T06:19:19Z",
+  "generated_at": "2026-05-23T06:14:56Z",
   "litellm_version": "v1.83.14-stable",
   "claude_code_version": "2.1.126",
   "providers": [
@@ -19,11 +19,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude returned empty assistant text"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -41,11 +42,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -63,11 +65,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -85,11 +88,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -107,10 +111,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -129,11 +135,11 @@
         },
         "bedrock_invoke": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-invoke] no `thinking` content block observed in stream-json events"
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-converse] no `thinking` content block observed in stream-json events"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "fail",
@@ -152,11 +158,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -174,11 +181,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -196,11 +204,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -218,11 +227,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -240,11 +250,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -262,11 +273,12 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -307,10 +319,11 @@
         },
         "bedrock_invoke": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"message\\\":\\\"tools.0: Input tag 'tool_search_tool_regex_20251119' found using 'type' does not match any of the expected tags: 'bash_20250124', 'custom', 'memory_20250818', 'text_editor_20250124', 'text_editor_20250429', 'text_editor_20250728', 'web_search_20250305'\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\""
+          "error": "[claude-haiku-4-5-bedrock-invoke] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] tool_search probe failed: status 400: {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
@@ -329,11 +342,11 @@
         },
         "bedrock_invoke": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-invoke] claude CLI failed: exit=1; (no diagnostic output)"
+          "error": "[claude-sonnet-4-6-bedrock-invoke] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"{\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-sonnet-4-6-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-converse] claude returned empty assistant text"
+          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 {\"error\":{\"message\":\"litellm.BadRequestError: BedrockException - {\\\"message\\\":\\\"Operation not allowed\\\"}. Received Model Group=claude-sonnet-4-6-bedrock-converse\\nAvailable Model Group Fallbacks=None\",\"type\":null,\"param\":null,\"code\":\"400\"}}"
         },
         "vertex_ai": {
           "status": "pass"
