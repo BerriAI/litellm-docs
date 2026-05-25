@@ -17,10 +17,14 @@ export default function DocSidebar(props) {
     <>
       {shouldRenderSidebarDesktop && (
         <div className={styles.sidebarContainer}>
-          <div className={styles.searchBarContainer}>
-            <SearchBar />
+          <div className={styles.searchBarSection}>
+            <div className={styles.searchBarInner}>
+              <SearchBar />
+            </div>
           </div>
-          <DocSidebarDesktop {...props} />
+          <div className={styles.sidebarScroll}>
+            <DocSidebarDesktop {...props} />
+          </div>
         </div>
       )}
       {shouldRenderSidebarMobile && <DocSidebarMobile {...props} />}
