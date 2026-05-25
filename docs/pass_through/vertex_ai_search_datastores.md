@@ -1,14 +1,24 @@
-# Vertex AI Search Datastores
+# Vertex AI Search Datastores (Pass-through)
 
-Call Vertex AI Discovery Engine Search API through LiteLLM.
+Call the Vertex AI Discovery Engine REST API directly through the
+LiteLLM proxy, using Discovery Engine's native URL shape.
 
 Provider Doc: https://cloud.google.com/generative-ai-app-builder/docs/reference/rest/v1/projects.locations.dataStores.servingConfigs/search
 
+:::tip Looking for the unified `/v1/vector_stores/{id}/search` API?
+
+This page is for callers that want to send raw Discovery Engine
+requests through the proxy. If you'd rather register a data store
+once and query it via the OpenAI-compatible vector store API
+(`POST /vector_stores/{id}/search`), see
+[Vertex AI Search - Vector Store (Managed)](../providers/vertex_ai_search_vector_stores.md).
+
+:::
+
 ## What you get
 
-- Reference datastores by ID. LiteLLM finds the credentials.
-- No project/location in every request.
-- Configure credentials once, use everywhere.
+- Any Discovery Engine REST endpoint, reachable through the proxy.
+- Centralized auth: no Google access tokens in your client.
 - Cost tracking works automatically.
 
 ## Quick Start
@@ -40,35 +50,14 @@ curl -X POST \
   }'
 ```
 
-## Managed Vector Stores (Recommended)
-
-Register your datastore once. Reference it by ID.
-
-**In config.yaml:**
-
-```yaml
-vector_store_registry:
-  - vector_store_name: "vertex-ai-litellm-website-knowledgebase"
-    litellm_params:
-      vector_store_id: "my-datastore"
-      custom_llm_provider: "vertex_ai/search_api"
-      vertex_app_id: "test-litellm-app_1761094730750"
-      vertex_project: "test-vector-store-db"
-      vertex_location: "global"
-      vector_store_description: "Vertex AI vector store for the Litellm website knowledgebase"
-      vector_store_metadata:
-        source: "https://www.litellm.com/docs"
-```
-
-**How it works:**
-
-LiteLLM sees `dataStores/my-datastore` in your URL. It looks up the vector store. Uses the right project and credentials automatically.
-
 ## Endpoint
 
 `{PROXY_BASE_URL}/vertex_ai/discovery/{endpoint:path}`
 
-Routes to `https://discoveryengine.googleapis.com`
+Routes to `https://discoveryengine.googleapis.com`. Any path under
+the Discovery Engine API can be reached this way — the proxy adds
+authentication and cost tracking but does not rewrite the request
+body.
 
 ## Examples
 
@@ -121,6 +110,11 @@ for result in response.json().get("results", []):
 ```
 
 ### Use with Chat Completion
+
+If the data store is also registered as a managed vector store (see
+[Vertex AI Search - Vector Store (Managed)](../providers/vertex_ai_search_vector_stores.md)),
+you can additionally reference it from a chat completion `file_search`
+tool by ID:
 
 ```bash
 curl http://localhost:4000/v1/chat/completions \
