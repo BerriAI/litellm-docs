@@ -30,8 +30,6 @@ The polyfill means you write your Claude Code tool-loop once, pass `context_mana
 | `clear_thinking_20251015` | ❌ Coming soon | Clears extended-thinking blocks from history |
 | `compact_20260112` | ❌ Native pass-through only | Summarisation edit - supported on Anthropic / Bedrock Anthropic forwarding paths; not polyfilled |
 
----
-
 ## How It Works
 
 ```
@@ -77,8 +75,6 @@ Claude Code client
                            ▼
                     Claude Code client
 ```
-
----
 
 ## Usage
 
@@ -139,8 +135,6 @@ curl -X POST http://localhost:4000/v1/messages \
   }'
 ```
 
----
-
 ## `clear_tool_uses_20250919` - Knobs
 
 | Field | Required | Default | Description |
@@ -154,8 +148,6 @@ curl -X POST http://localhost:4000/v1/messages \
 | `clear_tool_inputs` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
 
 > **Hard floor:** regardless of `keep`, LiteLLM's polyfill never clears the most recently completed `tool_result` - the one the model is about to reply to.
-
----
 
 ## Responses
 
@@ -229,8 +221,6 @@ event: message_stop
 data: {"type":"message_stop"}
 ```
 
----
-
 ## Disabling Context Management
 
 ### Per-request - omit the field
@@ -256,8 +246,6 @@ litellm.drop_params = True
 
 This is useful when you have a global `drop_params` policy to suppress unsupported parameters - context management is treated like any other unsupported parameter and dropped rather than polyfilled.
 
----
-
 ## Provider Support Matrix
 
 | Provider | Native | Polyfill |
@@ -271,8 +259,6 @@ This is useful when you have a global `drop_params` policy to suppress unsupport
 | `gemini/*` | - | Yes |
 | `vertex_ai/*` | - | Yes |
 | All other providers | - | Yes |
-
----
 
 ## Notes
 
