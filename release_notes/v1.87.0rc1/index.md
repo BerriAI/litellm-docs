@@ -50,7 +50,7 @@ pip install litellm==1.87.0rc1
 - **Gemini 3.5 Flash Day-0 support** — `gemini-3.5-flash` and `gemini-3.1-flash-lite` ship on Vertex AI, Google AI Studio, and OpenRouter with full pricing, function calling, web search, code execution, and managed-agents support.
 - **MCP UI for OAuth tool calls** — the dashboard now resolves tool list and tool call against OAuth-protected MCP servers directly, plus native MCP OAuth support for Cursor and clearer OAuth error messages.
 - **Codex CLI auth hardening** — JWT-derived team aliases and SSO form-URL flow for the OpenAI Codex CLI, plus allowlisted OIDC-claim persistence across the CLI SSO poll.
-- **Anthropic streaming hot-path perf** — measurable per-request and per-chunk overhead reduction across the `/v1/messages` SSE path; lazy-loaded response streaming for Bedrock SageMaker.
+- **Anthropic streaming hot-path perf** — ~90% lower TTFT overhead and higher sustained throughput on the proxy's Anthropic `/v1/messages` SSE path, measured on a real 4-pod deployment against both Anthropic and Bedrock Invoke (wire output is parity-tested); plus lazy-loaded response streaming for Bedrock SageMaker.
 
 ## New Providers and Endpoints
 
@@ -209,7 +209,11 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 
 ## Performance / Loadbalancing / Reliability improvements
 
-- **Anthropic streaming hot path** — Measurable per-request and per-chunk overhead reduction across `/v1/messages` SSE - [PR #28289](https://github.com/BerriAI/litellm/pull/28289)
+- **Anthropic `/v1/messages` streaming hot path** — cut per-request and per-chunk overhead on the proxy's Anthropic streaming path, with byte-identical wire output guaranteed by parity tests that diff the logged and billed payloads between the fast and legacy paths. Measured on a real 4-pod `m7i.xlarge` deployment (no HPA) streaming 256 `text_delta` chunks per request, against both Anthropic and Bedrock Invoke: **TTFT overhead ~90% lower** (p50 2220% → 165%, p95 3057% → 316%, p99 3111% → 328%) with **higher sustained throughput** (TPM +12% / +6% / +4% at p50 / p95 / p99) - [PR #28289](https://github.com/BerriAI/litellm/pull/28289)
+    - Skip work that's a no-op in the default config: the per-chunk Datadog span when tracing is off, the per-chunk streaming hook when no callback / guardrail / cost-injection is active, and the agentic post-processing wrapper when no callback overrides its hook (it otherwise buffers every chunk and rebuilds the response from SSE just to call hooks that all return `(False, {})`).
+    - Stop doing the same work twice per request: serialize the request body once and reuse it for the pre-call log and the wire, memoize the optional-params type-hint resolution (~80µs/request), and skip the redundant `strip_empty_text_blocks` scan when the async wrapper already sanitized.
+    - Cheaper end-of-stream reconstruction: collapse the homogeneous run of `content_block_delta` text events into a single equivalent SSE event before `stream_chunk_builder`, removing O(output-token) `ModelResponseStream` constructions; tool-use / thinking / citations streams fall back to the unchanged legacy path.
+    - Cheaper hot-path logging: gate debug f-string evaluation behind `isEnabledFor(DEBUG)`, hoist `cost_injection_active` out of the per-chunk loop, and drop one async-generator layer per chunk in `async_sse_data_generator`.
 - **Bedrock / SageMaker** — Switch to lazy loading for response streaming - [PR #28189](https://github.com/BerriAI/litellm/pull/28189)
 - **Granian ASGI** — Add Granian as a supported ASGI server for better throughput stability - [PR #26027](https://github.com/BerriAI/litellm/pull/26027)
 - **Prisma** — Expose Prisma idle/connect timeout + extra DB URL params so production deployments can tune connection pools - [PR #28395](https://github.com/BerriAI/litellm/pull/28395)
