@@ -880,6 +880,7 @@ const sidebars = {
             "providers/vertex_batch",
             "providers/vertex_ocr",
             "providers/vertex_ai_agent_engine",
+            "providers/vertex_ai_search_vector_stores",
             "providers/vertex_realtime",
           ]
         },
