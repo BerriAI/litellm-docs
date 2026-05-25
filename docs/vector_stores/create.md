@@ -18,6 +18,23 @@ Create a vector store which can be used to store and search document chunks for 
 
 The proxy also supports **retrieve**, **list**, **update**, and **delete** for vector stores (OpenAI-compatible). See [Vector store management and routing on the proxy](#vector-store-management-and-routing-on-the-proxy) for `curl` examples and provider routing.
 
+:::tip Two endpoints, two different things
+
+LiteLLM exposes **two** create-style endpoints for vector stores.
+They look similar but do different jobs — pick based on whether the
+upstream store already exists.
+
+| Endpoint | What it does | Use it for |
+|----------|--------------|------------|
+| `POST /v1/vector_stores` | Creates a **new** upstream vector store on the provider (the same call you'd make against OpenAI directly). | OpenAI, Azure AI (passthrough), RAGFlow — anything where you want LiteLLM to call the provider's create API. |
+| `POST /vector_store/new` | **Registers an existing** upstream store as a LiteLLM-managed mapping (writes to `LiteLLM_ManagedVectorStoresTable`). No upstream create is performed. | Vertex AI Search, Azure AI Search, Milvus, Gemini File Search, Bedrock Knowledge Bases — anything where the store already lives on the provider and you only need LiteLLM to know how to route to it. |
+
+For Vertex AI Search specifically, see
+[Vertex AI Search - Vector Store (Managed)](../providers/vertex_ai_search_vector_stores.md)
+for the full registration + search walkthrough.
+
+:::
+
 ## Usage
 
 ### LiteLLM Python SDK
@@ -170,6 +187,34 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores' \
   }
 }'
 ```
+
+</TabItem>
+
+<TabItem value="curl-register" label="curl (register existing — Vertex AI Search etc.)">
+
+For providers like Vertex AI Search, Azure AI Search, or Milvus the
+upstream store already exists on the provider — you just need to
+**register** it so LiteLLM can route to it. Use `POST /vector_store/new`:
+
+```bash showLineNumbers title="Register an existing upstream store"
+curl -L -X POST 'http://0.0.0.0:4000/vector_store/new' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer sk-1234' \
+-d '{
+  "vector_store_id": "my-datastore_1234567890",
+  "custom_llm_provider": "vertex_ai/search_api",
+  "vector_store_name": "vertex-ai-litellm-website-knowledgebase",
+  "litellm_params": {
+    "vertex_project": "my-gcp-project",
+    "vertex_location": "global"
+  }
+}'
+```
+
+After this completes, `POST /v1/vector_stores/my-datastore_1234567890/search`
+routes to Vertex AI Search. See
+[Vertex AI Search - Vector Store (Managed)](../providers/vertex_ai_search_vector_stores.md)
+for the full walkthrough.
 
 </TabItem>
 
