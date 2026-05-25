@@ -63,6 +63,45 @@ pip install litellm==1.83.10
 
 ---
 
+## Breaking Changes
+
+#### Caller-supplied `tags` are stripped unless the key/team opts in
+
+- **What changed:** Tags supplied by the caller — `metadata.tags`, `litellm_metadata.tags`, root-level `tags`, and the `x-litellm-tags` header — are stripped from the request before [tag-based routing](../../docs/proxy/tag_routing) and [tag-based spend attribution](../../docs/proxy/cost_tracking#custom-tags) run, unless the calling key or its parent team carries `metadata.allow_client_tags: true`. Tags configured on the model deployment, key metadata, or team metadata are unaffected. The proxy logs a `WARNING` line on each strip:
+  ```
+  Stripped caller-supplied tags from metadata, tags (root): this key/team does not have `allow_client_tags: true` in its metadata. Set it to opt into client-supplied routing/budget tags.
+  ```
+  — [PR #25905](https://github.com/BerriAI/litellm/pull/25905)
+
+- **Who is affected:** Any deployment that relied on clients passing `tags` in the request body or `x-litellm-tags` header for tag-based cost tracking, tag budgets, or tag-based routing. After upgrade, those tags will silently fall through to the default bucket / default deployment, and per-tag spend reports will appear empty.
+
+- **Restore prior behavior:** Set `allow_client_tags: true` in the metadata of the affected key (or the team owning it). Either flag is sufficient — if the key or its parent team carries the flag, caller-supplied tags pass through.
+  ```bash
+  # Per key
+  curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
+    -H 'Authorization: Bearer sk-1234' \
+    -H 'Content-Type: application/json' \
+    -d '{"metadata": {"allow_client_tags": true}}'
+
+  # Per team
+  curl -L -X POST 'http://0.0.0.0:4000/team/new' \
+    -H 'Authorization: Bearer sk-1234' \
+    -H 'Content-Type: application/json' \
+    -d '{"metadata": {"allow_client_tags": true}}'
+  ```
+
+  Existing keys/teams can be patched with `/key/update` or `/team/update` carrying the same `metadata` payload.
+
+#### `os.environ/…` values in the UI or API
+
+- **What changed:** Values such as `os.environ/OPENAI_API_KEY` (and other `os.environ/…` patterns) are no longer expanded when they come from **request-supplied** fields—including the Admin UI and the same proxy APIs the UI calls. — [PR #25592](https://github.com/BerriAI/litellm/pull/25592)
+
+- **Who is affected:** Anyone who entered literal `os.environ/SECRET_NAME` strings in the UI or API and expected the proxy to substitute the host environment at runtime.
+
+- **What to use instead:** Provider API keys and similar secrets should be stored with [**Reusable Credentials**](../../docs/proxy/ui_credentials.md) and attached to models (for example via `litellm_credential_name`). For observability callbacks (Langfuse, LangSmith, etc.), set keys and endpoints in proxy `config.yaml` or in environment variables the process reads at startup—not as `os.environ/…` strings inside per-request metadata.
+
+---
+
 ## New Models / Updated Models
 
 #### New Model Support (10 new models)

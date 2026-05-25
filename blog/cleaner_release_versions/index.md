@@ -9,6 +9,22 @@ tags: [release, packaging, docker]
 hide_table_of_contents: false
 ---
 
+*Last Updated: May 2026*
+
+:::warning `main-stable` is deprecated — migrate to `:latest` by June 30, 2026
+The legacy `main-stable` Docker tag still advances each week so existing deployments keep working, but **we plan to stop publishing it on June 30, 2026 (end of Q2)**. Going forward, **`:latest`** is the canonical rolling pointer to the newest stable image — it advances automatically when each stable ships and matches the standard Docker convention.
+
+`main-stable` carries over from the previous naming scheme and doesn't fit modern conventions: it mixes "main" (typically a development branch) with "stable" (a release channel), and has no PyPI counterpart.
+
+**Migration:**
+
+- **Rolling stable (Docker)** → `ghcr.io/berriai/litellm:latest`
+- **Reproducible pin (Docker)** → `ghcr.io/berriai/litellm:1.84.0`
+- **Reproducible pin (PyPI)** → `pip install litellm==1.84.0`
+
+This banner will be updated with reminders as the cutover approaches.
+:::
+
 LiteLLM release version names are changing. Two pain points have been driving this:
 
 **1. The `-stable` and `-nightly` suffixes aren't standard.**
@@ -33,10 +49,12 @@ Starting with **`1.84.0`**:
 
 | Scenario | Old name | New name |
 |---|---|---|
-| Weekly scheduled stable | `v1.83.3-stable` | `1.84.0` (Docker + PyPI) |
-| Hotfix on the current stable | `v1.83.3-stable.patch.1` (Docker only - no PyPI release) | `1.84.1` (Docker + PyPI) |
-| Release candidate | `v1.84.0-rc` | `1.84.0-rc.1` (Docker) / `1.84.0rc1` (PyPI) |
-| Nightly | `v1.83.0-nightly` | `1.84.0-dev.42` (Docker) / `1.84.0.dev42` (PyPI) |
+| Weekly scheduled stable | `v1.83.3-stable` | `1.84.0` or `v1.84.0` (Docker) / `1.84.0` (PyPI) |
+| Hotfix on the current stable | `v1.83.3-stable.patch.1` (Docker only - no PyPI release) | `1.84.1` or `v1.84.1` (Docker) / `1.84.1` (PyPI) |
+| Release candidate | `v1.84.0-rc` | `1.84.0-rc.1` or `v1.84.0-rc.1` (Docker) / `1.84.0rc1` (PyPI) |
+| Nightly | `v1.83.0-nightly` | `1.84.0-dev.42` or `v1.84.0-dev.42` (Docker) / `1.84.0.dev42` (PyPI) |
+
+On Docker, every channel is published in both bare (`1.84.0`) and `v`-prefixed (`v1.84.0`) form going forward — both resolve to the same image digest, so existing pins that include the `v` prefix keep working. On PyPI, every channel uses the bare PEP 440 form (`1.84.0`, never `v1.84.0`).
 
 The hotfix row is the meaningful one. Under the old scheme there was no PyPI publication for `v1.83.3-stable.patch.1`. Under the new scheme, hotfixes ship to both registries and PyPI as a normal release.
 
@@ -48,6 +66,7 @@ If a maintenance patch is needed on a pre-cutover release line (e.g. a fix on `1
 
 ## A few things worth knowing
 
+- **The `v` prefix is optional on Docker tags.** Every Docker tag going forward is published in both bare and `v`-prefixed form — `ghcr.io/berriai/litellm:1.84.0` and `ghcr.io/berriai/litellm:v1.84.0` resolve to the same image (same `sha256` digest), and the same applies to release-candidate and dev/nightly tags. Existing pins that include the `v` prefix keep working without change. PyPI versions remain the bare PEP 440 form: `pip install litellm==1.84.0` (not `==v1.84.0`).
 - **`litellm-dev`** - there's a separate `litellm-dev` PyPI package and `*-dev` Docker image family for ad-hoc and one-off builds (e.g. testing a fix before it lands in a release). **Not for production use.** Anything pinned to the standard `litellm` package or `ghcr.io/berriai/litellm:*` Docker tags will never accidentally pick up a `litellm-dev` build.
 - **`:latest` Docker tag** points to the most recent stable release on each registry, advancing automatically when a new stable ships. For production deployments we still recommend pinning to a content tag (e.g. `:1.84.0`) so deploys are reproducible.
 - **Image signing** ([cosign verify](/blog/ci-cd-v2-improvements#verify-docker-image-signatures)) and verification commands continue to work unchanged with the new tag shapes.
