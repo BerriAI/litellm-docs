@@ -598,6 +598,7 @@ router_settings:
 | DD_APP_KEY | Application key for Datadog Cost Management integration. Required along with DD_API_KEY for cost metrics
 | DD_SITE | Site URL for Datadog (e.g., datadoghq.com)
 | DD_SOURCE | Source identifier for Datadog logs
+| DD_TRACE_AGENT_URL | URL of the Datadog Trace Agent. When set to a `unix://` scheme (e.g. `unix:///var/run/datadog/apm.socket`), the `datadog_llm_observability` callback ships LLM Observability spans over the agent's Unix domain socket — required for Datadog Operator APM auto-instrumentation deployments where the TCP receiver is not bound on the host. Ignored when `LITELLM_DD_AGENT_HOST` is set or when the value is non-unix.
 | DD_TRACER_STREAMING_CHUNK_YIELD_RESOURCE | Resource name for Datadog tracing of streaming chunk yields. Default is "streaming.chunk.yield"
 | DD_ENV | Environment identifier for Datadog logs. Only supported for `datadog_llm_observability` callback
 | DD_LLMOBS_ML_APP | Default ml_app name for Datadog LLM Observability (Application column). Falls back to DD_SERVICE. Can be overridden per-request via `metadata.ml_app`.
