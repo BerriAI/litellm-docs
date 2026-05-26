@@ -414,8 +414,8 @@ to: "/docs/mcp",
 },
 {
 icon: "✨",
-title: "Enterprise Quickstart",
-description: "PoC guide for trial customers — LLM, MCP, and Agent gateway.",
+title: "✨ Enterprise Quickstart",
+description: "Quickstart guide for trial customers — LLM, MCP, and Agent gateway.",
 to: "/docs/learn/enterprise_quickstart",
 },
 ]}

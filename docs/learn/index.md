@@ -41,8 +41,8 @@ items={[
   },
   {
     icon: "✨",
-    title: "Enterprise Quickstart",
-    description: "PoC LiteLLM Enterprise — LLM, MCP, and Agent gateway.",
+    title: "✨ Enterprise Quickstart",
+    description: "Quickstart Guide for LiteLLM Enterprise — LLM, MCP, and Agent gateway.",
     listDescription: [
       "Deploy with license",
       "Validate three gateways",
@@ -125,4 +125,4 @@ items={[
 ]}
 />
 
-Not sure where to start? Use [SDK Quickstart](/docs/learn/sdk_quickstart) for app code, [Gateway Quickstart](/docs/learn/gateway_quickstart) for shared infrastructure, or [Enterprise Quickstart](/docs/learn/enterprise_quickstart) for a trial or PoC evaluation.
+Not sure where to start? Use [SDK Quickstart](/docs/learn/sdk_quickstart) for app code, [Gateway Quickstart](/docs/learn/gateway_quickstart) for shared infrastructure, or [✨ Enterprise Quickstart](/docs/learn/enterprise_quickstart) for a trial or PoC evaluation.

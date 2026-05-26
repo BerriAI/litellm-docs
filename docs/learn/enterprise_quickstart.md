@@ -1,6 +1,6 @@
 ---
-title: Enterprise Quickstart
-sidebar_label: Enterprise Quickstart
+title: ✨ Enterprise Quickstart
+sidebar_label: ✨ Enterprise Quickstart
 description: Deploy LiteLLM Enterprise, validate the LLM/MCP/Agent gateway end-to-end, enforce budgets, and enable key enterprise controls.
 ---
 
