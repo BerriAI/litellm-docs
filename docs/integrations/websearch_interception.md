@@ -183,7 +183,6 @@ Configure which search provider to use. LiteLLM supports multiple search provide
 | **SearXNG** | `searxng` | `SEARXNG_API_BASE` (required) |
 | **Linkup** | `linkup` | `LINKUP_API_KEY` |
 | **Serper** | `serper` | `SERPER_API_KEY` |
-| **DuckDuckGo** | `duckduckgo` | `DUCKDUCKGO_API_BASE` |
 | **SearchAPI.io** | `searchapi` | `SEARCHAPI_API_KEY` |
 
 See [Search Providers Documentation](../search/index.md) for detailed setup instructions.
