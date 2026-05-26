@@ -277,7 +277,6 @@ The response follows Perplexity's search format with the following structure:
 | SearXNG | `SEARXNG_API_BASE` (required) | `searxng` |
 | Linkup | `LINKUP_API_KEY` | `linkup` |
 | Serper | `SERPER_API_KEY` | `serper` |
-| DuckDuckGo | `DUCKDUCKGO_API_BASE` | `duckduckgo` |
 | SearchAPI.io | `SEARCHAPI_API_KEY` | `searchapi` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
