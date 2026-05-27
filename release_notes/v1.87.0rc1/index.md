@@ -200,6 +200,7 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 
 ## MCP Gateway
 
+- **MCP Credential Store** — Per-server env vars with an admin-managed global scope and a per-user dashboard scope, interpolated as `${NAME}` into `static_headers` at request time; tool listing stays best-effort when per-user values are unset and a setup-link error is raised only on tool call - [PR #28917](https://github.com/BerriAI/litellm/pull/28917)
 - **OAuth in the UI** — Add tool-call and tool-list support via the dashboard for OAuth-protected MCP servers - [PR #28454](https://github.com/BerriAI/litellm/pull/28454)
 - **Cursor OAuth** — Allow native MCP OAuth support for Cursor - [PR #28327](https://github.com/BerriAI/litellm/pull/28327)
 - **Auth Resolution** — JWT on `tools/list` and REST `tools/call` server resolution - [PR #28227](https://github.com/BerriAI/litellm/pull/28227)
@@ -254,14 +255,14 @@ Testing, CI & build hardening:
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 93)
+PRs by ownership area (total: 94)
   - Other (CI / tests / build hardening): 25
   - Models & Providers (incl. new provider): 18
   - UI / Auth & Management: 12
   - LLM API Endpoints: 11
   - Performance: 9
+  - MCP: 7
   - Logging: 6
-  - MCP: 6
   - Spend / Budgets / Rate Limits: 3
   - Docs: 2
   - Guardrails: 1
@@ -287,9 +288,9 @@ PRs by ownership area (total: 93)
 * Management Endpoints / UI: 12
 * AI Integrations (Logging / Guardrails / Secret Managers): 7
 * Spend Tracking, Budgets and Rate Limiting: 3
-* MCP Gateway: 6
+* MCP Gateway: 7
 * Performance / Loadbalancing / Reliability improvements: 9
 * General Proxy Improvements (testing / CI / build): 25
 * Documentation Updates: 2
 
-Total: 93 PRs
+Total: 94 PRs
