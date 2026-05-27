@@ -200,7 +200,7 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 
 ## MCP Gateway
 
-- **MCP Credential Store** — Per-server env vars with an admin-managed global scope and a per-user dashboard scope, interpolated as `${NAME}` into `static_headers` at request time; tool listing stays best-effort when per-user values are unset and a setup-link error is raised only on tool call - [PR #28917](https://github.com/BerriAI/litellm/pull/28917)
+- **MCP Credential Store** — Per-server env vars with an admin-managed global scope and a per-user dashboard scope, interpolated as `${NAME}` into `static_headers` at request time; tool listing stays best-effort when per-user values are unset and a setup-link error is raised only on tool call - [PR #28917](https://github.com/BerriAI/litellm/pull/28917) ([demo](https://www.loom.com/share/12878e2be19140069170c3a270b50d1c))
 - **OAuth in the UI** — Add tool-call and tool-list support via the dashboard for OAuth-protected MCP servers - [PR #28454](https://github.com/BerriAI/litellm/pull/28454)
 - **Cursor OAuth** — Allow native MCP OAuth support for Cursor - [PR #28327](https://github.com/BerriAI/litellm/pull/28327)
 - **Auth Resolution** — JWT on `tools/list` and REST `tools/call` server resolution - [PR #28227](https://github.com/BerriAI/litellm/pull/28227)
