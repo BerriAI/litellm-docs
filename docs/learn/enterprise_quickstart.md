@@ -55,14 +55,14 @@ OPENAI_API_KEY="your-api-key"
 Create `config.yaml`:
 
 ```yaml title="config.yaml" showLineNumbers
-general_settings:
-  callbacks: ["prometheus"] # add a logging provider
-
 model_list:
   - model_name: gpt-5.5
     litellm_params:
       model: openai/gpt-5.5
       api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  callbacks: ["prometheus"]
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -197,7 +197,7 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-team-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.5",
     "messages": [{"role": "user", "content": "TLDR of BerriAI/litellm repo"}],
     "tools": [{
       "type": "mcp",
@@ -365,7 +365,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Authorization: Bearer sk-team-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.5",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["poc:chat-app"]}
   }'
