@@ -49,15 +49,8 @@ pip install litellm==1.87.0rc1
 - **OCI Generative AI as a first-class provider** — production-ready chat, embeddings, streaming, reasoning and tool use across Cohere Command-A, Meta Llama 3.1/3.2/3.3/4, xAI Grok 3/4, Google Gemini 2.5, and OpenAI GPT-5 hosted on OCI; full model-pricing catalog included.
 - **Gemini 3.5 Flash Day-0 support** — `gemini-3.5-flash` and `gemini-3.1-flash-lite` ship on Vertex AI, Google AI Studio, and OpenRouter with full pricing, function calling, web search, code execution, and managed-agents support.
 - **MCP UI for OAuth tool calls** — the dashboard now resolves tool list and tool call against OAuth-protected MCP servers directly, plus native MCP OAuth support for Cursor and clearer OAuth error messages.
-- **MCP Credential Store**: per-server env vars with a global admin scope and a per-user dashboard scope, interpolated as `${NAME}` into `static_headers` at request time. Tool listing stays available when per-user values are unset.
 - **Codex CLI auth hardening** — JWT-derived team aliases and SSO form-URL flow for the OpenAI Codex CLI, plus allowlisted OIDC-claim persistence across the CLI SSO poll.
 - **Anthropic streaming hot-path perf** — ~90% lower TTFT overhead and higher sustained throughput on the proxy's Anthropic `/v1/messages` SSE path, measured on a real 4-pod deployment against both Anthropic and Bedrock Invoke (wire output is parity-tested); plus lazy-loaded response streaming for Bedrock SageMaker.
-
-## MCP Credential Store
-
-<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
-The new MCP Credential Store lets you hold MCP server credentials securely on a per-user basis. Take a GitHub MCP server that doesn't support OAuth and requires every developer to supply their own personal access token. Each internal user now signs in to the dashboard and enters their own token, instead of the whole team sharing one bearer token. Some credentials are partly shared and partly different across users. A database MCP server, for instance, might use a username and password that vary by user while the protocol and hostname stay the same for everyone. This release covers both cases. It adds **instance variables** for the shared portion alongside the new **per-user variables**. See the video above for a walkthrough. [PR #28917](https://github.com/BerriAI/litellm/pull/28917)
 
 ## New Providers and Endpoints
 
@@ -207,7 +200,6 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 
 ## MCP Gateway
 
-- **MCP Credential Store**: Per-server env vars with a global admin scope and a per-user dashboard scope, interpolated as `${NAME}` into `static_headers` at request time. Tool listing stays available when per-user values are unset; a setup link error is raised only on tool call. [PR #28917](https://github.com/BerriAI/litellm/pull/28917)
 - **OAuth in the UI** — Add tool-call and tool-list support via the dashboard for OAuth-protected MCP servers - [PR #28454](https://github.com/BerriAI/litellm/pull/28454)
 - **Cursor OAuth** — Allow native MCP OAuth support for Cursor - [PR #28327](https://github.com/BerriAI/litellm/pull/28327)
 - **Auth Resolution** — JWT on `tools/list` and REST `tools/call` server resolution - [PR #28227](https://github.com/BerriAI/litellm/pull/28227)
@@ -262,14 +254,14 @@ Testing, CI & build hardening:
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 94)
+PRs by ownership area (total: 93)
   - Other (CI / tests / build hardening): 25
   - Models & Providers (incl. new provider): 18
   - UI / Auth & Management: 12
   - LLM API Endpoints: 11
   - Performance: 9
-  - MCP: 7
   - Logging: 6
+  - MCP: 6
   - Spend / Budgets / Rate Limits: 3
   - Docs: 2
   - Guardrails: 1
@@ -295,9 +287,9 @@ PRs by ownership area (total: 94)
 * Management Endpoints / UI: 12
 * AI Integrations (Logging / Guardrails / Secret Managers): 7
 * Spend Tracking, Budgets and Rate Limiting: 3
-* MCP Gateway: 7
+* MCP Gateway: 6
 * Performance / Loadbalancing / Reliability improvements: 9
 * General Proxy Improvements (testing / CI / build): 25
 * Documentation Updates: 2
 
-Total: 94 PRs
+Total: 93 PRs
