@@ -55,9 +55,9 @@ pip install litellm==1.87.0rc1
 
 ## MCP Credential Store
 
-The MCP Gateway now stores per-server environment variables in two scopes: a **global** value the admin supplies once for every user, and a **per-user** value each user fills in from the dashboard. References like `${MY_API_KEY}` in a server's `static_headers` are interpolated at request time. Tool listing stays best-effort when a per-user value is unset — the tools still appear so the dashboard can render them — and a `MCPMissingUserEnvVarsError` with a setup deep-link is raised only on the tool-call path — [PR #28917](https://github.com/BerriAI/litellm/pull/28917).
-
 <iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+The new MCP Credential Store lets you hold MCP server credentials securely on a per-user basis. If you connect an MCP server that doesn't support OAuth — say a GitHub MCP server where each developer needs their own personal access token — every internal user signs in to the dashboard and enters their own token, instead of one shared bearer token getting passed around the team. For credentials that mix user-specific and shared parts — for example a database MCP server where the username and password vary per user but the protocol and hostname are the same for everyone — this release adds **instance variables** for the shared portion alongside the new **per-user variables**. See the video above for a walkthrough — [PR #28917](https://github.com/BerriAI/litellm/pull/28917).
 
 ## New Providers and Endpoints
 
