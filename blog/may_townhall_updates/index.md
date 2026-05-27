@@ -20,9 +20,9 @@ We covered security hardening, release versioning changes, new product launches 
 
 ## Security updates
 
-### v1.84.0 ships the security hardening
+### v1.84.1 ships the security hardening
 
-All security fixes from the last 4 weeks are bundled in v1.84.0. Upgrade when you can.
+All security fixes from the last 4 weeks are bundled in [v1.84.1](/release_notes/v1.84.1/v1-84-1) — a patch on top of v1.84.0. Upgrade when you can.
 
 ```
 pip install --upgrade litellm
@@ -52,7 +52,7 @@ Every PR now gets an automated security pass via Veria AI + zizmor + semgrep. Lo
 | GHSAs fixed | 58 |
 | GHSAs closed | 96 |
 
-All fixes ship in v1.84.0.
+All fixes ship in [v1.84.1](/release_notes/v1.84.1/v1-84-1).
 
 ### What's next for security
 
@@ -140,14 +140,10 @@ Streaming `/chat/completions` now handles 20% more requests per second and token
 
 ### Shipped optimizations
 
-| Area | Improvement |
-|------|-------------|
-| Files API memory | **-31%** |
-| Health check peak memory | **-99%** |
-| Prometheus logger p95 latency | **-30%** |
-| Bedrock streaming CPU time | **-97%** |
-| Tag spend DB queries | **-54%** |
-| Rust gateway (early) | **1K+ RPS @ 10k concurrency** |
+<Image
+  img={require('../../img/may_townhall_perf_numbers.png')}
+  style={{width: '900px', height: 'auto', display: 'block'}}
+/>
 
 ### What's next for performance
 
@@ -170,15 +166,11 @@ Signals we're seeing:
 
 Four pillars. One control plane.
 
-| Pillar | What it does |
-|--------|-------------|
-| **Sandbox** | Run Claude Code on-prem in isolated environments |
-| **Vault** | Credentials live in the HTTPS proxy. Agents never see them |
-| **Proxy** | Access to 100+ models and any MCP via LiteLLM Proxy |
-| **Harness** | Swap opencode / codex / hermes / Claude Code — same API |
+<Image
+  img={require('../../img/may_townhall_agent_platform.png')}
+  style={{width: '900px', height: 'auto', display: 'block'}}
+/>
 
-- All on-prem.
-- Cloud-agnostic — runs on k8s native ecosystem.
 - Agent Templates — pre-built configs for common tasks.
 - Skills — upload and reuse skills across agents.
 - Projects — repos + env vars, packaged for reuse.
