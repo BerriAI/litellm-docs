@@ -23,7 +23,7 @@ The polyfill means you write your Claude Code tool-loop once, pass `context_mana
 |---|---|---|
 | `clear_tool_uses_20250919` | ✅ **Supported** | Clears old `tool_result` content from conversation history when a trigger threshold is met, keeping only the most recent `N` tool results intact |
 | `clear_thinking_20251015` | ❌ Coming soon | Clears extended-thinking blocks from history |
-| `compact_20260112` | ❌ Native pass-through only | Summarisation edit - supported on Anthropic / Bedrock Anthropic forwarding paths; not polyfilled |
+| `compact_20260112` | ✅ **Supported** | Summarisation edit - LiteLLM calls a configured summary model, injects the summary as a system prefix, and returns a `compaction` block in the response |
 
 ## How It Works
 
@@ -43,11 +43,20 @@ Claude Code client
 │  │  Responses API       │   │   Azure, …)            │  │
 │  │                      │   │                        │  │
 │  │  Pass context_mgmt   │   │  In-gateway polyfill:  │  │
-│  │  spec through as-is  │   │  • Count input tokens  │  │
-│  │  (server applies it) │   │  • Check trigger       │  │
-│  └──────────┬───────────┘   │  • Clear old results   │  │
+│  │  spec through as-is  │   │                        │  │
+│  │  (server applies it) │   │  clear_tool_uses:      │  │
+│  └──────────┬───────────┘   │  • Count input tokens  │  │
+│             │               │  • Check trigger       │  │
+│             │               │  • Clear old results   │  │
 │             │               │  • Keep N most recent  │  │
-│             │               │  • Never clear latest  │  │
+│             │               │                        │  │
+│             │               │  compact_20260112:     │  │
+│             │               │  • Slice at compaction │  │
+│             │               │    block (if present)  │  │
+│             │               │  • Check token trigger │  │
+│             │               │  • Call summary model  │  │
+│             │               │  • Inject summary as   │  │
+│             │               │    system prefix       │  │
 │             │               └──────────┬─────────────┘  │
 │             │                          │                 │
 │             └────────────┬─────────────┘                 │
@@ -65,6 +74,7 @@ Claude Code client
 ┌─────────────────────────────────────────────────────────┐
 │  LiteLLM attaches applied_edits to response             │
 │  { context_management: { applied_edits: [...] } }       │
+│  (compact also prepends a compaction block to content)  │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -129,6 +139,160 @@ curl -X POST http://localhost:4000/v1/messages \
     }
   }'
 ```
+
+---
+
+## `compact_20260112` - Conversation Compaction
+
+The `compact_20260112` edit type summarizes the conversation history when the input token count exceeds a threshold. LiteLLM's polyfill makes this work on **any provider**, not just Anthropic.
+
+### Setup - configure a summary model
+
+The polyfill calls a separately-configured model to generate the summary. Add `context_management_summary_model` to `general_settings` in your proxy config:
+
+```yaml
+# proxy_server_config.yaml
+general_settings:
+  context_management_summary_model: claude-sonnet-4-5   # any model alias in your model_list
+```
+
+Without this setting, the polyfill is a no-op and `applied_edits[0].error: "summary_model_not_configured"` is returned.
+
+### Usage
+
+```python
+import litellm
+
+response = await litellm.anthropic.messages.acreate(
+    model="gpt-5.4-mini",          # any non-Anthropic provider
+    max_tokens=1024,
+    messages=[...],                # multi-turn history
+    context_management={
+        "edits": [
+            {
+                "type": "compact_20260112",
+                "trigger": {
+                    "type": "input_tokens",
+                    "value": 80000          # compact when history exceeds 80k tokens
+                }
+            }
+        ]
+    }
+)
+```
+
+### Via the proxy (curl)
+
+```bash
+curl -X POST http://localhost:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "gpt-5.4-mini",
+    "max_tokens": 1024,
+    "messages": [...],
+    "context_management": {
+      "edits": [
+        {
+          "type": "compact_20260112",
+          "trigger": {"type": "input_tokens", "value": 80000}
+        }
+      ]
+    }
+  }'
+```
+
+### How it works (3 phases)
+
+**Phase A — slice existing compaction block**
+
+If the message history already contains a `compaction` block (from a previous compaction round), everything before that block is dropped and its summary text is prepended to the system prompt. This ensures prior context is carried forward.
+
+**Phase B — threshold check**
+
+LiteLLM counts the effective input tokens of the (sliced) message history. If at or below the trigger threshold, the request is forwarded immediately — no summary call is made.
+
+**Phase C — summarize (only when over threshold)**
+
+LiteLLM calls the configured `context_management_summary_model` with the full conversation history and a summarization prompt. The summary is:
+- Injected as a `"Previous conversation summary: ..."` prefix in the system message on the downstream model call
+- Returned as a `compaction` content block prepended to the response `content` array, so the Claude Code client can maintain rolling compaction state
+
+### Custom summarization prompt
+
+You can override the default summarization instructions via the `instructions` field:
+
+```python
+context_management={
+    "edits": [
+        {
+            "type": "compact_20260112",
+            "trigger": {"type": "input_tokens", "value": 80000},
+            "instructions": "Summarize the key decisions made and open questions. Wrap in <summary></summary> tags."
+        }
+    ]
+}
+```
+
+The summary text must be wrapped in `<summary>...</summary>` tags. If the model returns text without these tags, `applied_edits[0].error: "summary_extraction_failed"` is set and the original (uncompacted) conversation is forwarded.
+
+### `compact_20260112` - Knobs
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `trigger.type` | No | `"input_tokens"` | Only `"input_tokens"` is supported; other values fall back with a warning |
+| `trigger.value` | No | `150000` | Token threshold. Must be ≥ 50,000 or the request is rejected with a 400 |
+| `instructions` | No | Anthropic default prompt | Custom summarization prompt; must instruct the model to wrap output in `<summary>` tags |
+| `pause_after_compaction` | Accepted | - | Accepted in request but ignored (warning noted in `applied_edits`) |
+
+### `compact_20260112` - Response
+
+When compaction fires, the response includes `context_management.applied_edits` and a `compaction` block prepended to `content`:
+
+```json
+{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "compaction",
+      "content": "The user is building a Python CLI tool. We have implemented the argument parser and file reader. Next step is to add the output formatter."
+    },
+    {"type": "text", "text": "Sure, here's the output formatter..."}
+  ],
+  "model": "gpt-5.4-mini",
+  "stop_reason": "end_turn",
+  "usage": {"input_tokens": 420, "output_tokens": 120},
+  "context_management": {
+    "applied_edits": [
+      {
+        "type": "compact_20260112",
+        "summary_input_tokens": 8400,
+        "summary_output_tokens": 210
+      }
+    ]
+  }
+}
+```
+
+If the trigger was not met, `context_management` is **absent** and no `compaction` block is prepended.
+
+### Error handling
+
+The polyfill is best-effort. If the summary call fails or returns no parseable summary, the original conversation is forwarded unchanged and `applied_edits[0].error` is set:
+
+| `error` value | Cause |
+|---|---|
+| `"summary_model_not_configured"` | `context_management_summary_model` not set in `general_settings` |
+| `"summary_call_failed"` | The summary model call raised an exception |
+| `"summary_extraction_failed"` | Summary model response contained no `<summary>...</summary>` block |
+
+### Client-side compaction blocks (no `context_management` edit)
+
+If the request does **not** include a `compact_20260112` edit but the message history already contains a `compaction` block (e.g. from a previous Claude Code client-side compaction), LiteLLM automatically applies slice-only forwarding: the prior summary is moved to the system prefix and only the latest user question is sent downstream. No summary model call is made.
+
+---
 
 ## `clear_tool_uses_20250919` - Knobs
 
@@ -243,20 +407,22 @@ This is useful when you have a global `drop_params` policy to suppress unsupport
 
 ## Provider Support Matrix
 
-| Provider | Native | Polyfill |
+| Provider | `clear_tool_uses_20250919` | `compact_20260112` |
 |---|---|---|
-| `anthropic/*` | Yes | - |
-| `bedrock/anthropic.*` | `compact_20260112` only | - |
-| `openai/*` (Responses API) | Yes | - |
-| `openai/*` (chat completions) | - | Yes |
-| `azure/*` | - | Yes |
-| `xai/*` | - | Yes |
-| `gemini/*` | - | Yes |
-| `vertex_ai/*` | - | Yes |
-| All other providers | - | Yes |
+| `anthropic/*` | Native pass-through | Native pass-through |
+| `bedrock/anthropic.*` | Native pass-through | Native pass-through |
+| `openai/*` (Responses API) | Native pass-through | Native pass-through |
+| `openai/*` (chat completions) | Polyfill | Polyfill |
+| `azure/*` | Polyfill | Polyfill |
+| `xai/*` | Polyfill | Polyfill |
+| `gemini/*` | Polyfill | Polyfill |
+| `vertex_ai/*` | Polyfill | Polyfill |
+| All other providers | Polyfill | Polyfill |
 
 ## Notes
 
-- The polyfill only processes the `clear_tool_uses_20250919` edit type. `compact_20260112` requires Anthropic's summarisation capability and is forwarded as-is on native paths only.
-- Token counting for the polyfill uses `litellm.token_counter` (tiktoken `cl100k_base` fallback for unknown models).
-- The message array structure is preserved: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`.
+- **`compact_20260112` requires `context_management_summary_model`** to be set in `general_settings`. Without it, the edit is acknowledged but no compaction is performed.
+- **Token counting** for polyfill threshold checks uses `litellm.token_counter` (tiktoken `cl100k_base` fallback for unknown models).
+- **`clear_tool_uses_20250919`** preserves the message array structure: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`.
+- **`compact_20260112`** collapses the entire prior history to a single system-prefix summary + the last user question. The `compaction` block in the response gives the Claude Code client the summary text to carry forward into the next turn.
+- The 50,000-token minimum for `compact_20260112` trigger is enforced at the proxy; requests with a lower value are rejected with HTTP 400.
