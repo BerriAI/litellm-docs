@@ -513,6 +513,36 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 - If no header is provided, LiteLLM auto-selects the first team with access to the requested model
 
 
+### Fall back to DB team when JWT claims don't resolve
+
+By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error — the claim is treated as authoritative.
+
+For deployments where the IdP team claim is **advisory** (e.g. machine tokens whose `groups` claim lives in a separate namespace from LiteLLM `team_id`s), opt in to a fallback: if the configured claim is present but unresolved, LiteLLM defers to the user's single LiteLLM team (when the user belongs to exactly one team in the DB).
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    user_id_jwt_field: "sub"
+    team_ids_jwt_field: "groups"
+    team_claim_fallback: true # 👈 opt in
+```
+
+**Behavior:**
+
+| Trigger | Default (`team_claim_fallback: false`) | Opt-in (`team_claim_fallback: true`) |
+|---|---|---|
+| `team_id` claim resolves to a real team | 200 / use team | 200 / use team |
+| `team_id` claim present, team missing in DB | raise | defer → fallback to user's single DB team |
+| `team_alias` claim resolves | 200 / use team | 200 / use team |
+| `groups` claim resolves and team grants model | 200 | 200 |
+| `groups` claim resolves but team lacks model | 403 (preserved) | 403 (preserved) |
+| `groups` claim present, none resolve to a real team | 403 | defer → fallback to user's single DB team |
+| no claim at all (single-team fallback baseline) | 200 / fallback | 200 / fallback |
+
+**Security envelope:** the fallback only resolves when the user belongs to exactly one LiteLLM team in the DB; non-404 errors (e.g. `"No DB Connected"`) always propagate. Keep the default (`false`) if your IdP team claims are authoritative for authorization.
+
+
 ### Custom JWT Validate
 
 Validate a JWT Token using custom logic, if you need an extra way to verify if tokens are valid for LiteLLM Proxy.
