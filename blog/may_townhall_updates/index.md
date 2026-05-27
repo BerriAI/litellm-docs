@@ -107,6 +107,11 @@ Tools are name-scoped, so collisions across servers are safe.
 
 **Example:** A "deploy-flow" toolset might combine `create_issue` from GitHub MCP, `post_message` from Slack MCP, and `create_ticket` from Jira MCP — all surfaced to the agent as one tool list.
 
+<Image
+  img={require('../../img/may_townhall_mcp_toolsets.png')}
+  style={{width: '900px', height: 'auto', display: 'block'}}
+/>
+
 ### MCP on-behalf-of OAuth
 
 OAuth tokens are vaulted at the proxy — never returned to the client.
@@ -114,6 +119,11 @@ OAuth tokens are vaulted at the proxy — never returned to the client.
 - The client sends requests without a token.
 - LiteLLM adds the token when calling the downstream MCP server.
 - Refresh happens transparently. The client never sees a 401.
+
+<Image
+  img={require('../../img/may_townhall_mcp_obo_oauth.png')}
+  style={{width: '900px', height: 'auto', display: 'block'}}
+/>
 
 ### What's next for product
 
