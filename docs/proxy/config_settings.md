@@ -1069,6 +1069,7 @@ router_settings:
 | QDRANT_SCALAR_QUANTILE | Scalar quantile for Qdrant operations. Default is 0.99
 | QDRANT_URL | Connection URL for Qdrant database
 | QDRANT_VECTOR_SIZE | Vector size for Qdrant operations. Default is 1536
+| REDIS_ASYNC_CLIENT_CACHE_TTL | TTL (seconds) for the cached async Redis client / connection pool. Pinned long (default 86400 = 1 day) so the BlockingConnectionPool is not recycled by the 10-minute LLMClientCache default; prevents pool-warmup storms that surface as  under sustained load. Default is 86400
 | REDIS_CONNECTION_POOL_TIMEOUT | Timeout in seconds for Redis connection pool. Default is 5
 | REDIS_CIRCUIT_BREAKER_FAILURE_THRESHOLD | Number of consecutive failures before the Redis circuit breaker opens. Default is 5
 | REDIS_CIRCUIT_BREAKER_RECOVERY_TIMEOUT | Time in seconds before the Redis circuit breaker attempts recovery after opening. Default is 60
