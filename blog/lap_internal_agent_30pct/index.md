@@ -15,12 +15,12 @@ image: /img/lap_litellm_agent_platform_hero.png
 
 :::info
 
-The platform we built is open source — [litellm-agent-platform](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [lite-harness](https://github.com/LiteLLM-Labs/lite-harness).
+The platform we built is open source — [litellm-agent-platform](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer is [lite-harness](https://github.com/LiteLLM-Labs/lite-harness).
 
 Building the same thing inside your company?
 
-- [30-minute chat](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
-- [LAP Discord](https://discord.gg/Q2AK7HKudm)
+- [Schedule a 30-minute call](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
+- [Join the LAP Discord](https://discord.gg/Q2AK7HKudm)
 
 :::
 
@@ -32,7 +32,7 @@ Three weeks ago we began building an agent that could own 30% of our engineering
 
 ## What we shipped
 
-Three weeks in, on `BerriAI/litellm`: **21 PRs merged**, 41 open, 50+ filed this month. Between the PRs it lands and the Slack questions it answers, the agent now covers roughly **30% of the eng tickets that used to hit a human every week.** You can browse its PRs [here](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
+Three weeks in, on `BerriAI/litellm`: **21 PRs merged**, 41 open, 50+ filed this month. Between the PRs it lands and the Slack questions it answers, the agent now covers roughly **30% of the eng tickets that used to hit a human every week.** Browse [all agent-filed PRs on GitHub](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
 
 It also closed 138 PRs without merging — and that is by design. Sessions are cheap, so the agent attempts liberally and we discard freely. A closed PR costs us almost nothing; a ticket sitting in the backlog for weeks costs us a lot more.
 
