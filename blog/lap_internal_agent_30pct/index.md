@@ -15,13 +15,12 @@ image: /img/lap_litellm_agent_platform_hero.png
 
 :::info
 
-The platform we built is open source - [here](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [github.com/BerriAI/lite-harness](https://github.com/LiteLLM-Labs/lite-harness). 
+The platform we built is open source — [litellm-agent-platform](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [lite-harness](https://github.com/LiteLLM-Labs/lite-harness).
 
 Building the same thing inside your company?
 
-- Grab time for a 30-minute chat [here](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
-- Join the LAP Discord [here](https://discord.gg/Q2AK7HKudm)
-
+- [30-minute chat](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
+- [LAP Discord](https://discord.gg/Q2AK7HKudm)
 
 :::
 
@@ -63,19 +62,19 @@ The cold start showed up where everyone could feel it: Slack.
 
 ![Slack thread waiting on a cold sandbox boot before the agent could respond](/img/lap_shin_slack_slow_start.png)
 
-So we split the agent in two. The **brain** — reasoning, planning, model calls — lives in a shared, persistent pod. It has no shell: no BASH, no filesystem. The **sandbox** is ephemeral, one per session, and the only thing that can run `git`, `gh`, or `pytest`. The brain reaches it through two tool calls. This is similar to how Anthropic's managed agent platform works - [blog](https://www.anthropic.com/engineering/managed-agents).
+So we split the agent in two. The **brain** — reasoning, planning, model calls — lives in a shared, persistent pod. It has no shell: no BASH, no filesystem. The **sandbox** is ephemeral, one per session, and the only thing that can run `git`, `gh`, or `pytest`. The brain reaches it through two tool calls. This is similar to [how Anthropic's managed agent platform works](https://www.anthropic.com/engineering/managed-agents).
 
-![Architecture: a persistent brain pod with no shell, talking to an ephemeral per-session sandbox pool through four tool calls](/img/lap_brain_sandbox_split.svg)
+![Architecture: a persistent brain pod with no shell, talking to an ephemeral per-session sandbox pool through two tool calls](/img/lap_brain_sandbox_split.svg)
 
-This was a big win in terms of response time and session success rates, as well as reducing the cost of running the agent.
+Response time dropped, session success rates climbed, and cost per session fell.
 
 ## 2. Architecture: pick a harness, not an agent framework
 
 We started with agent frameworks — Pydantic AI, LangGraph, the PI SDK. Each one made us rebuild things a coding *harness* already ships: context compaction, sub-agent spawning, tool loops. We already trusted Claude Code locally for exactly this work, so we went looking for a harness, not a framework.
 
-We landed on **OpenCode**. In our testing, we saw it scaled better than Claude Agents SDK which spawns a CLI session per run, and OOM'd for us at ~1 RPM. OpenCode showed similar characteristics (the bottleneck here is sessions are long running and stored in memory), but it's memory usage grew slower than Claude Code.
+We landed on **OpenCode**. The Claude Agents SDK spawns a CLI session per run and OOM'd for us at ~1 RPM. OpenCode hits the same fundamental bottleneck — long-running sessions held in memory — but its memory usage grew more slowly, making it the better fit for now.
 
-That choice only stays cheap because we also wrote our own harness unification layer - [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness), which unifies OpenCode/Claude Code/Codex/etc to the OpenCode contract:
+That choice stays flexible because we also wrote a harness unification layer — [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) — which adapts OpenCode, Claude Code, Codex, and others to a single HTTP contract:
 
 ```
 lite-harness/
@@ -84,9 +83,9 @@ lite-harness/
   contract.py         # the one interface every runtime implements
 ```
 
-The agent platform does not know which harness is behind a session - allowing us to swap out the harness, if we ever see a better option.
+The agent platform doesn't know which harness is behind a session — swapping is a config change, not a rewrite.
 
-Our next goal is to achieve 100 RPM on our agent harness.
+Our next goal: 100 RPM on the harness.
 
 ## 3. Security: scope every credential to one endpoint
 
@@ -107,26 +106,21 @@ credentials:
     allowed_host: api.openai.com
 ```
 
-Our learning here was that you will need specific guardrails at the agent's input/output boundary. Guardrails at the LLM call level are insufficient as it can't distinguish between a user query and an internal tool loop.
+The lesson: guardrails must sit at the agent's input/output boundary. LLM-level guardrails can't distinguish between a user query and an internal tool loop — so they're either too permissive or too slow.
 
 ## Where the AI Gateway fits
 
-In our exploration, we found the AI Gateway to be a useful point of access control. It's how we gave our agent access to models and MCP tools. However, it is only half the picture: the agent boundary needs its own guardrails and capabilities (e.g. skills, memory) , because the agent — not the model — is what takes actions. The guardrail actions for when the agent answers a user might differ from when it is deep in an internal tool loop. Furthermore, running model-level guardrails on internal tool loops would make the agent much slower (~adding 5 minutes/session). 
+The AI Gateway is a useful access control point — it's how we gave our agent access to models and MCP tools. But it's only half the picture. The agent boundary needs its own guardrails and capabilities (skills, memory), because the agent — not the model — is what takes actions. The guardrails needed when an agent answers a user differ from those needed inside an internal tool loop. Running model-level guardrails on every tool call also adds ~5 minutes per session.
 
 ## What we believe now
 
-We believe autonomous agents are where the 10x productivity gains are, and the technical risk is the part that is mostly solved — models are already smart enough to file a decent PR. The hard problems left are product problems: scale it, make it reliable, make it secure.
+Autonomous agents are where the 10x productivity gains are, and the technical risk is largely solved — models are already smart enough to file a decent PR. The hard problems left are product problems: scale, reliability, and security.
 
-For us, that means two walls. **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory? **Security:** how do we secure the Agent server, so that it doesn't leak sensitive information or do destructive actions (we tried MCP's but hit rate limits or structural issues which made API key usage more preferable)? 
+For us, that means two walls. **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory? **Security:** how do you prevent the agent server from leaking sensitive information or taking destructive actions? (We tried MCPs but hit rate limits and structural issues — direct API keys were more reliable, which is what made scoping credentials critical.)
 
 ## Try it
 
-The platform we built is open source - [here](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [github.com/BerriAI/lite-harness](https://github.com/LiteLLM-Labs/lite-harness). 
-
-Building the same thing inside your company?
-
-- Grab time for a 30-minute chat [here](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
-- Join the LAP Discord [here](https://discord.gg/Q2AK7HKudm)
+Both repos are open source and self-hostable — [litellm-agent-platform](https://github.com/BerriAI/litellm-agent-platform) and [lite-harness](https://github.com/LiteLLM-Labs/lite-harness). If you're building something similar and want to skip the three weeks of mistakes, [book a 30-minute chat](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat) or join the [LAP Discord](https://discord.gg/Q2AK7HKudm).
 
 
 *This blog was inspired in shape by Ramp's [Why we built our background agent](https://builders.ramp.com/post/why-we-built-our-background-agent).*
@@ -136,7 +130,7 @@ Building the same thing inside your company?
 - Three weeks in: **21 PRs merged, ~30% of weekly eng tickets handled**, with a human approving every merge before anything lands on main
 - Separating the brain (no shell) from the sandbox dropped response time and cost — Slack questions no longer wait on a sandbox boot
 - Pick a harness over a framework — frameworks make you rebuild compaction, sub-agent spawning, and tool loops that harnesses already ship
-- Scope every credential to one upstream host; guardrails belong at the agent I/O boundary, and at the LLM layer
+- Scope every credential to one upstream host; guardrails must sit at the agent I/O boundary — LLM-level guardrails alone aren't enough
 - Every model call routes through the LiteLLM AI Gateway — per-session budgets, full audit trail, model swaps without touching agent code
 
 ---
@@ -153,11 +147,11 @@ We haven't fully solved it yet. CLI harnesses like OpenCode hold large sessions 
 
 ### Why not use Cursor or an off-the-shelf agent platform?
 
-Cursor agents aren't stateful across sessions — you can't give an agent persistent memory, skills, or identity. Anthropic's platform is closer, but we wanted to swap models and harnesses freely. We wanted a platform we could run internally, with flexibility to go across models/harnesses. 
+Cursor agents aren't stateful across sessions — you can't give an agent persistent memory, skills, or identity. Anthropic's platform is closer, but we wanted to swap models and harnesses freely without being locked to one vendor.
 
 ### Is the agent platform available in LiteLLM OSS?
 
-Yes. The [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform) and the swappable harness layer [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) are both open source (MIT License) and self-hosted. 
+Yes. The [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform) and the swappable harness layer [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) are both open source (MIT License) and can be self-hosted.
 
 ---
 
