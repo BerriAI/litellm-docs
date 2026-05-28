@@ -8,7 +8,22 @@ authors:
 description: "How we built a background agent on the LiteLLM AI Gateway that merges PRs with no human in the loop — the infra, harness, and credential-scoping calls behind it."
 tags: [agents, ai-gateway, lap, lite-harness, engineering]
 hide_table_of_contents: true
+image: /img/lap_litellm_agent_platform_hero.png
 ---
+
+![LiteLLM Agent Platform — agent.litellm.ai](/img/lap_litellm_agent_platform_hero.png)
+
+:::info
+
+The platform we built is open source - [here](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [github.com/BerriAI/lite-harness](https://github.com/LiteLLM-Labs/lite-harness). 
+
+Building the same thing inside your company?
+
+- Grab time for a 30-minute chat [here](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
+- Join the LAP Discord [here](https://discord.gg/Q2AK7HKudm)
+
+
+:::
 
 Our goal was to 10x the productivity of our company with agents.
 
@@ -96,34 +111,32 @@ Our learning here was that you will need specific guardrails at the agent's inpu
 
 ## Where the AI Gateway fits
 
-Every model call the agent makes — planning, code generation, the reviewer pass — routes through our own LiteLLM AI Gateway. That is not incidental. It is what makes the agent operable at scale instead of a science project:
-
-- **Per-session budgets.** Each session carries a budget tag, so we know the exact token cost of every closed ticket and can cap a runaway loop before it spends real money.
-- **A full audit trail.** The AI Gateway logs every prompt and completion. When the agent does something surprising — like the vault probe above — we can replay exactly what it saw.
-- **Model swaps without code changes.** Planning on one model, edits on a cheaper one, triage on the smallest. All of it is routing config at the gateway, not branches in the agent.
-
-A production-grade AI Gateway gives us one reliable control point at the model boundary. But it is only half the picture: the agent boundary needs its own guardrails, because the agent — not the model — is what takes actions. The guardrail has to behave one way when the agent answers a user and another way when it is deep in an internal tool loop.
+In our exploration, we found the AI Gateway to be a useful point of access control. It's how we gave our agent access to models and MCP tools. However, it is only half the picture: the agent boundary needs its own guardrails and capabilities (e.g. skills, memory) , because the agent — not the model — is what takes actions. The guardrail actions for when the agent answers a user might differ from when it is deep in an internal tool loop. Furthermore, running model-level guardrails on internal tool loops would make the agent much slower (~adding 5 minutes/session). 
 
 ## What we believe now
 
-Autonomous agents are where the 10x productivity gains are, and the technical risk is the part that is mostly solved — models are already smart enough to file a decent PR. The hard problems left are product problems: scale it, make it reliable, make it secure.
+We believe autonomous agents are where the 10x productivity gains are, and the technical risk is the part that is mostly solved — models are already smart enough to file a decent PR. The hard problems left are product problems: scale it, make it reliable, make it secure.
 
-For us, that means two walls. **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory? **Security:** how do you stop leaks and destructive tool use without lobotomizing the agent? Neither is a model problem anymore. Both are infrastructure problems — which is the kind we like.
+For us, that means two walls. **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory? **Security:** how do we secure the Agent server, so that it doesn't leak sensitive information or do destructive actions (we tried MCP's but hit rate limits or structural issues which made API key usage more preferable)? 
 
 ## Try it
 
-LAP is open source: [github.com/BerriAI/litellm-agent-platform](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [github.com/BerriAI/lite-harness](https://github.com/BerriAI/lite-harness). Both self-hosted, both run on a single Render service or your own K8s.
+The platform we built is open source - [here](https://github.com/BerriAI/litellm-agent-platform). The swappable harness layer lives at [github.com/BerriAI/lite-harness](https://github.com/LiteLLM-Labs/lite-harness). 
 
-Building the same thing inside your team? Open an issue on either repo — we would rather you skip the three weeks of mistakes. If you want to talk through it, [book a demo](https://calendly.com/d/4mp-gsd-vhf/litellm-cloud-and-self-hosted-).
+Building the same thing inside your company?
 
-*Inspired in shape by Ramp's [Why we built our background agent](https://builders.ramp.com/post/why-we-built-our-background-agent).*
+- Grab time for a 30-minute chat [here](https://calendly.com/d/cr4t-yp7-pzn/litellm-1-1-feedback-chat)
+- Join the LAP Discord [here](https://discord.gg/Q2AK7HKudm)
+
+
+*This blog was inspired in shape by Ramp's [Why we built our background agent](https://builders.ramp.com/post/why-we-built-our-background-agent).*
 
 ## Key Takeaways
 
 - Three weeks in: **21 PRs merged, ~30% of weekly eng tickets handled**, with a human approving every merge before anything lands on main
 - Separating the brain (no shell) from the sandbox dropped response time and cost — Slack questions no longer wait on a sandbox boot
 - Pick a harness over a framework — frameworks make you rebuild compaction, sub-agent spawning, and tool loops that harnesses already ship
-- Scope every credential to one upstream host; guardrails belong at the agent I/O boundary, not at the LLM call
+- Scope every credential to one upstream host; guardrails belong at the agent I/O boundary, and at the LLM layer
 - Every model call routes through the LiteLLM AI Gateway — per-session budgets, full audit trail, model swaps without touching agent code
 
 ---
@@ -136,15 +149,15 @@ No. Each session gets a scoped GitHub token that can push to a branch and open a
 
 ### How do you handle the OOM problem at scale?
 
-We haven't fully solved it yet. CLI harnesses like OpenCode hold large sessions in memory and OOM at around 1 RPM under load. We split the harness into [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) so we can swap runtimes without platform changes — that's the path forward, not rebuilding a harness from scratch.
+We haven't fully solved it yet. CLI harnesses like OpenCode hold large sessions in memory and OOM at around 1 RPM under load. We split the harness into [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) so we can swap runtimes without platform changes, as we experiment further. 
 
 ### Why not use Cursor or an off-the-shelf agent platform?
 
-Cursor agents aren't stateful across sessions — you can't give an agent persistent memory, skills, or identity. Anthropic's platform is closer, but we wanted to swap models and harnesses freely. If you're locked into a platform, you're betting your workflow on that vendor's roadmap.
+Cursor agents aren't stateful across sessions — you can't give an agent persistent memory, skills, or identity. Anthropic's platform is closer, but we wanted to swap models and harnesses freely. We wanted a platform we could run internally, with flexibility to go across models/harnesses. 
 
 ### Is the agent platform available in LiteLLM OSS?
 
-Yes. The [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform) and the swappable harness layer [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) are both open source (Apache 2.0) and self-hosted. [LiteLLM Enterprise](https://litellm.ai/enterprise) adds SSO/SCIM, air-gapped deployment, 24/7 SLA support, and advanced guardrails on top.
+Yes. The [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform) and the swappable harness layer [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) are both open source (MIT License) and self-hosted. 
 
 ---
 
