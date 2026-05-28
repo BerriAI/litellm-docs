@@ -48,11 +48,11 @@ The cold start showed up where everyone could feel it: Slack.
 
 ![Slack thread waiting on a cold sandbox boot before the agent could respond](/img/lap_shin_slack_slow_start.png)
 
-So we split the agent in two. The **brain** — reasoning, planning, model calls — lives in a shared, persistent pod. It has no shell: no BASH, no filesystem. The **sandbox** is ephemeral, one per session, and the only thing that can run `git`, `gh`, or `pytest`. The brain reaches it through exactly four tool calls.
+So we split the agent in two. The **brain** — reasoning, planning, model calls — lives in a shared, persistent pod. It has no shell: no BASH, no filesystem. The **sandbox** is ephemeral, one per session, and the only thing that can run `git`, `gh`, or `pytest`. The brain reaches it through two tool calls. This is similar to how Anthropic's managed agent platform works - [blog](https://www.anthropic.com/engineering/managed-agents).
 
 ![Architecture: a persistent brain pod with no shell, talking to an ephemeral per-session sandbox pool through four tool calls](/img/lap_brain_sandbox_split.svg)
 
-The payoff is structural, not incremental. A Slack question no longer waits on a sandbox at all — the brain answers from tool calls, and only real PR work pays the sandbox cost. Response time and session success rate both jumped, and the cost per session dropped. Decoupling the brain from the sandbox was the single highest-leverage infra decision we made.
+This was a big win in terms of response time and session success rates, as well as reducing the cost of running the agent.
 
 ## 2. Architecture: pick a harness, not an agent framework
 

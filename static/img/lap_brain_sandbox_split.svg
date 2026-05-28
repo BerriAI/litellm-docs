@@ -15,16 +15,12 @@
 
   <!-- tool surface -->
   <line x1="120" y1="220" x2="600" y2="220" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 3"/>
-  <text x="360" y="245" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#6b7280">TOOL SURFACE — 4 CALLS</text>
+  <text x="360" y="245" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#6b7280">TOOL SURFACE — 2 CALLS</text>
   <g font-family="ui-monospace, monospace" font-size="11" fill="#374151">
-    <rect x="80" y="258" width="135" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
-    <text x="147.5" y="276" text-anchor="middle">sandbox_provision</text>
-    <rect x="225" y="258" width="135" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
-    <text x="292.5" y="276" text-anchor="middle">sandbox_execute</text>
-    <rect x="370" y="258" width="135" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
-    <text x="437.5" y="276" text-anchor="middle">sandbox_read_file</text>
-    <rect x="515" y="258" width="125" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
-    <text x="577.5" y="276" text-anchor="middle">sandbox_write_file</text>
+    <rect x="200" y="258" width="150" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
+    <text x="275" y="276" text-anchor="middle">sandbox_provision</text>
+    <rect x="370" y="258" width="150" height="28" rx="4" fill="#f3f4f6" stroke="#d1d5db"/>
+    <text x="445" y="276" text-anchor="middle">sandbox_execute</text>
   </g>
 
   <!-- sandbox pods (per-session) -->
@@ -44,7 +40,6 @@
 
   <!-- arrows -->
   <line x1="360" y1="165" x2="360" y2="218" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
-  <line x1="160" y1="290" x2="160" y2="350" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
-  <line x1="360" y1="290" x2="360" y2="350" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
-  <line x1="560" y1="290" x2="560" y2="350" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="275" y1="290" x2="275" y2="350" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="445" y1="290" x2="445" y2="350" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
 </svg>
