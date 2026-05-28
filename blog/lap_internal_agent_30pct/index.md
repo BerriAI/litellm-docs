@@ -11,7 +11,7 @@ hide_table_of_contents: true
 image: /img/lap_litellm_agent_platform_hero.png
 ---
 
-![LiteLLM Agent Platform: agent.litellm.ai](/img/lap_litellm_agent_platform_hero.png)
+<img src="/img/lap_litellm_agent_platform_hero.png" alt="LiteLLM Agent Platform: agent.litellm.ai" style={{width: "100%"}} />
 
 :::info
 
@@ -114,45 +114,3 @@ Both repos are open source and self-hostable: [litellm-agent-platform](https://g
 
 
 *This blog was inspired in shape by Ramp's [Why we built our background agent](https://builders.ramp.com/post/why-we-built-our-background-agent).*
-
-## Key Takeaways
-
-- Three weeks in: **21 PRs merged, ~30% of weekly eng tickets handled**, with a human approving every merge before anything lands on main
-- Separating the brain (no shell) from the sandbox dropped response time and cost. Slack questions no longer wait on a sandbox boot
-- Pick a harness over a framework, since frameworks make you rebuild compaction, sub-agent spawning, and tool loops that harnesses already ship
-- Scope every credential to one upstream host; guardrails must sit at the agent I/O boundary. LLM-level guardrails alone aren't enough.
-- Every model call routes through the LiteLLM AI Gateway: per-session budgets, full audit trail, model swaps without touching agent code
-
----
-
-### Frequently Asked Questions
-
-### Does the agent push to main?
-
-No. Each session gets a scoped GitHub token that can push to a branch and open a PR, nothing more. A human reviews and approves every merge. The agent cannot bypass that gate.
-
-### How do you handle the OOM problem at scale?
-
-We haven't fully solved it yet. CLI harnesses like OpenCode hold large sessions in memory and OOM at around 1 RPM under load. We split the harness into [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) so we can swap runtimes without platform changes, as we experiment further. 
-
-### Why not use Cursor or an off-the-shelf agent platform?
-
-Cursor agents aren't stateful across sessions, so you can't give an agent persistent memory, skills, or identity. Anthropic's platform is closer, but we wanted to swap models and harnesses freely without being locked to one vendor.
-
-### Is the agent platform available in LiteLLM OSS?
-
-Yes. The [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform) and the swappable harness layer [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness) are both open source (MIT License) and can be self-hosted.
-
----
-
-## Conclusion
-
-Background agents become reliable when the infrastructure underneath them is production-grade: cheap sandboxes, scoped credentials, and a reliable AI Gateway handling every model call with full auditability. The right failure mode for an agent like this is "opens a draft PR that a human declines," not "touches something it shouldn't." Build the infrastructure that enforces that boundary and the rest follows.
-
-For teams with strict uptime and compliance requirements, [LiteLLM Enterprise](https://litellm.ai/enterprise) provides the additional controls needed for regulated production environments.
-
-## Recommended Reading
-
-- [LiteLLM AI Gateway: full feature overview](https://docs.litellm.ai/docs/simple_proxy)
-- [Spend tracking and per-session budget controls](https://docs.litellm.ai/docs/proxy/cost_tracking)
-- [Logging and audit trail for AI Gateway requests](https://docs.litellm.ai/docs/proxy/logging)
