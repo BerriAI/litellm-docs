@@ -1,6 +1,6 @@
 ---
 slug: lap-internal-agent-30-percent
-title: "Three calls we'd have gotten wrong building our background agent"
+title: "How we built a background agent to cover 30% of our backlog"
 date: 2026-05-27T10:00:00
 authors:
   - ishaan
@@ -9,76 +9,21 @@ tags: [agents, product, lap, lite-harness, engineering]
 hide_table_of_contents: false
 ---
 
-Coding agents are converging on the wrong shape.
-
-Most of what's being built today is a copilot — a model with autocomplete reach, sitting next to your cursor. That's fine for typing assistance. It's not where the leverage is. The leverage is in a process that owns part of your backlog and ships PRs while you do other work.
-
-We've spent the last three weeks pointing [LiteLLM Agent Platform (LAP)](https://github.com/BerriAI/litellm-agent-platform) at our own queue. Today a single background agent has 21 merged PRs on `BerriAI/litellm`, ~50 PRs filed per month, owns the Slack `#help-litellm` triage, and posts blocker comments on Linear before a human triages them.
-
-Three calls made that work. We'd have gotten all three wrong if we'd done the obvious thing.
+This post covers our early learnings across infrastructure, architecture, and security challenges as we build our own background agent to cover 30% of our engineering backlog. You can see its PRs [here](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
 
 {/* truncate */}
 
-## 1. The brain doesn't get BASH
+To deliver this, we decided to build an agent which could run autonomously, in the background, taking tickets from our Linear board and filing PRs for us. We evaluated Cursor and Anthropic's managed agent platforms, but neither felt like a good fit for our needs.
 
-The first instinct, when you're building a coding agent, is to give it a shell. Spin up one sandbox per session, drop the agent process inside, let it run `bash` and `git` and `pytest` natively. That's how most demos look.
+- Cursor - their agents were not stateful - i.e. you could not store memory, skills, etc. per agent. Their platform equated an agent to a session, which is not what we wanted.
 
-We shipped it that way first. It nearly killed the project.
+- Anthropic - this was close to what we wanted, but we wanted the flexibility to swap models and harnesses easily. We didn't want to be locked into their platform.
 
-The Slack rollout exposed the failure mode. Someone in `#help-litellm` would ask a small question — "how does SCIM map our SSO groups to Teams?" — and the bot would acknowledge, then sit silent for two full minutes before the answer started streaming. Every new question paid the full cold-start cost: provision a new sandbox, install dependencies, boot the agent, load context.
+## What we shipped
 
-![Shin's two-minute cold start in Slack](/img/lap_shin_slack_slow_start.png)
+Three weeks in, on `BerriAI/litellm`: **21 PRs merged**, 41 open, 50+ filed per month, plus the Slack triage volume the agent absorbs that we'd otherwise answer by hand. Together that's ~30% of our weekly ticket throughput.
 
-The architecture was wrong. Bundling the brain (the model loop, the context, the planning) with the sandbox (the filesystem, the shell, the executables) meant every session paid the worst-case startup of both. And worse, scaling the brain meant scaling the sandbox alongside it — every session held an idle VM whether or not the agent needed one in the next minute.
-
-So we split them. Anthropic's [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) frames the LLM as an "augmented brain" with retrieval, tools, and memory bolted onto it. We took that one step further and made the augmentation **physically** separate: the brain runs in a persistent harness pod shared across many sessions; the sandbox is a per-session E2B pod accessed only through tool calls.
-
-![Brain in the harness, sandbox per session, four tools between them](/img/lap_brain_sandbox_split.svg)
-
-The brain's tool surface is exactly four things: `sandbox_provision`, `sandbox_execute`, `sandbox_read_file`, `sandbox_write_file`. **No BASH on the harness.** Not because we don't trust the model — because the harness is shared. One stray `rm -rf` and we'd corrupt the host running ten other sessions.
-
-Two things happened after the split:
-
-- **Cold start dropped from 2 minutes to under 2 seconds.** The brain is already warm; the sandbox lazy-spins on the first `sandbox_execute`. Slack questions feel synchronous.
-- **The brain got braver.** When the worst case is "the sandbox dies and gets reprovisioned," the model tries more aggressive fixes — running tests, force-pushing, rewriting whole files — that you'd never approve if the worst case were "the harness dies and takes nine other sessions with it."
-
-This is the change that took a demo into something we'd let answer customer questions.
-
-## 2. Make the agent report when it's stuck
-
-Default agent loops fail silently. The model decides it can't make progress, emits one more vague paragraph, and the trace ends with a half-done diff nobody can use.
-
-We shipped without a self-report path for the first week. The PR queue filled with garbage — PRs that almost passed tests, PRs that fixed the wrong file, PRs whose Linear ticket was ambiguous and the agent guessed. 138 of the agent's PRs have been closed without merging. That number was the symptom.
-
-So we gave the agent a `report_issue` tool. When the brain hits something it can't resolve from sandbox state alone — a credential it can't find, a fixture that doesn't exist, an ambiguous acceptance criterion — it stops the loop and posts a comment back on the originating Linear ticket explaining what it tried and what it'd need to continue.
-
-The week we shipped it, the agent's PR-filing rate went *down* and its Linear-comment rate went *up*. That is the right shape. A loop that knows it's stuck is more valuable than one that pretends it isn't. Engineers triage the comment, supply the missing context (a doc link, a credential binding, a clarified spec), and the agent re-picks the ticket cleanly on the next pass.
-
-It also keeps the merge bar high. The 21 PRs that landed are ones the agent could actually defend; the rest became tickets it flagged for humans, not noise reviewers had to filter.
-
-## 3. A harness, not an agent framework
-
-The third call was the one we re-litigated the most.
-
-Agent frameworks — LangGraph, OpenAI's Agents SDK, the Python and TS wrappers — give you a function: `runAgent({ task, tools, model })`. You `await` it. It returns. That is the abstraction.
-
-That abstraction is wrong for production. Real agent runs:
-
-- Stream tokens to a UI for minutes, sometimes hours
-- Survive deploys (the loop has to outlive a `kubectl rollout`)
-- Get inspected mid-flight (humans need to see what the brain is doing *right now*)
-- Get cancelled, paused, and resumed
-- Persist their event bus so a reconnecting client gets the full transcript
-
-None of that fits a function call. All of it fits an HTTP server.
-
-So we picked a **harness** — a long-running process ([opencode](https://opencode.ai/) under the hood) that exposes the agent loop as REST endpoints: `POST /session`, `POST /session/:id/message`, `GET /event` (SSE), `POST /session/:id/abort`. LAP is a thin client. The agent loop is a server.
-
-That decision made the harness layer cheap to swap. We split it into its own repo, [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness): one folder per supported runtime (`opencode`, `claude-agent-sdk`, …), one HTTP contract, one shared UI. LAP doesn't know which harness is behind a session. Internally we've run the same agent on opencode and on claude-agent-sdk across different weeks. Throughput barely budged — which is the point. The loop is the product, not the framework wrapping it.
-
-## What it's actually shipping
-
-Three weeks in, on `BerriAI/litellm`: 21 PRs merged, 41 open, 138 closed without merging, 50+ filed per month. Plus the Slack triage volume the agent absorbs that we'd otherwise be answering by hand.
+It also closed 138 PRs without merging — and that's by design. Sessions are cheap, so the agent attempts liberally and we discard freely. A closed PR costs us almost nothing; a ticket sitting in the backlog for weeks costs us a lot more.
 
 Representative merged PRs, end-to-end with no human touching the code:
 
@@ -87,7 +32,49 @@ Representative merged PRs, end-to-end with no human touching the code:
 - [#28372 — `feat(prometheus): emit per-token-type detail metrics`](https://github.com/BerriAI/litellm/pull/28372)
 - [#27873 — `fix: strip Gemini thought-signature suffix from non-streaming tool_use.id`](https://github.com/BerriAI/litellm/pull/27873)
 
-The long tail of "obvious, blocking, hard to prioritize" work that used to sit in the backlog for weeks.
+This is the long tail of "obvious, blocking, hard to prioritize" work that used to sit in the backlog for weeks. Here's what it took to get there.
+
+## 1. Infrastructure: separate the agent from the sandbox
+
+We initially tried to run the agent in the sandbox. This is similar to [Ramp Inspect's](https://builders.ramp.com/post/why-we-built-our-background-agent) approach, but this meant that each new session spawned a sandbox, which was slow and expensive. If an internal user is asking a technical question, there is no need to spawn a sandbox for this - just a few tool calls would suffice.
+
+
+This is when we decided to decouple the agent from the sandbox. This was a big win in terms of improving our response time and session success rates, as well as reducing the cost of running the agent.
+
+If you're curious to learn more, we recommend reading Anthropic's blog post on [this](https://www.anthropic.com/engineering/managed-agents).
+
+
+## 2. Architecture: pick a harness, not an agent framework
+
+We initially experimented with Pydantic AI, Langgraph, and PI SDK. But they required us to rebuild a lot of components that harnesses already have (like compaction, sub-agent spawning, etc). Our goal was to build an agent which could file PR's and answer technical questions for us, and we knew Claude Code was good for this - we used it locally, so it felt natural to look for that (or something similar) for handling PR's for us. 
+
+We eventually ended up with Opencode, because we saw it scaled better than the other options (Claude Agents SDK spawns a CLI session for each run, which led to OOM's at ~ 1 RPM). 
+
+That decision made the harness layer cheap to swap. We split it into its own repo, [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness): one folder per supported runtime (`opencode`, `claude-agent-sdk`, …), one HTTP contract, one shared UI. The agent platform doesn't know which harness is behind a session. Internally we've run the same agent on opencode and on claude-agent-sdk across different weeks.
+
+
+Our current challenge here is around scaling the harness. CLI Harnesses store large sessions in-memory leading to OOM's. We'd like to avoid rebuilding the harness (Opencode/claude code/codex seem quite focused on that), but we want something that can run autonomously, reliably and allow all members of our team to use it.
+
+
+
+## 3. Security: agents leak credentials easily
+
+A problem we faced was our agent including the API keys from the environment in commit or slack messages. We initially mitigated this with a simple HTTP Proxy Vault. We stubbed the credentials in the environment, and swapped them if the agent used the stubbed credentials in the headers. 
+
+However, the agent noticed it was given stubbed credentials, and ran a MITM attack to get the real credentials. It wrote a fake endpoint, ran the request to call it with stubbed credentials, the vault swapped out the stubbed credentials with the real credentials, and the agent got the real credentials, which it subsequently stored to its memory via a tool call. 
+
+The fix was straightforward - we simply mapped the credentials to an endpoint. This way your github token could only be used to call the github API, and not any other API.
+
+We're still in the early stages of this, but securing the agent runtime is a big challenge. The checks are a mix of architectural decisions, cpu-level guardrails and model level guardrails. Our goal is to secure the agent input/output, which means the guardrail needs to run at the agent level, not at the LLM level.
+
+
+## Learnings 
+
+We believe autonomous agents are where the 10x productivity gains are. The technical risk is limited - models seem like they are smart enough to file a decent PR. The challenges are now around the product - how do you scale this, make it reliable and make it secure.
+
+The biggest challenges are around scaling the harness (how do you serve 100 RPM with OpenCode?) and securing the agent (prevent leaks, destructive tool usage, etc). 
+
+The AI Gateway as an access point, felt critical, but there are controls we need at the Agent level as well (e.g. running guardrails when the agent is responding to a user query vs. when it's running an internal tool loop).
 
 ## Try it
 
