@@ -34,16 +34,6 @@ Three weeks ago we began building an agent that could own 30% of our engineering
 
 Three weeks in, on `BerriAI/litellm`: **21 PRs merged**, 41 open, 50+ filed this month. Between the PRs it lands and the Slack questions it answers, the agent now covers roughly **30% of the eng tickets that used to hit a human every week.** Browse [all agent-filed PRs on GitHub](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
 
-It also closed 138 PRs without merging, and that is by design. Sessions are cheap, so the agent attempts liberally and we discard freely. A closed PR costs us almost nothing; a ticket sitting in the backlog for weeks costs us a lot more.
-
-Representative merged PRs, end-to-end with no human touching the code:
-
-- [#29016: `fix(otel): normalize unhashable scope in _emit_once`](https://github.com/BerriAI/litellm/pull/29016)
-- [#28548: `feat(datadog): emit litellm.overhead.latency as a standalone Datadog metric`](https://github.com/BerriAI/litellm/pull/28548)
-- [#28372: `feat(prometheus): emit per-token-type detail metrics`](https://github.com/BerriAI/litellm/pull/28372)
-- [#27873: `fix: strip Gemini thought-signature suffix from non-streaming tool_use.id`](https://github.com/BerriAI/litellm/pull/27873)
-
-This is the long tail of "obvious, blocking, hard to prioritize" work that used to sit in the backlog for weeks. Here is what it took to get there.
 
 ## Why we built our own
 
@@ -52,7 +42,7 @@ We wanted an agent that runs autonomously, in the background, pulling tickets of
 - **Cursor:** agents were not stateful. You could not store memory, skills, etc. per agent. The platform equated an agent to a session; we wanted an agent that persists across them.
 - **Anthropic:** close to what we wanted, but we wanted to swap models and harnesses freely. We did not want to be locked to one platform.
 
-So we built on the [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform). Three calls shaped everything that followed.
+So we built on the [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform). 
 
 ## 1. Infrastructure: separate the brain from the sandbox
 
@@ -70,7 +60,7 @@ Response time dropped, session success rates climbed, and cost per session fell.
 
 ## 2. Architecture: pick a harness, not an agent framework
 
-We started with agent frameworks: Pydantic AI, LangGraph, the PI SDK. Each one made us rebuild things a coding *harness* already ships: context compaction, sub-agent spawning, tool loops. We already trusted Claude Code locally for exactly this work, so we went looking for a harness, not a framework.
+We started with agent frameworks: Pydantic AI, LangGraph, the PI SDK. Each one made us rebuild things a coding *harness* already ships: context compaction, sub-agent spawning, tool loops. We already trusted Claude Code locally for this work, so we went looking for a harness, not a framework.
 
 We landed on **OpenCode**. The Claude Agents SDK spawns a CLI session per run and OOM'd for us at ~1 RPM. OpenCode hits the same fundamental bottleneck (long-running sessions held in memory), but its memory usage grew more slowly, making it the better fit for now.
 
@@ -95,7 +85,7 @@ The agent defeated it. It noticed the credentials were stubbed, then wrote its o
 
 ![Ishaan catching the agent writing real credentials to its memory after circumventing the stub vault](/img/lap_shin_agent_mitm_memory.png)
 
-The fix was to stop trusting the *value* and start binding it to a *destination*. Each credential is pinned to exactly one upstream host; the vault refuses the swap if the outbound request is going anywhere else:
+The fix was to stop trusting the *value* and start binding it to a *destination*. Each credential is pinned to one upstream host; the vault refuses the swap if the outbound request is going anywhere else:
 
 ```yaml
 # vault: a credential is only ever swapped in for its bound host
