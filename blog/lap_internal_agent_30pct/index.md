@@ -48,15 +48,15 @@ So we built on the [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-a
 
 Our first version ran the agent *inside* the sandbox, following the same shape as [Ramp Inspect](https://builders.ramp.com/post/why-we-built-our-background-agent). Every new session booted a fresh sandbox. That is fine when the work is "go edit code." It is wasteful when an engineer just asks a question in Slack. You pay a full sandbox boot to answer something that needs a few tool calls.
 
-The cold start showed up where everyone could feel it: Slack.
-
-![Slack thread waiting on a cold sandbox boot before the agent could respond](/img/lap_shin_slack_slow_start.png)
-
 So we split the agent in two. The **brain** (reasoning, planning, model calls) lives in a shared, persistent pod. It has no shell: no BASH, no filesystem. The **sandbox** is ephemeral, one per session, and the only thing that can run `git`, `gh`, or `pytest`. The brain reaches it through two tool calls. This is similar to [how Anthropic's managed agent platform works](https://www.anthropic.com/engineering/managed-agents).
 
 ![Architecture: a persistent brain pod with no shell, talking to an ephemeral per-session sandbox pool through two tool calls](/img/lap_brain_sandbox_split.svg)
 
 Response time dropped, session success rates climbed, and cost per session fell.
+
+The cold start showed up most visibly in Slack, where everyone could feel the wait.
+
+![Slack thread waiting on a cold sandbox boot before the agent could respond](/img/lap_shin_slack_slow_start.png)
 
 ## 2. Architecture: pick a harness, not an agent framework
 
