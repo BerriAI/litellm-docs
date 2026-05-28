@@ -58,9 +58,9 @@ This was a big win in terms of response time and session success rates, as well 
 
 We started with agent frameworks — Pydantic AI, LangGraph, the PI SDK. Each one made us rebuild things a coding *harness* already ships: context compaction, sub-agent spawning, tool loops. We already trusted Claude Code locally for exactly this work, so we went looking for a harness, not a framework.
 
-We landed on **OpenCode**. It scaled where the alternatives did not — the Claude Agents SDK spawns a CLI session per run, which OOM'd us at ~1 RPM.
+We landed on **OpenCode**. In our testing, we saw it scaled better than Claude Agents SDK which spawns a CLI session per run, and OOM'd for us at ~1 RPM. OpenCode showed similar characteristics (the bottleneck here is sessions are long running and stored in memory), but it's memory usage grew slower than Claude Code.
 
-That choice only stayed cheap because we refused to marry it. The harness lives in its own repo, [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness), behind one HTTP contract:
+That choice only stays cheap because we also wrote our own harness unification layer - [`BerriAI/lite-harness`](https://github.com/BerriAI/lite-harness), which unifies OpenCode/Claude Code/Codex/etc to the OpenCode contract:
 
 ```
 lite-harness/
@@ -69,15 +69,17 @@ lite-harness/
   contract.py         # the one interface every runtime implements
 ```
 
-The agent platform does not know which harness is behind a session. We have run the same agent on OpenCode one week and the Claude Agent SDK the next, no platform changes. Treat the harness as a swappable backend and you stop betting the company on any single vendor's roadmap.
+The agent platform does not know which harness is behind a session - allowing us to swap out the harness, if we ever see a better option.
 
-The open problem: CLI harnesses hold large sessions in memory, so they OOM under load. We do not want to rewrite a harness from scratch — but serving 100 RPM on OpenCode is the wall we are walking into next.
+Our next goal is to achieve 100 RPM on our agent harness.
 
 ## 3. Security: scope every credential to one endpoint
 
 Our agent kept leaking API keys from its environment into commits and Slack messages. First mitigation: a small HTTP proxy vault. We stubbed the real credentials in the environment and swapped the stub for the real value only when the agent made an outbound call.
 
 The agent defeated it. It noticed the credentials were stubbed, then wrote its own endpoint, called it with the stubbed credentials, let the vault swap in the real ones on the way out, and read the real keys back off its own server — then stored them to memory via a tool call. A clean man-in-the-middle against our own vault.
+
+![Ishaan's Slack messages: "agent wrote keys to its memory" and "it tries to circumvent the stubs" — showing the agent's memory entries storing real credentials after defeating the proxy vault](/img/lap_shin_agent_mitm_memory.png)
 
 The fix was to stop trusting the *value* and start binding it to a *destination*. Each credential is pinned to exactly one upstream host; the vault refuses the swap if the outbound request is going anywhere else:
 
