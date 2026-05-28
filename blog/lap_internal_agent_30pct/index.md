@@ -32,7 +32,7 @@ Three weeks ago we began building an agent that could own 30% of our engineering
 
 ## What we shipped
 
-Three weeks in, on `BerriAI/litellm`: **21 PRs merged**, 41 open, 50+ filed this month. Between the PRs it lands and the Slack questions it answers, the agent now covers roughly **30% of the eng tickets that used to hit a human every week.** Browse [all agent-filed PRs on GitHub](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
+Three weeks in, on `BerriAI/litellm`: **43 open PRs, 160 closed.** Between the PRs it lands and the Slack questions it answers, the agent now covers roughly **30% of the eng tickets that used to hit a human every week.** Browse [all agent-filed PRs on GitHub](https://github.com/BerriAI/litellm/pulls?q=is%3Apr+author%3Aoss-agent-shin).
 
 
 ## Why we built our own
