@@ -106,7 +106,10 @@ The AI Gateway is a useful access control point: it's how we gave our agent acce
 
 Autonomous agents are where the 10x productivity gains are, and the technical risk is largely solved. Models are already smart enough to file a decent PR. The hard problems left are product problems: scale, reliability, and security.
 
-For us, that means two walls. **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory? **Security:** how do you prevent the agent server from leaking sensitive information or taking destructive actions? (We tried MCPs but hit rate limits and structural issues, so direct API keys were more reliable, which is what made scoping credentials critical.)
+For us, that means two open problems:
+
+- **Scale:** how do you serve 100 RPM on a harness that keeps sessions in memory?
+- **Security:** how do you prevent the agent server from leaking sensitive information or taking destructive actions? (We tried MCPs but hit rate limits and structural issues, so direct API keys were more reliable, which is what made scoping credentials critical.)
 
 ## Try it
 
