@@ -92,7 +92,7 @@ credentials:
     allowed_host: api.openai.com
 ```
 
-Now the GitHub token can only ever reach the GitHub API. The agent's fake endpoint gets the stub and nothing else. The lesson generalizes: guardrails belong at the agent's input/output boundary, not at the LLM call — because the agent, not the model, is the thing taking actions.
+Our learning here was that you will need specific guardrails at the agent's input/output boundary. Guardrails at the LLM call level are insufficient as it can't distinguish between a user query and an internal tool loop.
 
 ## Where the AI Gateway fits
 
