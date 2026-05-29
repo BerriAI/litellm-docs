@@ -20,10 +20,14 @@ LiteLLM now supports [Claude Opus 4.8](https://www.anthropic.com/news/claude-opu
 
 ## What's new in Opus 4.8
 
-- **Same per-token price as Opus 4.7** — $5 / MTok input and $25 / MTok output, with prompt caching at $0.50 / MTok (read) and $6.25 / MTok (write).
-- **Full effort ladder** — Opus 4.8 supports `low`, `medium`, `high` (default), `xhigh`, and `max`, giving you finer-grained control over how much reasoning the model applies.
-- **1M-token context** with up to 128K output tokens.
-- Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output — all supported through LiteLLM.
+Opus 4.8 builds on Opus 4.7 with gains across coding, agentic, and reasoning benchmarks — and ships at the **same price**. A few things stand out for teams running it through a gateway:
+
+- **A sharper, more honest agent.** Anthropic reports Opus 4.8 is roughly **4× less likely** than Opus 4.7 to let flaws in code it wrote pass unremarked, and more likely to flag uncertainty than make unsupported claims. That reliability compounds when the model is driving multi-step tool calls behind your proxy. ([details from Anthropic](https://www.anthropic.com/news/claude-opus-4-8))
+- **The full effort ladder, per request.** `low → medium → high` (default) `→ xhigh → max`. Dial reasoning *up* for hard, long-running agentic work or *down* for fast, cheap responses — set it per call via `reasoning_effort` or `output_config`.
+- **Mid-task system messages.** The Messages API now accepts `system` entries *inside* the `messages` array, so an agent can update its instructions, permissions, or token budget mid-run without breaking the prompt cache — and it flows straight through LiteLLM's `/v1/messages` passthrough.
+- **Same per-token price as Opus 4.7** — $5 / MTok input and $25 / MTok output, with prompt caching at $0.50 / MTok (read) and $6.25 / MTok (write). Better results, no price change.
+- **1M-token context**, up to 128K output tokens.
+- **One gateway, every surface.** Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output — across Anthropic, Azure, Vertex AI, and Bedrock, with unified spend tracking, logging, and fallbacks.
 
 ## Enabling Opus 4.8
 
