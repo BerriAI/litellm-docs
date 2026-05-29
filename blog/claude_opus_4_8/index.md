@@ -6,7 +6,7 @@ authors:
   - mateo
   - krrish
   - ishaan-alt
-description: "Day 0 support for Claude Opus 4.8 on LiteLLM AI Gateway - use across Anthropic, Azure, Vertex AI, and Bedrock."
+description: "Day 0 support for Claude Opus 4.8 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
 tags: [anthropic, claude, opus 4.8, day 0 support]
 hide_table_of_contents: false
 ---
@@ -14,26 +14,26 @@ hide_table_of_contents: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM now supports [Claude Opus 4.8](https://www.anthropic.com/news/claude-opus-4-8) on Day 0. Use it across Anthropic, Azure, Vertex AI, and Bedrock through the LiteLLM AI Gateway — call it with the same OpenAI-compatible request you already use, and track spend, rate limits, and logging in one place.
+LiteLLM now supports [Claude Opus 4.8](https://www.anthropic.com/news/claude-opus-4-8) on Day 0. Use it across Anthropic, Azure, Vertex AI, and Bedrock through the LiteLLM AI Gateway. Call it with the same OpenAI-compatible request you already use, and track spend, rate limits, and logging in one place.
 
 {/* truncate */}
 
 ## What's new in Opus 4.8
 
-Opus 4.8 builds on Opus 4.7 with gains across coding, agentic, and reasoning benchmarks — and ships at the **same price**. A few things stand out for teams running it through a gateway:
+Opus 4.8 builds on Opus 4.7 with gains across coding, agentic, and reasoning benchmarks, and ships at the **same price**. A few things stand out for teams running it through a gateway:
 
 - **A sharper, more honest agent.** Anthropic reports Opus 4.8 is roughly **4× less likely** than Opus 4.7 to let flaws in code it wrote pass unremarked, and more likely to flag uncertainty than make unsupported claims. That reliability compounds when the model is driving multi-step tool calls behind your proxy. ([details from Anthropic](https://www.anthropic.com/news/claude-opus-4-8))
-- **The full effort ladder, per request.** `low → medium → high` (default) `→ xhigh → max`. Dial reasoning *up* for hard, long-running agentic work or *down* for fast, cheap responses — set it per call via `reasoning_effort` or `output_config`.
-- **Mid-task system messages.** The Messages API now accepts `system` entries *inside* the `messages` array, so an agent can update its instructions, permissions, or token budget mid-run without breaking the prompt cache — and it flows straight through LiteLLM's `/v1/messages` passthrough.
-- **Same per-token price as Opus 4.7** — $5 / MTok input and $25 / MTok output, with prompt caching at $0.50 / MTok (read) and $6.25 / MTok (write). Better results, no price change.
+- **The full effort ladder, per request.** `low`, `medium`, `high` (default), `xhigh`, and `max`. Dial reasoning *up* for hard, long-running agentic work or *down* for fast, cheap responses. Set it per call via `reasoning_effort` or `output_config`.
+- **Mid-task system messages.** The Messages API now accepts `system` entries *inside* the `messages` array, so an agent can update its instructions, permissions, or token budget mid-run without breaking the prompt cache, and it flows straight through LiteLLM's `/v1/messages` passthrough.
+- **Same per-token price as Opus 4.7.** $5 / MTok input and $25 / MTok output, with prompt caching at $0.50 / MTok (read) and $6.25 / MTok (write). Better results, no price change.
 - **1M-token context**, up to 128K output tokens.
-- **One gateway, every surface.** Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output — across Anthropic, Azure, Vertex AI, and Bedrock, with unified spend tracking, logging, and fallbacks.
+- **One gateway, every surface.** Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output, all available across Anthropic, Azure, Vertex AI, and Bedrock with unified spend tracking, logging, and fallbacks.
 
 ## Enabling Opus 4.8
 
 Opus 4.8 ships in the nightly **`v1.88.0-dev.1`** image (and every release after it). How you pick it up depends on where your proxy reads pricing from:
 
-- **Default (remote cost map) — no upgrade needed.** In the LiteLLM UI, go to **Models + Endpoints → Price Data** and click **Reload Price Data** (or, as a proxy admin, `POST /reload/model_cost_map`). This refetches the latest pricing from LiteLLM's cost map **and** re-registers provider routing in one step, so `claude-opus-4-8` becomes available across Anthropic, Azure, Vertex AI, and Bedrock — even if you're on an older proxy version.
+- **Default (remote cost map): no upgrade needed.** In the LiteLLM UI, open the **Price Data** tab under **Models + Endpoints** and click **Reload Price Data** (or, as a proxy admin, `POST /reload/model_cost_map`). This refetches the latest pricing from LiteLLM's cost map **and** re-registers provider routing in one step, so `claude-opus-4-8` becomes available across Anthropic, Azure, Vertex AI, and Bedrock, even if you're on an older proxy version.
 - **Running `LITELLM_LOCAL_MODEL_COST_MAP=true`?** The cost map is baked into the image, so the Reload button won't reach it. Pull `v1.88.0-dev.1` or later to get the bundled Opus 4.8 metadata:
 
   ```bash
@@ -292,7 +292,7 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 Claude Opus 4.8 supports five effort levels: `low`, `medium`, `high` (default), `xhigh`, and `max`. These give you finer-grained control over how much reasoning the model applies to a task. Pass the effort level via the `output_config` parameter.
 
-Opus 4.8 supports the full effort ladder — both `xhigh` (introduced with Opus 4.7) and `max` (previously Opus 4.6 only) are available.
+Opus 4.8 supports the full effort ladder. Both `xhigh` (introduced with Opus 4.7) and `max` (previously Opus 4.6 only) are available.
 
 <Tabs>
 <TabItem value="completions" label="/chat/completions">
@@ -375,8 +375,8 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 | Effort | When to use |
 |--------|-------------|
-| `low` | Short, fast responses — simple lookups, formatting, classification |
+| `low` | Short, fast responses for simple lookups, formatting, and classification |
 | `medium` | Balanced tradeoff for everyday Q&A and light reasoning |
 | `high` (default) | Complex reasoning, code generation, analysis |
-| `xhigh` | Hard problems — multi-step math, deep research, agentic planning |
+| `xhigh` | Hard problems like multi-step math, deep research, and agentic planning |
 | `max` | The hardest tasks where you want maximum reasoning depth regardless of latency |
