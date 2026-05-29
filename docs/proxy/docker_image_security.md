@@ -171,12 +171,12 @@ cosign verify \
 
 If digest pinning is too rigid for your workflow, use plain semver / PEP 440 release tags (e.g. `v1.86.2`). These are immutable release tags that will not be overwritten.
 
-:::warning `main-stable` is deprecated
+:::warning `main-stable` and `main-latest` are deprecated
 
-LiteLLM has moved to PEP 440 / semver versioning, so stable releases are now published as plain `vX.Y.Z` tags (e.g. `v1.86.2`) instead of the older `vX.Y.Z-stable` form. The rolling `main-stable` tag is still being updated for backwards compatibility, but it is deprecated; pin to a specific `vX.Y.Z` tag (or a digest) instead.
+LiteLLM has moved to PEP 440 / semver versioning, so stable releases are now published as plain `vX.Y.Z` tags (e.g. `v1.86.2`) instead of the older `vX.Y.Z-stable` form. The rolling `main-stable` tag is still being updated for backwards compatibility but is deprecated; pin to a specific `vX.Y.Z` tag (or a digest) instead. The rolling `main-latest` tag is deprecated and is no longer being updated; use `latest` instead.
 :::
 
-Avoid `main-latest` in production. This rolling tag points to the most recent build and can change between deployments.
+Avoid `latest` in production. This rolling tag points to the most recent build and can change between deployments.
 
 ### Safe upgrade checklist
 
