@@ -31,10 +31,14 @@ Opus 4.8 builds on Opus 4.7 with gains across coding, agentic, and reasoning ben
 
 ## Enabling Opus 4.8
 
-Opus 4.8 is already in the LiteLLM model cost map on `main`, so most deployments **do not need a redeploy** to start using it:
+Opus 4.8 ships in the nightly **`v1.88.0-dev.1`** image (and every release after it). How you pick it up depends on where your proxy reads pricing from:
 
-- **Reload the model cost map.** In the LiteLLM UI, go to **Models + Endpoints → Price Data** and click **Reload Price Data** — or, as a proxy admin, call `POST /reload/model_cost_map`. By default the cost map is fetched from the `main` branch of the LiteLLM repo, so this refetches the latest pricing **and** re-registers provider routing in one step: `claude-opus-4-8` becomes available across Anthropic, Azure, Vertex AI, and Bedrock with no rebuild.
-- **Pinned to a local cost map, or using the SDK?** If you run with `LITELLM_LOCAL_MODEL_COST_MAP=true` (or a pinned `LITELLM_MODEL_COST_MAP_URL`), or you call LiteLLM through the Python SDK, upgrade to the latest LiteLLM release to pick up the bundled Opus 4.8 metadata. Basic completions route through on passthrough either way; the reload/upgrade is what enables accurate cost tracking and the full effort ladder.
+- **Default (remote cost map) — no upgrade needed.** In the LiteLLM UI, go to **Models + Endpoints → Price Data** and click **Reload Price Data** (or, as a proxy admin, `POST /reload/model_cost_map`). This refetches the latest pricing from LiteLLM's cost map **and** re-registers provider routing in one step, so `claude-opus-4-8` becomes available across Anthropic, Azure, Vertex AI, and Bedrock — even if you're on an older proxy version.
+- **Running `LITELLM_LOCAL_MODEL_COST_MAP=true`?** The cost map is baked into the image, so the Reload button won't reach it. Pull `v1.88.0-dev.1` or later to get the bundled Opus 4.8 metadata:
+
+  ```bash
+  docker pull ghcr.io/berriai/litellm:v1.88.0-dev.1
+  ```
 
 ## Usage - Anthropic
 
@@ -58,7 +62,7 @@ docker run -d \
   -p 4000:4000 \
   -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:main-stable \
+  ghcr.io/berriai/litellm:v1.88.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -106,7 +110,7 @@ docker run -d \
   -e AZURE_AI_API_KEY=$AZURE_AI_API_KEY \
   -e AZURE_AI_API_BASE=$AZURE_AI_API_BASE \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:main-stable \
+  ghcr.io/berriai/litellm:v1.88.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -155,7 +159,7 @@ docker run -d \
   -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/credentials.json:/app/credentials.json \
-  ghcr.io/berriai/litellm:main-stable \
+  ghcr.io/berriai/litellm:v1.88.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -204,7 +208,7 @@ docker run -d \
   -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:main-stable \
+  ghcr.io/berriai/litellm:v1.88.0-dev.1 \
   --config /app/config.yaml
 ```
 
