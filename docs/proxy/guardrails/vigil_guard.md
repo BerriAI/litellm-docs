@@ -7,6 +7,10 @@ Use [Vigil Guard](https://www.vigilguard.ai) as a LiteLLM proxy guardrail to eva
 
 **Supported endpoints:** The Vigil Guard integration supports the chat completions endpoint (`/v1/chat/completions`).
 
+For Chat Completions, Vigil Guard scans request and response text. On post-call checks, LiteLLM also scans model-generated `tool_calls[].function.arguments`; if Vigil Guard returns `SANITIZED`, LiteLLM replaces the tool call arguments with the sanitized value before returning the response.
+
+Static tool schemas and tool descriptions passed in `tools` are not scanned by this integration.
+
 Vigil Guard Enterprise is an AI Detection & Response platform for securing LLM applications at runtime. It gives security and platform teams a policy layer for prompts, responses, and autonomous agent interactions, with support for prompt-injection defense, sensitive data protection, content moderation, semantic drift detection, and SIEM export.
 
 Deploy Vigil Guard Enterprise on-premises, then point LiteLLM at the deployed API. The public installation guide provides a Docker-based deployment flow for Linux x86_64 hosts. See the [Vigil Guard installation guide](https://www.vigilguard.ai/install/) for current requirements and installation steps.
