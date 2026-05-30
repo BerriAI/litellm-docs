@@ -6,6 +6,7 @@ import TabItem from '@theme/TabItem';
 
 :::info
 
+- **New to Enterprise?** Start with the [✨ Enterprise Quickstart](/docs/learn/enterprise_quickstart)
 - **Free trial**: [7-day enterprise license](https://www.litellm.ai/enterprise#trial)
 - **Talk to us**: [Book a demo](https://enterprise.litellm.ai/demo)
 - **SSO is free for up to 5 users.** Beyond that, an enterprise license is required.
@@ -25,9 +26,12 @@ LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, vi
 | **Auth** | API keys | SSO + SCIM, OIDC/JWT |
 | **Key Management** | Virtual keys, users, teams across LLM APIs, MCPs, and Agents | Organizations, org/team admins, delegated admin roles |
 | **Security** | — | Key rotations, read/write to secret manager |
-| **Guardrails** | Always-on / request-based | Key and team scoped guardrails |
+| **Guardrails** | Always-on / request-based<sup>[1](#guardrails-oss-vs-enterprise)</sup> | Key and team scoped guardrails |
 | **Logging** | Request/response logging, Prometheus metrics | Per-key / per-team routing to Langfuse, Langsmith, Arize and more. Management-op logs |
 | **Deployment** | Single-region proxy | Control plane for multi-region architecture |
+
+<a id="guardrails-oss-vs-enterprise"></a>
+<sup>1</sup> The OSS guardrail framework supports custom guardrails plus Presidio (PII masking). Several built-in callback integrations &mdash; including `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection` &mdash; require a LiteLLM Enterprise license.
 
 ## Core Enterprise Features
 
@@ -108,6 +112,12 @@ We run the proxy; you focus on your product.
 ---
 
 ## Professional Support
+
+:::info Support model changing — May 18, 2026
+
+As LiteLLM has grown, the current professional support model no longer fits our scale. We're moving to a new model built around clear, predictable communication on when customers can expect support and changes. The model described below is being deprecated, we'll share details on the new system as we finalize it over the next few weeks.
+
+:::
 
 Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
 

@@ -90,6 +90,31 @@ Both `store_audit_logs: true` and `audit_log_callbacks` must be set. If `store_a
 
 :::
 
+### Send Audit Logs to a Separate S3 Bucket
+
+If you also send normal request/response logs to S3 via `callbacks: ["s3_v2"]`, by default both streams share `s3_callback_params` and land in the same bucket. To send audit logs to a different bucket (e.g. a compliance-only bucket with stricter access controls or longer retention), add an `s3_audit_callback_params` block. It accepts the same fields as `s3_callback_params` and only applies to audit logs.
+
+```yaml
+litellm_settings:
+  store_audit_logs: true
+  callbacks: ["s3_v2"]                       # normal request logs
+  audit_log_callbacks: ["s3_v2"]             # audit logs
+
+  s3_callback_params:                        # used for normal logs
+    s3_bucket_name: my-llm-logs-bucket
+    s3_region_name: us-west-2
+    s3_aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+    s3_aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+    s3_path: litellm-logs
+
+  s3_audit_callback_params:                  # used for audit logs only
+    s3_bucket_name: my-audit-logs-bucket
+    s3_region_name: us-east-1                # different region OK
+    s3_aws_access_key_id: os.environ/AWS_AUDIT_ACCESS_KEY_ID  # different creds OK
+    s3_aws_secret_access_key: os.environ/AWS_AUDIT_SECRET_ACCESS_KEY
+    s3_path: litellm-audit
+```
+
 ## Advanced
 
 ### Attribute Management changes to Users

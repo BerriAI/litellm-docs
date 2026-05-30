@@ -9,7 +9,7 @@ Pass-through endpoints for Anthropic - call provider-specific endpoint, in nativ
 |-------|-------|-------|
 | Cost Tracking | ✅ | supports all models on `/messages`, `/v1/messages/batches` endpoint |
 | Logging | ✅ | works across all integrations |
-| End-user Tracking | ✅ | disable prometheus tracking via `litellm.disable_end_user_cost_tracking_prometheus_only`|
+| End-user Tracking | ✅ | Prometheus `end_user` label is off by default; enable via `litellm.enable_end_user_cost_tracking_prometheus_only`|
 | Streaming | ✅ | |
 
 Just replace `https://api.anthropic.com` with `LITELLM_PROXY_BASE_URL/anthropic`

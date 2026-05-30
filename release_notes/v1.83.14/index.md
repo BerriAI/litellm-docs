@@ -1,6 +1,6 @@
 ---
-title: "v1.83.14.rc.1 - GPT-5.5, Prompt Compression & Memory API"
-slug: "v1-83-14-rc-1"
+title: "v1.83.14 - GPT-5.5, Prompt Compression & Memory API"
+slug: "v1-83-14"
 date: 2026-04-27T00:00:00
 authors:
   - name: Krrish Dholakia
@@ -38,20 +38,18 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:main-v1.83.14.rc.1
+docker.litellm.ai/berriai/litellm:main-v1.83.14-stable
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.83.14.rc1
+pip install litellm==1.83.14
 ```
 
 </TabItem>
 </Tabs>
-
-> This is a release candidate cut on top of `v1.83.10-stable`. Validate on a staging proxy before promoting to the next stable tag.
 
 ## Key Highlights
 
@@ -346,7 +344,7 @@ pip install litellm==1.83.14.rc1
 - @Michael-RZ-Berri made their first contribution in [#26124](https://github.com/BerriAI/litellm/pull/26124)
 - @anmolg1997 made their first contribution in [#26228](https://github.com/BerriAI/litellm/pull/26228)
 
-**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.10-stable...v1.83.14.rc.1
+**Full Changelog**: https://github.com/BerriAI/litellm/compare/v1.83.10-stable...v1.83.14-stable
 
 ---
 

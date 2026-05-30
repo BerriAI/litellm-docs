@@ -10,11 +10,21 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.82.3 — Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 New Models](/release_notes/v1.82.3/v1-82-3)
+### [v1.86.0 — Weighted-Routing Failover, Native Web-Search Citations & OTel-Standard Tracing](/release_notes/v1.86.0/v1-86-0)
 
-_March 16, 2026_
+_May 16, 2026_
 
-116 new models including Nebius AI, gpt-5.4, Gemini 3.x, and FLUX Kontext.
+Weighted-Routing Failover (retry the same model group on a different deployment while still respecting configured weights), native `web_search_tool_result` blocks for Anthropic clients so Claude Desktop and Cowork render web-search citations correctly, OTel-standard server-span attributes (`http.response.status_code`, `http.route`, `url.path`, `litellm.preprocessing.duration_ms`) plus opt-in OTEL GenAI semconv support, an additive componentized deployment scaffold (`gateway` / `backend` / `ui` Dockerfiles + Helm chart + Terraform stacks), and a critical fix for the v3 rate limiter that was leaking internal reservation keys into upstream provider request bodies on every virtual key with a `tpm_limit` or `rpm_limit` set.
+
+---
+
+## Latest Release Candidate
+
+### [v1.87.0rc1 — OCI Generative AI Provider, Gemini 3.5 Flash Day-0, MCP UI for OAuth Servers](/release_notes/v1.87.0rc1/v1-87-0-rc-1)
+
+_May 23, 2026_
+
+OCI Generative AI as a first-class provider (chat, embeddings, streaming, reasoning, tool use across Cohere, Llama, Grok, Gemini, and GPT-5 on OCI with full pricing catalog), Gemini 3.5 Flash and Gemini 3.1 Flash-Lite day-0 on Vertex AI / Google AI Studio / OpenRouter, MCP UI for OAuth-protected tool calls plus Cursor MCP OAuth, Codex CLI JWT team-alias and SSO form-URL auth hardening, and a hot-path Anthropic `/v1/messages` streaming rewrite with byte-identical wire output and ~90% lower TTFT overhead measured on a real 4-pod deployment.
 
 ---
 
@@ -22,6 +32,14 @@ _March 16, 2026_
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.86.0](/release_notes/v1.86.0/v1-86-0)   | May 16, 2026 | Weighted-Routing Failover, native Anthropic web-search citations, OTel-standard server spans |
+| [v1.85.1](/release_notes/v1.85.1/v1-85-1)   | May 20, 2026 | Patch — Gemini 3.5 Flash day-0 + cross-pod spend fix       |
+| [v1.84.1](/release_notes/v1.84.1/v1-84-1)   | May 20, 2026 | Patch — Gemini 3.5 Flash day-0 + cross-pod spend fix       |
+| [v1.85.0](/release_notes/v1.85.0/v1-85-0)   | May 16, 2026 | Realtime GA, MCP Gateway expansion & hardened multi-tenancy |
+| [v1.84.0](/release_notes/v1.84.0/v1-84-0)   | May 14, 2026 | Reliability hardening + multi-pod budget accuracy          |
+| [v1.83.14](/release_notes/v1.83.14/v1-83-14) | Apr 27, 2026 | GPT-5.5, Prompt Compression & Memory API                   |
+| [v1.83.10](/release_notes/v1.83.10/v1-83-10) | Apr 27, 2026 | Claude Opus 4.7, Prompt Compression & Multi-Window Budgets |
+| [v1.82.3](/release_notes/v1.82.3/v1-82-3)   | Mar 16, 2026 | Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 new models |
 | [v1.82.0](/release_notes/v1.82.0/v1-82-0)   | Feb 28, 2026 | Realtime Guardrails, Projects Management, and 10+ Performance Optimizations |
 | [v1.81.14](/release_notes/v1.81.14/v1-81-14) | Feb 21, 2026 | New Gateway Level Guardrails & Compliance Playground       |
 | [v1.81.12](/release_notes/v1.81.12/v1-81-12) | Feb 14, 2026 | Guardrail Policy Templates & Action Builder                |

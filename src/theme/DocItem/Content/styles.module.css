@@ -3,7 +3,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .title {
@@ -15,7 +15,8 @@
 .copyBtnRow {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 8px;
+  margin-top: 12px;
+  margin-bottom: 16px;
 }
 
 /* ── Button ── */
