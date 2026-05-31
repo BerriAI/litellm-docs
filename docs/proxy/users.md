@@ -254,9 +254,11 @@ curl 'http://0.0.0.0:4000/user/new' \
 
 #### Create new keys for existing user
 
-Now you can just call `/key/generate` with that user_id (i.e. krrish3@berri.ai) and:
-- **Budget Check**: krrish3@berri.ai's budget (i.e. $10) will be checked for this key
-- **Spend Tracking**: spend for this key will update krrish3@berri.ai's spend as well
+Call `/key/generate` with the existing `user_id` (e.g. `krrish3@berri.ai`). The key inherits that user's permissions:
+- **Budget check**: krrish3@berri.ai's user-level budget (e.g. $10) is checked alongside any budget set on the key itself
+- **Spend tracking**: spend on this key updates krrish3@berri.ai's user spend as well
+- **Models**: only models on the user's `models` list are callable through the key
+- See [Key Permission Inheritance](./virtual_keys#key-permission-inheritance) for the rules that apply when `user_id` is omitted
 
 ```bash
 curl --location 'http://0.0.0.0:4000/key/generate' \
@@ -1108,7 +1110,7 @@ curl --location 'http://localhost:4000/user/new' \
 
 ## Create new keys for existing internal user
 
-Just include user_id in the `/key/generate` request.
+Include `user_id` in the `/key/generate` request to bind the key to a specific user. The key will inherit that user's `models`, budget, rate limits, and other user-level limits at request time.
 
 ```bash
 curl --location 'http://0.0.0.0:4000/key/generate' \
@@ -1116,6 +1118,17 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 --header 'Content-Type: application/json' \
 --data '{"models": ["azure-models"], "user_id": "krrish@berri.ai"}'
 ```
+
+:::info
+
+**If `user_id` is omitted, the key inherits the caller's permissions instead.**
+
+- A non-admin caller (`internal_user`, `team_admin`, `org_admin`) has `user_id` auto-assigned to their own user record, so the key inherits the caller's user-level limits.
+- A `proxy_admin` caller has `user_id` left unset, so the key isn't bound to any user record and inherits the proxy admin's unrestricted ceiling.
+
+See [Key Permission Inheritance](./virtual_keys#key-permission-inheritance) for the full table and worked examples.
+
+:::
 
 
 ## API Specification 

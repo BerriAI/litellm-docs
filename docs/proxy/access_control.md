@@ -82,6 +82,12 @@ The proxy admin controls everything. They're like the owner of the whole platfor
 
 **Who should be a proxy admin:** Only the people running the LiteLLM instance.
 
+:::info
+
+When a proxy admin creates a key via `/key/generate` without setting `user_id`, the key is intentionally created with `user_id=null` and inherits the proxy admin's unrestricted ceiling at request time. To scope an admin-created key to a specific user instead, pass `user_id` explicitly. See [Key Permission Inheritance](./virtual_keys#key-permission-inheritance).
+
+:::
+
 ---
 
 ### Proxy Admin Viewer - Platform-Wide Read Access

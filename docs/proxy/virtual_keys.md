@@ -67,6 +67,55 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --data-raw '{"models": ["gpt-3.5-turbo", "gpt-4"], "metadata": {"user": "ishaan@berri.ai"}}'
 ```
 
+## Key Permission Inheritance
+
+A key's effective permissions are computed at request time by combining three sources: fields set on the key itself (e.g. `models`, `max_budget`), the user record looked up via `user_id`, and the team record looked up via `team_id`. The user that the key is bound to depends on **who created the key** and whether `user_id` was set on the request.
+
+The rule is: **a key inherits the permissions of the user who created it**, unless the caller explicitly assigns the key to a different user via `user_id`.
+
+### Default behavior at `/key/generate`
+
+| Caller role | `user_id` on the request | Resulting `user_id` on the key | What the key inherits |
+| --- | --- | --- | --- |
+| Internal user / team admin / org admin | Omitted | Auto-assigned to the caller's `user_id` | The caller's user-level `models`, budget, rate limits, and RBAC |
+| Internal user / team admin / org admin | Set explicitly to another user `X` (where permitted by the caller's role) | `X` | User `X`'s user-level `models`, budget, rate limits, and RBAC |
+| Proxy admin | Omitted | `null` — key is not bound to any user record | No user-level restriction is applied at request time; the key inherits the proxy admin's unrestricted access |
+| Proxy admin | Set explicitly to user `X` | `X` | User `X`'s user-level `models`, budget, rate limits, and RBAC |
+
+The non-admin auto-assignment (row 1) is enforced server-side so that a non-admin caller cannot create an unbound key that escapes their own user-level limits. The proxy-admin row (row 3) is the **proxy-admin pattern**: when an admin creates a key without specifying `user_id`, the key intentionally has no `user_id`, so user-level model/budget checks are skipped at request time and the key inherits the admin's unrestricted ceiling. The key remains subject to its own `models`, `max_budget`, and (if `team_id` is set) the team's policy.
+
+### Worked examples
+
+**Internal user creates a key without `user_id`:**
+
+```bash
+# Caller: alice@example.com (role=internal_user, models=["gpt-4o"], max_budget=$10)
+curl 'http://0.0.0.0:4000/key/generate' \
+  --header 'Authorization: Bearer <alice-key>' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"key_alias": "alice-ci-key"}'
+```
+
+The key is created with `user_id="alice@example.com"`. At request time the key can only call `gpt-4o` and its usage counts against Alice's $10 budget — exactly the user-level limits Alice already has.
+
+**Proxy admin creates a key without `user_id`:**
+
+```bash
+# Caller: master key (role=proxy_admin)
+curl 'http://0.0.0.0:4000/key/generate' \
+  --header 'Authorization: Bearer sk-1234' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"key_alias": "service-key", "models": ["gpt-4o", "claude-sonnet-4-5"]}'
+```
+
+The key is created with `user_id=null`. At request time no user-level lookup runs, so the key's `models` list is the only model gate — it inherits the proxy admin's unrestricted ceiling. To intentionally constrain such a key to a specific user, pass `user_id` explicitly.
+
+### Tracking who created a key
+
+Independently of `user_id`, every key records the caller in the `created_by` field. `user_id` controls **permissions at request time**; `created_by` is purely an audit trail and does not affect authorization. They are the same identity for non-admin callers, and can differ when a proxy admin creates a key for another user (or leaves `user_id` unset).
+
+See [Access Control](./access_control) for the full role matrix and [Budgets, Rate Limits](./users) for how user-level budgets flow through to a key.
+
 ## Spend Tracking 
 
 Get spend per:
