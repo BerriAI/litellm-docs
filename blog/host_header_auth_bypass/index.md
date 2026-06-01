@@ -1,7 +1,7 @@
 ---
 slug: host-header-auth-bypass
 title: "Fixed in 1.84.0+ - Version Update: Authentication Bypass via Host Header Injection (GHSA-4xpc-pv4p-pm3w)"
-date: 2026-05-27T12:00:00
+date: 2026-06-01T12:00:00
 authors:
   - krrish
   - ishaan-alt
