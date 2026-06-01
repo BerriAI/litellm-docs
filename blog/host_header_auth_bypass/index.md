@@ -11,7 +11,7 @@ tags: [security]
 hide_table_of_contents: false
 ---
 
-The update addressing this Host-header authentication bypass in the LiteLLM proxy shipped in `v1.84.0`, with follow-up path-handling hardening completed and backported across the maintained release lines in `v1.84.3`, `v1.85.2`, and `v1.86.2`. The potential for bypass was limited to deployments with the three specific conditions below. The bypass was reported by Le The Thang (KCSC) and Kim Ngoc Chung (One Mount Group).
+The update addressing this Host-header authentication bypass in the LiteLLM proxy shipped in `v1.84.0`, with follow-up path-handling hardening completed and backported across the maintained release lines in `v1.84.3`, `v1.85.2`, `v1.86.2`, and `v1.83.10-stable.patch.3`. The potential for bypass was limited to deployments with the three specific conditions below. The bypass was reported by Le The Thang (KCSC) and Kim Ngoc Chung (One Mount Group).
 
 The conditions could allow unauthenticated access to protected management routes when the proxy listener was reachable with an arbitrary `Host` header.
 
@@ -21,7 +21,7 @@ No LiteLLM Cloud customers were affected. The update was deployed across all Lit
 * Recommended: the latest release; follow-up path-handling hardening was backported in `v1.84.3`, `v1.85.2`, and `v1.86.2`
 * Action: upgrade to `v1.84.0` or later. No configuration change is required.
 
-More info on the advisory is here: https://github.com/BerriAI/litellm/security/advisories/GHSA-4xpc-pv4p-pm3w
+More info on the advisory is here: https://github.com/BerriAI/litellm/security/advisories/GHSA-4xpc-pv4p-pm3w. CVE: https://www.cve.org/CVERecord?id=CVE-2026-48710.
 
 {/* truncate */}
 
@@ -40,7 +40,7 @@ Potential bypass requires an actor to reach the proxy listener with an arbitrary
 
 ## Additional hardening
 
-The primary update in `v1.84.0` addressed the reported potential for bypass by deriving the request route from the ASGI scope path rather than the `Host`-reconstructed URL. As additional follow-up, we audited every other location in the proxy that derived a route from the request URL and moved them onto the same hardened resolution. This closes the long tail of the potential for bypass and was backported across the maintained release lines in `v1.84.3`, `v1.85.2`, and `v1.86.2`. We recommend upgrading to one of these releases for comprehensive mitigation.
+The primary update in `v1.84.0` addressed the reported potential for bypass by deriving the request route from the ASGI scope path rather than the `Host`-reconstructed URL. As additional follow-up, we audited every other location in the proxy that derived a route from the request URL and moved them onto the same hardened resolution. This closes the long tail of the potential for bypass and was backported across the maintained release lines in `v1.84.3`, `v1.85.2`, `v1.86.2`, and `v1.83.10-stable.patch.3`. We recommend upgrading to one of these releases for comprehensive mitigation.
 
 ## Am I affected?
 
