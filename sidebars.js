@@ -94,7 +94,6 @@ const sidebars = {
           "proxy/guardrails/prompt_injection",
           "proxy/guardrails/tool_permission",
           "proxy/guardrails/rubrik",
-          "proxy/guardrails/vigil_guard",
           "proxy/guardrails/zscaler_ai_guard",
           "proxy/guardrails/javelin",
           "proxy/guardrails/akto",
