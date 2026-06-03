@@ -1,6 +1,8 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+require('dotenv').config();
+
 // @ts-ignore
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 // @ts-ignore
@@ -32,15 +34,30 @@ const inkeepConfig = {
     },
   },
   searchSettings: {
-    searchBarPlaceholder: 'Search docs...',
+    searchBarPlaceholder: 'Search docs, guides, API reference...',
+    debounceTimeMs: 0,
+    maxResults: 7 
   },
   aiChatSettings: {
-    quickQuestions: [
-      'How do I use the proxy?',
-      'How do I cache responses?',
-      'How do I stream responses?',
-    ],
+    aiAssistantName: 'LiteLLM AI',
+    chatSubjectName: 'LiteLLM',
     aiAssistantAvatar: '/img/favicon.ico',
+    placeholder: 'Ask anything about LiteLLM...',
+    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
+    exampleQuestions: [
+      'How do I set up the LiteLLM proxy?',
+      'How do I route requests across multiple models?',
+      'How do I enable response caching?',
+      'How do I track spend per team or API key?',
+    ],
+    exampleQuestionsLabel: 'Common questions',
+    isFirstExampleQuestionHighlighted: true,
+    shouldOpenLinksInNewTab: true,
+    isCopyChatButtonVisible: true,
+    isShareButtonVisible: false,
+    prompts: [
+      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
+    ],
   },
 };
 
