@@ -9,6 +9,8 @@ const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
 
 const inkeepApiKey = process.env.INKEEP_API_KEY;
+// Conditional check: docs should work if this key is missing.
+const hasInkeepSearch = Boolean(inkeepApiKey);
 
 const inkeepConfig = {
   baseSettings: {
@@ -84,17 +86,21 @@ const config = {
     locales: ['en'],
   },
   plugins: [
-    [
-      '@inkeep/cxkit-docusaurus',
-      {
-        SearchBar: {
-          ...inkeepConfig,
-        },
-        ChatButton: {
-          ...inkeepConfig,
-        },
-      },
-    ],
+    ...(hasInkeepSearch
+      ? [
+          [
+            '@inkeep/cxkit-docusaurus',
+            {
+              SearchBar: {
+                ...inkeepConfig,
+              },
+              ChatButton: {
+                ...inkeepConfig,
+              },
+            },
+          ],
+        ]
+      : []),
     [
       '@docusaurus/plugin-ideal-image',
       {
@@ -325,10 +331,9 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          {
-            type: 'search',
-            position: 'right',
-          },
+          ...(hasInkeepSearch
+            ? [{type: 'search', position: 'right'}]
+            : []),
         ],
       },
       footer: {
