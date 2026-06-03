@@ -86,6 +86,7 @@ const config = {
     locales: ['en'],
   },
   plugins: [
+    require('./plugins/optimize-images'),
     ...(hasInkeepSearch
       ? [
           [
@@ -104,10 +105,10 @@ const config = {
     [
       '@docusaurus/plugin-ideal-image',
       {
-        quality: 100,
-        max: 1920, // max resized image's size.
-        min: 640, // min resized image's size. if original is lower, use that size.
-        steps: 2, // the max number of images generated between min and max (inclusive)
+        quality: 75,
+        max: 1280,
+        min: 640,
+        steps: 2,
         disableInDev: false,
       },
     ],
@@ -266,6 +267,16 @@ const config = {
       }),
     ],
   ],
+
+  future: {
+    experimental_faster: {
+      swcJsLoader: true,
+      swcJsMinimizer: true,
+      swcHtmlMinimizer: true,
+      lightningCssMinimizer: true,
+      mdxCrossCompilerCache: true,
+    },
+  },
 
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
