@@ -211,7 +211,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 :::
 
-The Helm chart can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml).
+The Helm chart can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/litellm_internal_staging/deploy/charts/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml).
 
 #### Step 1. Clone the repository
 
@@ -225,6 +225,7 @@ git clone https://github.com/BerriAI/litellm.git
 kubectl create secret generic litellm-env-secret \
   --from-literal=LITELLM_LICENSE="eyJ..." \
   --from-literal=OPENAI_API_KEY="your-api-key"
+  --from-literal=DATABASE_URL="postgres://user@password:5432"
 ```
 
 #### Step 3. Create `values-enterprise.yaml`
@@ -253,6 +254,19 @@ proxy_config:
     callbacks: ["prometheus"]
   general_settings:
     store_model_in_db: true
+```
+
+**Bring your own database** — to point at an existing Postgres instead of letting the chart provision one, replace the `db` block:
+
+```yaml title="values-enterprise.yaml" showLineNumbers
+db:
+  useExisting: true
+  endpoint: my-postgres.default.svc.cluster.local
+  database: litellm
+  url: postgresql://user:pass@my-postgres:5432/litellm
+  secret:
+    name: litellm-db-secret
+    usePasswordSecret: true
 ```
 
 #### Step 4. Deploy with Helm
