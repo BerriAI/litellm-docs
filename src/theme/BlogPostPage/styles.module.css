@@ -62,37 +62,12 @@
   margin: 0 0 0.75rem;
 }
 
-.ctaLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.5rem;
+.ctaTitle {
+  font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: #111827;
-  text-decoration: none !important;
-  transition: color 0.15s;
-}
-
-.ctaLink:hover {
-  color: #0ea5e9;
-}
-
-.ctaArrow {
-  width: 1.25rem;
-  height: 1.25rem;
-  transition: transform 0.15s;
-  flex-shrink: 0;
-}
-
-.ctaLink:hover .ctaArrow {
-  transform: translateX(3px);
-}
-
-.ctaSub {
-  margin: 0.75rem 0 0;
-  font-size: 0.875rem;
-  color: #6b7280;
+  margin: 0 0 1rem;
 }
 
 [data-theme='dark'] .cta {
@@ -100,10 +75,6 @@
   border-color: #374151;
 }
 
-[data-theme='dark'] .ctaLink {
+[data-theme='dark'] .ctaTitle {
   color: #f9fafb;
-}
-
-[data-theme='dark'] .ctaSub {
-  color: #9ca3af;
 }

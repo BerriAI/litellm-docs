@@ -1,8 +1,15 @@
 /* ── Page shell ───────────────────────────────────────────────────────── */
 .page {
+  width: 100%;
   max-width: 860px;
   margin: 0 auto;
   padding: 0 2rem;
+  /* Required: as a flex item of .main-wrapper, default min-width: auto
+     would let the marquee's intrinsic content size push the page wider
+     than the viewport. */
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -36,6 +43,19 @@
   margin: 0 0 1.25rem;
 }
 
+.subscribeSection {
+  margin-top: 1.5rem;
+}
+
+.subscribeLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin: 0 0 0.75rem;
+}
+
 .hiringBtn {
   display: inline-block;
   background: #111827;
@@ -46,6 +66,7 @@
   border-radius: 6px;
   text-decoration: none !important;
   transition: background 0.15s;
+  margin-top: 1rem;
 }
 
 .hiringBtn:hover {
@@ -259,6 +280,77 @@
   color: #0ea5e9;
 }
 
+/* ── Mobile (≤640px) ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .page {
+    padding: 0 1.25rem;
+  }
+
+  .hero {
+    padding: 2rem 0 0;
+  }
+
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .heroSub {
+    font-size: 0.9rem;
+  }
+
+  .hiringBtn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .marqueeWrap {
+    margin: 2rem 0 0;
+    padding: 1rem 0;
+  }
+
+  .fadeLeft,
+  .fadeRight {
+    width: 2.5rem;
+  }
+
+  .marqueeItem {
+    padding: 0 0.9rem;
+    font-size: 0.78rem;
+  }
+
+  .marqueeSep {
+    margin-left: 0.8rem;
+  }
+
+  .post {
+    padding: 1.5rem 0;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .desc {
+    font-size: 0.85rem;
+  }
+
+  .pagination {
+    padding: 1rem 0 3rem;
+    gap: 1rem;
+  }
+
+  .pageLink {
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .marqueeTrack {
+    animation: none;
+  }
+}
+
 /* ── Dark mode ────────────────────────────────────────────────────────── */
 [data-theme='dark'] .heroTitle,
 [data-theme='dark'] .title {
@@ -267,7 +359,8 @@
 
 [data-theme='dark'] .heroSub,
 [data-theme='dark'] .desc,
-[data-theme='dark'] .date {
+[data-theme='dark'] .date,
+[data-theme='dark'] .subscribeLabel {
   color: #9ca3af;
 }
 

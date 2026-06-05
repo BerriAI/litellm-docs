@@ -1,14 +1,20 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+require('dotenv').config();
+
 // @ts-ignore
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 // @ts-ignore
 const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
 
+const inkeepApiKey = process.env.INKEEP_API_KEY;
+// Conditional check: docs should work if this key is missing.
+const hasInkeepSearch = Boolean(inkeepApiKey);
+
 const inkeepConfig = {
   baseSettings: {
-    apiKey: "0cb9c9916ec71bfe0e53c9d7f83ff046daee3fa9ef318f6a",
+    apiKey: inkeepApiKey,
     organizationDisplayName: 'liteLLM',
     primaryBrandColor: '#4965f5',
     theme: {
@@ -30,15 +36,30 @@ const inkeepConfig = {
     },
   },
   searchSettings: {
-    searchBarPlaceholder: 'Search docs...',
+    searchBarPlaceholder: 'Search docs, guides, API reference...',
+    debounceTimeMs: 0,
+    maxResults: 7 
   },
   aiChatSettings: {
-    quickQuestions: [
-      'How do I use the proxy?',
-      'How do I cache responses?',
-      'How do I stream responses?',
-    ],
+    aiAssistantName: 'LiteLLM AI',
+    chatSubjectName: 'LiteLLM',
     aiAssistantAvatar: '/img/favicon.ico',
+    placeholder: 'Ask anything about LiteLLM...',
+    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
+    exampleQuestions: [
+      'How do I set up the LiteLLM proxy?',
+      'How do I route requests across multiple models?',
+      'How do I enable response caching?',
+      'How do I track spend per team or API key?',
+    ],
+    exampleQuestionsLabel: 'Common questions',
+    isFirstExampleQuestionHighlighted: true,
+    shouldOpenLinksInNewTab: true,
+    isCopyChatButtonVisible: true,
+    isShareButtonVisible: false,
+    prompts: [
+      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
+    ],
   },
 };
 
@@ -65,24 +86,29 @@ const config = {
     locales: ['en'],
   },
   plugins: [
-    [
-      '@inkeep/cxkit-docusaurus',
-      {
-        SearchBar: {
-          ...inkeepConfig,
-        },
-        ChatButton: {
-          ...inkeepConfig,
-        },
-      },
-    ],
+    require('./plugins/optimize-images'),
+    ...(hasInkeepSearch
+      ? [
+          [
+            '@inkeep/cxkit-docusaurus',
+            {
+              SearchBar: {
+                ...inkeepConfig,
+              },
+              ChatButton: {
+                ...inkeepConfig,
+              },
+            },
+          ],
+        ]
+      : []),
     [
       '@docusaurus/plugin-ideal-image',
       {
-        quality: 100,
-        max: 1920, // max resized image's size.
-        min: 640, // min resized image's size. if original is lower, use that size.
-        steps: 2, // the max number of images generated between min and max (inclusive)
+        quality: 75,
+        max: 1280,
+        min: 640,
+        steps: 2,
         disableInDev: false,
       },
     ],
@@ -242,6 +268,16 @@ const config = {
     ],
   ],
 
+  future: {
+    experimental_faster: {
+      swcJsLoader: true,
+      swcJsMinimizer: true,
+      swcHtmlMinimizer: true,
+      lightningCssMinimizer: true,
+      mdxCrossCompilerCache: true,
+    },
+  },
+
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
     mermaid: true,
@@ -306,10 +342,9 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          {
-            type: 'search',
-            position: 'right',
-          },
+          ...(hasInkeepSearch
+            ? [{type: 'search', position: 'right'}]
+            : []),
         ],
       },
       footer: {

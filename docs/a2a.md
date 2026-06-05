@@ -61,7 +61,7 @@ Follow [this guide, to add your bedrock agentcore agent to LiteLLM Agent Gateway
 
 ### Add LangGraph Agents
 
-Follow [this guide, to add your langgraph agent to LiteLLM Agent Gateway](./providers/langgraph#litellm-a2a-gateway)
+Follow [this guide to register a LangGraph agent and configure its agent card](./providers/langgraph#register-a-langgraph-platform-agent)
 
 ### Add Pydantic AI Agents
 
@@ -203,19 +203,83 @@ With header forwarding enabled, you'll see:
 
 ## API Reference
 
-### Endpoint
+### Endpoints
 
-```
-POST /a2a/{agent_name}/message/send
-```
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `POST /a2a/{agent_id}` | JSON-RPC 2.0 | **Primary** — all A2A methods (see table below) |
+| `POST /a2a/{agent_id}/message/send` | JSON-RPC | Alias for `message/send` only |
+| `POST /v1/a2a/{agent_id}/message/send` | JSON-RPC | Alias for `message/send` only |
+| `GET /a2a/{agent_id}/.well-known/agent.json` | Agent card | Discovery (proxy URL in `url` field) |
+| `GET /a2a/{agent_id}/.well-known/agent-card.json` | Agent card | Discovery (standard path) |
+
+`{agent_id}` may be the agent UUID or the registered agent name.
+
+### Supported JSON-RPC methods
+
+Send any of these in the `method` field of `POST /a2a/{agent_id}`:
+
+| Method | Description |
+|--------|-------------|
+| `message/send` | Send a message; returns a `task` or `message` (LiteLLM-integrated path) |
+| `message/stream` | Streaming variant (NDJSON/SSE) |
+| `tasks/get` | Get task status by `params.id` |
+| `tasks/list` | List tasks (optional `params.contextId`) |
+| `tasks/cancel` | Cancel task by `params.id` |
+| `tasks/resubscribe` | Subscribe to task updates (streaming) |
+| `tasks/pushNotificationConfig/set` | Register push notification config |
+| `tasks/pushNotificationConfig/get` | Get push config |
+| `tasks/pushNotificationConfig/list` | List push configs for a task |
+| `tasks/pushNotificationConfig/delete` | Delete push config |
+| `agent/getAuthenticatedExtendedCard` | Extended agent card |
+
+PascalCase SDK names (`GetTask`, `ListTasks`, …) are normalized to the slash form automatically.
+
+**Routing:** `message/send` and `message/stream` go through LiteLLM's A2A client (logging, guardrails, spend). All other methods are forwarded to the upstream URL in `agent_card_params.url`. Task APIs require that URL; completion-bridge-only agents support messaging methods only.
+
+See [Supported A2A methods](./a2a_agent_card#supported-a2a-methods) for examples, aliases, and limitations.
 
 ### Authentication
 
-Include your LiteLLM Virtual Key in the `Authorization` header:
+Include your LiteLLM Virtual Key in either of two headers — `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3--convention-based-forwarding) to forward the caller's identity).
 
 ```
 Authorization: Bearer sk-your-litellm-key
+# or
+x-litellm-api-key: Bearer sk-your-litellm-key
 ```
+
+#### Per-agent permission check
+
+After the virtual key is authenticated, LiteLLM checks whether the calling key (and its team) is allowed to invoke the requested agent. If not, the response is HTTP 403. See [Agent Permission Management](./a2a_agent_permissions) for the full intersection model and access groups.
+
+#### Trace ID enforcement (optional, per-agent)
+
+An agent can require every inbound request to carry a trace ID for cross-system audit threading. Set `require_trace_id_on_calls_to_agent: true` in the agent's `litellm_params`. When set, requests missing `x-litellm-trace-id` (or `x-litellm-session-id`) are rejected with HTTP 400.
+
+```bash title="Register an agent that requires inbound trace IDs" showLineNumbers
+curl -X POST http://localhost:4000/v1/agents \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_name": "audit-critical-agent",
+    "agent_card_params": { ... },
+    "litellm_params": {
+      "require_trace_id_on_calls_to_agent": true
+    }
+  }'
+```
+
+The reverse direction — enforcing trace ID on **outbound** calls made by a key owned by an agent — is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
+
+#### Sub-agent identity propagation
+
+When the backend agent itself calls LiteLLM (for chat completions or to invoke a sub-agent), LiteLLM forwards two headers to maintain trace continuity:
+
+- `X-LiteLLM-Trace-Id` — links all calls in the chain to a single trace
+- `X-LiteLLM-Agent-Id` — attributes spend to the originating agent
+
+The caller's **virtual key** and **end-user ID** are not automatically forwarded. If the downstream agent needs the user's identity, propagate it explicitly via [`extra_headers` or the `x-a2a-{agent_name_or_id}-{header}` convention](./a2a_agent_headers).
 
 ### Request Format
 
@@ -256,6 +320,22 @@ LiteLLM follows the [A2A JSON-RPC 2.0 specification](https://github.com/google/A
     ]
   }
 }
+```
+
+Agent JSON-RPC errors are returned in the `error` field with the same `id` as the request when possible. Poll long-running work with `tasks/get` after `message/send` returns a `submitted` task.
+
+### Example: `tasks/get`
+
+```bash title="Poll task after message/send"
+curl -X POST "http://localhost:4000/a2a/my-agent" \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "req-2",
+    "method": "tasks/get",
+    "params": {"id": "task-id-from-send-response"}
+  }'
 ```
 
 ## Agent Registry

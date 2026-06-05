@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.85.0 — Realtime GA, MCP Gateway Expansion & Hardened Multi-Tenancy](/release_notes/v1.85.0/v1-85-0)
+### [v1.87.0 — OCI Generative AI Provider, Gemini 3.5 Flash Day-0, MCP UI for OAuth Servers](/release_notes/v1.87.0/v1-87-0)
 
-_May 16, 2026_
+_May 23, 2026_
 
-OpenAI Realtime GA (with `gpt-realtime-2` pricing and `/openai/v1/realtime` logging), a broad multi-tenancy hardening sweep across keys, projects, batches, files, and MCP servers, MCP Gateway expansion (org-level permissions, OBO auth, `delegate_auth_to_upstream` PKCE passthrough), an observability overhaul (Prometheus label/cardinality fixes + OTEL handler isolation), and new models including xAI `grok-4.3`, OpenAI `gpt-realtime-2`, OpenRouter Qwen 3.6 Plus, SambaNova MiniMax-M2.7, and Bedrock Z.AI GLM-5.
+OCI Generative AI as a first-class provider (chat, embeddings, streaming, reasoning, tool use across Cohere, Llama, Grok, Gemini, and GPT-5 on OCI with full pricing catalog), Gemini 3.5 Flash and Gemini 3.1 Flash-Lite day-0 on Vertex AI / Google AI Studio / OpenRouter, MCP UI for OAuth-protected tool calls plus Cursor MCP OAuth, Codex CLI JWT team-alias and SSO form-URL auth hardening, and a hot-path Anthropic `/v1/messages` streaming rewrite with byte-identical wire output and ~90% lower TTFT overhead measured on a real 4-pod deployment.
 
 ---
 
@@ -22,6 +22,10 @@ OpenAI Realtime GA (with `gpt-realtime-2` pricing and `/openai/v1/realtime` logg
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.87.0](/release_notes/v1.87.0/v1-87-0)   | May 23, 2026 | OCI Generative AI provider, Gemini 3.5 Flash day-0, MCP UI for OAuth servers |
+| [v1.86.0](/release_notes/v1.86.0/v1-86-0)   | May 16, 2026 | Weighted-Routing Failover, native Anthropic web-search citations, OTel-standard server spans |
+| [v1.85.1](/release_notes/v1.85.1/v1-85-1)   | May 20, 2026 | Patch — Gemini 3.5 Flash day-0 + cross-pod spend fix       |
+| [v1.84.1](/release_notes/v1.84.1/v1-84-1)   | May 20, 2026 | Patch — Gemini 3.5 Flash day-0 + cross-pod spend fix       |
 | [v1.85.0](/release_notes/v1.85.0/v1-85-0)   | May 16, 2026 | Realtime GA, MCP Gateway expansion & hardened multi-tenancy |
 | [v1.84.0](/release_notes/v1.84.0/v1-84-0)   | May 14, 2026 | Reliability hardening + multi-pod budget accuracy          |
 | [v1.83.14](/release_notes/v1.83.14/v1-83-14) | Apr 27, 2026 | GPT-5.5, Prompt Compression & Memory API                   |
