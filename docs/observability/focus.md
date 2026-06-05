@@ -55,10 +55,10 @@ LiteLLM currently conforms to the FinOps FOCUS v1.2 specification when emitting 
 
 ## Setup via Config
 
+### Configure environment variables
+
 <Tabs>
 <TabItem value="s3" label="S3">
-
-### Configure environment variables
 
 ```bash
 export FOCUS_PROVIDER="s3"
@@ -69,23 +69,8 @@ export FOCUS_S3_ACCESS_KEY="AKIA..."
 export FOCUS_S3_SECRET_KEY="..."
 ```
 
-### Update LiteLLM config
-
-```yaml
-model_list:
-  - model_name: gpt-4o
-    litellm_params:
-      model: openai/gpt-4o
-      api_key: sk-your-key
-
-litellm_settings:
-  callbacks: ["focus"]
-```
-
 </TabItem>
 <TabItem value="gcs" label="GCS">
-
-### Configure environment variables
 
 ```bash
 export FOCUS_PROVIDER="gcs"
@@ -98,6 +83,9 @@ export FOCUS_GCS_PATH_SERVICE_ACCOUNT="/path/to/service-account.json"
 
 The service account (or ADC principal) needs the `storage.objects.create` permission on the destination bucket (`roles/storage.objectCreator` or broader).
 
+</TabItem>
+</Tabs>
+
 ### Update LiteLLM config
 
 ```yaml
@@ -110,9 +98,6 @@ model_list:
 litellm_settings:
   callbacks: ["focus"]
 ```
-
-</TabItem>
-</Tabs>
 
 ### Start the proxy
 
