@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-21T06:19:19Z",
+  "generated_at": "2026-06-07T06:15:02Z",
   "litellm_version": "v1.83.14-stable",
   "claude_code_version": "2.1.126",
   "providers": [
@@ -22,7 +22,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
@@ -43,7 +44,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
@@ -64,7 +66,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
@@ -85,8 +88,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -107,7 +109,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude returned empty assistant text on a vision prompt"
         },
         "vertex_ai": {
           "status": "pass"
@@ -130,7 +133,7 @@
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-converse] no `thinking` content block observed in stream-json events"
+          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "fail",
@@ -262,7 +265,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
@@ -325,7 +329,7 @@
         },
         "bedrock_invoke": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-invoke] claude CLI failed: exit=1; (no diagnostic output)"
+          "error": "[claude-opus-4-7-bedrock-invoke] claude CLI failed: exit=1; text=API Error: Claude Code is unable to respond to this request, which appears to violate our Usage Policy (https://www.anthropic.com/legal/aup). Try rephrasing the request or attempting a different approach. If you are seeing this refusal repeatedly, try running /model claude-sonnet-4-20250514 to switch models."
         },
         "bedrock_converse": {
           "status": "fail",
