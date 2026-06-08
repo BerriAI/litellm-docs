@@ -83,7 +83,7 @@ litellm_settings:
 <Tabs>
 <TabItem value="docker" label="Docker Run">
 
-Mount your `custom_logger.py` on the LiteLLM Docker container.
+Mount your `custom_prompt.py` on the LiteLLM Docker container.
 
 ```shell
 docker run -d \
@@ -91,7 +91,7 @@ docker run -d \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   --name my-app \
   -v $(pwd)/my_config.yaml:/app/config.yaml \
-  -v $(pwd)/custom_logger.py:/app/custom_logger.py \
+  -v $(pwd)/custom_prompt.py:/app/custom_prompt.py \
   my-app:latest \
   --config /app/config.yaml \
   --port 4000 \
