@@ -886,6 +886,7 @@ router_settings:
 | LITELLM_DD_AGENT_PORT | Port of DataDog agent for LiteLLM-specific log intake. Default is 10518
 | LITELLM_DD_LLM_OBS_PORT | Port for Datadog LLM Observability agent. Default is 8126
 | LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT | Default `encoding_format` for OpenAI-compatible embedding calls when it is not set on the request or in model `litellm_params` (e.g. `float`, `base64`). Fallback is `float`. See [Embeddings](./embedding.md#embedding-encoding-format).
+| LITELLM_DEV_ENV_HOT_RELOAD | Internal flag the proxy sets on itself when started with `--reload`, signalling reloaded workers to re-read `.env` with `override=True` so edits to existing keys take effect on reload. Not meant to be set by users
 | LITELLM_DONT_SHOW_FEEDBACK_BOX | Flag to hide feedback box in LiteLLM UI
 | LITELLM_DROP_PARAMS | Parameters to drop in LiteLLM requests
 | LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
@@ -933,6 +934,7 @@ router_settings:
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
+| LITELLM_STREAM_INACTIVITY_TIMEOUT_SECONDS | Maximum seconds to wait for the next chunk from an async streaming provider before raising a Timeout. Guards against a provider that keeps the connection warm with keepalive bytes but stops sending content. Default is None (disabled)
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
@@ -1019,6 +1021,7 @@ router_settings:
 | OPENMETER_API_ENDPOINT | API endpoint for OpenMeter integration
 | OPENMETER_API_KEY | API key for OpenMeter services
 | OPENMETER_EVENT_TYPE | Type of events sent to OpenMeter
+| OPENMETER_TRUST_REQUEST_USER | If false, ignore the request body `user` and resolve the OpenMeter subject from the authenticated key's user_id. Defaults to true
 | ONYX_API_BASE | Base URL for Onyx Security AI Guard service (defaults to https://ai-guard.onyx.security)
 | ONYX_API_KEY | API key for Onyx Security AI Guard service
 | ONYX_TIMEOUT | Timeout in seconds for Onyx Guard server requests. Default is 10
