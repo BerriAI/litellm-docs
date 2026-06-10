@@ -8,7 +8,7 @@ LiteLLM can export proxy spend data to [Mavvrik](https://mavvrik.ai) as [FOCUS 1
 |----------|---------|
 | Destination | Export LiteLLM usage data to Mavvrik via signed URL upload |
 | Data format | FOCUS CSV (gzip-compressed, automatically transformed from LiteLLM spend data) |
-| Supported operations | Automatic scheduled export (daily by default) |
+| Supported operations | Automatic daily export |
 | Authentication | Mavvrik API key + connection ID |
 
 ## Prerequisites
@@ -28,9 +28,11 @@ You need the following from your Mavvrik account:
 | `MAVVRIK_API_KEY` | Yes | Mavvrik API key |
 | `MAVVRIK_API_ENDPOINT` | Yes | Tenant API endpoint, e.g. `https://api.mavvrik.ai/<tenant_id>` |
 | `MAVVRIK_CONNECTION_ID` | Yes | AI cost connection identifier |
-| `MAVVRIK_FOCUS_FREQUENCY` | No | Export cadence: `daily` (default), `hourly`, or `interval` |
-| `MAVVRIK_FOCUS_INTERVAL_SECONDS` | No | Seconds between exports when frequency is `interval` (default: 3600) |
-| `MAVVRIK_FOCUS_MAX_ROWS` | No | Maximum rows per export window (default: 500000). Increase for very high-traffic deployments. |
+| `MAVVRIK_FOCUS_MAX_ROWS` | No | Maximum rows per daily export (default: 500000). Increase for very high-traffic deployments. |
+
+:::info Daily export only
+Only `daily` frequency is supported. The Mavvrik ingestion protocol stores one file per calendar date (`metrics/YYYY-MM-DD`). Hourly or interval exports would overwrite each other within the same day, producing incomplete data.
+:::
 
 ### Proxy config
 
@@ -52,17 +54,17 @@ export MAVVRIK_CONNECTION_ID="<connection-id>"
 litellm --config /path/to/config.yaml
 ```
 
-The proxy registers a background job that exports FOCUS-formatted spend data on the configured schedule.
+The proxy registers a background job that exports FOCUS-formatted spend data once daily.
 
 ## How it works
 
-Each export cycle:
+Each daily export cycle:
 
 1. Registers the connector with the Mavvrik backend (`POST /metrics/agent/ai/{connection_id}`)
 2. Requests a GCS signed upload URL for the export date (`GET /metrics/agent/ai/{connection_id}/upload-url`)
 3. Uploads gzip-compressed FOCUS CSV to GCS via the signed URL
 
-Re-running an export for the same date overwrites the previous file for that day. Exports are capped at `MAVVRIK_FOCUS_MAX_ROWS` rows per window (default 500k) to bound memory usage.
+Re-running an export for the same date overwrites the previous file — exports are idempotent. Exports are capped at `MAVVRIK_FOCUS_MAX_ROWS` rows per day (default 500k) to bound memory usage.
 
 ## FOCUS Field Mapping
 
