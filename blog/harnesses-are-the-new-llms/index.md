@@ -12,7 +12,7 @@ authors:
 
 description:  "The same deployment pattern that emerged with LLMs — routing, fallbacks, observability, central billing — is now emerging with harnesses. Here's why the AI Gateway layer is moving up the stack."
 
-tags: [harnesses, ai-gateway, agents, thesis, infrastructure]
+tags: [ideas, harnesses, ai-gateway, agents, thesis]
 
 hide_table_of_contents: true
 
