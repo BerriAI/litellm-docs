@@ -14,6 +14,8 @@ hide_table_of_contents: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
+![LiteLLM x Claude Fable 5](/img/litellm_claude_fable_5_announcement.png)
+
 LiteLLM now supports [Claude Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) on Day 0. Use it across Anthropic, Azure, Vertex AI, and Bedrock through the LiteLLM AI Gateway. Call it with the same OpenAI-compatible request you already use, and track spend, rate limits, and logging in one place.
 
 {/* truncate */}
