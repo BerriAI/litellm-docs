@@ -1,64 +1,87 @@
 ---
-
-slug:  harnesses-are-the-new-llms
-
-title:  "Harnesses Are the New LLMs"
-
-date:  2026-06-10T09:00:00
-
+slug: agents-are-the-new-llms
+title: "A Unified Agent Control Plane"
+date: 2026-06-10T09:00:00
 authors:
-
--  krrish
-
-description:  "The same deployment pattern that emerged with LLMs — routing, fallbacks, observability, central billing — is now emerging with harnesses. Here's why the AI Gateway layer is moving up the stack."
-
+- krrish
+description: "The AI Gateway is moving up the stack: from routing model calls to routing agent work."
 tags: [ideas, harnesses, ai-gateway, agents, thesis]
-
 hide_table_of_contents: true
-
 ---
 
 import { StackComparison } from './diagrams';
 
-*Last Updated: June 2026*
+*Last updated: June 2026*
 
-When we see harnesses today, we see the same stack being built, as the ones we saw for LLM's. This blog walks through some emerging patterns, and open problems that we see in the space. 
+Agent infrastructure is already separating into three layers: models, harnesses, and runtimes. Our thesis is that a fourth layer will emerge: the unified agent control plane. This will allow calling agents living in different agent runtimes, all from 1 place. 
 
-## What's new? 
+The reason is that companies will not run every agent on one runtime. Coding agents may run on Bedrock AgentCore or Claude Managed Agents. Data agents may run inside Elastic, Databricks, or Snowflake. Internal workflow agents may run on custom infrastructure. The control plane emerges because companies want one place where all of these agents can be used, regardless of where they were built or run.
 
-Building agents today is no longer about just wrapping an LLM API call in a tool loop and pushing it to production. Claude Code and OpenClaw changed user expectations for how powerful AI could be, and how we'd want to interact with it ("I don't want to go to code, I just want to tell it what to do, and have it do the thing."). This has given rise to several coding harnesses which wrap the LLM API call with a tool loop, and handle scenarios like sub-agent spawning, memory, compaction, etc. increasing the robustness of agents and making them more useful for tasks. 
+But a registry alone is not enough. Anyone can build a list of agents.
 
-## What does this change?
+The harder problem is invocation. Agent runtimes expose similar primitives — agents, sessions, events, tools — but they do not expose them through the same APIs. So if you want one place to actually use these agents, not just list them, the control plane has to manage agent runtimes, schedules, memory, and sessions.
 
-The agents we're focusing on, our autonomous, long-running coding agents - the kind you can ask to file a PR to fix an issue. To run this agent, you pick a model + harness and deploy it somewhere. The harness also needs a sandbox, to check out the code, make changes and file a fix. Making harnesses reliable in production is hard. It involves sandbox orchestration, and optimizing the harness to handle concurrent requests (what happens if the container goes down mid-way through a request? how to hand off sessions? etc.). 
-
-We're already seeing solutions ("Agent Runtimes") crop up that help simplify this - AgentCore, Gemini Agent Platform, Claude Managed Agents. Over time, similar to LLM's, we expect there to be a wide range of providers offering 'harness-as-a-service' API's (either proprietary - e.g. Claude Managed Agents, or wrapping open-source - e.g. [Bedrock Agent Core wrapping OpenCode](https://aws.amazon.com/blogs/machine-learning/its-safe-to-close-your-laptop-now-hosting-coding-agents-on-amazon-bedrock-agentcore/).
+This is the same pattern LiteLLM saw with models. Companies did not just need a catalog of models. They needed one interface to call them. The only change, is that the primitive is now the agent session, not the model call.
 
 ## The Stack of the Future
 
 <StackComparison />
 
-## Open Questions
+The important shift is that the gateway is no longer just routing model calls. It is routing agent work.
 
-This stack has 2 open questions:
+With LLMs, the stack became:
 
-- What does the VLLM of this world look like? 
-- When will users want to go across multiple Agent Runtimes?
+* **Models:** GPT, Claude, Gemini, Llama
+* **Inference providers:** OpenAI, Anthropic, Bedrock, Vertex, Azure, vLLM
+* **Gateway:** routing, fallbacks, logging, spend tracking, auth, billing
+* **Applications:** copilots, workflows, internal tools, products
 
-For #1, We think there's room for someone to build a high-throughput inference server, which works across the open-source coding harnesses, and optimizes them to achieve high scale (1k+ RPS). We've already published templates, for OpenCode, DeepAgents, and Hermes, for what that server needs to look like (ideally mapped to the Claude Managed Agents API spec). 
+With agents, we think the stack becomes:
 
-For #2, we see this control plane above the runtimes being very similar to how LiteLLM works today, and are building this as an experimental project with [LAP](https://github.com/LiteLLM-Labs/litellm-agent-platform). This is a Rust-based AI Gateway + Agent Control Plane, that allows users to build, register and invoke agents across multiple Agent Runtimes. 
+* **Models:** Claude, GPT, Gemini, open-source models
+* **Harnesses:** Claude Code, Codex, OpenCode, Hermes, DeepAgents
+* **Agent runtimes:** Claude Managed Agents, Bedrock AgentCore, Gemini Enterprise Agent Platform, self-hosted runtimes
+* **Agent control plane:** multi-runtime platform where teams manage agent runtimes, schedules, memory, and sessions.
+* **Applications:** coding agents, support agents, data agents, security agents
 
-We're already starting to see some users resonate with this problem - trying to use LAP as a control plane for agents being built in their company in different runtimes (e.g. Exposing an agent built on Elastic's Runtime, for analyzing Kibana logs to everyone via LAP). 
+## Why companies will need this
 
-If you're company is facing similar problems, we'd love your feedback on LiteLLM Agent Platform - https://github.com/LiteLLM-Labs/litellm-agent-platform. 
+At LiteLLM, we are already seeing our team work across multiple agent runtimes. Some people are building on Claude Managed Agents, others are on N8N or Cursor. 
 
-## Frequently Asked Questions 
+This fragmentation makes it hard for agents built on these platforms to be shareable, and everyone to benefit from the work done so far. 
 
-1. Is LiteLLM building a 2nd product? 
+By having the agents live in 1 place, everyone can leverage these agents - even if the PR Babysitter Agent was written in Claude Managed Agents, which not everyone has direct access to. 
 
-No. Our goal is to roll these learnings into the core LiteLLM offering over time. Building it separately, allows us to move quickly without impacting existing users. 
+That is the control plane problem.
 
-2. Is LAP ready for production? 
+This is also why we think the AI Gateway moves up the stack. The gateway starts by managing model calls. But as agents become the dominant use-case for AI, the gateway has to manage agent sessions too.
 
-No. This is a pre-v0 project. The API's might change unexpectedly, as we work with users on this. If you want to contribute to this project, file an [issue](https://github.com/LiteLLM-Labs/litellm-agent-platform/issues) OR join our discord [here](https://discord.gg/Nkxw3rm3EE). 
+## What we are building
+
+[LiteLLM Agent Platform](https://github.com/LiteLLM-Labs/litellm-agent-platform) is our experiment in this direction.
+
+LiteLLM Agent Platform is a Rust-based AI Gateway and Agent Control Plane. The goal is to let teams register, invoke, observe, and govern agents across multiple runtimes.
+
+We are starting with coding agents because the need is obvious. They are long-running, stateful, tool-heavy, and expensive enough to require real infrastructure.
+
+We are already seeing early users resonate with this pattern. Some companies want LAP to act as a central control plane for agents built by different teams on different runtimes. For example, one team might build an agent on Elastic’s runtime to analyze Kibana logs, but the company may want to expose that agent internally through a common gateway.
+
+This is the architecture we believe is coming: models become interchangeable, harnesses become specialized, runtimes become managed, and the gateway becomes the control plane for agent work.
+
+If this matches what you are seeing, we would love feedback on LiteLLM Agent Platform:
+
+https://github.com/LiteLLM-Labs/litellm-agent-platform
+
+## Frequently Asked Questions
+
+### Is LiteLLM building a second product?
+
+No. LAP is an experimental project. The goal is to learn quickly and bring the right pieces into LiteLLM over time.
+
+### Is LAP production-ready?
+
+No. LAP is pre-v0. APIs may change as we work with early users and contributors.
+
+If you want to contribute, file an issue or join our Discord:
+
+https://discord.gg/Nkxw3rm3EE
