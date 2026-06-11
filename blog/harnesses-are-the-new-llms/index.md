@@ -5,7 +5,7 @@ date: 2026-06-10T09:00:00
 authors:
 - krrish
 description: "The AI Gateway is moving up the stack: from routing model calls to routing agent work."
-tags: [ideas, harnesses, ai-gateway, agents, thesis]
+tags: [ideas, harnesses, ai-gateway, agents]
 hide_table_of_contents: true
 ---
 
@@ -15,7 +15,7 @@ import { StackComparison, ConvergenceHero } from './diagrams';
 
 *Last updated: June 2026*
 
-Agent infrastructure is already separating into three layers: models, harnesses, and runtimes. Our thesis is that a fourth layer will emerge: the unified agent control plane. This will allow calling agents living in different agent runtimes, all from 1 place. 
+Agent infrastructure is already separating into three layers: models, harnesses, and runtimes. We believe a fourth layer will emerge: the unified agent control plane. This will allow calling agents living in different agent runtimes, all from 1 place. 
 
 The reason is that companies will not run every agent on one runtime. Coding agents may run on Bedrock AgentCore or Claude Managed Agents. Data agents may run inside Elastic, Databricks, or Snowflake. Internal workflow agents may run on custom infrastructure. The control plane emerges because companies want one place where all of these agents can be used, regardless of where they were built or run.
 
