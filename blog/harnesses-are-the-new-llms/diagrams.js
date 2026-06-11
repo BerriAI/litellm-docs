@@ -1,5 +1,63 @@
 import React from 'react';
 
+// ── Hero ──────────────────────────────────────────────────────────────────
+// Two-focal bundle: many curves fan in from the left, pass through two focal
+// nodes (registry + invocation), fan out on the right. Reads as: many agent
+// runtimes routed through one unified control plane to many consumers.
+export function ConvergenceHero() {
+  const W = 1200;
+  const H = 500;
+  const N = 40;
+  const f1 = { x: W * 0.25, y: H * 0.5 };
+  const f2 = { x: W * 0.75, y: H * 0.5 };
+  const curves = Array.from({ length: N }, (_, i) => {
+    const t = (i - N / 2) / (N / 2);
+    const yIn = H * 0.5 + t * H * 0.45;
+    const yOut = H * 0.5 - t * H * 0.45;
+    const d = `M 0 ${yIn} Q ${f1.x} ${f1.y}, ${(f1.x + f2.x) / 2} ${H / 2} Q ${f2.x} ${f2.y}, ${W} ${yOut}`;
+    return { d, o: 0.18 + 0.35 * (1 - Math.abs(t)) };
+  });
+
+  return (
+    <figure style={{ margin: '0 0 2rem 0' }}>
+      <div
+        style={{
+          background: '#3a3a2e',
+          borderRadius: 12,
+          overflow: 'hidden',
+          aspectRatio: `${W} / ${H}`,
+          width: '100%',
+        }}
+      >
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width="100%"
+          height="100%"
+          preserveAspectRatio="xMidYMid meet"
+          style={{ display: 'block' }}
+          role="img"
+          aria-label="Abstract curve bundle fanning in from the left, passing through two focal points, and fanning out on the right — representing many agent runtimes routed through a unified control plane to many consumers."
+        >
+          {curves.map((c, i) => (
+            <path
+              key={i}
+              d={c.d}
+              fill="none"
+              stroke="#faf9f5"
+              strokeWidth={0.9}
+              strokeOpacity={c.o}
+              strokeLinecap="round"
+            />
+          ))}
+          <circle cx={f1.x} cy={f1.y} r={4} fill="#faf9f5" opacity={0.95} />
+          <circle cx={f2.x} cy={f2.y} r={4} fill="#faf9f5" opacity={0.95} />
+        </svg>
+      </div>
+    </figure>
+  );
+}
+
+
 const ROWS = [
   {
     label: 'Unified API',

@@ -9,7 +9,9 @@ tags: [ideas, harnesses, ai-gateway, agents, thesis]
 hide_table_of_contents: true
 ---
 
-import { StackComparison } from './diagrams';
+import { StackComparison, ConvergenceHero } from './diagrams';
+
+<ConvergenceHero />
 
 *Last updated: June 2026*
 
