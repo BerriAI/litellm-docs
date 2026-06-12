@@ -395,12 +395,11 @@ callback_settings:
         - gen_ai.system
         - gen_ai.request.model
         - gen_ai.framework
-        - gen_ai.token.type
         - metadata.user_api_key_team_id
         - metadata.user_api_key_org_id
 ```
 
-On the token-usage histogram, `gen_ai.token.type` is always stamped (`input` or `output`) so the two token series stay distinct, even when you leave it out of `include_list`. It is applied after filtering, and every other attribute obeys the list literally.
+`gen_ai.token.type` cannot be filtered. It is a structural discriminator stamped onto the input and output token series after filtering so the two stay distinct, and listing it in either `include_list` or `exclude_list` is rejected at startup rather than silently ignored.
 
 ### Valid attribute names
 
@@ -410,7 +409,6 @@ Both lists are validated at startup against the set below. An unknown name raise
 - `gen_ai.system`
 - `gen_ai.request.model`
 - `gen_ai.framework`
-- `gen_ai.token.type`
 - `hidden_params`
 - `metadata.user_api_key_hash`
 - `metadata.user_api_key_alias`
