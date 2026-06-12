@@ -144,6 +144,26 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Image Generation
+
+EmpirioLabs image models work through the OpenAI-compatible route by passing the EmpirioLabs base URL and `extra_body={"sync": True}` (the EmpirioLabs image endpoint is async by default; `sync` returns the finished OpenAI-shaped response directly):
+
+```python showLineNumbers title="EmpirioLabs Image Generation"
+import os
+import litellm
+
+response = litellm.image_generation(
+    prompt="A glass cathedral at sunset, dramatic lighting",
+    model="openai/seedream-5-0-lite",
+    api_base="https://api.empiriolabs.ai/v1",
+    api_key=os.environ["EMPIRIOLABS_API_KEY"],
+    extra_body={"sync": True},
+)
+print(response.data[0].url)
+```
+
+Image model ids (for example `seedream-5-0-lite`, `wan-2-7-image`, `qwen-image-2-0`) are listed at [empiriolabs.ai/models](https://empiriolabs.ai/models).
+
 ## Additional Notes
 
 - Thinking-capable models accept `reasoning_effort` (`none`, `low`, `medium`, `high`, `max`); the gateway maps it onto each model's native thinking controls.
