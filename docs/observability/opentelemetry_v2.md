@@ -279,9 +279,11 @@ Every sample carries the same identity attributes as the matching span (operatio
 
 By default every metric sample is stamped with the full identity attribute set, which includes per-request fields such as `hidden_params` and several `metadata.*` values. Those are close to unique per request, so each one multiplies the number of time series your backend tracks (one series per distinct attribute combination). At volume this explodes metric cardinality, and some backends, for example Splunk Observability Cloud, start throttling or dropping the metrics
 
-v2 reads the same filter v1 does, from `callback_settings.otel.attributes` in your config. Nest an `attributes` block there with either an `include_list` (allowlist; emit only the listed attributes) or an `exclude_list` (denylist; emit everything except the listed attributes). The two are mutually exclusive, and setting both raises a configuration error at startup. The filter applies to metrics only; spans keep their full attribute set, so traces stay rich while metric cardinality stays bounded
+v2 reads the same filter v1 does, from `callback_settings.otel.attributes` in your config. Nest an `attributes` block there with either an `include_list` (allowlist; emit only the listed attributes) or an `exclude_list` (denylist; emit everything except the listed attributes). The two are mutually exclusive. The filter applies to metrics only; spans keep their full attribute set, so traces stay rich while metric cardinality stays bounded
 
 The block sits under `callback_settings.otel` on its own. You do not add `otel` to `callbacks`; that key turns on the separate v1 integration, while v2 stays driven by `LITELLM_OTEL_V2`
+
+Unlike v1, v2 has no per-instance `attributes` field, so this global block is the only source. v2 also resolves the filter lazily on the first metric a request records rather than at boot, so a bad config (both lists set, or a forbidden name) surfaces on that first recorded request and editing the lists takes effect only after a restart. The filter is read only on the default OTLP path (callback name `otel` or unset); preset destinations such as `arize`, `arize_phoenix`, and `langfuse_otel` emit their metrics with the full attribute set, the same as in v1
 
 ```yaml title="config.yaml"
 callback_settings:
@@ -312,7 +314,7 @@ callback_settings:
         - metadata.user_api_key_org_id
 ```
 
-`gen_ai.token.type` is never filtered out. It stays on `gen_ai.client.token.usage` so the input/output split survives whatever list you set, and listing it in either `include_list` or `exclude_list` is rejected at startup
+`gen_ai.token.type` is never filtered out. It is stamped on `gen_ai.client.token.usage` after the filter runs, so the input/output split survives whatever list you set, and naming it in either `include_list` or `exclude_list` is rejected
 
 ## Which routes are traced
 
