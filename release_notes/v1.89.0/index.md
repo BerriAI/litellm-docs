@@ -226,10 +226,6 @@ PRs by ownership area (visible, non-vehicle set; total: 101)
   - Guardrails: 1
 ```
 
-## New Contributors
-
-New-contributor verification was not run for this release; see the changelog link below for the full author list.
-
 ## Full Changelog
 
 https://github.com/BerriAI/litellm/compare/v1.88.0...v1.89.0
