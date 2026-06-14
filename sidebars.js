@@ -99,6 +99,7 @@ const sidebars = {
           "proxy/guardrails/javelin",
           "proxy/guardrails/akto",
           "proxy/guardrails/vigil_guard",
+          "proxy/guardrails/bastion",
         ].sort(),
       ],
     },
