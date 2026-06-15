@@ -20,6 +20,7 @@ hide_table_of_contents: false
 
 ## Deploy this version
 
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -182,6 +183,14 @@ Additional model-map additions: fal.ai Nano Banana and Gemini 2.5 Flash Image ge
 - Scope the session-token team-key budget exemption to a caller-supplied `team_id` - [PR #29641](https://github.com/BerriAI/litellm/pull/29641)
 
 ## MCP Gateway
+
+### MCP Credential Store
+
+<Image img={require('../../img/release_notes/mcp_credential_store.png')} style={{ width: '800px', height: 'auto' }} />
+
+<br/>
+
+This release lets you securely store per-server credentials for MCP servers directly on the gateway. Define variables once on a server - scoped either as **Instance** (shared across all users) or **Per-user** (each user supplies their own value) - and reference them in static headers or authentication using `${VAR_NAME}` syntax (for example, `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`). This keeps sensitive values like database passwords and API tokens out of your config files while letting each user connect with their own identity.
 
 - Per-server environment variables with global and per-user scopes - [PR #28917](https://github.com/BerriAI/litellm/pull/28917)
 - Per-MCP-server RPM rate limiting for keys and teams - [PR #29482](https://github.com/BerriAI/litellm/pull/29482)
