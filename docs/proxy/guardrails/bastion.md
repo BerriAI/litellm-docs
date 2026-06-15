@@ -56,7 +56,7 @@ curl http://localhost:4000/v1/chat/completions \
 | Param | Default | Description |
 |---|---|---|
 | `guardrail` | — | Set to `bastion`. |
-| `mode` | `pre_call` | `pre_call`, `post_call`, or a list. `post_call` also screens the model's reply. |
+| `mode` | `pre_call` | `pre_call`, `post_call`, `pre_mcp_call`, or a list. `post_call` also screens the model's reply; `pre_mcp_call` screens MCP tool calls (see below). |
 | `default_on` | `false` | Apply to every request without a per-request opt-in. |
 | `preset` | `tiny` | `tiny` (free) or `multilingual` (commercial — see below). |
 | `threshold` | model default | Override the attack decision threshold (`risk >= threshold` ⇒ block). |
@@ -67,6 +67,28 @@ curl http://localhost:4000/v1/chat/completions \
 - **`tiny`** (default) — free, runs fully offline.
 - **`multilingual`** — higher cross-language accuracy; commercial license. Request a
   quote at [bastionsoft.com](https://bastionsoft.com).
+
+## MCP tool screening
+
+Bastion also screens [MCP](https://docs.litellm.ai/docs/mcp) tool traffic — the
+place where indirect prompt injection most often hides:
+
+```yaml
+guardrails:
+  - guardrail_name: "bastion-guard"
+    litellm_params:
+      guardrail: bastion
+      mode: ["pre_call", "pre_mcp_call"]
+      default_on: true
+```
+
+- **Outbound (`pre_mcp_call`)** — the tool name and arguments are screened before
+  the MCP tool runs; a flagged call is rejected with `HTTP 400`.
+- **Inbound (tool results)** — the content a tool returns (web pages, issues,
+  documents) is screened for injected instructions before it reaches the model. On
+  a flagged result the offending text is replaced with a refusal, so poisoned tool
+  output never re-enters the LLM context. This runs automatically whenever the
+  guardrail is configured for an MCP mode.
 
 ## How it works
 
