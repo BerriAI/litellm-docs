@@ -172,10 +172,9 @@ When an MCP server needs credentials that vary per user, or you simply want to k
 
 Variables support two scopes. **Instance** variables hold a single value shared across every user of the server, which suits hostnames, protocols, and other non-secret configuration. **Per-user** variables are supplied individually by each user, so each caller connects with their own identity and LiteLLM resolves the correct value at request time. This lets one registered server serve many users without everyone sharing the same credentials, and it keeps secrets like database passwords and API tokens out of your config files.
 
-<Image 
-  img={require('../img/release_notes/mcp_credential_store.png')}
-  style={{width: '80%', display: 'block', margin: '0'}}
-/>
+This video walks through defining server variables and referencing them in headers and authentication.
+
+<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 </TabItem>
 
