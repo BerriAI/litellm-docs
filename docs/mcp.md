@@ -168,13 +168,14 @@ These headers get sent with every request to the server. That's it.
 
 ### Server Variables
 
-When an MCP server needs credentials that vary per user, or you simply want to keep sensitive values out of your static headers and authentication fields, define them as server variables. Each variable has a name, a value, and a scope, and you reference it anywhere in the server's static headers or authentication using `${VAR_NAME}`. For example, you can assemble a connection string as `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`, and LiteLLM substitutes the resolved values before sending the request.
-
-Variables support two scopes. **Instance** variables hold a single value shared across every user of the server, which suits hostnames, protocols, and other non-secret configuration. **Per-user** variables are supplied individually by each user, so each caller connects with their own identity and LiteLLM resolves the correct value at request time. This lets one registered server serve many users without everyone sharing the same credentials, and it keeps secrets like database passwords and API tokens out of your config files.
-
-This video walks through defining server variables and referencing them in headers and authentication.
+Store credentials on the server and reference them in static headers or authentication with `${VAR_NAME}` (e.g. `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`). Scope each variable as **Instance** (shared) or **Per-user** (each user supplies their own).
 
 <iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+**When to use this:**
+- You want secrets like passwords and API tokens kept out of config files
+- Each user should connect with their own credentials
+- You want to reuse shared config (hostnames, protocols) across users
 
 </TabItem>
 
