@@ -323,6 +323,16 @@ This page documents all command-line interface (CLI) arguments available for the
      litellm --use_prisma_db_push
      ```
 
+### litellm-proxy db generate
+   - Generates the Prisma client using the schema bundled with `litellm-proxy-extras`.
+   - Resolves the schema path for you, so you do not need to know the internal `site-packages` location or pass `--schema` by hand. This is the generate-step companion to `db push` and `migrate deploy`, which already use the same bundled schema.
+   - Works after a plain `pip install 'litellm[proxy]'` even when the venv is not activated, such as when the proxy is invoked by absolute path in Docker or installer scripts.
+   - Requires `litellm-proxy-extras`, which ships with `litellm[proxy]`. If it is missing, the command prints an install hint and exits.
+   - **Usage:**
+     ```shell
+     litellm-proxy db generate
+     ```
+
 ## Debugging
 
 ### --debug
