@@ -14,14 +14,6 @@ As more teams depend on LiteLLM, stability matters more, not less. So we're trea
 - **Close 20 reported bugs** in core functionality. Full list, in the open, [here](https://github.com/BerriAI/litellm/issues/30484)
 - **Fix root causes, not symptoms.** A lot of our worst bugs come from code that needs to be reworked, not patched. Patching is cheaper this week and more expensive every week after. We are comitting to adressing root causes in 3 core areas: UI, MCP and AI Gateway Authentication.
 
-
-Here's where we're investing, and what you get from each.
-
-This blog post covers our planned stability work for the month of June. At LiteLLM we are doubling down our focus on stability and reliability of core features as our adoption grows it is doubly important to deliver a stable product for users. 
-
-This month has 2 goals in terms of input:
-- Close out 20 reported bugs on core functionality. You can reference the parent list of issues being worked on here https://github.com/BerriAI/litellm/issues/30484 
-- Long term inestments, One of the symptoms of some of our stability bugs is that the underlying code itself is not amazing. Part of this is we're trying to refactor the code to address some of the root causes versus constantly patching on fixes.
 Here's where we're investing, and what you get from each.
 
 ## MCP: auth that works the same way every time
