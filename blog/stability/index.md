@@ -9,43 +9,43 @@ tags: []
 hide_table_of_contents: false
 ---
 
-As more teams depend on LiteLLM, stability matters more, not less. So we're treating stability as mission critical. For June we are comitting to two things: 
+Over the past few months, we've heard our users report more bugs and regressions. We take that feedback seriously, and today we're sharing exactly what we're doing about it.
 
-- **Close 20 reported bugs** in core functionality. Full list, in the open, [here](https://github.com/BerriAI/litellm/issues/30484)
-- **Fix root causes, not symptoms.** A lot of our worst bugs come from code that needs to be reworked, not patched. Patching is cheaper this week and more expensive every week after. We are comitting to adressing root causes in 3 core areas: UI, MCP and AI Gateway Authentication.
+We're kicking off a stability sprint for LiteLLM with one bar in mind: 0 reported regressions by our next release on August 29th. The sprint has 2 goals:
 
-Here's where we're investing, and what you get from each.
+- Close 20 reported bugs in core functionality - [here](https://github.com/BerriAI/litellm/issues/30484)
+- Address the root cause of underlying bugs in 3 core components - MCP, Gateway, and UI
+
+## What class of bugs are we driving down?
+
+Over this sprint we're driving down 3 classes of bugs:
+
+- **MCP Authentication:** View/List Tools did not consistently work across all our supported MCP auth methods.
+- **Gateway Authentication:** Team IDs are not reliably on every request trace. As a result, some requests and budgets are not accurately tracked to a team.
+- **UI Forms:** Today when users hit save on a form, it can accidentally wipe out other fields on the form, across keys, teams, and users.
 
 ## MCP: auth that works the same way every time
 
-**What you get:** you can view tools and authenticate against MCP servers reliably, no matter how you connect (Gateway or Claude Code).
-
-**The problem today:** auth behavior changes depending on your entry point. Sometimes you get no tools back at all.
-
-**Why:** we have too many credential paths and nothing deciding which one wins, so what you get depends on how you connect. Tokens were also cached without proper expiry or refresh.
-
-**The bet:** one path that resolves credentials the same way every time, fails safe instead of silently downgrading, and refreshes tokens before they expire.
+Solution: We've identified that the root cause of bugs across MCPs is that we maintain 5 different code paths, one per authentication method. To fix this and restore connection reliability, we're refactoring this into one code path that resolves MCP credentials across all supported authentication methods. The result: tools list and call reliably, no matter which auth method you use.
 
 ## AI Gateway auth: spend always lands on the right team
 
-**What you get:** your team IDs show up in traces, and spend is always attributed to the right team.
-
-**The problem today:** team IDs go missing from traces, and spend sometimes never gets attributed.
-
-**Why:** figuring out who's making a request takes 5+ DB lookups spread across the codebase. When one fails quietly, your team ID drops out but the request still succeeds, so it fails silently instead of loud.
-
-**The bet:** resolve caller identity once, into a single record every check and log reads from. Cuts identity lookups roughly in half. Target: fewer than 1 identity-attribution bug per release.
+Solution: We identified that the authentication layer makes 5+ DB lookups to resolve the exact key, user, team, and team member making a request. To fix this, we're resolving caller identity once, into a single record that every check and log reads from. This cuts identity lookups roughly in half, and means spend is always attributed to the team that made the request.
 
 ## UI: edits change only what you touched
 
-**What you get:** you edit a field, hit save, and only that field changes. Nothing else moves.
+Solution: One of the root causes of UI bugs on form save is that our data shapes across the frontend and backend are not consistent. To fix this, we're refactoring so frontend and backend types are 100% in sync and read from the same source of truth. The result: a save changes only the field you edited, nothing else.
 
-**The problem today:** editing one field can silently break or remove another. You update one field, save, and a different field disappears.
+## How you'll know it worked
 
-**Why:** the data shapes our frontend and backend exchange have drifted apart, and a lot of older form code behaves inconsistently.
+We'll report back at the August 29th release on exactly where each of these stands. You shouldn't have to take our word for it.
 
-**The bet:** tighten the contract between frontend and backend, rework how forms handle data. Target: 0 inconsistency bugs across core flows. We'll prove it one page at a time, starting with the flows you use most.
+## Why now
+
+We've grown fast. And fast growth in a complex system means bugs accumulate if you're not deliberate about paying them down. This sprint is us being deliberate.
+
+We're also being public about it because you deserve to know what's being fixed and when. Stability is infrastructure. We're treating it that way.
 
 ## Want us to fix something?
 
-This list came from your feedback and we want more of it. If something in LiteLLM is unreliable for you, comment here and we'll pick it up: https://github.com/BerriAI/litellm/issues/30484
+Every item above came from real user reports. If there's a bug affecting you that isn't on this list, comment on the [GitHub issue](https://github.com/BerriAI/litellm/issues/30484). We're actively triaging!
