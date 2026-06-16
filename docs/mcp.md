@@ -166,6 +166,17 @@ These headers get sent with every request to the server. That's it.
 - You want full control over exactly what headers are sent
 - You're debugging and need to quickly add headers without changing auth configuration
 
+### Server Variables
+
+When an MCP server needs credentials that vary per user, or you simply want to keep sensitive values out of your static headers and authentication fields, define them as server variables. Each variable has a name, a value, and a scope, and you reference it anywhere in the server's static headers or authentication using `${VAR_NAME}`. For example, you can assemble a connection string as `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`, and LiteLLM substitutes the resolved values before sending the request.
+
+Variables support two scopes. **Instance** variables hold a single value shared across every user of the server, which suits hostnames, protocols, and other non-secret configuration. **Per-user** variables are supplied individually by each user, so each caller connects with their own identity and LiteLLM resolves the correct value at request time. This lets one registered server serve many users without everyone sharing the same credentials, and it keeps secrets like database passwords and API tokens out of your config files.
+
+<Image 
+  img={require('../img/release_notes/mcp_credential_store.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+/>
+
 </TabItem>
 
 <TabItem value="config" label="config.yaml">
