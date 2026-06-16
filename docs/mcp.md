@@ -173,9 +173,8 @@ Store credentials on the server and reference them in static headers or authenti
 <iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 **When to use this:**
-- You want secrets like passwords and API tokens kept out of config files
-- Each user should connect with their own credentials
-- You want to reuse shared config (hostnames, protocols) across users
+- Each user needs to connect with their own static credentials
+- You want to reuse certain shared details (e.g., DB url) across users
 
 </TabItem>
 
