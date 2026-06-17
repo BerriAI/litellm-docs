@@ -91,6 +91,23 @@ This page documents all command-line interface (CLI) arguments available for the
     litellm
     ```
 
+### --max_requests_before_restart_jitter
+   - **Default:** `None`
+   - **Type:** `int`
+   - Adds a random amount in `[0, jitter]` to `--max_requests_before_restart` for each worker so workers recycle at staggered request counts instead of all at once. Has no effect without `--max_requests_before_restart`.
+   - For uvicorn: maps to `limit_max_requests_jitter` (requires `uvicorn>=0.41.0`; on older versions the flag is ignored with a warning)
+   - For gunicorn: maps to `max_requests_jitter`
+   - **Usage:** 
+     ```shell
+     litellm --max_requests_before_restart 10000 --max_requests_before_restart_jitter 1000
+     ```
+  - **Usage - set Environment Variable:** `MAX_REQUESTS_BEFORE_RESTART_JITTER`
+    ```shell
+    export MAX_REQUESTS_BEFORE_RESTART=10000
+    export MAX_REQUESTS_BEFORE_RESTART_JITTER=1000
+    litellm
+    ```
+
 ## Server Backend Options
 
 ### --run_gunicorn

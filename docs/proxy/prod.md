@@ -124,6 +124,13 @@ When you run **multiple workers in one container** and rely on `--max_requests_b
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000"]
 ```
 
+When several workers boot together and serve a similar amount of traffic, they reach the request threshold at almost the same time and recycle in lockstep, dropping a chunk of capacity at once. Add `--max_requests_before_restart_jitter` to offset each worker's threshold by a random amount in `[0, jitter]` so restarts stagger instead of synchronizing. It maps to Uvicorn's [`limit_max_requests_jitter`](https://uvicorn.dev/settings/#resource-limits) (requires `uvicorn>=0.41.0`) and Gunicorn's [`max_requests_jitter`](https://gunicorn.org/reference/settings/#max_requests_jitter), and has no effect without `--max_requests_before_restart`.
+
+```shell
+# Stagger recycling so workers don't all restart at once
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
+```
+
 ### 3c. Keep restarts hitless
 
 A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
