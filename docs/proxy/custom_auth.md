@@ -254,7 +254,7 @@ general_settings:
   custom_auth_run_common_checks: true
 ```
 
-With the flag on, LiteLLM runs `common_checks`, fetching your team, user, project, and end-user records from the DB by the IDs on the token and enforcing against them. Set each control where the table shows:
+With the flag on, LiteLLM runs `common_checks`. Set each control where the table shows:
 
 | What you want to enforce | Where you set it | How LiteLLM finds it |
 | --- | --- | --- |
@@ -264,7 +264,11 @@ With the flag on, LiteLLM runs `common_checks`, fetching your team, user, projec
 | Project model allowlist, budget, per-model rate limits | the project record (`/project/new` or UI) | looked up by `project_id` |
 | End-user budget / limits | the end-user record (`/customer/new` or UI) | looked up by `end_user_id` |
 
-Because LiteLLM loads the project from the DB and sets `project_metadata` from the project row (overwriting anything your handler set on `project_metadata`), configure per-model and project-level limits on the project record, not on the returned object.
+**Note:**
+
+- The only control read directly off the returned `UserAPIKeyAuth` is the key-level `models` allowlist; everything else lives on the DB records.
+- With the flag on, LiteLLM overwrites anything your handler set on `project_metadata` with the project row from the DB, so configure per-model and project-level limits on the project record, not on the returned object.
+- For per-model rate limits (`model_tpm_limit` / `model_rpm_limit`), the model key must match the request's `model` string exactly; a request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
 
 To also enforce key-level and end-user budgets, set `litellm.enable_post_custom_auth_checks: true`.
 
@@ -289,10 +293,6 @@ general_settings:
 ```
 
 Without `custom_auth_run_common_checks: true`, a client can call any model the proxy has configured (for example `gpt-4o`) even if it is not in your `models` list.
-
-### Per-model rate limits
-
-Per-model limits live on the project record's `model_tpm_limit` / `model_rpm_limit`, keyed by model name. The model key must match the request's `model` string exactly; a request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
 
 ### Key `models` vs project `models`
 
