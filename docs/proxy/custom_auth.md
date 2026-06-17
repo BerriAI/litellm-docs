@@ -2,13 +2,32 @@
 
 You can now override the default api key auth.
 
-:::warning Enforcement is OFF by default with custom auth
+:::warning Enforcement with custom auth
 
-With the flag off, budgets, model-access allowlists, and limits on your DB project/team records are not enforced unless you set `custom_auth_run_common_checks: true`.
-
-Rate limits set directly on the returned object are still enforced. [More details](#enforce-model-access-budgets-and-teamproject-checks).
+By default, custom auth enforces only the rate limits you set on the returned object. Budgets and model-access require a flag. The table below shows, for each control, where to configure it and which flags it needs.
 
 :::
+
+## What gets enforced
+
+| Goal | Set it on | Flags required |
+| --- | --- | --- |
+| Key / user / team / end-user rate limits | returned object (`rpm_limit`, `team_tpm_limit`, …) | none |
+| Per-model rate limits, key / team scoped | `metadata` / `team_metadata` on the returned object | none |
+| Per-model rate limits, project scoped | the project record (`model_tpm_limit` / `model_rpm_limit`) † | `custom_auth_run_common_checks` |
+| Team / user / project budget | the team / user / project record | `custom_auth_run_common_checks` |
+| Team / user / project model allowlist | the team / user / project record | `custom_auth_run_common_checks` |
+| End-user budget | the end-user record | `custom_auth_run_common_checks` or `enable_post_custom_auth_checks` |
+| Key model allowlist (`models`) | returned object | both flags |
+| Key per-model budget (`model_max_budget`) | returned object | `enable_post_custom_auth_checks` |
+| Key expiry (`expires`) | returned object | `enable_post_custom_auth_checks` |
+| Key scalar budget (`max_budget` / `soft_budget`) | not supported; use a per-scope budget | n/a |
+
+† With `custom_auth_run_common_checks` off, project per-model limits can be set on the returned object's `project_metadata`. With the flag on, the DB project record is the source of truth and any `project_metadata` on the object is overwritten, so set them on the project record.
+
+**Flag interactions:** enabling `custom_auth_run_common_checks` makes the DB project record the source of truth for `project_metadata`. Per-model project limits set on the returned object are then ignored; move them to the project record. Other scopes are unaffected (team per-model limits via `team_metadata` always stay on the object).
+
+See [Enforce budgets and model access](#enforce-budgets-and-model-access) and [Key-level enforcement](#key-level-enforcement) for examples.
 
 ## Usage
 
@@ -28,194 +47,6 @@ async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
         raise Exception
     except: 
         raise Exception
-```
-
-## UserAPIKeyAuth Fields Reference
-
-The `UserAPIKeyAuth` object supports the following fields for comprehensive auth configuration:
-
-### Core Authentication Fields
-```python
-UserAPIKeyAuth(
-    # Basic auth fields
-    api_key: Optional[str] = None,                    # The API key (will be hashed automatically)
-    token: Optional[str] = None,                      # Hashed token for internal use
-    key_name: Optional[str] = None,                   # Human-readable key name
-    key_alias: Optional[str] = None,                  # Key alias for identification
-    
-    # User identification
-    user_id: Optional[str] = None,                    # Unique user identifier
-    user_email: Optional[str] = None,                 # User email address
-    user_role: Optional[LitellmUserRoles] = None,     # User role (PROXY_ADMIN, INTERNAL_USER, etc.)
-    
-    # Team/Organization
-    team_id: Optional[str] = None,                    # Team identifier
-    team_alias: Optional[str] = None,                 # Team display name
-    org_id: Optional[str] = None,                     # Organization identifier
-)
-```
-
-### Budget and Spend Tracking
-```python
-UserAPIKeyAuth(
-    # User budgets
-    max_budget: Optional[float] = None,               # Maximum budget for the key
-    spend: float = 0.0,                              # Current spend amount
-    soft_budget: Optional[float] = None,              # Soft budget limit (warnings)
-    model_max_budget: Dict = {},                      # Per-model budget limits
-    model_spend: Dict = {},                           # Per-model spend tracking
-    
-    # Team budgets
-    team_max_budget: Optional[float] = None,          # Team's maximum budget
-    team_spend: Optional[float] = None,               # Team's current spend
-    team_member_spend: Optional[float] = None,        # This user's spend within the team
-    
-    # Budget timing
-    budget_duration: Optional[str] = None,            # Budget reset period
-    budget_reset_at: Optional[datetime] = None,       # When budget resets
-)
-```
-
-### Rate Limiting
-```python
-UserAPIKeyAuth(
-    # User limits
-    tpm_limit: Optional[int] = None,                  # Tokens per minute limit
-    rpm_limit: Optional[int] = None,                  # Requests per minute limit
-    user_tpm_limit: Optional[int] = None,             # User-specific TPM limit
-    user_rpm_limit: Optional[int] = None,             # User-specific RPM limit
-    
-    # Team limits
-    team_tpm_limit: Optional[int] = None,             # Team TPM limit
-    team_rpm_limit: Optional[int] = None,             # Team RPM limit
-    team_member_tpm_limit: Optional[int] = None,      # Per-member TPM limit
-    team_member_rpm_limit: Optional[int] = None,      # Per-member RPM limit
-    
-    # Per-model limits — NOT enforced (inert). Use the project's
-    # model_tpm_limit / model_rpm_limit instead (see "Per-model rate limits").
-    rpm_limit_per_model: Optional[Dict[str, int]] = None,  # not enforced
-    tpm_limit_per_model: Optional[Dict[str, int]] = None,  # not enforced
-)
-```
-
-### End User Tracking
-```python
-UserAPIKeyAuth(
-    # End user identification and limits
-    end_user_id: Optional[str] = None,                # End user identifier
-    end_user_tpm_limit: Optional[int] = None,         # End user TPM limit
-    end_user_rpm_limit: Optional[int] = None,         # End user RPM limit
-    end_user_max_budget: Optional[float] = None,      # End user budget limit
-)
-```
-
-### Model and Route Access
-```python
-UserAPIKeyAuth(
-    # Model access control
-    models: List = [],                                # Allowed models list (enforced when custom_auth_run_common_checks: true)
-    team_models: List = [],                           # Team's allowed models
-    aliases: Dict = {},                               # Model aliases
-    
-    # Route permissions
-    allowed_routes: Optional[list] = [],              # Allowed API routes
-    allowed_cache_controls: Optional[list] = [],      # Cache control permissions
-    permissions: Dict = {},                           # General permissions
-)
-```
-
-### Object Permission Example (MCP, agents, etc.)
-
-```python
-from litellm.proxy._experimental.mcp_server.mcp_server_manager import (
-    global_mcp_server_manager,
-)
-
-def _server_id(name: str) -> str:
-    server = global_mcp_server_manager.get_mcp_server_by_name(name)
-    if not server:
-        raise ValueError(f"Unknown MCP server '{name}'")
-    return server.server_id
-
-object_permission = LiteLLM_ObjectPermissionTable(
-    mcp_servers=[_server_id("deepwiki"), _server_id("everything")], # MCP servers this key is allowed to use
-    mcp_tool_permissions={"deepwiki": ["search", "read_doc"]},      # optional per-server tool allow-list
-)
-
-UserAPIKeyAuth(
-    object_permission=object_permission,
-)
-```
-
-### Advanced Configuration
-```python
-UserAPIKeyAuth(
-    # Request handling
-    max_parallel_requests: Optional[int] = None,      # Concurrent request limit
-    allowed_model_region: Optional[AllowedModelRegion] = None,  # Geographic restrictions
-    
-    # Expiration and status
-    expires: Optional[Union[str, datetime]] = None,   # Key expiration
-    blocked: Optional[bool] = None,                   # Whether key is blocked
-    
-    # Metadata and configuration
-    metadata: Dict = {},                              # Custom metadata
-    config: Dict = {},                               # Configuration settings
-    team_metadata: Optional[Dict] = None,             # Team metadata
-    
-    # Internal tracking
-    request_route: Optional[str] = None,              # Current request route
-    last_refreshed_at: Optional[float] = None,        # Cache refresh timestamp
-)
-```
-
-### Complete Example
-
-```python
-from fastapi import Request
-from datetime import datetime, timedelta
-from litellm.proxy._types import UserAPIKeyAuth, LitellmUserRoles
-
-async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
-    try:
-        # Example: Comprehensive auth configuration
-        if api_key.startswith("sk-admin-"):
-            return UserAPIKeyAuth(
-                api_key=api_key,
-                user_id="admin_user_123",
-                user_email="admin@company.com",
-                user_role=LitellmUserRoles.PROXY_ADMIN,
-                team_id="admin_team",
-                team_alias="Administrative Team",
-                max_budget=1000.0,
-                soft_budget=800.0,
-                tpm_limit=10000,
-                rpm_limit=100,
-                models=["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
-                allowed_routes=["/chat/completions", "/embeddings"],
-                expires=datetime.now() + timedelta(days=30),
-                metadata={"department": "engineering", "cost_center": "ai_ops"}
-            )
-        elif api_key.startswith("sk-team-"):
-            return UserAPIKeyAuth(
-                api_key=api_key,
-                user_id="team_user_456",
-                user_email="user@company.com",
-                user_role=LitellmUserRoles.INTERNAL_USER,
-                team_id="dev_team",
-                team_alias="Development Team",
-                max_budget=100.0,
-                tpm_limit=1000,
-                rpm_limit=20,
-                models=["gpt-3.5-turbo", "claude-3-haiku"],
-                team_member_tpm_limit=500,  # Limit within team
-                end_user_tpm_limit=100,     # Per end-user limit
-                metadata={"project": "chatbot_v2"}
-            )
-        else:
-            raise Exception("Invalid API key")
-    except Exception:
-        raise Exception("Authentication failed")
 ```
 
 #### 2. Pass the filepath (relative to the config.yaml)
@@ -244,9 +75,100 @@ general_settings:
 $ litellm --config /path/to/config.yaml 
 ```
 
-## Enforce model access, budgets, and team/project checks
+## UserAPIKeyAuth Fields Reference
 
-By default, custom auth enforces only what your handler sets on the returned object (for example the rate limits in [Rate Limiting](#rate-limiting) above). To also enforce model allowlists, budgets, and team/project restrictions, set:
+These fields are enforced as soon as your handler returns them, with no flag required. LiteLLM's rate limiter reads them straight off the object you return. Budgets and model-access are enforced separately, behind flags; see [Enforce budgets and model access](#enforce-budgets-and-model-access) and [Key-level enforcement](#key-level-enforcement) below.
+
+### Identity
+
+These set who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true` (see below).
+
+```python
+UserAPIKeyAuth(
+    api_key: Optional[str] = None,                    # The API key (will be hashed automatically)
+    token: Optional[str] = None,                      # Hashed token for internal use
+    key_alias: Optional[str] = None,                  # Key alias for identification
+    user_id: Optional[str] = None,                    # User identifier (also used to load the user record)
+    user_email: Optional[str] = None,                 # User email address
+    user_role: Optional[LitellmUserRoles] = None,     # User role (PROXY_ADMIN, INTERNAL_USER, etc.)
+    team_id: Optional[str] = None,                    # Team identifier (also used to load the team record)
+    org_id: Optional[str] = None,                     # Organization identifier (also used to load the org record)
+    end_user_id: Optional[str] = None,                # End-user identifier (also used to load the end-user record)
+)
+```
+
+### Rate limits
+
+All scopes below are enforced directly off the returned object, with no flag.
+
+```python
+UserAPIKeyAuth(
+    # Key
+    tpm_limit: Optional[int] = None,
+    rpm_limit: Optional[int] = None,
+    # User
+    user_tpm_limit: Optional[int] = None,
+    user_rpm_limit: Optional[int] = None,
+    # Team
+    team_tpm_limit: Optional[int] = None,
+    team_rpm_limit: Optional[int] = None,
+    # Per team-member
+    team_member_tpm_limit: Optional[int] = None,
+    team_member_rpm_limit: Optional[int] = None,
+    # Per end-user
+    end_user_tpm_limit: Optional[int] = None,
+    end_user_rpm_limit: Optional[int] = None,
+    # Per-model (key / team scoped)
+    metadata: Dict = {},          # e.g. {"model_tpm_limit": {...}, "model_rpm_limit": {...}}
+    team_metadata: Optional[Dict] = None,  # same keys, team scoped
+)
+```
+
+:::note
+
+Per-model rate limits are read from `metadata` (key) and `team_metadata` (team), keyed by model name. The model key must equal the request's `model` string exactly, or the limit is skipped silently.
+
+`rpm_limit_per_model` / `tpm_limit_per_model` exist on the object but are inert; use `metadata` / `team_metadata` instead, or the project record (see below).
+
+:::
+
+### Advanced
+
+```python
+UserAPIKeyAuth(
+    max_parallel_requests: Optional[int] = None,      # Concurrent request limit
+    allowed_model_region: Optional[AllowedModelRegion] = None,  # Geographic restrictions
+    blocked: Optional[bool] = None,                   # Whether the key is blocked
+    config: Dict = {},                                # Configuration settings
+)
+```
+
+### Object permission (MCP, agents, etc.)
+
+```python
+from litellm.proxy._experimental.mcp_server.mcp_server_manager import (
+    global_mcp_server_manager,
+)
+
+def _server_id(name: str) -> str:
+    server = global_mcp_server_manager.get_mcp_server_by_name(name)
+    if not server:
+        raise ValueError(f"Unknown MCP server '{name}'")
+    return server.server_id
+
+object_permission = LiteLLM_ObjectPermissionTable(
+    mcp_servers=[_server_id("deepwiki"), _server_id("everything")], # MCP servers this key is allowed to use
+    mcp_tool_permissions={"deepwiki": ["search", "read_doc"]},      # optional per-server tool allow-list
+)
+
+UserAPIKeyAuth(
+    object_permission=object_permission,
+)
+```
+
+## Enforce budgets and model access
+
+Set `custom_auth_run_common_checks: true` to enforce budgets and model-access alongside custom auth:
 
 ```yaml
 general_settings:
@@ -254,45 +176,38 @@ general_settings:
   custom_auth_run_common_checks: true
 ```
 
-With the flag on, LiteLLM runs `common_checks`. Set each control where the table shows:
+LiteLLM then runs `common_checks`, loading the team / user / project / end-user records from its DB by the IDs you return and enforcing against those records. So your handler returns the IDs (`team_id`, `user_id`, `project_id`, `end_user_id`), and the budgets and allowlists live on the matching DB records (created via `/team/new`, `/user/new`, `/project/new`, `/customer/new`, or the UI). For example, create a team with a budget and model allowlist:
 
-| What you want to enforce | Where you set it | How LiteLLM finds it |
-| --- | --- | --- |
-| Key-level model allowlist | `models=[...]` on the returned `UserAPIKeyAuth` | read directly off the object |
-| Team model allowlist, budget, rate limits | the team record (`/team/new` or UI) | looked up by `team_id` on the object |
-| User model allowlist, budget | the user record (`/user/new` or UI) | looked up by `user_id` |
-| Project model allowlist, budget, per-model rate limits | the project record (`/project/new` or UI) | looked up by `project_id` |
-| End-user budget / limits | the end-user record (`/customer/new` or UI) | looked up by `end_user_id` |
-
-**Note:**
-
-- The only control read directly off the returned `UserAPIKeyAuth` is the key-level `models` allowlist; everything else lives on the DB records.
-- With the flag on, LiteLLM overwrites anything your handler set on `project_metadata` with the project row from the DB, so configure per-model and project-level limits on the project record, not on the returned object.
-- For per-model rate limits (`model_tpm_limit` / `model_rpm_limit`), the model key must match the request's `model` string exactly; a request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
-
-To also enforce key-level and end-user budgets, set `litellm.enable_post_custom_auth_checks: true`.
-
-#### Example: restrict models in custom auth
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H 'Authorization: Bearer sk-master-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_id": "eng-team",
+    "max_budget": 100,
+    "models": ["gpt-4o-mini", "claude-3-haiku"]
+  }'
+```
 
 ```python
-async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
-    # ... validate api_key and load project_context from your system ...
-    return UserAPIKeyAuth(
-        api_key=api_key,
-        user_id=user_id,
-        team_id=project_context.team_id,
-        project_id=project_context.project_id,
-        models=project_context.models,  # e.g. ["gpt-4o-mini", "claude-3-haiku"]
-    )
+# ...then return that team_id from custom auth:
+return UserAPIKeyAuth(api_key=api_key, team_id="eng-team")
 ```
 
-```yaml
-general_settings:
-  custom_auth: my_auth.user_api_key_auth
-  custom_auth_run_common_checks: true
+For project per-model rate limits, set `model_tpm_limit` / `model_rpm_limit` on the project record (keyed by model name) and return that `project_id`:
+
+```python
+# On the project record (via /project/new or the UI):
+#   model_tpm_limit = {"gpt-4o": 100000, "claude-3-haiku": 50000}
+#   model_rpm_limit = {"gpt-4o": 100,    "claude-3-haiku": 200}
 ```
 
-Without `custom_auth_run_common_checks: true`, a client can call any model the proxy has configured (for example `gpt-4o`) even if it is not in your `models` list.
+:::note
+
+- The project record's metadata replaces any `project_metadata` you set on the returned object, so configure project per-model limits on the project record, not on the object.
+- For per-model rate limits, the model key must equal the request's `model` string exactly, or the limit is skipped silently. This was the actual Expedia failure mode.
+
+:::
 
 ### Key `models` vs project `models`
 
@@ -303,15 +218,33 @@ These are separate controls:
 | `models` on `UserAPIKeyAuth` | Key-level allowlist | Value you return from custom auth |
 | `project_id` on `UserAPIKeyAuth` | Project-level allowlist | `models` on the **project record in LiteLLM's DB** |
 
-If you set `project_id`, also create/update the project in LiteLLM (via `/project/new` or the UI) with the correct `models` list. See [Project Management](./project_management).
+An empty `models` list (`[]`) means no restriction (all models allowed) for that scope. Model names must match the model group name in your proxy config, or use wildcard patterns where supported. See [Project Management](./project_management) and [`custom_auth_run_common_checks` in Config Settings](./config_settings#all-settings).
 
-**Notes:**
+## Key-level enforcement
 
-- An empty `models` list (`[]`) means **no restriction** (all models allowed) for that scope.
-- Model names must match the model group name in your proxy config, or use wildcard patterns where supported.
-- Fallback models in the request body are also validated against the key allowlist when common checks are enabled.
+The following are enforced from the returned object, but only when `litellm.enable_post_custom_auth_checks: true` is also set:
 
-See also: [`custom_auth_run_common_checks` in Config Settings](./config_settings#all-settings).
+```yaml
+general_settings:
+  custom_auth: custom_auth.user_api_key_auth
+  custom_auth_run_common_checks: true   # required for the key models allowlist
+
+litellm_settings:
+  enable_post_custom_auth_checks: true
+```
+
+```python
+from datetime import datetime, timedelta, timezone
+
+return UserAPIKeyAuth(
+    api_key=api_key,
+    models=["gpt-4o-mini"],                                   # key model allowlist (needs both flags)
+    model_max_budget={"gpt-4o": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
+    expires=datetime.now(timezone.utc) + timedelta(days=30),  # key expiry
+)
+```
+
+This path also enforces end-user budgets and per-model end-user budgets when `end_user_id` is set.
 
 ## ✨ Support LiteLLM Virtual Keys + Custom Auth
 
