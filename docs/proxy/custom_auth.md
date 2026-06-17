@@ -2,6 +2,12 @@
 
 You can now override the default api key auth.
 
+:::warning Enforcement is OFF by default with custom auth
+
+Custom auth skips LiteLLM's standard enforcement. Project, team, org, and end-user budgets, rate limits (including per-model), and model-access allowlists are all ignored unless you set `custom_auth_run_common_checks: true`. See [Enforce model access, budgets, and team/project checks](#enforce-model-access-budgets-and-teamproject-checks).
+
+:::
+
 ## Usage
 
 #### 1. Create a custom auth file. 
@@ -83,9 +89,10 @@ UserAPIKeyAuth(
     team_member_tpm_limit: Optional[int] = None,      # Per-member TPM limit
     team_member_rpm_limit: Optional[int] = None,      # Per-member RPM limit
     
-    # Per-model limits
-    rpm_limit_per_model: Optional[Dict[str, int]] = None,  # RPM limits by model
-    tpm_limit_per_model: Optional[Dict[str, int]] = None,  # TPM limits by model
+    # Per-model limits — NOT enforced (inert). Use the project's
+    # model_tpm_limit / model_rpm_limit instead (see "Per-model rate limits").
+    rpm_limit_per_model: Optional[Dict[str, int]] = None,  # not enforced
+    tpm_limit_per_model: Optional[Dict[str, int]] = None,  # not enforced
 )
 ```
 
@@ -274,6 +281,22 @@ general_settings:
 ```
 
 Without `custom_auth_run_common_checks: true`, a client can call any model the proxy has configured (for example `gpt-4o`) even if it is not in your `models` list.
+
+### Configure limits on the project, not in the handler
+
+With the flag on, LiteLLM loads project metadata from the DB (by the `project_id` you return), **overwriting any your handler set**, so configure per-model and project-level limits on the LiteLLM project itself (via `/project/new` or the UI), not on the returned object.
+
+### Per-model rate limits
+
+Set `model_tpm_limit` / `model_rpm_limit` on the project record (keyed by model name), return that project's `project_id`, and enable common checks:
+
+```python
+# On the LiteLLM project record (not in custom auth):
+#   model_tpm_limit = {"gpt-4o": 100000, "claude-3-haiku": 50000}
+#   model_rpm_limit = {"gpt-4o": 100,    "claude-3-haiku": 200}
+```
+
+The model key must match the request's `model` string exactly. A request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
 
 ### Key `models` vs project `models`
 
