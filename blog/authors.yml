@@ -1,0 +1,70 @@
+litellm:
+  name: LiteLLM Team
+  title: LiteLLM Core Team
+  url: https://github.com/BerriAI/litellm
+  image_url: https://github.com/BerriAI.png
+
+sameer:
+  name: Sameer Kankute
+  title: SWE @ LiteLLM (LLM Translation)
+  url: https://www.linkedin.com/in/sameer-kankute/
+  image_url: https://pbs.twimg.com/profile_images/2001352686994907136/ONgNuSk5_400x400.jpg
+
+krrish:
+  name: Krrish Dholakia
+  title: CEO, LiteLLM
+  url: https://www.linkedin.com/in/krish-d/
+  image_url: https://pbs.twimg.com/profile_images/1298587542745358340/DZv3Oj-h_400x400.jpg
+
+ishaan:
+  name: Ishaan Jaffer
+  title: CTO, LiteLLM
+  url: https://www.linkedin.com/in/reffajnaahsi/
+  image_url: https://pbs.twimg.com/profile_images/1613813310264340481/lz54oEiB_400x400.jpg
+
+# Alias for typo in name
+ishaan-alt:
+  name: Ishaan Jaffer
+  title: CTO, LiteLLM
+  url: https://www.linkedin.com/in/reffajnaahsi/
+  image_url: https://pbs.twimg.com/profile_images/1613813310264340481/lz54oEiB_400x400.jpg
+
+ryan:
+  name: Ryan Crabbe
+  title: Performance Engineer, LiteLLM
+  url: https://www.linkedin.com/in/ryan-crabbe-0b9687214
+  image_url: https://media.licdn.com/dms/image/v2/D5603AQHt1t9Z4BJ6Gw/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1724453682340?e=1772064000&v=beta&t=VXdmr13rsNB05wyA2F1TENOB5UuDHUZ0FCHTolNyR5M
+
+alexsander:
+  name: Alexsander Hamir
+  title: Performance Engineer, LiteLLM
+  url: https://www.linkedin.com/in/alexsander-baptista/
+  image_url: https://github.com/AlexsanderHamir.png
+
+yuneng:
+  name: Yuneng Jiang
+  title: Senior SWE @ LiteLLM
+  url: https://www.linkedin.com/in/yuneng-david-jiang-455676139/
+  image_url: https://avatars.githubusercontent.com/u/171294688?v=4
+
+mateo:
+  name: Mateo Wang
+  title: AI Engineer, LiteLLM
+  url: https://www.linkedin.com/in/mateo-wang
+  image_url: /img/mateo.jpeg
+
+mubashir:
+  name: Mubashir Osmani
+  url: https://www.linkedin.com/in/mubashirosmani
+  image_url: https://github.com/mubashir1osmani.png
+yassin:
+  name: Yassin Kortam
+  title: Senior SWE @ LiteLLM
+  url: https://www.linkedin.com/in/yassink/
+  image_url: /img/yassin.jpg
+
+varoon:
+  name: Varoon Raghav
+  title: GTM
+  url: https://www.linkedin.com/in/varoon-raghav/
+  image_url: https://media.licdn.com/dms/image/v2/D4E03AQEh97dpWxmuPw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1685591224743?e=1782950400&v=beta&t=e0YuLBpOsKz_d9eSsYRY02O9xpanq3ccHNFq2mLweuI
