@@ -14,7 +14,7 @@ By default, custom auth enforces only the rate limits you set on the returned ob
 | --- | --- | --- |
 | Key / user / team / end-user rate limits | returned object (`rpm_limit`, `team_tpm_limit`, …) | none |
 | Per-model rate limits, key / team scoped | `metadata` / `team_metadata` on the returned object | none |
-| Per-model rate limits, project scoped | the project record (`model_tpm_limit` / `model_rpm_limit`) † | `custom_auth_run_common_checks` |
+| Per-model rate limits, project scoped | the project record (`model_tpm_limit` / `model_rpm_limit`) | `custom_auth_run_common_checks` |
 | Team / user / project budget | the team / user / project record | `custom_auth_run_common_checks` |
 | Team / user / project model allowlist | the team / user / project record | `custom_auth_run_common_checks` |
 | End-user budget | the end-user record | `custom_auth_run_common_checks` or `enable_post_custom_auth_checks` |
@@ -23,9 +23,7 @@ By default, custom auth enforces only the rate limits you set on the returned ob
 | Key expiry (`expires`) | returned object | `enable_post_custom_auth_checks` |
 | Key scalar budget (`max_budget` / `soft_budget`) | not supported; use a per-scope budget | n/a |
 
-† With `custom_auth_run_common_checks` off, project per-model limits can be set on the returned object's `project_metadata`. With the flag on, the DB project record is the source of truth and any `project_metadata` on the object is overwritten, so set them on the project record.
-
-**Flag interactions:** enabling `custom_auth_run_common_checks` makes the DB project record the source of truth for `project_metadata`. Per-model project limits set on the returned object are then ignored; move them to the project record. Other scopes are unaffected (team per-model limits via `team_metadata` always stay on the object).
+**Note:** Project per-model limits go on the object's `project_metadata` with the flag off, but the DB project record overrides it once the flag is on, so set them there. (Team per-model via `team_metadata` always stays on the object.)
 
 See [Enforce budgets and model access](#enforce-budgets-and-model-access) and [Key-level enforcement](#key-level-enforcement) for examples.
 
@@ -77,11 +75,11 @@ $ litellm --config /path/to/config.yaml
 
 ## UserAPIKeyAuth Fields Reference
 
-These fields are enforced as soon as your handler returns them, with no flag required. LiteLLM's rate limiter reads them straight off the object you return. Budgets and model-access are enforced separately, behind flags; see [Enforce budgets and model access](#enforce-budgets-and-model-access) and [Key-level enforcement](#key-level-enforcement) below.
+These fields are read straight off the returned object and enforced with no flag. Budgets and model-access are enforced behind flags (see below).
 
 ### Identity
 
-These set who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true` (see below).
+Who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true`.
 
 ```python
 UserAPIKeyAuth(
@@ -176,7 +174,9 @@ general_settings:
   custom_auth_run_common_checks: true
 ```
 
-LiteLLM then runs `common_checks`, loading the team / user / project / end-user records from its DB by the IDs you return and enforcing against those records. So your handler returns the IDs (`team_id`, `user_id`, `project_id`, `end_user_id`), and the budgets and allowlists live on the matching DB records (created via `/team/new`, `/user/new`, `/project/new`, `/customer/new`, or the UI). For example, create a team with a budget and model allowlist:
+Your handler returns the IDs; the budgets and allowlists live on the matching DB records (`/team/new`, `/user/new`, `/project/new`, `/customer/new`, or the UI), which LiteLLM loads and enforces.
+
+For example, a team with a budget and model allowlist:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
@@ -218,7 +218,7 @@ These are separate controls:
 | `models` on `UserAPIKeyAuth` | Key-level allowlist | Value you return from custom auth |
 | `project_id` on `UserAPIKeyAuth` | Project-level allowlist | `models` on the **project record in LiteLLM's DB** |
 
-An empty `models` list (`[]`) means no restriction (all models allowed) for that scope. Model names must match the model group name in your proxy config, or use wildcard patterns where supported. See [Project Management](./project_management) and [`custom_auth_run_common_checks` in Config Settings](./config_settings#all-settings).
+An empty `models` list (`[]`) means no restriction. Names must match the model group in your config (wildcards supported). See [Project Management](./project_management) and [Config Settings](./config_settings#all-settings).
 
 ## Key-level enforcement
 
