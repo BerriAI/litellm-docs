@@ -501,6 +501,12 @@ The `hide_secrets` guardrail check did not run on this request because api key=s
 ## Content Moderation
 ### Content Moderation with LLM Guard
 
+:::info
+
+`llmguard_moderations` requires a LiteLLM Enterprise license and the `litellm-enterprise` package. The OSS guardrail framework still supports custom guardrails and Presidio PII masking.
+
+:::
+
 Set the LLM Guard API Base in your environment
 
 ```env
