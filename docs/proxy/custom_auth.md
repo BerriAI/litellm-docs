@@ -4,7 +4,9 @@ You can now override the default api key auth.
 
 :::warning Enforcement is OFF by default with custom auth
 
-Custom auth skips LiteLLM's standard enforcement. Project, team, org, and end-user budgets, rate limits (including per-model), and model-access allowlists are all ignored unless you set `custom_auth_run_common_checks: true`. See [Enforce model access, budgets, and team/project checks](#enforce-model-access-budgets-and-teamproject-checks).
+With the flag off, budgets, model-access allowlists, and limits on your DB project/team records are not enforced unless you set `custom_auth_run_common_checks: true`.
+
+Rate limits set directly on the returned object are still enforced. [More details](#enforce-model-access-budgets-and-teamproject-checks).
 
 :::
 
@@ -244,9 +246,7 @@ $ litellm --config /path/to/config.yaml
 
 ## Enforce model access, budgets, and team/project checks
 
-By default, LiteLLM **does not** run standard proxy auth checks (model allowlists, budgets, team/project restrictions) after your custom auth handler returns a `UserAPIKeyAuth` object. Setting `models=[...]` on the returned object only **records** the allowlist for logging — it does **not** block requests unless you opt in.
-
-To enforce LiteLLM's built-in checks alongside custom auth, set:
+By default, custom auth enforces only what your handler sets on the returned object (for example the rate limits in [Rate Limiting](#rate-limiting) above). To also enforce model allowlists, budgets, and team/project restrictions, set:
 
 ```yaml
 general_settings:
@@ -254,13 +254,21 @@ general_settings:
   custom_auth_run_common_checks: true
 ```
 
-When `custom_auth_run_common_checks: true`, LiteLLM runs the same validation used for virtual keys, including:
+With the flag on, LiteLLM runs `common_checks`, fetching your team, user, project, and end-user records from the DB by the IDs on the token and enforcing against them. Set each control where the table shows:
 
-- **Key-level model access** — the `models` list on your returned `UserAPIKeyAuth`
-- **Team / user / project model access** — loaded from LiteLLM's DB using `team_id`, `user_id`, and `project_id` on the token
-- **Budget and rate limits** — key, team, user, project, and end-user budgets where configured
+| What you want to enforce | Where you set it | How LiteLLM finds it |
+| --- | --- | --- |
+| Key-level model allowlist | `models=[...]` on the returned `UserAPIKeyAuth` | read directly off the object |
+| Team model allowlist, budget, rate limits | the team record (`/team/new` or UI) | looked up by `team_id` on the object |
+| User model allowlist, budget | the user record (`/user/new` or UI) | looked up by `user_id` |
+| Project model allowlist, budget, per-model rate limits | the project record (`/project/new` or UI) | looked up by `project_id` |
+| End-user budget / limits | the end-user record (`/customer/new` or UI) | looked up by `end_user_id` |
 
-### Example: restrict models in custom auth
+Because LiteLLM loads the project from the DB and sets `project_metadata` from the project row (overwriting anything your handler set on `project_metadata`), configure per-model and project-level limits on the project record, not on the returned object.
+
+To also enforce key-level and end-user budgets, set `litellm.enable_post_custom_auth_checks: true`.
+
+#### Example: restrict models in custom auth
 
 ```python
 async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
@@ -282,21 +290,9 @@ general_settings:
 
 Without `custom_auth_run_common_checks: true`, a client can call any model the proxy has configured (for example `gpt-4o`) even if it is not in your `models` list.
 
-### Configure limits on the project, not in the handler
-
-With the flag on, LiteLLM loads project metadata from the DB (by the `project_id` you return), **overwriting any your handler set**, so configure per-model and project-level limits on the LiteLLM project itself (via `/project/new` or the UI), not on the returned object.
-
 ### Per-model rate limits
 
-Set `model_tpm_limit` / `model_rpm_limit` on the project record (keyed by model name), return that project's `project_id`, and enable common checks:
-
-```python
-# On the LiteLLM project record (not in custom auth):
-#   model_tpm_limit = {"gpt-4o": 100000, "claude-3-haiku": 50000}
-#   model_rpm_limit = {"gpt-4o": 100,    "claude-3-haiku": 200}
-```
-
-The model key must match the request's `model` string exactly. A request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
+Per-model limits live on the project record's `model_tpm_limit` / `model_rpm_limit`, keyed by model name. The model key must match the request's `model` string exactly; a request whose model is not a key is skipped silently, so an alias-vs-deployment-name mismatch looks like the limit is broken.
 
 ### Key `models` vs project `models`
 
