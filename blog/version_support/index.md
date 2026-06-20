@@ -21,7 +21,7 @@ This shift in focus takes effect Monday, June 29, 2026.
 
 A minor line is a release series written as 1.89.x, covering every patch in it: 1.89.0, 1.89.1, 1.89.2, and any later ones. We support the four most recent lines and every patch inside each of them; we don't pick individual patch numbers across lines.
 
-Today the four supported lines are **1.89.x, 1.88.x, 1.87.x, and 1.86.x**. Everything **1.85.x and earlier** has reached end of life and no longer receives updates. The window rolls forward: when 1.90.x ships, 1.86.x drops off and the supported set becomes 1.90.x, 1.89.x, 1.88.x, and 1.87.x. With a new line about every week, that works out to roughly a month of coverage per line.
+Today the four supported lines are **1.89.x, 1.88.x, 1.87.x, and 1.86.x**. Everything **1.85.x and earlier** has reached end of life and will no longer actively receive updates. The window rolls forward: when 1.90.x ships, 1.86.x rolls out and the supported set becomes 1.90.x, 1.89.x, 1.88.x, and 1.87.x. With a new line about every week, that works out to roughly a month of coverage per line.
 
 ## What this means for you
 
@@ -29,4 +29,4 @@ To stay supported, pin to a line and take its patches, then move up before it ag
 
 ## How to stay current
 
-The best way to stay up to date on these changes is to bookmark our [release notes](https://docs.litellm.ai/release_notes). We update it every time a new version ships, so you can always see the latest stable line and the three behind it that are still supported.
+The best way to stay up to date on these changes is to bookmark our [release notes](https://docs.litellm.ai/release_notes). We update it as new versions ship, so you can see the latest stable line and the three behind it that are still supported.
