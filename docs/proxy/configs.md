@@ -643,6 +643,16 @@ The tradeoff is that every query pays the prepare cost instead of amortizing it,
 
 To enable [LiteLLM Enterprise features](https://docs.litellm.ai/docs/enterprise), set your license key as an environment variable:
 
+:::caution
+
+Watch for trailing whitespace or newline characters in your License key! 
+These will cause silent parse failures, common sources could be:
+
+- Copying from a PDF or email (may include a trailing newline)
+- Using `echo` when piping into `kubectl create secret` (`echo` appends `\n`)
+
+:::
+
 ```bash
 export LITELLM_LICENSE="eyJ..."
 ```
@@ -653,6 +663,62 @@ You can also add it to your `.env` file:
 
 ```env
 LITELLM_LICENSE="eyJ..."
+```
+
+### Setting the License Key as a Kubernetes Secret
+
+For Kubernetes deployments, store the license key as a Secret and inject it as an environment variable.
+
+**Step 1**: Create the Kubernetes secret
+
+```bash
+kubectl create secret generic litellm-license \
+  --from-literal=LITELLM_LICENSE="eyJ..."
+```
+
+Or using a manifest:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: litellm-license
+type: Opaque
+stringData:
+  LITELLM_LICENSE: "eyJ..."
+```
+
+Apply it:
+
+```bash
+kubectl apply -f litellm-license-secret.yaml
+```
+
+**Step 2**: Reference the secret in your LiteLLM deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-proxy
+spec:
+  template:
+    spec:
+      containers:
+        - name: litellm-proxy
+          image: ghcr.io/berriai/litellm:main-latest
+          env:
+            - name: LITELLM_LICENSE
+              valueFrom:
+                secretKeyRef:
+                  name: litellm-license
+                  key: LITELLM_LICENSE
+```
+
+**Step 3**: Verify the secret is loaded
+
+```bash
+kubectl exec -it <litellm-pod-name> -- env | grep LITELLM_LICENSE
 ```
 
 ## Extras
