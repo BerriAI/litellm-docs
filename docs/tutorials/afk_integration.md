@@ -89,7 +89,7 @@ In AFK:
 
 :::tip
 
-If your LiteLLM Proxy is strictly local and does not require an API key, AFK's **Local model** connection can also point at `http://localhost:4000/v1`. Use the OpenAI connection when you need to send a LiteLLM virtual key.
+Use the OpenAI connection for LiteLLM Proxy because it lets AFK send your LiteLLM master key or virtual key and target the proxy's OpenAI-compatible `/v1` endpoint. For a local proxy, remember that runtime requests are made from the daemon/agent machine, so `localhost` is resolved there.
 
 :::
 
