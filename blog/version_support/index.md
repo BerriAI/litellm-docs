@@ -21,7 +21,7 @@ This shift in focus takes effect Monday, June 29, 2026.
 
 A minor line is a release series written as 1.89.x, covering every patch in it: 1.89.0, 1.89.1, 1.89.2, and any later ones. We support the four most recent lines and every patch inside each of them; we don't pick individual patch numbers across lines.
 
-Today the supported lines are 1.89.x, 1.88.x, 1.87.x, and 1.86.x; 1.85.x and anything older is end of life. The window rolls forward: when 1.90.x ships, 1.86.x drops off and the supported set becomes 1.90.x, 1.89.x, 1.88.x, and 1.87.x. With a new line about every week, that works out to roughly a month of coverage per line.
+Today the four supported lines are **1.89.x, 1.88.x, 1.87.x, and 1.86.x**. Everything **1.85.x and earlier** has reached end of life and no longer receives updates. The window rolls forward: when 1.90.x ships, 1.86.x drops off and the supported set becomes 1.90.x, 1.89.x, 1.88.x, and 1.87.x. With a new line about every week, that works out to roughly a month of coverage per line.
 
 ## What this means for you
 
