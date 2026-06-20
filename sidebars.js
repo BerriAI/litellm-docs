@@ -141,6 +141,7 @@ const sidebars = {
       },
       items: [
         "tutorials/openweb_ui",
+        "tutorials/afk_integration",
         {
           type: "category",
           label: "Claude Code",
