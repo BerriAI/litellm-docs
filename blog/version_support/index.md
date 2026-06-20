@@ -9,15 +9,19 @@ tags: [release, support]
 hide_table_of_contents: false
 ---
 
-*Starting Monday, June 29, 2026, LiteLLM actively supports the four most recent stable minor lines. Here's what's changing and what it means for you.*
+*Starting Monday, June 29, 2026, LiteLLM will only actively support the four most recent stable minor lines. Here's what's changing and what it means for you.*
 
 ## Why we're doing this
 
-LiteLLM ships fast, a new stable line about every week. Maintaining older lines means carrying every fix back to keep them all in parity. That overhead grows with the number of lines we keep alive, not the number of fixes we make. Our focus is ensuring the most up-to-date product offerings are stable and working for you. Because of this, LiteLLM is focusing on the four most recent stable minor lines going forward.
+Maintaining older lines means carrying every fix back to keep them all in parity. That overhead grows with the number of lines we keep alive, not the number of fixes we make. Our focus is ensuring the most up-to-date product offerings are stable and working for you. Because of this, LiteLLM is focusing on the four most recent stable minor lines going forward.
 
 ## How the rolling window works
 
-This shift in focus takes effect Monday, June 29, 2026. The window rolls forward: when a new line ships, the oldest drops. For example, if 1.89 is the latest stable line, then 1.86 will be the oldest still supported, and with a new line about every week that works out to roughly a month of coverage per line.
+This shift in focus takes effect Monday, June 29, 2026.
+
+A minor line is a full 1.x series and every patch within it. The 1.89 line, for example, includes 1.89.0, 1.89.1, 1.89.2, and any later patches. We support the four most recent lines and every patch inside each of them; we don't pick individual patch numbers across lines.
+
+Today the supported lines are 1.89, 1.88, 1.87, and 1.86; 1.85 and anything older is end of life. The window rolls forward: when 1.90 ships, 1.86 drops off and the supported set becomes 1.90, 1.89, 1.88, and 1.87. With a new line about every week, that works out to roughly a month of coverage per line.
 
 ## What this means for you
 
