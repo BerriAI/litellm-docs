@@ -1,8 +1,12 @@
+import Image from '@theme/IdealImage';
+
 # Plugins
 
 Plugins let external services appear as selectable modes in the LiteLLM UI sidebar alongside the AI Gateway. Each plugin runs as its own backend; LiteLLM proxies requests to it, injects a scoped credential, and hands the iframe a short-lived identity claim so the user never re-authenticates.
 
 This is useful when you want to ship an internal tool (a reporting UI, an agent control plane, a data labelling app) under the LiteLLM dashboard without leaking the caller's master key to that tool.
+
+<Image img={require('../../img/plugins_dropdown.png')} />
 
 :::info
 
@@ -25,6 +29,10 @@ general_settings:
 ```
 
 `plugin_key` is injected as `Authorization: Bearer <plugin_key>` on every request the proxy forwards to the plugin. The caller's LiteLLM credential is stripped first so the plugin never receives a live LiteLLM API key.
+
+You can also add plugins through the dashboard at **Admin Settings > Plugins**. The same fields apply; `plugin_key` is write-only and never returned by the API once saved.
+
+<Image img={require('../../img/plugins_add_modal.png')} />
 
 ### 2. Implement the two plugin endpoints
 
