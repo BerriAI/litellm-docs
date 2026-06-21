@@ -406,6 +406,7 @@ const sidebars = {
                 "proxy/ui/ui_edit_logo",
                 "proxy/custom_sso",
                 "proxy/custom_root_ui",
+                "proxy/plugins",
                 "tutorials/scim_litellm",
               ]
             },
