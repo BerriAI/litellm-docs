@@ -8,6 +8,10 @@ This is useful when you want to ship an internal tool (a reporting UI, an agent 
 
 <Image img={require('../../img/plugins_dropdown.png')} />
 
+Selecting a plugin replaces the AI Gateway navigation with the plugin's own; the page below is an Agent Control Plane plugin loaded inside the LiteLLM dashboard frame.
+
+<Image img={require('../../img/plugins_loaded.png')} />
+
 :::info
 
 Available in v1.89.3+.
@@ -81,6 +85,34 @@ def plugin_auth(session_claim: str) -> dict:
 ```
 
 The claim payload is `{ "plugin", "user_id", "user_role", "exp" }`. It carries no LiteLLM bearer token. Establish the plugin's own session from `user_id` and `user_role`, and authenticate API calls back to LiteLLM through the `/plugin-proxy/<name>/*` reverse proxy, which injects `plugin_key` for you.
+
+## What the plugin receives about the user
+
+LiteLLM forwards a deliberately minimal user context. The plugin never sees the caller's email, key alias, team, budget, or bearer token; only an identifier and a role.
+
+The decrypted `session_claim` payload contains exactly four fields:
+
+```json
+{
+  "plugin": "my-plugin",
+  "user_id": "user_abc123",
+  "user_role": "proxy_admin",
+  "exp": 1750460400
+}
+```
+
+`plugin` is the plugin name the claim was issued for. Always check that it matches your own plugin before trusting the rest, so a claim for one plugin cannot be replayed against another. `user_id` is the LiteLLM internal user identifier of the caller; use it as the stable join key against LiteLLM's `/user/info` if you need to look up profile data. `user_role` is the caller's LiteLLM role string (for example `proxy_admin`, `internal_user`, or `internal_user_viewer`); use it as a coarse authorization hint, then enforce your own checks. `exp` is a Unix timestamp set 30 seconds in the future; the Fernet `ttl` argument already rejects expired ciphertexts, but verifying `exp` independently catches clock skew between the proxy and the plugin.
+
+Both `user_id` and `user_role` default to `""` when the proxy could not resolve them (for example, an unauthenticated caller). Treat empty strings as unauthenticated; do not grant elevated access on a missing role.
+
+On every `/plugin-proxy/<name>/<path>` call the proxy makes to the plugin's backend, the same identity is forwarded as two headers:
+
+```
+x-litellm-user-id: user_abc123
+x-litellm-user-role: proxy_admin
+```
+
+These headers are informational. The plugin should still authenticate the request against its own session (issued from a verified `session_claim`), not from headers it cannot independently verify.
 
 ## How iframe auth works
 
