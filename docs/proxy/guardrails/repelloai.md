@@ -11,10 +11,19 @@ Use [RepelloAI Argus](https://repello.ai/) to scan prompts and responses against
 |----------|---------|
 | Description | Cloud-hosted guardrail for prompt and response policy enforcement |
 | Provider | [RepelloAI](https://repello.ai/) |
-| Supported actions | `BLOCK` on violated policies |
+| Supported actions | `BLOCK` (blocked verdict); `LOG` warning (flagged verdict) |
 | Supported modes | `pre_call`, `post_call` |
 | Streaming support | Yes |
 | API requirements | Repello API key and asset ID |
+
+## Prerequisites
+
+Before configuring the guardrail, you need two things from the Repello dashboard at [https://platform.repello.ai/](https://platform.repello.ai/):
+
+- **API key** — go to your account settings and generate an API key. Set it as `ARGUS_API_KEY` in your environment.
+- **Asset ID** — create an asset in the dashboard and configure the policies you want enforced. Copy the asset ID; this is what you pass as `asset_id` in the config.
+
+Policies (what to block, what to flag, thresholds) are managed entirely from the dashboard on a per-asset basis. The LiteLLM config only points at an asset — it does not define policies inline.
 
 ## Quick Start
 
@@ -79,7 +88,7 @@ Expected response when a policy blocks the request:
 ```json
 {
   "error": {
-    "message": "{'error': 'Blocked by RepelloAI Argus guardrail', 'policies_violated': [{'policy_name': 'prompt_injection_detection', 'action_taken': 'block'}]}",
+    "message": "Blocked by RepelloAI Argus guardrail. Policies violated: prompt_injection_detection (action: block).",
     "type": "None",
     "param": "None",
     "code": "400"
@@ -131,12 +140,16 @@ Expected response:
 
 RepelloAI scans the inspectable text it can find in the request body:
 
-- Chat Completions `messages`
-- Responses API `input`
+- Chat Completions `messages` (all roles)
+- Responses API `input` items, including `input_text` content parts
+- Responses API `instructions` field
+- Legacy `prompt` field (completions API)
+- Tool call arguments (`tool_calls[*].function.arguments`) in messages and Responses API output
+- Tool and function definitions (`tools[*].function` schema text — names, descriptions, enum values)
 - Multimodal text parts inside `content` lists
 - Assistant output returned from chat completions and Responses API requests
 
-That means a guardrail configured with `mode: pre_call` inspects the full prompt text, and `mode: post_call` can inspect both chat-completions-style responses and Responses API output text.
+A guardrail configured with `mode: pre_call` inspects the full prompt text (messages, instructions, tool definitions, and tool call arguments). `mode: post_call` inspects assistant message content, Responses API output text, and any tool call arguments in the model response.
 
 ## Streaming Support
 
@@ -208,7 +221,19 @@ Authentication and configuration errors (HTTP 400/401/403/404/422) always block 
 
 ### Input + Output Pipeline
 
-Scan prompts on the way in and responses on the way out by pointing two guardrail entries at the same asset:
+Scan prompts on the way in and responses on the way out. You can use a single guardrail entry with `mode` set to a list, or two separate entries pointing at the same asset:
+
+```yaml
+guardrails:
+  - guardrail_name: "repelloai-guard"
+    litellm_params:
+      guardrail: repelloai
+      mode: ["pre_call", "post_call"]
+      asset_id: "your-repello-asset-id"
+      api_key: os.environ/ARGUS_API_KEY
+```
+
+Or equivalently with two entries:
 
 ```yaml
 guardrails:
