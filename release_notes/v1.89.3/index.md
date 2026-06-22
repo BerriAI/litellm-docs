@@ -18,6 +18,12 @@ authors:
 hide_table_of_contents: false
 ---
 
+:::warning Potential performance regression — under investigation
+
+We're investigating a potential throughput regression affecting recent releases. Correctness and error rates are not affected. We're still confirming which versions are impacted and a fix — we'll update this note as soon as we have them. For throughput-sensitive workloads, we recommend validating performance in a staging environment before rolling out an upgrade.
+
+:::
+
 ## Deploy this version
 
 import Tabs from '@theme/Tabs';
