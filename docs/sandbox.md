@@ -1,3 +1,6 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Sandbox / Code Execution
 
 Run model-generated code inside an isolated sandbox and get its output back. The API is provider-agnostic; e2b is the first supported backend, talked to directly over HTTPS with no extra SDK dependency.
@@ -169,6 +172,9 @@ litellm --config /path/to/config.yaml
 
 #### 4. Call `/v1/responses`
 
+<Tabs>
+<TabItem value="curl" label="curl">
+
 ```bash
 curl -s "http://localhost:4000/v1/responses" \
   -H "Authorization: Bearer sk-1234" \
@@ -179,6 +185,41 @@ curl -s "http://localhost:4000/v1/responses" \
     "input": "Product of first 6 primes. Just the number."
   }'
 ```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI SDK">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+
+response = client.responses.create(
+    model="gpt-5",
+    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
+    input="Product of first 6 primes. Just the number.",
+)
+print(response.output_text)
+```
+
+</TabItem>
+<TabItem value="litellm" label="LiteLLM SDK">
+
+```python
+import litellm
+
+response = await litellm.aresponses(
+    model="openai/gpt-5",
+    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
+    input="Product of first 6 primes. Just the number.",
+    api_base="http://localhost:4000",
+    api_key="sk-1234",
+)
+print(response.output_text)
+```
+
+</TabItem>
+</Tabs>
 
 Response contains a `code_interpreter_call` item with a `cntr_*` `container_id` wrapping the e2b sandbox id.
 
