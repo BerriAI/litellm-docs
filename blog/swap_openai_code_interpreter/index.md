@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 
 The OpenAI Responses and Chat Completions APIs let you declare a `code_interpreter` tool and the model runs Python inside an OpenAI-hosted container. That container is opaque, billed by OpenAI, and the code (often customer data) leaves your perimeter. LiteLLM now let's you intercept that tool call and runs it in a sandbox you control. The client request is unchanged.
 
-Available starting `LiteLLM v1.91.0.dev1`.
+Available starting `LiteLLM v1.91.0.dev1`. Check here for [releases](https://github.com/BerriAI/litellm/releases).
 
 {/* truncate */}
 
