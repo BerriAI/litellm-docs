@@ -6,13 +6,15 @@ authors:
   - ishaan
 description: "LiteLLM is moving its AI gateway to Rust: 15x throughput, 11x less memory, and sub-1ms per-request overhead. No v2, no migration, your config stays the same."
 keywords: [fastest ai gateway, fastest llm gateway, llm gateway, rust llm gateway, llm gateway benchmark, high throughput llm gateway, lightweight ai gateway, ai gateway latency, ai gateway memory, litellm performance, litellm rust, llm proxy overhead]
-image: ./rust_vs_python_proxy_benchmark.png
+image: ./rust_migration_social_card.png
 tags: [rust, ai-gateway, performance, benchmarks, reliability, engineering]
 hide_table_of_contents: true
 ---
 
-import { RustMigrationStages, RouteCadence, Stage1Architecture, RustServerSteps } from './diagrams';
+import { RustHeader, RustMigrationStages, RouteCadence, Stage1Architecture, RustServerSteps } from './diagrams';
 import Head from '@docusaurus/Head';
+
+<RustHeader />
 
 *Last Updated: June 2026*
 
