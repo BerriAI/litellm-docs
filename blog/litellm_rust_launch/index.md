@@ -24,7 +24,7 @@ We are already seeing the payoff in benchmarks. The Rust gateway serves about `1
 
 ## What you get
 
-You deploy a single Rust binary. It uses about `65MB` of memory, gateway overhead stays under `1ms`, and nothing in your setup changes: same `config.yaml`, same database, same client API, same providers. You keep LiteLLM's coverage of 100+ LLM providers behind one OpenAI-compatible API, now as the fastest and most lightweight LLM gateway you can self-host.
+You deploy a single Rust binary. It uses about `65MB` of memory, gateway overhead stays under `1ms`, and nothing in your setup changes: same `config.yaml`, same database, same client API, same providers. You keep LiteLLM's coverage of 100+ LLM providers behind one OpenAI-compatible API, with `/chat/completions`, `/messages`, `/responses`, and every other LLM endpoint LiteLLM supports today, now as the fastest and most lightweight LLM gateway you can self-host.
 
 This is not a v2 and not a rewrite. There is no new major version to migrate to and nothing for you to change. The runtime under the hot path gets faster and lighter while your config stays exactly where it is.
 
