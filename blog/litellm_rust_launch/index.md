@@ -168,6 +168,10 @@ Yes. The overhead harness (a mock upstream, a thin Rust gateway, and a load clie
 
 No. Config, database schema, and the client API contract stay the same. The runtime under the hot path changes gradually, route by route, behind passing parity and end-to-end tests.
 
+## We are hiring Rust engineers
+
+We are building this with a small team and looking for Rust engineers who want to work on the hot path of an AI gateway that serves 100+ providers. If that sounds like you, [come build it with us](https://jobs.ashbyhq.com/litellm/3f326076-7415-46a1-921e-8a1b1d6ee2b6).
+
 ## References
 
 - [How Datadog migrated their static analyzer from Java to Rust](https://www.datadoghq.com/blog/engineering/how-we-migrated-our-static-analyzer-from-java-to-rust/)
