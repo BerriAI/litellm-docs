@@ -7,10 +7,6 @@ https://runware.ai
 
 **We support all Runware text / LLM models — just set `model=runware/<model-id>` when sending LiteLLM requests.**
 
-:::info
-Runware also serves image, video, audio, and 3D models, but those run on Runware's **native** API and are **not** reachable through this OpenAI-compatible `/chat/completions` route. Only text / LLM models work through the `runware/` provider.
-:::
-
 | Property | Details |
 |-------|-------|
 | Description | Runware is an OpenAI-compatible inference platform serving open-weight and frontier LLMs for chat, coding, and agentic workloads. |
@@ -32,9 +28,8 @@ Get your Runware API key from the [Runware dashboard](https://runware.ai/dashboa
 Runware accepts two interchangeable id formats for the same model:
 
 - the **bare model id** — e.g. `minimax-m2-7`, `deepseek-v4-pro`, `alibaba-qwen3-5-397b`
-- the **AIR id** — e.g. `minimax:m2.7@0`, `google:gemini@3.1-pro`
 
-Prefix either form with `runware/` (e.g. `runware/minimax-m2-7` or `runware/minimax:m2.7@0`). LiteLLM forwards the id to Runware verbatim. Browse the full, current catalogue — with pricing and context windows — in the [Runware models catalogue](https://runware.ai/docs/models).
+Prefix either form with `runware/` (e.g. `runware/minimax-m2-7`). LiteLLM forwards the id to Runware verbatim. Browse the full, current catalogue — with pricing and context windows — in the [Runware models catalogue](https://runware.ai/docs/models).
 
 ## Usage - LiteLLM Python SDK
 
