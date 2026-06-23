@@ -1,5 +1,51 @@
 import React from 'react';
 
+// Header hero: big to small. A wide, full-height bundle of thin cream lines on the
+// left funnels down and collapses into one small glowing rust core on the right,
+// a large Python gateway shrinking into a small, fast Rust binary.
+export function RustHeader() {
+  const N = 37, TOP = 22, BOT = 478, NODE_X = 1000, NODE_Y = 250, CREAM = '#faf9f5';
+  const center = (N - 1) / 2;
+  const paths = [];
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    const yl = TOP + t * (BOT - TOP);
+    const cy = NODE_Y + (yl - NODE_Y) * 0.3;
+    const op = 0.16 + (1 - Math.abs(i - center) / center) * (0.5 - 0.16);
+    paths.push(
+      <path key={i} d={`M 0 ${yl} Q 540 ${cy}, ${NODE_X} ${NODE_Y}`}
+        fill="none" stroke={CREAM} strokeWidth="0.9" strokeOpacity={Number(op.toFixed(4))} strokeLinecap="round" />
+    );
+  }
+  const rings = [[150, 215, 0.10], [360, 150, 0.085], [560, 95, 0.07], [740, 52, 0.06]].map(
+    ([rx, ry, op], j) => (
+      <ellipse key={`r${j}`} cx={rx} cy={NODE_Y} rx="14" ry={ry} fill="none"
+        stroke={CREAM} strokeWidth="0.8" strokeOpacity={op} />
+    )
+  );
+  return (
+    <figure style={{margin: '0 0 2rem 0'}}>
+      <div style={{background: '#3a3a2e', borderRadius: 12, overflow: 'hidden', aspectRatio: '1200 / 500', width: '100%'}}>
+        <svg viewBox="0 0 1200 500" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
+          style={{display: 'block'}} role="img"
+          aria-label="A wide bundle of thin lines on the left funnels down and collapses into one small glowing core on the right, a large Python gateway shrinking into a small, fast Rust binary.">
+          <defs>
+            <radialGradient id="rustGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f0a35e" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#d97a3d" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#d97a3d" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          {rings}
+          {paths}
+          <circle cx={NODE_X} cy={NODE_Y} r="34" fill="url(#rustGlow)" />
+          <circle cx={NODE_X} cy={NODE_Y} r="5.5" fill="#f4b079" opacity="0.98" />
+        </svg>
+      </div>
+    </figure>
+  );
+}
+
 const s = {
   fig: {margin: '2.5rem 0', fontFamily: 'inherit'},
   box: {borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', padding: '2rem 2.5rem'},
