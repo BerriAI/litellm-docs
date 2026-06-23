@@ -5,12 +5,15 @@ date: 2026-06-23T10:00:00
 authors:
   - krrish
 description: "Keep the OpenAI code_interpreter tool in your requests, run the code in your own sandbox. LiteLLM intercepts the tool call and routes it to E2B or OpenSandbox; no client changes."
+image: ./hero.png
 tags: [code interpreter, sandbox, e2b, opensandbox, agents]
 hide_table_of_contents: false
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
+![Swap OpenAI Code Interpreter with E2B](./hero.png)
 
 The OpenAI Responses and Chat Completions APIs let you declare a `code_interpreter` tool and the model runs Python inside an OpenAI-hosted container. That container is opaque, billed by OpenAI, and the code (often customer data) leaves your perimeter. LiteLLM now let's you intercept that tool call and runs it in a sandbox you control. The client request is unchanged.
 
