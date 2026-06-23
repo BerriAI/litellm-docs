@@ -1352,7 +1352,6 @@ const learnSidebar = {
           items: [
             "completion/mock_requests",
             "completion/reliable_completions",
-            "budget_manager",
           ],
         },
         {
