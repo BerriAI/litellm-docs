@@ -127,11 +127,50 @@ result = await litellm.acode_interpreter_tool(
 
 Behind the scenes the call goes directly to e2b's REST API: `POST api.e2b.app/sandboxes` to create, a streamed NDJSON `POST` to the per-sandbox host on port 49999 to execute, and `DELETE api.e2b.app/sandboxes/{id}` to tear down.
 
-## LiteLLM Proxy: Responses API code interpreter interceptor
+## Responses API code interpreter interceptor
 
 Route OpenAI's `code_interpreter` tool to your sandbox instead of OpenAI's container. The client request stays plain Responses API.
 
-### Setup
+### SDK
+
+Register the sandbox tool, install the interceptor as a callback, call `litellm.aresponses` with the `code_interpreter` tool unchanged.
+
+```python showLineNumbers title="sandbox_interceptor.py"
+import os, litellm
+from litellm.sandbox.sandbox_tools import register_sandbox_tools
+from litellm.integrations.code_interpreter_interception.handler import (
+    CodeInterpreterInterceptionLogger,
+)
+
+os.environ["E2B_API_KEY"] = "e2b_..."
+os.environ["OPENAI_API_KEY"] = "sk-..."
+
+register_sandbox_tools([
+    {
+        "sandbox_tool_name": "my-e2b",
+        "litellm_params": {
+            "sandbox_provider": "e2b",
+            "api_key": "os.environ/E2B_API_KEY",
+        },
+    }
+])
+
+litellm.callbacks = [
+    CodeInterpreterInterceptionLogger(
+        enabled_providers=["openai"],
+        sandbox_tool_name="my-e2b",
+    )
+]
+
+response = await litellm.aresponses(
+    model="openai/gpt-5",
+    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
+    input="Product of first 6 primes. Just the number.",
+)
+print(response.output_text)
+```
+
+### Proxy setup
 
 #### 1. Set keys
 
@@ -198,22 +237,6 @@ response = client.responses.create(
     model="gpt-5",
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     input="Product of first 6 primes. Just the number.",
-)
-print(response.output_text)
-```
-
-</TabItem>
-<TabItem value="litellm" label="LiteLLM SDK">
-
-```python
-import litellm
-
-response = await litellm.aresponses(
-    model="openai/gpt-5",
-    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
-    input="Product of first 6 primes. Just the number.",
-    api_base="http://localhost:4000",
-    api_key="sk-1234",
 )
 print(response.output_text)
 ```
