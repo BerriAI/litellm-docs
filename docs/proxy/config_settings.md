@@ -913,6 +913,9 @@ router_settings:
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRIES | Maximum retries for parallel requests in LiteLLM
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
+| LITELLM_ENABLE_HTTP2 | If true, enables opt-in HTTP/2 for outbound requests to upstream LLM providers. Default is false (HTTP/1.1). Can also be set via `litellm.enable_http2` or `litellm_settings.enable_http2` in config.yaml. See [HTTP/2 support](./config_settings).
+| LITELLM_HTTP2_MAX_CONNECTIONS | Optional integer. Maximum number of connections in the HTTP/2 client pool. Only applies when HTTP/2 is enabled. Defaults to httpx defaults when unset. Can also be set via `litellm.http2_max_connections`.
+| LITELLM_HTTP2_MAX_KEEPALIVE_CONNECTIONS | Optional integer. Maximum number of keep-alive connections in the HTTP/2 client pool. Only applies when HTTP/2 is enabled. Defaults to httpx defaults when unset. Can also be set via `litellm.http2_max_keepalive_connections`.
 | LITELLM_DISABLE_LAZY_LOADING | When set to "1", "true", "yes", or "on", disables lazy loading of attributes (currently only affects encoding/tiktoken). This ensures encoding is initialized before VCR starts recording HTTP requests, fixing VCR cassette creation issues. See [issue #18659](https://github.com/BerriAI/litellm/issues/18659)
 | LITELLM_DISABLE_REDACT_SECRETS | When set to "true", disables automatic redaction of secrets (API keys, tokens, credentials) from proxy log output. Secret redaction is enabled by default.
 | LITELLM_MIGRATION_DIR | Custom migrations directory for prisma migrations, used for baselining db in read-only file systems.
