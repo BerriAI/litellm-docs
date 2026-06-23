@@ -20,6 +20,12 @@ import Head from '@docusaurus/Head';
 
 Over the past year, we have heard the same thing from our users and our community: they want the fastest, most lightweight AI gateway they can run. We have heard you. We are addressing it by moving LiteLLM to Rust, and committing to sub-`1ms` overhead with a sub-`100MB` memory binary you can deploy. By the end of this migration, you will get a pure Rust server that can serve 100% of your AI traffic, with every hot path operation, including auth and rate limiting, running in Rust.
 
+:::tip Want to help us build it?
+
+We are opening an early beta and want to work directly with teams who care about a fast, lightweight gateway. If that is you, [sign up here](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog) and we will get you testing the Rust gateway in your own stack, with a direct line to our team.
+
+:::
+
 The reason it matters: under real load, CPU and memory climb with concurrency, and pods get OOM-killed at the worst time. Today the LiteLLM Python proxy peaks around `359MB` of memory under load, and that cost multiplies across every pod, region, and retry you run.
 
 We are already seeing the payoff in benchmarks. The Rust gateway serves about `15x` the throughput (`453` to `6,782` requests per second) on about `11x` less memory (`359MB` to `32MB`), and cuts per-request overhead from about `7.5ms` on the Python path to about `0.05ms`, well under the `1ms` we commit to.
