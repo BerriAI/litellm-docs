@@ -1,6 +1,6 @@
 ---
 slug: litellm-rust-launch
-title: "Migrating LiteLLM to Rust - Building the Fastest and Lightest AI Gateway"
+title: "Migrating LiteLLM to Rust - Building the Fastest and Litest AI Gateway"
 date: 2026-06-22T09:00:00
 authors:
   - ishaan
