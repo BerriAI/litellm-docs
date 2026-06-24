@@ -16,6 +16,7 @@ The fields below mirror the A2A v1.0 specification ([§4.4 Agent Discovery Objec
 
 | Field | Supported |
 |---|---|
+| `protocolVersion` | ✅ |
 | `name` | ✅ |
 | `description` | ✅ |
 | `supportedInterfaces` | ✅ |
@@ -92,7 +93,7 @@ When you register an A2A agent in LiteLLM:
 
 1. You provide a base URL (and, for some providers, an assistant identifier).
 2. LiteLLM fetches the upstream agent card from the agent's `/.well-known/agent-card.json` (or the provider-specific equivalent).
-3. You review the parsed card in the LiteLLM UI and choose which skills and fields to expose.
+3. You review the parsed card in the LiteLLM UI, choose which skills and fields to expose, and pick a **Protocol Version** (`1.0` or `0.3`) for clients.
 4. LiteLLM saves the curated card and serves it at:
 
     ```
@@ -106,6 +107,22 @@ When you register an A2A agent in LiteLLM:
     ```
 
     using A2A JSON-RPC 2.0 (see [Supported A2A methods](#supported-a2a-methods) below).
+
+
+## Protocol versioning
+
+LiteLLM converts upstream agent responses to the `protocolVersion` pinned on each agent. Clients always see the version you choose, regardless of what the upstream agent speaks natively.
+
+| `protocolVersion` | Served to clients |
+|-------------------|-------------------|
+| `"1.0"` (default on new cards) | Protobuf JSON envelopes — `result.message`, stream `statusUpdate` / `artifactUpdate` |
+| `"0.3"` | Legacy `kind`-discriminated JSON — `result.kind == "message"` |
+
+Set this in the agent card UI or in `agent_card_params` at registration. Unsupported values are rejected with HTTP 400.
+
+Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config — pin `protocolVersion` only if your client expects a specific wire format.
+
+See [Protocol versioning](./a2a#protocol-versioning) for client negotiation when `protocolVersion` is not pinned.
 
 ## Supported A2A methods
 
@@ -129,6 +146,8 @@ All methods below are accepted on `POST /a2a/{agent_id}` (and `POST /a2a/{agent_
 
 | SDK / alias name | Wire method |
 |---|---|
+| `SendMessage` | `message/send` |
+| `SendStreamingMessage` | `message/stream` |
 | `GetTask` | `tasks/get` |
 | `ListTasks` | `tasks/list` |
 | `CancelTask` | `tasks/cancel` |
@@ -147,7 +166,7 @@ All methods below are accepted on `POST /a2a/{agent_id}` (and `POST /a2a/{agent_
 
 ### Example: two-step task flow
 
-```bash title="1. Send a message"
+```bash title="1. Send a message (0.3 wire format — pin protocolVersion: 0.3)"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
