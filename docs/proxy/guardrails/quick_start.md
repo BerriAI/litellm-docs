@@ -20,7 +20,7 @@ model_list:
 guardrails:
   - guardrail_name: general-guard
     litellm_params:
-      guardrail: cato_networks
+      guardrail: cato_networks # supported values: "cato_networks", "repelloai"
       mode: [pre_call, post_call]
       api_key: os.environ/CATO_API_KEY
       api_base: os.environ/CATO_API_BASE
@@ -28,13 +28,13 @@ guardrails:
   
   - guardrail_name: "aporia-pre-guard"
     litellm_params:
-      guardrail: aporia  # supported values: "aporia", "lakera"
+      guardrail: aporia  # supported values: "aporia", "lakera", "repelloai"
       mode: "during_call"
       api_key: os.environ/APORIA_API_KEY_1
       api_base: os.environ/APORIA_API_BASE_1
   - guardrail_name: "aporia-post-guard"
     litellm_params:
-      guardrail: aporia  # supported values: "aporia", "lakera"
+      guardrail: aporia  # supported values: "aporia", "lakera", "repelloai"
       mode: "post_call"
       api_key: os.environ/APORIA_API_KEY_2
       api_base: os.environ/APORIA_API_BASE_2
@@ -46,6 +46,15 @@ guardrails:
           description: "Score between 0-1 indicating content toxicity level"
         - name: "pii_detection"
           type: "boolean"
+        
+# Example RepelloAI Argus config — dashboard-managed guardrail; 
+# policies are configured per asset in the RepelloAI dashboard
+  - guardrail_name: "repelloai-guard"
+    litellm_params:
+      guardrail: repelloai
+      mode: [pre_call, post_call]
+      asset_id: "your-repello-asset-id" 
+      api_key: os.environ/ARGUS_API_KEY
 
 # Example Presidio guardrail config with entity actions + confidence score thresholds
   - guardrail_name: "presidio-pii"
@@ -114,7 +123,7 @@ litellm_settings:
 
 **Where this applies:** Only the **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`.
 
-**Where this does *not* apply:** Guardrails that run only via direct hooks on the raw request (e.g. Lakera v2, Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). It also does not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
+**Where this does *not* apply:** Guardrails that run only via direct hooks on the raw request (e.g. RepelloAI Argus, Lakera v2, Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). It also does not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
 
 ### Load Balancing Guardrails
 
