@@ -232,6 +232,65 @@ curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:streamGenerate
 </Tabs>
 
 
+## Native request fields
+
+The `generateContent` endpoint is a drop-in for Google's [Generative Language REST API](https://ai.google.dev/api/generate-content), so the top-level fields that Google's `GenerateContentRequest` carries as siblings of `generationConfig` are forwarded to Google verbatim. This covers `safetySettings`, `toolConfig`, `cachedContent`, and `labels`. Send them at the top level of the request body exactly as you would when calling Google directly; there is no need to wrap them in `extra_body`. If you do pass `extra_body`, an explicit value there wins on conflict.
+
+<Tabs>
+<TabItem value="curl-native" label="curl">
+
+```bash showLineNumbers title="Native top-level fields via LiteLLM Proxy"
+curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateContent' \
+-H 'content-type: application/json' \
+-H 'authorization: Bearer sk-1234' \
+-d '{
+  "contents": [
+    {
+      "parts": [{"text": "Say hi"}],
+      "role": "user"
+    }
+  ],
+  "generationConfig": {
+    "maxOutputTokens": 100
+  },
+  "safetySettings": [
+    {
+      "category": "HARM_CATEGORY_HATE_SPEECH",
+      "threshold": "BLOCK_NONE"
+    }
+  ],
+  "toolConfig": {
+    "functionCallingConfig": {"mode": "AUTO"}
+  }
+}'
+```
+
+</TabItem>
+
+<TabItem value="sdk-native" label="LiteLLM Python SDK">
+
+```python showLineNumbers title="Native top-level fields via LiteLLM Python SDK"
+from litellm.google_genai import generate_content
+import os
+
+# Set API key
+os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
+
+response = generate_content(
+    model="gemini/gemini-2.0-flash",
+    contents=[{"role": "user", "parts": [{"text": "Say hi"}]}],
+    safetySettings=[
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"}
+    ],
+    toolConfig={"functionCallingConfig": {"mode": "AUTO"}},
+)
+print(response)
+```
+
+</TabItem>
+</Tabs>
+
+
 ## Related 
 
 - [Use LiteLLM with gemini-cli](../docs/tutorials/litellm_gemini_cli)
