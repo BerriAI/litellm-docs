@@ -11,7 +11,7 @@ from litellm import completion
 os.environ["GONKABROKER_API_KEY"] = "your-gonkabroker-api-key"
 
 messages = [{"role": "user", "content": "Write a short poem"}]
-response = completion(model="gonkabroker/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8", messages=messages)
+response = completion(model="gonkabroker/MiniMaxAI/MiniMax-M2.7", messages=messages)
 print(response)
 ```
 
@@ -40,7 +40,7 @@ for chunk in response:
 model_list:
   - model_name: gonkabroker-model
     litellm_params:
-      model: gonkabroker/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8
+      model: gonkabroker/MiniMaxAI/MiniMax-M2.7
       api_key: "os.environ/GONKABROKER_API_KEY" # ensure you have `GONKABROKER_API_KEY` in your .env
 ```
 
@@ -77,7 +77,7 @@ curl http://localhost:4000/chat/completions \
 
 ## Supported models
 
-Gonka Broker serves open-source models on the Gonka network, and the live list changes over time. The authoritative, always-current catalog is the public [`GET /v1/models` ↗](https://proxy.gonkabroker.com/v1/models) endpoint. Reference any entry as `gonkabroker/<model-id>`, for example `gonkabroker/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8`.
+Gonka Broker serves open-source models on the Gonka network, and the live list changes over time. The authoritative, always-current catalog is the public [`GET /v1/models` ↗](https://proxy.gonkabroker.com/v1/models) endpoint. Reference any entry as `gonkabroker/<model-id>`, for example `gonkabroker/MiniMaxAI/MiniMax-M2.7`.
 
 ## Supported features
 
