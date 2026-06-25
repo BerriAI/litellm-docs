@@ -25,11 +25,9 @@ Get your Runware API key from the [Runware dashboard](https://runware.ai/dashboa
 
 ## Model IDs
 
-Runware accepts two interchangeable id formats for the same model:
+Runware addresses each model by its model id — e.g. `minimax-m2-7`, `deepseek-v4-pro`, `alibaba-qwen3-5-397b`.
 
-- the **bare model id** — e.g. `minimax-m2-7`, `deepseek-v4-pro`, `alibaba-qwen3-5-397b`
-
-Prefix either form with `runware/` (e.g. `runware/minimax-m2-7`). LiteLLM forwards the id to Runware verbatim. Browse the full, current catalogue — with pricing and context windows — in the [Runware models catalogue](https://runware.ai/docs/models).
+Prefix the id with `runware/` (e.g. `runware/minimax-m2-7`). LiteLLM forwards the id to Runware verbatim.
 
 ## Usage - LiteLLM Python SDK
 
