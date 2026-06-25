@@ -70,6 +70,7 @@ const sidebars = {
           "proxy/guardrails/aporia_api",
           "proxy/guardrails/azure_content_guardrail",
           "proxy/guardrails/bedrock",
+          "proxy/guardrails/bias_hallucination_estimator",
           "proxy/guardrails/crowdstrike_aidr",
           "proxy/guardrails/enkryptai",
           "proxy/guardrails/ibm_guardrails",
@@ -530,6 +531,7 @@ const sidebars = {
             "proxy/guardrails/guardrail_load_balancing",
             "proxy/guardrails/test_playground",
             "proxy/guardrails/litellm_content_filter",
+            "proxy/guardrails/bias_hallucination_estimator",
             "proxy/guardrails/realtime_guardrails",
             {
               type: "link",
