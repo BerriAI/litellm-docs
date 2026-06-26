@@ -18,9 +18,13 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::warning Potential performance regression — under investigation
+:::warning Potential performance regression under investigation
 
-We're investigating a potential throughput regression affecting recent releases. Correctness and error rates are not affected. We're still confirming which versions are impacted and a fix — we'll update this note as soon as we have them. For throughput-sensitive workloads, we recommend validating performance in a staging environment before rolling out an upgrade.
+We're investigating a potential throughput regression in recent releases. It appears limited to certain deployment configurations rather than affecting all deployments, so we expect it to impact only a small subset of users; correctness and error rates are not affected.
+
+**Update (June 26, 2026):** We've identified potential causes and will need more time to test before we can confirm a fix. We'll update this note with the affected versions and the fix as soon as we have them.
+
+For throughput-sensitive workloads, we recommend validating performance in a staging environment before rolling out an upgrade.
 
 :::
 
