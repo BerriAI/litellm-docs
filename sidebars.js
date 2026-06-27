@@ -98,6 +98,7 @@ const sidebars = {
           "proxy/guardrails/rubrik",
           "proxy/guardrails/zscaler_ai_guard",
           "proxy/guardrails/javelin",
+          "proxy/guardrails/llm_as_a_judge",
           "proxy/guardrails/akto",
           "proxy/guardrails/vigil_guard",
         ].sort(),
@@ -538,6 +539,7 @@ const sidebars = {
           label: "Guardrails",
           items: [
             "proxy/guardrails/quick_start",
+            "proxy/guardrails/llm_as_a_judge",
             "proxy/guardrails/team_based_guardrails",
             "proxy/guardrails/guardrail_load_balancing",
             "proxy/guardrails/test_playground",
