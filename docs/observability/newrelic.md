@@ -51,7 +51,7 @@ docker build -f Dockerfile -t litellm-newrelic:local .
 If you wish to specify the LiteLLM image version to use as a base, pass `--build-arg BASE_IMAGE=…` and/or `--build-arg BASE_TAG=…` to target a different base image or tag similar to the following command.
 
 ```shell
-BASE_TAG=v1.83.14-stable
+BASE_TAG=v1.89.4
 docker build \
   --build-arg BASE_IMAGE=docker.litellm.ai/berriai/litellm \
   --build-arg BASE_TAG=${BASE_TAG} \
@@ -68,7 +68,7 @@ The Dockerfile defines the layers added on top of an official LiteLLM container.
 
 ```dockerfile
 ARG BASE_IMAGE=docker.litellm.ai/berriai/litellm
-ARG BASE_TAG=main-stable
+ARG BASE_TAG=latest
 FROM ${BASE_IMAGE}:${BASE_TAG}
 
 USER root

@@ -221,7 +221,7 @@ services:
       - elasticsearch
       
   litellm:
-    image: docker.litellm.ai/berriai/litellm:main-latest
+    image: docker.litellm.ai/berriai/litellm:latest
     ports:
       - "4000:4000"
     environment:

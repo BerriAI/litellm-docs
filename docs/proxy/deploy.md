@@ -25,7 +25,7 @@ To start using Litellm, run the following commands in a shell:
 <TabItem value="docker" label="Docker">
 
 ```
-docker pull docker.litellm.ai/berriai/litellm:main-latest
+docker pull docker.litellm.ai/berriai/litellm:latest
 ```
 
 [**See all docker images**](https://github.com/orgs/BerriAI/packages)
@@ -89,7 +89,7 @@ cosign verify \
   ghcr.io/berriai/litellm:<release-tag>
 ```
 
-Replace `<release-tag>` with the version you are deploying (e.g. `v1.83.0-stable`).
+Replace `<release-tag>` with the version you are deploying (e.g. `v1.89.4`).
 
 Expected output:
 
@@ -127,7 +127,7 @@ docker run \
     -e AZURE_API_KEY=d6*********** \
     -e AZURE_API_BASE=https://openai-***********/ \
     -p 4000:4000 \
-    docker.litellm.ai/berriai/litellm:main-stable \
+    docker.litellm.ai/berriai/litellm:latest \
     --config /app/config.yaml --detailed_debug
 ```
 
@@ -157,12 +157,12 @@ See all supported CLI args [here](https://docs.litellm.ai/docs/proxy/cli):
 
 Here's how you can run the docker image and pass your config to `litellm`
 ```shell
-docker run docker.litellm.ai/berriai/litellm:main-stable --config your_config.yaml
+docker run docker.litellm.ai/berriai/litellm:latest --config your_config.yaml
 ```
 
 Here's how you can run the docker image and start litellm on port 8002 with `num_workers=8`
 ```shell
-docker run docker.litellm.ai/berriai/litellm:main-stable --port 8002 --num_workers 8
+docker run docker.litellm.ai/berriai/litellm:latest --port 8002 --num_workers 8
 ```
 
 
@@ -170,7 +170,7 @@ docker run docker.litellm.ai/berriai/litellm:main-stable --port 8002 --num_worke
 
 ```shell
 # Use the provided base image
-FROM docker.litellm.ai/berriai/litellm:main-stable
+FROM docker.litellm.ai/berriai/litellm:latest
 
 # Set the working directory to /app
 WORKDIR /app
@@ -302,7 +302,7 @@ spec:
     spec:
       containers:
       - name: litellm
-        image: docker.litellm.ai/berriai/litellm:main-stable # it is recommended to fix a version generally
+        image: docker.litellm.ai/berriai/litellm:latest # it is recommended to fix a version generally
         args:
           - "--config"
           - "/app/proxy_server_config.yaml"
@@ -322,7 +322,7 @@ spec:
 ```
 
 :::info
-To avoid issues with predictability, difficulties in rollback, and inconsistent environments, use versioning or SHA digests (for example, `litellm:main-v1.30.3` or `litellm@sha256:12345abcdef...`) instead of `litellm:main-stable`.
+To avoid issues with predictability, difficulties in rollback, and inconsistent environments, use versioning or SHA digests (for example, `litellm:v1.89.4` or `litellm@sha256:12345abcdef...`) instead of `litellm:latest`.
 :::
 
 
@@ -420,7 +420,7 @@ Requirements:
 We maintain a [separate Dockerfile](https://github.com/BerriAI/litellm/pkgs/container/litellm-database) for reducing build time when running LiteLLM proxy with a connected Postgres Database 
 
 ```shell
-docker pull docker.litellm.ai/berriai/litellm-database:main-stable
+docker pull docker.litellm.ai/berriai/litellm-database:latest
 ```
 
 ```shell
@@ -431,7 +431,7 @@ docker run \
     -e AZURE_API_KEY=d6*********** \
     -e AZURE_API_BASE=https://openai-***********/ \
     -p 4000:4000 \
-    docker.litellm.ai/berriai/litellm-database:main-stable \
+    docker.litellm.ai/berriai/litellm-database:latest \
     --config /app/config.yaml --detailed_debug
 ```
 
@@ -459,7 +459,7 @@ spec:
     spec:
       containers:
         - name: litellm-container
-          image: docker.litellm.ai/berriai/litellm:main-stable
+          image: docker.litellm.ai/berriai/litellm:latest
           imagePullPolicy: Always
           env:
             - name: AZURE_API_KEY
@@ -655,7 +655,7 @@ router_settings:
 Start docker container with config
 
 ```shell
-docker run docker.litellm.ai/berriai/litellm:main-stable --config your_config.yaml
+docker run docker.litellm.ai/berriai/litellm:latest --config your_config.yaml
 ```
 
 ### Deploy with Database + Redis
@@ -690,7 +690,7 @@ Start `litellm-database`docker container with config
 docker run --name litellm-proxy \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname> \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm-database:main-stable --config your_config.yaml
+docker.litellm.ai/berriai/litellm-database:latest --config your_config.yaml
 ```
 
 ###  (Non Root) - without Internet Connection
@@ -700,7 +700,7 @@ By default `prisma generate` downloads [prisma's engine binaries](https://www.pr
 Use this docker image to deploy litellm with pre-generated prisma binaries.
 
 ```bash
-docker pull docker.litellm.ai/berriai/litellm-non_root:main-stable
+docker pull docker.litellm.ai/berriai/litellm-non_root:latest
 ```
 
 [Published Docker Image link](https://github.com/BerriAI/litellm/pkgs/container/litellm-non_root)
@@ -719,7 +719,7 @@ Use this, If you need to set ssl certificates for your on prem litellm proxy
 Pass `ssl_keyfile_path` (Path to the SSL keyfile) and `ssl_certfile_path` (Path to the SSL certfile) when starting litellm proxy 
 
 ```shell
-docker run docker.litellm.ai/berriai/litellm:main-stable \
+docker run docker.litellm.ai/berriai/litellm:latest \
     --ssl_keyfile_path ssl_test/keyfile.key \
     --ssl_certfile_path ssl_test/certfile.crt
 ```
@@ -734,7 +734,7 @@ Step 1. Build your custom docker image with hypercorn
 
 ```shell
 # Use the provided base image
-FROM docker.litellm.ai/berriai/litellm:main-stable
+FROM docker.litellm.ai/berriai/litellm:latest
 
 # Set the working directory to /app
 WORKDIR /app
@@ -797,7 +797,7 @@ litellm --config config.yaml --port 4000 --run_granian --num_workers 4
 Or with Docker:
 
 ```shell
-docker run docker.litellm.ai/berriai/litellm:main-stable \
+docker run docker.litellm.ai/berriai/litellm:latest \
     --config /app/config.yaml \
     --port 4000 \
     --run_granian \
@@ -821,7 +821,7 @@ Usage Example:
 In this example, we set the keepalive timeout to 75 seconds.
 
 ```shell showLineNumbers title="docker run"
-docker run docker.litellm.ai/berriai/litellm:main-stable \
+docker run docker.litellm.ai/berriai/litellm:latest \
     --keepalive_timeout 75
 ```
 
@@ -830,7 +830,7 @@ In this example, we set the keepalive timeout to 75 seconds.
 
 ```shell showLineNumbers title="Environment Variable"
 export KEEPALIVE_TIMEOUT=75
-docker run docker.litellm.ai/berriai/litellm:main-stable
+docker run docker.litellm.ai/berriai/litellm:latest
 ```
 
 
@@ -841,7 +841,7 @@ Use this to mitigate memory growth by recycling workers after a fixed number of 
 Usage Examples:
 
 ```shell showLineNumbers title="docker run (CLI flag)"
-docker run docker.litellm.ai/berriai/litellm:main-stable \
+docker run docker.litellm.ai/berriai/litellm:latest \
     --max_requests_before_restart 10000
 ```
 
@@ -849,7 +849,7 @@ Or set via environment variable:
 
 ```shell showLineNumbers title="Environment Variable"
 export MAX_REQUESTS_BEFORE_RESTART=10000
-docker run docker.litellm.ai/berriai/litellm:main-stable
+docker run docker.litellm.ai/berriai/litellm:latest
 ```
 
 
@@ -878,7 +878,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:main-stable --detailed_debug
+   docker.litellm.ai/berriai/litellm-database:latest --detailed_debug
 ```
 
 </TabItem>
@@ -899,7 +899,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:main-stable
+   docker.litellm.ai/berriai/litellm-database:latest
 ```
 </TabItem>
 </Tabs>
@@ -1026,7 +1026,7 @@ Run the following command, replacing `<database_url>` with the value you copied 
 docker run --name litellm-proxy \
    -e DATABASE_URL=<database_url> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:main-stable
+   docker.litellm.ai/berriai/litellm-database:latest
 ```
 
 #### 4. Access the Application:
@@ -1105,7 +1105,7 @@ services:
       context: .
       args:
         target: runtime
-    image: docker.litellm.ai/berriai/litellm:main-stable
+    image: docker.litellm.ai/berriai/litellm:latest
     ports:
       - "4000:4000" # Map the container port to the host, change the host port if necessary
     volumes:

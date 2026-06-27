@@ -289,7 +289,7 @@ docker run \
     -e USE_DDTRACE=true \
     -e USE_DDPROFILER=true \
     -p 4000:4000 \
-    docker.litellm.ai/berriai/litellm:main-latest \
+    docker.litellm.ai/berriai/litellm:latest \
     --config /app/config.yaml --detailed_debug
 ```
 

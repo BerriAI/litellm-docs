@@ -30,7 +30,7 @@ A commit hash is cryptographically immutable, making this the strongest verifica
 ```bash
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm:v1.83.0-stable
+  ghcr.io/berriai/litellm:v1.89.4
 ```
 
 Replace the image reference with any signed variant:
@@ -39,12 +39,12 @@ Replace the image reference with any signed variant:
 # litellm-database
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  ghcr.io/berriai/litellm-database:v1.89.4
 
 # litellm-non_root
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-non_root:v1.83.0-stable
+  ghcr.io/berriai/litellm-non_root:v1.89.4
 ```
 
 ### Verify with a release tag (convenience)
@@ -53,8 +53,8 @@ Tags are protected in this repository and resolve to the same key:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.83.0-stable/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.89.4/cosign.pub \
+  ghcr.io/berriai/litellm-database:v1.89.4
 ```
 
 ### Expected output
@@ -156,7 +156,7 @@ Get the digest after pulling:
 
 ```bash
 docker inspect --format='{{index .RepoDigests 0}}' \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  ghcr.io/berriai/litellm-database:v1.89.4
 ```
 
 Cosign verification works with digests too:
