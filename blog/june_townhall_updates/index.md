@@ -142,3 +142,5 @@ Thank you again for all the questions and feedback. We'll keep sharing concrete 
 ## Hiring
 
 We are actively hiring across several roles — apply [here](https://jobs.ashbyhq.com/litellm) if you're interested!
+
+Thank you for using LiteLLM - Krrish & Ishaan
