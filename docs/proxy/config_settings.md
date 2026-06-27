@@ -993,6 +993,7 @@ router_settings:
 | MAX_IMAGE_URL_DOWNLOAD_SIZE_MB | Maximum size in MB for downloading images from URLs. Prevents memory issues from downloading very large images. Images exceeding this limit will be rejected before download. Set to 0 to completely disable image URL handling (all image_url requests will be blocked). Default is 50MB (matching [OpenAI's limit](https://platform.openai.com/docs/guides/images-vision?api-mode=chat#image-input-requirements))
 | MAX_LONG_SIDE_FOR_IMAGE_HIGH_RES | Maximum length for the long side of high-resolution images. Default is 2000
 | MAX_REDIS_BUFFER_DEQUEUE_COUNT | Maximum count for Redis buffer dequeue operations. Default is 100
+| MAX_REQUEST_BODY_SIZE_TO_REPAIR_MB | Maximum request body size in MB that LiteLLM will attempt to repair when it fails to parse as JSON. The repair fallback runs two full-body regex passes to fix invalid surrogate escapes, which blocks the event loop on large malformed payloads. Bodies above this size skip the repair and return a 400 immediately; bodies at or below it are still repaired. Set to 0 to disable the cap and always attempt repair. Default is 1 (MB)
 | MAX_SHORT_SIDE_FOR_IMAGE_HIGH_RES | Maximum length for the short side of high-resolution images. Default is 768
 | MAX_SIZE_IN_MEMORY_QUEUE | Maximum size for in-memory queue. Default is 10000
 | MAX_SIZE_PER_ITEM_IN_MEMORY_CACHE_IN_KB | Maximum size in KB for each item in memory cache. Default is 512 or 1024
