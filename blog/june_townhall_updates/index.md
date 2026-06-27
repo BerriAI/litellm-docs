@@ -1,6 +1,6 @@
 ---
 slug: june-townhall-updates
-title: "June Townhall Updates: 94 Bug Fixes, a Rust Migration, and a Zero-Regression Commitment"
+title: "June Townhall Updates: 94 Bug Fixes, OCR + Realtime are in Rust, and a Zero-Regression Commitment"
 date: 2026-06-26T12:00:00
 authors:
   - krrish
@@ -133,7 +133,7 @@ We're migrating the LiteLLM gateway to Rust, and the early numbers make the case
 
 ### Announcing our version policy
 
-Going forward, we'll maintain only the four most recent stable minor lines. This takes effect **next Monday, June 29th**. Our focus is ensuring stability on the most up-to-date product offerings — bookmark our [Release Notes](https://docs.litellm.ai/release_notes) to stay current.
+Going forward, we'll maintain only the four most recent stable minor releases. This takes effect **next Monday, June 29th**. Our focus is ensuring stability on the most up-to-date product offerings — bookmark our [Release Notes](https://docs.litellm.ai/release_notes) to stay current.
 
 ## What's next
 
