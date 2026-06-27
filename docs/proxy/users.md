@@ -635,6 +635,25 @@ general_settings:
   proxy_budget_rescheduler_max_time: 1
 ```
 
+## Fallback to 'free' models
+
+If a key/user/team is at its budget limit, requests to models configured with `input_cost_per_token: 0` and `output_cost_per_token: 0` are still allowed. Budget checks are skipped entirely for zero-cost models.
+
+This lets you configure free or self-hosted models as a fallback that budget-exhausted keys can still access.
+
+To mark a model as free, set both cost fields explicitly to `0` in your `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: my-free-model
+    litellm_params:
+      model: ollama/llama3
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+```
+
+**Note:** The cost fields must be explicitly set to `0`. If they are unset (`null`/missing), the model is not treated as free and budget checks still apply.
+
 ## Set Rate Limits 
 
 You can set: 
