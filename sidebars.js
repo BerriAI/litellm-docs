@@ -1079,6 +1079,7 @@ const sidebars = {
         "providers/tensormesh",
         "providers/togetherai",
         "providers/topaz",
+        "providers/trustedrouter",
         "providers/triton-inference-server",
         "providers/v0",
         "providers/vercel_ai_gateway",
