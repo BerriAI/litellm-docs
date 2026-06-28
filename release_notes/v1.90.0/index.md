@@ -56,7 +56,11 @@ pip install litellm==1.90.0
 
 <Image img={require('../../img/release_notes/app_router_routing.png')} style={{ width: '800px', height: 'auto' }} />
 
-We're moving the Admin UI from the legacy Next.js Pages Router to the App Router. The motivation is that routing now lives in the URL, so any view (a specific team, a filtered usage report, a single key) becomes a shareable link you can send to a teammate or bookmark instead of a piece of in-memory client state. The App Router also renders more of each page on the server and code-splits per route, so pages load faster and ship less JavaScript. Just as importantly, each page becomes a self-contained route with its own data loading and layout; that stronger separation of concerns makes the codebase much easier to contribute to, since a new contributor can find and change one page without untangling a shared global router.
+We're moving the Admin UI from query param based routing to the Nextjs App Router. The motivation is that routing now lives in the URL, so any view (a specific team, a filtered usage report, a single key) becomes a shareable link you can send to a teammate or bookmark instead of a piece of in-memory client state. 
+
+The motivation for this is twofold: it lays the groundwork for a lot of highly requested feaetures/improvements to the UI, and it lays the groundwork for contributing to LiteLLM easier and code more human reviewable for maintainers.
+
+The biggest one here will be sharing links for different pages like specific logs pages, teams pages, and more.
 
 ## New Providers and Endpoints
 
