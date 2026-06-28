@@ -351,7 +351,7 @@ spec:
     spec:
       initContainers:
         - name: setup-ui
-          image: ghcr.io/berriai/litellm:main-stable
+          image: ghcr.io/berriai/litellm:latest
           command:
             - sh
             - -c
@@ -366,7 +366,7 @@ spec:
 
       containers:
         - name: litellm
-          image: ghcr.io/berriai/litellm:main-stable
+          image: ghcr.io/berriai/litellm:latest
           env:
             - name: LITELLM_NON_ROOT
               value: "true"

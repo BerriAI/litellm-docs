@@ -1,7 +1,7 @@
 ---
-title: "v1.89.3 - Guardrails & Cache-Control Fixes"
-slug: "v1-89-3"
-date: 2026-06-20T14:45:08
+title: "v1.89.4 - Vertex Batch Uploads & CVE Patches"
+slug: "v1-89-4"
+date: 2026-06-25T02:38:49
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -40,28 +40,31 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.89.3
+docker.litellm.ai/berriai/litellm:1.89.4
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.89.3
+pip install litellm==1.89.4
 ```
 
 </TabItem>
 </Tabs>
 
-`v1.89.3` is a patch release on top of [`v1.89.2`](/release_notes/v1.89.2/v1-89-2). It backports guardrail correctness fixes (a single pre-call hook for model-level guardrails, no DB re-init on every poll, 400 instead of 500 when AIM blocks a request) and caps Anthropic cache-control injection at the 4-block limit.
+`v1.89.4` is a patch release on top of [`v1.89.3`](/release_notes/v1.89.3/v1-89-3). It streams OpenAI→Vertex batch JSONL uploads instead of buffering them in memory, backports cost-tracking recovery for interrupted Anthropic streams, adds a `no-mcp-servers` sentinel that scopes a key to zero MCP servers, and clears the remaining OSV-flagged CVEs with OpenSSL and dependency bumps. The bundled `litellm-enterprise` package is bumped to `0.1.42.post2`.
 
 ### What's Changed
 
-- fix(integrations): cap Anthropic cache_control injection at 4 blocks - [PR #30480](https://github.com/BerriAI/litellm/pull/30480)
-- fix(guardrails): run pre_call hook once for model-level guardrails - [PR #30543](https://github.com/BerriAI/litellm/pull/30543)
-- fix(guardrails): stop re-initializing DB guardrails on every poll - [PR #30542](https://github.com/BerriAI/litellm/pull/30542)
-- fix(guardrails): return 400 not 500 when AIM blocks a request - [PR #30573](https://github.com/BerriAI/litellm/pull/30573)
+- fix(passthrough): recover output tokens for interrupted anthropic streams - [PR #30787](https://github.com/BerriAI/litellm/pull/30787)
+- fix(proxy): record partial spend on the failure row for interrupted streams - [PR #30788](https://github.com/BerriAI/litellm/pull/30788)
+- feat(mcp): scope a key to zero MCP servers with no-mcp-servers sentinel - [PR #31029](https://github.com/BerriAI/litellm/pull/31029)
+- fix(passthrough,streaming): recover cost on interrupted and agentic Anthropic streams - [PR #31035](https://github.com/BerriAI/litellm/pull/31035)
+- fix(vertex/files): stream OpenAI->Vertex batch JSONL uploads - [PR #31036](https://github.com/BerriAI/litellm/pull/31036)
+- fix(deps): bump osv-flagged dependencies to clear known CVEs - [PR #31122](https://github.com/BerriAI/litellm/pull/31122)
+- fix(docker): bump wolfi-base digest to patch openssl CVE-2026-34182 - [PR #31133](https://github.com/BerriAI/litellm/pull/31133)
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.89.2...v1.89.3
+https://github.com/BerriAI/litellm/compare/v1.89.3...v1.89.4

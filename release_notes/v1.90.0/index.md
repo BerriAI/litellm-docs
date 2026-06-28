@@ -1,7 +1,7 @@
 ---
-title: "v1.90.0rc1 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
-slug: "v1-90-0-rc-1"
-date: 2026-06-20T18:20:54
+title: "v1.90.0 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
+slug: "v1-90-0"
+date: 2026-06-26T19:52:37
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -31,22 +31,20 @@ import Image from '@theme/IdealImage';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.90.0-rc.1
+docker.litellm.ai/berriai/litellm:1.90.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.90.0rc1
+pip install litellm==1.90.0
 ```
 
 </TabItem>
 </Tabs>
 
 ## Key Highlights
-
-`v1.90.0rc1` is the current release candidate for 1.90.0.
 
 - **Six new providers** - ModelScope, LibertAI, Parasail, Pinstripes, TinyFish (search), and FastCRW (search) - plus a new e2b code-execution sandbox primitive.
 - **91 new models** across Fireworks AI, Scaleway, Tensormesh, LibertAI, Azure AI (including `gpt-5.5` and DeepSeek V4), and Bedrock Mantle.
@@ -210,6 +208,7 @@ The 91 new entries also include the full `fireworks_ai/accounts/...` model and r
 - **UI**
     - Stop the Virtual Keys page from an infinite render loop - [PR #30397](https://github.com/BerriAI/litellm/pull/30397)
     - Source api-keys identity from `useAuthorized` to stop "User ID is not set" - [PR #30903](https://github.com/BerriAI/litellm/pull/30903)
+    - Render logos correctly under a custom `server_root_path` - [PR #31156](https://github.com/BerriAI/litellm/pull/31156)
     - Warn that team models are deleted in the delete-team modal - [PR #29990](https://github.com/BerriAI/litellm/pull/29990)
     - Three small fixes - Gemini `api_base`, credential form reset, Mode badge - [PR #30419](https://github.com/BerriAI/litellm/pull/30419)
     - Repoint the dead usage-guide link to cost-tracking docs - [PR #30859](https://github.com/BerriAI/litellm/pull/30859)
@@ -261,6 +260,7 @@ The 91 new entries also include the full `fireworks_ai/accounts/...` model and r
 - Fail closed when the scope filter resolves to no servers - [PR #30353](https://github.com/BerriAI/litellm/pull/30353)
 - Re-raise instead of silently dropping MCP team permissions - [PR #30477](https://github.com/BerriAI/litellm/pull/30477)
 - Drop the phantom 401 span on delegated OAuth2 tool calls - [PR #30494](https://github.com/BerriAI/litellm/pull/30494)
+- Challenge delegate-auth OAuth servers with the upstream `resource_metadata` - [PR #31255](https://github.com/BerriAI/litellm/pull/31255)
 - Default the Linear MCP registry entry to streamable HTTP - [PR #30396](https://github.com/BerriAI/litellm/pull/30396)
 - Preserve native tools in the semantic filter hook - [PR #26650](https://github.com/BerriAI/litellm/pull/26650)
 
@@ -285,4 +285,4 @@ The 91 new entries also include the full `fireworks_ai/accounts/...` model and r
 
 ## Full Changelog
 
-[`v1.89.0...v1.90.0-rc.1`](https://github.com/BerriAI/litellm/compare/v1.89.0...v1.90.0-rc.1)
+[`v1.89.0...v1.90.0`](https://github.com/BerriAI/litellm/compare/v1.89.0...v1.90.0)

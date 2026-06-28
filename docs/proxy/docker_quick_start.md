@@ -85,7 +85,7 @@ Choose your install method. **Docker Compose** users complete their full setup i
 <TabItem value="docker" label="Docker">
 
 ```bash
-docker pull docker.litellm.ai/berriai/litellm:main-latest
+docker pull docker.litellm.ai/berriai/litellm:latest
 ```
 
 [**See all docker images**](https://github.com/orgs/BerriAI/packages)
@@ -109,7 +109,7 @@ Docker Compose bundles LiteLLM with a Postgres database. Follow the steps below 
 LiteLLM provides a dedicated `litellm-database` image for proxy deployments that connect to Postgres.
 
 ```bash
-docker pull ghcr.io/berriai/litellm-database:main-latest
+docker pull ghcr.io/berriai/litellm-database:latest
 ```
 
 See all available tags on the [GitHub Container Registry](https://github.com/BerriAI/litellm/pkgs/container/litellm-database).
@@ -328,7 +328,7 @@ docker run \
     -e AZURE_API_KEY=d6*********** \
     -e AZURE_API_BASE=https://openai-***********/ \
     -p 4000:4000 \
-    docker.litellm.ai/berriai/litellm:main-latest \
+    docker.litellm.ai/berriai/litellm:latest \
     --config /app/config.yaml --detailed_debug
 
 # RUNNING on http://0.0.0.0:4000
@@ -515,7 +515,7 @@ docker run \
     -e AZURE_API_KEY=d6*********** \
     -e AZURE_API_BASE=https://openai-***********/ \
     -p 4000:4000 \
-    ghcr.io/berriai/litellm-database:main-latest \
+    ghcr.io/berriai/litellm-database:latest \
     --config /app/config.yaml --detailed_debug
 ```
 

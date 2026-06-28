@@ -115,6 +115,18 @@ const sidebars = {
     },
     {
       type: "category",
+      label: "Cost Optimization",
+      items: [
+        {
+          type: "link",
+          label: "Prompt Compression",
+          href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
+        },
+        "proxy/headroom",
+      ]
+    },
+    {
+      type: "category",
       label: "[Beta] Prompt Management",
       items: [
         {
@@ -651,6 +663,7 @@ const sidebars = {
               label: "Prompt Compression",
               href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
             },
+            "proxy/headroom",
           ],
         },
       ]

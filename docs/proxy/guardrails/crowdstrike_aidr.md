@@ -94,7 +94,7 @@ docker run --rm \
   -e CS_AIDR_BASE_URL=$CS_AIDR_BASE_URL \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:main-latest \
+  ghcr.io/berriai/litellm:latest \
   --config /app/config.yaml
 ```
 

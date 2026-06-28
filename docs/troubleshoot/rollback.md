@@ -2,7 +2,7 @@
 
 This guide outlines the process for safely rolling back a LiteLLM Proxy deployment to a previous version.
 
-We recommend rolling back to the previous [stable release](https://github.com/BerriAI/litellm/releases). Stable releases come out every week and follow the `main-v<VERSION>-stable` tag convention (e.g., `main-v1.77.2-stable`).
+We recommend rolling back to the previous [stable release](https://github.com/BerriAI/litellm/releases). Stable releases come out every week and follow the `vX.Y.Z` tag convention (e.g., `v1.89.4`).
 
 ## 1. Determine Rollback Scope
 
@@ -38,7 +38,7 @@ Revert your deployment to the previous stable Docker image or Helm chart version
 Update your deployment manifest (e.g., K8s Deployment, Docker Compose) to use the previous version:
 ```yaml
 # Example: Reverting to the previous stable release
-image: docker.litellm.ai/berriai/litellm:main-v<VERSION>-stable
+image: docker.litellm.ai/berriai/litellm:v<VERSION>
 ```
 
 See [all available images](https://github.com/orgs/BerriAI/packages).

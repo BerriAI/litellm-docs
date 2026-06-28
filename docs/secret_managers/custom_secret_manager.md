@@ -76,7 +76,7 @@ docker run -d \
   --name litellm-proxy \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/my_secret_manager.py:/app/my_secret_manager.py \
-  docker.litellm.ai/berriai/litellm:main-latest \
+  docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml \
   --port 4000 \
   --detailed_debug
