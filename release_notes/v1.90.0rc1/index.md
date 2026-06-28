@@ -20,6 +20,7 @@ hide_table_of_contents: false
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 ## Deploy this version
 
@@ -52,6 +53,12 @@ pip install litellm==1.90.0rc1
 - **OpenTelemetry v2 reaches metrics parity with v1**, emitting the six `gen_ai.client.*` metrics, stamping input/output message content, and scoping OTLP credentials per tenant.
 - **A broad streaming-reliability sweep**: upstream connections are now released when the client disconnects mid-stream (Gemini, aiohttp), requests are cancelled cleanly, and partial spend is recorded on interrupted streams.
 - **Two new guardrails** (Cisco AI Defense, Repello Argus) and a large Next.js App Router UI migration covering the models, teams, users, organizations, api-keys, and usage pages.
+
+## App Router Routing
+
+<Image img={require('../../img/release_notes/app_router_routing.jpg')} style={{ width: '800px', height: 'auto' }} />
+
+We're moving the Admin UI from the legacy Next.js Pages Router to the App Router. The motivation is that routing now lives in the URL, so any view (a specific team, a filtered usage report, a single key) becomes a shareable link you can send to a teammate or bookmark instead of a piece of in-memory client state. The App Router also renders more of each page on the server and code-splits per route, so pages load faster and ship less JavaScript. Just as importantly, each page becomes a self-contained route with its own data loading and layout; that stronger separation of concerns makes the codebase much easier to contribute to, since a new contributor can find and change one page without untangling a shared global router.
 
 ## New Providers and Endpoints
 
