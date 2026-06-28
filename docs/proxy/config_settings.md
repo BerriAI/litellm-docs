@@ -714,6 +714,8 @@ router_settings:
 | DOCS_FILTERED | Flag indicating filtered documentation
 | DOCS_TITLE | Title of the documentation pages
 | DOCS_URL | The path to the Swagger API documentation. **By default this is "/"**
+| ECOLOGITS_API_BASE | Base URL for the EcoLogits estimations API. Defaults to `https://api.ecologits.ai`.
+| ECOLOGITS_ELECTRICITY_MIX_ZONE | Default electricity-mix zone for EcoLogits impact estimation (e.g. `FRA`). Falls back to `WOR` when unset. 
 | EMAIL_LOGO_URL | URL for the logo used in emails
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for email budget alerts in seconds
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Maximum spend percentage for triggering email budget alerts
