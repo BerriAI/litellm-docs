@@ -1095,6 +1095,7 @@ router_settings:
 | PREDIBASE_API_BASE | Base URL for Predibase API
 | PRESIDIO_ANALYZER_API_BASE | Base URL for Presidio Analyzer service
 | PRESIDIO_ANONYMIZER_API_BASE | Base URL for Presidio Anonymizer service
+| PROMETHEUS_BUDGET_METRICS_PER_REQUEST_TIMEOUT | Maximum seconds to spend emitting per-request Prometheus budget metrics before skipping; on timeout the emission is dropped in isolation so a slow Redis/DB lookup cannot cancel the whole success-logging event. Default is 5.0
 | PROMETHEUS_BUDGET_METRICS_REFRESH_INTERVAL_MINUTES | Refresh interval in minutes for Prometheus budget metrics. Default is 5
 | PROMETHEUS_FALLBACK_STATS_SEND_TIME_HOURS | Fallback time in hours for sending stats to Prometheus. Default is 9
 | PROMETHEUS_URL | URL for Prometheus service
