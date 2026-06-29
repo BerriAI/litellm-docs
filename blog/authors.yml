@@ -43,6 +43,28 @@ alexsander:
 
 yuneng:
   name: Yuneng Jiang
-  title: SWE @ LiteLLM (Full Stack)
+  title: Senior SWE @ LiteLLM
   url: https://www.linkedin.com/in/yuneng-david-jiang-455676139/
   image_url: https://avatars.githubusercontent.com/u/171294688?v=4
+
+mateo:
+  name: Mateo Wang
+  title: AI Engineer, LiteLLM
+  url: https://www.linkedin.com/in/mateo-wang
+  image_url: /img/mateo.jpeg
+
+mubashir:
+  name: Mubashir Osmani
+  url: https://www.linkedin.com/in/mubashirosmani
+  image_url: https://github.com/mubashir1osmani.png
+yassin:
+  name: Yassin Kortam
+  title: Senior SWE @ LiteLLM
+  url: https://www.linkedin.com/in/yassink/
+  image_url: /img/yassin.jpg
+
+varoon:
+  name: Varoon Raghav
+  title: GTM
+  url: https://www.linkedin.com/in/varoon-raghav/
+  image_url: https://media.licdn.com/dms/image/v2/D4E03AQEh97dpWxmuPw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1685591224743?e=1782950400&v=beta&t=e0YuLBpOsKz_d9eSsYRY02O9xpanq3ccHNFq2mLweuI

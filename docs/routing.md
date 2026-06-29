@@ -830,6 +830,110 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
+## Routing Groups - Per-Model Strategies
+
+Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
+
+:::tip
+You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
+:::
+
+**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models — without spinning up a second router.
+
+#### Rules
+
+- Each `model_name` may belong to **at most one** group. Overlap raises `ValueError` at init.
+- Models not in any group use the top-level `routing_strategy` / `routing_strategy_args` (an implicit `"default"` group). The name `"default"` is reserved.
+- Each group can override `routing_strategy_args` (e.g. latency window TTL, TPM ceilings).
+- The group is resolved per-request based on the post-pre-routing-hook `model` name.
+
+<Tabs>
+<TabItem value="config-yaml" label="LiteLLM Proxy Config.yaml">
+
+```yaml
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2024-08-01-preview"
+  - model_name: cheap-model
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+router_settings:
+  # fallback strategy for models not in any explicit group
+  routing_strategy: simple-shuffle
+
+  routing_groups:
+    - group_name: latency-sensitive
+      models: [gpt-4o]
+      routing_strategy: latency-based-routing
+      routing_strategy_args:
+        ttl: 3600
+```
+
+Behavior:
+- `gpt-4o` → latency-based routing across the OpenAI + Azure deployments.
+- `cheap-model` → simple-shuffle (the default group).
+
+</TabItem>
+<TabItem value="sdk" label="Python SDK">
+
+```python
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {"model_name": "gpt-4o", "litellm_params": {"model": "openai/gpt-4o"}},
+        {"model_name": "gpt-4o", "litellm_params": {"model": "azure/gpt-4o", "api_base": "...", "api_key": "..."}},
+        {"model_name": "cheap-model", "litellm_params": {"model": "openai/gpt-4o-mini"}},
+    ],
+    routing_strategy="simple-shuffle",  # fallback for ungrouped models
+    routing_groups=[
+        {
+            "group_name": "latency-sensitive",
+            "models": ["gpt-4o"],
+            "routing_strategy": "latency-based-routing",
+            "routing_strategy_args": {"ttl": 3600},
+        },
+    ],
+)
+```
+
+</TabItem>
+</Tabs>
+
+#### Multiple groups
+
+Two groups can use the same strategy with different args; each gets an independent state instance.
+
+```yaml
+router_settings:
+  routing_strategy: simple-shuffle
+  routing_groups:
+    - group_name: hot-path
+      models: [gpt-4o, claude-sonnet]
+      routing_strategy: latency-based-routing
+      routing_strategy_args:
+        ttl: 60          # short window — react quickly to latency changes
+    - group_name: batch
+      models: [gpt-4o-mini, llama-70b]
+      routing_strategy: usage-based-routing-v2
+      routing_strategy_args:
+        rpm: 10000
+```
+
+#### Updating at runtime
+
+Routing groups can be updated via `Router.update_settings(routing_groups=[...])` or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
+
 ## Traffic Mirroring / Silent Experiments
 
 Traffic mirroring allows you to "mimic" production traffic to a secondary (silent) model for evaluation purposes. The silent model's response is gathered in the background and does not affect the latency or result of the primary request.
@@ -951,6 +1055,105 @@ model_list:
 
 </TabItem>
 </Tabs>
+
+### Weighted Failover
+
+By default, when a deployment in a model group fails, the router moves on to the next entry in `fallbacks` (a different model group). With `enable_weighted_failover`, the router first retries **inside the same model group** by re-picking a different deployment using the existing weights, and only escalates to cross-group fallbacks once every deployment in the group has been tried.
+
+This is useful when you have multiple regional copies of the same model (e.g. Azure `eastus2` + `swedencentral`) and want a failed region to fail over to a healthy peer with the same `model_name`, instead of immediately switching to a different model.
+
+**Behavior**
+
+- Only active when `routing_strategy="simple-shuffle"` (the default).
+- On a retryable failure, the failing deployment ID is excluded and a new deployment is picked from the remaining peers in the same model group, respecting `weight` / `rpm` / `tpm`.
+- Exclusions accumulate across hops: each retry adds the previous failure to the exclusion set, so a deployment that just failed is never picked again in the same request chain.
+- Capped by `max_fallbacks` (default `5`).
+- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError` — those keep their dedicated fallback paths.
+- Async-only: honored by `router.acompletion()` and other async entrypoints. The sync `router.completion()` path falls through to regular fallbacks.
+- Cooldowns still apply: a deployment that crosses `allowed_fails` is cooled down independently of weighted failover.
+
+**Order vs. weight**
+
+If the same group also uses `order`, the order filter runs **before** the weighted pick. So weighted failover re-picks only among the deployments in the current minimum-order tier. Promotion to the next order tier happens through the existing order-based fallback path.
+
+**Config**
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import Router
+
+model_list = [
+    {
+        "model_name": "gpt-4.1-mini",
+        "litellm_params": {
+            "model": "azure/gpt-4.1-mini",
+            "api_base": "https://eastus2.example.azure.com",
+            "api_key": os.getenv("AZURE_EASTUS2_KEY"),
+            "weight": 1,
+        },
+    },
+    {
+        "model_name": "gpt-4.1-mini",
+        "litellm_params": {
+            "model": "azure/gpt-4.1-mini",
+            "api_base": "https://swedencentral.example.azure.com",
+            "api_key": os.getenv("AZURE_SWEDEN_KEY"),
+            "weight": 1,
+        },
+    },
+]
+
+router = Router(
+    model_list=model_list,
+    routing_strategy="simple-shuffle",
+    enable_weighted_failover=True,  # 👈 retry within the same model group on failure
+)
+
+response = await router.acompletion(
+    model="gpt-4.1-mini",
+    messages=[{"role": "user", "content": "Hey"}],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: gpt-4.1-mini
+    litellm_params:
+      model: azure/gpt-4.1-mini
+      api_base: https://eastus2.example.azure.com
+      api_key: os.environ/AZURE_EASTUS2_KEY
+      weight: 1
+  - model_name: gpt-4.1-mini
+    litellm_params:
+      model: azure/gpt-4.1-mini
+      api_base: https://swedencentral.example.azure.com
+      api_key: os.environ/AZURE_SWEDEN_KEY
+      weight: 1
+
+router_settings:
+  routing_strategy: simple-shuffle
+  enable_weighted_failover: true  # 👈 retry within the same model group on failure
+```
+
+</TabItem>
+</Tabs>
+
+**Walkthrough**
+
+With the config above and a request to `gpt-4.1-mini`:
+
+1. `simple-shuffle` picks one of the two deployments using `weight`.
+2. If the picked deployment raises a provider error (e.g. `RateLimitError`, `InternalServerError`), its deployment ID is added to `metadata._failover_excluded_ids`.
+3. The router re-enters `simple-shuffle` with the failed deployment excluded and weights renormalized over what's left.
+4. Steps 2–3 repeat until a deployment succeeds, every peer has been excluded, or `max_fallbacks` is reached.
+5. Only after all peers are exhausted does the router fall through to any `fallbacks` configured for the group.
+
+See [`enable_weighted_failover`](./proxy/config_settings#router_settings---reference) in the router settings reference for the flag.
 
 ### Max Parallel Requests (ASYNC)
 

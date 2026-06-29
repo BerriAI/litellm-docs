@@ -16,13 +16,13 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
-  callbacks:
-    - websearch_interception:
-        enabled_providers:
-          - openai
-          - minimax
-          - anthropic
-        search_tool_name: perplexity-search  # Optional
+  callbacks: ["websearch_interception"]
+  websearch_interception_params:
+    enabled_providers:
+      - openai
+      - minimax
+      - anthropic
+    search_tool_name: perplexity-search  # Optional
 
 search_tools:
   - search_tool_name: perplexity-search
@@ -175,12 +175,15 @@ Configure which search provider to use. LiteLLM supports multiple search provide
 | **Perplexity AI** | `perplexity` | `PERPLEXITYAI_API_KEY` |
 | **Tavily** | `tavily` | `TAVILY_API_KEY` |
 | **Exa AI** | `exa_ai` | `EXA_API_KEY` |
+| **Brave Search** | `brave` | `BRAVE_API_KEY` |
 | **Parallel AI** | `parallel_ai` | `PARALLEL_AI_API_KEY` |
 | **Google PSE** | `google_pse` | `GOOGLE_PSE_API_KEY`, `GOOGLE_PSE_ENGINE_ID` |
 | **DataForSEO** | `dataforseo` | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` |
 | **Firecrawl** | `firecrawl` | `FIRECRAWL_API_KEY` |
 | **SearXNG** | `searxng` | `SEARXNG_API_BASE` (required) |
 | **Linkup** | `linkup` | `LINKUP_API_KEY` |
+| **Serper** | `serper` | `SERPER_API_KEY` |
+| **SearchAPI.io** | `searchapi` | `SEARCHAPI_API_KEY` |
 
 See [Search Providers Documentation](../search/index.md) for detailed setup instructions.
 
@@ -214,14 +217,14 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
 
 litellm_settings:
-  callbacks:
-    - websearch_interception:
-        enabled_providers:
-          - openai
-          - minimax
-          - anthropic
-          - azure
-        search_tool_name: perplexity-search
+  callbacks: ["websearch_interception"]
+  websearch_interception_params:
+    enabled_providers:
+      - openai
+      - minimax
+      - anthropic
+      - azure
+    search_tool_name: perplexity-search
 
 search_tools:
   - search_tool_name: perplexity-search

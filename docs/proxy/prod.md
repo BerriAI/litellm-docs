@@ -21,10 +21,6 @@ general_settings:
   proxy_batch_write_at: 60 # Batch write spend updates every 60s
   database_connection_pool_limit: 10 # connection pool limit per worker process. Total connections = limit × workers × instances. Calculate: MAX_DB_CONNECTIONS / (instances × workers). Default: 10.
 
-:::warning
-**Multiple instances:** If running multiple LiteLLM instances (e.g., Kubernetes pods), remember each instance multiplies your total connections. Example: 3 instances × 4 workers × 10 connections = 120 total connections.
-:::
-
   # OPTIONAL Best Practices
   disable_error_logs: True # turn off writing LLM Exceptions to DB
   allow_requests_on_db_unavailable: True # Only USE when running LiteLLM on your VPC. Allow requests to still be processed even if the DB is unavailable. We recommend doing this if you're running LiteLLM on VPC that cannot be accessed from the public internet.
@@ -34,6 +30,11 @@ litellm_settings:
   set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
   json_logs: true         # Get debug logs in json format
 ```
+:::warning Multiple instances
+
+If running multiple LiteLLM instances (e.g., Kubernetes pods), remember each instance multiplies your total connections. Example: 3 instances × 4 workers × 10 connections = 120 total connections.
+
+:::
 
 Set slack webhook url in your env
 ```shell
@@ -47,49 +48,122 @@ export LITELLM_LOG="ERROR"
 
 :::info
 
-Need Help or want dedicated support ? Talk to a founder [here]: (https://enterprise.litellm.ai/demo)
+Need Help or want dedicated support ? Talk to a founder [here](https://enterprise.litellm.ai/demo).
 
 :::
 
 
 ## 2. Recommended Machine Specifications
 
-For optimal performance in production, we recommend the following minimum machine specifications:
+For optimal performance in production, we recommend the following resource configuration.
 
-| Resource | Recommended Value |
-|----------|------------------|
-| CPU      | 4 vCPU           |
-| Memory   | 8 GB RAM         |
+**1. Memory `requests` and `limits`**
 
-These specifications provide:
-- Sufficient compute power for handling concurrent requests
-- Adequate memory for request processing and caching
-
-
-## 3. On Kubernetes — Match Uvicorn Workers to CPU Count [Suggested CMD]
-
-Use this Docker `CMD`. It automatically matches Uvicorn workers to the pod’s CPU count, ensuring each worker uses one core efficiently for better throughput and stable latency.
-
-```shell
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)"]
+```yaml
+resources:
+  requests:
+    cpu: "1" # should be 1*num_workers
+    memory: "4Gi" # should be 4*num_workers
+  limits:
+    cpu: "1"
+    memory: "4Gi"
 ```
 
-> **Optional:** If you observe gradual memory growth under sustained load, consider recycling workers after a fixed number of requests to mitigate leaks.
-> You can configure this either via CLI or environment variable:
+**2. HPA thresholds**
+
+```yaml
+targetCPUUtilizationPercentage: 60
+targetMemoryUtilizationPercentage: 80
+```
+
+
+## 3. Choose your server: Uvicorn vs. Gunicorn
+
+LiteLLM Proxy runs on [Uvicorn](https://uvicorn.dev/) by default. Passing `--run_gunicorn` instead starts [Gunicorn](https://gunicorn.org/) as a process manager that supervises [Uvicorn worker processes](https://uvicorn.dev/deployment/#gunicorn) (`uvicorn.workers.UvicornWorker`). In both cases your application code still runs on Uvicorn; the difference is which process manages and recycles the workers.
+
+| | Uvicorn (default) | Gunicorn (`--run_gunicorn`) |
+|---|---|---|
+| **When to use** | Recommended for almost all deployments, especially Kubernetes with one worker per pod. | Choose when you run **multiple workers in a single container** and want a mature process manager to supervise and recycle them. |
+| **Worker recycling** | Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits). | Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests), the battle-tested mechanism Gunicorn has shipped for years. |
+| **Process supervision** | Uvicorn's built-in multiprocess manager. | Gunicorn's [arbiter](https://gunicorn.org/design/#arbiter), which restarts workers one at a time as they exit. |
+
+:::tip Recommendation
+
+On Kubernetes, run **one Uvicorn worker per pod** and scale **horizontally** (more pods) rather than vertically (more workers per pod). One process per pod keeps latency predictable under load, lets the Horizontal Pod Autoscaler use the [thresholds above](#2-recommended-machine-specifications) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time. Reach for Gunicorn only when you must pack multiple workers into one container.
+
+:::
+
+### 3a. Recommended: one Uvicorn worker per pod
+
+This is the default server, so you only need to set `--num_workers 1` (the default is already `1`):
+
+```shell
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
+```
+
+### 3b. Recycle workers with `--max_requests_before_restart`
+
+If you observe gradual memory growth under sustained load, recycle each worker after a fixed number of requests to bound memory usage. `--max_requests_before_restart` maps to Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits) (default server) and to Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests) under `--run_gunicorn`. Configure it via CLI flag or environment variable:
 
 ```shell
 # CLI
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)", "--max_requests_before_restart", "10000"]
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
 
 # or ENV (for deployment manifests / containers)
 export MAX_REQUESTS_BEFORE_RESTART=10000
 ```
 
-> **Tip:** When using `--max_requests_before_restart`, the `--run_gunicorn` flag is more stable and mature as it uses Gunicorn's battle-tested worker recycling mechanism instead of Uvicorn's implementation.
+:::tip
+
+When you run **multiple workers in one container** and rely on `--max_requests_before_restart`, prefer `--run_gunicorn`. Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests) recycling is more mature than Uvicorn's, and its [arbiter](https://gunicorn.org/design/#arbiter) restarts workers one at a time so the pod keeps serving traffic while a worker is replaced.
+
+:::
 
 ```shell
-# Use Gunicorn for more stable worker recycling
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "$(nproc)", "--run_gunicorn", "--max_requests_before_restart", "10000"]
+# Multiple workers in one container, with Gunicorn-managed recycling
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000"]
+```
+
+When several workers boot together and serve a similar amount of traffic, they reach the request threshold at almost the same time and recycle in lockstep, dropping a chunk of capacity at once. Add `--max_requests_before_restart_jitter` to offset each worker's threshold by a random amount in `[0, jitter]` so restarts stagger instead of synchronizing. It maps to Uvicorn's [`limit_max_requests_jitter`](https://uvicorn.dev/settings/#resource-limits) (requires `uvicorn>=0.41.0`) and Gunicorn's [`max_requests_jitter`](https://gunicorn.org/reference/settings/#max_requests_jitter), and has no effect without `--max_requests_before_restart`.
+
+```shell
+# Stagger recycling so workers don't all restart at once
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
+```
+
+### 3c. Keep restarts hitless
+
+A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
+
+**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). With one worker per pod, recycling briefly reduces that pod's capacity, which is why we recommend scaling horizontally so the load balancer can route around it.
+
+**Rolling deploys and pod restarts (Kubernetes).** Make restarts hitless at the orchestration layer rather than relying on the server alone:
+
+- Use a [`RollingUpdate`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment) strategy (the Deployment default) so new pods become Ready before old pods are terminated.
+- Keep a [readiness probe](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/) on `/health/readiness` so Kubernetes only sends traffic to pods that can serve it, and stops routing to a pod as soon as termination begins.
+- Set [`terminationGracePeriodSeconds`](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) to comfortably exceed your longest expected request (LiteLLM's request timeout defaults to 600s; see [Section 1](#1-use-this-configyaml)). On termination Kubernetes sends `SIGTERM`, and both Uvicorn and Gunicorn shut down [gracefully](https://uvicorn.dev/deployment/) by draining in-flight requests before exiting.
+- Optionally add a small [`preStop` hook](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks) (for example `sleep 5`) to give the load balancer time to deregister the pod before the server begins shutting down, eliminating the brief window where traffic can still arrive at a terminating pod.
+
+```yaml title="Kubernetes Deployment snippet for hitless rolling restarts"
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0   # never drop below desired replica count
+      maxSurge: 1         # add one new pod at a time
+  template:
+    spec:
+      terminationGracePeriodSeconds: 620   # > your longest request (request_timeout: 600)
+      containers:
+        - name: litellm
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 5"]
 ```
 
 
@@ -277,7 +351,7 @@ spec:
     spec:
       initContainers:
         - name: setup-ui
-          image: ghcr.io/berriai/litellm:main-stable
+          image: ghcr.io/berriai/litellm:latest
           command:
             - sh
             - -c
@@ -292,7 +366,7 @@ spec:
 
       containers:
         - name: litellm
-          image: ghcr.io/berriai/litellm:main-stable
+          image: ghcr.io/berriai/litellm:latest
           env:
             - name: LITELLM_NON_ROOT
               value: "true"
@@ -377,47 +451,6 @@ The proxy will log a warning about the UI but API endpoints will work normally.
 2. **Prisma Cache**: Set `PRISMA_BINARY_CACHE_DIR` and `XDG_CACHE_HOME` to writable paths
 3. **Server Root Path**: If using a custom `server_root_path`, you must pre-process UI files in your Dockerfile as the proxy cannot modify files at runtime with read-only filesystem
 4. **Automatic Detection**: The UI is automatically detected as pre-restructured if it contains a `.litellm_ui_ready` marker file (created by the official Docker images)
-
-## 10. Use a Separate Health Check App
-:::info
-The Separate Health Check App only runs when running via the the LiteLLM Docker Image and using Docker and setting the SEPARATE_HEALTH_APP env var to "1"
-:::
-
-Using a separate health check app ensures that your liveness and readiness probes remain responsive even when the main application is under heavy load. 
-
-**Why is this important?**
-
-- If your health endpoints share the same process as your main app, high traffic or resource exhaustion can cause health checks to hang or fail.
-- When Kubernetes liveness probes hang or time out, it may incorrectly assume your pod is unhealthy and restart it—even if the main app is just busy, not dead.
-- By running health endpoints on a separate lightweight FastAPI app (with its own port), you guarantee that health checks remain fast and reliable, preventing unnecessary pod restarts during traffic spikes or heavy workloads.
-- The way it works is, if either of the health or main proxy app dies due to whatever reason, it will kill the pod and which would be marked as unhealthy prompting the orchestrator to restart the pod
-- Since the proxy and health app are running in the same pod, if the pod dies the health check probe fails, it signifies that the pod is unhealthy and needs to restart/have action taken upon.
-
-**How to enable:**
-
-Set the following environment variable(s):
-```bash
-SEPARATE_HEALTH_APP="1" # Default "0" 
-SEPARATE_HEALTH_PORT="8001" # Default "4001", Works only if `SEPARATE_HEALTH_APP` is "1"
-SUPERVISORD_STOPWAITSECS="3600" # Optional: Upper bound timeout in seconds for graceful shutdown. Default: 3600 (1 hour). Only used when SEPARATE_HEALTH_APP=1.
-```
-
-**Graceful Shutdown:**
-
-Previously, `stopwaitsecs` was not set, defaulting to 10 seconds and causing in-flight requests to fail. `SUPERVISORD_STOPWAITSECS` (default: 3600) provides an upper bound for graceful shutdown, allowing uvicorn to wait for all in-flight requests to complete.
-
-<video controls width="100%" style={{ borderRadius: '8px', marginBottom: '1em' }}>
-  <source src="https://cdn.loom.com/sessions/thumbnails/b08be303331246b88fdc053940d03281-1718990992822.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
-Or [watch on Loom](https://www.loom.com/share/b08be303331246b88fdc053940d03281?sid=a145ec66-d55f-41f7-aade-a9f41fbe752d).
-
-
-### High Level Architecture
-
-<Image alt="Separate Health App Architecture" img={require('../../img/separate_health_app_architecture.png')} style={{ borderRadius: '8px', marginBottom: '1em', maxWidth: '100%' }} />
-
 
 ## Extras
 ### Expected Performance in Production

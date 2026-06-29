@@ -132,6 +132,8 @@ The `tools` parameter provides information about available function/tool definit
 
 **Format:** OpenAI `ChatCompletionToolParam` format (see [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools))
 
+Built-in tools that carry only a `type` and no `function` block, such as `{"type": "code_interpreter"}` or `{"type": "file_search", "vector_store_ids": [...]}`, are also accepted and forwarded to your endpoint intact (including their tool-specific config). Your endpoint should treat `function` as optional and branch on `type`.
+
 **Example:**
 ```json
 {
@@ -238,11 +240,34 @@ litellm_settings:
         api_base: https://your-guardrail-api.com
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
+        fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
           language: "en"
 ```
+
+### Error handling: `unreachable_fallback` and `fail_on_error`
+
+Two settings control what LiteLLM does when the guardrail itself fails, rather than returning a verdict. They sit on a spectrum from strict to permissive, and they compose:
+
+- `unreachable_fallback` (default `fail_closed`) only reacts to the guardrail endpoint being **unreachable**: network errors, timeouts, or an HTTP 502/503/504 from an upstream proxy/load balancer. Set it to `fail_open` to let requests proceed in just those cases.
+- `fail_on_error` (default `true`) is the broader control. It governs **any** guardrail error, not only unreachability.
+
+| `fail_on_error` | Behavior on a guardrail error |
+| --- | --- |
+| `true` (default) | **Fail closed.** Any error blocks the request: a non-2xx response, a malformed or unparseable body, a network failure, or an internal serialization/validation error. This preserves LiteLLM's existing behavior |
+| `false` | **Fail open (complete).** Any guardrail error is downgraded to a critical-level log line and the request proceeds as if the guardrail were not configured |
+
+Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `BLOCKED` decision still blocks; everything that is not a valid response (errors, malformed bodies, unreachable endpoints) is bypassed. This applies to both the request hook (`pre_call`) and the response hook (`post_call`); on the response path, a fail-open returns the already-generated model output, while fail-closed turns a successful generation into an error.
+
+:::danger
+
+`fail_on_error: false` is a complete bypass on failure. It means that **any** failure in the guardrail or its endpoint, for any reason, will cause the guardrail to be skipped for that request rather than block it. Enable it only if you have understood and accepted that tradeoff: choose it when your availability and operational constraints are stronger than your security constraints. If the guardrail is a hard security boundary, leave it at the default `true` (fail closed).
+
+:::
+
+The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
 
 ### Static and dynamic headers
 

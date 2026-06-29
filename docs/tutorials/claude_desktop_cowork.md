@@ -1,4 +1,4 @@
-# Claude Desktop (CoWork) Integration
+# Claude Desktop (Cowork) Integration
 
 Route Claude Desktop requests through LiteLLM Proxy to get unified logging, budget controls, and access to any model.
 

@@ -513,6 +513,36 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 - If no header is provided, LiteLLM auto-selects the first team with access to the requested model
 
 
+### Fall back to DB team when JWT claims don't resolve
+
+By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error — the claim is treated as authoritative.
+
+For deployments where the IdP team claim is **advisory** (e.g. machine tokens whose `groups` claim lives in a separate namespace from LiteLLM `team_id`s), opt in to a fallback: if the configured claim is present but unresolved, LiteLLM defers to the user's single LiteLLM team (when the user belongs to exactly one team in the DB).
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    user_id_jwt_field: "sub"
+    team_ids_jwt_field: "groups"
+    team_claim_fallback: true # 👈 opt in
+```
+
+**Behavior:**
+
+| Trigger | Default (`team_claim_fallback: false`) | Opt-in (`team_claim_fallback: true`) |
+|---|---|---|
+| `team_id` claim resolves to a real team | 200 / use team | 200 / use team |
+| `team_id` claim present, team missing in DB | raise | defer → fallback to user's single DB team |
+| `team_alias` claim resolves | 200 / use team | 200 / use team |
+| `groups` claim resolves and team grants model | 200 | 200 |
+| `groups` claim resolves but team lacks model | 403 (preserved) | 403 (preserved) |
+| `groups` claim present, none resolve to a real team | 403 | defer → fallback to user's single DB team |
+| no claim at all (single-team fallback baseline) | 200 / fallback | 200 / fallback |
+
+**Security envelope:** the fallback only resolves when the user belongs to exactly one LiteLLM team in the DB; non-404 errors (e.g. `"No DB Connected"`) always propagate. Keep the default (`false`) if your IdP team claims are authoritative for authorization.
+
+
 ### Custom JWT Validate
 
 Validate a JWT Token using custom logic, if you need an extra way to verify if tokens are valid for LiteLLM Proxy.
@@ -621,7 +651,7 @@ Below is a quick reference for the route groups you can use and example represen
 | `mcp_routes` | Internal MCP management endpoints | `/mcp/tools`, `/mcp/tools/call` |
 | `info_routes` | Read-only & info endpoints used by the UI | `/key/info`, `/team/info`, `/v1/models` |
 | `management_routes` | Admin-only management endpoints (create/update/delete user/team/model) | `/team/new`, `/key/generate`, `/model/new` |
-| `spend_tracking_routes` | Budget/spend related endpoints | `/spend/logs`, `/spend/keys` |
+| `spend_tracking_routes` | Budget/spend related endpoints | `/spend/logs`, `/spend/keys`, `/spend/users` |
 | `public_routes` | Public and unauthenticated endpoints | `/`, `/routes`, `/.well-known/litellm-ui-config` |
 
 Note: `llm_api_routes` is the union of OpenAI, Anthropic, Google, pass-through and other LLM routes (`openai_routes + anthropic_routes + google_routes + mapped_pass_through_routes + passthrough_routes_wildcard + apply_guardrail_routes + mcp_routes + litellm_native_routes`).
@@ -814,10 +844,26 @@ general_settings:
 
 ### Matching behavior
 
-- A rule matches when all configured selectors match token claims
-- Supported selectors: `iss` (required), `client_id` (optional), `aud` (optional)
-- Selector values support both string and list forms
-- If no rule matches, LiteLLM continues with standard JWT validation
+- A rule matches when **all** configured selectors match the corresponding token claims (AND semantics).
+- Supported selectors: `iss` (required), `client_id` (optional), `scope` (optional), `aud` (optional).
+- Selector values can be a single string or a list of strings (the claim must match at least one entry, using the rules below).
+- **Wildcards:** selectors may use shell-style `*` and `?`. Matching is **case-sensitive**—use the same casing your IdP emits in JWT claims.
+- **`scope` claim as a space-delimited string:** OAuth/OIDC often sends `scope` as one string (e.g. `openid profile App:LiteLLM`). LiteLLM splits that string **only when matching the `scope` selector**, so a configured value like `App:LiteLLM` can match. **`iss`, `aud`, and `client_id` are never split on spaces**; the full claim string is used (routing uses unverified claims only for path selection; final auth still validates the token).
+- If no rule matches, LiteLLM continues with standard JWT validation.
+
+### Example: `scope` and wildcard `client_id`
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  enable_oauth2_auth: false
+  litellm_jwtauth:
+    routing_overrides:
+      - iss: "machine-issuer.example.com"
+        scope: "App:LiteLLM"
+        client_id: "*MID_LITELLM"
+        path: "oauth2"
+```
 
 ### List-based override example
 

@@ -13,6 +13,221 @@ Use this provider to call Bedrock Mantle models with accurate **AWS Bedrock pric
 
 :::
 
+## Claude Mythos
+
+[Claude Mythos](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-mythos-preview.html) (`anthropic.claude-mythos-preview`) is available on Bedrock Mantle with **1M token input context**, 128K output, and support for reasoning, vision, and tool use.
+
+Use the `bedrock_mantle/` route prefix with standard AWS credentials.
+
+### /messages
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import asyncio
+import litellm
+import os
+
+os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
+os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
+os.environ['AWS_REGION_NAME'] = "us-east-1"
+
+async def main():
+    response = await litellm.anthropic_messages(
+        model="bedrock_mantle/anthropic.claude-mythos-preview",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Explain quantum entanglement simply."}],
+    )
+    print(response)
+
+asyncio.run(main())
+```
+
+</TabItem>
+<TabItem value="ai-gateway" label="AI Gateway">
+
+**1. Add to config.yaml**
+
+```yaml
+model_list:
+  - model_name: claude-mythos
+    litellm_params:
+      model: bedrock_mantle/anthropic.claude-mythos-preview
+      aws_region_name: us-east-1
+```
+
+**2. Start LiteLLM AI Gateway**
+
+```shell
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/messages` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "claude-mythos",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Explain quantum entanglement simply."}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+### /chat/completions
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+import os
+
+os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
+os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
+os.environ['AWS_REGION_NAME'] = "us-east-1"
+
+response = completion(
+    model="bedrock_mantle/anthropic.claude-mythos-preview",
+    messages=[{"role": "user", "content": "Explain quantum entanglement simply."}],
+)
+print(response)
+```
+
+</TabItem>
+<TabItem value="ai-gateway-chat" label="AI Gateway">
+
+**1. Add to config.yaml**
+
+```yaml
+model_list:
+  - model_name: claude-mythos
+    litellm_params:
+      model: bedrock_mantle/anthropic.claude-mythos-preview
+      aws_region_name: us-east-1
+```
+
+**2. Start LiteLLM AI Gateway**
+
+```shell
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/chat/completions` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "claude-mythos",
+    "messages": [
+      {"role": "user", "content": "Explain quantum entanglement simply."}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+## OpenAI Models (GPT-5.4 / GPT-5.5)
+
+### /responses
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+import os
+
+os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
+os.environ['BEDROCK_MANTLE_REGION'] = "us-east-2"
+
+response = litellm.responses(
+    model="bedrock_mantle/openai.gpt-5.5",
+    input="Hello! How can you help me today?",
+)
+print(response)
+```
+
+#### Streaming
+
+```python
+import litellm
+import os
+
+os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
+
+response = litellm.responses(
+    model="bedrock_mantle/openai.gpt-5.5",
+    input="Tell me a three sentence bedtime story about a unicorn.",
+    stream=True,
+)
+
+for event in response:
+    print(event)
+```
+
+</TabItem>
+<TabItem value="ai-gateway" label="AI Gateway">
+
+**1. Add to config.yaml**
+
+```yaml
+model_list:
+  - model_name: gpt-5.5-mantle
+    litellm_params:
+      model: bedrock_mantle/openai.gpt-5.5
+      api_key: os.environ/BEDROCK_MANTLE_API_KEY
+      api_base: https://bedrock-mantle.us-east-2.api.aws/v1
+```
+
+**2. Start LiteLLM AI Gateway**
+
+```shell
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/responses` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "gpt-5.5-mantle",
+    "input": "Hello! How can you help me today?"
+  }'
+```
+
+**4. Or use the OpenAI SDK**
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-1234",
+    base_url="http://0.0.0.0:4000",
+)
+
+response = client.responses.create(
+    model="gpt-5.5-mantle",
+    input="Hello! How can you help me today?",
+)
+print(response)
+```
+
+</TabItem>
+</Tabs>
+
 ## API Key
 
 ```python
@@ -25,12 +240,14 @@ os.environ['BEDROCK_MANTLE_REGION'] = "us-east-1"  # or use AWS_REGION
 
 ## Supported Models
 
-| Model | Context Window | Input (per 1M tokens) | Output (per 1M tokens) |
-|-------|---------------|----------------------|------------------------|
-| `openai.gpt-oss-120b` | 131K | $0.15 | $0.60 |
-| `openai.gpt-oss-20b` | 131K | $0.075 | $0.30 |
-| `openai.gpt-oss-safeguard-120b` | 131K | $0.15 | $0.60 |
-| `openai.gpt-oss-safeguard-20b` | 131K | $0.075 | $0.30 |
+| Model | Endpoint | Context Window | Input (per 1M tokens) | Output (per 1M tokens) |
+|-------|----------|---------------|----------------------|------------------------|
+| `openai.gpt-5.5` | `/responses` | 272K | $5.50 | $33.00 |
+| `openai.gpt-5.4` | `/responses` | 272K | $2.75 | $16.50 |
+| `openai.gpt-oss-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
+| `openai.gpt-oss-20b` | `/chat/completions` | 131K | $0.075 | $0.30 |
+| `openai.gpt-oss-safeguard-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
+| `openai.gpt-oss-safeguard-20b` | `/chat/completions` | 131K | $0.075 | $0.30 |
 
 ## Sample Usage
 
@@ -120,6 +337,12 @@ response = completion(
 
 ```yaml
 model_list:
+  - model_name: gpt-5.5-mantle
+    litellm_params:
+      model: bedrock_mantle/openai.gpt-5.5
+      api_key: os.environ/BEDROCK_MANTLE_API_KEY
+      api_base: "https://bedrock-mantle.us-east-2.api.aws/v1"
+
   - model_name: gpt-oss-120b
     litellm_params:
       model: bedrock_mantle/openai.gpt-oss-120b

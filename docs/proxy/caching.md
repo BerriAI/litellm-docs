@@ -19,8 +19,42 @@ calling the LLM API again.
 - Redis Cache
 - Qdrant Semantic Cache
 - Redis Semantic Cache
+- Valkey Semantic Cache
 - S3 Bucket Cache
 - GCS Bucket Cache
+
+## Virtual Key Authentication Cache (Redis)
+
+When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**—so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
+
+Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
+
+**Requirements**
+
+- `litellm_settings.cache` must be **`true`** (Redis for the proxy is initialized during cache setup). See [All settings](./config_settings).
+- `cache_params.type` must be **`redis`** (or Redis Cluster, per your cache config); the auth cache attaches to that Redis client. See [supported `cache_params`](#supported-cache_params-on-proxy-configyaml).
+- Optionally set **`general_settings.user_api_key_cache_ttl`** (seconds): TTL applies to both the in-memory and Redis tiers when Redis auth caching is enabled, so stale keys expire consistently.
+
+Example:
+
+```yaml
+litellm_settings:
+  cache: true
+  enable_redis_auth_cache: true
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: 6379
+
+general_settings:
+  user_api_key_cache_ttl: 300 # optional; seconds
+```
+
+:::tip
+
+Startup logs distinguish the two modes: with `enable_redis_auth_cache: true`, you should see a message that virtual-key lookups are shared across workers.
+
+:::
 
 ## Quick Start
 
@@ -350,6 +384,77 @@ litellm_settings:
 QDRANT_API_KEY = "16rJUMBRx*************"
 QDRANT_API_BASE = "https://5392d382-45*********.cloud.qdrant.io"
 ```
+
+#### Step 3: Run proxy with config
+
+```shell
+$ litellm --config /path/to/config.yaml
+```
+
+#### Step 4. Test it
+
+```shell
+curl -i http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{
+    "model": "fake-openai-endpoint",
+    "messages": [
+      {"role": "user", "content": "Hello"}
+    ]
+  }'
+```
+
+**Expect to see `x-litellm-semantic-similarity` in the response headers when semantic caching is
+one**
+
+</TabItem>
+
+<TabItem value="valkey-semantic" label="Valkey Semantic cache">
+
+Semantic caching on a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, such as AWS ElastiCache for Valkey. RediSearch and RedisVL are not required.
+
+:::info Requirements
+
+The `valkey-search` module must be loaded (check with `MODULE LIST` / `FT._LIST`). On AWS ElastiCache, vector search needs a **node-based Valkey 8.2+ cluster**; a cluster-mode-disabled node group is supported and recommended, and a primary with read replicas is fine since only horizontal sharding is unsupported. ElastiCache **Serverless does not support vector search**. Multi-shard (cluster-mode-enabled) endpoints are not supported here, so use a cluster-mode-disabled endpoint and scale vertically.
+
+:::
+
+#### Step 1: Add `cache` to the config.yaml
+
+```yaml
+model_list:
+  - model_name: fake-openai-endpoint
+    litellm_params:
+      model: openai/fake
+      api_key: fake-key
+      api_base: https://exampleopenaiendpoint-production.up.railway.app/
+  - model_name: openai-embedding
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  set_verbose: True
+  cache: True
+  cache_params:
+    type: valkey-semantic
+    host: os.environ/VALKEY_HOST
+    port: os.environ/VALKEY_PORT
+    valkey_semantic_cache_embedding_model: openai-embedding # the model should be defined on the model_list
+    valkey_semantic_cache_index_name: litellm_semantic_cache_index # optional
+    similarity_threshold: 0.8 # similarity threshold for semantic cache
+```
+
+#### Step 2: Add Valkey Credentials to your .env
+
+```shell
+VALKEY_HOST = "your-valkey-host"
+VALKEY_PORT = "6379"
+VALKEY_PASSWORD = "your-password" # omit for passwordless / IAM-auth clusters
+```
+
+For ElastiCache with encryption in transit (TLS), add `ssl: true` under `cache_params`, or set `cache_params.redis_url` to a `rediss://` URL instead of host and port. To run valkey-search locally, `docker run -d -p 6379:6379 valkey/valkey-bundle:8.1`.
 
 #### Step 3: Run proxy with config
 

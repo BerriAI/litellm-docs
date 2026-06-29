@@ -6,6 +6,7 @@ Here are the core requirements for any PR submitted to LiteLLM:
 
 - [ ] Sign the [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
 - [ ] Keep scope as isolated as possible — your changes should address **one specific problem** at a time
+- [ ] Follow the [Commit and Branch Conventions](#commit-and-branch-conventions) — PR titles are gated by CI
 
 ### Proxy (Backend) PRs
 
@@ -25,6 +26,86 @@ Here are the core requirements for any PR submitted to LiteLLM:
 Before contributing code to LiteLLM, you must sign our [Contributor License Agreement (CLA)](https://cla-assistant.io/BerriAI/litellm). This is a legal requirement for all contributions to be merged into the main repository. The CLA helps protect both you and the project by clearly defining the terms under which your contributions are made.
 
 **Important:** We strongly recommend signing the CLA **before** starting work on your contribution to avoid delays in the review process. You can find and sign the CLA [here](https://cla-assistant.io/BerriAI/litellm).
+
+---
+
+## Commit and Branch Conventions
+
+LiteLLM enforces two community specs:
+
+- **Commits** follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) — `<type>(<scope>)!: <description>`
+- **Branches** follow [Conventional Branches](https://conventional-branch.github.io/) — `<type>/<description>`
+
+Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a required CI check on the PR title (since squash-merge uses the PR title as the commit subject).
+
+### Commit message format
+
+```
+<type>(<optional scope>)!: <description>
+
+<optional body>
+
+<optional footer>
+```
+
+- `<type>` is one of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+- `<scope>` is optional and lowercase.
+- `!` before `:` marks a breaking change.
+- `<description>` is required and **must start with a lowercase letter** (digits and symbols are also fine; only `A–Z` is rejected).
+
+Examples:
+
+```
+feat(router): add weighted round-robin strategy
+fix(bedrock): decouple STS region from aws_region_name
+chore(deps): bump black to 26.3.1
+refactor!: drop Python 3.8 support
+```
+
+PR titles must follow the same format — squash-merge uses the PR title as the commit subject and the **Conventional PR Title** workflow validates it.
+
+### Branch naming
+
+Format: `<type>/<short-description>` where `<type>` is one of `feature`, `bugfix`, `hotfix`, `release`, `chore`.
+
+```
+feature/weighted-round-robin
+bugfix/streaming-empty-chunks
+chore/bump-black
+hotfix/auth-bypass
+release/v1.45.0
+```
+
+Branches always allowed (the `pre-push` hook bypasses them):
+
+- `main`
+- `litellm_internal_staging`
+- `dependabot/*`
+- `gh-readonly-queue/*`
+
+Tag pushes and branch deletions are also skipped.
+
+### Installing the hooks
+
+The hooks live in `.githooks/` and are opt-in. Run once per clone:
+
+```shell
+make install-hooks
+```
+
+This sets `core.hooksPath=.githooks` for the local repository. After that:
+
+- `git commit` runs `commit-msg`, which validates the subject line.
+- `git push` runs `pre-push`, which validates branch names.
+
+In a rare emergency you can bypass either hook per command:
+
+```shell
+git commit --no-verify -m "..."
+git push   --no-verify
+```
+
+To uninstall: `git config --unset core.hooksPath`.
 
 ---
 

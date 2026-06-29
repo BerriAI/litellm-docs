@@ -8,10 +8,10 @@ Set model list, `api_base`, `api_key`, `temperature` & proxy server settings (`m
 | Param Name           | Description                                                   |
 |----------------------|---------------------------------------------------------------|
 | `model_list`         | List of supported models on the server, with model-specific configs |
-| `router_settings`   | litellm Router settings, example `routing_strategy="least-busy"` [**see all**](#router-settings)|
-| `litellm_settings`   | litellm Module settings, example `litellm.drop_params=True`, `litellm.set_verbose=True`, `litellm.api_base`, `litellm.cache` [**see all**](#all-settings)|
-| `general_settings`   | Server settings, example setting `master_key: sk-my_special_key` |
-| `environment_variables`   | Environment Variables example, `REDIS_HOST`, `REDIS_PORT` |
+| `router_settings`   | litellm Router settings, example `routing_strategy="least-busy"` [**see all**](./config_settings#router_settings---reference)|
+| `litellm_settings`   | litellm Module settings, example `litellm.drop_params=True`, `litellm.set_verbose=True`, `litellm.api_base`, `litellm.cache` [**see all**](./config_settings#litellm_settings---reference)|
+| `general_settings`   | Server settings, example setting `master_key: sk-my_special_key` [**see all**](./config_settings#general_settings---reference)|
+| `environment_variables`   | Environment Variables example, `REDIS_HOST`, `REDIS_PORT` [**see all**](./config_settings#environment-variables---reference)|
 
 **Complete List:** Check the Swagger UI docs on `<your-proxy-url>/#/config.yaml` (e.g. http://0.0.0.0:4000/#/config.yaml), for everything you can pass in the config.yaml.
 
@@ -602,9 +602,46 @@ Since you shouldn't use 12.5, round down to **10** to leave a safety buffer. Thi
 - Total maximum connections: 8 workers × 10 connections = 80 connections
 - This stays safely under your database's 100 connection limit
 
+### Cap Idle DB Connections + Pass Extra Prisma URL Params
+
+If you're seeing a large number of idle Prisma connections that never close, set `database_socket_timeout` so Prisma closes any connection that's been silent past the threshold. You can also bound how long Prisma waits to open a new connection with `database_connect_timeout`, and pass arbitrary extra query-string params through to Prisma via `database_extra_connection_params`.
+
+These map to the Prisma [PostgreSQL connection URL params](https://www.prisma.io/docs/orm/overview/databases/postgresql) of the same name (minus the `database_` prefix), and LiteLLM appends them to both `DATABASE_URL` and `DIRECT_URL`.
+
+```yaml
+general_settings:
+  database_connection_pool_limit: 20
+  database_socket_timeout: 300   # close any connection idle/slow for >5 min
+  database_connect_timeout: 15   # fail fast if a new connection can't be established within 15s
+  database_extra_connection_params:
+    pgbouncer: "true"            # set if running behind PgBouncer
+    statement_cache_size: 0
+    sslmode: "require"
+```
+
+**Notes:**
+- `database_socket_timeout` is the main knob for capping idle DB connections from LiteLLM.
+- `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
+- `database_extra_connection_params` is an untyped passthrough — any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+
+### Disable Server-Side Prepared Statements
+
+Set `database_disable_prepared_statements: true` to stop Prisma from reusing server-side prepared statements. It appends `pgbouncer=true` to the Prisma connection URL, so each query is prepared fresh instead of reusing a cached plan.
+
+```yaml
+general_settings:
+  database_disable_prepared_statements: true
+```
+
+Use this when:
+- LiteLLM connects to Postgres through **PgBouncer in transaction pooling mode**, where reused prepared statements break because consecutive queries can land on different server connections.
+- You run **rolling deployments with schema migrations** and see `cached plan must not change result type` errors. The error fires when a migration changes the result type of a column referenced by a plan that a pooled connection still holds; with this flag on there is no reused plan to invalidate, so the migration is harmless.
+
+The tradeoff is that every query pays the prepare cost instead of amortizing it, which adds a small per-query overhead. An explicit `pgbouncer` key in `database_extra_connection_params` takes precedence over this flag.
+
 ## LiteLLM License Key (Enterprise)
 
-To enable [LiteLLM Enterprise features](https://docs.litellm.ai/docs/proxy/enterprise), set your license key as an environment variable:
+To enable [LiteLLM Enterprise features](https://docs.litellm.ai/docs/enterprise), set your license key as an environment variable:
 
 ```bash
 export LITELLM_LICENSE="eyJ..."
@@ -693,7 +730,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:main-latest --detailed_debug
+   docker.litellm.ai/berriai/litellm-database:latest --detailed_debug
 ```
 
 </TabItem>
@@ -714,7 +751,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:main-latest
+   docker.litellm.ai/berriai/litellm-database:latest
 ```
 </TabItem>
 </Tabs>

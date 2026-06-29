@@ -32,7 +32,7 @@ This page documents all command-line interface (CLI) arguments available for the
 
 ### --num_workers
    - **Default:** Number of logical CPUs in the system, or `4` if that cannot be determined
-   - The number of uvicorn / gunicorn workers to spin up.
+   - The number of worker processes to spin up (uvicorn, gunicorn, or Granian `--workers`).
    - **Usage:** 
      ```shell
      litellm --num_workers 4
@@ -91,6 +91,23 @@ This page documents all command-line interface (CLI) arguments available for the
     litellm
     ```
 
+### --max_requests_before_restart_jitter
+   - **Default:** `None`
+   - **Type:** `int`
+   - Adds a random amount in `[0, jitter]` to `--max_requests_before_restart` for each worker so workers recycle at staggered request counts instead of all at once. Has no effect without `--max_requests_before_restart`.
+   - For uvicorn: maps to `limit_max_requests_jitter` (requires `uvicorn>=0.41.0`; on older versions the flag is ignored with a warning)
+   - For gunicorn: maps to `max_requests_jitter`
+   - **Usage:** 
+     ```shell
+     litellm --max_requests_before_restart 10000 --max_requests_before_restart_jitter 1000
+     ```
+  - **Usage - set Environment Variable:** `MAX_REQUESTS_BEFORE_RESTART_JITTER`
+    ```shell
+    export MAX_REQUESTS_BEFORE_RESTART=10000
+    export MAX_REQUESTS_BEFORE_RESTART_JITTER=1000
+    litellm
+    ```
+
 ## Server Backend Options
 
 ### --run_gunicorn
@@ -109,6 +126,22 @@ This page documents all command-line interface (CLI) arguments available for the
    - **Usage:** 
      ```shell
      litellm --run_hypercorn
+     ```
+
+### --run_granian
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - **Status:** Beta — opt in when you want higher gateway throughput; uvicorn remains the default.
+   - Starts the proxy via [Granian](https://github.com/emmett-framework/granian) (Rust-backed ASGI server) instead of uvicorn. Supports HTTP/1 and HTTP/2.
+   - **Why use it:** Granian moves the HTTP layer off Python into a Rust runtime, which tends to handle concurrent proxy traffic more predictably than uvicorn alone. In LiteLLM load tests, Granian showed a **10–20 RPS improvement** over an equivalent uvicorn multi-worker setup, with **better stability under sustained load and fewer request failures**.
+   - **Requirements:** Python 3.9+ and the `granian` package (included in `litellm[proxy]`).
+   - **Limitations when using Granian:**
+     - `--max_requests_before_restart` is not supported (Granian uses `workers_lifetime` in seconds, not a per-request limit).
+     - `--ciphers` is not applied.
+     - `--keepalive_timeout` and `--log_config` apply to uvicorn only.
+   - **Usage:** 
+     ```shell
+     litellm --config config.yaml --run_granian --num_workers 4
      ```
 
 ### --skip_server_startup

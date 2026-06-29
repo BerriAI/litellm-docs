@@ -23,6 +23,10 @@ From v1.76.0, SSO is now Free for up to 5 users.
 <Tabs>
 <TabItem value="okta" label="Okta SSO">
 
+### Video Walkthrough
+
+<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
 #### Step 1: Create an OIDC Application in Okta
 
 In your Okta Admin Console, create a new **OIDC Web Application**. See [Okta's guide on creating OIDC app integrations](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm) for detailed instructions.
@@ -269,6 +273,8 @@ Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm
 **Capturing Additional SSO Fields**
 
 Use `GENERIC_USER_EXTRA_ATTRIBUTES` to extract additional fields from the SSO provider response beyond the standard user attributes (id, email, name, etc.). This is useful when you need to access custom organization-specific data (e.g., department, employee ID, groups) in your [custom SSO handler](./custom_sso.md).
+
+For **CLI SSO**, you can map the same (or other) claims into user `metadata` and return scalars to the CLI via `CLI_SSO_CLAIM_MAP` — see [CLI Authentication](./cli_sso.md#attribution-metadata-oidc-claims).
 
 ```shell
 # Comma-separated list of field names to extract

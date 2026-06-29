@@ -1,6 +1,6 @@
 ---
 slug: mcp-stdio-command-injection-april-2026
-title: "Security Update: CVE-2026-30623 — Command Injection via MCP SDK stdio Transport"
+title: "Security Update: CVE-2026-30623 — Command Injection via Anthropic's MCP SDK"
 date: 2026-04-21T12:00:00
 authors:
   - krrish
@@ -10,7 +10,7 @@ tags: [security]
 hide_table_of_contents: false
 ---
 
-On April 15, 2026, [OX Security](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/) published an advisory covering command-injection in Anthropic's MCP SDK's stdio transport (`StdioServerParameters` runs whatever `command` it's handed). This has been fixed on LiteLLM since `v1.83.6-nightly`.
+On April 15, 2026, [OX Security](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/) published an advisory covering **command-injection in Anthropic's MCP SDK's stdio transport** (`StdioServerParameters` runs whatever `command` it's handed). This has been fixed on LiteLLM since `v1.83.6-nightly`.
 
 The fix landed in [commit `7b7f304`](https://github.com/BerriAI/litellm/commit/7b7f304675) (PR [#25343](https://github.com/BerriAI/litellm/pull/25343)) and has been in every release from `v1.83.6-nightly` onward. `v1.83.7-stable` includes it.
 

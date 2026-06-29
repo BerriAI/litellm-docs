@@ -1,0 +1,54 @@
+.wrapper {
+  margin: 1rem 0 2rem 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.meta code {
+  background: var(--ifm-code-background);
+  padding: 0 0.25rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--ifm-table-border-color);
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.featureCol {
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+.status_pass {
+  background: rgba(46, 160, 67, 0.12);
+}
+
+.status_fail {
+  background: rgba(248, 81, 73, 0.12);
+  cursor: help;
+}
+
+.status_not_tested {
+  color: var(--ifm-color-emphasis-500);
+}
+
+.status_not_applicable {
+  color: var(--ifm-color-emphasis-600);
+  font-style: italic;
+  cursor: help;
+}

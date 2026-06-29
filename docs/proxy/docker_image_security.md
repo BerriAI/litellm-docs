@@ -1,6 +1,6 @@
 # Docker Image Security Guide
 
-LiteLLM signs every Docker image published to GHCR with [cosign](https://docs.sigstore.dev/cosign/overview/) starting from **v1.83.0**. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
+LiteLLM signs every Docker image published to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/) starting from **v1.83.0**. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
 
 ## Signed images
 
@@ -30,7 +30,7 @@ A commit hash is cryptographically immutable, making this the strongest verifica
 ```bash
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm:v1.83.0-stable
+  ghcr.io/berriai/litellm:v1.89.4
 ```
 
 Replace the image reference with any signed variant:
@@ -39,12 +39,12 @@ Replace the image reference with any signed variant:
 # litellm-database
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  ghcr.io/berriai/litellm-database:v1.89.4
 
 # litellm-non_root
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-non_root:v1.83.0-stable
+  ghcr.io/berriai/litellm-non_root:v1.89.4
 ```
 
 ### Verify with a release tag (convenience)
@@ -53,8 +53,8 @@ Tags are protected in this repository and resolve to the same key:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.83.0-stable/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.89.4/cosign.pub \
+  ghcr.io/berriai/litellm-database:v1.89.4
 ```
 
 ### Expected output
@@ -156,7 +156,7 @@ Get the digest after pulling:
 
 ```bash
 docker inspect --format='{{index .RepoDigests 0}}' \
-  ghcr.io/berriai/litellm-database:v1.83.0-stable
+  ghcr.io/berriai/litellm-database:v1.89.4
 ```
 
 Cosign verification works with digests too:
@@ -169,9 +169,14 @@ cosign verify \
 
 ### Use stable release tags
 
-If digest pinning is too rigid for your workflow, use `-stable` release tags (e.g. `v1.83.0-stable`). These are immutable release tags that will not be overwritten.
+If digest pinning is too rigid for your workflow, use plain semver / PEP 440 release tags (e.g. `v1.86.2`). These are immutable release tags that will not be overwritten.
 
-Avoid `main-latest` or `main-stable` in production — these rolling tags point to the most recent build and can change between deployments.
+:::warning `main-stable` and `main-latest` are deprecated
+
+LiteLLM has moved to PEP 440 / semver versioning, so stable releases are now published as plain `vX.Y.Z` tags (e.g. `v1.86.2`) instead of the older `vX.Y.Z-stable` form. The rolling `main-stable` tag is still being updated for backwards compatibility but is deprecated; pin to a specific `vX.Y.Z` tag (or a digest) instead. The rolling `main-latest` tag is deprecated and is no longer being updated; use `latest` instead.
+:::
+
+Avoid `latest` in production. This rolling tag points to the most recent build and can change between deployments.
 
 ### Safe upgrade checklist
 
@@ -185,5 +190,5 @@ Avoid `main-latest` or `main-stable` in production — these rolling tags point 
 
 - [CI/CD v2 announcement](https://docs.litellm.ai/blog/ci-cd-v2-improvements) — background on LiteLLM's signing infrastructure
 - [Docker deployment guide](./deploy.md) — full Docker, Helm, and Terraform setup
-- [cosign documentation](https://docs.sigstore.dev/cosign/overview/) — cosign usage and key management
+- [cosign documentation](https://docs.sigstore.dev/quickstart/quickstart-cosign/) — cosign usage and key management
 - [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) — Kubernetes admission control

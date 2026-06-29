@@ -9,13 +9,9 @@ import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
 import Image from '@theme/IdealImage';
 
-:::note Security Update
-The Trivy supply-chain compromise has been contained :tada: . All affected packages have been deleted and current releases are free of the compromised code/component. Please refer to our [Security Townhall](/blog/security-townhall-updates) for a deeper understanding of the problem, and [CI/CD v2](/blog/ci-cd-v2-improvements) for how we're improving moving forward.
-:::
-
 <Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
 
-**LiteLLM** is an open-source library that provides a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
+**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
 
 - Call any provider using the same `completion()` interface — no re-learning the API for each one
 - Consistent output format regardless of which provider or model you use
@@ -366,7 +362,7 @@ docker run \
   -e AZURE_API_KEY=your-key \
   -e AZURE_API_BASE=https://your-resource.openai.azure.com/ \
   -p 4000:4000 \
-  docker.litellm.ai/berriai/litellm:main-latest \
+  docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml --detailed_debug
 ```
 
@@ -402,7 +398,7 @@ Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exact
 LiteLLM is a unified gateway for **LLMs, agents, and MCP** — you don't need a separate agent or MCP gateway. One endpoint for 100+ models, A2A agents, and MCP tools.
 
 <NavigationCards
-columns={2}
+columns={3}
 items={[
 {
 icon: "🔗",
@@ -415,6 +411,12 @@ icon: "🛠️",
 title: "MCP Gateway",
 description: "Central MCP endpoint with per-key access control.",
 to: "/docs/mcp",
+},
+{
+icon: "✨",
+title: "✨ Enterprise Quickstart",
+description: "Quickstart guide for trial customers — LLM, MCP, and Agent gateway.",
+to: "/docs/learn/enterprise_quickstart",
 },
 ]}
 />

@@ -1,14 +1,20 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+require('dotenv').config();
+
 // @ts-ignore
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 // @ts-ignore
 const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
 
+const inkeepApiKey = process.env.INKEEP_API_KEY;
+// Conditional check: docs should work if this key is missing.
+const hasInkeepSearch = Boolean(inkeepApiKey);
+
 const inkeepConfig = {
   baseSettings: {
-    apiKey: "0cb9c9916ec71bfe0e53c9d7f83ff046daee3fa9ef318f6a",
+    apiKey: inkeepApiKey,
     organizationDisplayName: 'liteLLM',
     primaryBrandColor: '#4965f5',
     theme: {
@@ -30,15 +36,30 @@ const inkeepConfig = {
     },
   },
   searchSettings: {
-    searchBarPlaceholder: 'Search docs...',
+    searchBarPlaceholder: 'Search docs, guides, API reference...',
+    debounceTimeMs: 0,
+    maxResults: 7 
   },
   aiChatSettings: {
-    quickQuestions: [
-      'How do I use the proxy?',
-      'How do I cache responses?',
-      'How do I stream responses?',
-    ],
+    aiAssistantName: 'LiteLLM AI',
+    chatSubjectName: 'LiteLLM',
     aiAssistantAvatar: '/img/favicon.ico',
+    placeholder: 'Ask anything about LiteLLM...',
+    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
+    exampleQuestions: [
+      'How do I set up the LiteLLM proxy?',
+      'How do I route requests across multiple models?',
+      'How do I enable response caching?',
+      'How do I track spend per team or API key?',
+    ],
+    exampleQuestionsLabel: 'Common questions',
+    isFirstExampleQuestionHighlighted: true,
+    shouldOpenLinksInNewTab: true,
+    isCopyChatButtonVisible: true,
+    isShareButtonVisible: false,
+    prompts: [
+      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
+    ],
   },
 };
 
@@ -65,24 +86,29 @@ const config = {
     locales: ['en'],
   },
   plugins: [
-    [
-      '@inkeep/cxkit-docusaurus',
-      {
-        SearchBar: {
-          ...inkeepConfig,
-        },
-        ChatButton: {
-          ...inkeepConfig,
-        },
-      },
-    ],
+    require('./plugins/optimize-images'),
+    ...(hasInkeepSearch
+      ? [
+          [
+            '@inkeep/cxkit-docusaurus',
+            {
+              SearchBar: {
+                ...inkeepConfig,
+              },
+              ChatButton: {
+                ...inkeepConfig,
+              },
+            },
+          ],
+        ]
+      : []),
     [
       '@docusaurus/plugin-ideal-image',
       {
-        quality: 100,
-        max: 1920, // max resized image's size.
-        min: 640, // min resized image's size. if original is lower, use that size.
-        steps: 2, // the max number of images generated between min and max (inclusive)
+        quality: 75,
+        max: 1280,
+        min: 640,
+        steps: 2,
         disableInDev: false,
       },
     ],
@@ -142,7 +168,6 @@ const config = {
 
           const docItems = flattenDocs(items);
 
-          // Group by year
           const byYear = {};
           for (const item of docItems) {
             const year = docYearMap[item.id] || 'Other';
@@ -150,23 +175,34 @@ const config = {
             byYear[year].push(item);
           }
 
-          // Sort each year's items by version descending
-          for (const year of Object.keys(byYear)) {
-            byYear[year].sort(compareVersionsDesc);
+          function buildMinorCategories(yearItems, expandNewest) {
+            const byMinor = {};
+            for (const item of yearItems) {
+              const [maj, min] = parseVersion(item.label || item.id || '');
+              const key = `v${maj}.${min}.x`;
+              if (!byMinor[key]) byMinor[key] = {maj, min, items: []};
+              byMinor[key].items.push(item);
+            }
+            const keys = Object.keys(byMinor);
+            for (const key of keys) byMinor[key].items.sort(compareVersionsDesc);
+            keys.sort((a, b) =>
+              (byMinor[b].maj - byMinor[a].maj) || (byMinor[b].min - byMinor[a].min));
+            return keys.map((key, idx) => ({
+              type: 'category',
+              label: key,
+              collapsed: !(expandNewest && idx === 0),
+              items: byMinor[key].items,
+            }));
           }
 
-          // Build categories sorted by year descending
-          const years = Object.keys(byYear).sort((a, b) => {
-            // Object.keys() returns strings; avoid numeric subtraction type errors.
-            const na = Number.parseInt(a, 10);
-            const nb = Number.parseInt(b, 10);
-            return nb - na;
-          });
-          return years.map(year => ({
+          const years = Object.keys(byYear).sort(
+            (a, b) => Number.parseInt(b, 10) - Number.parseInt(a, 10),
+          );
+          return years.map((year, idx) => ({
             type: 'category',
             label: String(year),
             collapsed: year !== String(years[0]),
-            items: byYear[year],
+            items: buildMinorCategories(byYear[year], idx === 0),
           }));
         },
       },
@@ -180,10 +216,11 @@ const config = {
         blogTitle: 'Blog',
         blogSidebarTitle: 'All Posts',
         blogSidebarCount: 'ALL',
-        postsPerPage: 10,
+        postsPerPage: 'ALL',
         showReadingTime: false,
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
+        remarkPlugins: [require('./src/remark/raw-markdown')],
       },
     ],
 
@@ -230,14 +267,26 @@ const config = {
             : undefined,
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
+        pages: {},
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
       }),
     ],
   ],
+
+  future: {
+    experimental_faster: {
+      swcJsLoader: true,
+      swcJsMinimizer: true,
+      swcHtmlMinimizer: true,
+      lightningCssMinimizer: true,
+      mdxCrossCompilerCache: true,
+    },
+  },
 
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
@@ -287,6 +336,11 @@ const config = {
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            href: 'https://docs.litellm-agent-platform.ai/',
+            label: 'LiteLLM Agent Platform',
+            position: 'left',
+          },
+          {
             href: 'https://github.com/BerriAI/litellm',
             position: 'right',
             className: 'header-github-link',
@@ -298,10 +352,9 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          {
-            type: 'search',
-            position: 'right',
-          },
+          ...(hasInkeepSearch
+            ? [{type: 'search', position: 'right'}]
+            : []),
         ],
       },
       footer: {

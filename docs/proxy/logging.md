@@ -739,6 +739,12 @@ You will see `raw_request` in your Langfuse Metadata. This is the RAW CURL comma
 
 ## OpenTelemetry
 
+:::tip
+
+The full OpenTelemetry reference — span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting — lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
+
+:::
+
 :::info 
 
 [Optional] Customize OTEL Service Name and OTEL TRACER NAME by setting the following variables in your environment
@@ -2282,8 +2288,19 @@ Beta Integration
 
 **Required Env Variables**
 
+Galileo Cloud (app.galileo.ai):
+
 ```bash
-export GALILEO_BASE_URL=""  # For most users, this is the same as their console URL except with the word 'console' replaced by 'api' (e.g. http://www.console.galileo.myenterprise.com -> http://www.api.galileo.myenterprise.com)
+export GALILEO_API_KEY=""
+export GALILEO_PROJECT_ID=""
+export GALILEO_LOG_STREAM_ID=""  # optional
+export GALILEO_BASE_URL="https://api.galileo.ai"  # optional, defaults when GALILEO_API_KEY is set
+```
+
+Enterprise / self-hosted Observe:
+
+```bash
+export GALILEO_BASE_URL=""  # Replace 'console' with 'api' in your console URL (e.g. https://api.galileo.myenterprise.com)
 export GALILEO_PROJECT_ID=""
 export GALILEO_USERNAME=""
 export GALILEO_PASSWORD=""
@@ -2300,6 +2317,11 @@ model_list:
     api_key: my-fake-key
     model: openai/my-fake-model
   model_name: fake-openai-endpoint
+
+environment_variables:
+  GALILEO_API_KEY: "os.environ/GALILEO_API_KEY"
+  GALILEO_PROJECT_ID: "your-project-id"
+  GALILEO_LOG_STREAM_ID: "your-log-stream-id"  # optional
 
 litellm_settings:
   success_callback: ["galileo"] # 👈 KEY CHANGE

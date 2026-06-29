@@ -27,9 +27,26 @@
   --ifm-font-size-base: 15px;
   --ifm-line-height-base: 1.65;
   --ifm-border-radius: 6px;
+  /* Code fences: slightly more inset than Infima default (1rem), esp. next to bash left accent */
+  --ifm-pre-padding: 1.25rem;
   /* Wider reading column — reduces excessive whitespace on large monitors */
   --ifm-container-width: 1380px;
   --ifm-container-width-xl: 1560px;
+}
+
+
+html,
+body,
+#__docusaurus {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Break the flex-item min-width:auto chain that lets nowrap children
+   (marquees, long pre/code blocks) push wrappers wider than the viewport. */
+#__docusaurus,
+#__docusaurus > * {
+  min-width: 0;
 }
 
 /* =========================================
@@ -307,6 +324,38 @@ li.tabs__item--active {
   border-radius: var(--ifm-border-radius);
   font-size: 12.5px !important;
   line-height: 1.6;
+}
+
+/* Docusaurus line-number mode uses vertical-only padding on the inner wrapper; restore horizontal inset */
+.theme-code-block span[class*='codeLineContent'] {
+  padding-left: var(--ifm-pre-padding);
+}
+
+/* Doc + blog: both render under `article > .markdown`. Blog prose `.markdown code` and
+   `pre:not(.prism-code) code` were zeroing inner padding on fenced blocks — match Infima/CodeBlock. */
+article .markdown pre:not(.prism-code) code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+article .markdown pre.prism-code code[class*='codeBlockLinesWithNumbering'] {
+  padding: var(--ifm-pre-padding) 0 !important;
+  font-size: var(--ifm-code-font-size) !important;
+  line-height: var(--ifm-pre-line-height) !important;
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+}
+
+article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='codeBlockLinesWithNumbering']) {
+  padding: var(--ifm-pre-padding) !important;
+  font-size: var(--ifm-code-font-size) !important;
+  line-height: var(--ifm-pre-line-height) !important;
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
 }
 
 [data-theme='dark'] .prism-code {
@@ -923,4 +972,37 @@ video {
 
 [data-theme='dark'].blog-wrapper article .markdown a {
   color: #38bdf8;
+}
+
+/* =========================================
+   ANNOUNCEMENT BAR
+   ========================================= */
+div[class*='announcementBar'] {
+  background: #0078d4 !important;
+  border-bottom: none !important;
+  padding: 10px 0 !important;
+  font-family: var(--ifm-font-family-base);
+  font-size: 14px !important;
+  letter-spacing: 0.01em;
+}
+
+div[class*='announcementBar'] div[class*='content'] {
+  font-weight: 400 !important;
+  line-height: 1.5;
+}
+
+div[class*='announcementBar'] a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+  font-weight: 600 !important;
+  margin-left: 4px;
+}
+
+div[class*='announcementBar'] a:hover {
+  opacity: 0.9;
+}
+
+[data-theme='dark'] div[class*='announcementBar'] {
+  background: #1a5fb4 !important;
 }
