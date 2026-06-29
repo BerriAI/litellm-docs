@@ -2,6 +2,13 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # GradientAI
+
+:::warning Deprecated
+
+This provider is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#gradient-ai-provider).
+
+:::
+
 https://digitalocean.com/products/gradientai
 
 

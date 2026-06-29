@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # CloudZero Integration
 
+:::warning Deprecated
+
+The CloudZero connector is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#cloudzero-connector).
+
+:::
+
 LiteLLM provides an integration with CloudZero's AnyCost API, allowing you to export your LLM usage data to CloudZero for cost tracking analysis.
 
 ## Overview

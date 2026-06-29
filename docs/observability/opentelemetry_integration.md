@@ -4,15 +4,15 @@ import TabItem from '@theme/TabItem';
 
 # OpenTelemetry - Tracing LLMs with any observability tool
 
+:::warning Deprecated
+
+OpenTelemetry v1 is deprecated and will be removed in the **August 25, 2026** release. Migrate to the opt-in **[OpenTelemetry v2](./opentelemetry_v2)** integration, which produces one trace per request (HTTP → auth → guardrails → LLM call → DB writes), follows the official GenAI semantic conventions, and ships with presets for Arize, Phoenix, Langfuse, Weave, and more. Enable it with `LITELLM_OTEL_V2=true`. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#opentelemetry-v1).
+
+:::
+
 OpenTelemetry is a CNCF standard for observability. It connects to any observability tool, such as Jaeger, Zipkin, Datadog, New Relic, Traceloop, Levo AI and others.
 
 <Image img={require('../../img/traceloop_dash.png')} />
-
-:::tip Looking for full-request tracing?
-
-There's a newer, opt-in **[OpenTelemetry v2](./opentelemetry_v2)** integration for LiteLLM Proxy that produces one trace per request (HTTP → auth → guardrails → LLM call → DB writes), follows the official GenAI semantic conventions, and ships with presets for Arize, Phoenix, Langfuse, Weave, and more. Enable it with `LITELLM_OTEL_V2=true`.
-
-:::
 
 :::note Change in v1.81.0
 

@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # Exposing MCPs on the Public Internet
 
+:::warning Deprecated
+
+The "Network Settings" panel and the "Internal network only" flag are deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#mcp-network-settings).
+
+:::
+
 Control which MCP servers are visible to external callers (e.g., ChatGPT, Claude Desktop) vs. internal-only callers. This is useful when you want a subset of your MCP servers available publicly while keeping sensitive servers restricted to your private network.
 
 ## Overview

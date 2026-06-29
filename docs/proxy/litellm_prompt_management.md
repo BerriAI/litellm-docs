@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # LiteLLM AI Gateway Prompt Management
 
+:::warning Deprecated
+
+This feature is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#prompt-management).
+
+:::
+
 Use the LiteLLM AI Gateway to create, manage and version your prompts.
 
 ## Quick Start

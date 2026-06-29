@@ -1,5 +1,10 @@
 # Greenscale - Track LLM Spend and Responsible Usage
 
+:::warning Deprecated
+
+This feature is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#greenscale-logging).
+
+:::
 
 :::tip
 

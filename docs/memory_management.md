@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # /memory
 
+:::warning Deprecated
+
+This feature is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#memory).
+
+:::
+
 CRUD endpoints for storing and retrieving user/team-scoped memory entries on the LiteLLM proxy. Use these to persist conversation context, agent memory, team playbooks, or any key-value data scoped to users and teams.
 
 ## Overview

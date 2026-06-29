@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # Memory Management
 
+:::warning Deprecated
+
+This feature is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#memory).
+
+:::
+
 Store user preferences and feedback so your LLM remembers them across sessions. Scoped per user and team, with built-in access control.
 
 **Requires:** LiteLLM `v1.83.10+` with PostgreSQL connected. No config changes needed.

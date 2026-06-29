@@ -2,6 +2,8 @@
 
 When we have breaking changes (i.e. going from 1.x.x to 2.x.x), we will document those changes here.
 
+For features and integrations being retired without a major version bump, see the [Deprecations](./deprecations.md) guide.
+
 
 ## `1.0.0` 
 

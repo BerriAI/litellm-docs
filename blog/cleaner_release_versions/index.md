@@ -22,7 +22,7 @@ The legacy `main-stable` Docker tag still advances each week so existing deploym
 - **Reproducible pin (Docker)** → `ghcr.io/berriai/litellm:1.84.0`
 - **Reproducible pin (PyPI)** → `pip install litellm==1.84.0`
 
-This banner will be updated with reminders as the cutover approaches.
+This banner will be updated with reminders as the cutover approaches. See the [full list of deprecated Docker tags](/docs/deprecations#docker-tags) for every tag and its replacement.
 :::
 
 LiteLLM release version names are changing. Two pain points have been driving this:

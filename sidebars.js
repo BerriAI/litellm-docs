@@ -1166,6 +1166,7 @@ const sidebars = {
       items: [
         "sdk_custom_pricing",
         "migration",
+        "deprecations",
         "data_security",
         "proxy/security_encryption_faq",
         "migration_policy",

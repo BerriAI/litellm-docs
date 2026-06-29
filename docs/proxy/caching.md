@@ -630,6 +630,12 @@ $ litellm --config /path/to/config.yaml
 
 <TabItem value="disk" label="Disk Cache">
 
+:::warning Deprecated
+
+Disk caching is deprecated and will be removed in the **August 25, 2026** release. See the [deprecations notice](/docs/deprecations) and the [migration guide for this feature](/docs/deprecations#disk-caching).
+
+:::
+
 #### Step 1: Add `cache` to the config.yaml
 
 ```yaml
