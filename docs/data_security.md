@@ -12,15 +12,6 @@ At LiteLLM, **safeguarding your data privacy and security** is our top priority.
 
 For security inquiries, please contact us at support@berri.ai
 
-## **Security Certifications**
-
-| **Certification** | **Status**                                                                                      |
-|-------------------|-------------------------------------------------------------------------------------------------|
-| SOC 2 Type I      | Certified. Report available upon request on Enterprise plan.                                                           |
-| SOC 2 Type II     | Certified. Report available upon request on Enterprise plan.                   |
-| ISO 27001          | Certified. Report available upon request on Enterprise                              |
-
-
 ## Collection of Personal Data
 
 ### For Self-hosted LiteLLM Users:
