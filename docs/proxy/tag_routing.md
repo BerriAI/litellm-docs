@@ -284,7 +284,8 @@ curl http://localhost:4000/v1/chat/completions \
 | Behavior | Detail |
 |----------|--------|
 | Matching | Exact tag string match. `!provider:anthropic` removes only deployments tagged exactly `provider:anthropic` |
-| Ban-only request | If the request carries only `!` tags and no positive tags, all non-banned deployments are eligible |
+| No regex | Negation tags are plain strings, not regex patterns. `!provider:(anthropic\|openai)` only excludes a deployment tagged exactly `provider:(anthropic\|openai)`. To exclude multiple providers send separate tags: `["!provider:anthropic", "!provider:openai"]` |
+| Ban-only request | If the request carries only `!` tags and no positive tags, the base pool mirrors untagged-request behaviour: default-tagged deployments if any exist, otherwise all deployments. The exclusion set is then applied on top of that pool |
 | All excluded | If negation tags remove every candidate, the request fails with `no_deployments_with_tag_routing` |
 | Untagged deployments | Deployments with no `tags` field are never excluded by negation tags |
 | Header | Negation tags work via `x-litellm-tags` header too: `-H 'x-litellm-tags: !provider:anthropic'` |
