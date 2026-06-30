@@ -361,6 +361,61 @@ curl http://localhost:4000/v1/chat/completions \
 | Interaction with plain tags | When a deployment has both `tags` and `tag_regex`, and `tag_filtering_match_any=False`, the regex path is blocked if the strict tag check already failed. Regex cannot override a strict-tag policy |
 | Trusted input | Patterns are set by the operator in config, never supplied by the caller. This is the key difference from negation tags (`!foo` in request metadata), which are always treated as plain literals |
 
+### Interaction with negation tags
+
+Negation exclusion runs before `tag_regex` matching. The order matters when a deployment carries both a plain `tags` list and `tag_regex`:
+
+1. The router removes any deployment whose `tags` intersect the request's excluded set.
+2. `tag_regex` matching runs only on the surviving candidates.
+
+**Case 1: negation removes a plain-tagged deployment; the `tag_regex` deployment is unaffected**
+
+```yaml
+model_list:
+  - model_name: chat
+    litellm_params:
+      tag_regex: ["^User-Agent: claude-code\\/"]   # no plain tags
+    model_info: {id: claude-code-deployment}
+
+  - model_name: chat
+    litellm_params:
+      tags: ["provider:anthropic"]
+    model_info: {id: anthropic-deployment}
+```
+
+```bash
+curl ... -H "User-Agent: claude-code/1.2.3" \
+  -d '{"model":"chat","metadata":{"tags":["!provider:anthropic"]}}'
+# anthropic-deployment is excluded; claude-code-deployment is matched by User-Agent
+# -> x-litellm-model-id: claude-code-deployment
+```
+
+**Case 2: negation removes the deployment that holds `tag_regex`; ban-only path fires**
+
+If the negated tag is on the same deployment as `tag_regex`, that deployment is excluded first. With no `tag_regex` deployments left in the candidate pool, `has_tag_filter` becomes `False`, the ban-only path fires, and the remaining deployments are returned directly.
+
+```yaml
+model_list:
+  - model_name: chat
+    litellm_params:
+      tag_regex: ["^User-Agent: claude-code\\/"]
+      tags: ["group:claude"]   # negation target is on the tag_regex deployment
+    model_info: {id: claude-code-deployment}
+
+  - model_name: chat
+    litellm_params:
+      tags: ["provider:openai"]
+    model_info: {id: openai-deployment}
+```
+
+```bash
+curl ... -H "User-Agent: claude-code/1.2.3" \
+  -d '{"model":"chat","metadata":{"tags":["!group:claude"]}}'
+# claude-code-deployment excluded; no tag_regex deployments remain
+# ban-only path returns openai-deployment regardless of User-Agent
+# -> x-litellm-model-id: openai-deployment
+```
+
 ### Observability
 
 ```json
