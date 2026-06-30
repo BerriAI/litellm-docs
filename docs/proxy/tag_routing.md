@@ -284,7 +284,7 @@ curl http://localhost:4000/v1/chat/completions \
 | Behavior | Detail |
 |----------|--------|
 | Matching | Exact tag string match. `!provider:anthropic` removes only deployments tagged exactly `provider:anthropic` |
-| No regex | Negation tags are plain strings, not regex patterns. `!provider:(anthropic\|openai)` only excludes a deployment tagged exactly `provider:(anthropic\|openai)`. To exclude multiple providers send separate tags: `["!provider:anthropic", "!provider:openai"]` |
+| No regex | Negation tags are plain strings, not regex patterns. `!provider:(anthropic\|openai)` only excludes a deployment tagged exactly `provider:(anthropic\|openai)`. To exclude multiple providers send separate tags: `["!provider:anthropic", "!provider:openai"]`. Note: `tag_regex` in deployment config is regex, but that is operator-configured and unrelated to client-supplied negation tags |
 | Ban-only request | If the request carries only `!` tags and no positive tags, the base pool mirrors untagged-request behaviour: default-tagged deployments if any exist, otherwise all deployments. The exclusion set is then applied on top of that pool |
 | All excluded | If negation tags remove every candidate, the request fails with `no_deployments_with_tag_routing` |
 | Untagged deployments | Deployments with no `tags` field are never excluded by negation tags |
@@ -349,6 +349,17 @@ curl http://localhost:4000/v1/chat/completions \
   -d '{"model": "claude-sonnet", "messages": [{"role": "user", "content": "hi"}]}'
 # -> x-litellm-model-id: regular-deployment
 ```
+
+### Matching semantics
+
+| Behavior | Detail |
+|----------|--------|
+| Engine | Python `re.search` — patterns do not need to be anchored unless you want to pin to the start (`^`) or end (`$`) of the string |
+| Input format | Patterns are matched against `"Header-Name: value"` strings. Currently only `User-Agent` is exposed: `User-Agent: claude-code/1.2.3` |
+| Logic | Always OR — any single pattern matching is enough to select the deployment. `tag_filtering_match_any=False` applies only to plain `tags`, not to `tag_regex` |
+| Invalid patterns | A pattern that fails `re.compile` is logged and skipped; it never causes a hard error |
+| Interaction with plain tags | When a deployment has both `tags` and `tag_regex`, and `tag_filtering_match_any=False`, the regex path is blocked if the strict tag check already failed. Regex cannot override a strict-tag policy |
+| Trusted input | Patterns are set by the operator in config, never supplied by the caller. This is the key difference from negation tags (`!foo` in request metadata), which are always treated as plain literals |
 
 ### Observability
 
