@@ -7,6 +7,10 @@ This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy.
 
 Note: LiteLLM supports OAuth for MCP servers as well. [Learn more](https://docs.litellm.ai/docs/mcp#mcp-oauth)
 
+## Demo
+
+<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
 ## Connecting MCP Servers
 
 You can connect MCP servers to Claude Code via LiteLLM Proxy.
@@ -46,7 +50,7 @@ mcp_servers:
 </Tabs>
 
 :::important
-The server name under `mcp_servers:` (e.g. `atlassian_mcp`, `github_mcp`) **must match** the name used in the Claude Code URL path (`/mcp/<server_name>`). A mismatch will cause a 404 error during OAuth.
+The server name under `mcp_servers:` (e.g. `atlassian_mcp`, `github_mcp`) **must match** the name used in the Claude Code URL path (`/<server_name>/mcp`). A mismatch will cause a 404 error during OAuth.
 :::
 
 2. Start LiteLLM Proxy
@@ -70,7 +74,7 @@ ngrok http 4000
 <TabItem value="github" label="GitHub MCP">
 
 ```bash
-claude mcp add --transport http litellm-github https://your-ngrok-url.ngrok-free.dev/mcp/github_mcp \
+claude mcp add --transport http litellm-github https://your-ngrok-url.ngrok-free.dev/github_mcp/mcp \
   --header "x-litellm-api-key: Bearer sk-1234"
 ```
 
@@ -78,7 +82,7 @@ claude mcp add --transport http litellm-github https://your-ngrok-url.ngrok-free
 <TabItem value="atlassian" label="Atlassian MCP">
 
 ```bash
-claude mcp add --transport http litellm-atlassian https://your-ngrok-url.ngrok-free.dev/mcp/atlassian_mcp \
+claude mcp add --transport http litellm-atlassian https://your-ngrok-url.ngrok-free.dev/atlassian_mcp/mcp \
   --header "x-litellm-api-key: Bearer sk-1234"
 ```
 
@@ -91,7 +95,7 @@ claude mcp add --transport http litellm-atlassian https://your-ngrok-url.ngrok-f
 |-----------|-------------|
 | `--transport http` | Use HTTP transport for the MCP connection |
 | `litellm-atlassian` | The name for this MCP server **on Claude Code** — can be anything you choose |
-| `https://your-ngrok-url.ngrok-free.dev/mcp/atlassian_mcp` | The LiteLLM proxy URL. Format: `<PROXY_URL>/mcp/<server_name_on_litellm>`. The `atlassian_mcp` part **must match** the key under `mcp_servers:` in your LiteLLM proxy config |
+| `https://your-ngrok-url.ngrok-free.dev/atlassian_mcp/mcp` | The LiteLLM proxy URL. Format: `<PROXY_URL>/<server_name_on_litellm>/mcp`. The `atlassian_mcp` part **must match** the key under `mcp_servers:` in your LiteLLM proxy config |
 | `--header "x-litellm-api-key: Bearer sk-1234"` | Your LiteLLM virtual key for authentication to the proxy |
 
 You can also add the MCP server directly to your `~/.claude.json` file instead of using `claude mcp add`. [See Claude Code docs](https://docs.anthropic.com/en/docs/claude-code/mcp).

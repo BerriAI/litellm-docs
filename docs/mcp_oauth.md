@@ -382,11 +382,11 @@ The `Authorization` header carries the LiteLLM API key instead of an OAuth2 toke
 
 ```bash
 # WRONG — blocks OAuth2 discovery
-claude mcp add --transport http my_server http://proxy/mcp/server \
+claude mcp add --transport http my_server http://proxy/server/mcp \
     --header "Authorization: Bearer sk-..."
 
 # CORRECT — LiteLLM key in dedicated header, Authorization free for OAuth2
-claude mcp add --transport http my_server http://proxy/mcp/server \
+claude mcp add --transport http my_server http://proxy/server/mcp \
     --header "x-litellm-api-key: Bearer sk-..."
 ```
 
