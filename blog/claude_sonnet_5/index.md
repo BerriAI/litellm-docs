@@ -33,13 +33,13 @@ Sonnet 5 is the most agentic Sonnet model yet, with performance close to Opus 4.
 
 ## Enabling Sonnet 5
 
-Sonnet 5 ships in the **`v1.92.0-rc.1`** image (and every release after it). How you pick it up depends on where your proxy reads pricing from:
+Sonnet 5 ships in the **`v1.92.0-dev.1`** image (and every release after it). How you pick it up depends on where your proxy reads pricing from:
 
 - **Default (remote cost map): no upgrade needed.** In the LiteLLM UI, open the **Price Data** tab under **Models + Endpoints** and click **Reload Price Data** (or, as a proxy admin, `POST /reload/model_cost_map`). This refetches the latest pricing from LiteLLM's cost map **and** re-registers provider routing in one step, so `claude-sonnet-5` becomes available across Anthropic, Azure, Vertex AI, and Bedrock, even if you're on an older proxy version.
-- **Running `LITELLM_LOCAL_MODEL_COST_MAP=true`?** The cost map is baked into the image, so the Reload button won't reach it. Pull `v1.92.0-rc.1` or later to get the bundled Sonnet 5 metadata:
+- **Running `LITELLM_LOCAL_MODEL_COST_MAP=true`?** The cost map is baked into the image, so the Reload button won't reach it. Pull `v1.92.0-dev.1` or later to get the bundled Sonnet 5 metadata:
 
   ```bash
-  docker pull ghcr.io/berriai/litellm:v1.92.0-rc.1
+  docker pull ghcr.io/berriai/litellm:v1.92.0-dev.1
   ```
 
 ## Usage - Anthropic
@@ -64,7 +64,7 @@ docker run -d \
   -p 4000:4000 \
   -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.92.0-rc.1 \
+  ghcr.io/berriai/litellm:v1.92.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -112,7 +112,7 @@ docker run -d \
   -e AZURE_AI_API_KEY=$AZURE_AI_API_KEY \
   -e AZURE_AI_API_BASE=$AZURE_AI_API_BASE \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.92.0-rc.1 \
+  ghcr.io/berriai/litellm:v1.92.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -161,7 +161,7 @@ docker run -d \
   -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/credentials.json:/app/credentials.json \
-  ghcr.io/berriai/litellm:v1.92.0-rc.1 \
+  ghcr.io/berriai/litellm:v1.92.0-dev.1 \
   --config /app/config.yaml
 ```
 
@@ -214,7 +214,7 @@ docker run -d \
   -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.92.0-rc.1 \
+  ghcr.io/berriai/litellm:v1.92.0-dev.1 \
   --config /app/config.yaml
 ```
 
