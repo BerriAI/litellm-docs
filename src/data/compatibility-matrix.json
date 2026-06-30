@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-06-30T04:34:21Z",
+  "generated_at": "2026-06-30T06:12:11Z",
   "litellm_version": "v1.90.0",
   "claude_code_version": "2.1.126",
   "providers": [
@@ -16,7 +16,8 @@
       "name": "Basic messaging (non-streaming)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -38,7 +39,8 @@
       "name": "Basic messaging (streaming)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -60,7 +62,8 @@
       "name": "Tool use",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -82,14 +85,14 @@
       "name": "Prompt caching (5m TTL)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -104,7 +107,30 @@
       "name": "Vision",
       "providers": {
         "anthropic": {
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
+        },
+        "bedrock_invoke": {
           "status": "pass"
+        },
+        "bedrock_converse": {
+          "status": "pass"
+        },
+        "vertex_ai": {
+          "status": "pass"
+        },
+        "azure": {
+          "status": "pass"
+        }
+      }
+    },
+    {
+      "id": "thinking",
+      "name": "Thinking",
+      "providers": {
+        "anthropic": {
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -122,33 +148,12 @@
       }
     },
     {
-      "id": "thinking",
-      "name": "Thinking",
-      "providers": {
-        "anthropic": {
-          "status": "pass"
-        },
-        "bedrock_invoke": {
-          "status": "pass"
-        },
-        "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
-        },
-        "vertex_ai": {
-          "status": "pass"
-        },
-        "azure": {
-          "status": "pass"
-        }
-      }
-    },
-    {
       "id": "tool_use_streaming",
       "name": "Tool use (streaming / fine-grained)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -170,7 +175,8 @@
       "name": "Extended thinking + tool use",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -192,7 +198,8 @@
       "name": "PDF document input",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -214,7 +221,8 @@
       "name": "Prompt caching (1h TTL)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -236,7 +244,8 @@
       "name": "Web search (server tool)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -258,7 +267,8 @@
       "name": "Structured outputs",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
@@ -289,8 +299,7 @@
           "status": "pass"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] count_tokens probe failed: status 400: {\"detail\":{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"claude-haiku-4-5 is not supported for token counting\"},\"request_id\":\"req_vrtx_011CcYovroaF5s4ddaYxNL6K\"}}"
+          "status": "pass"
         },
         "azure": {
           "status": "pass"
@@ -302,7 +311,8 @@
       "name": "Tool search (MCP discovery)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\\\"},\\\"request_id\\\":\\\"req_011CcYwpTUPcQ553QyjGCBAX\\\"}. Received Model Group=claude-haiku-4-5\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         },
         "bedrock_invoke": {
           "status": "fail",
@@ -324,7 +334,8 @@
       "name": "Long context (1M)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
