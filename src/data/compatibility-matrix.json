@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-06-30T02:19:58Z",
-  "litellm_version": "v1.83.14-stable",
+  "generated_at": "2026-06-30T04:34:21Z",
+  "litellm_version": "v1.90.0",
   "claude_code_version": "2.1.126",
   "providers": [
     "anthropic",
@@ -88,7 +88,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
@@ -128,16 +129,14 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-invoke] no `thinking` content block observed in stream-json events"
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "fail",
           "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
-          "status": "fail",
-          "error": "[claude-opus-4-7-vertex] no `thinking` content block observed in stream-json events"
+          "status": "pass"
         },
         "azure": {
           "status": "pass"
@@ -291,7 +290,7 @@
         },
         "vertex_ai": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-vertex] count_tokens probe failed: status 500: {\"detail\":{\"error\":\"Internal server error: vertexai import failed please run `pip install -U \\\"google-cloud-aiplatform>=1.38\\\"`. Got error: No module named 'vertexai'\"}}"
+          "error": "[claude-haiku-4-5-vertex] count_tokens probe failed: status 400: {\"detail\":{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"claude-haiku-4-5 is not supported for token counting\"},\"request_id\":\"req_vrtx_011CcYovroaF5s4ddaYxNL6K\"}}"
         },
         "azure": {
           "status": "pass"
