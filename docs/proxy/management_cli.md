@@ -1,17 +1,22 @@
 # LiteLLM Proxy CLI
 
 The `lite` CLI is a command-line tool for managing your LiteLLM proxy
-server. It provides commands for managing models, credentials, API keys, users,
-and more, as well as making chat and HTTP requests to the proxy server.
+server and for running coding agents through it. It manages models, credentials,
+API keys, teams, and users, runs chat and HTTP requests against the proxy,
+migrates at-rest credential encryption, and launches coding agents (Claude Code,
+Codex, OpenCode) with their LLM traffic routed through the proxy.
 
-| Feature                | What you can do                                 |
-|------------------------|-------------------------------------------------|
-| Models Management      | List, add, update, and delete models            |
-| Credentials Management | Manage provider credentials                     |
-| Keys Management        | Generate, list, and delete API keys             |
-| User Management        | Create, list, and delete users                  |
-| Chat Completions       | Run chat completions                            |
-| HTTP Requests          | Make custom HTTP requests to the proxy server   |
+| Feature                | What you can do                                            |
+|------------------------|-----------------------------------------------------------|
+| Coding Agents          | Run Claude Code, Codex, or OpenCode through the proxy      |
+| Models Management      | List, add, update, and delete models                      |
+| Credentials Management | Manage provider credentials                               |
+| Keys Management        | Generate, list, delete, and import API keys               |
+| Teams Management       | List teams, list joinable teams, assign your key to a team |
+| User Management        | Create, list, and delete users                            |
+| Chat Completions       | Run chat completions                                      |
+| HTTP Requests          | Make custom HTTP requests to the proxy server             |
+| Encryption Migration   | Re-encrypt at-rest credentials to AES-256-GCM             |
 
 ## Quick Start
 
@@ -117,6 +122,48 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 
    This will list all the models available to you.
 
+## Run coding agents through the proxy
+
+Launch a coding agent with all of its LLM traffic routed through your LiteLLM proxy. Each supported agent is its own command, so there is nothing to remember beyond the agent's name:
+
+```bash
+lite claude
+lite codex
+lite opencode
+```
+
+Anything after the agent name is forwarded to the agent untouched, so its own flags keep working:
+
+```bash
+lite claude --resume
+lite codex exec "summarize the repo"
+```
+
+Each command resolves your LiteLLM key (logging in via SSO when none is stored and you are at a terminal; otherwise it reads `LITELLM_PROXY_API_KEY` or `--api-key`), checks the key against the proxy so bad credentials fail right away instead of deep inside the agent, exports the environment variables the agent reads, then replaces itself with the agent process.
+
+The variables are chosen per agent. Claude Code gets `ANTHROPIC_BASE_URL` (the proxy root, so it appends `/v1/messages`) and `ANTHROPIC_AUTH_TOKEN`, with any stray `ANTHROPIC_API_KEY` cleared so the proxy token wins. Codex and OpenCode get `OPENAI_BASE_URL` (the proxy plus `/v1`) and `OPENAI_API_KEY`. Codex ignores `OPENAI_BASE_URL`, so it is additionally pointed at the proxy through a custom provider passed as `-c` config overrides (HTTP/SSE Responses transport, since the proxy does not speak the Responses WebSocket protocol).
+
+`--skip-verify` skips the pre-launch key check, which helps offline or with non-standard auth. It belongs to the wrapper, so put it before the agent's own flags:
+
+```bash
+lite claude --skip-verify --resume
+```
+
+To pin the model, pass the agent's own model flag (`lite claude --model my-proxy-model` or `lite codex -m my-proxy-model`) or export the variable the agent reads (`ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` for Claude Code); the wrapper preserves anything you already set. Whatever model the agent requests must exist on the proxy, since requests land on the proxy's `/v1/messages` (Anthropic) or `/v1/chat/completions` and `/v1/responses` (OpenAI) endpoints.
+
+### The `lite login` credential
+
+The token minted by `lite login` is a short-lived, per-session agent credential, not a managed virtual key. It is scoped to the user and team you authenticated as, inherits that user's and team's models and budgets, and is enforced on the proxy exactly like a virtual key on the same team (guardrails, routing, logging, spend). Spend is tracked against the shared team and user budgets, so running several agents (or logging in more than once) does not give each session its own budget; they all draw down the same team and user allowance, and there is no separate per-session cap.
+
+The credential is short-lived by design (default 24h, configurable via `LITELLM_CLI_JWT_EXPIRATION_HOURS`); run `lite login` again to refresh it, which also re-reads your latest team and user settings. It does not appear in the Keys UI and cannot be rotated or revoked mid-session, and `lite claude`, `lite codex`, and `lite opencode` work with it on a default deployment. If you need a long-lived, rotatable key that shows up in the Keys UI, create a dedicated virtual key in the dashboard and pass it via `--api-key` or `LITELLM_PROXY_API_KEY` instead.
+
+When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
+
+```bash
+lite whoami   # show the authenticated user and the token age
+lite logout   # clear the stored token
+```
+
 ## Main Commands
 
 ### Models Management
@@ -153,7 +200,7 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 
 ### Keys Management
 
-- List, generate, get info, and delete API keys.
+- List, generate, get info, delete, and import API keys.
 - Example:
 
   ```bash
@@ -165,6 +212,15 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
     --key-alias=my-key
   lite keys info --key sk-key1
   lite keys delete --keys sk-key1,sk-key2 --key-aliases alias1,alias2
+  ```
+
+  `lite keys import` copies keys from another LiteLLM instance into this one. Add `--dry-run` to preview without writing, and `--created-since` (`YYYY-MM-DD` or `YYYY-MM-DD_HH:MM`) to limit the import by creation date:
+
+  ```bash
+  lite keys import \
+    --source-base-url https://old-proxy.example.com \
+    --source-api-key sk-source-admin \
+    --created-since 2026-01-01
   ```
 
   [API used (OpenAPI)](https://litellm-api.up.railway.app/#/key%20management)
@@ -187,6 +243,21 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
   ```
 
   [API used (OpenAPI)](https://litellm-api.up.railway.app/#/Internal%20User%20management)
+
+### Teams Management
+
+- List the teams you belong to, list teams available to join, and assign your current CLI key to a team.
+- Example:
+
+  ```bash
+  lite teams list
+  lite teams available
+  lite teams assign-key --team-id team123
+  ```
+
+  Running `lite teams assign-key` without `--team-id` prompts you to pick a team interactively.
+
+  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/team%20management)
 
 ### Chat Completions
 
@@ -211,6 +282,19 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
   ```
 
   [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
+
+### Encryption Migration
+
+- Re-encrypt at-rest credentials into the AES-256-GCM (`v2:gcm:`) format. This is an admin operation; start the proxy with `general_settings.encryption_algorithm: aes-256-gcm` first. The migration is idempotent and resumable, so it is safe to re-run after an interruption.
+- Example:
+
+  ```bash
+  lite encryption migrate --check    # read-only residual scan, no writes
+  lite encryption migrate --dry-run  # run the walkers without writing changes
+  lite encryption migrate            # perform the migration
+  ```
+
+  `--check` reports how many legacy values remain; a residual of `0` means everything is on the new format.
 
 ## Environment Variables
 
