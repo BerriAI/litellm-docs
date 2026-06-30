@@ -42,10 +42,12 @@ Sonnet 5 ships in the **`v1.92.0-dev.1`** image (and every release after it). Ho
   docker pull ghcr.io/berriai/litellm:v1.92.0-dev.1
   ```
 
-## Usage - Anthropic
+## Usage
+
+Pick your provider below. Each tab wires up `claude-sonnet-5` for that provider; the request you send afterward is identical everywhere.
 
 <Tabs>
-<TabItem value="proxy" label="LiteLLM Proxy">
+<TabItem value="anthropic" label="Anthropic">
 
 **1. Setup config.yaml**
 
@@ -68,30 +70,8 @@ docker run -d \
   --config /app/config.yaml
 ```
 
-**3. Test it!**
-
-```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_KEY' \
---data '{
-  "model": "claude-sonnet-5",
-  "messages": [
-    {
-      "role": "user",
-      "content": "what llm are you"
-    }
-  ]
-}'
-```
-
 </TabItem>
-</Tabs>
-
-## Usage - Azure
-
-<Tabs>
-<TabItem value="proxy" label="LiteLLM Proxy">
+<TabItem value="azure" label="Azure">
 
 **1. Setup config.yaml**
 
@@ -116,30 +96,8 @@ docker run -d \
   --config /app/config.yaml
 ```
 
-**3. Test it!**
-
-```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_KEY' \
---data '{
-  "model": "claude-sonnet-5",
-  "messages": [
-    {
-      "role": "user",
-      "content": "what llm are you"
-    }
-  ]
-}'
-```
-
 </TabItem>
-</Tabs>
-
-## Usage - Vertex AI
-
-<Tabs>
-<TabItem value="proxy" label="LiteLLM Proxy">
+<TabItem value="vertex" label="Vertex AI">
 
 **1. Setup config.yaml**
 
@@ -165,30 +123,8 @@ docker run -d \
   --config /app/config.yaml
 ```
 
-**3. Test it!**
-
-```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_KEY' \
---data '{
-  "model": "claude-sonnet-5",
-  "messages": [
-    {
-      "role": "user",
-      "content": "what llm are you"
-    }
-  ]
-}'
-```
-
 </TabItem>
-</Tabs>
-
-## Usage - Bedrock
-
-<Tabs>
-<TabItem value="proxy" label="LiteLLM Proxy">
+<TabItem value="bedrock" label="Bedrock">
 
 **1. Setup config.yaml**
 
@@ -218,7 +154,12 @@ docker run -d \
   --config /app/config.yaml
 ```
 
+</TabItem>
+</Tabs>
+
 **3. Test it!**
+
+The request is the same regardless of which provider you configured above:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -234,9 +175,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
   ]
 }'
 ```
-
-</TabItem>
-</Tabs>
 
 ## Advanced Features
 
