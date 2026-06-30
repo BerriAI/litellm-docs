@@ -937,12 +937,6 @@ video {
   color: inherit;
 }
 
-/* Hide tags section at bottom of blog posts */
-.blog-wrapper footer [class*='blogPostTags'],
-.blog-wrapper footer [class*='tags'] {
-  display: none;
-}
-
 /* Nav buttons (prev/next) at bottom - keep clean */
 .blog-wrapper .pagination-nav__label {
   font-size: 0.85rem;
