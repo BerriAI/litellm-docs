@@ -7,6 +7,12 @@ Headroom is the context optimization layer for LLM applications. It compresses t
 
 This is available on both `/v1/chat/completions` and `/v1/messages` (Anthropic format).
 
+## Architecture
+
+Headroom runs as a sidecar service alongside LiteLLM. Client traffic continues to hit the LiteLLM gateway as usual; LiteLLM calls Headroom in-process during the `pre_call` step to rewrite the messages, then forwards the compressed payload to the upstream LLM. The client and the upstream LLM provider do not talk to Headroom directly.
+
+![Client to LiteLLM to LLM, with Headroom attached to LiteLLM as a sidecar](/img/headroom_architecture.png)
+
 ## Requirements
 
 A reachable Headroom proxy. See [Deploy Headroom](#deploy-headroom) below for a one-file Dockerfile.
