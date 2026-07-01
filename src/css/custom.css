@@ -1006,3 +1006,47 @@ div[class*='announcementBar'] a:hover {
 [data-theme='dark'] div[class*='announcementBar'] {
   background: #1a5fb4 !important;
 }
+
+/* Contact page cards */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  background: var(--ifm-card-background-color);
+  text-decoration: none !important;
+  color: var(--ifm-font-color-base);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  color: var(--ifm-font-color-base);
+}
+
+.contact-card__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.contact-card__title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.contact-card__desc {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+}
