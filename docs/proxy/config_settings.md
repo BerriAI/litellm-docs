@@ -599,7 +599,9 @@ router_settings:
 | DATABRICKS_API_KEY | API key (Personal Access Token) for Databricks API authentication
 | DATABRICKS_CLIENT_ID | Client ID for Databricks OAuth M2M authentication (Service Principal application ID)
 | DATABRICKS_CLIENT_SECRET | Client secret for Databricks OAuth M2M authentication
+| DATABRICKS_CONFIG_PROFILE | Named profile from `~/.databrickscfg` to authenticate with (Databricks CLI / SDK unified auth). Overridable per request via the `databricks_profile` parameter
 | DATABRICKS_USER_AGENT | Custom user agent string for Databricks API requests. Used for partner telemetry attribution
+| DATABRICKS_USE_AI_GATEWAY | Tri-state override for Unity AI Gateway routing: `true`/`force` routes via `<host>/ai-gateway`, `false` forces `<host>/serving-endpoints`, unset = auto (optimistic gateway-first with reactive serving-endpoints fallback)
 | DAYS_IN_A_MONTH | Days in a month for calculation purposes. Default is 28
 | DAYS_IN_A_WEEK | Days in a week for calculation purposes. Default is 7
 | DAYS_IN_A_YEAR | Days in a year for calculation purposes. Default is 365
