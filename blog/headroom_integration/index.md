@@ -1,6 +1,6 @@
 ---
 slug: headroom-integration
-title: "LiteLLM × Headroom: Use 60-95% fewer tokens with Prompt Compression"
+title: "LiteLLM × Headroom: Use 60-95% fewer tokens with Claude Code"
 date: 2026-06-30T10:00:00
 authors:
   - krrish
