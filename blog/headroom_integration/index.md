@@ -32,6 +32,6 @@ Compression works on both `/v1/chat/completions` and `/v1/messages` (Anthropic f
 
 Turn it on per key, per request, or globally via `default_on: true`. Confirm it ran by checking the `x-litellm-applied-guardrails` response header or the Guardrails panel in the Logs UI.
 
-**Get started:** [Headroom guardrail setup guide](../../docs/proxy/headroom)
+**Get started:** [Headroom guardrail setup guide](../../docs/proxy/headroom) (requires LiteLLM v1.92.x or later; for testing ahead of the stable cut, grab the [v1.92.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.92.0-dev.1) dev release)
 
 **Discussion:** [GitHub discussion #31816](https://github.com/BerriAI/litellm/discussions/31816)
