@@ -100,6 +100,71 @@ curl -X POST 'http://localhost:4000/v1/images/generations' \
 }'
 ```
 
+### Passing imageConfig (Gemini models)
+
+Gemini image generation models support the full [`ImageConfig`](https://cloud.google.com/vertex-ai/docs/reference/rpc/google.cloud.aiplatform.v1#imageconfig) object. Pass it as `imageConfig` on any `/v1/images/generations` request and LiteLLM will forward all fields verbatim to `generationConfig.imageConfig`.
+
+| Field | Type | Description |
+|---|---|---|
+| `aspectRatio` | string | `"1:1"`, `"16:9"`, `"9:16"`, `"4:3"`, `"3:4"`, `"4:5"`, `"5:4"`, `"2:3"`, `"3:2"`, `"21:9"` |
+| `imageSize` | string | `"1K"`, `"2K"`, `"4K"` (supported on Gemini 3 Pro and newer) |
+| `personGeneration` | string | `"DONT_ALLOW"`, `"ALLOW_ADULT"`, `"ALLOW_ALL"` |
+| `imageOutputOptions` | object | `{"mimeType": "image/jpeg"\|"image/png"\|"image/webp", "compressionQuality": 0–100}` |
+
+```python showLineNumbers title="Passing imageConfig via Python SDK"
+import litellm
+
+response = await litellm.aimage_generation(
+    model="vertex_ai/gemini-3.1-flash-image",
+    prompt="A nano banana on a desk",
+    vertex_ai_project="your-project-id",
+    vertex_ai_location="us-central1",
+    imageConfig={
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85,
+        },
+    },
+)
+```
+
+```bash showLineNumbers title="Passing imageConfig via Proxy"
+curl -X POST 'http://localhost:4000/v1/images/generations' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer sk-1234' \
+-d '{
+    "model": "gemini-3.1-flash-image",
+    "prompt": "A nano banana on a desk",
+    "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85
+        }
+    }
+}'
+```
+
+You can also use flat params as shorthand for `aspectRatio` and `imageSize`:
+
+```python showLineNumbers title="Flat param shorthand"
+response = await litellm.aimage_generation(
+    model="vertex_ai/gemini-3.1-flash-image",
+    prompt="A nano banana on a desk",
+    aspect_ratio="16:9",   # or aspectRatio="16:9"
+    image_size="2K",       # or imageSize="2K"
+    vertex_ai_project="your-project-id",
+    vertex_ai_location="us-central1",
+)
+```
+
+Flat params (`aspect_ratio`, `image_size`, `aspectRatio`, `imageSize`) override the same key inside `imageConfig` when both are present.
+
 ### Imagen Models
 
 ```python showLineNumbers title="Imagen Image Generation"

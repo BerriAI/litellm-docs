@@ -223,6 +223,52 @@ curl --location 'http://localhost:4000/v1/images/generations' \
 
 You can also pass `tools=[{"type": "web_search"}]` or native `tools=[{"googleSearch": {}}]`.
 
+### Passing imageConfig
+
+Gemini image models accept a full `imageConfig` object. All fields map directly to `generationConfig.imageConfig` on the underlying `generateContent` request.
+
+```python showLineNumbers title="imageConfig with all fields"
+import litellm
+import os
+
+os.environ["GEMINI_API_KEY"] = "your-api-key-here"
+
+response = litellm.image_generation(
+    model="gemini/gemini-3.1-flash-image-preview",
+    prompt="A nano banana on a desk",
+    imageConfig={
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85,
+        },
+    },
+)
+
+print(response.data[0].b64_json)
+```
+
+```bash showLineNumbers title="imageConfig via Proxy"
+curl --location 'http://localhost:4000/v1/images/generations' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer sk-1234' \
+--data '{
+    "model": "gemini-3.1-flash-image-preview",
+    "prompt": "A nano banana on a desk",
+    "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85
+        }
+    }
+}'
+```
+
 ## Supported Parameters
 
 Google AI Studio Image Generation supports the following OpenAI-compatible parameters:
@@ -235,6 +281,7 @@ Google AI Studio Image Generation supports the following OpenAI-compatible param
 | `size` | string | Image dimensions | `"1024x1024"` | `"512x512"`, `"1024x1024"` |
 | `web_search_options` | object | Enable Google Search grounding (Gemini image models only) | - | `{}` |
 | `tools` | array | Pass `{"type": "web_search"}` or `{"googleSearch": {}}` (Gemini image models only) | - | `[{"type": "web_search"}]` |
+| `imageConfig` | object | Full [ImageConfig](https://cloud.google.com/vertex-ai/docs/reference/rpc/google.cloud.aiplatform.v1#imageconfig) object (Gemini image models only). Fields: `aspectRatio`, `imageSize`, `personGeneration`, `imageOutputOptions` | - | `{"aspectRatio": "16:9", "imageSize": "2K"}` |
 
 1. Create an account at [Google AI Studio](https://aistudio.google.com/)
 2. Generate an API key from [API Keys section](https://aistudio.google.com/app/apikey)
