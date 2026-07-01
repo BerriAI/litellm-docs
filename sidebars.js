@@ -1080,6 +1080,7 @@ const sidebars = {
         "providers/stability",
         "providers/synthetic",
         "providers/snowflake",
+        "providers/tencent",
         "providers/tensormesh",
         "providers/togetherai",
         "providers/topaz",
