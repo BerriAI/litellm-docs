@@ -222,9 +222,70 @@ sandbox_tools:
       api_key: os.environ/OPEN_SANDBOX_API_KEY
 ```
 
+### Sticky sessions
+
+By default each request spins up a fresh sandbox that gets deleted when the agentic loop ends. Pass `metadata.session_id` to reuse the same sandbox across sequential requests so variables, imports, and files defined in one turn stay live for the next.
+
+<Tabs>
+<TabItem value="sticky-curl" label="curl">
+
+```bash
+# First request: define x
+curl -s "http://localhost:4000/v1/responses" \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5",
+    "tools": [{"type": "code_interpreter", "container": {"type": "auto"}}],
+    "input": "Set x = 42 and confirm.",
+    "metadata": {"session_id": "chat-abc-123"}
+  }'
+
+# Second request: same session_id, x is still there
+curl -s "http://localhost:4000/v1/responses" \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5",
+    "tools": [{"type": "code_interpreter", "container": {"type": "auto"}}],
+    "input": "Print x + 1.",
+    "metadata": {"session_id": "chat-abc-123"}
+  }'
+```
+
+</TabItem>
+<TabItem value="sticky-openai" label="OpenAI SDK">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+
+client.responses.create(
+    model="gpt-5",
+    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
+    input="Set x = 42 and confirm.",
+    extra_body={"metadata": {"session_id": "chat-abc-123"}},
+)
+
+# Same session_id reuses the same e2b container, so x is still defined
+followup = client.responses.create(
+    model="gpt-5",
+    tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
+    input="Print x + 1.",
+    extra_body={"metadata": {"session_id": "chat-abc-123"}},
+)
+print(followup.output_text)
+```
+
+</TabItem>
+</Tabs>
+
+Cross-tenant isolation is enforced by combining the client-supplied `session_id` with the proxy-minted `user_api_key_hash` to form the cache key (`{hash}:{session_id}`), so two API keys sending the same `session_id` never share a sandbox. Each API key is capped at 10 live session-scoped sandboxes; when a new session would exceed the cap, the least-recently-used session for that key is evicted and its sandbox deleted. Active sessions do not expire mid-conversation because the TTL resets on every access. Omitting `session_id` keeps the original ephemeral per-request behavior.
+
 ### Notes
 
-Response shape matches OpenAI's native `code_interpreter_call`. `stream: true` works. Forced `tool_choice: {"type":"code_interpreter"}` is rewritten automatically. One sandbox per request, deleted on completion; concurrent requests are isolated by a server-minted cache key. Removing a tool from `sandbox_tools` clears its credentials on reload. v0 does not support file upload or download yet.
+Response shape matches OpenAI's native `code_interpreter_call`. `stream: true` works. Forced `tool_choice: {"type":"code_interpreter"}` is rewritten automatically. Sandboxes are ephemeral per request by default, or sticky when `metadata.session_id` is set (see above); concurrent requests are isolated by a server-minted cache key. Removing a tool from `sandbox_tools` clears its credentials on reload. v0 does not support file upload or download yet.
 
 ## Direct sandbox SDK
 
