@@ -600,6 +600,8 @@ router_settings:
 | DATABRICKS_CLIENT_ID | Client ID for Databricks OAuth M2M authentication (Service Principal application ID)
 | DATABRICKS_CLIENT_SECRET | Client secret for Databricks OAuth M2M authentication
 | DATABRICKS_USER_AGENT | Custom user agent string for Databricks API requests. Used for partner telemetry attribution
+| DAKERA_API_KEY | API key for Dakera persistent memory integration. Used by `DakeraMemoryLogger` to authenticate with the self-hosted Dakera server. Defaults to empty string (no auth).
+| DAKERA_API_URL | Base URL for the self-hosted Dakera memory server. Used by `DakeraMemoryLogger`. Defaults to `http://localhost:3300`.
 | DAYS_IN_A_MONTH | Days in a month for calculation purposes. Default is 28
 | DAYS_IN_A_WEEK | Days in a week for calculation purposes. Default is 7
 | DAYS_IN_A_YEAR | Days in a year for calculation purposes. Default is 365
