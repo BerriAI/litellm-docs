@@ -10,7 +10,7 @@ tags: [partnership, guardrails, context, headroom, claude-code]
 hide_table_of_contents: false
 ---
 
-[Headroom](https://headroom.ai) now runs as a native guardrail on the LiteLLM proxy, compressing tool outputs, RAG payloads, database results, and file reads before they reach the model.
+[Headroom](https://headroomlabs-ai.github.io/headroom/) now runs as a native guardrail on the LiteLLM proxy, compressing tool outputs, RAG payloads, database results, and file reads before they reach the model.
 
 {/* truncate */}
 
