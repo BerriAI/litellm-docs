@@ -20,8 +20,6 @@ Official images are published to `ghcr.io/berriai` (`litellm`, `litellm-database
 Facing issues with pulling the docker image? Email us at support@berri.ai.
 :::
 
-To start using Litellm, run the following commands in a shell:
-
 <Tabs>
 
 <TabItem value="docker" label="Docker">
@@ -181,16 +179,11 @@ CMD ["--port", "4000", "--config", "config.yaml", "--detailed_debug"]
 
 ### Terraform
 
-s/o [Nicholas Cecere](https://www.linkedin.com/in/nicholas-cecere-24243549/) for his LiteLLM User Management Terraform
-
-[Go here for Terraform](https://github.com/BerriAI/terraform-provider-litellm)
+To provision the full infrastructure stack with Terraform on AWS or GCP, use the official modules described in [Deploy to Cloud](./deploy_cloud.md#deploy-with-terraform-aws-and-gcp). To manage LiteLLM resources (keys, teams, models) with Terraform, use [terraform-provider-litellm](https://github.com/BerriAI/terraform-provider-litellm) (s/o [Nicholas Cecere](https://www.linkedin.com/in/nicholas-cecere-24243549/)).
 
 ### Kubernetes
 
-Deploying a config file based litellm instance just requires a simple deployment that loads
-the config.yaml file via a config map. It is good practice to declare api keys as env vars and
-attach them from an opaque secret. The manifest below defines a ConfigMap, a Secret, a
-Deployment, and a Service; apply it with `kubectl apply -f deployment.yaml`.
+A config file based litellm instance runs as a Deployment that loads `config.yaml` from a ConfigMap, with api keys declared as env vars attached from an opaque Secret. The manifest below defines a ConfigMap, a Secret, a Deployment, and a Service; apply it with `kubectl apply -f deployment.yaml`.
 
 ```yaml
 apiVersion: v1
@@ -713,47 +706,6 @@ https://railway.app
 
 
 ## Extras 
-
-### Docker compose
-
-**Step 1**
-
-- (Recommended) Use the example file `docker-compose.yml` given in the project root. e.g. https://github.com/BerriAI/litellm/blob/main/docker-compose.yml
-
-Here's an example `docker-compose.yml` file
-```yaml
-version: "3.9"
-services:
-  litellm:
-    build:
-      context: .
-      args:
-        target: runtime
-    image: docker.litellm.ai/berriai/litellm:latest
-    ports:
-      - "4000:4000" # Map the container port to the host, change the host port if necessary
-    volumes:
-      - ./litellm-config.yaml:/app/config.yaml # Mount the local configuration file
-    # You can change the port or number of workers as per your requirements or pass any new supported CLI argument. Make sure the port passed here matches with the container port defined above in `ports` value
-    command: [ "--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8" ]
-
-# ...rest of your docker-compose config if any
-```
-
-**Step 2**
-
-Create a `litellm-config.yaml` file with your LiteLLM config relative to your `docker-compose.yml` file.
-
-Check the config doc [here](https://docs.litellm.ai/docs/proxy/configs)
-
-**Step 3**
-
-Run the command `docker-compose up` or `docker compose up` as per your docker installation.
-
-> Use `-d` flag to run the container in detached mode (background) e.g. `docker compose up -d`
-
-
-Your LiteLLM container should be running now on the defined port e.g. `4000`.
 
 ### IAM-based Auth for RDS DB 
 

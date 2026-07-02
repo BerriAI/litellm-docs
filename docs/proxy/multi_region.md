@@ -1,16 +1,17 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 import { MultiRegionArchitecture } from '@site/src/components/CloudArchitecture';
 
 # Multi-Region Deployment
 
 Run LiteLLM proxy instances in multiple regions of the same cloud provider, all connected to one shared PostgreSQL database. Clients get routed to the nearest region for low latency, while keys, teams, users, and spend tracking stay consistent everywhere because there is a single source of truth.
 
+This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Deploy to Cloud (AWS, GCP, Azure)](./deploy_cloud.md).
+
 ## Architecture
 
 <MultiRegionArchitecture />
-
-This page covers the supported multi-region topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Deploy to Cloud (AWS, GCP, Azure)](./deploy_cloud.md).
 
 The topology has three rules:
 
@@ -18,21 +19,23 @@ The topology has three rules:
 2. **One Redis per region.** Redis handles rate limiting, router state, and response caching between the instances of a region. Keep it in-region; putting a single Redis behind cross-region links adds a network round trip to every rate-limit check.
 3. **One cloud provider.** Run all regions in the same cloud provider.
 
-This architecture supports both common goals. Run it active-active, with DNS routing every client to its nearest region, when the goal is latency. Run it active-passive, with all traffic on one region and a second region deployed but idle behind a DNS failover record, when the goal is disaster recovery. The configuration is identical; only the DNS policy differs.
+The same topology runs active-active (DNS routes every client to its nearest region; the goal is latency) or active-passive (all traffic on one region, a second region deployed but idle behind a DNS failover record; the goal is disaster recovery). The configuration is identical; only the DNS policy differs.
 
 ## Licensing across regions
 
 A single LiteLLM Enterprise license covers all regions, as long as all regions share one database.
 
-This works because of how the license is enforced. Each proxy instance independently validates the `LITELLM_LICENSE` key it is given (offline against a signed payload, or against the license server), and nothing in the license check counts instances or regions. The quantitative limits a license carries, maximum users and maximum teams, are counted from the database. When every region shares one database, those counts exist once, so the license is enforced once, globally.
+Each proxy instance independently validates the `LITELLM_LICENSE` key it is given (offline against a signed payload, or against the license server), and nothing in the license check counts instances or regions. The quantitative limits a license carries, maximum users and maximum teams, are counted from the database. When every region shares one database, those counts exist once, so the license is enforced once, globally.
 
-The corollary: if you give each region its own database, you have created independent LiteLLM deployments, and each one needs its own license. Two databases means two sets of user and team counts, two sets of keys, and two licenses.
+The corollary: separate databases per region are separate deployments, and each needs its own license. Two databases means two sets of user and team counts, two sets of keys, and two licenses.
 
 | Topology | Databases | Licenses needed |
 |---|---|---|
 | Multi-region, shared database (this page) | 1 | 1 |
 | Independent deployment per region | 1 per region | 1 per region |
 | [High Availability Control Plane](./high_availability_control_plane.md) (BETA) | 1 per worker | 1 per worker |
+
+If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [High Availability Control Plane](./high_availability_control_plane.md) (BETA, Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
 
 ## Requirements
 
@@ -120,10 +123,14 @@ Health-check each region against `/health/liveliness`, not `/health/readiness`. 
 
 ### 6. Verify
 
-Create a key through one region and use it through another; both should work, and spend should accumulate on the same key.
-
 1. Open the primary region's Admin UI (`https://llm.example.com/ui`), go to **Virtual Keys**, and create a key.
+
+<Image img={require('../../img/litellm_ui_create_key.png')} alt="Creating a virtual key in the LiteLLM Admin UI" />
+
 2. Open the secondary region's UI directly (`https://eu.llm.example.com/ui`), go to the **Test Key** playground, paste the key you just created, and send a request. It succeeds because both regions validate keys against the same database.
+
+<Image img={require('../../img/ui_playground_navigation.png')} alt="Test Key playground in the LiteLLM Admin UI" />
+
 3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region.
 
 ## Optional: dedicated admin instance
@@ -166,15 +173,10 @@ LITELLM_MASTER_KEY="sk-<same-everywhere>"
 | `DISABLE_ADMIN_ENDPOINTS` | `false` | Management endpoints (`/key/*`, `/user/*`, `/team/*`, `/model/*`) return errors; LLM endpoints, `/health`, and `/metrics` keep working |
 | `DISABLE_LLM_API_ENDPOINTS` | `false` | LLM endpoints (`/chat/completions`, `/v1/*`, provider pass-through routes) return errors; management endpoints keep working, and `/models` stays available so the UI can list models |
 
-## Choosing a topology
-
-Use this page's shared-database architecture when you want one logical LiteLLM deployment that happens to run close to users in several regions: one set of keys, one budget ledger, one license.
-
-Use the [High Availability Control Plane](./high_availability_control_plane.md) (BETA, Enterprise) when you want fully independent deployments per region, each with its own database, Redis, master key, and license, managed from a single UI. That architecture trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions and each worker needs its own license.
-
-If a single region is acceptable, deploy one region and skip this page entirely. A single-region deployment with multi-AZ database and Redis already survives zone failures; see [Production Best Practices](./prod.md).
-
 ## FAQ
+
+**Do I need multi-region at all?**
+Often not. A single-region deployment with a multi-AZ database and Redis already survives zone failures; see [Production Best Practices](./prod.md). Add regions when you need lower latency for distant users or cross-region disaster recovery.
 
 **Does multi-region require an Enterprise license?**
 The shared-database topology itself runs on the open source proxy. Enterprise features are covered by one license across regions, as described in [Licensing across regions](#licensing-across-regions).

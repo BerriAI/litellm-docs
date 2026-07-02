@@ -5,13 +5,18 @@ import { CloudArchitectureSelector } from '@site/src/components/CloudArchitectur
 
 # Deploy to Cloud (AWS, GCP, Azure)
 
-Step-by-step guides for running LiteLLM proxy in production on AWS, Google Cloud, or Azure.
+Step-by-step guides for running LiteLLM proxy in production on AWS, Google Cloud, or Azure. There are two supported paths. If you run Kubernetes, [deploy with Helm](#deploy-with-helm) on EKS, GKE, or AKS; the install is the same on every cloud, only the data stores and ingress differ. If you do not run Kubernetes, AWS and GCP have [official Terraform modules](#deploy-with-terraform-aws-and-gcp) that stand up the entire stack; Azure has no Terraform module, so AKS with Helm is the supported path there.
 
 ## Architecture
 
 <CloudArchitectureSelector />
 
-LiteLLM ships in two shapes, and the diagrams above show both. **Monolithic**: one `litellm` image serves LLM traffic, management APIs, and the UI from a single deployment; this is what the `litellm-helm` chart runs, and the simplest to operate. **Microservices**: the proxy splits into a `gateway` (LLM traffic, port 4000), `backend` (management APIs and UI backend, port 4001), and `ui` (port 3000), each deployed and scaled independently; this is what the componentized `litellm` chart and both Terraform modules run. See [Microservices Helm](./microservices_helm.md) for the full componentized reference. Around either shape, the supporting infrastructure is identical:
+LiteLLM provides two deployment modes:
+
+- **Monolithic**: one `litellm` image serves LLM traffic, management APIs, and the UI. This is what the `litellm-helm` chart runs, and the simplest to operate.
+- **Microservices**: a `gateway` (LLM traffic, port 4000), `backend` (management APIs and UI backend, port 4001), and `ui` (port 3000), each deployed and scaled independently. This is what the componentized `litellm` chart and both Terraform modules run; see [Microservices Helm](./microservices_helm.md) for the full reference.
+
+The supporting infrastructure is identical in either mode:
 
 | Component | Purpose | Notes |
 |---|---|---|
@@ -20,13 +25,7 @@ LiteLLM ships in two shapes, and the diagrams above show both. **Monolithic**: o
 | Redis | Rate limiting, router state, caching across instances | Required once you run more than one instance |
 | Migrations job | Applies schema migrations against Postgres | Runs once per upgrade; proxy instances set `DISABLE_SCHEMA_UPDATE=true` |
 
-Two supported paths. If you run Kubernetes, [deploy with Helm](#deploy-with-helm) on EKS, GKE, or AKS; the install is the same on every cloud, only the data stores and ingress differ. If you do not run Kubernetes, AWS and GCP have [official Terraform modules](#deploy-with-terraform-aws-and-gcp) that stand up the entire microservices stack; Azure has no Terraform module, so AKS with Helm is the supported path there.
-
-Before going live, work through the [production checklist](./prod.md). To run more than one region, finish this page first, then see [Multi-Region Deployment](./multi_region.md).
-
 ## Core configuration
-
-These settings apply on every cloud and appear throughout the guides below.
 
 ```bash
 DATABASE_URL="postgresql://user:password@host:5432/litellm"
@@ -78,7 +77,7 @@ Docs: [AKS](https://learn.microsoft.com/en-us/azure/aks/what-is-aks), [Azure Dat
 
 ## Deploy with Helm
 
-The Helm install is cloud agnostic; it runs unchanged on EKS, GKE, and AKS. First create the secrets both charts consume:
+First create the secrets both charts consume:
 
 ```bash
 kubectl create secret generic litellm-masterkey \
@@ -94,7 +93,7 @@ kubectl create secret generic litellm-env \
   --from-literal=OPENAI_API_KEY="<provider-key>"
 ```
 
-Then pick a shape:
+Then pick a deployment mode:
 
 <Tabs>
 <TabItem value="monolith" label="Monolithic (litellm-helm)">
@@ -265,20 +264,20 @@ module "litellm" {
 }
 ```
 
-Three GCP-specific facts worth knowing before you apply. First, always override `image_registry`: it defaults to `ghcr.io/berriai`, which Cloud Run cannot pull from, so the apply succeeds but the services fail at image pull. Point it at an [Artifact Registry remote repository](https://cloud.google.com/artifact-registry/docs/repositories/remote-overview) that proxies `ghcr.io`. Second, the database uses password authentication through Secret Manager rather than IAM auth; LiteLLM's IAM token support is AWS RDS specific. Third, create the DNS record for `lb_domains` pointing at the load balancer IP after apply; the [Google-managed certificate](https://cloud.google.com/load-balancing/docs/ssl-certificates/google-managed-certs) will not finish provisioning until the domain resolves to it.
+Three GCP-specific caveats. First, always override `image_registry`: it defaults to `ghcr.io/berriai`, which Cloud Run cannot pull from, so the apply succeeds but the services fail at image pull. Point it at an [Artifact Registry remote repository](https://cloud.google.com/artifact-registry/docs/repositories/remote-overview) that proxies `ghcr.io`. Second, the database uses password authentication through Secret Manager rather than IAM auth; LiteLLM's IAM token support is AWS RDS specific. Third, create the DNS record for `lb_domains` pointing at the load balancer IP after apply; the [Google-managed certificate](https://cloud.google.com/load-balancing/docs/ssl-certificates/google-managed-certs) will not finish provisioning until the domain resolves to it.
 
 </TabItem>
 </Tabs>
 
 ## Verify the deployment
 
-The same flow on every cloud. First confirm the proxy is up and can reach its database:
+Confirm the proxy is up and can reach its database:
 
 ```bash
 curl -s https://llm.example.com/health/readiness
 ```
 
-Everything else happens in the Admin UI. Open `https://llm.example.com/ui` and log in with your master key.
+Then open the Admin UI at `https://llm.example.com/ui` and log in with your master key.
 
 1. **Add a model.** Go to **Models + Endpoints** and click **Add Model**: pick the provider, the model, and enter the provider credentials. With `STORE_MODEL_IN_DB=True` the model is saved to your database, so you manage models here rather than in config files.
 
@@ -289,6 +288,8 @@ Everything else happens in the Admin UI. Open `https://llm.example.com/ui` and l
 <Image img={require('../../img/litellm_ui_create_key.png')} alt="Creating a virtual key in the LiteLLM Admin UI" />
 
 3. **Send a request.** Go to the **Test Key** playground, select your key and model, and send a message. A response here proves the full path: load balancer, proxy, database, and provider credentials.
+
+<Image img={require('../../img/ui_playground_navigation.png')} alt="Test Key playground in the LiteLLM Admin UI" />
 
 ## Next steps
 
