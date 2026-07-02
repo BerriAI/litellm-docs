@@ -27,7 +27,7 @@ os.environ["VERTEX_LOCATION"] = "us-east1"
 
 # 2. Provide Service Account Credentials (as a JSON string or token)
 # Note: For security against Local File Inclusion (LFI), passing a local file path
-# via api_key is disabled by default unless explicitly enabled via LITELLM_GDC_ALLOW_LOCAL_FILE_ACCESS=true.
+# via api_key is disabled by default unless explicitly enabled via GDC_ALLOW_LOCAL_FILE_ACCESS=true.
 service_account_json = '{"type": "service_account", "project_id": "my-gdc-project", ...}'
 
 response = completion(
@@ -104,5 +104,5 @@ To protect proxy deployments against Local File Inclusion (LFI) and arbitrary fi
 
 If you need to pass a local filesystem path (e.g., `/etc/secrets/service_account.json`) as `api_key` rather than passing the raw JSON string or OAuth bearer token directly, you must explicitly enable local file access using one of the following methods:
 
-- **Environment Variable**: Set `LITELLM_GDC_ALLOW_LOCAL_FILE_ACCESS=true` (or `GDC_ALLOW_LOCAL_FILE_ACCESS=true`).
+- **Environment Variable**: Set `GDC_ALLOW_LOCAL_FILE_ACCESS=true`.
 - **Proxy Configuration**: In your proxy `config.yaml`, set `allow_client_side_credentials: true` (or `gdc_allow_local_file_access: true`) under `general_settings`.
