@@ -1,0 +1,502 @@
+/* Cloud deployment architecture diagrams.
+   Palette mirrors ControlPlaneArchitecture for visual consistency. */
+:root {
+  --ca-border: #e5e7eb;
+  --ca-text: #1a1a2e;
+  --ca-text-secondary: #6b7280;
+  --ca-text-muted: #9ca3af;
+  --ca-accent: #3b82f6;
+  --ca-accent-light: #dbeafe;
+  --ca-green: #10b981;
+  --ca-green-light: #d1fae5;
+  --ca-orange: #f59e0b;
+  --ca-orange-light: #fef3c7;
+  --ca-red: #ef4444;
+  --ca-red-light: #fee2e2;
+  --ca-card-bg: #f9fafb;
+  --ca-region-bg: #f8fafc;
+  --ca-connector: #d1d5db;
+}
+
+[data-theme='dark'] {
+  --ca-border: #374151;
+  --ca-text: #e5e7eb;
+  --ca-text-secondary: #9ca3af;
+  --ca-text-muted: #6b7280;
+  --ca-accent: #60a5fa;
+  --ca-accent-light: #1e3a5f;
+  --ca-green: #34d399;
+  --ca-green-light: #064e3b;
+  --ca-orange: #fbbf24;
+  --ca-orange-light: #78350f;
+  --ca-red: #f87171;
+  --ca-red-light: #451a1a;
+  --ca-card-bg: #1f2937;
+  --ca-region-bg: #111827;
+  --ca-connector: #4b5563;
+}
+
+.wrapper {
+  margin: 1.5rem 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* CSP selector tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--ca-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ca-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: var(--ca-text);
+}
+
+.tabActive {
+  color: var(--ca-accent);
+  border-bottom-color: var(--ca-accent);
+}
+
+.tabIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* Variant pills (Terraform vs Kubernetes path) */
+.variantRow {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.variantPill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ca-text-secondary);
+  background: none;
+  border: 1.5px solid var(--ca-border);
+  border-radius: 9999px;
+  padding: 0.25rem 0.8rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.variantPillActive {
+  color: var(--ca-accent);
+  border-color: var(--ca-accent);
+  background: var(--ca-accent-light);
+}
+
+.diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Clients row */
+.clients {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clientsIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ca-accent-light);
+  border: 2px solid var(--ca-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clientsIcon svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--ca-accent);
+}
+
+.clientsLabel {
+  font-size: 0.75rem;
+  color: var(--ca-text-secondary);
+  margin-top: 0.3rem;
+  font-weight: 500;
+}
+
+/* Connectors */
+.connectorDown {
+  width: 2px;
+  height: 26px;
+  background: var(--ca-connector);
+  position: relative;
+}
+
+.connectorDown::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--ca-connector);
+}
+
+.connectorLabeled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.connectorLabel {
+  font-size: 0.68rem;
+  color: var(--ca-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Generic node card */
+.node {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 2px solid var(--ca-border);
+  border-radius: 12px;
+  background: var(--ca-card-bg);
+  padding: 0.7rem 1.1rem;
+  min-width: 230px;
+}
+
+.nodeIcon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.nodeText {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.nodeTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ca-text);
+  line-height: 1.3;
+}
+
+.nodeSubtitle {
+  font-size: 0.72rem;
+  color: var(--ca-text-secondary);
+  line-height: 1.35;
+}
+
+.nodeAccent {
+  border-color: var(--ca-accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.nodeGreen {
+  border-color: var(--ca-green);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.nodeSmall {
+  min-width: 190px;
+  padding: 0.55rem 0.9rem;
+}
+
+.nodeSmall .nodeIcon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Compute (proxy replicas) node */
+.replicaRow {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  justify-content: center;
+}
+
+.replicaPill {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--ca-accent);
+  background: var(--ca-accent-light);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+}
+
+.computeNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid var(--ca-accent);
+  border-radius: 12px;
+  background: var(--ca-card-bg);
+  padding: 0.8rem 1.4rem;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.computeHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Data stores row */
+.dataRow {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.dataColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Branch connector: one stem, horizontal bar, N legs */
+.branch {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  height: 34px;
+}
+
+.branchStem {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 11px;
+  background: var(--ca-connector);
+  transform: translateX(-50%);
+}
+
+.branchBar {
+  position: absolute;
+  top: 11px;
+  left: 18%;
+  right: 18%;
+  height: 2px;
+  background: var(--ca-connector);
+}
+
+.branchLeg {
+  position: absolute;
+  top: 11px;
+  width: 2px;
+  height: 22px;
+  background: var(--ca-connector);
+}
+
+.branchLeg::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--ca-connector);
+}
+
+/* Region container */
+.regionsRow {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.region {
+  border: 2px dashed var(--ca-border);
+  border-radius: 14px;
+  background: var(--ca-region-bg);
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 250px;
+  flex: 1;
+  max-width: 330px;
+}
+
+.regionPrimary {
+  border-color: var(--ca-accent);
+}
+
+.regionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-self: flex-start;
+}
+
+.regionIcon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.regionName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ca-text);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.13rem 0.45rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badgeBlue {
+  background: var(--ca-accent-light);
+  color: var(--ca-accent);
+}
+
+.badgeGreen {
+  background: var(--ca-green-light);
+  color: var(--ca-green);
+}
+
+.badgeOrange {
+  background: var(--ca-orange-light);
+  color: var(--ca-orange);
+}
+
+/* Shared database strip below regions */
+.sharedDbWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.mergeBranch {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  height: 30px;
+}
+
+.mergeLegLeft,
+.mergeLegRight {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 15px;
+  background: var(--ca-connector);
+}
+
+.mergeLegLeft {
+  left: 25%;
+}
+
+.mergeLegRight {
+  right: 25%;
+}
+
+.mergeBar {
+  position: absolute;
+  top: 15px;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: var(--ca-connector);
+}
+
+.mergeStem {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  width: 2px;
+  height: 15px;
+  background: var(--ca-connector);
+  transform: translateX(-50%);
+}
+
+/* Callouts */
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--ca-text);
+  line-height: 1.5;
+  max-width: 640px;
+}
+
+.calloutSuccess {
+  background: var(--ca-green-light);
+  border: 1px solid var(--ca-green);
+}
+
+.calloutWarning {
+  background: var(--ca-orange-light);
+  border: 1px solid var(--ca-orange);
+}
+
+@media (max-width: 768px) {
+  .regionsRow {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .region {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .branch,
+  .mergeBranch {
+    display: none;
+  }
+
+  .dataRow {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+}

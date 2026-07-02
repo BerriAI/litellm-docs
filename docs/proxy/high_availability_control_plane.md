@@ -18,7 +18,7 @@ This is an Enterprise feature.
 
 ## Why This Architecture?
 
-In the [standard multi-region setup](./control_plane_and_data_plane.md), all instances share a single database and master key. This works, but introduces a shared dependency. If the database goes down, every instance is affected.
+In the [standard multi-region setup](./multi_region.md), all instances share a single database and master key. This works, but introduces a shared dependency. If the database goes down, every instance is affected. It also means one license covers every region; with the independent workers on this page, each worker is its own deployment with its own license.
 
 The **High Availability Control Plane** takes a different approach:
 
@@ -42,7 +42,7 @@ The **High Availability Control Plane** takes a different approach:
 
 <ControlPlaneArchitecture />
 
-The **control plane** is a LiteLLM instance that serves the admin UI and knows about all the workers. It is **not a router** — it does not proxy or route any LLM requests. It exists purely so admins can switch between workers and manage them from a single UI.
+The **control plane** is a LiteLLM instance that serves the admin UI and knows about all the workers. It is **not a router**; it does not proxy or route any LLM requests. It exists purely so admins can switch between workers and manage them from a single UI.
 
 Each **worker** is a fully independent LiteLLM proxy that handles LLM requests for its region or team. Workers have their own database, Redis, users, keys, teams, and budgets. No infrastructure is shared between workers.
 
@@ -185,6 +185,6 @@ Then open `http://localhost:4000/ui`. You should see the worker selector on the 
 
 ## Related Documentation
 
-- [Standard Multi-Region Setup](./control_plane_and_data_plane.md) - shared-database architecture for admin/worker split
+- [Multi-Region Deployment](./multi_region.md) - shared-database architecture, licensing across regions
 - [SSO Setup](./admin_ui_sso.md) - configuring SSO for the admin UI
 - [Production Deployment](./prod.md) - production best practices

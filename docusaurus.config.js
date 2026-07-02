@@ -87,6 +87,17 @@ const config = {
   },
   plugins: [
     require('./plugins/optimize-images'),
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {
+            from: '/docs/proxy/control_plane_and_data_plane',
+            to: '/docs/proxy/multi_region',
+          },
+        ],
+      },
+    ],
     ...(hasInkeepSearch
       ? [
           [

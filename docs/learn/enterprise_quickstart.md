@@ -688,9 +688,9 @@ items={[
   },
   {
     icon: "🏗️",
-    title: "Control Plane",
-    description: "Multi-region control plane and data plane architecture.",
-    to: "/docs/proxy/control_plane_and_data_plane",
+    title: "Multi-Region",
+    description: "Multi-region deployment, licensing, and admin/worker split.",
+    to: "/docs/proxy/multi_region",
   },
   {
     icon: "🔒",

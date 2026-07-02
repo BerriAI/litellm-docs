@@ -28,7 +28,7 @@ LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, vi
 | **Security** | — | Key rotations, read/write to secret manager |
 | **Guardrails** | Always-on / request-based<sup>[1](#guardrails-oss-vs-enterprise)</sup> | Key and team scoped guardrails |
 | **Logging** | Request/response logging, Prometheus metrics | Per-key / per-team routing to Langfuse, Langsmith, Arize and more. Management-op logs |
-| **Deployment** | Single-region proxy | Control plane for multi-region architecture |
+| **Deployment** | Single-region proxy | [Multi-region deployment](./proxy/multi_region) under one license, admin/worker split |
 
 <a id="guardrails-oss-vs-enterprise"></a>
 <sup>1</sup> The OSS guardrail framework supports custom guardrails plus Presidio (PII masking). Several built-in callback integrations &mdash; including `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection` &mdash; require a LiteLLM Enterprise license.

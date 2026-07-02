@@ -10,7 +10,9 @@ There are **no limits** on the number of users, keys, or teams you can create on
 
 You can find the Dockerfile to build litellm proxy [here](https://github.com/BerriAI/litellm/blob/main/Dockerfile)
 
-> Note: Production requires at least 4 CPU cores and 8 GB RAM.
+Official images are published to `ghcr.io/berriai` (`litellm`, `litellm-database` which bundles prisma for use with Postgres, and `litellm-non_root`) and mirrored at `docker.litellm.ai/berriai`. The snippets below use the `docker.litellm.ai` mirror.
+
+> Note: for production sizing, see [machine specifications](./prod.md#2-recommended-machine-specifications).
 
 ## Quick Start
 
@@ -131,25 +133,11 @@ docker run \
     --config /app/config.yaml --detailed_debug
 ```
 
-Get Latest Image 👉 [here](https://github.com/berriai/litellm/pkgs/container/litellm)
+Get the latest image [here](https://github.com/berriai/litellm/pkgs/container/litellm)
 
-#### Step 3. TEST Request
+#### Step 3. Test it
 
-  Pass `model=azure-gpt-4o` this was set on step 1
-
-  ```shell
-  curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Content-Type: application/json' \
-      --data '{
-      "model": "azure-gpt-4o",
-      "messages": [
-          {
-          "role": "user",
-          "content": "what llm are you"
-          }
-      ]
-  }'
-  ```
+Open the Admin UI at `http://0.0.0.0:4000/ui`, go to the **Test Key** playground, pick `azure-gpt-4o` (the model you set in step 1), and send a message.
 
 ### Docker Run - CLI Args
 
@@ -191,77 +179,18 @@ EXPOSE 4000/tcp
 CMD ["--port", "4000", "--config", "config.yaml", "--detailed_debug"]
 ```
 
-### Build from published LiteLLM packages
-
-Follow these instructions to build a Docker container from published LiteLLM packages. If your company has a strict requirement around security or image provenance, you can follow these steps.
-
-**Note:** Copy the `schema.prisma` file from the [LiteLLM repository](https://github.com/BerriAI/litellm/blob/main/schema.prisma) into your build directory alongside this Dockerfile.
-
-Dockerfile 
-
-```shell
-FROM cgr.dev/chainguard/python:latest-dev
-ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.10.9
-
-USER root
-WORKDIR /app
-
-ENV UV_TOOL_BIN_DIR=/usr/local/bin
-
-# Install runtime dependencies
-RUN apk update && \
-    apk add --no-cache gcc python3-dev openssl openssl-dev
-
-COPY --from=$UV_IMAGE /uv /usr/local/bin/uv
-COPY --from=$UV_IMAGE /uvx /usr/local/bin/uvx
-
-RUN uv tool install 'litellm[proxy,proxy-runtime,extra_proxy]==1.57.3' \
-    --python python
-
-# Copy Prisma schema file
-COPY schema.prisma .
-
-# Generate prisma client
-RUN prisma generate
-
-EXPOSE 4000/tcp
-
-ENTRYPOINT ["litellm"]
-CMD ["--port", "4000"]
-```
-
-
-Build the docker image
-
-```shell
-docker build \
-  -f Dockerfile \
-  -t litellm-proxy-from-package-5 .
-```
-
-Run the docker image
-
-```shell
-docker run \
-    -v $(pwd)/litellm_config.yaml:/app/config.yaml \
-    -e OPENAI_API_KEY="sk-1222" \
-    -e DATABASE_URL="postgresql://xxxxxxxxx \
-    -p 4000:4000 \
-    litellm-proxy-from-package-5 \
-    --config /app/config.yaml --detailed_debug
-```
-
 ### Terraform
 
 s/o [Nicholas Cecere](https://www.linkedin.com/in/nicholas-cecere-24243549/) for his LiteLLM User Management Terraform
 
-👉 [Go here for Terraform](https://github.com/BerriAI/terraform-provider-litellm)
+[Go here for Terraform](https://github.com/BerriAI/terraform-provider-litellm)
 
 ### Kubernetes
 
 Deploying a config file based litellm instance just requires a simple deployment that loads
-the config.yaml file via a config map. Also it would be a good practice to use the env var
-declaration for api keys, and attach the env vars with the api key values as an opaque secret.
+the config.yaml file via a config map. It is good practice to declare api keys as env vars and
+attach them from an opaque secret. The manifest below defines a ConfigMap, a Secret, a
+Deployment, and a Service; apply it with `kubectl apply -f deployment.yaml`.
 
 ```yaml
 apiVersion: v1
@@ -292,6 +221,7 @@ metadata:
   labels:
     app: litellm
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: litellm
@@ -302,7 +232,7 @@ spec:
     spec:
       containers:
       - name: litellm
-        image: docker.litellm.ai/berriai/litellm:latest # it is recommended to fix a version generally
+        image: docker.litellm.ai/berriai/litellm:main-v1.90.2 # pin a version, do not use :latest
         args:
           - "--config"
           - "/app/proxy_server_config.yaml"
@@ -315,14 +245,47 @@ spec:
         envFrom:
         - secretRef:
             name: litellm-secrets
+        livenessProbe:
+          httpGet:
+            path: /health/liveliness
+            port: 4000
+          initialDelaySeconds: 120
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: 4000
+          initialDelaySeconds: 120
+          periodSeconds: 15
       volumes:
         - name: config-volume
           configMap:
             name: litellm-config-file
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-service
+spec:
+  selector:
+    app: litellm
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: NodePort
 ```
 
+Port-forward to reach the proxy locally:
+
+```bash
+kubectl port-forward service/litellm-service 4000:4000
+```
+
+To connect a database (Virtual Keys, spend tracking), use the `docker.litellm.ai/berriai/litellm-database` image and add `DATABASE_URL` and `LITELLM_MASTER_KEY` to the Secret; nothing else in the manifest changes. See [Deploy with Database](#deploy-with-database). To run more than one instance behind a load balancer, see [Multi-region and scaling](./multi_region.md).
+
 :::info
-To avoid issues with predictability, difficulties in rollback, and inconsistent environments, use versioning or SHA digests (for example, `litellm:v1.89.4` or `litellm@sha256:12345abcdef...`) instead of `litellm:latest`.
+To avoid issues with predictability, difficulties in rollback, and inconsistent environments, pin a version or SHA digest (for example, `litellm:main-v1.90.2` or `litellm@sha256:12345abcdef...`) instead of `litellm:latest`.
 :::
 
 
@@ -334,48 +297,49 @@ To avoid issues with predictability, difficulties in rollback, and inconsistent 
 
 :::
 
-Use this when you want to use litellm helm chart as a dependency for other charts. The `litellm-helm` OCI is hosted here [https://github.com/BerriAI/litellm/pkgs/container/litellm-helm](https://github.com/BerriAI/litellm/pkgs/container/litellm-helm)
+The canonical chart lives at [`deploy/charts/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm) in the litellm repo and is published as an OCI artifact at `oci://ghcr.io/berriai/litellm-helm`, the published chart versions carry litellm release numbers (for example, `1.90.2`).
 
-#### Step 1. Pull the litellm helm chart
+<Tabs>
 
-```bash
-helm pull oci://docker.litellm.ai/berriai/litellm-helm
+<TabItem value="helm-oci" label="OCI registry (recommended)">
 
-# Pulled: docker.litellm.ai/berriai/litellm-helm:0.1.2
-# Digest: sha256:7d3ded1c99c1597f9ad4dc49d84327cf1db6e0faa0eeea0c614be5526ae94e2a
-```
-
-#### Step 2. Unzip litellm helm
-Unzip the specific version that was pulled in Step 1
+Inspect the default values, then install with your own `values.yaml`:
 
 ```bash
-tar -zxvf litellm-helm-0.1.2.tgz
+# View the chart's configurable values
+helm show values oci://ghcr.io/berriai/litellm-helm > values.yaml
+
+# Install (or upgrade) the release
+helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml
 ```
 
-#### Step 3. Install litellm helm
+Set your proxy config and master key in `values.yaml`; see the [chart values reference](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml). Pin a chart version with `--version <version>` for reproducible installs.
+
+</TabItem>
+
+<TabItem value="helm-source" label="From source">
+
+Install directly from a checkout of the litellm repo:
 
 ```bash
-helm install lite-helm ./litellm-helm
+git clone https://github.com/BerriAI/litellm.git
+helm install litellm deploy/charts/litellm-helm --set masterkey=sk-1234
 ```
 
-#### Step 4. Expose the service to localhost
+</TabItem>
+</Tabs>
+
+Expose the service to localhost:
 
 ```bash
-kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
+kubectl --namespace default port-forward service/litellm 4000:4000
 ```
 
-Your LiteLLM Proxy Server is now running on `http://127.0.0.1:4000`.
-
-**That's it ! That's the quick start to deploy litellm**
+Your LiteLLM Proxy Server is now running on `http://127.0.0.1:4000`. To run multiple replicas behind a load balancer, see [Multi-region and scaling](./multi_region.md).
 
 #### Make LLM API Requests
 
-:::info
-💡 Go here 👉 [to make your first LLM API Request](user_keys)
-
-LiteLLM is compatible with several SDKs - including OpenAI SDK, Anthropic SDK, Mistral SDK, LLamaIndex, Langchain (Js, Python)
-
-:::
+Open the Admin UI at `http://127.0.0.1:4000/ui`, log in with your master key, and send a request from the **Test Key** playground. To call the proxy from code, see [making your first LLM API request](user_keys); LiteLLM is compatible with the OpenAI SDK, Anthropic SDK, Mistral SDK, LlamaIndex, and Langchain (JS, Python).
 
 ## Deployment Options
 
@@ -383,8 +347,7 @@ LiteLLM is compatible with several SDKs - including OpenAI SDK, Anthropic SDK, M
 | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Quick Start](#quick-start)                                                                       | call 100+ LLMs + Load Balancing                                                                                                                       |
 | [Deploy with Database](#deploy-with-database)                                                     | + use Virtual Keys + Track Spend (Note: When deploying with a database providing a `DATABASE_URL` and `LITELLM_MASTER_KEY` are required in your env ) |
-| [LiteLLM container + Redis](#litellm-container--redis)                                            | + load balance across multiple litellm containers                                                                                                     |
-| [LiteLLM Database container + PostgresDB + Redis](#litellm-database-container--postgresdb--redis) | + use Virtual Keys + Track Spend + load balance across multiple litellm containers                                                                    |
+| [Deploy with Redis](#deploy-with-redis)                                                           | + load balance across multiple litellm containers (optionally with a database)                                                                        |
 
 ### Deploy with Database
 ##### Docker, Kubernetes, Helm Chart
@@ -411,7 +374,7 @@ See [Resolve DB Deadlocks](/docs/proxy/db_deadlocks) for details.
 
 Requirements:
 - Need a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc) Set `DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname>` in your env 
-- Set a `LITELLM_MASTER_KEY`, this is your Proxy Admin key - you can use this to create other keys (🚨 must start with `sk-`)
+- Set a `LITELLM_MASTER_KEY`, this is your Proxy Admin key - you can use this to create other keys (must start with `sk-`)
 
 <Tabs>
 
@@ -440,188 +403,13 @@ Your LiteLLM Proxy Server is now running on `http://0.0.0.0:4000`.
 </TabItem>
 <TabItem value="kubernetes-deploy" label="Kubernetes">
 
-#### Step 1. Create deployment.yaml
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: litellm-deployment
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: litellm
-  template:
-    metadata:
-      labels:
-        app: litellm
-    spec:
-      containers:
-        - name: litellm-container
-          image: docker.litellm.ai/berriai/litellm:latest
-          imagePullPolicy: Always
-          env:
-            - name: AZURE_API_KEY
-              value: "d6******"
-            - name: AZURE_API_BASE
-              value: "https://ope******"
-            - name: LITELLM_MASTER_KEY
-              value: "sk-1234"
-            - name: DATABASE_URL
-              value: "po**********"
-          args:
-            - "--config"
-            - "/app/proxy_config.yaml"  # Update the path to mount the config file
-          volumeMounts:                 # Define volume mount for proxy_config.yaml
-            - name: config-volume
-              mountPath: /app/proxy_config.yaml
-              subPath: config.yaml      # Specify the field under data of the ConfigMap litellm-config
-              readOnly: true
-          livenessProbe:
-            httpGet:
-              path: /health/liveliness
-              port: 4000
-            initialDelaySeconds: 120
-            periodSeconds: 15
-            successThreshold: 1
-            failureThreshold: 3
-            timeoutSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health/readiness
-              port: 4000
-            initialDelaySeconds: 120
-            periodSeconds: 15
-            successThreshold: 1
-            failureThreshold: 3
-            timeoutSeconds: 10
-      volumes:  # Define volume to mount proxy_config.yaml
-        - name: config-volume
-          configMap:
-            name: litellm-config  
-
-```
-
-```bash
-kubectl apply -f /path/to/deployment.yaml
-```
-
-#### Step 2. Create service.yaml 
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: litellm-service
-spec:
-  selector:
-    app: litellm
-  ports:
-    - protocol: TCP
-      port: 4000
-      targetPort: 4000
-  type: NodePort
-```
-
-```bash
-kubectl apply -f /path/to/service.yaml
-```
-
-#### Step 3. Start server
-
-```
-kubectl port-forward service/litellm-service 4000:4000
-```
-
-Your LiteLLM Proxy Server is now running on `http://0.0.0.0:4000`.
+Use the canonical manifest from the [Kubernetes](#kubernetes) section above. The DB-connected variant is the same manifest with `DATABASE_URL` and `LITELLM_MASTER_KEY` added to the Secret and the image set to `docker.litellm.ai/berriai/litellm-database:main-v1.90.2` (bundles prisma). Nothing else changes.
 
 </TabItem>
 
 <TabItem value="helm-deploy" label="Helm">
 
-
-
-:::info
-
-[BETA] Helm Chart is BETA. If you run into an issues/have feedback please let us know [https://github.com/BerriAI/litellm/issues](https://github.com/BerriAI/litellm/issues)
-
-:::
-
-Use this to deploy litellm using a helm chart. Link to [the LiteLLM Helm Chart](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm)
-
-#### Step 1. Clone the repository
-
-```bash
-git clone https://github.com/BerriAI/litellm.git
-```
-
-#### Step 2. Deploy with Helm
-
-Run the following command in the root of your `litellm` repo. This will set the litellm proxy master key as `sk-1234`
-
-```bash
-helm install \
-  --set masterkey=sk-1234 \
-  mydeploy \
-  deploy/charts/litellm-helm
-```
-
-#### Step 3. Expose the service to localhost
-
-```bash
-kubectl \
-  port-forward \
-  service/mydeploy-litellm-helm \
-  4000:4000
-```
-
-Your LiteLLM Proxy Server is now running on `http://127.0.0.1:4000`.
-
-
-If you need to set your litellm proxy config.yaml, you can find this in [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml)
-
-</TabItem>
-
-<TabItem value="helm-oci" label="Helm OCI Registry (GHCR)">
-
-:::info
-
-[BETA] Helm Chart is BETA. If you run into an issues/have feedback please let us know [https://github.com/BerriAI/litellm/issues](https://github.com/BerriAI/litellm/issues)
-
-:::
-
-Use this when you want to use litellm helm chart as a dependency for other charts. The `litellm-helm` OCI is hosted here [https://github.com/BerriAI/litellm/pkgs/container/litellm-helm](https://github.com/BerriAI/litellm/pkgs/container/litellm-helm)
-
-#### Step 1. Pull the litellm helm chart
-
-```bash
-helm pull oci://docker.litellm.ai/berriai/litellm-helm
-
-# Pulled: docker.litellm.ai/berriai/litellm-helm:0.1.2
-# Digest: sha256:7d3ded1c99c1597f9ad4dc49d84327cf1db6e0faa0eeea0c614be5526ae94e2a
-```
-
-#### Step 2. Unzip litellm helm
-Unzip the specific version that was pulled in Step 1
-
-```bash
-tar -zxvf litellm-helm-0.1.2.tgz
-```
-
-#### Step 3. Install litellm helm
-
-```bash
-helm install lite-helm ./litellm-helm
-```
-
-#### Step 4. Expose the service to localhost
-
-```bash
-kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
-```
-
-Your LiteLLM Proxy Server is now running on `http://127.0.0.1:4000`.
+Use the [Helm chart](#helm-chart) described above. Set `DATABASE_URL` and `LITELLM_MASTER_KEY` in your `values.yaml` (see the [chart values reference](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml)), then run `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`.
 
 </TabItem>
 </Tabs>
@@ -658,33 +446,7 @@ Start docker container with config
 docker run docker.litellm.ai/berriai/litellm:latest --config your_config.yaml
 ```
 
-### Deploy with Database + Redis
-
-The only change required is setting Redis on your `config.yaml`
-LiteLLM Proxy supports sharing rpm/tpm shared across multiple litellm instances, pass `redis_host`, `redis_password` and `redis_port` to enable this. (LiteLLM will use Redis to track rpm/tpm usage )
-
-
-```yaml
-model_list:
-  - model_name: gpt-4o
-    litellm_params:
-      model: azure/<your-deployment-name>
-      api_base: <your-azure-endpoint>
-      api_key: <your-azure-api-key>
-      rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-4o
-    litellm_params:
-      model: azure/gpt-4o-ca
-      api_base: https://my-endpoint-canada-berri992.openai.azure.com/
-      api_key: <your-azure-api-key>
-      rpm: 6
-router_settings:
-  redis_host: <your redis host>
-  redis_password: <your redis password>
-  redis_port: 1992
-```
-
-Start `litellm-database`docker container with config
+To combine Redis with a database (Virtual Keys and spend tracking), keep the same `router_settings` above, switch to the `litellm-database` image, and pass `DATABASE_URL`:
 
 ```shell
 docker run --name litellm-proxy \
@@ -692,6 +454,8 @@ docker run --name litellm-proxy \
 -p 4000:4000 \
 docker.litellm.ai/berriai/litellm-database:latest --config your_config.yaml
 ```
+
+To scale across regions or many instances, see [Multi-region and scaling](./multi_region.md).
 
 ###  (Non Root) - without Internet Connection
 
@@ -748,7 +512,7 @@ RUN chmod +x ./docker/entrypoint.sh
 # Expose the necessary port
 EXPOSE 4000/tcp
 
-# 👉 Key Change: Install hypercorn
+# Key change: install hypercorn
 RUN uv add hypercorn
 
 # Override the CMD instruction with your desired command and arguments
@@ -773,7 +537,7 @@ docker run \
     --run_hypercorn
 ```
 
-### 4. Granian ASGI server (higher throughput) — Beta
+### 4. Granian ASGI server (higher throughput) [Beta]
 
 :::info Beta feature
 `--run_granian` is in **beta**. Uvicorn is still the default server. Try Granian when you need more gateway throughput or see instability under load with uvicorn; report issues on [GitHub](https://github.com/BerriAI/litellm/issues).
@@ -782,9 +546,9 @@ docker run \
 Use this to run the proxy with [Granian](https://github.com/emmett-framework/granian), a Rust-backed ASGI server. The HTTP stack runs in Rust instead of pure Python, which helps the proxy stay responsive when many clients hit health checks, auth, routing, and caching at once.
 
 **Why it helps:**
-- **Higher throughput** — In LiteLLM benchmarks, Granian showed a **10–20 RPS improvement** over uvicorn with the same worker count (see [PR #26027](https://github.com/BerriAI/litellm/pull/26027)).
-- **Better stability** — Sustained load tests showed steadier latency and fewer spikes than uvicorn.
-- **Fewer failures** — Error rates under load were lower (near-zero failures in the compared runs vs uvicorn).
+- **Higher throughput**: In LiteLLM benchmarks, Granian showed a **10–20 RPS improvement** over uvicorn with the same worker count (see [PR #26027](https://github.com/BerriAI/litellm/pull/26027)).
+- **Better stability**: Sustained load tests showed steadier latency and fewer spikes than uvicorn.
+- **Fewer failures**: Error rates under load were lower (near-zero failures in the compared runs vs uvicorn).
 
 Granian is included in `litellm[proxy]` and requires Python 3.9+. Scale throughput with `--num_workers`.
 
@@ -810,7 +574,7 @@ docker run docker.litellm.ai/berriai/litellm:latest \
 - `--max_requests_before_restart` (use Gunicorn if you need per-request worker recycling)
 - `--ciphers` (Hypercorn only)
 
-See [CLI Arguments — Server Backend Options](/docs/proxy/cli#server-backend-options) for full flag details.
+See [CLI Arguments, Server Backend Options](/docs/proxy/cli#server-backend-options) for full flag details.
 
 ### 5. Keepalive Timeout
 
@@ -916,151 +680,11 @@ This will use the local model prices file instead.
 
 ## Platform-specific Guide
 
+For managed cloud deployments on AWS (ECS, EKS, CloudFormation), GCP (GKE, Cloud Run), and Azure (AKS), including the Terraform modules, see [Deploy to Cloud (AWS, GCP, Azure)](./deploy_cloud.md).
+
+Render and Railway are quick options not covered by that guide:
+
 <Tabs>
-<TabItem value="AWS ECS" label="AWS ECS - Elastic Container Service">
-
-### Terraform-based ECS Deployment
-
-LiteLLM maintains a dedicated Terraform tutorial for deploying the proxy on ECS. Follow the step-by-step guide in the [litellm-ecs-deployment repository](https://github.com/BerriAI/litellm-ecs-deployment) to provision the required ECS services, task definitions, and supporting AWS resources.
-
-1. Clone the tutorial repository to review the Terraform modules and variables.
-  ```bash
-  git clone https://github.com/BerriAI/litellm-ecs-deployment.git
-  cd litellm-ecs-deployment
-  ```
-
-2. Initialize and validate the Terraform project before applying it to your chosen workspace/account.
-  ```bash
-  terraform init
-  terraform plan
-  terraform apply
-  ```
-
-3. Once `terraform apply` completes, do `./build.sh` to push the repository on ECR and update the ECS cluster. Use that endpoint (port `4000` by default) for API requests to your LiteLLM proxy.
-
-
-</TabItem>
-
-<TabItem value="AWS EKS" label="AWS EKS - Kubernetes">
-
-### Kubernetes (AWS EKS)
-
-Step1. Create an EKS Cluster with the following spec
-
-```shell
-eksctl create cluster --name=litellm-cluster --region=us-west-2 --node-type=t2.small
-```
-
-Step 2. Mount litellm proxy config on kub cluster 
-
-This will mount your local file called `proxy_config.yaml` on kubernetes cluster
-
-```shell
-kubectl create configmap litellm-config --from-file=proxy_config.yaml
-```
-
-Step 3. Apply `kub.yaml` and `service.yaml`
-Clone the following `kub.yaml` and `service.yaml` files and apply locally
-
-- Use this `kub.yaml` file - [litellm kub.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/kubernetes/kub.yaml)
-
-- Use this `service.yaml` file - [litellm service.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/kubernetes/service.yaml)
-
-Apply `kub.yaml`
-```
-kubectl apply -f kub.yaml
-```
-
-Apply `service.yaml` - creates an AWS load balancer to expose the proxy
-```
-kubectl apply -f service.yaml
-
-# service/litellm-service created
-```
-
-Step 4. Get Proxy Base URL
-
-```shell
-kubectl get services
-
-# litellm-service   LoadBalancer   10.100.6.31   a472dc7c273fd47fd******.us-west-2.elb.amazonaws.com   4000:30374/TCP   63m
-```
-
-Proxy Base URL =  `a472dc7c273fd47fd******.us-west-2.elb.amazonaws.com:4000`
-
-That's it, now you can start using LiteLLM Proxy
-
-</TabItem>
-
-
-<TabItem value="aws-stack" label="AWS Cloud Formation Stack">
-
-### AWS Cloud Formation Stack
-LiteLLM AWS Cloudformation Stack - **Get the best LiteLLM AutoScaling Policy and Provision the DB for LiteLLM Proxy**
-
-This will provision:
-- LiteLLMServer - EC2 Instance
-- LiteLLMServerAutoScalingGroup
-- LiteLLMServerScalingPolicy (autoscaling policy)
-- LiteLLMDB - RDS::DBInstance
-
-#### Using AWS Cloud Formation Stack
-**LiteLLM Cloudformation stack is located [here - litellm.yaml](https://github.com/BerriAI/litellm/blob/main/enterprise/cloudformation_stack/litellm.yaml)**
-
-#### 1. Create the CloudFormation Stack:
-In the AWS Management Console, navigate to the CloudFormation service, and click on "Create Stack."
-
-On the "Create Stack" page, select "Upload a template file" and choose the litellm.yaml file 
-
-Now monitor the stack was created successfully. 
-
-#### 2. Get the Database URL:
-Once the stack is created, get the DatabaseURL of the Database resource, copy this value 
-
-#### 3. Connect to the EC2 Instance and deploy litellm on the EC2 container
-From the EC2 console, connect to the instance created by the stack (e.g., using SSH).
-
-Run the following command, replacing `<database_url>` with the value you copied in step 2
-
-```shell
-docker run --name litellm-proxy \
-   -e DATABASE_URL=<database_url> \
-   -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
-```
-
-#### 4. Access the Application:
-
-Once the container is running, you can access the application by going to `http://<ec2-public-ip>:4000` in your browser.
-
-</TabItem>
-<TabItem value="google-cloud-run" label="Google Cloud Run">
-
-### Google Cloud Run
-
-1. Fork this repo - [github.com/BerriAI/example_litellm_gcp_cloud_run](https://github.com/BerriAI/example_litellm_gcp_cloud_run)
-
-2. Edit the `litellm_config.yaml` file in the repo to include your model settings 
-
-3. Deploy your forked github repo on Google Cloud Run
-
-#### Testing your deployed proxy
-**Assuming the required keys are set as Environment Variables**
-
-https://litellm-7yjrj3ha2q-uc.a.run.app is our example proxy, substitute it with your deployed cloud run app
-
-```shell
-curl https://litellm-7yjrj3ha2q-uc.a.run.app/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-     "model": "gpt-4o",
-     "messages": [{"role": "user", "content": "Say this is a test!"}],
-     "temperature": 0.7
-   }'
-```
-
-
-</TabItem>
 <TabItem value="render" label="Render deploy">
 
 ### Render 
@@ -1160,7 +784,7 @@ export DATABASE_SCHEMA="schema-name" # skip to use the default "public" schema
 litellm --config /path/to/config.yaml --iam_token_db_auth
 ```
 
-### ✨ Blocking web crawlers
+### Blocking web crawlers
 
 Note: This is an [enterprise only feature](https://docs.litellm.ai/docs/enterprise).
 
