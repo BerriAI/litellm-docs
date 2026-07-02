@@ -18,13 +18,13 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::warning Potential performance regression under investigation
+:::info Update: no performance regression found
 
-We're investigating a potential throughput regression in recent releases. It appears limited to certain deployment configurations rather than affecting all deployments, so we expect it to impact only a small subset of users; correctness and error rates are not affected.
+An earlier version of this note flagged a potential throughput regression. We investigated and could not confirm or reproduce any regression in the released version. The one report we received came from a deployment running custom code on top of what we shipped, and our testing points to those changes, not LiteLLM, as the likely cause.
 
-**Update (June 26, 2026):** We've identified potential causes and will need more time to test before we can confirm a fix. We'll update this note with the affected versions and the fix as soon as we have them.
+Correctness and error rates were never affected. If you're on this version, there's nothing you need to do.
 
-For throughput-sensitive workloads, we recommend validating performance in a staging environment before rolling out an upgrade.
+We're still monitoring incoming reports and will update this note if anything changes.
 
 :::
 
