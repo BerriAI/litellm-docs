@@ -54,9 +54,6 @@ model_list:
       vertex_location: "us-east1"
       ssl_verify: true
       gdc_token_caching: true
-
-general_settings:
-  allow_client_side_credentials: true  # Optional: allow reading local credential files if passing file paths in api_key
 ```
 
 **2. Start the proxy**
@@ -102,7 +99,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 To protect proxy deployments against Local File Inclusion (LFI) and arbitrary file read vulnerabilities, LiteLLM disables reading local filesystem paths passed via the `api_key` parameter by default for GDC.
 
-If you need to pass a local filesystem path (e.g., `/etc/secrets/service_account.json`) as `api_key` rather than passing the raw JSON string or OAuth bearer token directly, you must explicitly enable local file access using one of the following methods:
+If you need to pass a local filesystem path (e.g., `/etc/secrets/service_account.json`) as `api_key` rather than passing the raw JSON string or OAuth bearer token directly, you must explicitly enable local file access by setting the environment variable:
 
 - **Environment Variable**: Set `GDC_ALLOW_LOCAL_FILE_ACCESS=true`.
-- **Proxy Configuration**: In your proxy `config.yaml`, set `allow_client_side_credentials: true` (or `gdc_allow_local_file_access: true`) under `general_settings`.
