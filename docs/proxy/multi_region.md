@@ -125,7 +125,7 @@ Health-check each region against `/health/liveliness`, not `/health/readiness`. 
 
 1. Open the primary region's Admin UI (`https://llm.example.com/ui`), go to **Virtual Keys**, and create a key.
 
-<Image img={require('../../img/litellm_ui_create_key.png')} alt="Creating a virtual key in the LiteLLM Admin UI" />
+<Image img={require('../../img/ui_create_key_flow.gif')} alt="Creating a virtual key in the LiteLLM Admin UI" />
 
 2. Open the secondary region's UI directly (`https://eu.llm.example.com/ui`), go to the **Test Key** playground, paste the key you just created, and send a request. It succeeds because both regions validate keys against the same database.
 

@@ -281,11 +281,11 @@ Then open the Admin UI at `https://llm.example.com/ui` and log in with your mast
 
 1. **Add a model.** Go to **Models + Endpoints** and click **Add Model**: pick the provider, the model, and enter the provider credentials. With `STORE_MODEL_IN_DB=True` the model is saved to your database, so you manage models here rather than in config files.
 
-<Image img={require('../../img/litellm_hosted_ui_add_models.png')} alt="Adding a model in the LiteLLM Admin UI" />
+<Image img={require('../../img/ui_add_model_form.png')} alt="Adding a model in the LiteLLM Admin UI" />
 
 2. **Create a key.** Go to **Virtual Keys** and click **Create New Key**, scoping it to the model you just added.
 
-<Image img={require('../../img/litellm_ui_create_key.png')} alt="Creating a virtual key in the LiteLLM Admin UI" />
+<Image img={require('../../img/ui_create_key_modal.png')} alt="Creating a virtual key in the LiteLLM Admin UI" />
 
 3. **Send a request.** Go to the **Test Key** playground, select your key and model, and send a message. A response here proves the full path: load balancer, proxy, database, and provider credentials.
 

@@ -290,7 +290,7 @@ To avoid issues with predictability, difficulties in rollback, and inconsistent 
 
 :::
 
-The canonical chart lives at [`deploy/charts/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm) in the litellm repo and is published as an OCI artifact at `oci://ghcr.io/berriai/litellm-helm`, the published chart versions carry litellm release numbers (for example, `1.90.2`).
+The canonical chart lives at [`deploy/charts/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm) in the litellm repo and is published as an OCI artifact at `oci://ghcr.io/berriai/litellm-helm`, the published chart versions carry litellm release numbers (for example, `1.90.2`). This section covers a local quickstart; for a production install on EKS, GKE, or AKS with managed Postgres and Redis, see [Deploy to Cloud](./deploy_cloud.md#deploy-with-helm).
 
 <Tabs>
 
