@@ -73,6 +73,10 @@ router_settings:
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
 
+:::tip Separate input/output limits
+Set `itpm` and `otpm` instead of `tpm`/`rpm` when a provider publishes distinct input and output throughput limits. See [Separate ITPM / OTPM Rate Limits](./io_token_rate_limits).
+:::
+
 :::info
 By default, `rpm` and `tpm` values are only used for **routing decisions** (picking deployments with capacity). With `enforce_model_rate_limits`, they become **hard limits**.
 :::

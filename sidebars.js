@@ -528,6 +528,7 @@ const sidebars = {
             "proxy/tag_budgets",
             "proxy/customers",
             "proxy/dynamic_rate_limit",
+            "proxy/io_token_rate_limits",
             "proxy/rate_limit_tiers",
             "proxy/temporary_budget_increase",
             "proxy/budget_reset_and_tz",
