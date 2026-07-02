@@ -1001,6 +1001,7 @@ const sidebars = {
         "providers/galadriel",
         "providers/github",
         "providers/github_copilot",
+        "providers/gdc",
         "providers/gmi",
         "providers/chatgpt",
         "providers/gradient_ai",
