@@ -221,8 +221,6 @@ Headroom protects two message types by default, set on the Headroom container it
 - `user`/`system` messages, unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it.
 - Messages with an Anthropic `cache_control` marker, always. Compressing them would break prompt-cache byte matching. No override exists.
 
-`requests_compressed: 0` on `user`/`system`-heavy, cache-heavy traffic like Claude Code is expected, not a bug; the guardrail still ran and shows up normally in `x-litellm-applied-guardrails` and spend log `guardrail_information`.
-
 ## Configuration reference
 
 | Param        | Type   | Description                                                                                          |
