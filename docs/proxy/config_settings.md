@@ -526,6 +526,7 @@ router_settings:
 | AZURE_SCOPE | For EntraID Auth, Scope for Azure services, defaults to "https://cognitiveservices.azure.com/.default"
 | AZURE_SENTINEL_DCR_IMMUTABLE_ID | Immutable ID of the Data Collection Rule for Azure Sentinel logging
 | AZURE_SENTINEL_STREAM_NAME | Stream name for Azure Sentinel logging
+| AZURE_SENTINEL_AUDIT_STREAM_NAME | Stream name for Azure Sentinel audit logs; falls back to AZURE_SENTINEL_STREAM_NAME when unset
 | AZURE_SENTINEL_CLIENT_SECRET | Client secret for Azure Sentinel authentication
 | AZURE_SENTINEL_ENDPOINT | Endpoint for Azure Sentinel logging
 | AZURE_SENTINEL_TENANT_ID | Tenant ID for Azure Sentinel authentication
