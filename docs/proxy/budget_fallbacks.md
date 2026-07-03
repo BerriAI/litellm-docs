@@ -95,10 +95,6 @@ curl 'http://0.0.0.0:4000/key/update' \
   }'
 ```
 
-## Notes
+## Related
 
-`budget_fallbacks` is persisted on `LiteLLM_VerificationToken` and evaluated inside the auth layer, so the reroute happens before the request reaches the router. Every route that goes through key auth is covered, including `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`.
-
-Because the model is rewritten on the parsed request body, provider-specific route handlers (for example `/v1/messages`, which re-parses the body) still see the rerouted model name.
-
-Related: [Virtual Key model_max_budget](./users#-virtual-key-model-specific), [Fallback Management endpoints](./fallback_management), [Reliability and fallbacks](./reliability).
+[Virtual Key model_max_budget](./users#-virtual-key-model-specific), [Fallback Management endpoints](./fallback_management), [Reliability and fallbacks](./reliability).
