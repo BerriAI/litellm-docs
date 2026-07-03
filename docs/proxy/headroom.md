@@ -214,6 +214,14 @@ ENV HEADROOM_TELEMETRY=off
 CMD ["headroom", "proxy", "--host", "0.0.0.0", "--port", "8787"]
 ```
 
+### Headroom defaults that can make compression look like a no-op
+
+Headroom applies its own protection rules before compressing anything, independently of LiteLLM. These are configured on the Headroom container itself (as `ENV` vars in the Dockerfile above, or in the Headroom service's own config), not in LiteLLM's `config.yaml`. If a workload sees `requests_compressed: 0` even though the guardrail is wired up correctly and `x-litellm-applied-guardrails` shows `headroom-compression` ran, check these two defaults first:
+
+- **`HEADROOM_COMPRESS_USER_MESSAGES` defaults to `0`.** Headroom protects `user` and `system` role messages from compression unless this is set to `1`. Since most Claude Code traffic is `user` role messages, a default Headroom deployment compresses none of it. Set `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` on the Headroom container to opt in.
+- **Messages carrying an Anthropic `cache_control` marker are always protected.** Anthropic prompt caching requires a byte-exact match on the cached prefix, so Headroom skips compressing any message with a `cache_control` block to avoid invalidating the cache. Claude Code relies heavily on prompt caching, so a large share of its messages fall into this category regardless of the setting above. There is no override for this behavior; it is a correctness requirement of prompt caching, not a tunable.
+
+Because both of these are enforced inside Headroom before LiteLLM sees the compressed payload, LiteLLM's own guardrail logs and spend log `guardrail_information` will correctly show the guardrail ran, even when it compressed nothing. A `requests_compressed: 0` result on a `user`/`system`-heavy, cache-heavy workload like Claude Code is expected default behavior, not a bug.
 
 ## Configuration reference
 
