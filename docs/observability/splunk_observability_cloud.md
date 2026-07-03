@@ -1,4 +1,4 @@
-# Splunk Observability Cloud (OpenTelemetry)
+# Splunk Observability Cloud
 
 Send LiteLLM traces to [Splunk Observability Cloud](https://www.splunk.com/en_us/products/observability-cloud.html) using the built-in **`otel`** callback and standard OpenTelemetry OTLP environment variables.
 

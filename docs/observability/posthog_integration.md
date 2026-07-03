@@ -1,4 +1,4 @@
-# PostHog - Tracking LLM Usage Analytics
+# PostHog
 
 ## What is PostHog?
 

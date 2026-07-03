@@ -1,4 +1,4 @@
-# Sentry - Log LLM Exceptions
+# Sentry
 import Image from '@theme/IdealImage';
 
 

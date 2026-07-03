@@ -157,4 +157,4 @@ Common error scenarios and their solutions:
 
 - [Vertex AI Provider Documentation](./providers/vertex.md)
 - [General Batches API Documentation](./batches.md)
-- [Cost Tracking and Monitoring](./observability/telemetry.md)
+- [Cost Tracking and Monitoring](./proxy/logging)

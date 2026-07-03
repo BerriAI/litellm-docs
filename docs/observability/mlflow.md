@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# 🔁 MLflow - OSS LLM Observability and Evaluation
+# MLflow
 
 ## What is MLflow?
 

@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# 🔭 DeepEval - Open-Source Evals with Tracing
+# DeepEval
 
 ### What is DeepEval?
 [DeepEval](https://deepeval.com) is an open-source evaluation framework for LLMs ([Github](https://github.com/confident-ai/deepeval)). 

@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Qualifire - LLM Evaluation, Guardrails & Observability
+# Qualifire
 
 [Qualifire](https://qualifire.ai/) provides real-time Agentic evaluations, guardrails and observability for production AI applications.
 
