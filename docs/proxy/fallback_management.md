@@ -266,6 +266,6 @@ Specifically triggered when content policy violations occur.
 - The maximum number of fallbacks attempted is controlled by the router's `max_fallbacks` setting
 - Changes take effect immediately and are persisted to the database
 
-## Related
+## Budget Fallbacks
 
 - [Budget Fallbacks](./budget_fallbacks): reroute a request to another model when a per-key `model_max_budget` is exceeded, instead of returning `budget_exceeded`.
