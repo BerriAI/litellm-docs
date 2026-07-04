@@ -1,7 +1,7 @@
 ---
-title: "v1.91.0rc1 - MCP OAuth v2, Rust OCR Gateway & Realtime Performance"
-slug: "v1-91-0-rc-1"
-date: 2026-06-27T20:13:02
+title: "v1.91.0 - MCP OAuth v2, Rust OCR Gateway & Realtime Performance"
+slug: "v1-91-0"
+date: 2026-07-04T17:55:59
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,22 +30,20 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.91.0-rc.1
+docker.litellm.ai/berriai/litellm:1.91.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.91.0rc1
+pip install litellm==1.91.0
 ```
 
 </TabItem>
 </Tabs>
 
 ## Key Highlights
-
-`v1.91.0rc1` is the current release candidate for 1.91.0.
 
 - **MCP Gateway OAuth 2.0 v2 resolver** - a new shared OAuth token foundation with cross-replica single-flight refresh, an outbound-credentials package with typed results, and the first authorization_code migration onto the v2 resolver.
 - **Rust OCR gateway** - a new LiteLLM Rust workspace ships an async-first Mistral OCR bridge, packaged directly into the LiteLLM wheel, alongside an experimental Axum-based realtime AI gateway.
@@ -114,6 +112,8 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
     - Only expand config-sourced AWS credential references - [PR #30867](https://github.com/BerriAI/litellm/pull/30867)
     - Prevent key-level `metadata.tags` from leaking into the Bedrock passthrough body - [PR #30985](https://github.com/BerriAI/litellm/pull/30985)
     - Surface web-identity token `aud`/`iss` on `InvalidIdentityToken` - [PR #31412](https://github.com/BerriAI/litellm/pull/31412)
+    - Drop the unsupported `toolSpec.strict` field for Converse on Claude Opus 4.7/4.8 - [PR #31582](https://github.com/BerriAI/litellm/pull/31582)
+    - Honor the cache TTL for `tool_config` cache injection points - [PR #31929](https://github.com/BerriAI/litellm/pull/31929)
 - **[Vertex AI](../../docs/providers/vertex)**
     - Prevent a stale Vertex bearer token from causing a `/v1/messages` 401 after token expiry - [PR #31276](https://github.com/BerriAI/litellm/pull/31276)
     - Append the `rawPredict` suffix for a custom `api_base` - [PR #31529](https://github.com/BerriAI/litellm/pull/31529)
@@ -192,6 +192,7 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
     - Stop double-decrypting email/slack alerting env vars in `get_config` - [PR #31117](https://github.com/BerriAI/litellm/pull/31117)
     - Serialize team `budget_limits` to JSON in `jsonify_team_object` - [PR #31045](https://github.com/BerriAI/litellm/pull/31045)
     - Block a server credential leak to a caller-supplied `api_base` - [PR #30682](https://github.com/BerriAI/litellm/pull/30682)
+    - Restore teamless-key access to all-team models - [PR #32032](https://github.com/BerriAI/litellm/pull/32032)
 
 ## AI Integrations
 
@@ -240,6 +241,7 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
     - Migrate authorization_code MCP to the v2 resolver (single-replica) [1/2] - [PR #31473](https://github.com/BerriAI/litellm/pull/31473)
     - Cross-replica single-flight refresh for the v2 per-user OAuth store [2/2] - [PR #31493](https://github.com/BerriAI/litellm/pull/31493)
     - Challenge delegate-auth OAuth servers with upstream `resource_metadata` - [PR #31255](https://github.com/BerriAI/litellm/pull/31255)
+    - Support `client_secret_basic` for upstream OAuth token endpoints - [PR #31635](https://github.com/BerriAI/litellm/pull/31635)
 - **Access control**
     - Opt-in least-privilege default for team-key MCP access - [PR #31380](https://github.com/BerriAI/litellm/pull/31380)
     - Scope a key to zero MCP servers with a no-mcp-servers sentinel - [PR #31029](https://github.com/BerriAI/litellm/pull/31029)
@@ -255,6 +257,9 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
     - Stop auth failures on the `/mcp` path surfacing as cancelled tool calls - [PR #31011](https://github.com/BerriAI/litellm/pull/31011)
     - Resolve toolset tools by the server's known prefix - [PR #31254](https://github.com/BerriAI/litellm/pull/31254)
     - Stop logging tool-call input in the MCP client - [PR #31393](https://github.com/BerriAI/litellm/pull/31393)
+    - Persist the DCR `client_id` from on-create MCP OAuth Authorize & Fetch - [PR #31920](https://github.com/BerriAI/litellm/pull/31920)
+    - Persist the DCR `client_id` so interactive OAuth token refresh works - [PR #31912](https://github.com/BerriAI/litellm/pull/31912)
+    - Surface `tools/list` 401 auth failures as a challenge on single-server routes - [PR #31921](https://github.com/BerriAI/litellm/pull/31921)
 
 ## Performance / Loadbalancing / Reliability improvements
 
@@ -289,8 +294,8 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
 
 ## New Contributors
 
-This release candidate contains changes from existing maintainers only; there are no new contributors in this window.
+This release contains changes from existing maintainers only; there are no new contributors in this window.
 
 ## Full Changelog
 
-[`v1.90.0...v1.91.0-rc.1`](https://github.com/BerriAI/litellm/compare/v1.90.0...v1.91.0-rc.1)
+[`v1.90.0...v1.91.0`](https://github.com/BerriAI/litellm/compare/v1.90.0...v1.91.0)
