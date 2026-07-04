@@ -3,6 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # Budget Fallbacks
 
+:::info
+
+Available on `v1.92.x` and later.
+
+:::
+
 Reroute requests to a fallback model when a key's [`model_max_budget`](./users#-virtual-key-model-specific) is exceeded, instead of returning a `budget_exceeded` error.
 
 By default `model_max_budget` blocks requests once a key's spend on a model crosses its cap. `budget_fallbacks` lets you configure a per-model fallback chain on the key itself, so the request is silently rerouted to the first fallback that still has budget remaining. Spend is attributed to the fallback model, not the exhausted one.
