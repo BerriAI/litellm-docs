@@ -491,6 +491,7 @@ const sidebars = {
             "proxy/db_info",
             "proxy/db_read_replica",
             "proxy/image_handling",
+            "proxy/key_auth_arch",
             "proxy/jwt_auth_arch",
             "proxy/spend_logs_deletion",
             "proxy/user_management_heirarchy",
