@@ -29,32 +29,11 @@ These strings are reserved as enum values in `litellm.proxy._types.SpecialModelN
 
 ## Resolution: with team_id vs without
 
-```mermaid
-flowchart TD
-    Req[Request: model = X] --> LoadKey[Load key row]
-    LoadKey --> KeyModels{key.models}
+Two rules cover every case. A standalone key (no `team_id`) is authorized purely against its own `models` list. A team-attached key must pass both its own list and a second check against `team.models`; the intersection is what the caller can actually reach, so a key holding `["gpt-4"]` under a team holding `["azure-gpt-3.5"]` cannot call anything.
 
-    KeyModels -->|empty or contains *| AllowAll[allow: proxy-wide]
-    KeyModels -->|contains all-proxy-models| AllowAll
-    KeyModels -->|contains all-team-models| CheckTeam{team_id set?}
-    KeyModels -->|concrete / wildcard / access group| MatchKey{X matches key.models?<br/>expand access groups<br/>+ wildcards}
+The failure surface tells you which step rejected. The key step raises `Invalid model for key`. The team step raises `Invalid model for team <team_alias>: <model>. Valid models for team are: [...]` (see [Restrict models by team_id](./model_access.md#restrict-models-by-team_id)).
 
-    CheckTeam -->|no| DenySentinel[deny: sentinel unresolved]
-    CheckTeam -->|yes| UseTeam[substitute team.models]
-    UseTeam --> TeamCheck
-
-    MatchKey -->|no| Deny[403 invalid model for key]
-    MatchKey -->|yes, no team_id| Allow[allow]
-    MatchKey -->|yes, team_id set| TeamCheck{X allowed by team.models?}
-
-    TeamCheck -->|team.models empty or all-proxy-models| Allow
-    TeamCheck -->|X matches team.models| Allow
-    TeamCheck -->|otherwise| DenyTeam[403 invalid model for team]
-```
-
-Two rules are load-bearing. First, a team-attached key is subject to a second check against `team.models`; the key's own list is not the final word. Second, the sentinels do not carry through the second check identically. `all-proxy-models` on a team means the team check trivially passes, but the key still has to pass its own step first. `all-team-models` on a key skips the key step entirely and defers to the team check.
-
-The failure surface differs by which step rejects: the key step raises `Invalid model for key`; the team step raises `Invalid model for team <team_alias>: <model>. Valid models for team are: [...]` (see [Restrict models by team_id](./model_access.md#restrict-models-by-team_id)).
+The sentinels change the shape of these two checks: `all-proxy-models` on a team makes the team step trivially pass but the key still has to match; `all-team-models` on a key skips the key step and defers to the team step (and denies if no team is attached).
 
 ## Access groups and wildcards
 
