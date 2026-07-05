@@ -1,5 +1,5 @@
 ---
-title: "v1.92.0-rc.1 - Claude Sonnet 5, Production MCP OAuth & New Providers"
+title: "v1.92.0rc1 - Claude Sonnet 5, Production MCP OAuth & New Providers"
 slug: "v1-92-0-rc-1"
 date: 2026-07-04T23:30:00
 authors:
