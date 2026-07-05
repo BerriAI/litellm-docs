@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# 🪢 Langfuse - Logging LLM Input/Output
+# Langfuse
 
 ## What is Langfuse?
 
@@ -13,7 +13,7 @@ Example trace in Langfuse using multiple models via LiteLLM:
 
 :::info
 
-For Langfuse v3, we recommend using the [Langfuse OTEL](./langfuse_otel_integration) integration.
+For Langfuse v3, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets).
 
 :::
 

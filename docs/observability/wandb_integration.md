@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Weights & Biases - Logging LLM Input/Output
+# Weights & Biases
 
 
 :::tip

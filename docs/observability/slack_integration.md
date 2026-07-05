@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Slack - Logging LLM Input/Output, Exceptions
+# Slack
 
 <Image img={require('../../img/slack.png')} />
 

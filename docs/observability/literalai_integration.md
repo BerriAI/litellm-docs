@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Literal AI - Log, Evaluate, Monitor
+# Literal AI
 
 [Literal AI](https://literalai.com) is a collaborative observability, evaluation and analytics platform for building production-grade LLM apps.
 

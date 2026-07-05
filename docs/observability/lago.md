@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Lago - Usage Based Billing
+# Lago
 
 [Lago](https://www.getlago.com/) offers a self-hosted and cloud, metering and usage-based billing solution.
 

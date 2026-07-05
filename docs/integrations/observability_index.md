@@ -17,7 +17,7 @@ items={[
   { icon: "🐶", title: "Datadog", description: "Metrics, traces, and dashboards.", to: "/docs/observability/datadog" },
   { icon: "📡", title: "OpenTelemetry", description: "Vendor-neutral tracing.", to: "/docs/observability/opentelemetry_integration" },
   { icon: "🔗", title: "LangSmith", description: "LLM debugging and evaluation.", to: "/docs/observability/langsmith_integration" },
-  { icon: "🔥", title: "Arize / Phoenix", description: "ML observability and evaluation.", to: "/docs/observability/arize_integration" },
+  { icon: "🔥", title: "Arize / Phoenix", description: "ML observability and evaluation.", to: "/docs/observability/opentelemetry_v2" },
   { icon: "🌀", title: "Helicone", description: "LLM request logging and analytics.", to: "/docs/observability/helicone_integration" },
   { icon: "📊", title: "MLflow", description: "Experiment tracking.", to: "/docs/observability/mlflow" },
   { icon: "🏋️", title: "Weights & Biases", description: "ML experiment tracking.", to: "/docs/observability/wandb_integration" },

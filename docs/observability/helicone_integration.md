@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Helicone - OSS LLM Observability Platform
+# Helicone
 
 :::tip
 

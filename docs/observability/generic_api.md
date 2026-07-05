@@ -1,4 +1,4 @@
-# Generic API Callback (Webhook)
+# Generic API
 
 Send LiteLLM logs to any HTTP endpoint.
 

@@ -1,4 +1,4 @@
-# Supabase Tutorial 
+# Supabase
 
 :::tip
 

@@ -44,7 +44,7 @@ items={[
     icon: "🔥",
     title: "Arize / Phoenix",
     description: "ML observability and evaluation.",
-    to: "/docs/observability/arize_integration",
+    to: "/docs/observability/opentelemetry_v2",
   },
   {
     icon: "🌀",

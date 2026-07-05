@@ -302,7 +302,7 @@ response = litellm.completion(
 )
 ```
 
-📖 [See all observability integrations →](/docs/observability/agentops_integration)
+📖 [See all observability integrations →](/docs/observability/opentelemetry_v2)
 
 ### Track Costs & Usage
 
@@ -456,7 +456,7 @@ to: "/docs/proxy/guardrails/quick_start",
 icon: "📡",
 title: "Observability",
 description: "Integrate with Langfuse, MLflow, Helicone, and more.",
-to: "/docs/observability/agentops_integration",
+to: "/docs/observability/opentelemetry_v2",
 },
 {
 icon: "🏭",

@@ -1,4 +1,4 @@
-# Mavvrik Integration
+# Mavvrik
 
 LiteLLM can export proxy spend data to [Mavvrik](https://mavvrik.ai) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you track and analyse LLM spend within the Mavvrik cost management platform.
 

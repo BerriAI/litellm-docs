@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Promptlayer Tutorial
+# PromptLayer
 
 
 :::tip

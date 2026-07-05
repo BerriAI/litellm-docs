@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# 🌙 Lunary - GenAI Observability 
+# Lunary
 
 [Lunary](https://lunary.ai/) is an open-source platform providing [observability](https://lunary.ai/docs/features/observe), [prompt management](https://lunary.ai/docs/features/prompts), and [analytics](https://lunary.ai/docs/features/observe#analytics) to help team manage and improve LLM chatbots.
 

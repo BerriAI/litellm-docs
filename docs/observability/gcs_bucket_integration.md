@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Google Cloud Storage Buckets
+# Google Cloud Storage
 
 Log LLM Logs to [Google Cloud Storage Buckets](https://cloud.google.com/storage?hl=en)
 

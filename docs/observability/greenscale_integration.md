@@ -1,4 +1,4 @@
-# Greenscale - Track LLM Spend and Responsible Usage
+# Greenscale
 
 
 :::tip

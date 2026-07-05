@@ -482,6 +482,8 @@ Expected response on failure
 </TabItem>
 </Tabs>
 
+To reroute requests to another model once a per-model budget is exceeded instead of returning `budget_exceeded`, see [Budget Fallbacks](./budget_fallbacks).
+
 
 ### Agents
 

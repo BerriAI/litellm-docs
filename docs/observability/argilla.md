@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Argilla 
+# Argilla
 
 Argilla is a collaborative annotation tool for AI engineers and domain experts who need to build high-quality datasets for their projects.
 
