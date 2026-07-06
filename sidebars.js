@@ -229,6 +229,7 @@ const sidebars = {
           label: "Claude Code",
           items: [
             "claude_code_compatibility",
+            "tutorials/claude_code_cut_costs",
             "tutorials/claude_responses_api",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
