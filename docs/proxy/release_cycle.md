@@ -18,6 +18,18 @@ See [LiteLLM release versioning is changing](/blog/cleaner-release-versions) for
 
 Follow our release notes [here](https://github.com/BerriAI/litellm/releases).
 
+## Weekly schedule
+
+Each week runs the same loop against one version line. The first nightly (`dev`) build, typically Tuesday, opens the next minor version (for example `1.86.0`), and that base rides every build until it ships as stable. A second nightly follows midweek, typically Thursday. On Saturday the release candidate is cut (`1.86.0rc1`) and enters a roughly week-long window for early testers and QA. Late the following week, on Friday or Saturday, the prior week's `rc` is promoted to stable with the suffix dropped (`1.85.0rc1` becomes `1.85.0`), identical to that `rc` unless a fix was backported. Each Saturday therefore does double duty: the current week's `rc` is cut while the previous week's `rc` becomes stable.
+
+| Day | What ships |
+| --- | --- |
+| Tuesday | First nightly `dev` build; opens the next minor (`1.86.0.dev1`) |
+| Thursday | Second nightly `dev` build, cumulative (`1.86.0.dev2`) |
+| Saturday | New `rc` cut (`1.86.0rc1`); prior week's `rc` promoted to stable |
+
+If a Saturday `rc` fails QA it is not promoted; a fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
+
 
 ## FAQ
 
