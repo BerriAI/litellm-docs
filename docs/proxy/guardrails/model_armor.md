@@ -68,6 +68,48 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
+## Document and File Scanning
+
+As of v1.92.0, Model Armor scans inline document attachments in addition to message text. On `pre_call` and `during_call`, LiteLLM resolves each attachment in the request messages to bytes and submits it to Model Armor's [byte API](https://cloud.google.com/security-command-center/docs/sanitize-prompts-responses) before the request reaches the LLM.
+
+LiteLLM recognizes OpenAI `type: file` content blocks with inline `file_data` (a base64 data URI or raw base64) and Anthropic `type: document` blocks with an inline base64 `source`. The attachment's MIME type, declared `format`, or filename extension is mapped to a Model Armor `byteDataType`; PDF, Word, Excel, PowerPoint, CSV, and plain text documents are scanned. Inline content of types the byte API does not support, such as images, is not scanned and passes through.
+
+```json
+{
+  "role": "user",
+  "content": [
+    {"type": "text", "text": "Summarize this document"},
+    {"type": "file", "file": {"file_data": "data:application/pdf;base64,JVBERi0x...", "filename": "report.pdf"}}
+  ]
+}
+```
+
+A Model Armor finding on a document always blocks the request with an HTTP 400:
+
+```json
+{"error": "Content blocked by Model Armor", "model_armor_response": {"sanitizationResult": {"filterMatchState": "MATCH_FOUND"}}}
+```
+
+Masking never applies to documents. Model Armor returns findings for a document rather than a sanitized copy, so a match blocks even when `mask_request_content` is enabled.
+
+### Attachments That Cannot Be Scanned
+
+An attachment LiteLLM recognizes as a document but cannot submit for scanning fails closed: the request is blocked with an HTTP 400 unless you set `fail_on_error: false`.
+
+| Case | Default (`fail_on_error: true`) | With `fail_on_error: false` |
+|------|--------------------------------|------------------------------|
+| `file_id` or remote URL reference (`http://`, `https://`, `gs://`) with no inline bytes | Blocked | Passes through unscanned |
+| Document larger than Model Armor's 4 MB limit | Blocked | Passes through unscanned |
+| More than 10 attachments in one request | Blocked | First 10 scanned, rest pass through unscanned |
+| Inline base64 that fails to decode | Blocked | Passes through unscanned |
+| Model Armor API error while scanning an attachment | Blocked | Attachment skipped, remaining attachments still scanned |
+
+Blocked requests return the reason:
+
+```json
+{"error": "Model Armor could not scan an attachment and blocked the request: attachment of 5242880 bytes exceeds Model Armor's 4194304 byte scan limit"}
+```
+
 ## Supported Params 
 
 ### Common Params
@@ -84,7 +126,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 - `location` - str - Google Cloud location/region. Default is `us-central1`
 - `credentials` - Union[str, dict] - Path to service account JSON file or credentials dictionary
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
-- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors. Default is `true`
+- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
 - `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
