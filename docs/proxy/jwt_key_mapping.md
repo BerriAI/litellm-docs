@@ -34,7 +34,7 @@ sequenceDiagram
 
     Proxy->>DB: Look up (claim_name, claim_value)
     alt Mapping found
-        DB-->>Proxy: virtual_key_id = sk-abc123
+        DB-->>Proxy: key = sk-abc123
         Proxy->>Proxy: Apply virtual key permissions<br/>(models, budget, rate limits)
         Proxy-->>Client: 200 OK
     else No mapping — fallback_team_mapping
@@ -58,7 +58,7 @@ Complete [OIDC JWT Auth setup](./token_auth.md) first — you need `JWT_PUBLIC_K
 
 ### Step 1. Configure the JWT claim to map on
 
-Add `jwt_client_id_field` to your `litellm_jwtauth` config. This is the JWT claim LiteLLM uses as the lookup key:
+Add `virtual_key_claim_field` to your `litellm_jwtauth` config. This is the JWT claim LiteLLM uses as the lookup key:
 
 ```yaml
 general_settings:
@@ -67,9 +67,11 @@ general_settings:
   litellm_jwtauth:
     team_id_jwt_field: "team_id"          # existing team mapping (optional)
     user_id_jwt_field: "sub"
-    jwt_client_id_field: "client_id"      # 👈 claim used for key mapping
+    virtual_key_claim_field: "client_id"  # claim used as the key-mapping lookup
     unregistered_jwt_client_behavior: "fallback_team_mapping"  # see below
 ```
+
+`virtual_key_claim_field` was previously named `jwt_client_id_field`; the old name still works as a backward-compatible alias.
 
 **`unregistered_jwt_client_behavior`** controls what happens when a JWT has no registered mapping:
 
@@ -79,17 +81,20 @@ general_settings:
 | `reject` | Return 403 if no mapping found |
 | `auto_register` | Auto-create a virtual key + mapping on first encounter |
 
+With `auto_register`, the first request carrying a new claim value provisions a virtual key and mapping on the fly, with no admin call. The key is created only after the JWT clears full policy (signature, RBAC/scope, `custom_validate`, and `user_allowed_email_domain`); if the token fails any check the request is rejected and nothing is created. The new key inherits the team, user, and org resolved from the validated JWT, so make sure those claims are configured. A token that resolves to a proxy admin is not auto-registered, since admins already have full access. `auto_register` requires a database connection
+
 ### Step 2. Register a JWT client → virtual key mapping
 
-**Option A: Single call (creates key + mapping atomically)**
+**Recommended: let `auto_register` do it.** Set `unregistered_jwt_client_behavior: "auto_register"` in Step 1 and the first request from each new claim value provisions its own key automatically, with no admin call. Use this when every client should start from the same defaults.
+
+**Manual: register a key with specific limits.** When a client needs its own budget or model set, create the virtual key first, then map a claim value to it. There is no single atomic endpoint; it is two calls.
 
 ```bash
-curl -X POST 'http://0.0.0.0:4000/jwt_client/new' \
+# 1. Create a virtual key with the limits you want
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "jwt_claim_name": "client_id",
-    "jwt_claim_value": "dev-alice",
     "models": ["claude-sonnet-4-5", "claude-haiku-4-5"],
     "max_budget": 50.0,
     "budget_duration": "30d",
@@ -97,30 +102,17 @@ curl -X POST 'http://0.0.0.0:4000/jwt_client/new' \
     "tpm_limit": 50000,
     "team_id": "engineering"
   }'
-```
+# -> {"key": "sk-abc123...", ...}
 
-Response includes the virtual key token (only shown on creation):
-
-```json
-{
-  "key": "sk-abc123...",
-  "key_id": "key_123",
-  "mapping_id": "mapping_456",
-  "jwt_claim_name": "client_id",
-  "jwt_claim_value": "dev-alice"
-}
-```
-
-**Option B: Map an existing virtual key**
-
-```bash
+# 2. Map a JWT claim value to that key
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
   -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
     "jwt_claim_name": "client_id",
     "jwt_claim_value": "dev-alice",
-    "virtual_key_id": "key_123"
+    "key": "sk-abc123...",
+    "description": "dev-alice"
   }'
 ```
 
@@ -163,35 +155,31 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 
 **2. Register each developer with their own key and spend limit**
 
-```bash
-# Alice — senior eng, higher budget
-curl -X POST 'http://0.0.0.0:4000/jwt_client/new' \
-  -H 'Authorization: Bearer <MASTER_KEY>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jwt_claim_name": "client_id",
-    "jwt_claim_value": "alice@corp.com",
-    "team_id": "engineering",
-    "models": ["claude-sonnet-4-5", "claude-haiku-4-5"],
-    "max_budget": 200.0,
-    "budget_duration": "30d",
-    "rpm_limit": 200
-  }'
+Each developer is a virtual key plus a mapping from their JWT claim to that key. Create the key with `/key/generate`, then map the claim value with `/jwt/key/mapping/new`.
 
-# Bob — contractor, tighter limits
-curl -X POST 'http://0.0.0.0:4000/jwt_client/new' \
-  -H 'Authorization: Bearer <MASTER_KEY>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jwt_claim_name": "client_id",
-    "jwt_claim_value": "bob@contractor.com",
-    "team_id": "engineering",
-    "models": ["claude-haiku-4-5"],
-    "max_budget": 20.0,
-    "budget_duration": "30d",
-    "rpm_limit": 30
-  }'
+```bash
+# Alice: senior eng, higher budget
+ALICE_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
+  -d '{"team_id": "engineering", "models": ["claude-sonnet-4-5", "claude-haiku-4-5"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
+  | jq -r '.key')
+
+curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
+  -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
+  -d "{\"jwt_claim_name\": \"client_id\", \"jwt_claim_value\": \"alice@corp.com\", \"key\": \"$ALICE_KEY\", \"description\": \"alice@corp.com\"}"
+
+# Bob: contractor, tighter limits
+BOB_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
+  -d '{"team_id": "engineering", "models": ["claude-haiku-4-5"], "max_budget": 20.0, "budget_duration": "30d", "rpm_limit": 30}' \
+  | jq -r '.key')
+
+curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
+  -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
+  -d "{\"jwt_claim_name\": \"client_id\", \"jwt_claim_value\": \"bob@contractor.com\", \"key\": \"$BOB_KEY\", \"description\": \"bob@contractor.com\"}"
 ```
+
+For teams where everyone starts from the same defaults, skip the per-developer calls and set `unregistered_jwt_client_behavior: "auto_register"` instead.
 
 **3. Configure Claude Code to use the proxy**
 
@@ -227,70 +215,62 @@ No API keys distributed. No shared limits. Full per-developer spend visibility i
 
 ## Managing mappings
 
-**View a mapping + its key settings**
+Every mapping has an `id` (returned when you create it). The `info`, `update`, and `delete` endpoints key off that `id`, so start from `list` to find it.
+
+**List mappings**
 
 ```bash
-curl 'http://0.0.0.0:4000/jwt/key/mapping/info?jwt_claim_name=client_id&jwt_claim_value=alice@corp.com' \
+curl 'http://0.0.0.0:4000/jwt/key/mapping/list?page=1&size=50' \
   -H 'Authorization: Bearer <MASTER_KEY>'
 ```
 
-Response includes the linked key's `models`, `max_budget`, `spend`, `rpm_limit`, `expires`, etc.
+**View one mapping by id**
+
+```bash
+curl 'http://0.0.0.0:4000/jwt/key/mapping/info?id=<mapping-id>' \
+  -H 'Authorization: Bearer <MASTER_KEY>'
+```
+
+The response is the mapping's own metadata: claim name and value, description, `is_active`, timestamps, and who created or last updated it. It does not include the linked key or its settings, and the hashed key is never returned. To inspect the key's models, budget, or spend, use `/key/info`.
 
 **Update a mapping**
 
+`update` changes the mapping itself: point it at a different key, edit the description, or toggle `is_active`. To change budgets or model access, update the underlying key with `/key/update`; the mapping only stores the claim, the linked key, a description, and an active flag.
+
 ```bash
-curl -X POST 'http://0.0.0.0:4000/jwt_client/update' \
+curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/update' \
   -H 'Authorization: Bearer <MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "jwt_claim_name": "client_id",
-    "jwt_claim_value": "alice@corp.com",
-    "max_budget": 300.0
+    "id": "<mapping-id>",
+    "key": "sk-newkey...",
+    "description": "rotated key",
+    "is_active": true
   }'
 ```
 
 **Delete a mapping**
 
 ```bash
-curl -X DELETE 'http://0.0.0.0:4000/jwt/key/mapping/delete' \
+curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/delete' \
   -H 'Authorization: Bearer <MASTER_KEY>' \
   -H 'Content-Type: application/json' \
-  -d '{
-    "jwt_claim_name": "client_id",
-    "jwt_claim_value": "alice@corp.com"
-  }'
+  -d '{"id": "<mapping-id>"}'
 ```
 
 ---
 
 ## Security
 
-JWT-bound keys are locked down:
-
-- Non-admin users cannot call `/key/update`, `/key/delete`, or `/key/regenerate` on a JWT-bound key. These return 403.
-- JWT-bound keys are automatically restricted to `llm_api_routes` — they can make LLM calls but cannot manage other keys or admin resources.
-- Only proxy admins can create, update, or delete mappings.
+- Creating, updating, and deleting mappings is restricted to proxy admins; listing and inspecting them also allows the admin viewer role. All `/jwt/key/mapping/*` routes reject other callers with 403.
+- The mapping endpoints never return the underlying key or its hashed token; responses carry only the mapping's metadata.
+- A mapped or auto-registered key is a standard virtual key. It enforces exactly the models, budgets, rate limits, team, and guardrail settings configured on that key, and like any non-admin key it can call LLM routes but cannot manage other keys or admin resources.
 
 ---
 
-## Multi-IdP support
+## Multiple identity providers
 
-If you have users across multiple identity providers that share the same claim values (e.g. two services both have `sub: user-123` from different issuers), set `issuer` when creating the mapping:
-
-```bash
-curl -X POST 'http://0.0.0.0:4000/jwt_client/new' \
-  -H 'Authorization: Bearer <MASTER_KEY>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jwt_claim_name": "sub",
-    "jwt_claim_value": "user-123",
-    "issuer": "https://idp-a.corp.com",
-    "models": ["claude-sonnet-4-5"],
-    "max_budget": 50.0
-  }'
-```
-
-Mappings are unique per `(claim_name, claim_value, issuer)` — so `user-123` from IdP A and `user-123` from IdP B resolve to different virtual keys.
+Mappings are keyed on `(jwt_claim_name, jwt_claim_value)` only; there is no per-issuer dimension. If two identity providers can emit the same claim value (for example both send `sub: user-123`), those tokens resolve to the same mapping and collide. Map on a claim that is globally unique across your providers, such as `email`, or configure per-issuer validation with [issuer-bound JWT rules](./token_auth.md) so each provider's identities land on distinct claim values.
 
 ---
 
