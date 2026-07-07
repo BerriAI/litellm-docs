@@ -27,6 +27,7 @@ Each week runs the same loop against one version line. The first nightly (`dev`)
 | Tuesday | First nightly `dev` build; opens the next minor (`1.86.0.dev1`) |
 | Thursday | Second nightly `dev` build, cumulative (`1.86.0.dev2`) |
 | Saturday | New `rc` cut (`1.86.0rc1`); prior week's `rc` promoted to stable |
+| Next Tuesday | Next line's first nightly opens (`1.87.0.dev1`); the loop repeats, and `1.86.0rc1` becomes stable that Fri/Sat |
 
 If a Saturday `rc` fails QA it is not promoted; a fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
 
