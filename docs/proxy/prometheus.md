@@ -42,12 +42,10 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-View Metrics on `/metrics` (requires a LiteLLM API key since v1.85.0):
+View Metrics on `/metrics`:
 ```shell
 curl http://localhost:4000/metrics \
   -H "Authorization: Bearer sk-..."
-
-# <proxy_base_url>/metrics
 ```
 
 ### Multiple Workers
@@ -625,18 +623,9 @@ Here is a screenshot of the metrics you can monitor with the LiteLLM Grafana Das
 
 ## Authentication on `/metrics` endpoint
 
-:::info Default changed in v1.85.0
-As of [v1.85.0](https://github.com/BerriAI/litellm/releases/tag/v1.85.0), **`/metrics` requires LiteLLM API key authentication by default**. Earlier versions left it unauthenticated unless you set `require_auth_for_metrics_endpoint: true`.
-:::
+**By default, `/metrics` requires LiteLLM API key authentication** (since v1.85.0).
 
-Prometheus scrapers and manual `curl` checks must send a valid key in the `Authorization` header:
-
-```bash
-curl http://localhost:4000/metrics \
-  -H "Authorization: Bearer sk-..."
-```
-
-Example `prometheus.yml` scrape config:
+For Prometheus, add `authorization` to your scrape config:
 
 ```yaml
 scrape_configs:
@@ -648,18 +637,12 @@ scrape_configs:
       - targets: ['localhost:4000']
 ```
 
-### Opt out (unauthenticated `/metrics`)
-
-If your Prometheus setup cannot send auth headers, restore unauthenticated access by setting:
+To allow unauthenticated access:
 
 ```yaml
 litellm_settings:
   require_auth_for_metrics_endpoint: false
 ```
-
-:::warning
-Leaving `/metrics` unauthenticated exposes spend and usage metrics to anyone who can reach the endpoint. Only disable auth if the endpoint is network-restricted.
-:::
 
 ## FAQ 
 
