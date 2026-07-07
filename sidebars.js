@@ -720,6 +720,7 @@ const sidebars = {
             "tutorials/vertex_ai_pay_go",
             "proxy/request_tags",
             "proxy/custom_pricing",
+            "proxy/custom_model_cost_map",
             "proxy/pricing_calculator",
             "proxy/provider_margins",
             "proxy/provider_discounts",
