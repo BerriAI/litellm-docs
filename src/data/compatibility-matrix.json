@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-07-06T06:18:22Z",
+  "generated_at": "2026-07-07T06:15:55Z",
   "litellm_version": "v1.91.0",
   "claude_code_version": "2.1.126",
   "providers": [
@@ -257,8 +257,7 @@
       "name": "Structured outputs",
       "providers": {
         "anthropic": {
-          "status": "fail",
-          "error": "[claude-opus-4-7] claude CLI failed: exit=1; text=Based on the schema, I need to provide answer as an integer."
+          "status": "pass"
         },
         "bedrock_invoke": {
           "status": "pass"
