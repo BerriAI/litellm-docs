@@ -1017,6 +1017,7 @@ router_settings:
 | MICROSOFT_AUTHORIZATION_ENDPOINT | Custom authorization endpoint URL for Microsoft SSO (overrides default Microsoft OAuth authorization endpoint)
 | MICROSOFT_CLIENT_ID | Client ID for Microsoft services
 | MICROSOFT_CLIENT_SECRET | Client secret for Microsoft services
+| MICROSOFT_GRAPH_ENDPOINT | Microsoft Graph API base URL used when syncing Entra ID group memberships during SSO. Defaults to `https://graph.microsoft.com/v1.0`. Set to `https://graph.microsoft.us/v1.0` for Azure Government Cloud (GCC High)
 | MICROSOFT_SERVICE_PRINCIPAL_ID | Service Principal ID for Microsoft Enterprise Application. (This is an advanced feature if you want litellm to auto-assign members to Litellm Teams based on their Microsoft Entra ID Groups)
 | MICROSOFT_TENANT | Tenant ID for Microsoft Azure
 | MICROSOFT_TOKEN_ENDPOINT | Custom token endpoint URL for Microsoft SSO (overrides default Microsoft OAuth token endpoint)

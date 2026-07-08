@@ -111,6 +111,16 @@ On the LiteLLM UI, Navigate to `Teams`, You should see the new team `Production 
 
 <Image img={require('../../img/msft_member_3.png')}  style={{ width: '900px', height: 'auto' }} />
 
+### 2.5 Azure Government Cloud (GCC High)
+
+By default LiteLLM syncs group memberships from the commercial Microsoft Graph endpoint at `https://graph.microsoft.com/v1.0`. Azure Government Cloud GCC High serves Graph from a different host, so set `MICROSOFT_GRAPH_ENDPOINT` to point LiteLLM at the sovereign cloud endpoint.
+
+```bash showLineNumbers title="GCC High Graph endpoint"
+export MICROSOFT_GRAPH_ENDPOINT="https://graph.microsoft.us/v1.0"
+```
+
+When unset, LiteLLM uses `https://graph.microsoft.com/v1.0`, so commercial-cloud deployments need no change. This endpoint is used for the `/me/memberOf` group lookup and the Enterprise Application service-principal group lookup during SSO sign-in. You will likely also want to override the authorization, token, and userinfo endpoints for GCC High via `MICROSOFT_AUTHORIZATION_ENDPOINT`, `MICROSOFT_TOKEN_ENDPOINT`, and `MICROSOFT_USERINFO_ENDPOINT`.
+
 ## 3. Set default params for new teams auto-created on LiteLLM
 
 Since litellm auto creates a new team on the LiteLLM DB when there is a new Group Added to the LiteLLM Enterprise App on Azure Entra ID, we can set default params for new teams created. 
