@@ -94,6 +94,7 @@ mcp_servers:
   github_mcp:
     url: "https://api.githubcopilot.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     authorization_url: https://github.com/login/oauth/authorize
     token_url: https://github.com/login/oauth/access_token
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID
@@ -118,6 +119,7 @@ mcp_servers:
   github_mcp:
     url: "https://api.githubcopilot.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     authorization_url: https://github.com/login/oauth/authorize
     token_url: https://github.com/login/oauth/access_token
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID
@@ -272,6 +274,7 @@ mcp_servers:
   github_mcp:
     url: "https://api.githubcopilot.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     authorization_url: https://github.com/login/oauth/authorize
     token_url: https://github.com/login/oauth/access_token
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID

@@ -1,12 +1,12 @@
 # MCP OAuth
 
-LiteLLM supports two OAuth 2.0 flows for MCP servers:
+LiteLLM supports two OAuth 2.0 flows for MCP servers. Every `auth_type: oauth2` server in `config.yaml` must declare which one it uses via `oauth2_flow`:
 
-| Flow | Use Case | How It Works |
-|------|----------|--------------|
-| **Interactive (PKCE)** | User-facing apps (Claude Code, Cursor) | Browser-based consent, per-user tokens |
-| **Machine-to-Machine (M2M)** | Backend services, CI/CD, automated agents | `client_credentials` grant, proxy-managed tokens |
-| **On-Behalf-Of (OBO)** | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [MCP OBO Auth](./mcp_obo_auth.md). |
+| Flow | `oauth2_flow` | Use Case | How It Works |
+|------|---------------|----------|--------------|
+| **Interactive (PKCE)** | `authorization_code` | User-facing apps (Claude Code, Cursor) | Browser-based consent, per-user tokens |
+| **Machine-to-Machine (M2M)** | `client_credentials` | Backend services, CI/CD, automated agents | `client_credentials` grant, proxy-managed tokens |
+| **On-Behalf-Of (OBO)** | n/a (uses `auth_type: oauth2_token_exchange`) | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [MCP OBO Auth](./mcp_obo_auth.md). |
 
 ## Interactive OAuth (PKCE)
 
@@ -19,6 +19,7 @@ mcp_servers:
   github_mcp:
     url: "https://api.githubcopilot.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
@@ -225,6 +226,7 @@ mcp_servers:
   my_mcp_server:
     url: "https://my-mcp-server.com/mcp"
     auth_type: oauth2
+    oauth2_flow: client_credentials
     client_id: os.environ/MCP_CLIENT_ID
     client_secret: os.environ/MCP_CLIENT_SECRET
     token_url: "https://auth.example.com/oauth/token"
@@ -273,6 +275,7 @@ mcp_servers:
   test_oauth2:
     url: "http://localhost:8765/mcp"
     auth_type: oauth2
+    oauth2_flow: client_credentials
     client_id: "test-client"
     client_secret: "test-secret"
     token_url: "http://localhost:8765/oauth/token"
@@ -302,7 +305,7 @@ curl http://localhost:4000/mcp-rest/tools/call \
 | Field | Required | Description |
 |-------|----------|-------------|
 | `auth_type` | Yes | Must be `oauth2`. For RFC 8693 On-Behalf-Of, use `oauth2_token_exchange` instead — see [MCP OBO Auth](./mcp_obo_auth.md). |
-| `oauth2_flow` | No | Explicit flow selector. One of `"client_credentials"` (M2M) or `"authorization_code"` (interactive PKCE). If omitted, LiteLLM infers from the other fields: `authorization_url` present → interactive; only `token_url` + `client_id` + `client_secret` → client credentials. Set explicitly when in doubt — for example, when a legacy DB row has both `authorization_url` and `token_url` but you want M2M. |
+| `oauth2_flow` | Yes | Flow selector. One of `"client_credentials"` (M2M) or `"authorization_code"` (interactive PKCE, including `delegate_auth_to_upstream`). Required for every `auth_type: oauth2` server in `config.yaml`; the proxy refuses to start if it is missing or invalid. Servers created through the UI get it from the OAuth flow type selector. Only legacy database rows created before this field existed fall back to inference from field shape at request time; config entries are never inferred. |
 | `client_id` | Yes for M2M, optional for interactive | OAuth2 client ID. Required for `client_credentials`. For interactive flows, can be obtained via Dynamic Client Registration (RFC 7591) at `POST /{server_name}/register` if the upstream supports it. Supports `os.environ/VAR_NAME`. |
 | `client_secret` | Yes for M2M, optional for interactive | OAuth2 client secret. Same applicability as `client_id`. Supports `os.environ/VAR_NAME`. |
 | `token_url` | Yes for M2M, optional for interactive | Token endpoint URL. LiteLLM POSTs to this for `client_credentials` and for the authorization-code exchange. |
@@ -419,10 +422,11 @@ mcp_servers:
   notion_mcp:
     url: "https://mcp.notion.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     delegate_auth_to_upstream: true
 ```
 
-That's the entire change. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
+That's the entire change. Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
 
 :::warning Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation
 
@@ -482,4 +486,5 @@ The bypass only fires when **every** target the request resolves to opts in. It 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `auth_type` | Yes | Must be `oauth2`. The flag is ignored otherwise. |
+| `oauth2_flow` | Yes | Set to `authorization_code`; delegation passes the client's interactive PKCE flow through to the upstream server. |
 | `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into PKCE passthrough. |

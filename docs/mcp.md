@@ -395,13 +395,14 @@ See the **[MCP OAuth guide](./mcp_oauth.md)** for setup instructions, sequence d
 
 LiteLLM v 1.77.6 added support for OAuth 2.0 Client Credentials for MCP servers.
 
-You can configure this either in `config.yaml` or directly from the LiteLLM UI (MCP Servers → Authentication → OAuth).
+You can configure this either in `config.yaml` or directly from the LiteLLM UI (MCP Servers → Authentication → OAuth). Every `auth_type: oauth2` server must declare its flow via `oauth2_flow`: `authorization_code` for interactive browser sign-in (shown below) or `client_credentials` for machine-to-machine tokens.
 
 ```yaml
 mcp_servers:
   github_mcp:
     url: "https://api.githubcopilot.com/mcp"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```

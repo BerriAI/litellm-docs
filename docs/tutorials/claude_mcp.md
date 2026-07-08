@@ -29,6 +29,7 @@ mcp_servers:
     url: "https://api.githubcopilot.com/mcp"
     transport: "http"
     auth_type: oauth2
+    oauth2_flow: authorization_code
     client_id: os.environ/GITHUB_OAUTH_CLIENT_ID
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
@@ -44,6 +45,7 @@ mcp_servers:
     url: "https://mcp.atlassian.com/v1/mcp"
     transport: "http"
     auth_type: oauth2
+    oauth2_flow: authorization_code
 ```
 
 </TabItem>
