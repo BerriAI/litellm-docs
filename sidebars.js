@@ -1161,6 +1161,7 @@ const sidebars = {
         "providers/togetherai",
         "providers/topaz",
         "providers/triton-inference-server",
+        "providers/unorouter",
         "providers/v0",
         "providers/vercel_ai_gateway",
         {
