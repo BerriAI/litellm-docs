@@ -658,7 +658,7 @@ const sidebars = {
         "proxy/management_cli",
         {
           type: "link",
-          label: "Load Balancing, Routing, Fallbacks",
+          label: "Load Balancing, Routing, Fallbacks (Failover)",
           href: "https://docs.litellm.ai/docs/routing-load-balancing",
         },
         "traffic_mirroring",
@@ -1203,7 +1203,7 @@ const sidebars = {
       link: {
         type: "generated-index",
         title: "Routing & Load Balancing",
-        description: "Learn how to load balance, route, and set fallbacks for your LLM requests",
+        description: "Learn how to load balance, route, and set fallbacks (provider failover) for your LLM requests",
         slug: "/routing-load-balancing",
       },
       items: [
@@ -1481,7 +1481,7 @@ const learnSidebar = {
           link: {
             type: "generated-index",
             title: "Reliability, Testing & Spend",
-            description: "Retries, fallbacks, mock responses, and budget controls",
+            description: "Retries, fallbacks (failover), mock responses, and budget controls",
             slug: "/guides/reliability_testing_spend"
           },
           items: [

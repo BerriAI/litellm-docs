@@ -1,10 +1,28 @@
+---
+title: "Fallbacks (Provider Failover)"
+description: "Set up automatic provider failover in LiteLLM. If a model or provider fails after num_retries, fallback to another model group for high availability and reliability."
+keywords:
+  [
+    fallbacks,
+    failover,
+    provider failover,
+    model failover,
+    automatic failover,
+    high availability,
+    reliability,
+    retries,
+    backup model,
+    cross-provider failover,
+  ]
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Fallbacks
+# Fallbacks (Provider Failover)
 
-If a call fails after num_retries, fallback to another model group. 
+Fallbacks are how LiteLLM does automatic **failover**. If a call fails after num_retries, LiteLLM falls back to another model group, so a failing model or provider automatically fails over to a healthy backup. If you are looking for "provider failover" or "model failover", this is the page. 
 
 - Quick Start [load balancing](./load_balancing.md)
 - Quick Start [client side fallbacks](#client-side-fallbacks)
