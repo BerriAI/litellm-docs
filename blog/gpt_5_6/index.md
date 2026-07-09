@@ -149,4 +149,5 @@ Prices are per 1M tokens (USD), shown as short context (≤272K tokens) / long c
 - For cost tracking on the GPT-5.6 models, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`). Works on any LiteLLM version `v1.76.0` or newer, with no container restart or image upgrade required.
 - GPT-5.6 supports reasoning, function calling, parallel tool calls, vision (image input), prompt caching, web search, and structured output; see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
 - The GPT-5.6 family launched in limited preview and OpenAI is expanding availability through the API and Codex; check your OpenAI account for model access.
-- Azure availability: not yet; this post covers OpenAI direct only.
+- Azure availability: coming soon. This post covers OpenAI direct today, with Azure OpenAI support for the GPT-5.6 models on the way.
+- This is a living post and will be updated as GPT-5.6 support expands (Azure, additional capabilities, and pricing updates).
