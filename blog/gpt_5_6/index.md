@@ -23,6 +23,10 @@ LiteLLM now supports the [GPT-5.6 family](https://openai.com/index/previewing-gp
 
 GPT-5.6 introduces a new naming system where the number identifies the generation and the tier name identifies a durable capability level. `gpt-5.6-sol` is the flagship for complex reasoning and agentic workloads, `gpt-5.6-terra` is a balanced model for everyday work with performance competitive with GPT-5.5 at roughly half the cost, and `gpt-5.6-luna` is the fastest and most affordable tier. Per OpenAI, the family sets a new state of the art on agentic coding (Terminal-Bench 2.1) with broad gains in long-horizon biology and cybersecurity workflows. GPT-5.6 also adds a new `max` reasoning effort for the deepest single-agent thinking and an `ultra` mode that coordinates subagents on the most complex tasks.
 
+:::info Living post
+**This post is updated as GPT-5.6 support expands.** Azure OpenAI support for the GPT-5.6 models is coming soon; today the post covers OpenAI direct. Check back for Azure availability, new capabilities, and pricing updates.
+:::
+
 :::note
 **No Docker image upgrade needed.** GPT-5.6 routes through the existing `OpenAIGPT5Config` in LiteLLM (the version classifier already matches `gpt-5.4` and newer), so any recent version works out of the box.
 
@@ -149,5 +153,3 @@ Prices are per 1M tokens (USD), shown as short context (≤272K tokens) / long c
 - For cost tracking on the GPT-5.6 models, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`). Works on any LiteLLM version `v1.76.0` or newer, with no container restart or image upgrade required.
 - GPT-5.6 supports reasoning, function calling, parallel tool calls, vision (image input), prompt caching, web search, and structured output; see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
 - The GPT-5.6 family launched in limited preview and OpenAI is expanding availability through the API and Codex; check your OpenAI account for model access.
-- Azure availability: coming soon. This post covers OpenAI direct today, with Azure OpenAI support for the GPT-5.6 models on the way.
-- This is a living post and will be updated as GPT-5.6 support expands (Azure, additional capabilities, and pricing updates).
