@@ -481,11 +481,6 @@ const sidebars = {
           ],
         },
         {
-          "type": "link",
-          "label": "Demo LiteLLM Cloud",
-          "href": "https://www.litellm.ai/cloud"
-        },
-        {
           type: "category",
           label: "Admin UI",
           items: [
