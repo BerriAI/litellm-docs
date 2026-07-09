@@ -580,6 +580,11 @@ const sidebars = {
             "proxy/virtual_keys",
             "proxy/token_auth",
             "proxy/jwt_key_mapping",
+            {
+              type: "doc",
+              id: "proxy/identity_provisioning",
+              label: "Provisioning & Keys",
+            },
             "proxy/service_accounts",
             "proxy/access_control",
             "proxy/cli_sso",
