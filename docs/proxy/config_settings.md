@@ -966,6 +966,7 @@ router_settings:
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM
 | LITELLM_SENSITIVE_ROUTING_TTL | TTL in seconds for sticky sensitive-data routing decisions; controls how long a session stays pinned to the on-premise model selected by a routing guardrail. Default is 3600
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
+| LITELLM_SSE_KEEPALIVE_INTERVAL_SECONDS | Emit an SSE comment line (`: keepalive`) on streaming responses whenever the upstream provider is silent for this many seconds, so idle-timeout proxies/load balancers between the client and LiteLLM don't kill the connection while a reasoning model is thinking. Default is 0 (disabled)
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
 | LITELLM_TOKEN | Access token for LiteLLM integration
 | LITELLM_TPM_TOKEN_RESERVATION_ENABLED | When false, the v3 rate limiter skips the upfront TPM token reservation and enforces TPM post-call from actual usage. Default is true
