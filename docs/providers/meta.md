@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 |-------|-------|
 | Description | Meta's Model API provides access to Meta's Muse Spark family of reasoning models. |
 | Provider Route on LiteLLM | `meta/` |
-| Supported Endpoints | `/chat/completions`, `/responses` |
+| Supported Endpoints | `/chat/completions`, `/responses`, `/v1/messages` |
 | API Reference | [Meta Model API Reference ↗](https://dev.meta.ai/docs) |
 
 ## Required Variables
@@ -29,6 +29,8 @@ We actively maintain the list of models, pricing, token window, etc. [here](http
 | `muse-spark-1.1` | 1M | Text, Image, Video, PDF | Text |
 
 `muse-spark-1.1` supports function calling, parallel function calling, structured outputs, prompt caching, web search grounding, and reasoning via `reasoning_effort` (`"minimal"` through `"xhigh"`).
+
+The API also natively exposes the Anthropic Messages format, so LiteLLM forwards `/v1/messages` requests to `https://api.meta.ai/v1/messages` untranslated, preserving Anthropic-only features like thinking blocks.
 
 ## Usage - LiteLLM Python SDK
 
@@ -228,3 +230,18 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+### Anthropic Messages API
+
+The proxy's `/v1/messages` route forwards requests for `meta/` models to Meta's native Anthropic-compatible endpoint without translation.
+
+```bash showLineNumbers title="Meta Model API via Proxy - /v1/messages"
+curl http://localhost:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-proxy-api-key" \
+  -d '{
+    "model": "muse-spark-1.1",
+    "max_tokens": 2048,
+    "messages": [{"role": "user", "content": "Write a short poem about AI."}]
+  }'
+```
