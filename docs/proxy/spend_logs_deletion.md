@@ -33,11 +33,14 @@ general_settings:
   # Optional: set exact time for cleanup (Cron syntax)
   maximum_spend_logs_cleanup_cron: "0 4 * * *" # Run at 04:00 AM daily
 
-litellm_settings:
-  cache: true
-  cache_params:
-    type: redis
+  # Redis is used to elect the single pod that runs the cleanup
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
 ```
+
+See [Coordination Redis](./coordination_redis) for cluster, Sentinel, and environment-variable options.
 
 ### Configuration Options
 

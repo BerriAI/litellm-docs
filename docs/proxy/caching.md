@@ -27,27 +27,25 @@ calling the LLM API again.
 
 When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**—so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
-Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
+Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into the proxy's Redis. Workers and replicas then share cached auth entries across the cluster.
 
 **Requirements**
 
-- `litellm_settings.cache` must be **`true`** (Redis for the proxy is initialized during cache setup). See [All settings](./config_settings).
-- `cache_params.type` must be **`redis`** (or Redis Cluster, per your cache config); the auth cache attaches to that Redis client. See [supported `cache_params`](#supported-cache_params-on-proxy-configyaml).
+- The proxy must have a Redis client. Configure one with [`general_settings.coordination_redis`](./coordination_redis), or let the auth cache attach to a plain-Redis response cache (`litellm_settings.cache: true` and `cache_params.type: redis`, or Redis Cluster). A semantic response cache does not provide one; see [how the coordination Redis is resolved](./coordination_redis#how-the-coordination-redis-is-resolved).
 - Optionally set **`general_settings.user_api_key_cache_ttl`** (seconds): TTL applies to both the in-memory and Redis tiers when Redis auth caching is enabled, so stale keys expire consistently.
 
 Example:
 
 ```yaml
-litellm_settings:
-  cache: true
-  enable_redis_auth_cache: true
-  cache_params:
-    type: redis
+general_settings:
+  coordination_redis:
     host: os.environ/REDIS_HOST
     port: 6379
-
-general_settings:
+    password: os.environ/REDIS_PASSWORD
   user_api_key_cache_ttl: 300 # optional; seconds
+
+litellm_settings:
+  enable_redis_auth_cache: true
 ```
 
 :::tip

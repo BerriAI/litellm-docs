@@ -353,11 +353,7 @@ Add this to your config:
 ```yaml
 general_settings:
   use_redis_transaction_buffer: true
-
-litellm_settings:
-  cache: true
-  cache_params:
-    type: redis
+  coordination_redis:
     host: your-redis-host
 ```
 

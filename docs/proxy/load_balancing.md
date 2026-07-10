@@ -133,6 +133,8 @@ router_settings:
   redis_password: your-password
 ```
 
+`router_settings` Redis holds the router's own load-balancing state, including model-level rate limits, cooldowns, and usage-based routing counters; key, user, and team rate limits use the [coordination Redis](./coordination_redis) instead, and the router falls back to it when it has no Redis of its own.
+
 
 :::info
 Detailed information about [routing strategies can be found here](../routing)
@@ -220,6 +222,8 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ## Load Balancing using multiple litellm instances (Kubernetes, Auto Scaling)
 
 LiteLLM Proxy supports sharing rpm/tpm shared across multiple litellm instances, pass `redis_host`, `redis_password` and `redis_port` to enable this. (LiteLLM will use Redis to track rpm/tpm usage )
+
+This covers the router's deployment-level state. Rate limits on virtual keys, users, and teams are tracked on the [coordination Redis](./coordination_redis), configured under `general_settings.coordination_redis`.
 
 Example config
 

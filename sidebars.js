@@ -607,6 +607,7 @@ const sidebars = {
             "proxy/budget_fallbacks",
           ],
         },
+        "proxy/coordination_redis",
         "proxy/caching",
         "proxy/memory",
         {

@@ -49,11 +49,11 @@ Every proxy instance in every region must share the following. If any of these d
 | `LITELLM_LICENSE` | Same license key in every region | Each instance validates the license independently; one key activates all of them |
 | `DISABLE_SCHEMA_UPDATE` | `true` on all proxy instances | Schema migrations must run exactly once (as a job), not raced by every instance in every region |
 
-Per region, you additionally run a Redis instance and set it in that region's proxy config (`router_settings` and cache settings). Redis state is regional: rate limits and cached responses are scoped to the region that served the request.
+Per region, you additionally run a Redis instance and point that region's proxy at it with [`general_settings.coordination_redis`](./coordination_redis). Setting `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` per region, as the environment blocks below do, is enough on its own; the proxy builds the coordination Redis client from those variables when no explicit block is present. Redis state is regional: rate limits and cached responses are scoped to the region that served the request.
 
 :::info
 
-Rate limits (TPM/RPM on keys, teams, and users) are enforced through Redis. With one Redis per region, a limit of 100 RPM means 100 RPM per region, not globally. If you need strictly global rate limiting, all instances must share one Redis, which puts a cross-region round trip in the request path for remote regions. Most deployments accept per-region enforcement.
+Rate limits (TPM/RPM on keys, teams, and users) are enforced through the coordination Redis. With one Redis per region, a limit of 100 RPM means 100 RPM per region, not globally. If you need strictly global rate limiting, all instances must share one Redis, which puts a cross-region round trip in the request path for remote regions. Most deployments accept per-region enforcement.
 
 :::
 

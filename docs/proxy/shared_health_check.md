@@ -54,15 +54,14 @@ general_settings:
   # Health check interval (seconds)
   health_check_interval: 300  # 5 minutes
 
-# Redis configuration (required for shared health check)
-litellm_settings:
-  cache: true
-  cache_params:
-    type: redis
+  # Redis configuration (required for shared health check)
+  coordination_redis:
     host: your-redis-host
     port: 6379
     password: your-redis-password
 ```
+
+Shared health checks run on the proxy's [coordination Redis](./coordination_redis), which is configured independently of the LLM response cache.
 
 ### Environment Variables
 
@@ -81,7 +80,7 @@ export DEFAULT_SHARED_HEALTH_CHECK_LOCK_TTL=60
 
 ## Requirements
 
-- **Redis**: Required for shared state coordination
+- **Redis**: Required for shared state coordination. See [Coordination Redis](./coordination_redis)
 - **Background Health Checks**: Must be enabled (`background_health_checks: true`)
 - **Multiple Pods**: Most beneficial with 2+ proxy instances
 
@@ -244,11 +243,8 @@ general_settings:
   # Health check details
   health_check_details: true
 
-litellm_settings:
   # Redis configuration
-  cache: true
-  cache_params:
-    type: redis
+  coordination_redis:
     host: redis-cluster.example.com
     port: 6379
     password: os.environ/REDIS_PASSWORD

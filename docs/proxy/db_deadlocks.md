@@ -64,17 +64,15 @@ A single instance flushes the redis queue to the DB
 
 You can enable using the redis buffer by setting `use_redis_transaction_buffer: true` in the `general_settings` section of your `proxy_config.yaml` file. 
 
-Note: This setup requires litellm to be connected to a redis instance. 
+Note: This setup requires litellm to be connected to a redis instance. The buffer uses the proxy's [coordination Redis](./coordination_redis), which is configured independently of the response cache. 
 
 ```yaml showLineNumbers title="litellm proxy_config.yaml"
 general_settings:
   use_redis_transaction_buffer: true
-
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
-    supported_call_types: [] # Optional: Set cache for proxy, but not on the actual llm api call
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
 ```
 
 ## Monitoring
@@ -107,10 +105,11 @@ This means all available Redis connections are in use, and LiteLLM cannot obtain
 - Increase the `max_connections` parameter in your Redis config section in `proxy_config.yaml` to allow more simultaneous connections. For example:
 
 ```yaml
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
     max_connections: 100  # Increase as needed for your traffic
 ```
 

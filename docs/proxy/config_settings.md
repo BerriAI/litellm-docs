@@ -104,9 +104,10 @@ litellm_settings:
     ttl: 600 # ttl for caching
     disable_copilot_system_to_assistant: False # DEPRECATED - GitHub Copilot API supports system prompts.
 
-  # Virtual key auth cache — shares API key / virtual-key auth across workers via Redis.
+  # Virtual key auth cache - shares API key / virtual-key auth across workers via Redis.
   # Reduces DB round trips when caches are cold on new workers or pods.
-  # Requires litellm_settings.cache: true AND cache_params.type: redis above.
+  # Requires a Redis client on the proxy: general_settings.coordination_redis,
+  # or a plain-redis response cache (cache: true AND cache_params.type: redis above).
   enable_redis_auth_cache: false
 
 callback_settings:
@@ -135,6 +136,20 @@ general_settings:
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
   user_mcp_management_mode: restricted  # or "view_all"
+
+  # Coordination Redis - shared state across pods (rate limits, parallel request
+  # limits, spend buffer, pod lock, shared health checks). Independent of the
+  # response cache under litellm_settings.cache.
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+    # url: os.environ/REDIS_URL  # alternative to host/port/password
+    # ssl: true
+    # startup_nodes: [{host: ..., port: ...}]  # Redis Cluster
+    # sentinel_nodes: [[host, port]]           # Redis Sentinel
+    # service_name: mymaster
+    # sentinel_password: os.environ/REDIS_SENTINEL_PASSWORD
 
   # Database Settings
   database_url: string
@@ -212,7 +227,7 @@ router_settings:
 | context_window_fallbacks | array of objects | Fallbacks to use when a ContextWindowExceededError is encountered. [Further docs](./reliability#context-window-fallbacks) |
 | cache | boolean | If true, enables caching. [Further docs](./caching) |
 | cache_params | object | Parameters for the cache. [Further docs](./caching#supported-cache_params-on-proxy-configyaml) |
-| enable_redis_auth_cache | boolean | When `true`, stores virtual-key auth payloads in Redis (same client as response caching) so every worker/pod shares cached auth lookups—fewer repeated database reads on cache misses. **Requires `cache: true` and `cache_params.type: redis`** (Redis or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching#virtual-key-authentication-cache-redis) |
+| enable_redis_auth_cache | boolean | When `true`, stores virtual-key auth payloads in the proxy's Redis so every worker/pod shares cached auth lookups; fewer repeated database reads on cache misses. **Requires a Redis client on the proxy**, from [`general_settings.coordination_redis`](./coordination_redis) or from a plain-Redis response cache (`cache: true` and `cache_params.type: redis`, or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching#virtual-key-authentication-cache-redis) |
 | disable_end_user_cost_tracking | boolean | If true, turns off end user cost tracking on prometheus metrics + litellm spend logs table on proxy. |
 | enable_end_user_cost_tracking_prometheus_only | boolean | If true, includes the `end_user` label on Prometheus metrics. Disabled by default to keep Prometheus cardinality bounded. [Further docs](./prometheus#tracking-end_user-on-prometheus) |
 | cost_discount_config | object | Provider-specific percentage discounts applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_discounts) |
@@ -326,6 +341,7 @@ router_settings:
 | always_include_stream_usage | boolean | If true, includes usage metrics in every streaming response chunk |
 | auto_redirect_ui_login_to_sso | boolean | If true, automatically redirects UI login page to SSO provider |
 | control_plane_url | string | URL of the control plane for cross-instance state sharing |
+| coordination_redis | object | Redis connection used for cross-pod state: key/user/team rate limits, parallel request limits, the Redis spend transaction buffer, the pod lock manager, and shared health checks. Takes precedence over borrowing a plain-Redis response cache, which in turn takes precedence over building a client from `REDIS_*` environment variables. Supports `host`/`port`/`password`, `url`, `ssl`, Cluster `startup_nodes`, and Sentinel `sentinel_nodes`/`service_name`/`sentinel_password`. [Further docs](./coordination_redis) |
 | custom_auth_run_common_checks | boolean | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](./custom_auth#enforce-model-access-budgets-and-teamproject-checks) |
 | custom_ui_sso_sign_in_handler | string | Custom handler for SSO sign-in logic in the UI |
 | database_connection_pool_timeout | integer | Database connection pool timeout in seconds |

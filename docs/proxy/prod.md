@@ -184,21 +184,20 @@ This is still something we're investigating. Keep track of it [here](https://git
 Recommended to do this for prod:
 
 ```yaml
-router_settings:
-  routing_strategy: simple-shuffle # (default) - recommended for best performance
-  # redis_url: "os.environ/REDIS_URL"
-  redis_host: os.environ/REDIS_HOST
-  redis_port: os.environ/REDIS_PORT
-  redis_password: os.environ/REDIS_PASSWORD
-
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
+general_settings:
+  coordination_redis:
+    # url: "os.environ/REDIS_URL"
     host: os.environ/REDIS_HOST
     port: os.environ/REDIS_PORT
     password: os.environ/REDIS_PASSWORD
+
+router_settings:
+  routing_strategy: simple-shuffle # (default) - recommended for best performance
 ```
+
+`general_settings.coordination_redis` is the Redis every pod shares for key/user/team rate limits, parallel request limits, the spend transaction buffer, the pod lock, and shared health checks; see [Coordination Redis](./coordination_redis). The router picks it up automatically for its own load-balancing state (cooldowns, usage-based routing), so `router_settings.redis_host` / `redis_port` / `redis_password` are only needed when you want routing state on a different instance.
+
+The LLM response cache stays separate, under `litellm_settings.cache` / `cache_params`, and enabling it is optional.
 
 > **WARNING**
 **Usage-based routing is not recommended for production due to performance impacts.** Use `simple-shuffle` (default) for optimal performance in high-traffic scenarios.

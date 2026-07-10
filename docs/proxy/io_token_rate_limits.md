@@ -131,7 +131,7 @@ Do **not** set both modes on the same deployment. If `itpm` or `otpm` is present
 
 ## Multi-Instance Deployment
 
-Share counters across proxy replicas with Redis:
+ITPM/OTPM are deployment-level limits, so their counters live with the rest of the router's load-balancing state; limits on keys, users, and teams use the [coordination Redis](./coordination_redis) instead. Share the counters across proxy replicas with the router's Redis:
 
 ```yaml showLineNumbers title="config.yaml"
 router_settings:
