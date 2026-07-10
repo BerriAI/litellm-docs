@@ -1101,6 +1101,7 @@ const sidebars = {
         "providers/llamagate",
         "providers/lm_studio",
         "providers/manus",
+        "providers/meta",
         "providers/meta_llama",
         "providers/milvus_vector_stores",
         "providers/mistral",
