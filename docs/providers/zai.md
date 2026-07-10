@@ -51,8 +51,12 @@ We support ALL Z.AI GLM models, just set `zai/` as a prefix when sending complet
 
 | Model Name | Function Call | Notes |
 |------------|---------------|-------|
-| glm-4.7 | `completion(model="zai/glm-4.7", messages)` | **Latest flagship**, 200K context, **Reasoning** |
-| glm-4.6 | `completion(model="zai/glm-4.6", messages)` | 200K context |
+| glm-5.1 | `completion(model="zai/glm-5.1", messages)` | **Latest flagship**, 200K context, **Reasoning** |
+| glm-5 | `completion(model="zai/glm-5", messages)` | 200K context, **Reasoning** |
+| glm-5-code | `completion(model="zai/glm-5-code", messages)` | Coding-optimized, 200K context, **Reasoning** |
+| glm-4.7 | `completion(model="zai/glm-4.7", messages)` | 200K context, **Reasoning** |
+| glm-4.7-flash | `completion(model="zai/glm-4.7-flash", messages)` | **FREE tier**, 200K context, **Reasoning** |
+| glm-4.6 | `completion(model="zai/glm-4.6", messages)` | 200K context, **Reasoning** |
 | glm-4.5 | `completion(model="zai/glm-4.5", messages)` | 128K context |
 | glm-4.5v | `completion(model="zai/glm-4.5v", messages)` | Vision model |
 | glm-4.5-x | `completion(model="zai/glm-4.5-x", messages)` | Premium tier |
@@ -65,8 +69,12 @@ We support ALL Z.AI GLM models, just set `zai/` as a prefix when sending complet
 
 | Model | Input ($/1M tokens) | Output ($/1M tokens) | Cached Input ($/1M tokens) | Context Window |
 |-------|---------------------|----------------------|---------------------------|----------------|
+| glm-5.1 | $1.40 | $4.40 | $0.26 | 200K |
+| glm-5 | $1.00 | $3.20 | $0.20 | 200K |
+| glm-5-code | $1.20 | $5.00 | $0.30 | 200K |
 | glm-4.7 | $0.60 | $2.20 | $0.11 | 200K |
-| glm-4.6 | $0.60 | $2.20 | - | 200K |
+| glm-4.7-flash | **FREE** | **FREE** | - | 200K |
+| glm-4.6 | $0.60 | $2.20 | $0.11 | 200K |
 | glm-4.5 | $0.60 | $2.20 | - | 128K |
 | glm-4.5v | $0.60 | $1.80 | - | 128K |
 | glm-4.5-x | $2.20 | $8.90 | - | 128K |
