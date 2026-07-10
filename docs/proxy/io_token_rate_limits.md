@@ -1,4 +1,4 @@
-# Separate ITPM / OTPM Rate Limits
+# [Beta] Separate ITPM / OTPM Rate Limits
 
 Enforce **input tokens per minute (ITPM)** and **output tokens per minute (OTPM)** separately on router deployments.
 
