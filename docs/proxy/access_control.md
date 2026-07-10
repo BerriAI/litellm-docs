@@ -178,7 +178,6 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 **What they can do:**
 - Add or remove team members from their team
 - Update team members' budgets and rate limits within the team
-- Change team settings (budget, rate limits, models)
 - Create and delete keys for team members
 - Onboard a [team-BYOK](./team_model_add) model to LiteLLM (e.g. onboarding a team's finetuned model)
 - Configure [team member permissions](#team-member-permissions) to control what regular team members can do
