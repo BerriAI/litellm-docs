@@ -46,6 +46,7 @@ const sidebars = {
           label: "LLM observability platforms",
           items: [
             "observability/argilla",
+            "observability/argosvix_integration",
             "observability/athina_integration",
             "observability/braintrust",
             "observability/opik_integration",
