@@ -1272,6 +1272,7 @@ const sidebars = {
             "projects/Agent Lightning",
             "projects/Harbor",
             "projects/GraphRAG",
+            "projects/Nika",
             "projects/Docq.AI",
             "projects/PDL",
             "projects/OpenInterpreter",
