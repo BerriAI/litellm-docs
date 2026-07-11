@@ -145,6 +145,8 @@ model = "gpt-3.5-turbo"
 print(get_max_tokens(model)) # Output: 4097
 ```
 
+Note: `get_max_tokens` raises an `Exception` if the model is not in the model cost map, so wrap it in try/except when the model string is user-supplied.
+
 ### 8. `model_cost`
 
 * Output: Returns a dict object containing the max_tokens, input_cost_per_token, output_cost_per_token for all models on [community-maintained list](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
@@ -154,6 +156,19 @@ from litellm import model_cost
 
 print(model_cost) # {'gpt-3.5-turbo': {'max_tokens': 4000, 'input_cost_per_token': 1.5e-06, 'output_cost_per_token': 2e-06}, ...}
 ```
+
+:::warning Pricing catalog, not an availability signal
+
+A model appearing in `model_cost` does not mean your API key can call it. The map exists for cost tracking: it holds pricing data for every model LiteLLM can calculate costs for, including entries that are retired by the provider, not yet generally available, or gated to specific accounts; live keys can get 404s back for mapped models. To find out what your keys can actually call, for example to seed a model picker in your app, query the provider endpoints with [`get_valid_models(check_provider_endpoint=True)`](https://docs.litellm.ai/docs/set_keys#get_valid_modelscheck_provider_endpoint-true):
+
+```python
+from litellm import get_valid_models
+
+# only models your configured keys can call right now
+models = get_valid_models(check_provider_endpoint=True)
+```
+
+:::
 
 ### 9. `register_model`
 
