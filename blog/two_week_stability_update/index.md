@@ -4,6 +4,9 @@ title: "July stability update: hardening MCP auth and cutting pass-through memor
 date: 2026-07-11T12:00:00
 authors:
   - ishaan
+  - tin
+  - mateo
+  - yassin
 description: "A two-week product quality update. We addressed two major issues (MCP credential resolution and pass-through memory) and shipped 134 bug fixes in total. Plus our next goal: 95% end-to-end test coverage."
 tags: [stability, mcp, performance, product]
 hide_table_of_contents: false
