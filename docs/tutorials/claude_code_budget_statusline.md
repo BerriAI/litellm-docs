@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # Claude Code - Budget Status Line
 
 Show a user's remaining LiteLLM budget in the Claude Code status line. The status line calls [`/user/info`](../proxy/virtual_keys.md#spend-tracking) with the user's virtual key and displays the difference between `user_info.max_budget` and `user_info.spend`.
@@ -92,3 +94,7 @@ For a user with a `$100` maximum budget and `$24.35` in tracked spend, the statu
 ```text
 LiteLLM budget: $75.65 remaining of $100.00
 ```
+
+The remaining budget appears beneath the Claude Code prompt:
+
+<Image img={require('../../img/claude_code_budget_statusline.png')} style={{ width: '100%', maxWidth: '900px', height: 'auto' }} />
