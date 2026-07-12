@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.91.0 — MCP OAuth v2, Rust OCR Gateway & Realtime Performance](/release_notes/v1.91.0/v1-91-0)
+### [v1.92.0 — Claude Sonnet 5, Production MCP OAuth & New Providers](/release_notes/v1.92.0/v1-92-0)
 
-_July 4, 2026_
+_July 11, 2026_
 
-A new MCP Gateway OAuth 2.0 v2 resolver with cross-replica single-flight refresh, a Rust workspace shipping an async-first Mistral OCR bridge and an experimental Axum realtime gateway, realtime session-establishment latency cuts via connection-pool pre-warming and client-disconnect cancellation, least-privilege MCP defaults for team keys, and around 48 new models spanning a large Cloudflare Workers AI batch, Gemini 3 image models, Mistral Medium 3.5 and OCR 3/4, GLM/zai, and SambaNova.
+First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including regional inference profiles), Vertex AI, and Azure AI with a 1M-token context window, reasoning, computer use, and PDF input; a production-ready MCP OAuth 2.0 On-Behalf-Of arm on the v2 resolver with RFC 9728 to RFC 8414 endpoint discovery, persisted Dynamic Client Registration, per-server outbound concurrency limits, and an `mcp_tool_search` virtual tool for large tool catalogs; two new providers in Tencent (DeepSeek V4 flash and pro) and Google Distributed Cloud Gemini for on-prem and sovereign deployments; access-control hardening across the key, user, and team endpoints plus AES-256-GCM at-rest credential encryption; and faster spend and budget hot paths with Redis-cluster reconnect and read-replica boot resilience.
 
 ---
 
@@ -22,6 +22,7 @@ A new MCP Gateway OAuth 2.0 v2 resolver with cross-replica single-flight refresh
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
 | [v1.90.0](/release_notes/v1.90.0/v1-90-0)   | Jun 26, 2026 | Six new providers, OpenTelemetry v2 metrics parity, streaming-reliability sweep |
 | [v1.89.0](/release_notes/v1.89.0/v1-89-0)   | Jun 10, 2026 | Claude Fable 5, A2A agent providers, MCP per-server controls |

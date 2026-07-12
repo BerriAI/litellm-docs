@@ -1,7 +1,7 @@
 ---
-title: "v1.92.0rc1 - Claude Sonnet 5, Production MCP OAuth & New Providers"
-slug: "v1-92-0-rc-1"
-date: 2026-07-04T23:30:00
+title: "v1.92.0 - Claude Sonnet 5, Production MCP OAuth & New Providers"
+slug: "v1-92-0"
+date: 2026-07-11T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,14 +30,14 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.92.0-rc.1
+docker.litellm.ai/berriai/litellm:1.92.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.92.0rc1
+pip install litellm==1.92.0
 ```
 
 </TabItem>
@@ -107,6 +107,7 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
     - Drop `toolSpec.strict` for Opus 4.7/4.8 to unblock tool calls - [PR #31923](https://github.com/BerriAI/litellm/pull/31923)
     - Drop `strict`/`additionalProperties` from `toolSpec` for Claude Sonnet 4 - [PR #31943](https://github.com/BerriAI/litellm/pull/31943)
     - Omit empty `additionalModelRequestFields` and `system` from the Converse payload - [PR #29565](https://github.com/BerriAI/litellm/pull/29565)
+    - Expand `os.environ/` references for AWS auth params, then all fields, in DB-sourced models - [PR #32256](https://github.com/BerriAI/litellm/pull/32256), [PR #32405](https://github.com/BerriAI/litellm/pull/32405)
 - **[Anthropic](../../docs/providers/anthropic)**
     - Bill streaming 1h prompt-cache writes at the 1h rate - [PR #32073](https://github.com/BerriAI/litellm/pull/32073)
     - Drop unsignable thinking blocks and allow a null signature in logging - [PR #31654](https://github.com/BerriAI/litellm/pull/31654)
@@ -204,6 +205,9 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
     - Add `litellm_overhead_with_guardrails_latency_metric` - [PR #31593](https://github.com/BerriAI/litellm/pull/31593)
     - Expose `project_alias` in custom metadata labels and expose MCP tool metadata - [PR #31784](https://github.com/BerriAI/litellm/pull/31784), [PR #31899](https://github.com/BerriAI/litellm/pull/31899)
     - Bound per-request budget metric emission with a timeout - [PR #31632](https://github.com/BerriAI/litellm/pull/31632)
+- **[OpenTelemetry](../../docs/observability/opentelemetry_integration)**
+    - Stamp `gen_ai.response.time_to_first_chunk` on streaming LLM spans - [PR #32236](https://github.com/BerriAI/litellm/pull/32236)
+    - Restore `error.*` span attributes on v2 error spans - [PR #32524](https://github.com/BerriAI/litellm/pull/32524)
 - **[S3](../../docs/proxy/logging)**
     - Send `Content-MD5` on PUT and support optional server-side encryption in the s3 v2 logger - [PR #31928](https://github.com/BerriAI/litellm/pull/31928)
 - **[Microsoft Sentinel](../../docs/proxy/logging)**
@@ -281,6 +285,7 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
     - Highlight MCP cards red when the logged-in user is missing per-user env vars - [PR #29856](https://github.com/BerriAI/litellm/pull/29856)
     - BYOM visibility, preview UX, and admin-settings gating - [PR #31809](https://github.com/BerriAI/litellm/pull/31809)
     - Re-add the chat UI and allow a simple UI for MCP OBO auth - [PR #31893](https://github.com/BerriAI/litellm/pull/31893)
+    - Keep an in-flight OAuth resume from resetting when the create-server modal mounts closed - [PR #32416](https://github.com/BerriAI/litellm/pull/32416)
 
 ## Performance / Loadbalancing / Reliability improvements
 
@@ -299,6 +304,8 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
     - Tag-routing denylist support via a `!` prefix - [PR #31728](https://github.com/BerriAI/litellm/pull/31728)
     - Declarative fallback generalizations for unknown models - [PR #29718](https://github.com/BerriAI/litellm/pull/29718)
     - Skip the health check for semantic auto_router deployments - [PR #31668](https://github.com/BerriAI/litellm/pull/31668)
+- **Build**
+    - Bump the wolfi-base digest for glibc 2.43-r10 - [PR #32277](https://github.com/BerriAI/litellm/pull/32277)
 
 ## Documentation Updates
 
@@ -306,15 +313,15 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 218)
+PRs by ownership area (total: 226)
 
 - LLM API Endpoints: 30
 - UI: 28
-- MCP: 27
-- Models & Providers: 25
+- MCP: 28
+- Models & Providers: 27
+- Other (CI / chore / tests / version bumps): 24
 - Auth & Management: 23
-- Other (CI / chore / tests / version bumps): 21
-- Logging: 20
+- Logging: 22
 - Spend / Budgets / Rate Limits: 18
 - Guardrails: 12
 - Performance: 11
@@ -334,4 +341,4 @@ PRs by ownership area (total: 218)
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.91.0-rc.1...v1.92.0-rc.1
+[`v1.91.0...v1.92.0`](https://github.com/BerriAI/litellm/compare/v1.91.0...v1.92.0)
