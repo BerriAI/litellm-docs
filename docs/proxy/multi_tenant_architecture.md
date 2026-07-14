@@ -155,7 +155,7 @@ LiteLLM provides granular RBAC across the hierarchy:
 | Role | Scope | Permissions |
 |------|-------|-------------|
 | **Org Admin** ✨ | Specific organization | Create teams, add users, view org spend within their org only. |
-| **Team Admin** ✨ | Specific team | Manage team members, budgets, keys within their team only. |
+| **Team Admin** ✨ | Specific team | Manage team members, rate limits, and keys within their team only. May keep or lower team `max_budget`; raising it requires a proxy admin. |
 
 ✨ = Premium Feature
 
@@ -349,7 +349,7 @@ Team Admin → Manages their team independently
 **Team Admins Can:**
 - Add/remove team members
 - Create API keys for team members
-- Update team budgets (within org limits)
+- Update team rate limits; keep or lower team `max_budget` (raising `max_budget` requires a proxy admin; org-scoped teams also stay within org limits)
 - Configure team member permissions
 - View team usage and spend
 

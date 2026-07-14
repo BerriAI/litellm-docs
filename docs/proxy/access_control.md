@@ -178,15 +178,20 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 **What they can do:**
 - Add or remove team members from their team
 - Update team members' budgets and rate limits within the team
+- Change team rate limits (TPM/RPM) and allowed models
+- Keep or lower the team's `max_budget`
 - Create and delete keys for team members
 - Onboard a [team-BYOK](./team_model_add) model to LiteLLM (e.g. onboarding a team's finetuned model)
 - Configure [team member permissions](#team-member-permissions) to control what regular team members can do
 
 **What they cannot do:**
 - Create new teams
-- Modify team's budget / rate limits
+- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`) — only a proxy admin can do this
 - Add/remove global proxy models to their team
 
+:::info Team budget raises
+On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or clearing the cap) is reserved for proxy admins so a team admin cannot grow spend authority on their own. Org-scoped teams must also stay within the organization budget.
+:::
 
 **Who should be a team admin:** Team leads who need to manage their team's API access without bothering IT.
 
@@ -329,7 +334,9 @@ Here's the quick version:
 | Manage teams in their org | ✅ | ❌ |
 | Manage their specific team | ✅ | ✅ |
 | Add/remove team members | ✅ (in their org) | ✅ (their team only) |
-| Update team budgets | ✅ (in their org) | ✅ (their team only) |
+| Keep / lower team `max_budget` | ✅ (in their org) | ✅ (their team only) |
+| Raise team `max_budget` | ✅ within org limits (org-scoped); proxy admin for standalone | ❌ (proxy admin only) |
+| Update team rate limits | ✅ (in their org) | ✅ (their team only) |
 | Create keys for team members | ✅ (in their org) | ✅ (their team only) |
 | View organization spend | ✅ (their org) | ❌ |
 | View team spend | ✅ (in their org) | ✅ (their team) |
@@ -460,7 +467,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
     -d '{"team_id": "01044ee8-441b-45f4-be7d-c70e002722d8", "member": {"role": "admin", "user_id": "john@company.com"}}'
 ```
 
-Now `john@company.com` is a team admin. They can manage the `engineering_team` - add members, update budgets, create keys - but they can't touch other teams.
+Now `john@company.com` is a team admin. They can manage the `engineering_team` — add members, update rate limits, keep or lower the team budget, create keys — but they can't touch other teams or raise the team budget above its current cap.
 
 Create a Virtual Key for the team admin:
 
@@ -507,7 +514,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 ### 6. `Team Admin` - Update Team Settings
 
-The team admin can update team budgets and rate limits:
+The team admin can update rate limits and keep or lower the team budget. Raising `max_budget` above the team's current value requires a proxy admin.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
@@ -519,4 +526,6 @@ curl --location 'http://0.0.0.0:4000/team/update' \
         "rpm_limit": 1000
     }'
 ```
+
+In this example, `max_budget: 100` succeeds only if the team's current budget is already `100` or higher (keep / lower). To raise the team budget, use a proxy admin key.
 
