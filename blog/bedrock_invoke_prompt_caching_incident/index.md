@@ -10,9 +10,9 @@ tags: [incident-report, bedrock, caching, claude-code]
 hide_table_of_contents: false
 ---
 
-**Date:** July 4 to July 10, 2026
-**Affected versions:** `v1.91.0` and `v1.91.1`
-**Severity:** High (silent cost regression; no correctness impact)
+**Date:** July 4 to July 10, 2026  
+**Affected versions:** `v1.91.0` and `v1.91.1`  
+**Severity:** High (silent cost regression; no correctness impact)  
 **Status:** Resolved in `v1.91.2`
 
 > **Note:** If you run Claude Code against Amazon Bedrock through LiteLLM, upgrade to `v1.91.2` or higher.
