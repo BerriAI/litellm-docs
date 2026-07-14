@@ -26,6 +26,7 @@ The operational half came from [discussion #32172](https://github.com/BerriAI/li
 | Technical keywords     | Fixed built-in list             | `custom_technical_keywords` appends without replacing ([#32262](https://github.com/BerriAI/litellm/pull/32262))            |
 | Decision log           | "keyword rule fired"            | `cause=literal_keyword_match \| semantic_keyword_match \| complexity_scorer` ([#32943](https://github.com/BerriAI/litellm/pull/32943)) |
 | Alias `litellm_params` | Silently dropped                | Merged into outbound request ([#32974](https://github.com/BerriAI/litellm/pull/32974))                                    |
+| Session affinity       | Reclassified every turn         | Opt-in `session_affinity`: pin the first-turn model for the session, skip reclassification ([#33126](https://github.com/BerriAI/litellm/pull/33126)) |
 
 ## One config, all the knobs
 
@@ -64,6 +65,10 @@ model_list:
         # optional: Thompson-sample within the tier's pool
         adaptive: true
 
+        # optional: pin a session to its first-turn model (preserves prompt cache)
+        session_affinity: true
+        session_affinity_ttl_seconds: 3600
+
       complexity_router_default_model: claude-sonnet-5
 ```
 
@@ -75,12 +80,15 @@ model_list:
 
 **Adaptive** turns tier pools into learning pools. Cold requests sample only inside the classified tier instead of collapsing on the cheapest model. Feedback attributes back to the model that actually served the previous turn, even when stateless routing picks a different one this turn.
 
+**Session affinity** (opt-in) pins the first-turn model for a session and skips reclassification on later turns, so provider-side prompt caches keyed to that model do not get invalidated when a follow-up ("thanks!") would otherwise classify into a different tier ([#33126](https://github.com/BerriAI/litellm/pull/33126)). TTL defaults to 3600s. `session_id` comes from request metadata.
+
 **Decision log** emits one greppable line per request:
 
 ```
 ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
 ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.5
+ComplexityRouter: routing decision cause=session_affinity_pin,                                                                                      routed_model=gpt-5.5
 ```
 
 ## Fixes worth calling out
@@ -129,7 +137,6 @@ The initial work landed in [#32972](https://github.com/BerriAI/litellm/pull/3297
 
 **Also on the list:**
 
-- **Cache affinity as a routing signal.** Pin a conversation to its cached model so mid-conversation model swaps do not destroy prompt-cache hits.
 - **Escalation ceilings on fallback chains.** Per-request cap on escalations plus a cooldown once a key walks the chain N times, so a bad upstream cannot cascade into a bill.
 - **Attributable decisions.** Stamp the routed model and routing-table version on every response, and export structured decision traces (candidates, scores, fallbacks, latency) through the standard logging integrations.
 
