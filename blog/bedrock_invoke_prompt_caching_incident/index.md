@@ -19,11 +19,11 @@ hide_table_of_contents: false
 
 ## Summary
 
-Between July 4 and July 10, proxies running `v1.91.0` or `v1.91.1` silently broke Anthropic prompt caching for Claude Code sessions routed through Amazon Bedrock's Invoke API. For the customer who reported it, warm-session cache hit rates dropped from roughly 90% to 25-45% and team daily spend rose 2-3x for the same usage. Every request still returned a 200 with a correct completion; the only symptoms were a higher cache miss rate and a higher bill.
+Between July 4 and July 10, proxies running `v1.91.0` or `v1.91.1` silently broke Anthropic prompt caching for Claude Code sessions routed through Amazon Bedrock's Invoke API. For the customer who reported it, warm-session cache hit rates dropped from roughly 90% to 25-45% and team daily spend rose 2-3x for the same usage. Requests kept returning 200s with correct completions; the only symptoms were the cache miss rate and the bill.
 
-The regression was introduced by [PR #31364](https://github.com/BerriAI/litellm/pull/31364), which moved every `role: "system"` entry in `messages` into the top-level `system` field on the Invoke path. The fix shipped July 10 in `v1.91.2` across three PRs ([#32578](https://github.com/BerriAI/litellm/pull/32578), [#32831](https://github.com/BerriAI/litellm/pull/32831), [#32882](https://github.com/BerriAI/litellm/pull/32882)), with regression tests that fail on pre-fix code.
+The cause: [PR #31364](https://github.com/BerriAI/litellm/pull/31364) moved every `role: "system"` entry in `messages` into the top-level `system` field on the Invoke path, which invalidates every cache breakpoint past the first moved entry. The fix shipped July 10 in `v1.91.2` ([#32578](https://github.com/BerriAI/litellm/pull/32578), [#32831](https://github.com/BerriAI/litellm/pull/32831), [#32882](https://github.com/BerriAI/litellm/pull/32882)), with regression tests that fail on pre-fix code.
 
-We own this outcome entirely. The trigger was an undocumented change in how a new generation of Claude models and Claude Code use system messages, but customers run an LLM gateway precisely so they do not have to track provider quirks themselves. Translating requests faithfully, including their caching semantics, is our core job, and here we fell short. This post explains exactly what happened, why our testing and review failed to catch it, and what we have changed so this class of regression does not ship again.
+We own this outcome entirely. The trigger was an undocumented change in how new Claude models and Claude Code use system messages, but customers run a gateway precisely so they do not have to track provider quirks. Translating requests faithfully, including their caching semantics, is our core job.
 
 {/* truncate */}
 
@@ -31,31 +31,32 @@ We own this outcome entirely. The trigger was an undocumented change in how a ne
 
 ## Background
 
-Anthropic prompt caching is prefix based. Clients place `cache_control` breakpoints in the request, and a request reads from cache only up to the point where its payload matches a previously written prefix; cached tokens are billed at a small fraction of the normal input price. Agentic tools like Claude Code depend on this heavily because every turn resends the entire growing conversation. A warm Claude Code session routinely reads hundreds of thousands of tokens from cache per turn, so anything that rewrites content early in the payload turns almost the whole request back into full-price input tokens.
+Three facts set up the incident:
 
-On May 28, 2026, Anthropic released Claude Opus 4.8, the first model to accept `role: "system"` entries mid-conversation inside `messages` ([docs](https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages)). Claude Code began emitting these messages the same day. The feature did not appear in the Claude Code changelog, so gateways first encountered it as an unexplained new request shape in live traffic.
-
-Bedrock exposes Claude through two APIs that treat system content differently. Converse requires all system content in a top-level field and rejects system entries inside `messages` at any position; LiteLLM has hoisted them accordingly since December 2024 ([PR #7037](https://github.com/BerriAI/litellm/pull/7037)). Invoke accepts the native Anthropic Messages format, where models older than Opus 4.8 reject mid-conversation system entries with a 400 and newer models accept them.
+1. **Anthropic prompt caching is prefix based.** A request reads from cache only up to the point where its payload matches a previously written prefix; cached tokens cost a small fraction of normal input. Claude Code resends the entire growing conversation every turn, so a warm session reads hundreds of thousands of tokens from cache per turn, and anything that rewrites content early in the payload turns the rest back into full-price input.
+2. **Mid-conversation system messages are new.** On May 28, 2026, Claude Opus 4.8 shipped as the first model accepting `role: "system"` entries inside `messages` ([docs](https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages)). Claude Code (`v2.1.154`) began emitting them the same day, with no mention in its changelog.
+3. **Bedrock has two Anthropic APIs with different rules.** Converse requires all system content in a top-level field; LiteLLM has hoisted it there since December 2024 ([#7037](https://github.com/BerriAI/litellm/pull/7037)). Invoke takes the native Anthropic Messages format, where models older than Opus 4.8 reject mid-conversation system entries with a 400 and newer models accept them.
 
 ---
 
 ## What went wrong
 
-After May 28, a specific combination started failing: Claude Code sessions pointed at a Bedrock Invoke model older than Opus 4.8, using a proxy model alias that Claude Code could not map to a specific Claude version. Claude Code assumed the model supported mid-conversation system messages, emitted one, and the model rejected the request with a 400 mid-session.
-
-An enterprise customer hit exactly this, worked around it with a local patch set, and asked us to upstream it. One of those patches fixed the 400s by hoisting every system entry from `messages` into the top-level `system` field on the Invoke path, mirroring the longstanding Converse behavior. We shipped it as [PR #31364](https://github.com/BerriAI/litellm/pull/31364) in `v1.91.0` on July 4.
-
-Hoisting fixed the 400s but broke caching. Pulling a mid-conversation system entry out of `messages` rewrites the request prefix in two places at once: the top-level `system` block changes and the message list changes. From the model's perspective the previously cached prefix no longer matches, so every cache breakpoint past that point is invalidated. In a warm Claude Code session, that means nearly everything except the tool schemas misses cache on every turn, and the session pays full input price for context it had been reading at cache-hit rates.
+1. After May 28, Claude Code sessions on Bedrock Invoke began failing with 400s mid-session when two things were true: the model was older than Opus 4.8, and the proxy model alias did not tell Claude Code which Claude version it was talking to, so it assumed support and emitted mid-conversation system messages.
+2. An enterprise customer worked around the 400s with a local patch that hoisted every system entry from `messages` into top-level `system`, mirroring the Converse behavior, and asked us to upstream it. We shipped it as [#31364](https://github.com/BerriAI/litellm/pull/31364) in `v1.91.0` on July 4.
+3. The hoist fixed the 400s but rewrote the request prefix in two places at once: the top-level `system` block changes and the message list changes. Previously cached prefixes no longer match, so every cache breakpoint past the first moved entry is invalidated.
+4. Net effect in a warm Claude Code session: nearly everything except the tool schemas misses cache on every turn, at full input price.
 
 ---
 
 ## Detection and response
 
-On July 8, the affected customer reported the regression with request-level forensics that localized it for us: identical warm mid-session turns that had read 100% of a 306,892-token cached prefix the week before were now reading 17-22%, with everything past the first breakpoint re-written, all well inside the cache's 5-minute TTL, which ruled out expiry. They had also ruled out their own side by testing older Claude Code versions.
+On July 8 the affected customer reported the regression with request-level forensics that localized it for us: warm turns that had read 100% of a 306,892-token cached prefix the week before now read 17-22%, with everything past the first breakpoint re-written, all inside the cache's 5-minute TTL (ruling out expiry). Testing older Claude Code versions ruled out a client-side change. We reproduced it live the same day: a real Claude Code session against real Bedrock Invoke showed cache reads collapsing to 33,436 tokens exactly on the turns where Claude Code appended a mid-conversation system message.
 
-The same day, we reproduced it live: a real Claude Code session against real Bedrock Invoke showed cache reads collapsing to 33,436 tokens exactly on the turns where Claude Code appended a mid-conversation system message. [PR #32578](https://github.com/BerriAI/litellm/pull/32578) restored the correct behavior by hoisting only the leading run of system entries and forwarding mid-conversation ones untouched. Further investigation showed that forwarding them unconditionally would reintroduce the 400s on models below Opus 4.8, so [PR #32831](https://github.com/BerriAI/litellm/pull/32831) gated forwarding to models that support the feature, and [PR #32882](https://github.com/BerriAI/litellm/pull/32882) extended the supported-model list to Sonnet 5 and Fable 5, which had shipped after the initial gate was written.
+Three PRs fixed it, all released July 10 in `v1.91.2` with regression tests that fail on pre-fix code:
 
-All three fixes were backported with regression tests that fail on pre-fix code and released July 10 in `v1.91.2`. The customer upgraded July 12 and confirmed on July 13 that cache hit rates and spend were back to baseline.
+1. [#32578](https://github.com/BerriAI/litellm/pull/32578) hoists only the leading run of system entries and forwards mid-conversation ones untouched
+2. [#32831](https://github.com/BerriAI/litellm/pull/32831) gates forwarding to models that support the feature, since unconditional forwarding reintroduces the 400s below Opus 4.8
+3. [#32882](https://github.com/BerriAI/litellm/pull/32882) adds Sonnet 5 and Fable 5, which shipped after the gate was written
 
 | Date (2026) | Event |
 |---|---|
@@ -71,30 +72,25 @@ All three fixes were backported with regression tests that fail on pre-fix code 
 
 ## Why our process did not catch this
 
-Four gaps let this reach production undetected.
-
-First, the proof of fix was synthetic. We validated the original patch with single-turn requests showing a 400 become a 200. Those requests did not resemble what Claude Code actually sends: no multi-turn session, no cache breakpoints, no growing prefix. The one traffic shape that mattered was never exercised end to end.
-
-Second, the tests shipped with the change asserted the hoist as the new expected behavior, so they encoded the bug rather than catching it. When a PR redefines expected behavior, its own tests bless that behavior by construction; only an independent end-to-end check against real client traffic can catch the regression. Automated PR review tooling did not flag the caching implication either.
-
-Third, cost regressions are silent. Every response was a 200 with a correct completion, and the only signal was in cache read token counts. Nothing in our CI or monitoring measured cache hit rate, so there was no alarm to trip.
-
-Fourth, we leaned on documentation that was incomplete. Mid-conversation system messages never appeared in the Claude Code changelog, and as of July 13 the platform docs still describe the feature as Opus 4.8 only and unavailable on Bedrock, both of which live traffic contradicts. Provider behavior has to be established empirically, not from docs alone.
+1. **The proof of fix was synthetic.** We validated the original patch with single-turn requests showing a 400 become a 200: no multi-turn session, no cache breakpoints, no growing prefix. The one traffic shape that mattered was never exercised.
+2. **The PR's tests encoded the bug.** They asserted the hoist as the new expected behavior; when a PR redefines expected behavior, its own tests bless it by construction. Automated PR review tooling did not flag the caching implication either.
+3. **Cost regressions are silent.** Every response was a 200 with a correct completion. The only signal was cache-read token counts, which nothing in our CI or monitoring measured.
+4. **The documentation was incomplete.** The feature never appeared in the Claude Code changelog, and as of July 13 the platform docs still describe it as Opus 4.8 only and unavailable on Bedrock; live traffic contradicts both. Provider behavior has to be established empirically.
 
 ---
 
 ## What we are changing
 
-Our end-to-end suite now includes a scripted multi-turn Claude Code session that grows to roughly 250k tokens of context against real Bedrock and asserts that cache reads grow monotonically and never collapse; this work started in [PR #32963](https://github.com/BerriAI/litellm/pull/32963). A weekly load test checks for anomalies in spend, cache reads and writes, and turn latency, so silent cost regressions surface within days instead of waiting for a customer's bill.
-
-We are also closing the discovery gap that let an undocumented client change reach us through a 400 in production. Automated daily diffs of Anthropic's SDKs and documentation alert us to new features that need translation support, and live proxy traffic is monitored for new request shapes, such as unknown `anthropic-beta` headers, so client-side changes surface within a day of appearing.
-
-Finally, we changed the bar for merging translation fixes: a fix is not considered validated until it has been reproduced against the real client's traffic shape end to end. Synthetic requests demonstrating a status code change are not proof.
+- Our e2e suite gains a scripted multi-turn Claude Code session growing to roughly 250k tokens of context against real Bedrock, asserting cache reads grow monotonically and never collapse (started in [#32963](https://github.com/BerriAI/litellm/pull/32963))
+- A weekly load test flags anomalies in spend, cache reads and writes, and turn latency, so silent cost regressions surface in days rather than on a customer's bill
+- Daily automated diffs of Anthropic's SDKs and docs alert us to new features that need translation support before customer traffic finds them
+- Live proxy traffic is monitored for new request shapes, such as unknown `anthropic-beta` headers, so undocumented client changes surface within a day
+- Translation fixes now have a higher merge bar: validated means reproduced against the real client's traffic shape end to end; synthetic requests are not proof
 
 ---
 
 ## Known limitation: Bedrock Converse
 
-The fix applies to the Invoke path. Converse rejects system entries inside `messages` at any position, so on `bedrock_converse` we must still hoist, and Claude Code sessions routed through Converse will still lose cached prefix on every mid-conversation system message. If you run Claude Code against Bedrock, route it through the Invoke path (`bedrock/invoke/<model>`). We are raising the API constraint with AWS, and we are testing whether the Vertex AI and Azure paths need equivalent handling.
+Converse rejects system entries inside `messages` at any position, so on `bedrock_converse` we must still hoist, and Claude Code sessions routed through Converse still lose cached prefix on every mid-conversation system message. If you run Claude Code against Bedrock, route it through the Invoke path (`bedrock/invoke/<model>`). We are raising the API constraint with AWS, and we are testing whether the Vertex AI and Azure paths need equivalent handling.
 
-To every team whose bill went up because of this: we are sorry. The entire value of a gateway is that this class of provider change gets absorbed by us instead of reaching you, and the tests and monitoring above are how we intend to keep it that way.
+To every team whose bill went up because of this: we are sorry. The value of a gateway is that this class of provider change gets absorbed by us instead of reaching you, and the tests and monitoring above are how we intend to keep it that way.
