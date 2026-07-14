@@ -104,16 +104,18 @@ Pricing depends on your deployment size — [get in touch](https://enterprise.li
 
 ## Professional Support
 
-Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
+Every enterprise license includes a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
+
+The response SLAs below are available to customers on a paid support plan.
 
 | Severity | Response SLA |
 |---|---|
-| **Sev 0** — 100% production traffic failing | 1 hour |
-| **Sev 1** — partial production impact | 6 hours |
-| **Sev 2–3** — setup issues, non-urgent bugs | 24 hours (7am–7pm PT, Mon–Sat) |
+| **Sev 0**: 100% production traffic failing | 1 hour |
+| **Sev 1**: partial production impact | 6 hours |
+| **Sev 2–3**: setup issues, non-urgent bugs | 24 hours (7am–7pm PT, Mon–Sat) |
 | **Security patches** | 72 hours |
 
-Custom SLAs available on request.
+Custom SLAs available on request. [Get in touch](https://enterprise.litellm.ai/demo) to add a paid support plan.
 
 ---
 
