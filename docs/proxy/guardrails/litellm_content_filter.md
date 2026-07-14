@@ -585,32 +585,103 @@ guardrails:
 
 ### Custom Category Files
 
-Override default categories with custom keyword lists:
+Override a built-in category, or add a brand-new category, with your own keyword list
 
 ```yaml showLineNumbers title="config.yaml"
 categories:
-  - category: "harmful_self_harm"
+  - category: "<your-category-name>"
     enabled: true
     action: "BLOCK"
     severity_threshold: "medium"
-    category_file: "/path/to/custom.yaml"
+    category_file: "<your-category-name>.yaml"
 ```
 
-```yaml showLineNumbers title="custom.yaml"
-category_name: "harmful_self_harm"
-description: "Custom self-harm detection"
+```yaml showLineNumbers title="<your-category-name>.yaml"
+category_name: "<your-category-name>"
+description: "Short description of what this category detects"
 default_action: "BLOCK"
 
 keywords:
-  - keyword: "suicide"
-    severity: "high"
-  - keyword: "harm myself"
+  - keyword: "example keyword"
     severity: "high"
 
 exceptions:
-  - "suicide prevention"
-  - "mental health"
+  - "example exception phrase"
 ```
+
+#### Where to put the file
+
+Put your YAML in one of these two locations:
+
+**Option A: inside the built-in `categories/` directory (recommended)**
+
+Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml` and drop the `category_file:` field. The loader picks it up by category name
+
+```yaml title="values.yaml (Helm)"
+extraVolumeMounts:
+  - name: content-filter-categories
+    mountPath: /usr/local/lib/python3.13/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    subPath: <your-category-name>.yaml
+    readOnly: true
+
+extraVolumes:
+  - name: content-filter-categories
+    configMap:
+      name: <your-configmap-name>
+```
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: "<your-guardrail-name>"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      default_on: true
+      categories:
+        - category: "<your-category-name>"
+          enabled: true
+          action: "BLOCK"
+          severity_threshold: "high"
+```
+
+Update `mountPath` if you upgrade to a litellm image built on a different Python minor version
+
+**Option B: any other path, with the env var opt-in**
+
+Set
+
+```bash
+LITELLM_CONTENT_FILTER_ALLOW_EXTERNAL_PATHS=true
+```
+
+on the proxy pod, then reference the file by absolute path
+
+```yaml title="config.yaml"
+categories:
+  - category: "<your-category-name>"
+    enabled: true
+    action: "BLOCK"
+    severity_threshold: "high"
+    category_file: "/absolute/path/to/<your-category-name>.yaml"
+```
+
+Only use this when everyone who can write `category_file` (proxy config, DB, Admin UI, team-scoped configs) is trusted; with the flag on, `category_file` can point at any YAML-parseable file on the pod
+
+#### Verifying it loaded
+
+Check the proxy startup log for either
+
+```
+content_filter.py: Loaded category <name>: N keywords, M always-block keywords ...
+```
+
+or
+
+```
+content_filter.py: Category <name>: invalid category_file path, skipping. ...
+```
+
+The second line means the file was rejected and the category is running with zero rules; use one of the two options above to fix it
 
 ## Use Cases
 
