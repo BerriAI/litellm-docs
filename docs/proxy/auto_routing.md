@@ -50,13 +50,50 @@ model_list:
       complexity_router_default_model: gpt-4o
 ```
 
-Call it like any other model:
+Call it like any other model. The auto router works across the Chat Completions, Anthropic Messages, and Responses APIs; pass `smart-router` as the model on whichever endpoint your client already speaks.
+
+<Tabs>
+<TabItem value="chat" label="Chat Completions">
 
 ```shell
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -d '{"model": "smart-router", "messages": [{"role": "user", "content": "What is 2+2?"}]}'
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "smart-router",
+    "messages": [{"role": "user", "content": "What is 2+2?"}]
+  }'
 ```
+
+</TabItem>
+<TabItem value="messages" label="Messages">
+
+```shell
+curl -X POST http://localhost:4000/v1/messages \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "smart-router",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "What is 2+2?"}]
+  }'
+```
+
+</TabItem>
+<TabItem value="responses" label="Responses">
+
+```shell
+curl -X POST http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "smart-router",
+    "input": "What is 2+2?"
+  }'
+```
+
+</TabItem>
+</Tabs>
 
 ## Full config
 
