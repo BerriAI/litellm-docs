@@ -97,8 +97,7 @@ Existing complexity router configs keep working. To try v2, add `keyword_tier_ru
 
 ## What's next
 
-From [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172):
-
+- **Router plugins.** A signal-based plugin pipeline (language detection, domain classifiers, tenant policies, budget filters) that enriches the routing context before Auto Router picks. Groundwork landed in [#32972](https://github.com/BerriAI/litellm/pull/32972); more plugins next.
 - **Cache affinity as a routing signal.** Pin a conversation to its cached model so mid-conversation model swaps do not destroy prompt-cache hits.
 - **Escalation ceilings on fallback chains.** Per-request cap on escalations plus a cooldown once a key walks the chain N times, so a bad upstream cannot cascade into a bill.
 - **Attributable decisions.** Stamp the routed model and routing-table version on every response, and export structured decision traces (candidates, scores, fallbacks, latency) through the standard logging integrations.
