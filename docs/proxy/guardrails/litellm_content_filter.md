@@ -530,21 +530,42 @@ Prebuilt categories use **keyword matching** to detect harmful content, bias, an
 
 ### Available Categories
 
+Reference any category below by name; no `category_file:` is required
+
 | Category | Description |
 |----------|-------------|
 | **Harmful Content** | |
 | `harmful_self_harm` | Self-harm, suicide, eating disorders |
 | `harmful_violence` | Violence, criminal planning, attacks |
 | `harmful_illegal_weapons` | Illegal weapons, explosives, dangerous materials |
-| **Bias Detection** | |
+| `harmful_child_safety` | Inappropriate content involving minors |
+| **Bias / Employment Discrimination** | |
 | `bias_gender` | Gender-based discrimination, stereotypes |
 | `bias_sexual_orientation` | LGBTQ+ discrimination, homophobia, transphobia |
-| `bias_racial` | Racial/ethnic discrimination, stereotypes |
+| `bias_racial` | Racial/ethnic discrimination, hate speech |
 | `bias_religious` | Religious discrimination, stereotypes |
+| `age_discrimination` | Age-based employment discrimination |
+| `disability` | Employment discrimination against people with disabilities |
+| `gender_sexual_orientation` | Employment discrimination on gender, sex, or sexual orientation |
+| `military_status` | Employment discrimination against veterans / military personnel |
+| `religion` | Employment discrimination based on religion or religious beliefs |
 | **Denied Advice** | |
 | `denied_financial_advice` | Personalized financial advice, investment recommendations |
 | `denied_medical_advice` | Medical advice, diagnosis, treatment recommendations |
 | `denied_legal_advice` | Legal advice, representation, legal strategy |
+| `denied_insults` | Insults, name-calling, personal attacks |
+| **Prompt Injection** | |
+| `prompt_injection_jailbreak` | Jailbreak attempts (DAN, roleplay attacks, safety bypass) |
+| `prompt_injection_system_prompt` | Attempts to extract, reveal, or override system prompts |
+| `prompt_injection_sql` | SQL injection embedded in prompts |
+| `prompt_injection_malicious_code` | Malicious code injection via prompts |
+| `prompt_injection_data_exfiltration` | Attempts to extract training data or internal information |
+| **Claims Abuse** | |
+| `claims_fraud_coaching` | Coaching on fraudulent insurance claims |
+| `claims_medical_advice` | Medical advice in claims context |
+| `claims_phi_disclosure` | Unauthorized PHI disclosure / HIPAA violations |
+| `claims_prior_auth_gaming` | Prior authorization gaming attempts |
+| `claims_system_override` | Claims system override / role impersonation attempts |
 
 :::info Bias Detection Considerations
 
