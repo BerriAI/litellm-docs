@@ -97,7 +97,38 @@ Existing complexity router configs keep working. To try v2, add `keyword_tier_ru
 
 ## What's next
 
-- **Router plugins.** A signal-based plugin pipeline (language detection, domain classifiers, tenant policies, budget filters) that enriches the routing context before Auto Router picks. Groundwork landed in [#32972](https://github.com/BerriAI/litellm/pull/32972); more plugins next.
+**Router plugins.** From [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168): a pipeline where each plugin receives the routing context, enriches it, and passes it on before Auto Router makes the final call. Plugins do not replace the router; they contribute structured signals (classification, policies, candidate filters, scores) that Auto Router combines.
+
+Concrete end-to-end:
+
+1. User sends a request.
+2. Language plugin detects `en`.
+3. Domain classifier labels it `coding` with 0.93 confidence.
+4. Tenant policy limits allowed providers to OpenAI and Anthropic.
+5. Budget plugin removes models exceeding the tenant's cost cap.
+6. Auto Router picks the best remaining model from the enriched context.
+
+Config sketch:
+
+```yaml
+router_settings:
+  plugins:
+    - name: language-detector
+    - name: domain-classifier
+      params:
+        provider: openai/gpt-5-mini
+    - name: budget-policy
+      params:
+        daily_limit: 100
+    - name: tenant-policy
+    - name: custom-python
+      path: ./plugins/my_router.py
+```
+
+The plugin pipeline groundwork landed in [#32972](https://github.com/BerriAI/litellm/pull/32972); the reusable plugins ship next.
+
+**Also on the list:**
+
 - **Cache affinity as a routing signal.** Pin a conversation to its cached model so mid-conversation model swaps do not destroy prompt-cache hits.
 - **Escalation ceilings on fallback chains.** Per-request cap on escalations plus a cooldown once a key walks the chain N times, so a bad upstream cannot cascade into a bill.
 - **Attributable decisions.** Stamp the routed model and routing-table version on every response, and export structured decision traces (candidates, scores, fallbacks, latency) through the standard logging integrations.
