@@ -9,6 +9,12 @@ tags: [routing, complexity-router, semantic-router, adaptive, product]
 hide_table_of_contents: false
 ---
 
+:::info Availability
+
+Auto Router v2 ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
+
 Auto Router v2 collapses complexity, semantic, and adaptive routing into a single `auto_router/complexity_router`. One config now covers heuristic scoring, LLM classification, lexical or semantic keyword rules, and Thompson-sampled tier pools.
 
 The push came from the community. On [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), users pointed out that all three routing strategies should converge into a single Auto Router. One router with configurable signals and weights keeps the API simple while letting the routing engine evolve internally, instead of forcing you to pick a mode up front.
@@ -99,9 +105,7 @@ UI got a working Test Connection per tier ([#32950](https://github.com/BerriAI/l
 
 ## Try it
 
-Auto Router v2 ships in v1.94.x. The dev release cuts Tuesday, 2026-07-14.
-
-Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
+Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, `session_affinity: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
 ## What's next
 
