@@ -125,7 +125,7 @@ router_settings:
       path: ./plugins/my_router.py
 ```
 
-The plugin pipeline groundwork landed in [#32972](https://github.com/BerriAI/litellm/pull/32972); the reusable plugins ship next.
+The plugin pipeline groundwork landed in [#32972](https://github.com/BerriAI/litellm/pull/32972); the reusable plugins ship will be next.
 
 **Also on the list:**
 
