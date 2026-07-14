@@ -45,3 +45,7 @@ Use TLS for client-to-gateway and gateway-to-provider traffic. Keep certificate 
 Store provider credentials, the master key, and the salt key in your platform's secret store or a supported [secret manager](../secret_managers/overview). Do not commit secrets to `config.yaml` or source control. Follow the [master key rotation guide](./master_key_rotations), and do not rotate `LITELLM_SALT_KEY` after credentials have been stored.
 
 Enable [audit logs](./multiple_admins) and review administrative changes such as key creation, key deletion, role changes, and team updates.
+
+## 7. Add guardrails for sensitive workloads (optional)
+
+If your workloads handle sensitive or regulated data, add [guardrails](./guardrails/quick_start) to screen prompts and responses. We recommend [Bedrock Guardrails](./guardrails/bedrock) for content filtering, PII detection, and denied-topic policies, and the [LiteLLM content filter](./guardrails/litellm_content_filter) for lightweight, regex-based blocking of specific words or patterns. Guardrails can be applied per key, team, or model so you can enforce stricter controls where they are needed.
