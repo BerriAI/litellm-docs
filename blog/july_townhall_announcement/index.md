@@ -1,7 +1,7 @@
 ---
 slug: july-townhall-announcement
 title: "July Townhall: Product + Roadmap Updates"
-date: 2026-07-23T07:30:00
+date: 2026-07-09T12:00:00
 authors:
   - krrish
   - ishaan-alt
