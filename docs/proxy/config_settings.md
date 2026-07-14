@@ -1187,6 +1187,8 @@ router_settings:
 | TOGETHER_AI_110_B | Size parameter for Together AI 110B model. Default is 110
 | TOGETHER_AI_EMBEDDING_150_M | Size parameter for Together AI 150M embedding model. Default is 150
 | TOGETHER_AI_EMBEDDING_350_M | Size parameter for Together AI 350M embedding model. Default is 350
+| TOKEN_COUNTER_MAX_CONCURRENCY | Maximum concurrent local tokenization jobs per proxy worker for the token counting endpoints; requests over the cap receive a 429. Default is 32
+| TOKEN_COUNTER_MAX_REQUEST_CHARS | Maximum combined characters across all string fields accepted per token counting request; larger requests receive a 400. Default is 10000000
 | TOOL_CHOICE_OBJECT_TOKEN_COUNT | Token count for tool choice objects. Default is 4
 | TOOL_POLICY_CACHE_TTL_SECONDS | TTL in seconds for caching tool policy guardrail results. Default is 60
 | UI_LOGO_PATH | Path to the logo image used in the UI
