@@ -86,9 +86,10 @@ Three PRs fixed it, all released July 10 in `v1.91.2` after extensive end-to-end
 
 ## Why our process did not catch this
 
-1. **Testing the original patch was not end-to-end.** We validated the original patch with single-turn `curl` requests showing a 400 become a 200 that we assumed was the shape that Claude Code would use. That was not the case. We did not trace the root cause (we did not yet know mid-conversation system messages existed) or its caching implications, and treated it as a harmless edge case fix.
-2. **Cost regressions are silent.** Every response was a 200 with a correct completion. The only signal was cache-read token counts, which nothing in our CI or monitoring measured.
-3. **The documentation was incomplete.** The feature never appeared in the Claude Code changelog, and as of July 13 the Claude API docs still describe it as Opus 4.8 only (without mentioning Sonnet or Fable 5) and unavailable on Bedrock, which contradicts our empirical measurements.
+1. **Testing the original patch was not end-to-end.** We validated it with single-turn `curl` requests showing a 400 become a 200 that we assumed was the shape that Claude Code would use. That was not the case. We did not trace the root cause (we did not yet know mid-conversation system messages existed) or its caching implications, and treated it as a harmless edge case fix.
+2. **Review lacked the context to object.** The human reviewer saw a small compatibility patch with passing tests and no explanation of why Claude Code started sending these kinds of mid-conversation system messages, and our AI review bots did not flag the caching implication either. Nobody in the loop had the info to connect the hoist to cache invalidation.
+3. **Cost regressions are silent.** Every response was a 200 with a correct completion. The only signal was cache-read token counts, which nothing in our CI or monitoring measured.
+4. **The documentation was incomplete.** The feature never appeared in the Claude Code changelog, and as of July 13 the Claude API docs still describe it as Opus 4.8 only (without mentioning Sonnet or Fable 5) and unavailable on Bedrock, which contradicts our empirical measurements.
 
 ---
 
