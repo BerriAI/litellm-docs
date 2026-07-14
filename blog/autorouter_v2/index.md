@@ -97,12 +97,10 @@ Existing complexity router configs keep working. To try v2, add `keyword_tier_ru
 
 ## What's next
 
-The operational feedback in [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172) maps directly to what we want to build next.
+From [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172):
 
-**Cache affinity as a routing signal.** The biggest silent cost regression teams see is not picking a pricier model; it is a router switching models mid-conversation and destroying prompt-cache hit rates. The next iteration will keep a conversation pinned to its cached model unless there is a strong reason to move, so a marginally "better" per-request choice does not cost you every cached prefix.
+- **Cache affinity as a routing signal.** Pin a conversation to its cached model so mid-conversation model swaps do not destroy prompt-cache hits.
+- **Escalation ceilings on fallback chains.** Per-request cap on escalations plus a cooldown once a key walks the chain N times, so a bad upstream cannot cascade into a bill.
+- **Attributable decisions.** Stamp the routed model and routing-table version on every response, and export structured decision traces (candidates, scores, fallbacks, latency) through the standard logging integrations.
 
-**Escalation ceilings on fallback chains.** Retry and fallback logic that escalates to pricier models turns an upstream incident into a spend storm; every failing request walks the whole chain at the worst possible moment. We want a per-request cap on escalations, plus a cooldown once a key walks the chain N times, so a bad upstream cannot cascade into a bill.
-
-**Attributable routing decisions.** Predictable beats clever for debuggability. Beyond the `cause=` log line, every response should stamp the routed model and a routing-table version, so cost regressions are answerable after the fact instead of a support ticket mystery. Structured decision traces (candidate models, scores, fallback attempts, routing latency) exported through the standard logging integrations are on the same list.
-
-If you are running Auto Router in production and hitting any of these, drop a note on [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168) so we can build against real configs.
+Running Auto Router in production and hitting these? Drop a note on [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
