@@ -91,6 +91,8 @@ UI got a working Test Connection per tier ([#32950](https://github.com/BerriAI/l
 
 ## Try it
 
+Auto Router v2 ships in v1.94.x. The dev release cuts Tuesday, 2026-07-14.
+
 Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
 ## What's next
