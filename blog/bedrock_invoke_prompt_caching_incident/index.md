@@ -25,7 +25,7 @@ The cause: [PR #31364](https://github.com/BerriAI/litellm/pull/31364) moved ever
 
 We own this outcome entirely. The trigger was a poorly documented change in how new Claude models and Claude Code use system messages, but customers run a gateway precisely so they do not have to track provider quirks. Translating requests faithfully, including their caching semantics, is our core job and here we fell short. This post explains exactly what happened, why our testing and review failed to catch it, and what we have changed so this class of regression does not ship again.
 
-{/_ truncate _/}
+{/* truncate */}
 
 ---
 
