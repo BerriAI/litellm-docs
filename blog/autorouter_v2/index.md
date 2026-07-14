@@ -105,7 +105,7 @@ UI got a working Test Connection per tier ([#32950](https://github.com/BerriAI/l
 
 ## Try it
 
-Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, `session_affinity: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
+Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, `session_affinity: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Router v2 docs page](/docs/proxy/autorouter_v2).
 
 ## What's next
 
