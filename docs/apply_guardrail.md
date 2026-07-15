@@ -101,6 +101,10 @@ curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 </TabItem>
 </Tabs>
 
+## Testing from the Admin UI
+---
+
+The Guardrail Testing Playground (`Guardrails` -> `Test Playground` in the Admin UI) has an optional **Metadata** field below the input text. Enter a JSON object and it is sent as the `metadata` field of the request, letting you exercise parameterized custom guardrails without leaving the dashboard. Invalid JSON is rejected inline before the request is sent.
 
 ## Request Format
 ---
