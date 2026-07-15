@@ -478,6 +478,7 @@ const sidebars = {
             "proxy/model_management",
             "proxy/prod",
             "proxy/multi_region",
+            "proxy/billing_metrics",
             "proxy/worker_startup_hooks",
             "proxy/release_cycle",
           ],
