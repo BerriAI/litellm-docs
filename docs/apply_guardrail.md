@@ -79,6 +79,26 @@ curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 **Note**: For Bedrock guardrails, the `entities` parameter is not used as Bedrock handles content moderation based on its own policies.
 
 </TabItem>
+<TabItem value="custom" label="Custom Guardrail with metadata">
+
+Parameterized custom guardrails read per-request configuration from `request_data["metadata"]`. Send optional `metadata` in the request body and it is forwarded to your guardrail's `apply_guardrail` method. In this example `my-topic-guardrail` is a custom guardrail that blocks text mentioning any of the `forbidden_topics` passed in `metadata`.
+
+```bash showLineNumbers title="Example calling the endpoint"
+curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer your-api-key' \
+-d '{
+    "guardrail_name": "my-topic-guardrail",
+    "text": "What are tax loopholes?",
+    "metadata": {
+        "forbidden_topics": ["tax", "finance"]
+    }
+}'
+```
+
+`metadata` is only forwarded when the client sends it, so guardrails that do not depend on per-request configuration keep working unchanged when it is omitted.
+
+</TabItem>
 </Tabs>
 
 
@@ -109,6 +129,8 @@ The request body should follow the ApplyGuardrailRequest format.
   The language of the input text (e.g., "en" for English).
 - **entities** (array of strings):  
   Specific entities to process or filter (e.g., ["NAME", "EMAIL"]).
+- **metadata** (object):  
+  Per-request configuration forwarded to the guardrail as `request_data["metadata"]`. Custom guardrails that override `apply_guardrail` are responsible for reading it. Forwarded only when present, so omitting it preserves existing behavior.
 
 ## Response Format
 ---
