@@ -96,22 +96,36 @@ This configuration enables routing to specific OpenAI, Anthropic, and Gemini mod
 
 ## 4. Configure Codex to Use LiteLLM Proxy
 
-Set the required environment variables to point Codex to your LiteLLM Proxy:
+Codex reads its configuration from `~/.codex/config.toml`. Register your LiteLLM proxy as a custom model provider and point Codex at it by adding a `[model_providers.<name>]` block. Replace the placeholder base URL and bearer token with your own proxy URL and virtual key.
 
-```bash
-# Point to your LiteLLM Proxy server
-export OPENAI_BASE_URL=http://0.0.0.0:4000 
+```toml showLineNumbers title="~/.codex/config.toml"
+model_provider = "litellm"
+model = "openai/gpt-4o"
 
-# Use your LiteLLM API key (if you've set up authentication)
-export OPENAI_API_KEY="sk-1234"
+[model_providers.litellm]
+name = "LiteLLM Proxy"
+base_url = "https://your-litellm-proxy.com/v1"
+wire_api = "responses"
+experimental_bearer_token = "your-litellm-api-key"
+http_headers = { "x-litellm-tags" = "codex-cli" }
 ```
 
-## 5. Run Codex with Gemini
+Here `model_provider` selects the provider block Codex should use, `model` is the model name as configured in your LiteLLM `model_list`, and `base_url` is the `/v1` endpoint of your proxy. The `experimental_bearer_token` is sent as the `Authorization: Bearer` header, so set it to your LiteLLM virtual key. The optional `http_headers` table lets you attach extra headers on every request; the example above tags traffic with `x-litellm-tags` so you can filter Codex usage in LiteLLM analytics.
 
-With everything configured, you can now run Codex with Gemini:
+:::warning Two common gotchas
+
+`wire_api` must be set to `responses`. Codex removed support for the `chat` value in a recent release, so a provider block using `wire_api = "chat"` will fail.
+
+`openai` is a reserved built-in provider ID and cannot be used as the key in `[model_providers.<name>]`. Use a distinct name such as `litellm` or `openai-litellm` instead, and set `model_provider` to match.
+
+:::
+
+## 5. Run Codex
+
+With the provider configured as the default, start Codex and it routes through your LiteLLM proxy automatically:
 
 ```bash showLineNumbers
-codex --model gemini-2.0-flash --full-auto
+codex --full-auto
 ```
 
 <Image img={require('../../img/litellm_codex.gif')} />
@@ -122,15 +136,19 @@ The `--full-auto` flag allows Codex to automatically generate code without addit
 
 ### Using Different Models
 
-You can use any model configured in your LiteLLM proxy:
+Any model in your LiteLLM `model_list` can be used with Codex. Switch models per run with the `--model` flag, or change the `model` value in `config.toml` to set a new default:
 
 ```bash
-# Use Claude models
+# Use a Claude model routed through LiteLLM
 codex --model claude-3-7-sonnet-latest
 
-# Use Google AI Studio Gemini models
-codex --model gemini/gemini-2.0-flash
+# Use a Gemini model routed through LiteLLM
+codex --model gemini-2.0-flash
 ```
+
+### Codex Mac App
+
+The Codex Mac app reads the same `~/.codex/config.toml` file as the CLI, so the provider block above works unchanged. Configure the file once and both the CLI and the Mac app route through your LiteLLM proxy.
 
 ## Troubleshooting
 
