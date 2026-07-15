@@ -344,6 +344,7 @@ router_settings:
 | mcp_required_fields | list | List of required field names for MCP server submissions |
 | mcp_trusted_proxy_ranges | list | CIDR ranges of proxies trusted to forward `X-Forwarded-*` headers for MCP. Required (in addition to `use_x_forwarded_for: true`) for the MCP OAuth `authorize` endpoint to derive its public origin from those headers. Without this, headers are ignored and the proxy falls back to the request's literal base URL. For ingressed deployments, prefer [`PROXY_BASE_URL`](#environment-variables---reference). See [MCP OAuth — Reverse proxy and ingress configuration](../mcp_oauth#reverse-proxy-and-ingress-configuration). |
 | require_end_user_mcp_access_defined | boolean | If true, requires end users to have explicit MCP access permissions defined |
+| require_key_mcp_access_defined | boolean | If true, a key with an empty MCP server list no longer inherits its team's servers; the team becomes a ceiling and the key must grant MCP servers explicitly (directly or via an access group). See [MCP Permission Management](../mcp_control#require-keys-to-define-their-own-mcp-access) |
 | role_permissions | list | List of role-based permission configurations |
 | search_tools | list | List of search tool configurations for enabling web search capabilities |
 | token_rate_limit_type | string | Rate limit counting method: "total", "output", or "input" tokens |
