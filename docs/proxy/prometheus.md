@@ -42,11 +42,10 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-View Metrics on `/metrics`, Visit `http://localhost:4000/metrics` 
+View Metrics on `/metrics`:
 ```shell
-http://localhost:4000/metrics
-
-# <proxy_base_url>/metrics
+curl http://localhost:4000/metrics \
+  -H "Authorization: Bearer sk-..."
 ```
 
 ### Multiple Workers
@@ -622,15 +621,27 @@ Here is a screenshot of the metrics you can monitor with the LiteLLM Grafana Das
 
 
 
-## Add authentication on /metrics endpoint
+## Authentication on `/metrics` endpoint
 
-**By default /metrics endpoint is unauthenticated.** 
+**By default, `/metrics` requires LiteLLM API key authentication** (since v1.85.0).
 
-You can opt into running litellm authentication on the /metrics endpoint by setting the following on the config 
+For Prometheus, add `authorization` to your scrape config:
+
+```yaml
+scrape_configs:
+  - job_name: 'litellm'
+    authorization:
+      type: Bearer
+      credentials: <LITELLM_API_KEY>
+    static_configs:
+      - targets: ['localhost:4000']
+```
+
+To allow unauthenticated access:
 
 ```yaml
 litellm_settings:
-  require_auth_for_metrics_endpoint: true
+  require_auth_for_metrics_endpoint: false
 ```
 
 ## FAQ 

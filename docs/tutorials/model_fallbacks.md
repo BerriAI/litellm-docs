@@ -1,6 +1,11 @@
-# Model Fallbacks w/ LiteLLM
+---
+description: "Implement model fallbacks (provider failover) across OpenAI, Anthropic, and Azure with LiteLLM so a failing provider fails over to a backup."
+keywords: [fallbacks, failover, provider failover, model failover, OpenAI, Anthropic, Azure, reliability]
+---
 
-Here's how you can implement model fallbacks across 3 LLM providers (OpenAI, Anthropic, Azure) using LiteLLM. 
+# Model Fallbacks (Provider Failover) w/ LiteLLM
+
+Here's how you can implement model fallbacks (provider failover) across 3 LLM providers (OpenAI, Anthropic, Azure) using LiteLLM. 
 
 ## 1. Install LiteLLM
 ```python 

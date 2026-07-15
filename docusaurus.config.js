@@ -375,8 +375,8 @@ const config = {
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            href: 'https://docs.litellm-agent-platform.ai/',
-            label: 'LiteLLM Agent Platform',
+            href: 'https://trust.litellm.ai/',
+            label: 'Trust Center',
             position: 'left',
           },
           {

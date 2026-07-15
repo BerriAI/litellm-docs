@@ -234,6 +234,7 @@ const sidebars = {
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
             "tutorials/claude_code_customer_tracking",
+            "tutorials/claude_code_budget_statusline",
             "tutorials/claude_code_prompt_cache_routing",
             "tutorials/claude_code_websearch",
             "tutorials/claude_mcp",
@@ -465,6 +466,7 @@ const sidebars = {
           items: [
             "proxy/deploy",
             "proxy/prod",
+            "proxy/security_best_practices",
             "proxy/server_tuning",
             "proxy/db_deadlocks",
             "proxy/multi_region",
@@ -473,6 +475,7 @@ const sidebars = {
             "proxy/health",
             "proxy/model_management",
             "proxy/master_key_rotations",
+            "proxy/billing_metrics",
           ],
         },
         {
@@ -484,11 +487,6 @@ const sidebars = {
           type: "category",
           label: "Troubleshooting",
           items: ["proxy/debugging", "proxy/error_diagnosis"],
-        },
-        {
-          "type": "link",
-          "label": "Demo LiteLLM Cloud",
-          "href": "https://www.litellm.ai/cloud"
         },
         {
           type: "category",
@@ -576,6 +574,11 @@ const sidebars = {
             "proxy/token_auth",
             "proxy/jwt_key_mapping",
             "proxy/jwt_auth_arch",
+            {
+              type: "doc",
+              id: "proxy/identity_provisioning",
+              label: "Provisioning & Keys",
+            },
             "proxy/service_accounts",
             "proxy/access_control",
             "proxy/cli_sso",
@@ -655,7 +658,7 @@ const sidebars = {
         "proxy/management_cli",
         {
           type: "link",
-          label: "Load Balancing, Routing, Fallbacks",
+          label: "Load Balancing, Routing, Fallbacks (Failover)",
           href: "https://docs.litellm.ai/docs/routing-load-balancing",
         },
         "traffic_mirroring",
@@ -732,6 +735,7 @@ const sidebars = {
           label: "Cost Optimization",
           items: [
             "proxy/auto_routing",
+            "proxy/auto_routing_semantic",
             "adaptive_router",
             {
               type: "link",
@@ -1099,6 +1103,7 @@ const sidebars = {
         "providers/llamagate",
         "providers/lm_studio",
         "providers/manus",
+        "providers/meta",
         "providers/meta_llama",
         "providers/milvus_vector_stores",
         "providers/mistral",
@@ -1201,14 +1206,16 @@ const sidebars = {
       link: {
         type: "generated-index",
         title: "Routing & Load Balancing",
-        description: "Learn how to load balance, route, and set fallbacks for your LLM requests",
+        description: "Learn how to load balance, route, and set fallbacks (provider failover) for your LLM requests",
         slug: "/routing-load-balancing",
       },
       items: [
         "routing",
+        "routing_plugins",
         "adaptive_router",
         "scheduler",
         "proxy/auto_routing",
+        "proxy/auto_routing_semantic",
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",
@@ -1270,6 +1277,7 @@ const sidebars = {
             "projects/Google ADK",
             "projects/Agent Lightning",
             "projects/Harbor",
+            "projects/CompatCanary",
             "projects/GraphRAG",
             "projects/Docq.AI",
             "projects/PDL",
@@ -1481,7 +1489,7 @@ const learnSidebar = {
           link: {
             type: "generated-index",
             title: "Reliability, Testing & Spend",
-            description: "Retries, fallbacks, mock responses, and budget controls",
+            description: "Retries, fallbacks (failover), mock responses, and budget controls",
             slug: "/guides/reliability_testing_spend"
           },
           items: [

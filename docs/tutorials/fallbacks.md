@@ -1,6 +1,11 @@
-# Using completion() with Fallbacks for Reliability
+---
+description: "Use completion() with model fallbacks (failover) so a failing provider automatically fails over to a backup model for reliable responses."
+keywords: [fallbacks, failover, provider failover, model failover, reliability, backup model, completion]
+---
 
-This tutorial demonstrates how to employ the `completion()` function with model fallbacks to ensure reliability. LLM APIs can be unstable, completion() with fallbacks ensures you'll always get a response from your calls
+# Using completion() with Fallbacks (Failover) for Reliability
+
+This tutorial demonstrates how to employ the `completion()` function with model fallbacks (also called failover) to ensure reliability. LLM APIs can be unstable, completion() with fallbacks ensures you'll always get a response from your calls
 
 ## Set Up Fallbacks for a Virtual Key
 

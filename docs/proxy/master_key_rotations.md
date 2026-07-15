@@ -1,6 +1,6 @@
 # Rotating the Master Key
 
-The master key is the proxy's admin credential; it authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database. How you rotate it depends on which of those roles it plays, and getting this wrong can leave your stored credentials unreadable, so read the case that matches your setup before running anything.
+The master key is the proxy's admin credential; it authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database: the proxy signs stored data (model `litellm_params`, credentials, MCP server credentials, DB-stored environment variables) with `LITELLM_SALT_KEY` when it is set, and falls back to the master key only when no salt key is configured. How you rotate the master key depends on which of those roles it plays, and getting this wrong can leave your stored credentials unreadable, so read the case that matches your setup before running anything.
 
 :::warning
 
@@ -18,9 +18,17 @@ When `LITELLM_SALT_KEY` is set, the salt key encrypts and decrypts your stored c
 
 Generate a new master key value, update wherever the secret lives (the `LITELLM_MASTER_KEY` environment variable, or `general_settings.master_key` in your config), and restart every proxy instance so they pick up the new value. Do not call `POST /key/regenerate` with `new_master_key` here; that would re-encrypt your credentials under a key the proxy never uses to decrypt.
 
+Do not rotate `LITELLM_SALT_KEY` itself. It must not change after you have added a model; there is no in-place migration for salt-key rotation, so every stored credential would need to be re-registered.
+
 ## If the master key is your encryption key
 
-When no salt key is set, the master key doubles as the at-rest encryption key, so rotating it requires re-encrypting stored data. Call `POST /key/regenerate` with the current master key and the new one.
+When no salt key is set, the master key doubles as the at-rest encryption key, so rotating it requires re-encrypting stored data.
+
+:::tip Prefer a dedicated salt key
+Before you rotate, consider setting a permanent `LITELLM_SALT_KEY` so future master-key rotations become the no-migration flow above. Set the salt key to your current master key value first (so existing data still decrypts), then rotate the master key freely afterwards.
+:::
+
+Call `POST /key/regenerate` with the current master key and the new one.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/regenerate' \
@@ -49,4 +57,21 @@ The running process does not adopt the new key on its own, so finish with the st
 
 Update the master key everywhere the old value lived: the `LITELLM_MASTER_KEY` environment variable and your secret manager, and `general_settings.master_key` in your config if you set it there. If both are present, `general_settings.master_key` takes precedence over the environment variable, so make sure it holds the new value.
 
-Restart every proxy instance so they load the new key. Then verify by logging into the Admin UI with the new master key; if the UI loads and your stored models and credentials resolve, the rotation is complete.
+Restart every proxy instance so they load the new key. Then verify: log into the Admin UI with the new master key, and make a request to a DB-stored model with a LiteLLM key (the new master key or a virtual key) and confirm it succeeds.
+
+```bash
+curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer sk-PIp1h0RekR' \
+-d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+        {
+            "content": "Hey, how'\''s it going",
+            "role": "user"
+        }
+    ]
+}'
+```
+
+If the UI loads and your stored models and credentials resolve, the rotation is complete.

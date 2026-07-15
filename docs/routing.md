@@ -1,3 +1,19 @@
+---
+description: "LiteLLM Router for load balancing, routing, retries, cooldowns, and fallbacks (failover) across multiple LLM deployments and providers."
+keywords:
+  [
+    router,
+    load balancing,
+    fallbacks,
+    failover,
+    provider failover,
+    retries,
+    cooldowns,
+    high availability,
+    reliability,
+  ]
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

@@ -104,12 +104,6 @@ Pricing depends on your deployment size — [get in touch](https://enterprise.li
 
 ## Professional Support
 
-:::info Support model changing — May 18, 2026
-
-As LiteLLM has grown, the current professional support model no longer fits our scale. We're moving to a new model built around clear, predictable communication on when customers can expect support and changes. The model described below is being deprecated, we'll share details on the new system as we finalize it over the next few weeks.
-
-:::
-
 Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
 
 | Severity | Response SLA |

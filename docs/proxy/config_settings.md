@@ -446,6 +446,7 @@ router_settings:
 | health_check_staleness_threshold | integer | Maximum age in seconds for cached health check results before marking deployments as stale |
 | health_check_ignore_transient_errors | boolean | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
 | routing_groups | Optional[List[RoutingGroup]] | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. Defaults to None. |
+| plugins | Optional[List[RoutingPlugin]] | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. Defaults to None. |
 
 
 ### environment variables - Reference
@@ -897,6 +898,11 @@ router_settings:
 | LITELLM_ANTHROPIC_BETA_HEADERS_URL | Custom URL for fetching Anthropic beta headers configuration. Default is the GitHub main branch URL
 | LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX | Disable automatic URL suffix appending for Anthropic API base URLs. When set to `true`, prevents LiteLLM from automatically adding `/v1/messages` or `/v1/complete` to custom Anthropic API endpoints
 | LITELLM_ASSETS_PATH | Path to directory for UI assets and logos. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/assets` in Docker.
+| LITELLM_BILLING_METRICS_ENDPOINT | Collector URL for [enterprise billable-request metering](billing_metrics). Requires an enterprise license; unset disables metering
+| LITELLM_BILLING_METRICS_CLIENT_CERT | mTLS client certificate for billable-request metering. Accepts a file path or inline PEM content
+| LITELLM_BILLING_METRICS_CLIENT_KEY | Private key matching `LITELLM_BILLING_METRICS_CLIENT_CERT`. Accepts a file path or inline PEM content
+| LITELLM_BILLING_METRICS_CA_CERT | CA bundle for verifying the metering collector. Only for private or test collectors; unset uses the system trust store
+| LITELLM_BILLING_METRICS_EXPORT_INTERVAL_MS | Push cadence for billable-request metering in milliseconds. Default is 60000
 | LITELLM_BLOG_POSTS_URL | Custom URL for fetching LiteLLM blog posts JSON. Default is the GitHub main branch URL
 | LITELLM_CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
@@ -1017,6 +1023,7 @@ router_settings:
 | MICROSOFT_AUTHORIZATION_ENDPOINT | Custom authorization endpoint URL for Microsoft SSO (overrides default Microsoft OAuth authorization endpoint)
 | MICROSOFT_CLIENT_ID | Client ID for Microsoft services
 | MICROSOFT_CLIENT_SECRET | Client secret for Microsoft services
+| MICROSOFT_GRAPH_ENDPOINT | Microsoft Graph API base URL used when syncing Entra ID group memberships during SSO. Defaults to `https://graph.microsoft.com/v1.0`. Set to `https://graph.microsoft.us/v1.0` for Azure Government Cloud (GCC High)
 | MICROSOFT_SERVICE_PRINCIPAL_ID | Service Principal ID for Microsoft Enterprise Application. (This is an advanced feature if you want litellm to auto-assign members to Litellm Teams based on their Microsoft Entra ID Groups)
 | MICROSOFT_TENANT | Tenant ID for Microsoft Azure
 | MICROSOFT_TOKEN_ENDPOINT | Custom token endpoint URL for Microsoft SSO (overrides default Microsoft OAuth token endpoint)

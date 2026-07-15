@@ -530,21 +530,42 @@ Prebuilt categories use **keyword matching** to detect harmful content, bias, an
 
 ### Available Categories
 
+Reference any category below by name; no `category_file:` is required
+
 | Category | Description |
 |----------|-------------|
 | **Harmful Content** | |
 | `harmful_self_harm` | Self-harm, suicide, eating disorders |
 | `harmful_violence` | Violence, criminal planning, attacks |
 | `harmful_illegal_weapons` | Illegal weapons, explosives, dangerous materials |
-| **Bias Detection** | |
+| `harmful_child_safety` | Inappropriate content involving minors |
+| **Bias / Employment Discrimination** | |
 | `bias_gender` | Gender-based discrimination, stereotypes |
 | `bias_sexual_orientation` | LGBTQ+ discrimination, homophobia, transphobia |
-| `bias_racial` | Racial/ethnic discrimination, stereotypes |
+| `bias_racial` | Racial/ethnic discrimination, hate speech |
 | `bias_religious` | Religious discrimination, stereotypes |
+| `age_discrimination` | Age-based employment discrimination |
+| `disability` | Employment discrimination against people with disabilities |
+| `gender_sexual_orientation` | Employment discrimination on gender, sex, or sexual orientation |
+| `military_status` | Employment discrimination against veterans / military personnel |
+| `religion` | Employment discrimination based on religion or religious beliefs |
 | **Denied Advice** | |
 | `denied_financial_advice` | Personalized financial advice, investment recommendations |
 | `denied_medical_advice` | Medical advice, diagnosis, treatment recommendations |
 | `denied_legal_advice` | Legal advice, representation, legal strategy |
+| `denied_insults` | Insults, name-calling, personal attacks |
+| **Prompt Injection** | |
+| `prompt_injection_jailbreak` | Jailbreak attempts (DAN, roleplay attacks, safety bypass) |
+| `prompt_injection_system_prompt` | Attempts to extract, reveal, or override system prompts |
+| `prompt_injection_sql` | SQL injection embedded in prompts |
+| `prompt_injection_malicious_code` | Malicious code injection via prompts |
+| `prompt_injection_data_exfiltration` | Attempts to extract training data or internal information |
+| **Claims Abuse** | |
+| `claims_fraud_coaching` | Coaching on fraudulent insurance claims |
+| `claims_medical_advice` | Medical advice in claims context |
+| `claims_phi_disclosure` | Unauthorized PHI disclosure / HIPAA violations |
+| `claims_prior_auth_gaming` | Prior authorization gaming attempts |
+| `claims_system_override` | Claims system override / role impersonation attempts |
 
 :::info Bias Detection Considerations
 
@@ -585,32 +606,103 @@ guardrails:
 
 ### Custom Category Files
 
-Override default categories with custom keyword lists:
+Override a built-in category, or add a brand-new category, with your own keyword list
 
 ```yaml showLineNumbers title="config.yaml"
 categories:
-  - category: "harmful_self_harm"
+  - category: "<your-category-name>"
     enabled: true
     action: "BLOCK"
     severity_threshold: "medium"
-    category_file: "/path/to/custom.yaml"
+    category_file: "<your-category-name>.yaml"
 ```
 
-```yaml showLineNumbers title="custom.yaml"
-category_name: "harmful_self_harm"
-description: "Custom self-harm detection"
+```yaml showLineNumbers title="<your-category-name>.yaml"
+category_name: "<your-category-name>"
+description: "Short description of what this category detects"
 default_action: "BLOCK"
 
 keywords:
-  - keyword: "suicide"
-    severity: "high"
-  - keyword: "harm myself"
+  - keyword: "example keyword"
     severity: "high"
 
 exceptions:
-  - "suicide prevention"
-  - "mental health"
+  - "example exception phrase"
 ```
+
+#### Where to put the file
+
+Put your YAML in one of these two locations:
+
+**Option A: inside the built-in `categories/` directory (recommended)**
+
+Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml` and drop the `category_file:` field. The loader picks it up by category name
+
+```yaml title="values.yaml (Helm)"
+extraVolumeMounts:
+  - name: content-filter-categories
+    mountPath: /usr/local/lib/python3.13/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    subPath: <your-category-name>.yaml
+    readOnly: true
+
+extraVolumes:
+  - name: content-filter-categories
+    configMap:
+      name: <your-configmap-name>
+```
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: "<your-guardrail-name>"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      default_on: true
+      categories:
+        - category: "<your-category-name>"
+          enabled: true
+          action: "BLOCK"
+          severity_threshold: "high"
+```
+
+Update `mountPath` if you upgrade to a litellm image built on a different Python minor version
+
+**Option B: any other path, with the env var opt-in**
+
+Set
+
+```bash
+LITELLM_CONTENT_FILTER_ALLOW_EXTERNAL_PATHS=true
+```
+
+on the proxy pod, then reference the file by absolute path
+
+```yaml title="config.yaml"
+categories:
+  - category: "<your-category-name>"
+    enabled: true
+    action: "BLOCK"
+    severity_threshold: "high"
+    category_file: "/absolute/path/to/<your-category-name>.yaml"
+```
+
+Only use this when everyone who can write `category_file` (proxy config, DB, Admin UI, team-scoped configs) is trusted; with the flag on, `category_file` can point at any YAML-parseable file on the pod
+
+#### Verifying it loaded
+
+Check the proxy startup log for either
+
+```
+content_filter.py: Loaded category <name>: N keywords, M always-block keywords ...
+```
+
+or
+
+```
+content_filter.py: Category <name>: invalid category_file path, skipping. ...
+```
+
+The second line means the file was rejected and the category is running with zero rules; use one of the two options above to fix it
 
 ## Use Cases
 
