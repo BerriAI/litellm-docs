@@ -28,12 +28,6 @@ Codex, OpenCode) with their LLM traffic routed through the proxy.
    curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
    ```
 
-   On macOS you can install it with Homebrew instead:
-
-   ```shell
-   brew install BerriAI/litellm/lite
-   ```
-
    Already have uv and prefer to drive it yourself? Install the package directly:
 
    ```shell
