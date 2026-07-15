@@ -226,7 +226,7 @@ router = Router(
 
 ## Limitations
 
-Async only. Sync `Router.completion()` raises when plugins are configured. Supported strategies: `simple-shuffle`, `usage-based-routing-v2`, `cost-based-routing`, `latency-based-routing`, `least-busy`. Legacy `usage-based-routing` (v1) raises.
+Async only. Sync `Router.completion()` raises when plugins are configured. Supported strategies: `simple-shuffle`, `usage-based-routing-v2`, `cost-based-routing`, `latency-based-routing`, `least-busy`, and `auto_router/*` (complexity router today). Legacy `usage-based-routing` (v1) raises.
 
 Proxy YAML config is wired for the complexity router today. Other auto-routers (adaptive, semantic, quality) still require the SDK.
 
