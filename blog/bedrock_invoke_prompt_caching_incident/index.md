@@ -40,9 +40,9 @@ Three facts set up the incident:
       3. cache write (1.25x for 5m ttl, 2x for 1h ttl)
    2. when Claude Code makes a new request, the Bedrock provider checks if any previous request was a truncated prefix of the current request. If so, it reads from the cache only up to that point.
 2. **Mid-conversation system messages are new:**
-   1. On May 28, 2026, Claude Opus 4.8 shipped as the first model accepting `role: "system"` entries inside `messages` ([docs](https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages)). This was documented on the Claude API docs [on the same day](https://web.archive.org/web/20260528184320/https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages)
+   1. On May 28, 2026, Claude Opus 4.8 shipped as the first model accepting `role: "system"` entries inside `messages` ([docs](https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages)). This was documented on the Claude API docs [on the same day](https://web.archive.org/web/20260528184320/https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages).
    2. Claude Code (`v2.1.154`) began emitting them on May 28, 2026, with no mention in its changelog.
-   3. Bedrock documented the same support by [June 9, 2026](https://web.archive.org/web/20260609182343/https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-mid-conversation-system.html) at the latest (the first archive.org capture; the page may have appeared as early as May 28)
+   3. Bedrock documented the same support by [June 9, 2026](https://web.archive.org/web/20260609182343/https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-mid-conversation-system.html) at the latest (the first archive.org capture; the page may have appeared as early as May 28).
 3. **Bedrock has two Anthropic APIs with different rules:**
    1. Converse requires all system content in a top-level field; LiteLLM has hoisted it there since December 2024 ([#7037](https://github.com/BerriAI/litellm/pull/7037)).
    2. Invoke takes the native Anthropic Messages format, where models older than Opus 4.8 reject mid-conversation system entries with a 400 and newer models accept them.
@@ -95,9 +95,9 @@ Three PRs fixed it, all released July 10 in `v1.91.2` after extensive end-to-end
 
 ## What we are changing
 
-- Our e2e suite will gain a scripted multi-turn Claude Code session growing to roughly 250k tokens of context against real Bedrock, asserting cache reads grow monotonically and never collapse (started in [#32963](https://github.com/BerriAI/litellm/pull/32963))
+- Our e2e suite will gain a scripted multi-turn Claude Code session growing to roughly 250k tokens of context against real Bedrock, asserting cache reads grow monotonically and never collapse (started in [#32963](https://github.com/BerriAI/litellm/pull/32963)).
 - We will set up a weekly automated load test that will flag anomalies in spend, cache reads and writes, turn latency, error rates, etc., so cost and performance regressions are detected and fixed before a release.
-- Daily automated diffs of Anthropic's SDKs and docs alert us to new features that need translation support before customer traffic finds them
+- Daily automated diffs of Anthropic's SDKs and docs alert us to new features that need translation support before customer traffic finds them.
 - We [dogfood](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) LiteLLM internally and will set up monitoring for new request shapes, such as unknown `anthropic-beta` headers, and the same anomoly detction, which will alert us ahead of a release.
 - Bug fixes now have a higher merge bar: validated means reproduced against the real client's traffic on their exact end-user application end-to-end and a complete understanding of the root cause; synthetic requests are not enough.
 
@@ -105,7 +105,7 @@ Three PRs fixed it, all released July 10 in `v1.91.2` after extensive end-to-end
 
 ## Known limitations
 
-1. Converse rejects system entries inside `messages` at any position, so on `bedrock_converse` we must still hoist, and Claude Code sessions routed through Converse still lose cached prefix on every mid-conversation system message. If you run Claude Code against Bedrock, route it through the Invoke path (`bedrock/invoke/<model>`). We are raising the API constraint with AWS
+1. Converse rejects system entries inside `messages` at any position, so on `bedrock_converse` we must still hoist, and Claude Code sessions routed through Converse still lose cached prefix on every mid-conversation system message. If you run Claude Code against Bedrock, route it through the Invoke path (`bedrock/invoke/<model>`). We are raising the API constraint with AWS.
 2. We are testing whether the Vertex AI and Azure paths need equivalent hoisting and will update this post when we have more info.
 
 To every team whose bill went up because of this: we are sorry. The value of a gateway is that this class of provider change gets absorbed by us instead of reaching you, and the tests, monitoring, and process improvements above are how we intend to keep it that way.
