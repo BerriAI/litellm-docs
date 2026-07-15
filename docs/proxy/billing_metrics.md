@@ -133,6 +133,6 @@ Passing the PEM content directly as environment values works because the certifi
 
 **What happens on restart?** The proxy flushes the counter on shutdown, so buffered counts are not lost on a normal restart or rollout.
 
-**What if the collector is unreachable?** Requests are unaffected. Export failures are logged and the proxy keeps serving; the counter is cumulative, so transient export failures do not lose already-recorded counts within the exporter's retention.
+**What if the collector is unreachable?** Requests are unaffected. Export failures are logged and the proxy keeps serving; the counter is cumulative, so a later successful export carries the total including everything recorded while the collector was unreachable.
 
 **Air-gapped deployments?** Metering needs outbound HTTPS to the collector. If your deployment cannot reach it, talk to us about alternatives during onboarding.
