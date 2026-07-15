@@ -68,7 +68,7 @@ os.environ["TINYFISH_API_KEY"] = "your-api-key"
 response = search(
     query="latest tech news",
     search_provider="tinyfish",
-    max_results=10,               # Capped at 20
+    max_results=5,                # Capped at 10, enforced client-side
     country="us",                 # Mapped to TinyFish's location parameter
     search_domain_filter=["techcrunch.com", "theverge.com"],
     # TinyFish-specific parameters
