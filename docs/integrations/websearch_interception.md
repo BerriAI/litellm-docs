@@ -184,6 +184,7 @@ Configure which search provider to use. LiteLLM supports multiple search provide
 | **Linkup** | `linkup` | `LINKUP_API_KEY` |
 | **Serper** | `serper` | `SERPER_API_KEY` |
 | **SearchAPI.io** | `searchapi` | `SEARCHAPI_API_KEY` |
+| **TinyFish** | `tinyfish` | `TINYFISH_API_KEY` |
 
 See [Search Providers Documentation](../search/index.md) for detailed setup instructions.
 
