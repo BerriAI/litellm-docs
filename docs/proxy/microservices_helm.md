@@ -81,10 +81,16 @@ The chart is published to GitHub Container Registry:
 ```bash
 helm upgrade --install litellm \
   oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.86.0-dev \
+  --version 1.92.0 \
   -n litellm \
   -f values.yaml
 ```
+
+:::info Requires v1.89.0 or newer
+
+The four component images (`ghcr.io/berriai/litellm-gateway`, `-backend`, `-ui`, and `-migrations`) and the stable chart versions are published from `v1.89.0` onward, so pin `--version` to `1.89.0` or later. Because each component's image `tag` defaults to the chart `AppVersion`, older releases such as `v1.86.x` and `v1.88.0` resolve to component tags that were never pushed to GHCR (`docker manifest inspect` returns `manifest unknown`), even though `ghcr.io/berriai/litellm` and `ghcr.io/berriai/litellm-database` do exist at those tags. From `v1.89.0` every component image ships both `linux/amd64` and `linux/arm64` and is signed with cosign, so arm64-only clusters are covered
+
+:::
 
 The chart runs `prisma migrate deploy` as a pre-install/pre-upgrade hook Job,
 then brings up the `gateway`, `backend`, and `ui` Deployments. With
