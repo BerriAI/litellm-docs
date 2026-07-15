@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# ✨ Billable Request Metering
+# Billable Request Metering
 
 LiteLLM Enterprise [pricing is usage-based](../enterprise#how-is-pricing-structured). Billable request metering is how a licensed, connected deployment reports that usage: the proxy counts successful requests to LLM, MCP, and A2A endpoints and pushes a single OpenTelemetry counter to LiteLLM's collector over OTLP/HTTP, authenticated with a mutual TLS client certificate issued for your deployment.
 
