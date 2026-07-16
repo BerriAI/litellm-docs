@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
-LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html), which references a guardrail resource you create in AWS, and via the resource-less [InvokeGuardrailChecks API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html), where the safeguards are defined inline in your LiteLLM config (see [Resource-less checks](#resource-less-checks-invokeguardrailchecks)).
+LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html).
 
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
