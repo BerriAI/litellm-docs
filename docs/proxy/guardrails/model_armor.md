@@ -100,7 +100,7 @@ An attachment LiteLLM recognizes as a document but cannot submit for scanning fa
 |------|--------------------------------|------------------------------|
 | `file_id` or remote URL reference (`http://`, `https://`, `gs://`) with no inline bytes | Blocked | Passes through unscanned |
 | Document larger than Model Armor's 4 MB limit | Blocked | Passes through unscanned |
-| More than 10 attachments in one request | Blocked | First 10 scanned, rest pass through unscanned |
+| More than `max_file_attachments` (default 10) in one request | Blocked | Every attachment is scanned; nothing is dropped |
 | Inline base64 that fails to decode | Blocked | Passes through unscanned |
 | Model Armor API error while scanning an attachment | Blocked | Attachment skipped, remaining attachments still scanned |
 
@@ -111,6 +111,10 @@ Blocked requests return the reason:
 ```
 
 If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact; it only affects attachments there is nothing to send.
+
+The per-request attachment cap is not about scannability; every attachment past the cap could still be scanned, so it exists only to bound scan fan-out (latency and quota). Raise `max_file_attachments` when your requests legitimately carry more than 10 documents. Over the cap the request is blocked under the default `fail_on_error: true`, and with `fail_on_error: false` every attachment is scanned rather than dropping the overflow, so a document never reaches the model unscanned just because it arrived past the cap.
+
+A document larger than Model Armor's 4 MB byte limit does carry bytes but exceeds what the byte API accepts, so it stays fail-closed under `fail_on_error`; `skip_unscannable_attachments` does not cover it, since that is a real document you likely want blocked rather than forwarded unscanned.
 
 ## Supported Params 
 
@@ -130,6 +134,7 @@ If you use `file_id`, `gs://`, or `http(s)://` attachment references (the patter
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
 - `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
 - `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
+- `max_file_attachments` - int - Maximum inline document/file attachments scanned per request. Over this cap a request is blocked when `fail_on_error` is `true`, and every attachment is still scanned when `fail_on_error` is `false` (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `10`
 - `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
