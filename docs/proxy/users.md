@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 **Agent budgets**: Set rate limits (tpm/rpm) and session-level caps (iterations, dollar budget) on agents [**Jump**](#agents)
 
-***If a key belongs to a team, both the team budget and the user's personal budget are enforced. The `skip_user_budget_on_team_key` setting will be available in the next release candidate. To keep the old behavior where only the team (and team-member) budgets apply, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).***
+***If a key belongs to a team, both the team budget and the user's personal budget are enforced. The `skip_user_budget_on_team_key` setting will be available in the `v1.94.0` release candidate. To keep the old behavior where only the team (and team-member) budgets apply, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).***
 :::
 
 Requirements: 
@@ -202,7 +202,7 @@ Apply a budget across all calls an internal user (key owner) can make on the pro
 
 :::info
 
-For keys with a `team_id` set, the user's personal budget is enforced alongside the team budget. The `skip_user_budget_on_team_key` setting will be available in the next release candidate. To keep the old behavior where only the team budget applies, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).
+For keys with a `team_id` set, the user's personal budget is enforced alongside the team budget. The `skip_user_budget_on_team_key` setting will be available in the `v1.94.0` release candidate. To keep the old behavior where only the team budget applies, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).
 
 To apply a budget to a user within a team, use team member budgets.
 
