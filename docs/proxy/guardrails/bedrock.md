@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
-LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html). 
+LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html), which references a guardrail resource you create in AWS, and via the resource-less [InvokeGuardrailChecks API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html), where the safeguards are defined inline in your LiteLLM config (see [Resource-less checks](#resource-less-checks-invokeguardrailchecks)).
 
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
@@ -140,6 +140,82 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 
 </Tabs>
+
+## Resource-less Checks: InvokeGuardrailChecks
+
+The quick start above requires a guardrail resource created in AWS, referenced by `guardrailIdentifier`. Bedrock also offers the resource-less [InvokeGuardrailChecks API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html): the safeguards are passed inline with each request, so there is no guardrail resource to create and no identifier or version to manage. The API is detect-only; it returns a numeric score per check and never blocks, masks, or rewrites content on its own. LiteLLM turns those scores into a block decision using configurable thresholds.
+
+To use it, set `checks` on the `bedrock` guardrail instead of `guardrailIdentifier`. The two are mutually exclusive; configuring `checks` together with `guardrailIdentifier` or `guardrailVersion` fails at startup. Your AWS credentials need the `bedrock:InvokeGuardrailChecks` permission.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+guardrails:
+  - guardrail_name: "bedrock-checks"
+    litellm_params:
+      guardrail: bedrock
+      mode: "pre_call"
+      aws_region_name: os.environ/AWS_REGION
+      checks:
+        contentFilter:
+          categories:
+            - category: VIOLENCE
+            - category: HATE
+        promptAttack:
+          categories:
+            - category: JAILBREAK
+        sensitiveInformation:
+          entities:
+            - type: EMAIL
+            - type: PHONE
+      content_filter_threshold: 0.5   # block when severityScore >= 0.5
+      prompt_attack_threshold: 0.5    # block when severityScore >= 0.5
+      pii_confidence_threshold: 0.5   # block when confidenceScore >= 0.5
+```
+
+### Supported checks
+
+| Check | What it detects | Categories / entities | Threshold key |
+|-------|-----------------|-----------------------|---------------|
+| `contentFilter` | Harmful content | `VIOLENCE`, `HATE`, `SEXUAL`, `MISCONDUCT`, `INSULTS` | `content_filter_threshold` |
+| `promptAttack` | Prompt attacks | `JAILBREAK`, `PROMPT_INJECTION`, `PROMPT_LEAKAGE` | `prompt_attack_threshold` |
+| `sensitiveInformation` | PII | `EMAIL`, `PHONE`, `NAME`, `ADDRESS`, `US_SOCIAL_SECURITY_NUMBER`, `AWS_ACCESS_KEY`, and more; see the [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html) for the full list | `pii_confidence_threshold` |
+
+Include only the checks you want to run; at least one is required, and a `checks` block with no usable keys fails at startup. An empty check config such as `promptAttack: {}` enables that check with AWS defaults. Unrecognized keys inside `checks` log a warning and are ignored.
+
+### Thresholds
+
+Each threshold defaults to `0.5` and accepts values in `[0, 1]`. A score at or above the threshold blocks the request. Set a threshold to `null` to make that check detect-only, meaning scores are logged but never block. Thresholds are only enforced for checks you configured; a score Bedrock returns for a check you did not configure is ignored. If Bedrock marks the `sensitiveInformation` results as truncated while the PII check is configured, the request is blocked, since the omitted detections were never scored (fail closed).
+
+### Blocked response
+
+A block returns HTTP 400 listing each violating check with its category or entity type and score. PII location offsets and the raw input are not echoed back.
+
+```json
+{
+  "error": {
+    "message": {
+      "error": "Violated guardrail policy",
+      "bedrock_guardrail_checks": [
+        {"check": "promptAttack", "category": "JAILBREAK", "severityScore": 0.91}
+      ]
+    },
+    "type": "None",
+    "param": "None",
+    "code": "400"
+  }
+}
+```
+
+`disable_exception_on_block: true` (see [below](#disabling-exceptions-on-bedrock-block)) is also supported in this mode; a block then returns HTTP 200 with `finish_reason: "content_filter"` instead of an error.
+
+### Security behavior
+
+Per-request dynamic guardrail params are not merged into the InvokeGuardrailChecks request body, so a caller can never weaken or override the admin-configured checks. For the same reason, all input content is sent to Bedrock tagged with the `user` role regardless of the role in the caller's request; Bedrock excludes `system` content from prompt-attack evaluation, so trusting a caller-supplied `system` or `developer` label would let an injection bypass the `promptAttack` check.
 
 ## PII Masking with Bedrock Guardrails
 
