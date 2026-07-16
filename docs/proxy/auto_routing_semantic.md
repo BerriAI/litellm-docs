@@ -2,11 +2,11 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Semantic Auto Router (deprecated)
+# Auto-Router v1 (Semantic, deprecated)
 
 :::warning Deprecated
 
-The semantic Auto Router is superseded by [Auto Routing](./auto_routing.md), which folds semantic keyword matching, complexity scoring, and adaptive routing into a single `auto_router/complexity_router`. New deployments should start there; the semantic router page is preserved for existing configs.
+This is the original embedding-only Auto Router (**v1**), superseded by **[Auto-Router v2](./auto_routing.md)**, which folds semantic keyword matching, complexity scoring, and adaptive routing into a single `auto_router/complexity_router`. New deployments should start on v2; this page is preserved for existing v1 configs.
 
 :::
 

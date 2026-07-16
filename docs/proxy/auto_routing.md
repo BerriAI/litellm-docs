@@ -2,9 +2,15 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Auto Routing
+# Auto-Router v2
 
-One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, or lexical/semantic keyword rules, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier.
+One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, or lexical/semantic keyword rules, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier. Configured through `auto_router/complexity_router`.
+
+:::tip v1 or v2?
+
+This page is **Auto-Router v2**, the current router (`auto_router/complexity_router`); start here for any new deployment. The older embedding-only router is **[Auto-Router v1 (semantic, deprecated)](./auto_routing_semantic.md)**, configured through `auto_router/<name>` with a `router.json` of utterances. v1 still runs for existing configs, but v2 folds its semantic matching (plus complexity scoring, LLM classification, and adaptive pools) into a single config, so there is no reason to start a new setup on v1. The [comparison below](#v1-vs-v2) spells out the differences.
+
+:::
 
 :::info Availability
 
@@ -12,18 +18,19 @@ Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Sug
 
 :::
 
-## When to use
+## v1 vs v2
 
-| Feature      | Semantic Auto Router (deprecated) | Auto Routing (this page)                                                   |
-| ------------ | --------------------------------- | -------------------------------------------------------------------------- |
-| Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, or lexical/semantic keyword rules               |
-| Tier value   | One model                         | One model, random pool, or adaptive (Thompson-sampled) pool                |
-| Latency      | ~100-500ms (embedding call)       | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
-| Session pin  | No                                | Opt-in `session_affinity`, keyed by `session_id` from request metadata     |
-| Log          | No routing-cause signal           | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM) |
-| Best for     | Intent-based routing              | Cost/quality tiering, hybrid rule + classifier setups, prompt-cache pinning |
+| Feature      | Auto-Router v1 (semantic, deprecated) | Auto-Router v2 (this page)                                                 |
+| ------------ | ------------------------------------- | -------------------------------------------------------------------------- |
+| Model string | `auto_router/<name>` + `router.json`  | `auto_router/complexity_router` + inline `complexity_router_config`         |
+| Classifier   | Embedding match on utterances         | Heuristic, LLM classifier, or lexical/semantic keyword rules               |
+| Tier value   | One model                             | One model, random pool, or adaptive (Thompson-sampled) pool                |
+| Latency      | ~100-500ms (embedding call)           | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
+| Session pin  | No                                    | Opt-in `session_affinity`, keyed by `session_id` from request metadata     |
+| Log          | No routing-cause signal               | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM) |
+| Best for     | Intent-based routing                  | Cost/quality tiering, hybrid rule + classifier setups, prompt-cache pinning |
 
-The [semantic auto router](./auto_routing_semantic.md) is deprecated but still works for existing configs.
+v1 is documented separately on the [Auto-Router v1 (semantic, deprecated)](./auto_routing_semantic.md) page. It still works for existing configs, but new deployments should use v2 below.
 
 ## Quick start (Proxy)
 
@@ -263,4 +270,4 @@ Tier and classifier dropdowns exclude embedding-mode models; the semantic embedd
 ## See also
 
 - Announcement post: [Auto Router v2: one router for complexity, semantic, and adaptive routing](/blog/autorouter-v2)
-- Legacy semantic router: [Semantic Auto Router (deprecated)](./auto_routing_semantic.md)
+- Previous version: [Auto-Router v1 (semantic, deprecated)](./auto_routing_semantic.md)
