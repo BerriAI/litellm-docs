@@ -47,13 +47,14 @@ litellm --config /path/to/config.yaml
 
 ## Authenticate with Azure Workload Identity
 
-If you run the proxy on AKS with [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview), you can authenticate to Key Vault with a federated token instead of a client secret. Set `AZURE_KEY_VAULT_USE_WORKLOAD_IDENTITY=true` and LiteLLM will use `WorkloadIdentityCredential` rather than the default credential chain.
+If you run the proxy on AKS with [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview), you can authenticate to Key Vault with a federated token instead of a client secret. LiteLLM picks the Azure credential type from `AZURE_CREDENTIAL`, or infers it from the environment; when a federated token file is present alongside the client and tenant ids and no client secret is set, it uses `WorkloadIdentityCredential`.
 
-The credential reads `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_FEDERATED_TOKEN_FILE` from the environment; when you enable workload identity on the pod and annotate its service account, AKS injects these automatically, so you usually only need to set the toggle and the vault URI
+Enabling workload identity on the pod and annotating its service account causes AKS to inject `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_FEDERATED_TOKEN_FILE` automatically, so in most cases you only need to set the vault URI and let inference do the rest. You can also select it explicitly with `AZURE_CREDENTIAL=WorkloadIdentityCredential`.
 
 ```bash
 export AZURE_KEY_VAULT_URI="your-azure-key-vault-uri"
-export AZURE_KEY_VAULT_USE_WORKLOAD_IDENTITY="true"
+# optional; inferred automatically when AZURE_FEDERATED_TOKEN_FILE is set
+export AZURE_CREDENTIAL="WorkloadIdentityCredential"
 ```
 
 ```yaml
