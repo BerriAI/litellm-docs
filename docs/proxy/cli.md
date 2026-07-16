@@ -75,6 +75,22 @@ This page documents all command-line interface (CLI) arguments available for the
     litellm
     ```
 
+### --timeout_worker_healthcheck
+   - **Default:** `None` (uvicorn's own default of 5 seconds applies)
+   - **Type:** `int`
+   - Set the uvicorn worker health-check timeout in seconds (uvicorn `timeout_worker_healthcheck` parameter). When running uvicorn with `--num_workers` > 1, the supervisor process pings each worker; a worker that does not respond within this window (for example because its event loop is blocked by synchronous work) is killed with SIGKILL and replaced. A kill shows up in the logs as `Waiting for child process [<pid>]` followed by `Child process [<pid>] died`. Raise this value if healthy workers are being recycled during long synchronous operations.
+   - Requires `uvicorn>=0.37.0`. On older uvicorn versions the flag has no effect: LiteLLM prints a `Ignoring the flag` warning at startup and uvicorn's built-in 5 second timeout applies. If you set this flag, check your startup logs for that warning to confirm it took effect.
+   - Only applies when running uvicorn directly with `--num_workers` > 1; ignored under `--run_gunicorn` / `--run_hypercorn`.
+   - **Usage:** 
+     ```shell
+     litellm --num_workers 4 --timeout_worker_healthcheck 30
+     ```
+  - **Usage - set Environment Variable:** `TIMEOUT_WORKER_HEALTHCHECK`
+    ```shell
+    export TIMEOUT_WORKER_HEALTHCHECK=30
+    litellm
+    ```
+
 ### --max_requests_before_restart
    - **Default:** `None`
    - **Type:** `int`
