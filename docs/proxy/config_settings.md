@@ -525,6 +525,7 @@ router_settings:
 | AZURE_PASSWORD | Password for Azure services, use in conjunction with AZURE_USERNAME for azure ad token with basic username/password workflow
 | AZURE_FEDERATED_TOKEN_FILE | File path to Azure federated token
 | AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY | Cost per GB per day for Azure File Search service
+| AZURE_POSTGRESQL_AUTH | When true, authenticates PostgreSQL with a Microsoft Entra token for `https://ossrdbms-aad.database.windows.net/.default`. Requires the database connection variables and Azure Identity credentials. Cannot be enabled with `IAM_TOKEN_DB_AUTH`
 | AZURE_SCOPE | For EntraID Auth, Scope for Azure services, defaults to "https://cognitiveservices.azure.com/.default"
 | AZURE_SENTINEL_DCR_IMMUTABLE_ID | Immutable ID of the Data Collection Rule for Azure Sentinel logging
 | AZURE_SENTINEL_STREAM_NAME | Stream name for Azure Sentinel logging
@@ -585,18 +586,18 @@ router_settings:
 | COMPETITOR_LLM_TEMPERATURE | Temperature setting for the LLM used in competitor discovery. Default is 0.3
 | CURSOR_API_BASE | API base URL for Cursor AI provider integration. Default is https://api.cursor.com
 | DATABASE_HOST | Hostname for the database server
-| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from RDS IAM env vars
+| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Used with `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA`
 | DATABASE_NAME | Name of the database
-| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Used with `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_PASSWORD | Password for the database user
 | DATABASE_PORT | Port number for database connection
-| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Used with `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_SCHEMA | Schema name used in the database
-| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Used with `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_URL | Connection URL for the database
-| DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Useful for Aurora-style clusters with separate reader/writer endpoints. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True`, the reader IAM token is auto-refreshed alongside the writer
+| DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`, the reader token is auto-refreshed alongside the writer
 | DATABASE_USER | Username for database connection
-| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Used with `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_USERNAME | Alias for database user
 | DATABRICKS_API_BASE | Base URL for Databricks API
 | DATABRICKS_API_KEY | API key (Personal Access Token) for Databricks API authentication
@@ -853,7 +854,7 @@ router_settings:
 | HUGGINGFACE_API_BASE | Base URL for Hugging Face API
 | HUGGINGFACE_API_KEY | API key for Hugging Face API
 | HUMANLOOP_PROMPT_CACHE_TTL_SECONDS | Time-to-live in seconds for cached prompts in Humanloop. Default is 60
-| IAM_TOKEN_DB_AUTH | IAM token for database authentication
+| IAM_TOKEN_DB_AUTH | When true, authenticates PostgreSQL with AWS RDS IAM tokens. Cannot be enabled with `AZURE_POSTGRESQL_AUTH`
 | IBM_GUARDRAILS_API_BASE | Base URL for IBM Guardrails API
 | IBM_GUARDRAILS_AUTH_TOKEN | Authorization bearer token for IBM Guardrails API
 | INITIAL_RETRY_DELAY | Initial delay in seconds for retrying requests. Default is 0.5
