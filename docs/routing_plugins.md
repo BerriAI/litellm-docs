@@ -1,5 +1,11 @@
 # Routing Plugins
 
+:::info
+
+Routing plugins are available from **v1.92.x** (Thursday's release). The design is still evolving, so tell us how you'd use it and what you'd want next in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
+
 Routing plugins are a pipeline, where each plugin receives the routing context, enriches it, and passes it to the next plugin before the final routing decision.
 
 Two configuration surfaces:
@@ -236,3 +242,7 @@ Current candidate filtering is include/exclude only. Weighted scoring, where plu
 
 Config: [`router_settings.plugins`](./proxy/config_settings#router_settings---reference).
 PRs: [#32972](https://github.com/BerriAI/litellm/pull/32972) (SDK), [#33251](https://github.com/BerriAI/litellm/pull/33251) (proxy YAML for complexity router). Discussion: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+## Join the discussion
+
+Available from **v1.92.x** (Thursday's release). We're actively shaping where routing plugins and the autorouter go next, and want your input on the plugins you'd write, the signals you'd want, and the routing strategies you'd reach for. Share your use case and follow along in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
