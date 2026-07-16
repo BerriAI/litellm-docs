@@ -1,6 +1,12 @@
 # The Context Company
 
-[The Context Company](https://www.thecontextcompany.com) provides observability for production AI agents. Its LiteLLM callback records model calls as steps within an agent run, including inputs, outputs, token usage, finish reasons, tool calls, errors, and model information.
+[The Context Company](https://www.thecontextcompany.com) ([LiteLLM documentation](https://docs.thecontextcompany.com/frameworks/custom-instrumentation/python/litellm)) is an AI agent observability and customer analytics platform that helps teams understand and improve AI agents in production. The LiteLLM callback records model calls as steps within agent runs and connects them with analysis across runs.
+
+The integration provides:
+
+- Traces for model inputs and outputs, token usage, finish reasons, returned tool calls, errors, and model information
+- Sessions, conversational runs, feedback, and custom metadata through The Context Company run API
+- [Pattern detection](https://docs.thecontextcompany.com/features/patterns), [insight search](https://docs.thecontextcompany.com/features/insight-search), and [recaps](https://docs.thecontextcompany.com/features/weekly-insights) that analyze production behavior and link findings to supporting traces
 
 ## Prerequisites
 
