@@ -172,14 +172,16 @@ A tier value can be a single model name or a list.
 
 ## Session affinity
 
-Opt-in. Pins the first-turn model for a session and skips reclassification on later turns, so provider-side prompt caches keyed to that model do not get invalidated when a follow-up ("thanks!") would otherwise classify into a different tier.
+On by default. Pins the first-turn model for a session and skips reclassification on later turns, so provider-side prompt caches keyed to that model do not get invalidated when a follow-up ("thanks!") would otherwise classify into a different tier. It also keeps a multi-turn session on a single model, which avoids provider errors when conversation history produced by one model (for example an Anthropic `thinking` block) is replayed to a different model on a later turn.
+
+Set `session_affinity: false` to reclassify every turn instead.
 
 ```yaml
-session_affinity: true
+session_affinity: true   # default; set false to reclassify every turn
 session_affinity_ttl_seconds: 3600
 ```
 
-`session_id` is read from request metadata. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working.
+`session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working.
 
 ## Custom technical keywords
 
