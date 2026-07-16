@@ -17,7 +17,7 @@ items={[
   { icon: "🐶", title: "Datadog", description: "Metrics, traces, and dashboards.", to: "/docs/observability/datadog" },
   { icon: "📡", title: "OpenTelemetry", description: "Vendor-neutral tracing.", to: "/docs/observability/opentelemetry_integration" },
   { icon: "🔗", title: "LangSmith", description: "LLM debugging and evaluation.", to: "/docs/observability/langsmith_integration" },
-  { icon: "🔎", title: "The Context Company", description: "AI agent tracing and behavior analysis.", to: "/docs/observability/the_context_company" },
+  { icon: "🔎", title: "The Context Company", description: "AI agent observability and customer analytics.", to: "/docs/observability/the_context_company" },
   { icon: "🔥", title: "Arize / Phoenix", description: "ML observability and evaluation.", to: "/docs/observability/opentelemetry_v2" },
   { icon: "🌀", title: "Helicone", description: "LLM request logging and analytics.", to: "/docs/observability/helicone_integration" },
   { icon: "📊", title: "MLflow", description: "Experiment tracking.", to: "/docs/observability/mlflow" },
