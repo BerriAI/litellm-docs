@@ -74,7 +74,7 @@ response = search(
     # TinyFish-specific parameters
     language="en",                # Language code
     page=2,                       # Page number
-    include_thumbnail=True        # Include result thumbnails
+    recency_minutes=1440          # Only results from the last N minutes
 )
 ```
 
