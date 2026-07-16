@@ -1350,6 +1350,7 @@ const learnSidebar = {
         "learn/enterprise_quickstart",
       ],
     },
+    { type: "doc", id: "learn/autorouter_cli", label: "Autorouter CLI" },
 
     // ── Guides ────────────────────────────────────────────────────────
     {

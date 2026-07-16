@@ -340,6 +340,12 @@ const config = {
             label: 'Integrations',
           },
           {
+            type: 'doc',
+            docId: 'learn/autorouter_cli',
+            position: 'left',
+            label: 'Autorouter CLI',
+          },
+          {
             position: 'left',
             label: 'Enterprise',
             to: "docs/enterprise"
