@@ -110,6 +110,8 @@ Blocked requests return the reason:
 {"error": "Model Armor could not scan an attachment and blocked the request: attachment of 5242880 bytes exceeds Model Armor's 4194304 byte scan limit"}
 ```
 
+If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact; it only affects attachments there is nothing to send.
+
 ## Supported Params 
 
 ### Common Params
@@ -127,6 +129,7 @@ Blocked requests return the reason:
 - `credentials` - Union[str, dict] - Path to service account JSON file or credentials dictionary
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
 - `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
+- `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
 - `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
