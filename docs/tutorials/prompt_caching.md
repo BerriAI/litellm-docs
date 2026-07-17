@@ -32,6 +32,14 @@ LiteLLM can automatically inject prompt caching checkpoints into your requests t
 - **Cost Reduction**: Long, static parts of your prompts can be cached to avoid repeated processing
 - **No need to modify your application code**: You can configure the auto-caching behavior in the LiteLLM UI or in the `litellm config.yaml` file.
 
+## Who the cache is shared with
+
+This is provider-side prompt caching, which is a different feature from [LiteLLM response caching](../proxy/caching) and needs no Redis. The provider caches a prefix against the upstream credentials that sent it, not against the LiteLLM key, team or end user, and a cached prefix is reused by anyone whose request repeats it exactly.
+
+That sharing is usually the point: a long system prompt cached by one user is reused by everyone else on the same credentials, and an agent benefits from a prefix a user already cached. It has a consequence worth knowing before you inject checkpoints for everyone. Because a response reports `cache_read_input_tokens`, and a cache hit is also faster, a caller who repeats a prefix exactly can tell that someone else on those credentials sent it recently. The prefix has to be reproduced exactly and providers do not cache prefixes below a minimum size (1024 tokens for Anthropic), so this reveals whether a prompt the caller already holds was recently sent, rather than revealing its contents.
+
+If callers sharing one set of upstream credentials must not learn that about each other, give them separate credentials, since the isolation boundary is the provider account rather than anything LiteLLM can enforce.
+
 ## Configuration
 
 You need to specify `cache_control_injection_points` in your model configuration. This tells LiteLLM:
