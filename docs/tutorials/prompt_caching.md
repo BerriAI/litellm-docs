@@ -39,7 +39,7 @@ This is provider-side prompt caching, a different feature from [LiteLLM response
 - The provider caches a prefix against the **upstream credentials** that sent it, not against the LiteLLM key, team or end user.
 - Anyone whose request repeats that prefix exactly reuses it. That sharing is the point: a long system prompt cached by one user is reused by everyone else on the same credentials, and an agent benefits from a prefix a user already cached.
 - The flip side: responses report `cache_read_input_tokens`, and a cache hit is faster, so a caller repeating a prefix exactly can tell someone else on those credentials sent it recently.
-- That is bounded. The prefix must match exactly, and providers will not cache below a minimum size (1024 tokens for Anthropic), so it reveals *whether* a prompt the caller already holds was sent, not its contents.
+- That is bounded. The prefix must match exactly, and providers will not cache a prefix below a minimum size (for Anthropic that is model-dependent, currently 1k to 4k tokens), so it reveals *whether* a prompt the caller already holds was sent, not its contents.
 - For isolation, give tenants separate credentials. The boundary is the provider account, not anything LiteLLM can enforce.
 
 ## Automatic checkpoints for Claude models
