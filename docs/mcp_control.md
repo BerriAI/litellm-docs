@@ -80,6 +80,34 @@ flowchart TD
 
 The same intersection model applies to the per-server tool-level dict `mcp_tool_permissions` (see [Per-entity Tool-Level Permissions](#per-entity-tool-level-permissions) below).
 
+### Require keys to define their own MCP access
+
+By default a key with an empty or absent `mcp_servers` list inherits its team's list, so the team is effectively a default that every key falls back to. Set `require_key_mcp_access_defined: true` under `general_settings` to flip that relationship: the team becomes a ceiling rather than a default, and a key with an empty list is granted no MCP servers unless it grants some explicitly (either directly in `object_permission.mcp_servers` or via an [access group](#grouping-mcps-access-groups)).
+
+```yaml title="config.yaml" showLineNumbers
+general_settings:
+  require_key_mcp_access_defined: true
+```
+
+A team with an empty `mcp_servers` list still means "no restriction" regardless of this flag, since an empty team list never restricts. The flag only changes what an empty *key* list means when the team does have a list: inherit it (default) versus grant nothing (flag on). Access-group grants on the key remain additive, so attaching a group still reaches its servers even when the flag is enabled.
+
+For the equivalent control at the end-user level, see [`require_end_user_mcp_access_defined`](./proxy/config_settings#general_settings---reference).
+
+### Opting a key out of all MCP servers (`no-mcp-servers`)
+
+To explicitly deny a key every MCP server, put the sentinel `no-mcp-servers` in its `mcp_servers` list. This mirrors the `no-default-models` sentinel used for model access. Unlike an empty list, which inherits the team's servers, `no-mcp-servers` overrides team inheritance and any additive access-group grants, so the key resolves to zero MCP servers no matter what its team allows.
+
+```bash title="Key with no MCP access" showLineNumbers
+curl -X POST "http://localhost:4000/key/generate" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "object_permission": {
+      "mcp_servers": ["no-mcp-servers"]
+    }
+  }'
+```
+
 ## Allow/Disallow MCP Tools
   
 Control which tools are available from your MCP servers. You can either allow only specific tools or block dangerous ones.

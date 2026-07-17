@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
-LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html). 
+LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html).
 
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
@@ -140,6 +140,66 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 
 </Tabs>
+
+## Resource-less Checks: InvokeGuardrailChecks
+
+With the [InvokeGuardrailChecks API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html) you don't need to create a guardrail in AWS. Instead, define the checks inline in your config; Bedrock returns a score per check, and LiteLLM blocks the request when a score reaches your threshold.
+
+Set `checks` instead of `guardrailIdentifier` (the two can't be combined). Your AWS credentials need the `bedrock:InvokeGuardrailChecks` permission.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+guardrails:
+  - guardrail_name: "bedrock-checks"
+    litellm_params:
+      guardrail: bedrock
+      mode: "pre_call"
+      aws_region_name: os.environ/AWS_REGION
+      checks:
+        contentFilter:
+          categories:
+            - category: VIOLENCE
+        promptAttack:
+          categories:
+            - category: JAILBREAK
+        sensitiveInformation:
+          entities:
+            - type: EMAIL
+      content_filter_threshold: 0.5
+      prompt_attack_threshold: 0.5
+      pii_confidence_threshold: 0.5
+```
+
+### Supported checks
+
+| Check | What it detects | Threshold key |
+|-------|-----------------|---------------|
+| `contentFilter` | Harmful content: `VIOLENCE`, `HATE`, `SEXUAL`, `MISCONDUCT`, `INSULTS` | `content_filter_threshold` |
+| `promptAttack` | `JAILBREAK`, `PROMPT_INJECTION`, `PROMPT_LEAKAGE` | `prompt_attack_threshold` |
+| `sensitiveInformation` | PII: `EMAIL`, `PHONE`, `NAME`, and [more](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html) | `pii_confidence_threshold` |
+
+Include only the checks you want; at least one is required. An empty config like `promptAttack: {}` enables that check with AWS defaults.
+
+### How blocking works
+
+Scores range from 0 to 1 and each threshold defaults to `0.5`. A score at or above the threshold blocks the request with HTTP 400; set a threshold to `null` to only log that check's scores, never block. If Bedrock returns a truncated PII result, the request is blocked (fail closed).
+
+```json
+{
+  "error": {
+    "message": {
+      "error": "Violated guardrail policy",
+      "bedrock_guardrail_checks": [
+        {"check": "promptAttack", "category": "JAILBREAK", "severityScore": 0.91}
+      ]
+    },
+    "code": "400"
+  }
+}
+```
+
+`disable_exception_on_block: true` (see [below](#disabling-exceptions-on-bedrock-block)) works here too; a block then returns HTTP 200 with `finish_reason: "content_filter"`.
+
+Callers can't weaken the configured checks: per-request guardrail params are ignored in this mode, and all input is checked as `user` content so a `system`-labeled injection can't dodge the prompt-attack check.
 
 ## PII Masking with Bedrock Guardrails
 

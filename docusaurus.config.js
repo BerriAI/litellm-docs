@@ -375,9 +375,15 @@ const config = {
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            type: 'doc',
+            docId: 'learn/autorouter_cli',
+            position: 'left',
+            label: 'Autorouter CLI',
+          },
+          {
             href: 'https://trust.litellm.ai/',
             label: 'Trust Center',
-            position: 'left',
+            position: 'right',
           },
           {
             href: 'https://github.com/BerriAI/litellm',

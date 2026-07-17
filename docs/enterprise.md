@@ -104,7 +104,13 @@ Pricing depends on your deployment size — [get in touch](https://enterprise.li
 
 ## Professional Support
 
-Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting.
+### Standard Support (included)
+
+Included with every enterprise license: a dedicated Slack/Teams channel with our engineering team for integration, deployment, and provider troubleshooting. Support hours are 9am to 9pm PST, Monday through Friday. No guaranteed response time is included.
+
+### 24/7 Support SLAs (additional fee)
+
+For teams that need guaranteed response times around the clock, we offer 24/7 Support SLAs for an additional fee on top of standard support.
 
 | Severity | Response SLA |
 |---|---|

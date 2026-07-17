@@ -123,6 +123,7 @@ general_settings:
   disable_reset_budget: boolean  # turn off reset budget scheduled task
   disable_adding_master_key_hash_to_db: boolean  # turn off storing master key hash in db, for spend tracking
   disable_responses_id_security: boolean  # turn off response ID security checks that prevent users from accessing other users' responses
+  disable_auto_add_proxy_admin_to_teams: boolean  # if true, a proxy admin calling /team/new is no longer auto-added to the new team as team admin
   enable_jwt_auth: boolean  # allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims
   enforce_user_param: boolean  # requires all openai endpoint requests to have a 'user' param
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
@@ -245,6 +246,7 @@ router_settings:
 | disable_reset_budget | boolean | If true, turns off reset budget scheduled task |
 | disable_adding_master_key_hash_to_db | boolean | If true, turns off storing master key hash in db |
 | disable_responses_id_security | boolean | If true, disables response ID security checks that prevent users from accessing response IDs from other users. When false (default), response IDs are encrypted with user information to ensure users can only access their own responses. Applies to /v1/responses endpoints |
+| disable_auto_add_proxy_admin_to_teams | boolean | Default `false`. When a user calls `/team/new`, LiteLLM auto-adds that caller to the new team as a team admin. Set this to `true` so proxy admins are no longer auto-added; members you explicitly list in `members_with_roles` are still added, and non-admin callers (e.g. internal users) are still auto-added. Also toggleable from the Admin UI under **Settings > Router Settings > General Settings**. |
 | enable_jwt_auth | boolean | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
 | enforce_user_param | boolean | If true, requires all OpenAI endpoint requests to have a 'user' param. [Doc on call hooks](call_hooks)|
 | reject_clientside_metadata_tags | boolean | If true, rejects requests that contain client-side 'metadata.tags' to prevent users from influencing budgets by sending different tags. Tags can only be inherited from the API key metadata. |
@@ -344,6 +346,7 @@ router_settings:
 | mcp_required_fields | list | List of required field names for MCP server submissions |
 | mcp_trusted_proxy_ranges | list | CIDR ranges of proxies trusted to forward `X-Forwarded-*` headers for MCP. Required (in addition to `use_x_forwarded_for: true`) for the MCP OAuth `authorize` endpoint to derive its public origin from those headers. Without this, headers are ignored and the proxy falls back to the request's literal base URL. For ingressed deployments, prefer [`PROXY_BASE_URL`](#environment-variables---reference). See [MCP OAuth — Reverse proxy and ingress configuration](../mcp_oauth#reverse-proxy-and-ingress-configuration). |
 | require_end_user_mcp_access_defined | boolean | If true, requires end users to have explicit MCP access permissions defined |
+| require_key_mcp_access_defined | boolean | If true, a key with an empty MCP server list no longer inherits its team's servers; the team becomes a ceiling and the key must grant MCP servers explicitly (directly or via an access group). See [MCP Permission Management](../mcp_control#require-keys-to-define-their-own-mcp-access) |
 | role_permissions | list | List of role-based permission configurations |
 | search_tools | list | List of search tool configurations for enabling web search capabilities |
 | token_rate_limit_type | string | Rate limit counting method: "total", "output", or "input" tokens |
@@ -897,6 +900,8 @@ router_settings:
 | LITERAL_BATCH_SIZE | Batch size for Literal operations
 | LITELLM_ANTHROPIC_BETA_HEADERS_URL | Custom URL for fetching Anthropic beta headers configuration. Default is the GitHub main branch URL
 | LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX | Disable automatic URL suffix appending for Anthropic API base URLs. When set to `true`, prevents LiteLLM from automatically adding `/v1/messages` or `/v1/complete` to custom Anthropic API endpoints
+| LITELLM_ANTHROPIC_PROMPT_CACHING_TTL | Cache lifetime for the breakpoints injected by `LITELLM_ENABLE_ANTHROPIC_PROMPT_CACHING`, either `5m` or `1h`. Defaults to Anthropic's 5 minute ephemeral cache. `1h` suits long agentic sessions but doubles the cache write premium. Any other value falls back to the default. Can also be set via `litellm_settings.anthropic_prompt_caching_ttl`
+| LITELLM_ENABLE_ANTHROPIC_PROMPT_CACHING | When set to `true`, automatically injects Anthropic `cache_control` breakpoints on the system prompt and the trailing turn for Anthropic and Bedrock Claude models, so clients such as Claude Code that never set `cache_control` themselves still get prompt caching. Default is `false`. Requests that already carry their own `cache_control` are left untouched. Note that the provider caches a prefix against the upstream credentials that sent it rather than per end user, so enabling this makes every caller's prompts cacheable on that shared account; leave it off if callers sharing a set of credentials must not learn whether another caller recently sent a given prompt. Can also be set via `litellm_settings.enable_anthropic_prompt_caching`
 | LITELLM_ASSETS_PATH | Path to directory for UI assets and logos. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/assets` in Docker.
 | LITELLM_BILLING_METRICS_ENDPOINT | Collector URL for [enterprise billable-request metering](billing_metrics). Requires an enterprise license; unset disables metering
 | LITELLM_BILLING_METRICS_CLIENT_CERT | mTLS client certificate for billable-request metering. Accepts a file path or inline PEM content
@@ -1017,6 +1022,7 @@ router_settings:
 | MAX_POLICY_ESTIMATE_IMPACT_ROWS | Maximum number of rows returned when estimating the impact of a policy. Default is 1000
 | MAX_PAYLOAD_SIZE_FOR_DEBUG_LOG | Maximum payload size in bytes for full DEBUG serialization. Payloads exceeding this will be truncated in logs. Default is 102400 (100 KB)
 | MIN_NON_ZERO_TEMPERATURE | Minimum non-zero temperature value. Default is 0.0001
+| MINIMUM_CUSTOM_KEY_LENGTH | Minimum length for user supplied key values on /key/generate and /key/regenerate. Default is 16
 | MINIMUM_PROMPT_CACHE_TOKEN_COUNT | Minimum token count for caching a prompt. Default is 1024
 | MISTRAL_API_BASE | Base URL for Mistral API. Default is https://api.mistral.ai
 | MISTRAL_API_KEY | API key for Mistral API
