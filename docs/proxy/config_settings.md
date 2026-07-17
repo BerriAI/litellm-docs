@@ -656,6 +656,7 @@ router_settings:
 | DEFAULT_MAX_RECURSE_DEPTH | Default maximum recursion depth. Default is 100
 | DEFAULT_MAX_RECURSE_DEPTH_SENSITIVE_DATA_MASKER | Default maximum recursion depth for sensitive data masker. Default is 10
 | DEFAULT_MAX_RETRIES | Default maximum retry attempts. Default is 2
+| DEFAULT_MAX_SPEND_LOGS_PER_RESPONSES_SESSION | Maximum number of spend log rows loaded when reconstructing a Responses API session from `previous_response_id`. Bounds the query so large sessions cannot exhaust proxy memory. Default is 1000
 | DEFAULT_MAX_TOKENS | Default maximum tokens for LLM calls. Default is 4096
 | DEFAULT_MAX_TOKENS_FOR_TRITON | Default maximum tokens for Triton models. Default is 2000
 | DEFAULT_MAX_REDIS_BATCH_CACHE_SIZE | Default maximum size for redis batch cache. Default is 1000
