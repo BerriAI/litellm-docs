@@ -528,7 +528,7 @@ This is an Enterprise feature.
 
 [Enterprise Pricing](https://www.litellm.ai/#pricing)
 
-[Get free 7-day trial key](https://www.litellm.ai/enterprise#trial)
+[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
 
 
 :::

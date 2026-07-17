@@ -145,7 +145,7 @@ An internal user viewer can view their own information but cannot create or dele
 ## Organization/Team Specific Roles
 
 :::info 
-Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 7 day trial here](https://www.litellm.ai/#trial).
+Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 :::
 
 These roles are scoped to specific organizations or teams. Users with these roles can only manage resources within their assigned organization or team.
@@ -197,7 +197,7 @@ On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or cl
 
 :::info How to create a team admin
 
-You need to be a LiteLLM Enterprise user to assign team admins. [Get a 7 day trial here](https://www.litellm.ai/#trial).
+You need to be a LiteLLM Enterprise user to assign team admins. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
