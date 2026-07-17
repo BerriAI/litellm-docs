@@ -34,7 +34,7 @@ All gateway and budget tests share one deployment and one org/team/key. Do this 
 <Tabs>
 <TabItem value="docker-compose" label="Docker Compose">
 
-Follow the [Docker Compose tab](/docs/proxy/docker_quick_start) in the Getting Started Tutorial. Condensed steps:
+Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
 docker pull ghcr.io/berriai/litellm-database:latest
@@ -527,7 +527,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 3. **Second request within the same minute** → rate limit error (RPM exceeded).
 4. Confirm key spend in Admin UI under **Virtual Keys**.
 
-→ [Virtual Keys](/docs/proxy/virtual_keys) · [Docker Quick Start — RPM test](/docs/proxy/docker_quick_start)
+→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart — RPM test](/docs/proxy/docker_quick_start)
 
 ### 4b. Team budget
 

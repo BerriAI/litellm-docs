@@ -29,7 +29,7 @@ import Image from '@theme/IdealImage';
 uv add litellm
 ```
 
-To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Docker Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
+To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
 
 ---
 
@@ -379,7 +379,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-👉 [Full proxy quickstart with Docker →](./proxy/docker_quick_start)
+👉 [Full proxy quickstart →](./proxy/docker_quick_start)
 
 :::tip Debugging tool
 Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exactly what LiteLLM sends to any provider — useful for debugging prompt formatting, header issues, and provider-specific parameters.

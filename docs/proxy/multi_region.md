@@ -7,7 +7,7 @@ import { MultiRegionArchitecture } from '@site/src/components/CloudArchitecture'
 
 Run LiteLLM proxy instances in multiple regions of the same cloud provider, all connected to one shared PostgreSQL database. Clients get routed to the nearest region for low latency, while keys, teams, users, and spend tracking stay consistent everywhere because there is a single source of truth.
 
-This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Deploy](./deploy.md).
+This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Production Deployment](./deploy.md).
 
 ## Architecture
 
@@ -59,7 +59,7 @@ Rate limits (TPM/RPM on keys, teams, and users) are enforced through Redis. With
 
 ## Setup
 
-The steps below assume you can already deploy a single-region production proxy (load balancer, proxy instances, Postgres, Redis). If not, start with the [Deploy guide](./deploy.md) and the [production checklist](./prod.md).
+The steps below assume you can already deploy a single-region production proxy (load balancer, proxy instances, Postgres, Redis). If not, start with the [Production Deployment guide](./deploy.md) and the [production checklist](./prod.md).
 
 ### 1. Provision the shared database
 
@@ -127,7 +127,7 @@ Health-check each region against `/health/liveliness`, not `/health/readiness`. 
 
 2. Open the secondary region's UI directly (`https://eu.llm.example.com/ui`), go to the **Test Key** playground, paste the key you just created, and send a request. It succeeds because both regions validate keys against the same database.
 
-3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region. The UI flows themselves are covered with screenshots in the [Docker Quickstart](./docker_quick_start.md#5-create-a-virtual-key).
+3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region. The UI flows themselves are covered with screenshots in the [Quickstart](./docker_quick_start.md#5-create-a-virtual-key).
 
 ## Optional: dedicated admin instance
 

@@ -1,5 +1,5 @@
 ---
-title: Deploy
+title: Production Deployment
 description: Production deployment guide for LiteLLM on AWS, GCP, Azure, or any Kubernetes cluster, with Helm charts and official Terraform modules.
 ---
 
@@ -8,9 +8,9 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 import { CloudArchitectureSelector } from '@site/src/components/CloudArchitecture';
 
-# Deploy LiteLLM
+# Production Deployment
 
-Production deployment guide for AWS, Google Cloud, Azure, or any Kubernetes cluster. For a first deployment on a single machine, start with the [Docker Quickstart](./docker_quick_start.md); this page picks up where it ends.
+Production deployment guide for AWS, Google Cloud, Azure, or any Kubernetes cluster. For a first deployment on a single machine, start with the [Quickstart](./docker_quick_start.md); this page picks up where it ends.
 
 There are two supported paths. If you run Kubernetes, [deploy with Helm](#deploy-with-helm) on EKS, GKE, or AKS; the install is the same on every cloud, only the data stores and ingress differ. If you do not run Kubernetes, AWS and GCP have [official Terraform modules](#deploy-with-terraform-aws-and-gcp) that stand up the entire stack; Azure has no Terraform module, so AKS with Helm is the supported path there.
 
@@ -399,7 +399,7 @@ Confirm the proxy is up and can reach its database:
 curl -s https://llm.example.com/health/readiness
 ```
 
-Then open the Admin UI at `https://llm.example.com/ui`, log in with your master key, add a model, create a virtual key, and send a Playground message; a response proves the full path through the load balancer, proxy, database, and provider credentials. The [Docker Quickstart](./docker_quick_start.md#2-log-in-to-the-admin-ui) walks through each of those clicks with screenshots; the flow is identical on a production deployment.
+Then open the Admin UI at `https://llm.example.com/ui`, log in with your master key, add a model, create a virtual key, and send a Playground message; a response proves the full path through the load balancer, proxy, database, and provider credentials. The [Quickstart](./docker_quick_start.md#2-log-in-to-the-admin-ui) walks through each of those clicks with screenshots; the flow is identical on a production deployment.
 
 ## Next steps
 

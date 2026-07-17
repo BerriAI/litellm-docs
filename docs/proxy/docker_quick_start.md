@@ -1,70 +1,53 @@
 ---
-title: Docker Quickstart
-description: Deploy LiteLLM with Docker Compose and go from zero to your first gateway request in about five minutes, using the Admin UI for everything after startup.
+title: Quickstart
+description: Start LiteLLM with one command or one click and go from zero to your first gateway request in about five minutes, using the Admin UI for everything after startup.
 ---
 
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Docker Quickstart
+# Quickstart
 
-LiteLLM ships as a ready-to-run gateway. You start one Docker Compose stack, then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
+LiteLLM ships as a ready-to-run gateway. You start it with one command (or one click), then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
 
 By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
 
 ## 1. Start LiteLLM
 
-Save this as `docker-compose.yml`:
-
-```yaml
-services:
-  litellm:
-    image: docker.litellm.ai/berriai/litellm-database:latest
-    ports:
-      - "4000:4000"
-    environment:
-      LITELLM_MASTER_KEY: sk-1234
-      LITELLM_SALT_KEY: sk-XXXXXXXXXXXXXXXX
-      DATABASE_URL: postgresql://litellm:litellm@db:5432/litellm
-      STORE_MODEL_IN_DB: "True"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: litellm
-      POSTGRES_PASSWORD: litellm
-      POSTGRES_DB: litellm
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U litellm"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
-Then start it:
+<Tabs>
+<TabItem value="local" label="Run locally" default>
 
 ```bash
+curl -sSL https://docs.litellm.ai/docker-compose.yml | docker compose -f - up -d
+```
+
+This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://docs.litellm.ai/docker-compose.yml) it pipes in defines just those two services; to customize anything (pin a release tag instead of `latest`, change credentials), download it and start it the usual way:
+
+```bash
+curl -sSLO https://docs.litellm.ai/docker-compose.yml
 docker compose up -d
 ```
 
-That is the entire terminal portion of this guide. The stack runs the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. For anything beyond local evaluation, pin a specific release tag instead of `latest`; see [available tags](https://github.com/BerriAI/litellm/pkgs/container/litellm-database).
+</TabItem>
+<TabItem value="cloud" label="1-click deploy">
+
+<a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a> <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
+
+The Railway template provisions the gateway with a Postgres database and prompts you for a `LITELLM_MASTER_KEY`; it matches this guide exactly. The Render blueprint deploys the gateway alone; to follow the Admin UI steps below, add a Postgres instance and set `DATABASE_URL`, `LITELLM_MASTER_KEY`, and `STORE_MODEL_IN_DB=True` on the service after deploying.
+
+For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
+
+</TabItem>
+</Tabs>
 
 :::warning Set a real salt key
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. Set it to a long random value before adding models, and never change it afterwards; credentials encrypted with the old value cannot be decrypted with a new one. A password generator works well for this.
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. The quickstart compose file ships a placeholder; before adding models to anything you intend to keep, set it to a long random value, and never change it afterwards. Credentials encrypted with the old value cannot be decrypted with a new one. A password generator works well for this.
 :::
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-1234` in the compose file above).
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-1234` in the quickstart compose file).
 
 <Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
 
@@ -79,7 +62,7 @@ Click **Test Connect** to verify the key against the provider, then **Add Model*
 <Image img={require('../../img/ui_quickstart_models_list.png')} alt="All Models list showing the newly added model with cost data" />
 
 :::tip Keep provider keys out of the UI
-If you prefer to manage provider keys as environment variables, add them to the `litellm` service in your compose file (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`) and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
+If you prefer to manage provider keys as environment variables, download the compose file, add them to the `litellm` service (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`), and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
 :::
 
 ## 4. Send a test message
@@ -212,4 +195,4 @@ Requests authenticate with the master key. See the [full config reference](./con
 
 ## Next steps
 
-Going to production: the [Deploy guide](./deploy.md) covers Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, and the [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are covered in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
+Going to production: the [Production Deployment guide](./deploy.md) covers Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, and the [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are covered in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).

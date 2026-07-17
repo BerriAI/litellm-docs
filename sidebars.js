@@ -399,7 +399,6 @@ const sidebars = {
         slug: "/simple_proxy",
       },
       items: [
-        { type: "doc", id: "proxy/docker_quick_start", label: "Docker Quickstart" },
         {
           type: "category",
           label: "Agent & MCP Gateway",
@@ -464,6 +463,7 @@ const sidebars = {
           type: "category",
           label: "Setup & Deployment",
           items: [
+            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
             "proxy/prod",
             "proxy/security_best_practices",

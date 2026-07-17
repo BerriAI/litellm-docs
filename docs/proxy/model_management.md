@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 When `STORE_MODEL_IN_DB` is on, your models live in the database rather than in a static `config.yaml`. That means day-2 changes happen right in the Admin UI: adding a model, editing pricing, rotating a provider key, or retiring a deployment, all with no config edits and no proxy restart.
 
-This page covers those ongoing operations. If you are adding your very first model, start with the [Docker Quickstart](./docker_quick_start.md), which walks you through startup, provider connection, and your first request. Come back here once the gateway is running and you want to manage the models you have.
+This page covers those ongoing operations. If you are adding your very first model, start with the [Quickstart](./docker_quick_start.md), which walks you through startup, provider connection, and your first request. Come back here once the gateway is running and you want to manage the models you have.
 
 ## The model list
 

@@ -21,7 +21,7 @@ Requires LiteLLM v1.66.3.dev5 and higher
 :::
 
 
-Make sure to set up LiteLLM with the [LiteLLM Getting Started Guide](../proxy/docker_quick_start.md).
+Make sure to set up LiteLLM with the [LiteLLM Quickstart](../proxy/docker_quick_start.md).
 
 ## 1. Install OpenAI Codex
 
@@ -141,6 +141,6 @@ codex --model gemini/gemini-2.0-flash
 
 ## Additional Resources
 
-- [LiteLLM Docker Quick Start Guide](../proxy/docker_quick_start.md)
+- [LiteLLM Quickstart](../proxy/docker_quick_start.md)
 - [OpenAI Codex GitHub Repository](https://github.com/openai/codex)
 - [LiteLLM Virtual Keys and Authentication](../proxy/virtual_keys.md)

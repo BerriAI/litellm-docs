@@ -30,7 +30,7 @@ readinessProbe:
     port: 4000
 ```
 
-For full deployment manifests, see the [Deploy guide](./deploy.md) and the [production checklist](./prod.md).
+For full deployment manifests, see the [Production Deployment guide](./deploy.md) and the [production checklist](./prod.md).
 
 ## Model health in the Admin UI
 

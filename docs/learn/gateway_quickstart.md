@@ -8,7 +8,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 Use this path if you need one shared OpenAI-compatible endpoint for a team or platform.
 
-If you need a Docker or database-first setup, use the [Docker + Database tutorial](/docs/proxy/docker_quick_start). Otherwise, use the steps below to get to a working request fast.
+If you need a Docker or database-first setup, use the [Quickstart](/docs/proxy/docker_quick_start). Otherwise, use the steps below to get to a working request fast.
 
 ## 1. Install The Gateway
 
@@ -118,7 +118,7 @@ If you need virtual keys, spend tracking, or the admin UI, add a database next.
 - Add `database_url` under `general_settings`
 - Use [Virtual keys](/docs/proxy/virtual_keys) for key creation and budgets
 - Use [Admin UI](/docs/proxy/ui) to manage models and keys
-- Use the [Docker + Database tutorial](/docs/proxy/docker_quick_start) if you want a fuller setup
+- Use the [Quickstart](/docs/proxy/docker_quick_start) if you want a fuller setup
 
 ## 8. Pick Your Next Step
 
