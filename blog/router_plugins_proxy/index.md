@@ -66,6 +66,43 @@ Start the proxy, and every routing decision now runs through your plugin:
 litellm --config config.yaml
 ```
 
+## Chaining plugins
+
+Plugins run as a pipeline in list order, and each one sees the mutations and signals the previous plugin left behind. Add a second plugin in `plugins/enterprise_only.py` that reads the tenant off `context.metadata` and, for enterprise callers, restricts the pool to the models it left; it can also read the `cheap-first` signal published upstream:
+
+```python
+from litellm.types.router import RoutingContext
+
+
+class EnterpriseOnly:
+    ENTERPRISE = {"acme-corp", "globex"}
+
+    async def run(self, context: RoutingContext) -> RoutingContext:
+        tenant = context.metadata.get("tenant", "default")
+        if tenant in self.ENTERPRISE:
+            context.candidate_models = [
+                m for m in context.candidate_models if "gpt-4o" in m
+            ]
+        # signals from earlier plugins are available here
+        cheap = context.signals.get("cheap-first", {}).get("applied")
+        context.signals["enterprise-only"] = {"tenant": tenant, "after_cheap": cheap}
+        return context
+
+
+enterprise_only_plugin = EnterpriseOnly()
+```
+
+List both under `router_settings.plugins`. `cheap_first` runs first and narrows the pool, then `enterprise_only` receives that narrowed pool and applies its own policy on top:
+
+```yaml
+router_settings:
+  plugins:
+    - plugins.cheap_first.cheap_first_plugin
+    - plugins.enterprise_only.enterprise_only_plugin
+```
+
+Each plugin only narrows; if any plugin removes every remaining candidate, the request raises rather than silently falling back to the full pool, so a policy in the chain can't be bypassed by an earlier one.
+
 For the full contract, the request lifecycle, and how to scope plugins to the complexity router's tiers with `complexity_router_config.plugins`, see the [routing plugins docs](/docs/routing_plugins).
 
 ## Register your plugin
