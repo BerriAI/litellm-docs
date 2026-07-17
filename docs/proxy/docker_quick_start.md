@@ -32,9 +32,10 @@ docker compose up -d
 </TabItem>
 <TabItem value="cloud" label="1-click deploy">
 
-<a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a> <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
-
-The Railway template provisions the gateway with a Postgres database and prompts you for a `LITELLM_MASTER_KEY`; it matches this guide exactly. The Render blueprint deploys the gateway alone; to follow the Admin UI steps below, add a Postgres instance and set `DATABASE_URL`, `LITELLM_MASTER_KEY`, and `STORE_MODEL_IN_DB=True` on the service after deploying.
+<div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
+  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
+  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
+</div>
 
 For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
 
