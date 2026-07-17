@@ -1054,7 +1054,7 @@ general_settings:
 **Supported LiteLLM Roles:**
 - `proxy_admin`: Full administrative access
 - `internal_user`: Standard user access
-- `internal_user_view_only`: Read-only access
+- `internal_user_viewer`: Read-only access
 
 #### 3. Example JWT Token
 
