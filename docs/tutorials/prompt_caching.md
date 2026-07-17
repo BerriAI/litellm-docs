@@ -40,6 +40,60 @@ That sharing is usually the point: a long system prompt cached by one user is re
 
 If callers sharing one set of upstream credentials must not learn that about each other, give them separate credentials, since the isolation boundary is the provider account rather than anything LiteLLM can enforce.
 
+## Automatic checkpoints for Claude models
+
+:::info
+
+Requires LiteLLM v1.94.0
+
+:::
+
+Everything below asks you to decide *where* the checkpoints go. If all you want is the common case for Claude, one flag does it for you.
+
+```yaml title="config.yaml"
+litellm_settings:
+  enable_anthropic_prompt_caching: true
+```
+
+Or, without a config file:
+
+```bash
+export LITELLM_ENABLE_ANTHROPIC_PROMPT_CACHING=true
+```
+
+It is also a switch on the Admin UI, on the General tab under Router Settings.
+
+### What it actually does
+
+When it is on, LiteLLM adds the same `cache_control_injection_points` you would have written by hand: one checkpoint on the system prompt and one on the trailing turn. The stable prefix (system prompt, tools and history) stays cached while the checkpoint advances with the conversation, which is what a client like Claude Code needs, since it never sets `cache_control` itself and you cannot ask every user to configure one.
+
+The specifics are worth knowing before you turn it on:
+
+- It is off by default, so upgrading changes nothing until you enable it.
+- It only applies to `anthropic/` and `bedrock/` Claude models that the cost map marks as supporting prompt caching. Other providers are left alone, including Claude on `vertex_ai/` and `azure_ai/`; use `cache_control_injection_points` for those.
+- If the request already carries its own `cache_control`, LiteLLM stands down and the client's checkpoints win, so nothing is ever double-injected.
+- Explicit `cache_control_injection_points` also win. The flag only fills in when nothing is configured.
+- The provider limit of 4 `cache_control` blocks per request still applies, and client-supplied blocks count toward it.
+- It works on both `/v1/messages` and `/chat/completions`.
+
+### Cache lifetime
+
+The default is Anthropic's 5 minute ephemeral cache, which is their API default and what Claude Code uses. For long agentic sessions you can ask for the 1 hour cache instead:
+
+```yaml title="config.yaml"
+litellm_settings:
+  enable_anthropic_prompt_caching: true
+  anthropic_prompt_caching_ttl: "1h"
+```
+
+The equivalent environment variable is `LITELLM_ANTHROPIC_PROMPT_CACHING_TTL`, and the Admin UI exposes it as a dropdown. Note that a 1 hour cache write costs more than a 5 minute one, so it pays off only when the prefix is reused over a longer session.
+
+`litellm_settings` wins over the environment variable when both are set, since the config is applied after startup.
+
+### When to use injection points instead
+
+Reach for `cache_control_injection_points`, described below, when you need a provider the flag does not cover, a checkpoint somewhere other than the system prompt and the trailing turn, per-model rather than gateway-wide behavior, or `location: tool_config` to cache tool definitions.
+
 ## Configuration
 
 You need to specify `cache_control_injection_points` in your model configuration. This tells LiteLLM:
