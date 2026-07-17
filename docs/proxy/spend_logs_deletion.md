@@ -108,7 +108,7 @@ This would allow up to 200,000 logs to be deleted in one run.
 
 At high request volume (millions of rows per day), retention via `DELETE` becomes a problem. Deleting rows does not return disk to the operating system; it leaves dead tuples ("tombstones") that autovacuum has to reclaim later. When writes outpace autovacuum, the table keeps growing on disk even though the logical row count is bounded, and `LiteLLM_SpendLogs` can reach hundreds of GB in a month.
 
-The fix is native Postgres range partitioning on `startTime`. With a partitioned table, retention drops whole partitions with `DROP TABLE`, an instant metadata operation that frees disk immediately, with no tombstones and no vacuum. When LiteLLM detects that `LiteLLM_SpendLogs` is partitioned, the same cleanup job automatically switches from batched deletes to dropping expired partitions, and it pre-creates upcoming partitions on each run so writes always have a partition to land in.
+The fix is native Postgres range partitioning on `startTime`. With a partitioned table, retention drops whole partitions with `DROP TABLE`, an instant metadata operation that frees disk immediately, with no tombstones and no vacuum. With `general_settings.use_spend_logs_partitioning: true` set and the table actually partitioned, the same cleanup job switches from batched deletes to dropping expired partitions, and it pre-creates upcoming partitions on each run so writes always have a partition to land in; both conditions are required, detection alone does not flip the behavior.
 
 This is opt-in. The default schema is not partitioned, so existing deployments are unaffected until you convert the table.
 

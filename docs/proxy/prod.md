@@ -1,59 +1,109 @@
+---
+title: Production Best Practices
+description: Checklist for running LiteLLM in production; configuration, sizing and workers, Redis, and database and migrations.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# ⚡ Best Practices for Production
+# Production Best Practices
 
-## 1. Use this config.yaml
-Use this config.yaml in production (with your own LLMs)
+Work through this page before going live. It covers the production configuration, machine sizing and worker strategy, Redis, and database and migrations; each section stands alone, so you can also use it as a review checklist for an existing deployment. For deeper container tuning such as alternative servers, TLS at the proxy, keepalive, and loading config from object storage, see [Server Tuning](./server_tuning.md).
+
+## Configuration
+
+### Set a master key
+
+The master key is the proxy admin credential: it authenticates admin API calls and is the Admin UI login password. Set it as an env var (it must start with `sk-`), keep it in your secret manager, and rotate it with the [master key rotation flow](./master_key_rotations.md).
+
+```bash
+export LITELLM_MASTER_KEY="sk-<long-random-value>"
+```
+
+### Turn on alerting
+
+Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
+
+<Image img={require('../../img/ui_alerting_types.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
+
+To bake it into config instead, set `alerting: ["slack"]` under `general_settings` and export `SLACK_WEBHOOK_URL` in the environment.
+
+### Batch spend writes
+
+Write spend updates to the database every 60 seconds instead of on every request; at production traffic, per-request writes become a database hot spot.
 
 ```yaml
-model_list:
-  - model_name: fake-openai-endpoint
-    litellm_params:
-      model: openai/fake
-      api_key: fake-key
-      api_base: https://exampleopenaiendpoint-production.up.railway.app/
-
 general_settings:
-  master_key: sk-1234      # enter your own master key, ensure it starts with 'sk-'
-  alerting: ["slack"]      # Setup slack alerting - get alerts on LLM exceptions, Budget Alerts, Slow LLM Responses
-  proxy_batch_write_at: 60 # Batch write spend updates every 60s
-  database_connection_pool_limit: 10 # connection pool limit per worker process. Total connections = limit × workers × instances. Calculate: MAX_DB_CONNECTIONS / (instances × workers). Default: 10.
-
-  # OPTIONAL Best Practices
-  disable_error_logs: True # turn off writing LLM Exceptions to DB
-  allow_requests_on_db_unavailable: True # Only USE when running LiteLLM on your VPC. Allow requests to still be processed even if the DB is unavailable. We recommend doing this if you're running LiteLLM on VPC that cannot be accessed from the public internet.
-
-litellm_settings:
-  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
-  set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
-  json_logs: true         # Get debug logs in json format
+  proxy_batch_write_at: 60
 ```
+
+Above roughly 1000 requests per second, also route these writes through Redis with the [Redis transaction buffer](#redis-transaction-buffer) to prevent connection exhaustion and deadlocks.
+
+### Bound database connections
+
+Cap the connection pool per worker process so your instances cannot exhaust the database. Size it as `MAX_DB_CONNECTIONS / (instances × workers)`; the default is 10.
+
+```yaml
+general_settings:
+  database_connection_pool_limit: 10
+```
+
 :::warning Multiple instances
 
-If running multiple LiteLLM instances (e.g., Kubernetes pods), remember each instance multiplies your total connections. Example: 3 instances × 4 workers × 10 connections = 120 total connections.
+Each instance multiplies your total connections: 3 instances × 4 workers × 10 connections = 120 total connections against your database.
 
 :::
 
-Set slack webhook url in your env
-```shell
-export SLACK_WEBHOOK_URL="example-slack-webhook-url"
+### Keep error logs out of the database
+
+LLM exceptions are written to the database by default. Under sustained provider errors this bloats the spend logs table; send exceptions to your logging stack (see [alerting](#turn-on-alerting) and [logging callbacks](./logging.md)) instead.
+
+```yaml
+general_settings:
+  disable_error_logs: True
 ```
 
-Turn off FASTAPI's default info logs
+### Set a request timeout
+
+Fail requests that hang instead of holding connections open; the default is 6000 seconds.
+
+```yaml
+litellm_settings:
+  request_timeout: 600
+```
+
+### Production logging
+
+Switch off debug logging, emit JSON logs, and silence FastAPI's per-request info logs:
+
+```yaml
+litellm_settings:
+  set_verbose: False
+  json_logs: true
+```
+
 ```bash
 export LITELLM_LOG="ERROR"
 ```
 
-:::info
+### Disable load_dotenv
 
-Need Help or want dedicated support ? Talk to a founder [here](https://enterprise.litellm.ai/demo).
+Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which would otherwise automatically load credentials from a local `.env`.
 
-:::
+### Set the salt key
 
+If you use the database, set a salt key for encrypting and decrypting stored variables. Do not change it after adding a model; it encrypts your LLM API key credentials, and changing it makes them unreadable. Use a [password generator](https://1password.com/password-generator/) to get a random hash.
 
-## 2. Recommended Machine Specifications
+```bash
+export LITELLM_SALT_KEY="sk-1234"
+```
+
+[**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
+
+## Sizing and workers
+
+### Machine specifications
 
 For optimal performance in production, we recommend the following resource configuration.
 
@@ -76,117 +126,29 @@ targetCPUUtilizationPercentage: 60
 targetMemoryUtilizationPercentage: 80
 ```
 
+### Workers and scaling
 
-## 3. Choose your server: Uvicorn vs. Gunicorn
-
-LiteLLM Proxy runs on [Uvicorn](https://uvicorn.dev/) by default. Passing `--run_gunicorn` instead starts [Gunicorn](https://gunicorn.org/) as a process manager that supervises [Uvicorn worker processes](https://uvicorn.dev/deployment/#gunicorn) (`uvicorn.workers.UvicornWorker`). In both cases your application code still runs on Uvicorn; the difference is which process manages and recycles the workers.
-
-| | Uvicorn (default) | Gunicorn (`--run_gunicorn`) |
-|---|---|---|
-| **When to use** | Recommended for almost all deployments, especially Kubernetes with one worker per pod. | Choose when you run **multiple workers in a single container** and want a mature process manager to supervise and recycle them. |
-| **Worker recycling** | Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits). | Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests), the battle-tested mechanism Gunicorn has shipped for years. |
-| **Process supervision** | Uvicorn's built-in multiprocess manager. | Gunicorn's [arbiter](https://gunicorn.org/design/#arbiter), which restarts workers one at a time as they exit. |
-
-:::tip Recommendation
-
-On Kubernetes, run **one Uvicorn worker per pod** and scale **horizontally** (more pods) rather than vertically (more workers per pod). One process per pod keeps latency predictable under load, lets the Horizontal Pod Autoscaler use the [thresholds above](#2-recommended-machine-specifications) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time. Reach for Gunicorn only when you must pack multiple workers into one container.
-
-:::
-
-### 3a. Recommended: one Uvicorn worker per pod
-
-This is the default server, so you only need to set `--num_workers 1` (the default is already `1`):
+Run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler use the [thresholds above](#machine-specifications) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
 ```
 
-### 3b. Recycle workers with `--max_requests_before_restart`
-
-If you observe gradual memory growth under sustained load, recycle each worker after a fixed number of requests to bound memory usage. `--max_requests_before_restart` maps to Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits) (default server) and to Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests) under `--run_gunicorn`. Configure it via CLI flag or environment variable:
+If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
 
 ```shell
-# CLI
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
-
-# or ENV (for deployment manifests / containers)
-export MAX_REQUESTS_BEFORE_RESTART=10000
 ```
 
-:::tip
+For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
-When you run **multiple workers in one container** and rely on `--max_requests_before_restart`, prefer `--run_gunicorn`. Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests) recycling is more mature than Uvicorn's, and its [arbiter](https://gunicorn.org/design/#arbiter) restarts workers one at a time so the pod keeps serving traffic while a worker is replaced.
+## Redis
 
-:::
-
-```shell
-# Multiple workers in one container, with Gunicorn-managed recycling
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000"]
-```
-
-When several workers boot together and serve a similar amount of traffic, they reach the request threshold at almost the same time and recycle in lockstep, dropping a chunk of capacity at once. Add `--max_requests_before_restart_jitter` to offset each worker's threshold by a random amount in `[0, jitter]` so restarts stagger instead of synchronizing. It maps to Uvicorn's [`limit_max_requests_jitter`](https://uvicorn.dev/settings/#resource-limits) (requires `uvicorn>=0.41.0`) and Gunicorn's [`max_requests_jitter`](https://gunicorn.org/reference/settings/#max_requests_jitter), and has no effect without `--max_requests_before_restart`.
-
-```shell
-# Stagger recycling so workers don't all restart at once
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "4", "--run_gunicorn", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
-```
-
-### 3c. Keep restarts hitless
-
-A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
-
-**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). With one worker per pod, recycling briefly reduces that pod's capacity, which is why we recommend scaling horizontally so the load balancer can route around it.
-
-**Rolling deploys and pod restarts (Kubernetes).** Make restarts hitless at the orchestration layer rather than relying on the server alone:
-
-- Use a [`RollingUpdate`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment) strategy (the Deployment default) so new pods become Ready before old pods are terminated.
-- Keep a [readiness probe](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/) on `/health/readiness` so Kubernetes only sends traffic to pods that can serve it, and stops routing to a pod as soon as termination begins.
-- Set [`terminationGracePeriodSeconds`](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) to comfortably exceed your longest expected request (LiteLLM's request timeout defaults to 600s; see [Section 1](#1-use-this-configyaml)). On termination Kubernetes sends `SIGTERM`, and both Uvicorn and Gunicorn shut down [gracefully](https://uvicorn.dev/deployment/) by draining in-flight requests before exiting.
-- Optionally add a small [`preStop` hook](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks) (for example `sleep 5`) to give the load balancer time to deregister the pod before the server begins shutting down, eliminating the brief window where traffic can still arrive at a terminating pod.
-
-```yaml title="Kubernetes Deployment snippet for hitless rolling restarts"
-spec:
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0   # never drop below desired replica count
-      maxSurge: 1         # add one new pod at a time
-  template:
-    spec:
-      terminationGracePeriodSeconds: 620   # > your longest request (request_timeout: 600)
-      containers:
-        - name: litellm
-          readinessProbe:
-            httpGet:
-              path: /health/readiness
-              port: 4000
-          lifecycle:
-            preStop:
-              exec:
-                command: ["sh", "-c", "sleep 5"]
-```
-
-
-## 4. Use Redis 'port','host', 'password'. NOT 'redis_url'
-
-If you decide to use Redis, DO NOT use 'redis_url'. We recommend using redis port, host, and password params. 
-
-`redis_url`is 80 RPS slower
-
-This is still something we're investigating. Keep track of it [here](https://github.com/BerriAI/litellm/issues/3188)
-
-### Redis Version Requirement
-
-| Component | Minimum Version |
-|-----------|-----------------|
-| Redis     | 7.0+            |
-
-Recommended to do this for prod:
+Run Redis (7.0 or newer) as soon as you run more than one proxy instance. It shares rate limit counters, router state, and the response cache across instances; without it, each instance enforces limits independently and cache hits stay local to the instance that served the request.
 
 ```yaml
 router_settings:
   routing_strategy: simple-shuffle # (default) - recommended for best performance
-  # redis_url: "os.environ/REDIS_URL"
   redis_host: os.environ/REDIS_HOST
   redis_port: os.environ/REDIS_PORT
   redis_password: os.environ/REDIS_PASSWORD
@@ -200,53 +162,56 @@ litellm_settings:
     password: os.environ/REDIS_PASSWORD
 ```
 
-> **WARNING**
-**Usage-based routing is not recommended for production due to performance impacts.** Use `simple-shuffle` (default) for optimal performance in high-traffic scenarios.
+Keep the default `simple-shuffle` routing strategy for high-traffic deployments; usage-based routing adds Redis lookups to the request path.
 
-## 5. Disable 'load_dotenv'
+### Redis transaction buffer
 
-Set `export LITELLM_MODE="PRODUCTION"`
+At very high traffic (roughly 1000+ requests per second, or 10+ instances), spend tracking itself becomes a database bottleneck: every instance issues `UPDATE`/`UPSERT` statements against the same key, user, and team rows, which causes deadlocks and can exhaust Postgres connections (`FATAL: sorry, too many clients already`). The transaction buffer routes those writes through Redis instead: each instance queues its spend updates in Redis, and a single instance holding a Redis-backed lock aggregates the queue and flushes it to the database in one transaction.
 
-This disables the load_dotenv() functionality, which will automatically load your environment credentials from the local `.env`. 
+```yaml
+general_settings:
+  use_redis_transaction_buffer: true
+```
 
-## 6. If running LiteLLM on VPC, gracefully handle DB unavailability
+Monitor it with the `litellm_pod_lock_manager_size` Prometheus metric (which pod holds the flush lock) and the `litellm_in_memory_spend_update_queue_size` / `litellm_redis_spend_update_queue_size` gauges (spend updates waiting in memory and in Redis; the `_daily_` variants track per-user daily aggregates). If you see `Got exception from REDIS No connection available` under load, raise `max_connections` in your Redis `cache_params`.
+
+## Database and migrations
+
+### Gracefully handle DB unavailability
 
 When running LiteLLM on a VPC (and inaccessible from the public internet), you can enable graceful degradation so that request processing continues even if the database is temporarily unavailable.
 
-
 **WARNING: Only do this if you're running LiteLLM on VPC, that cannot be accessed from the public internet.**
-
-#### Configuration
 
 ```yaml showLineNumbers title="litellm config.yaml"
 general_settings:
   allow_requests_on_db_unavailable: True
 ```
 
-#### Expected Behavior
-
 When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle errors as follows:
 
 | Type of Error | Expected Behavior | Details |
 |---------------|-------------------|----------------|
-| Prisma Errors | ✅ Request will be allowed | Covers issues like DB connection resets or rejections from the DB via Prisma, the ORM used by LiteLLM. |
-| Httpx Errors | ✅ Request will be allowed | Occurs when the database is unreachable, allowing the request to proceed despite the DB outage. |
-| Pod Startup Behavior | ✅ Pods start regardless | LiteLLM Pods will start even if the database is down or unreachable, ensuring higher uptime guarantees for deployments. |
-| Health/Readiness Check | ✅ Always returns 200 OK | The /health/readiness endpoint returns a 200 OK status to ensure that pods remain operational even when the database is unavailable.
-| LiteLLM Budget Errors or Model Errors | ❌ Request will be blocked | Triggered when the DB is reachable but the authentication token is invalid, lacks access, or exceeds budget limits. |
-
+| Prisma Errors | Request will be allowed | Covers issues like DB connection resets or rejections from the DB via Prisma, the ORM used by LiteLLM. |
+| Httpx Errors | Request will be allowed | Occurs when the database is unreachable, allowing the request to proceed despite the DB outage. |
+| Pod Startup Behavior | Pods start regardless | LiteLLM Pods will start even if the database is down or unreachable, ensuring higher uptime guarantees for deployments. |
+| Health/Readiness Check | Always returns 200 OK | The /health/readiness endpoint returns a 200 OK status to ensure that pods remain operational even when the database is unavailable. |
+| LiteLLM Budget Errors or Model Errors | Request will be blocked | Triggered when the DB is reachable but the authentication token is invalid, lacks access, or exceeds budget limits. |
 
 [More information about what the Database is used for here](db_info)
 
-## 7. Use Helm PreSync Hook for Database Migrations [BETA]
+### Run migrations from the Helm PreSync hook
+
+:::info
+The Helm PreSync hook flow is in beta.
+:::
 
 To ensure only one service manages database migrations, use our [Helm PreSync hook for Database Migrations](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/templates/migrations-job.yaml). This ensures migrations are handled during `helm upgrade` or `helm install`, while LiteLLM pods explicitly disable migrations.
-
 
 1. **Helm PreSync Hook**:
    - The Helm PreSync hook is configured in the chart to run database migrations during deployments.
    - The hook always sets `DISABLE_SCHEMA_UPDATE=false`, ensuring migrations are executed reliably.
-  
+
   Reference Settings to set on ArgoCD for `values.yaml`
 
   ```yaml
@@ -257,7 +222,7 @@ To ensure only one service manages database migrations, use our [Helm PreSync ho
 
 2. **LiteLLM Pods**:
    - Set `DISABLE_SCHEMA_UPDATE=true` in LiteLLM pod configurations to prevent them from running migrations.
-   
+
    Example configuration for LiteLLM pod:
    ```yaml
    env:
@@ -265,45 +230,13 @@ To ensure only one service manages database migrations, use our [Helm PreSync ho
        value: "true"
    ```
 
+### Use prisma migrate deploy
 
-## 8. Set LiteLLM Salt Key 
-
-If you plan on using the DB, set a salt key for encrypting/decrypting variables in the DB. 
-
-Do not change this after adding a model. It is used to encrypt / decrypt your LLM API Key credentials
-
-We recommend - https://1password.com/password-generator/ password generator to get a random hash for litellm salt key.
-
-```bash
-export LITELLM_SALT_KEY="sk-1234"
-```
-
-[**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
-
-
-## 9. Use `prisma migrate deploy`
-
-Use this to handle db migrations across LiteLLM versions in production
-
-<Tabs>
-<TabItem value="env" label="ENV">
+Use this to handle db migrations across LiteLLM versions in production:
 
 ```bash
 USE_PRISMA_MIGRATE="True"
 ```
-
-</TabItem>
-
-<TabItem value="cli" label="CLI">
-
-```bash
-litellm
-```
-
-</TabItem>
-</Tabs>
-
-Benefits:
 
 The migrate deploy command:
 
@@ -312,8 +245,7 @@ The migrate deploy command:
 - **Does not** reset the database or generate artifacts (such as Prisma Client)
 - **Does not** rely on a shadow database
 
-
-### How does LiteLLM handle DB migrations in production?
+How LiteLLM ships migrations:
 
 1. A new migration file is written to our `litellm-proxy-extras` package. [See all](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations)
 
@@ -321,25 +253,21 @@ The migrate deploy command:
 
 3. When you upgrade to a new version of LiteLLM, the migration file is applied to the database. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/litellm-proxy-extras/litellm_proxy_extras/utils.py#L42)
 
-
-### Read-only File System
+### Read-only file system
 
 Running LiteLLM with `readOnlyRootFilesystem: true` is a Kubernetes security best practice that prevents container processes from writing to the root filesystem. LiteLLM fully supports this configuration.
-
-#### Quick Fix for Permission Errors
 
 If you see a `Permission denied` error, it means the LiteLLM pod is running with a read-only file system. LiteLLM needs writable directories for:
 - **Database migrations**: Set `LITELLM_MIGRATION_DIR="/path/to/writable/directory"`
 - **Admin UI**: Set `LITELLM_UI_PATH="/path/to/writable/directory"`
 - **UI assets/logos**: Set `LITELLM_ASSETS_PATH="/path/to/writable/directory"`
 
-#### Complete Read-Only Filesystem Setup (Kubernetes)
-
-For production deployments with enhanced security, use this configuration:
-
 **Option 1: Using EmptyDir Volumes with InitContainer (Recommended)**
 
 This approach copies the pre-built UI from the Docker image to writable emptyDir volumes at pod startup.
+
+<details>
+<summary>Full Deployment manifest (initContainer, env, securityContext, volumes)</summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -419,6 +347,8 @@ spec:
             sizeLimit: 64Mi
 ```
 
+</details>
+
 **Option 2: Without UI (API-only deployment)**
 
 If you don't need the admin UI, you can run with minimal configuration:
@@ -435,7 +365,7 @@ securityContext:
 
 The proxy will log a warning about the UI but API endpoints will work normally.
 
-#### Environment Variables for Read-Only Filesystems
+Environment variables for read-only filesystems:
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
@@ -445,23 +375,38 @@ The proxy will log a warning about the UI but API endpoints will work normally.
 | `PRISMA_BINARY_CACHE_DIR` | Prisma binary cache | System default |
 | `XDG_CACHE_HOME` | General cache directory | System default |
 
-#### Important Notes
+Notes: always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path, and set `PRISMA_BINARY_CACHE_DIR` and `XDG_CACHE_HOME` to writable paths. If using a custom `server_root_path`, you must pre-process UI files in your Dockerfile as the proxy cannot modify files at runtime with a read-only filesystem. The UI is automatically detected as pre-restructured if it contains a `.litellm_ui_ready` marker file (created by the official Docker images).
 
-1. **Migrations**: Always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path
-2. **Prisma Cache**: Set `PRISMA_BINARY_CACHE_DIR` and `XDG_CACHE_HOME` to writable paths
-3. **Server Root Path**: If using a custom `server_root_path`, you must pre-process UI files in your Dockerfile as the proxy cannot modify files at runtime with read-only filesystem
-4. **Automatic Detection**: The UI is automatically detected as pre-restructured if it contains a `.litellm_ui_ready` marker file (created by the official Docker images)
+## Verify production readiness
 
-## Extras
-### Expected Performance in Production
+### Expected performance
 
-See benchmarks [here](../benchmarks#performance-metrics)
+See benchmarks [here](../benchmarks#performance-metrics).
 
-### Verifying Debugging logs are off
+### Confirm debug logging is off
 
-You should only see the following level of details in logs on the proxy server
+You should only see the following level of details in logs on the proxy server:
+
 ```shell
 # INFO:     192.168.2.205:11774 - "POST /chat/completions HTTP/1.1" 200 OK
 # INFO:     192.168.2.205:34717 - "POST /chat/completions HTTP/1.1" 200 OK
 # INFO:     192.168.2.205:29734 - "POST /chat/completions HTTP/1.1" 200 OK
 ```
+
+## Deployment FAQ
+
+**Q: Is Postgres the only supported database, or do you support other ones (like Mongo)?**
+
+A: We explored MySQL but that was hard to maintain and led to bugs for customers. Currently, PostgreSQL is our primary supported database for production deployments.
+
+Because LiteLLM talks to the database through Prisma over the PostgreSQL wire protocol, any Postgres-wire-compatible distributed SQL database works as a drop-in replacement. [YugabyteDB](https://www.yugabyte.com/) is used in production this way; point `DATABASE_URL` at its YSQL endpoint (`postgresql://<user>:<password>@<host>:<port>/<dbname>`) and LiteLLM runs its migrations and queries unchanged. This is a good fit if you need horizontal scale or multi-region high availability beyond what a single Postgres instance provides.
+
+**Q: If there is Postgres downtime, how does LiteLLM react? Does it fail-open or is there API downtime?**
+
+A: You can gracefully handle DB unavailability if it's on your VPC; see [Gracefully handle DB unavailability](#gracefully-handle-db-unavailability) above.
+
+:::info
+
+Need help or want dedicated support? Talk to a founder [here](https://enterprise.litellm.ai/demo).
+
+:::

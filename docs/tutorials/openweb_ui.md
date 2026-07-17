@@ -12,7 +12,7 @@ This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM wit
 
 ## Quickstart
 
-- Make sure to setup LiteLLM with the [LiteLLM Getting Started Guide](https://docs.litellm.ai/docs/proxy/docker_quick_start)
+- Make sure to setup LiteLLM with the [LiteLLM Quickstart](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 
 
 ## 1. Start LiteLLM & Open WebUI
@@ -34,7 +34,7 @@ On LiteLLM, you can create Organizations, Teams, Users and Virtual Keys. For thi
 - `User` - A User is an individual user (employee, developer, eg. `krrish@litellm.ai`)
 - `Virtual Key` - A Virtual Key is an API Key that allows you to authenticate to LiteLLM Proxy. A Virtual Key is associated with a User or Team.
 
-Once the Team is created, you can invite Users to the Team. You can read more about LiteLLM's User Management [here](https://docs.litellm.ai/docs/proxy/user_management_heirarchy).
+Once the Team is created, you can invite Users to the Team. You can read more about LiteLLM's User Management [here](https://docs.litellm.ai/docs/proxy/multi_tenant_architecture#the-tenancy-hierarchy).
 
 ### 2.2 Create a Team on LiteLLM
 

@@ -179,10 +179,6 @@ litellm_settings:
     password: os.environ/REDIS_PASSWORD
 ```
 
-:::tip
-Use `redis_host`, `redis_port`, and `redis_password` instead of `redis_url` for ~80 RPS better performance.
-:::
-
 **Scaling:** DB connections scale linearly with instances. Consider PostgreSQL read replicas beyond 5K RPS.
 
 See [Production Configuration](./proxy/prod) for detailed best practices.

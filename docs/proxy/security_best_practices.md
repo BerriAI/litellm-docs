@@ -10,7 +10,7 @@ Make sure these emails reach both your security and platform teams.
 
 ## 2. Run a supported stable release
 
-Stay on the latest stable release and include LiteLLM upgrades in your regular patching process. Pin an exact version or image digest instead of using `latest`, and [verify the Docker image signature](./deploy#verify-docker-image-signatures) before deployment.
+Stay on the latest stable release and include LiteLLM upgrades in your regular patching process. Pin an exact version or image digest instead of using `latest`, and [verify the Docker image signature](./docker_image_security) before deployment.
 
 See the [LiteLLM release cycle](./release_cycle) for the current release schedule.
 

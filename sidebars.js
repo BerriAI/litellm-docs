@@ -399,7 +399,6 @@ const sidebars = {
         slug: "/simple_proxy",
       },
       items: [
-        { type: "doc", id: "proxy/docker_quick_start", label: "Getting Started Tutorial" },
         {
           type: "category",
           label: "Agent & MCP Gateway",
@@ -464,24 +463,29 @@ const sidebars = {
           type: "category",
           label: "Setup & Deployment",
           items: [
-            "proxy/quick_start",
-            "proxy/cli",
-            "proxy/debugging",
-            "proxy/error_diagnosis",
+            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
-            "proxy/deploy_cloud",
-            "proxy/microservices_helm",
-            "proxy/security_best_practices",
-            "proxy/docker_image_security",
-            "proxy/health",
-            "proxy/master_key_rotations",
-            "proxy/model_management",
             "proxy/prod",
+            "proxy/security_best_practices",
+            "proxy/server_tuning",
             "proxy/multi_region",
+            "proxy/db_read_replica",
+            "proxy/high_availability_control_plane",
+            "proxy/health",
+            "proxy/model_management",
+            "proxy/master_key_rotations",
             "proxy/billing_metrics",
-            "proxy/worker_startup_hooks",
-            "proxy/release_cycle",
           ],
+        },
+        {
+          type: "category",
+          label: "CLI",
+          items: ["proxy/quick_start", "proxy/cli"],
+        },
+        {
+          type: "category",
+          label: "Troubleshooting",
+          items: ["proxy/debugging", "proxy/error_diagnosis"],
         },
         {
           type: "category",
@@ -504,10 +508,8 @@ const sidebars = {
               type: "category",
               label: "Models",
               items: [
-                "proxy/ui_credentials",
                 "proxy/ai_hub",
                 "proxy/model_compare_ui",
-                "proxy/ui_store_model_db_setting",
                 "proxy/ui/routing_groups",
               ]
             },
@@ -554,16 +556,8 @@ const sidebars = {
           items: [
             "proxy/architecture",
             "proxy/multi_tenant_architecture",
-            "proxy/high_availability_control_plane",
-            "proxy/db_deadlocks",
-            "proxy/db_info",
-            "proxy/db_read_replica",
-            "proxy/image_handling",
             "proxy/key_auth_arch",
-            "proxy/jwt_auth_arch",
-            "proxy/spend_logs_deletion",
-            "proxy/user_management_heirarchy",
-            "router_architecture"
+            "proxy/db_info",
           ],
         },
         {
@@ -578,6 +572,7 @@ const sidebars = {
             "proxy/virtual_keys",
             "proxy/token_auth",
             "proxy/jwt_key_mapping",
+            "proxy/jwt_auth_arch",
             {
               type: "doc",
               id: "proxy/identity_provisioning",
@@ -656,6 +651,7 @@ const sidebars = {
             "proxy/call_hooks",
             "proxy/agentic_loop_hook",
             "proxy/rules",
+            "proxy/worker_startup_hooks",
           ]
         },
         "proxy/management_cli",
@@ -730,6 +726,7 @@ const sidebars = {
             "proxy/provider_discounts",
             "proxy/sync_models_github",
             "proxy/billing",
+            "proxy/spend_logs_deletion",
           ],
         },
         {
@@ -1256,7 +1253,9 @@ const sidebars = {
         "migration",
         "data_security",
         "proxy/security_encryption_faq",
+        "proxy/docker_image_security",
         "migration_policy",
+        "proxy/release_cycle",
         "load_test_advanced",
         "load_test_sdk",
         "load_test_rpm",

@@ -47,27 +47,12 @@ You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/ma
 | Table Name | Description | Row Insert Frequency |
 |------------|-------------|---------------------|
 | LiteLLM_SpendLogs | Detailed logs of all API requests. Records token usage, spend, and timing information. Tracks which models and keys were used. | **Medium - this is a batch process that runs on an interval.** |
+| LiteLLM_DailyUserSpend and siblings (DailyTeamSpend, DailyOrgSpend, DailyTagSpend, DailyEndUserSpend, DailyAgentSpend) | Pre-aggregated daily spend rollups per user, team, org, tag, end user, and agent; the Admin UI Usage views read these aggregates rather than scanning SpendLogs. | Low - one row per entity per day, updated in batches |
 | LiteLLM_AuditLog | Tracks changes to system configuration. Records who made changes and what was modified. Maintains history of updates to teams, users, and models. | **Off by default**, **High - Runs on every change to an entity** |
 
 ## Disable `LiteLLM_SpendLogs`
 
-You can disable spend_logs and error_logs by setting `disable_spend_logs` and `disable_error_logs` to `True` on the `general_settings` section of your proxy_config.yaml file.
-
-```yaml
-general_settings:
-  disable_spend_logs: True   # Disable writing spend logs to DB
-  disable_error_logs: True   # Only disable writing error logs to DB, regular spend logs will still be written unless `disable_spend_logs: True`
-```
-
-### What is the impact of disabling these logs?
-
-When disabling spend logs (`disable_spend_logs: True`):
-- You **will not** be able to view Usage on the LiteLLM UI
-- You **will** continue seeing cost metrics on s3, Prometheus, Langfuse (any other Logging integration you are using)
-
-When disabling error logs (`disable_error_logs: True`):
-- You **will not** be able to view Errors on the LiteLLM UI
-- You **will** continue seeing error logs in your application logs and any other logging integrations you are using
+Set `disable_spend_logs: True` or `disable_error_logs: True` under `general_settings` to stop writing those tables. With spend logs disabled you lose per-request log detail in the UI but keep cost metrics in your logging integrations (s3, Prometheus, Langfuse); with error logs disabled you lose the Errors view in the UI but keep errors in application logs and other logging integrations. See [keeping error logs out of the database](./prod.md#keep-error-logs-out-of-the-database) in the production checklist.
 
 
 ## Migrating Databases 

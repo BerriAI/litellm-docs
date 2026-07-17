@@ -1,4 +1,4 @@
-import Image from '@theme/IdealImage';
+import { TenancyDiagram } from '@site/src/components/CloudArchitecture';
 
 # Role-based Access Controls (RBAC)
 
@@ -8,7 +8,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 
 <iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
-<Image img={require('../../img/litellm_user_heirarchy.png')} style={{ width: '100%', maxWidth: '4000px' }} />
+<TenancyDiagram />
 
 
 - `Organizations` are the top-level entities that contain Teams.
