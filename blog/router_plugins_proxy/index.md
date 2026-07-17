@@ -103,7 +103,38 @@ router_settings:
 
 Each plugin only narrows; if any plugin removes every remaining candidate, the request raises rather than silently falling back to the full pool, so a policy in the chain can't be bypassed by an earlier one.
 
-For the full contract, the request lifecycle, and how to scope plugins to the complexity router's tiers with `complexity_router_config.plugins`, see the [routing plugins docs](/docs/routing_plugins).
+## Plugins inside the autorouter
+
+`router_settings.plugins` runs the pipeline globally, on every routing decision. You can also scope plugins to the [complexity autorouter](/docs/proxy/auto_routing), where they run inside the tier pick against that tier's actual candidate pool. Put them under `complexity_router_config.plugins` on the auto-router model:
+
+```yaml
+model_list:
+  - model_name: smart-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        tiers:
+          SIMPLE: ["gpt-4o-mini"]
+          COMPLEX: ["gpt-4o", "gpt-4o-mini"]
+        default_model: gpt-4o-mini
+        plugins:
+          - plugins.cheap_first.cheap_first_plugin
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+Here the autorouter first classifies the request into a tier, then the plugin filters that tier's pool before a deployment is picked. So a `COMPLEX` request that classifies into `["gpt-4o", "gpt-4o-mini"]` still passes through `cheap_first`, which keeps only `gpt-4o-mini`. As with the global pipeline, `default_model` is not an escape hatch: if a plugin drops every candidate in the tier, the request raises rather than falling back to it.
+
+Two things to know when combining plugins with the complexity router: `session_affinity` is disabled when plugins are configured, so a mid-session policy change still applies on later turns instead of being skipped by a cached model pin, and `adaptive: true` alongside `plugins` raises at config validation, since the bandit selector doesn't consume plugin-narrowed pools yet.
+
+For the full contract, the request lifecycle, and more on scoping plugins to the autorouter's tiers, see the [routing plugins docs](/docs/routing_plugins).
 
 ## Register your plugin
 
