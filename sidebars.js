@@ -468,7 +468,6 @@ const sidebars = {
             "proxy/prod",
             "proxy/security_best_practices",
             "proxy/server_tuning",
-            "proxy/db_deadlocks",
             "proxy/multi_region",
             "proxy/db_read_replica",
             "proxy/high_availability_control_plane",

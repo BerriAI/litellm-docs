@@ -104,6 +104,10 @@ const config = {
             to: '/docs/proxy/deploy#deploy-with-helm',
           },
           {
+            from: '/docs/proxy/db_deadlocks',
+            to: '/docs/proxy/prod#redis-transaction-buffer',
+          },
+          {
             from: '/docs/proxy/ui_credentials',
             to: '/docs/proxy/model_management#reusable-provider-credentials',
           },

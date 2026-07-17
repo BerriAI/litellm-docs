@@ -403,4 +403,4 @@ Then open the Admin UI at `https://llm.example.com/ui`, log in with your master 
 
 ## Next steps
 
-Harden the deployment with the [production checklist](./prod.md) (worker counts, machine sizing, Redis settings, server tuning, graceful degradation). Verify image signatures with the [Docker Image Security Guide](./docker_image_security.md). Add regions with [Multi-Region Deployment](./multi_region.md). For very high throughput (1000+ RPS), see [resolving DB deadlocks](./db_deadlocks.md).
+Harden the deployment with the [production checklist](./prod.md) (worker counts, machine sizing, Redis settings, server tuning, graceful degradation). Verify image signatures with the [Docker Image Security Guide](./docker_image_security.md). Add regions with [Multi-Region Deployment](./multi_region.md). For very high throughput (1000+ RPS), enable the [Redis transaction buffer](./prod.md#redis-transaction-buffer).

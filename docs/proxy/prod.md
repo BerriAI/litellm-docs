@@ -38,7 +38,7 @@ general_settings:
   proxy_batch_write_at: 60
 ```
 
-Above roughly 1000 requests per second, also route these writes through Redis with the [Redis transaction buffer](./db_deadlocks.md) to prevent connection exhaustion and deadlocks.
+Above roughly 1000 requests per second, also route these writes through Redis with the [Redis transaction buffer](#redis-transaction-buffer) to prevent connection exhaustion and deadlocks.
 
 ### Bound database connections
 
@@ -163,6 +163,17 @@ litellm_settings:
 ```
 
 Keep the default `simple-shuffle` routing strategy for high-traffic deployments; usage-based routing adds Redis lookups to the request path.
+
+### Redis transaction buffer
+
+At very high traffic (roughly 1000+ requests per second, or 10+ instances), spend tracking itself becomes a database bottleneck: every instance issues `UPDATE`/`UPSERT` statements against the same key, user, and team rows, which causes deadlocks and can exhaust Postgres connections (`FATAL: sorry, too many clients already`). The transaction buffer routes those writes through Redis instead: each instance queues its spend updates in Redis, and a single instance holding a Redis-backed lock aggregates the queue and flushes it to the database in one transaction.
+
+```yaml
+general_settings:
+  use_redis_transaction_buffer: true
+```
+
+Monitor it with the `litellm_pod_lock_manager_size` Prometheus metric (which pod holds the flush lock) and the `litellm_in_memory_spend_update_queue_size` / `litellm_redis_spend_update_queue_size` gauges (spend updates waiting in memory and in Redis; the `_daily_` variants track per-user daily aggregates). If you see `Got exception from REDIS No connection available` under load, raise `max_connections` in your Redis `cache_params`.
 
 ## Database and migrations
 

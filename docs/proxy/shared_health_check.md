@@ -306,5 +306,5 @@ general_settings:
 
 - [Background Health Checks](./health.md#background-health-checks)
 - [Redis Caching](./caching.md)
-- [High Availability Setup](./db_deadlocks.md)
+- [Redis Transaction Buffer](./prod.md#redis-transaction-buffer)
 - [Health Check Endpoints](./health.md#other-health-endpoints)

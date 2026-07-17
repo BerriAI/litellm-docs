@@ -55,7 +55,7 @@ Let's dive in.
 
 This release fixes the DB deadlocking issue that users faced in high traffic (10K+ RPS). This is great because it enables user/key/team spend tracking works at that scale.
 
-Read more about the new architecture [here](https://docs.litellm.ai/docs/proxy/db_deadlocks)
+Read more about the new architecture [here](https://docs.litellm.ai/docs/proxy/prod#redis-transaction-buffer)
 
 
 ### New Usage Tab
