@@ -34,11 +34,13 @@ LiteLLM can automatically inject prompt caching checkpoints into your requests t
 
 ## Who the cache is shared with
 
-This is provider-side prompt caching, which is a different feature from [LiteLLM response caching](../proxy/caching) and needs no Redis. The provider caches a prefix against the upstream credentials that sent it, not against the LiteLLM key, team or end user, and a cached prefix is reused by anyone whose request repeats it exactly.
+This is provider-side prompt caching, a different feature from [LiteLLM response caching](../proxy/caching). It needs no Redis.
 
-That sharing is usually the point: a long system prompt cached by one user is reused by everyone else on the same credentials, and an agent benefits from a prefix a user already cached. It has a consequence worth knowing before you inject checkpoints for everyone. Because a response reports `cache_read_input_tokens`, and a cache hit is also faster, a caller who repeats a prefix exactly can tell that someone else on those credentials sent it recently. The prefix has to be reproduced exactly and providers do not cache prefixes below a minimum size (1024 tokens for Anthropic), so this reveals whether a prompt the caller already holds was recently sent, rather than revealing its contents.
-
-If callers sharing one set of upstream credentials must not learn that about each other, give them separate credentials, since the isolation boundary is the provider account rather than anything LiteLLM can enforce.
+- The provider caches a prefix against the **upstream credentials** that sent it, not against the LiteLLM key, team or end user.
+- Anyone whose request repeats that prefix exactly reuses it. That sharing is the point: a long system prompt cached by one user is reused by everyone else on the same credentials, and an agent benefits from a prefix a user already cached.
+- The flip side: responses report `cache_read_input_tokens`, and a cache hit is faster, so a caller repeating a prefix exactly can tell someone else on those credentials sent it recently.
+- That is bounded. The prefix must match exactly, and providers will not cache below a minimum size (1024 tokens for Anthropic), so it reveals *whether* a prompt the caller already holds was sent, not its contents.
+- For isolation, give tenants separate credentials. The boundary is the provider account, not anything LiteLLM can enforce.
 
 ## Automatic checkpoints for Claude models
 
@@ -65,16 +67,14 @@ It is also a switch on the Admin UI, on the General tab under Router Settings.
 
 ### What it actually does
 
-When it is on, LiteLLM adds the same `cache_control_injection_points` you would have written by hand: one checkpoint on the system prompt and one on the trailing turn. The stable prefix (system prompt, tools and history) stays cached while the checkpoint advances with the conversation, which is what a client like Claude Code needs, since it never sets `cache_control` itself and you cannot ask every user to configure one.
+It adds the same `cache_control_injection_points` you would have written by hand, one checkpoint on the system prompt and one on the trailing turn, so the stable prefix stays cached while the checkpoint advances with the conversation. That is what a client like Claude Code needs, since it never sets `cache_control` itself.
 
-The specifics are worth knowing before you turn it on:
-
-- It is off by default, so upgrading changes nothing until you enable it.
-- It only applies to `anthropic/` and `bedrock/` Claude models that the cost map marks as supporting prompt caching. Other providers are left alone, including Claude on `vertex_ai/` and `azure_ai/`; use `cache_control_injection_points` for those.
-- If the request already carries its own `cache_control`, LiteLLM stands down and the client's checkpoints win, so nothing is ever double-injected.
-- Explicit `cache_control_injection_points` also win. The flag only fills in when nothing is configured.
-- The provider limit of 4 `cache_control` blocks per request still applies, and client-supplied blocks count toward it.
-- It works on both `/v1/messages` and `/chat/completions`.
+- **Off by default.** Upgrading changes nothing until you enable it.
+- **Claude only.** `anthropic/` and `bedrock/` models the cost map marks as supporting prompt caching. Claude on `vertex_ai/` and `azure_ai/` is not covered; use `cache_control_injection_points` for those.
+- **Never double-injects.** If the request already carries its own `cache_control`, LiteLLM stands down and the client's checkpoints win.
+- **Explicit config wins.** The flag only fills in when no `cache_control_injection_points` are set.
+- **Respects the 4 block provider limit**, counting client-supplied blocks toward it.
+- **Works on `/v1/messages` and `/chat/completions`.**
 
 ### Cache lifetime
 
