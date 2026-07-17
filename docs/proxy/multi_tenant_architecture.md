@@ -9,7 +9,7 @@ Multi-tenancy in LiteLLM means running a single proxy that serves many distinct 
 The design solves a few problems that show up whenever more than one group shares an LLM gateway. Cost has to be attributed to the right business unit rather than pooled. Access has to differ per tenant, since teams need different models, budgets, and rate limits. Administration has to be delegated, so a team lead can manage their own team without platform-wide admin rights. And the same architecture has to hold from a handful of users to tens of thousands without a redesign.
 
 :::info Open Source vs. Enterprise
-Teams and Virtual Keys are available in open source, and Teams alone can serve as your top-level tenant boundary. Organizations and Org Admins add a further layer of hierarchy on top and are an enterprise feature ([get a 7 day trial](https://www.litellm.ai/#trial)).
+Teams and Virtual Keys are available in open source, and Teams alone can serve as your top-level tenant boundary. Organizations and Org Admins add a further layer of hierarchy on top and are an enterprise feature ([get a 30 day trial](https://www.litellm.ai/#trial)).
 :::
 
 ## The Tenancy Hierarchy
