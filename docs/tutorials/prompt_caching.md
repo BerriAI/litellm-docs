@@ -32,6 +32,68 @@ LiteLLM can automatically inject prompt caching checkpoints into your requests t
 - **Cost Reduction**: Long, static parts of your prompts can be cached to avoid repeated processing
 - **No need to modify your application code**: You can configure the auto-caching behavior in the LiteLLM UI or in the `litellm config.yaml` file.
 
+## Who the cache is shared with
+
+This is provider-side prompt caching, a different feature from [LiteLLM response caching](../proxy/caching). It needs no Redis.
+
+- The provider caches a prefix against the **upstream credentials** that sent it, not against the LiteLLM key, team or end user.
+- Anyone whose request repeats that prefix exactly reuses it. That sharing is the point: a long system prompt cached by one user is reused by everyone else on the same credentials, and an agent benefits from a prefix a user already cached.
+- The flip side: responses report `cache_read_input_tokens`, and a cache hit is faster, so a caller repeating a prefix exactly can tell someone else on those credentials sent it recently.
+- That is bounded. The prefix must match exactly, and providers will not cache a prefix below a minimum size (for Anthropic that is model-dependent, currently 1k to 4k tokens), so it reveals *whether* a prompt the caller already holds was sent, not its contents.
+- For isolation, give tenants separate credentials. The boundary is the provider account, not anything LiteLLM can enforce.
+
+## Automatic checkpoints for Claude models
+
+:::info
+
+Requires LiteLLM v1.94.0
+
+:::
+
+Everything below asks you to decide *where* the checkpoints go. If all you want is the common case for Claude, one flag does it for you.
+
+```yaml title="config.yaml"
+litellm_settings:
+  enable_anthropic_prompt_caching: true
+```
+
+Or, without a config file:
+
+```bash
+export LITELLM_ENABLE_ANTHROPIC_PROMPT_CACHING=true
+```
+
+It is also a switch on the Admin UI, on the General tab under Router Settings.
+
+### What it actually does
+
+It adds the same `cache_control_injection_points` you would have written by hand, one checkpoint on the system prompt and one on the trailing turn, so the stable prefix stays cached while the checkpoint advances with the conversation. That is what a client like Claude Code needs, since it never sets `cache_control` itself.
+
+- **Off by default.** Upgrading changes nothing until you enable it.
+- **Claude only.** `anthropic/` and `bedrock/` models the cost map marks as supporting prompt caching. Claude on `vertex_ai/` and `azure_ai/` is not covered; use `cache_control_injection_points` for those.
+- **Never double-injects.** If the request already carries its own `cache_control`, LiteLLM stands down and the client's checkpoints win.
+- **Explicit config wins.** The flag only fills in when no `cache_control_injection_points` are set.
+- **Respects the 4 block provider limit**, counting client-supplied blocks toward it.
+- **Works on `/v1/messages` and `/chat/completions`.**
+
+### Cache lifetime
+
+The default is Anthropic's 5 minute ephemeral cache, which is their API default and what Claude Code uses. For long agentic sessions you can ask for the 1 hour cache instead:
+
+```yaml title="config.yaml"
+litellm_settings:
+  enable_anthropic_prompt_caching: true
+  anthropic_prompt_caching_ttl: "1h"
+```
+
+The equivalent environment variable is `LITELLM_ANTHROPIC_PROMPT_CACHING_TTL`, and the Admin UI exposes it as a dropdown. Note that a 1 hour cache write costs more than a 5 minute one, so it pays off only when the prefix is reused over a longer session.
+
+`litellm_settings` wins over the environment variable when both are set, since the config is applied after startup.
+
+### When to use injection points instead
+
+Reach for `cache_control_injection_points`, described below, when you need a provider the flag does not cover, a checkpoint somewhere other than the system prompt and the trailing turn, per-model rather than gateway-wide behavior, or `location: tool_config` to cache tool definitions.
+
 ## Configuration
 
 You need to specify `cache_control_injection_points` in your model configuration. This tells LiteLLM:
