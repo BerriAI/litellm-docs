@@ -24,6 +24,40 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-end-user-id`: Optional[str]: Standard header for passing a customer/end-user ID. Always checked without any configuration. [Learn More](./customers)
 
+`x-litellm-trace-id` Optional[str]: A stable id used to correlate all LLM calls belonging to one conversation or agentic flow. The value is stored in the `session_id` column of the `LiteLLM_SpendLogs` table and in request metadata (`trace_id` and `session_id`), and it propagates to nested MCP tool calls and A2A agent calls so inner LLM calls share the same session id. Highest priority of the three headers.
+
+`x-litellm-session-id` Optional[str]: Same behavior as `x-litellm-trace-id`. Used if `x-litellm-trace-id` is not present. The two headers are interchangeable and set the same chain id.
+
+`x-<vendor>-session-id` Optional[str]: Fallback pattern. Any header matching `x-<vendor>-session-id` (for example `x-claude-code-session-id`) is auto-detected as the session id if neither explicit LiteLLM header is present. The value must look like a session id: alphanumeric characters, hyphens, or underscores, at least 8 characters long.
+
+LiteLLM resolves the session id in a fixed priority order: `x-litellm-trace-id` first, then `x-litellm-session-id`, then any `x-<vendor>-session-id` header. The first match wins, and the resolved value becomes the chain id shared across the request and any nested MCP or A2A calls it triggers.
+
+### Session correlation example
+
+Send two chat completion requests with the same `x-litellm-trace-id` value to group them into one session:
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -H "x-litellm-trace-id: my-conversation-123" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "Hello, who won the world cup in 2022?"}]
+  }'
+
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -H "x-litellm-trace-id: my-conversation-123" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "And who was the top scorer?"}]
+  }'
+```
+
+All requests sharing that value can be found by querying spend logs by session id, or through the session grouping in the Admin UI logs page.
+
 ## Anthropic Headers
 
 `anthropic-version` Optional[str]: The version of the Anthropic API to use.  
