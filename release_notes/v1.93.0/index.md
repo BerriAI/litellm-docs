@@ -288,7 +288,7 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
 - **Build**
     - Restore the litellm-proxy-extras source dir in runtime images - [PR #33592](https://github.com/BerriAI/litellm/pull/33592)
     - Bake the prisma CLI and engines at a fixed path so fresh-database migrations work for any uid offline - [PR #33853](https://github.com/BerriAI/litellm/pull/33853)
-    - Raise the requires-python cap to <3.15 so Python 3.14 installs current releases - [PR #33438](https://github.com/BerriAI/litellm/pull/33438)
+    - Raise the requires-python cap to `<3.15` so Python 3.14 installs current releases - [PR #33438](https://github.com/BerriAI/litellm/pull/33438)
     - Allow redisvl, pypdf, and openapi-core on Python 3.14 - [PR #33801](https://github.com/BerriAI/litellm/pull/33801)
     - Raise pyo3 to 0.29 so the native bridge compiles on Python 3.14 - [PR #33798](https://github.com/BerriAI/litellm/pull/33798)
     - Update ddtrace to the 4.x line - [PR #33484](https://github.com/BerriAI/litellm/pull/33484)
