@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to output transcribed text (non-streaming only) |
-| Supported Providers | `openai`, `azure`, `vertex_ai`, `gemini`, `deepgram`, `groq`, `fireworks_ai`, `ovhcloud`, `mistral` | |
+| Supported Providers | `openai`, `azure`, `vertex_ai`, `gemini`, `deepgram`, `groq`, `fireworks_ai`, `ovhcloud`, `mistral`, `custom_openai` | |
 
 ## Quick Start
 
@@ -119,6 +119,72 @@ transcript = client.audio.transcriptions.create(
 </TabItem>
 </Tabs>
 
+## Self-hosted OpenAI-compatible ASR
+
+Use `custom_openai` when you want LiteLLM Proxy to expose a self-hosted
+OpenAI-compatible speech-to-text server. For example, FunASR's `funasr-server`
+can serve SenseVoice or Fun-ASR models behind LiteLLM without adding a new
+LiteLLM provider.
+
+### Start FunASR
+
+Install FunASR and the web server dependencies on the ASR host:
+
+```bash showLineNumbers title="Install FunASR"
+python -m pip install -U "funasr>=1.3.26" fastapi uvicorn python-multipart
+```
+
+Start a SenseVoice server:
+
+```bash showLineNumbers title="Start FunASR Server"
+funasr-server --model sensevoice --device cuda --port 8000
+```
+
+Use `--device cpu` for a CPU-only smoke test. The server exposes an
+OpenAI-compatible endpoint at:
+
+```text
+http://localhost:8000/v1/audio/transcriptions
+```
+
+### Configure LiteLLM Proxy
+
+Set `api_base` to the OpenAI-compatible base URL, not the full
+`/audio/transcriptions` path.
+
+```yaml showLineNumbers title="FunASR Proxy Configuration"
+model_list:
+- model_name: funasr-sensevoice
+  litellm_params:
+    model: custom_openai/FunAudioLLM/SenseVoiceSmall
+    api_base: http://localhost:8000/v1
+    api_key: dummy-key
+  model_info:
+    mode: audio_transcription
+
+general_settings:
+  master_key: sk-1234
+```
+
+Start LiteLLM Proxy:
+
+```bash showLineNumbers title="Start Proxy Server"
+litellm --config /path/to/config.yaml
+```
+
+Then call LiteLLM's OpenAI-compatible transcription endpoint:
+
+```bash showLineNumbers title="Test FunASR through LiteLLM"
+curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
+--header 'Authorization: Bearer sk-1234' \
+--form 'file=@"sample.wav"' \
+--form 'model="funasr-sensevoice"'
+```
+
+If you deploy Fun-ASR-Nano or another FunASR-compatible model, set the
+`custom_openai/<model-id>` suffix to the exact model id accepted by your
+FunASR server.
+
 ## Supported Providers
 
 - OpenAI
@@ -128,6 +194,7 @@ transcript = client.audio.transcriptions.create(
 - [Deepgram](./providers/deepgram.md)
 - [Mistral (Voxtral)](./providers/mistral.md#audio-transcription)
 - [OVHcloud AI Endpoints](./providers/ovhcloud.md)
+- Self-hosted OpenAI-compatible servers via `custom_openai`, such as FunASR or SenseVoice
 
 ---
 
