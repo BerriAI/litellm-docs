@@ -1,7 +1,7 @@
 ---
-title: "v1.93.0rc1 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
-slug: "v1-93-0-rc-1"
-date: 2026-07-11T23:30:00
+title: "v1.93.0 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
+slug: "v1-93-0"
+date: 2026-07-18T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,14 +30,14 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.93.0-rc.1
+docker.litellm.ai/berriai/litellm:1.93.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.93.0rc1
+pip install litellm==1.93.0
 ```
 
 </TabItem>
@@ -108,12 +108,15 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
     - Honor `cache_control` ttl on message-level cache points - [PR #32538](https://github.com/BerriAI/litellm/pull/32538), [PR #32551](https://github.com/BerriAI/litellm/pull/32551)
     - Keep mid-conversation system messages in place for Claude Invoke, gated on model support - [PR #32578](https://github.com/BerriAI/litellm/pull/32578), [PR #32831](https://github.com/BerriAI/litellm/pull/32831)
     - Honor AWS auth params in the realtime handler - [PR #32275](https://github.com/BerriAI/litellm/pull/32275)
+    - Forward AWS credential kwargs into `litellm_params` so the chat -> Responses bridge keeps Web Identity Federation auth - [PR #32956](https://github.com/BerriAI/litellm/pull/32956)
 - **[Google Vertex AI](../../docs/providers/vertex)**
     - Build the full request path when a custom `api_base` has no path - [PR #32367](https://github.com/BerriAI/litellm/pull/32367)
     - Return the `create_vertex_url` result directly for openai-path partner models with a custom `api_base` - [PR #32380](https://github.com/BerriAI/litellm/pull/32380)
     - Forward realtime health check params - [PR #32550](https://github.com/BerriAI/litellm/pull/32550)
 - **[Azure](../../docs/providers/azure)**
     - Build the responses `input_items` url with the path before the query string - [PR #32270](https://github.com/BerriAI/litellm/pull/32270)
+- **[Anthropic](../../docs/providers/anthropic)**
+    - Drop an incompatible pinned `temperature` when downgrading adaptive thinking for pre-4.6 models on `/v1/messages` - [PR #33244](https://github.com/BerriAI/litellm/pull/33244)
 - **General**
     - Forward provider response headers on streaming `/v1/messages` responses - [PR #32160](https://github.com/BerriAI/litellm/pull/32160)
     - Surface in-body error payloads on OpenAI-compatible streams - [PR #32237](https://github.com/BerriAI/litellm/pull/32237)
@@ -205,6 +208,7 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
 
 - **[Model Armor](../../docs/proxy/guardrails/model_armor)**
     - Scan MCP tool calls in `pre_mcp_call` / `during_mcp_call` modes - [PR #32296](https://github.com/BerriAI/litellm/pull/32296)
+    - Pass reference-only attachments through with `skip_unscannable_attachments` and remove the attachment count cap - [PR #33554](https://github.com/BerriAI/litellm/pull/33554)
 - **[Content Filter](../../docs/proxy/guardrails)**
     - Add `pre_mcp_call` support to Content Filter - [PR #32936](https://github.com/BerriAI/litellm/pull/32936)
 - **[CrowdStrike AIDR](../../docs/proxy/guardrails)**
@@ -279,22 +283,33 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
     - Negative-cache missing user/key lookups on the request hot path - [PR #32368](https://github.com/BerriAI/litellm/pull/32368)
     - Stop `CacheCodec` dropping null fields on a cache round-trip - [PR #32207](https://github.com/BerriAI/litellm/pull/32207)
 
+    - Source `/v1/models` token limits from the cost map instead of per-model router aggregation, removing wildcard deep copies - [PR #33721](https://github.com/BerriAI/litellm/pull/33721)
+    - Treat malformed configured token limits as absent on `/v1/models` - [PR #33864](https://github.com/BerriAI/litellm/pull/33864)
+- **Build**
+    - Restore the litellm-proxy-extras source dir in runtime images - [PR #33592](https://github.com/BerriAI/litellm/pull/33592)
+    - Bake the prisma CLI and engines at a fixed path so fresh-database migrations work for any uid offline - [PR #33853](https://github.com/BerriAI/litellm/pull/33853)
+    - Raise the requires-python cap to `<3.15` so Python 3.14 installs current releases - [PR #33438](https://github.com/BerriAI/litellm/pull/33438)
+    - Allow redisvl, pypdf, and openapi-core on Python 3.14 - [PR #33801](https://github.com/BerriAI/litellm/pull/33801)
+    - Raise pyo3 to 0.29 so the native bridge compiles on Python 3.14 - [PR #33798](https://github.com/BerriAI/litellm/pull/33798)
+    - Update ddtrace to the 4.x line - [PR #33484](https://github.com/BerriAI/litellm/pull/33484)
+    - Bump mcp to 1.28.1, pillow to 12.3.0, and pin httplib2/setuptools floors - [PR #33803](https://github.com/BerriAI/litellm/pull/33803), [PR #33093](https://github.com/BerriAI/litellm/pull/33093), [PR #33233](https://github.com/BerriAI/litellm/pull/33233)
+
 ## Documentation Updates
 
 - Point OSS contributors at the daily OSS branch - [PR #32830](https://github.com/BerriAI/litellm/pull/32830)
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 240)
+PRs by ownership area (total: 254)
 
-- Other (CI / chore / tests / refactors / version bumps): 56
+- Other (CI / chore / tests / refactors / version bumps): 65
 - UI: 42
 - MCP: 36
-- Models & Providers: 31
+- Models & Providers: 33
 - Performance: 14
 - Spend / Budgets / Rate Limits: 13
-- LLM API Endpoints: 13
-- Guardrails: 10
+- LLM API Endpoints: 15
+- Guardrails: 11
 - Auth & Management: 9
 - Logging: 9
 - Docs: 6
@@ -307,4 +322,4 @@ PRs by ownership area (total: 240)
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.92.0-rc.1...v1.93.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.92.0...v1.93.0

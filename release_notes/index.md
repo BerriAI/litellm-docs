@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.92.0 — Claude Sonnet 5, Production MCP OAuth & New Providers](/release_notes/v1.92.0/v1-92-0)
+### [v1.93.0 — GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API](/release_notes/v1.93.0/v1-93-0)
 
-_July 11, 2026_
+_July 18, 2026_
 
-First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including regional inference profiles), Vertex AI, and Azure AI with a 1M-token context window, reasoning, computer use, and PDF input; a production-ready MCP OAuth 2.0 On-Behalf-Of arm on the v2 resolver with RFC 9728 to RFC 8414 endpoint discovery, persisted Dynamic Client Registration, per-server outbound concurrency limits, and an `mcp_tool_search` virtual tool for large tool catalogs; two new providers in Tencent (DeepSeek V4 flash and pro) and Google Distributed Cloud Gemini for on-prem and sovereign deployments; access-control hardening across the key, user, and team endpoints plus AES-256-GCM at-rest credential encryption; and faster spend and budget hot paths with Redis-cluster reconnect and read-replica boot resilience.
+Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure plus xAI Grok-4.5, OpenAI Realtime 2.1, and Google Cloud Chirp 3 speech-to-text; a new OpenAI-compatible Meta Model API provider serving `muse-spark-1.1` across Chat Completions, `/v1/messages`, and Responses; client-forwarded MCP credentials via `true_passthrough`, `oauth_delegate`, and a `dcr_bridge` sealed-envelope path with PKCE S256 enforced on both authorize arms; the shadcn / Base UI dashboard migration covering the shared DataTable, charts, and the full-height sidebar shell; and a smarter complexity auto router with keyword tier overrides, semantic keyword matching, and an optional LLM-based classifier.
 
 ---
 
@@ -22,6 +22,7 @@ First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including 
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
 | [v1.90.0](/release_notes/v1.90.0/v1-90-0)   | Jun 26, 2026 | Six new providers, OpenTelemetry v2 metrics parity, streaming-reliability sweep |
