@@ -563,6 +563,7 @@ router_settings:
 | CHATGPT_TOKEN_DIR | Directory to store ChatGPT authentication tokens. Default is "~/.config/litellm/chatgpt"
 | CHATGPT_USER_AGENT | Custom user agent string for ChatGPT API requests
 | CHATGPT_USER_AGENT_SUFFIX | Suffix to append to the ChatGPT user agent string
+| CHECK_BATCH_COST_LOCK_TTL_SECONDS | TTL in seconds for the distributed lock that lets a single pod run the batch cost-tracking poll per cycle. Default is 600
 | CIRCLE_OIDC_TOKEN | OpenID Connect token for CircleCI
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
