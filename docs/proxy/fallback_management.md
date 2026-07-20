@@ -150,6 +150,12 @@ print(response.json())
 
 ### Test fallback
 
+:::warning Deprecated for Proxy requests
+Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
+:::
+
+To validate the fallback through the Proxy, make the primary deployment unavailable in a non-production environment and send a normal request:
+
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
@@ -161,8 +167,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
       "role": "user",
       "content": "ping"
     }
-  ],
-  "mock_testing_fallbacks": true
+  ]
 }
 '
 ```
