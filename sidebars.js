@@ -170,6 +170,7 @@ const sidebars = {
           "proxy/guardrails/akto",
           "proxy/guardrails/vigil_guard",
           "proxy/guardrails/xecguard",
+          "proxy/guardrails/straiker",
         ].sort(),
       ],
     },
