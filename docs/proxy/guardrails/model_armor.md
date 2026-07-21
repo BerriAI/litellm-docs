@@ -132,21 +132,10 @@ A document larger than Model Armor's 4 MB byte limit does carry bytes but exceed
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
 - `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
 - `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
-- `sanitize_error_detail` - bool - Keep the raw Model Armor API response out of caller-facing error details, debug logs, and guardrail trace payloads (see [Error Detail and Log Sanitization](#error-detail-and-log-sanitization)). Default is `true`
+- `sanitize_error_detail` - bool - Keep the raw Model Armor API response out of caller-facing error details, debug logs, and guardrail trace payloads. Default is `true`; set `false` to restore verbose output for debugging
 - `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
-
-## Error Detail and Log Sanitization
-
-Model Armor is a content scanner, so its API responses can echo fragments of the scanned prompt or response, including PII and PHI. By default LiteLLM keeps those responses out of every surface it controls
-
-- A blocked request returns `Content blocked by Model Armor` with no scanner payload attached
-- A Model Armor API failure surfaces as `Model Armor API error (upstream <status>)` with the upstream status code only, and guardrail traces record it as an API failure rather than a content intervention
-- Request and response debug logs carry the URL and status only
-- Guardrail trace payloads keep filter match states and confidence levels while the fields that echo scanned content (`text`, `sanitizedText`, `findings`, `maliciousUriMatchedItems`) are replaced with `[REDACTED]`
-
-Set `sanitize_error_detail: false` to restore verbose output on all of these surfaces for debugging. Only an explicit `false` opts out; leaving the field unset or set to `null` keeps sanitization on
 
 ## Further Reading
 
