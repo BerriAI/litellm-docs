@@ -13,7 +13,13 @@ LiteLLM supports all models on Databricks
 
 ## Authentication
 
-LiteLLM supports multiple authentication methods for Databricks, listed in order of preference:
+LiteLLM supports multiple authentication methods for Databricks. When more than one
+is configured, they are resolved in this order of precedence:
+
+1. **OAuth M2M** (`DATABRICKS_CLIENT_ID` + `DATABRICKS_CLIENT_SECRET`)
+2. **Personal Access Token** (`DATABRICKS_API_KEY`)
+3. **Named CLI profile** (`databricks_profile` param or `DATABRICKS_CONFIG_PROFILE`)
+4. **Databricks SDK unified auth** (automatic fallback)
 
 ### OAuth M2M (Recommended for Production)
 
@@ -51,6 +57,39 @@ response = completion(
 )
 ```
 
+### Named CLI Profile
+
+If you already authenticate with the Databricks CLI, you can point LiteLLM at a named
+profile from `~/.databrickscfg` instead of passing raw credentials. This uses the
+Databricks SDK's unified auth under the hood (so cached `databricks auth login` tokens,
+OAuth U2M, etc. all work).
+
+```python
+import os
+from litellm import completion
+
+# Option 1: per-request parameter
+response = completion(
+    model="databricks/databricks-dbrx-instruct",
+    messages=[{"role": "user", "content": "Hello!"}],
+    databricks_profile="my-workspace",  # profile name in ~/.databrickscfg
+)
+
+# Option 2: environment variable
+os.environ["DATABRICKS_CONFIG_PROFILE"] = "my-workspace"
+response = completion(
+    model="databricks/databricks-dbrx-instruct",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+```
+
+:::info
+
+Profile auth requires the Databricks SDK: `uv add databricks-sdk`. The `databricks_profile`
+parameter takes precedence over the `DATABRICKS_CONFIG_PROFILE` environment variable.
+
+:::
+
 ### Databricks SDK Authentication (Automatic)
 
 If no credentials are provided, LiteLLM will use the Databricks SDK for automatic authentication. This supports OAuth, Azure AD, and other unified auth methods configured in your environment.
@@ -65,6 +104,112 @@ response = completion(
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
+
+## Unity AI Gateway
+
+[Unity AI Gateway](https://docs.databricks.com/aws/en/ai-gateway/) (Mosaic AI Gateway)
+is Databricks' governed inference front door. It exposes both the unified
+OpenAI-compatible surface and **provider-native** API surfaces (Anthropic, Gemini,
+OpenAI Responses), plus centralized usage logging and request tagging — all under
+`https://<workspace-host>/ai-gateway/...`.
+
+LiteLLM reaches these surfaces through the same `databricks/<model>` interface you
+already use. No new provider prefix and no change to existing `/serving-endpoints`
+configurations.
+
+### Routing (surface selection)
+
+The connector decides between the AI Gateway and the legacy `/serving-endpoints`
+surface using this precedence:
+
+1. **Explicit `api_base`** — a base ending in `/serving-endpoints` or `/ai-gateway`
+   is honored verbatim (never rewritten). A custom endpoint path is also used as-is.
+2. **`databricks_use_ai_gateway`** param or **`DATABRICKS_USE_AI_GATEWAY`** env var
+   (tri-state): `true`/`force` → gateway, `false` → serving-endpoints.
+3. **Auto (default)** — optimistic **gateway-first**. The connector targets the
+   gateway with no preflight network probe; if a workspace doesn't serve the gateway,
+   that is learned reactively from the response and the call transparently falls back
+   to `/serving-endpoints` (cached per host).
+
+**Escape hatch:** force the legacy surface any time with
+`databricks_use_ai_gateway=False` (param) or `DATABRICKS_USE_AI_GATEWAY=false` (env).
+
+### Provider-native APIs (by model family)
+
+On the gateway, the connector automatically picks the best API surface for a model
+based on its name:
+
+| Model family | API surface | Gateway path |
+|--------------|-------------|--------------|
+| `*claude*` | Anthropic Messages | `/ai-gateway/anthropic/v1/messages` |
+| `*gemini*` | Gemini `generateContent` | `/ai-gateway/gemini/v1beta/models/<endpoint>:generateContent` |
+| `gpt-<n>` (e.g. `gpt-5`) | OpenAI Responses | `/ai-gateway/openai/v1/responses` |
+| everything else (Llama, Qwen, gpt-oss, Gemma, DBRX, …) | Unified MLflow chat | `/ai-gateway/mlflow/v1/chat/completions` |
+
+```python
+import os
+from litellm import completion
+
+os.environ["DATABRICKS_API_KEY"] = "dapi..."
+os.environ["DATABRICKS_API_BASE"] = "https://adb-xxx.azuredatabricks.net"  # bare host → gateway by default
+
+# Routed natively via the AI Gateway based on the model family
+completion(model="databricks/databricks-claude-3-7-sonnet", messages=[{"role": "user", "content": "Hi"}])
+completion(model="databricks/databricks-gemini-2-5-pro", messages=[{"role": "user", "content": "Hi"}])
+```
+
+### `responses()` support
+
+Databricks serves the Responses API across multiple surfaces, and no single surface
+covers every model. LiteLLM tries a per-family ordered chain and, if every responses
+surface rejects the model, falls back to chat-completions emulation:
+
+| Model family | Responses surface order |
+|--------------|-------------------------|
+| `gpt-<n>` | native OpenAI Responses → Supervisor (`/ai-gateway/mlflow/v1/responses`) |
+| `*claude*` | Supervisor → Open Responses |
+| `*gemini*` | Open Responses (`/serving-endpoints/open-responses`) |
+| others (gpt-oss, qwen, llama, …) | Open Responses → Supervisor |
+
+```python
+from litellm import responses
+
+resp = responses(
+    model="databricks/databricks-gpt-5",
+    input="Write a haiku about governed inference.",
+)
+```
+
+### Usage tagging
+
+The AI Gateway can log per-request tags to `system.ai_gateway.usage`. Emit them via
+the `databricks_ai_gateway_request_tags` param and/or litellm's standard `tags` list;
+LiteLLM serializes them into the `Databricks-Ai-Gateway-Request-Tags` header (tag
+params are stripped from the request body).
+
+```python
+from litellm import completion, embedding
+
+completion(
+    model="databricks/databricks-dbrx-instruct",
+    messages=[{"role": "user", "content": "Hello!"}],
+    databricks_ai_gateway_request_tags={"team": "fe", "env": "prod"},
+    tags=["experiment:a"],
+)
+
+embedding(
+    model="databricks/databricks-bge-large-en",
+    input=["good morning from litellm"],
+    tags=["team:fe", "env:prod"],
+)
+```
+
+### Backward compatibility
+
+Existing configurations are unaffected. An explicit
+`api_base=".../serving-endpoints"` resolves to the exact same URL as before via a
+pure in-memory lookup — no probe, no retry, and no added latency. Embeddings continue
+to use `<base>/embeddings` with no gateway routing.
 
 ## Custom User-Agent for Partner Attribution
 
