@@ -1,0 +1,386 @@
+preflight: claude CLI present (2.1.211 (Claude Code))
+preflight: proxy reachable at http://internal-k8s-litellm-litellm-e7f4afb143-1355079179.us-east-1.elb.amazonaws.com/health/liveliness (200)
+============================= test session starts ==============================
+platform linux -- Python 3.13.14, pytest-9.0.3, pluggy-1.6.0 -- /app/.venv/bin/python
+rootdir: /app/e2e
+configfile: pytest.ini
+plugins: anyio-4.13.0, locust-2.45.0, asyncio-1.3.0, cov-5.0.0, mock-3.15.1, postgresql-7.0.2, recording-0.13.4, rerunfailures-15.1, timeout-2.4.0, xdist-3.8.0, requests-mock-1.12.1, respx-0.22.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 287 items / 1 skipped
+
+access_control/test_access_control_e2e.py::TestAccessControl::test_disallowed_model_is_denied_403 PASSED [  0%]
+access_control/test_access_control_e2e.py::TestAccessControl::test_llm_only_key_forbidden_from_management_route_403 PASSED [  0%]
+access_control/test_access_control_e2e.py::TestAccessControl::test_unknown_model_returns_400 PASSED [  1%]
+batches/test_batches_e2e.py::test_batch_lifecycle[openai-encoded] PASSED [  1%]
+batches/test_batches_e2e.py::test_batch_lifecycle[openai-unified] PASSED [  1%]
+batches/test_batches_e2e.py::test_batch_lifecycle[openai-model_param] PASSED [  2%]
+batches/test_batches_e2e.py::test_batch_lifecycle[openai-provider_fallback] PASSED [  2%]
+batches/test_batches_e2e.py::test_batch_lifecycle[azure-encoded] PASSED  [  2%]
+batches/test_batches_e2e.py::test_batch_lifecycle[azure-unified] PASSED  [  3%]
+batches/test_batches_e2e.py::test_batch_lifecycle[azure-model_param] PASSED [  3%]
+batches/test_batches_e2e.py::test_batch_lifecycle[azure-provider_fallback] PASSED [  3%]
+batches/test_batches_e2e.py::test_batch_lifecycle[vertex_ai-encoded] PASSED [  4%]
+batches/test_batches_e2e.py::test_batch_lifecycle[vertex_ai-unified] PASSED [  4%]
+batches/test_batches_e2e.py::test_batch_lifecycle[vertex_ai-model_param] PASSED [  4%]
+batches/test_batches_e2e.py::test_batch_lifecycle[vertex_ai-provider_fallback] PASSED [  5%]
+batches/test_batches_e2e.py::test_batch_lifecycle[bedrock-unified] PASSED [  5%]
+batches/test_batches_e2e.py::test_batch_key_model_access_denied PASSED   [  5%]
+batches/test_batches_e2e.py::test_file_upload_and_delete_outputs PASSED  [  6%]
+batches/test_batches_e2e.py::test_rate_limited_batch_create_leaves_no_unattributed_spend_row PASSED [  6%]
+claude_code/basic_messaging_non_streaming/test_anthropic.py::test_basic_messaging_non_streaming_anthropic PASSED [  6%]
+claude_code/basic_messaging_non_streaming/test_azure.py::test_basic_messaging_non_streaming_azure PASSED [  7%]
+claude_code/basic_messaging_non_streaming/test_azure_openai.py::test_basic_messaging_non_streaming_azure_openai PASSED [  7%]
+claude_code/basic_messaging_non_streaming/test_bedrock_converse.py::test_basic_messaging_non_streaming_bedrock_converse PASSED [  8%]
+claude_code/basic_messaging_non_streaming/test_bedrock_invoke.py::test_basic_messaging_non_streaming_bedrock_invoke PASSED [  8%]
+claude_code/basic_messaging_non_streaming/test_bedrock_mantle.py::test_basic_messaging_non_streaming_bedrock_mantle SKIPPED [  8%]
+claude_code/basic_messaging_non_streaming/test_openai.py::test_basic_messaging_non_streaming_openai SKIPPED [  9%]
+claude_code/basic_messaging_non_streaming/test_vertex_ai.py::test_basic_messaging_non_streaming_vertex_ai PASSED [  9%]
+claude_code/basic_messaging_non_streaming/test_vertex_ai_gpt.py::test_basic_messaging_non_streaming_vertex_ai_gpt PASSED [  9%]
+claude_code/basic_messaging_streaming/test_anthropic.py::test_basic_messaging_streaming_anthropic PASSED [ 10%]
+claude_code/basic_messaging_streaming/test_azure.py::test_basic_messaging_streaming_azure PASSED [ 10%]
+claude_code/basic_messaging_streaming/test_azure_openai.py::test_basic_messaging_streaming_azure_openai PASSED [ 10%]
+claude_code/basic_messaging_streaming/test_bedrock_converse.py::test_basic_messaging_streaming_bedrock_converse PASSED [ 11%]
+claude_code/basic_messaging_streaming/test_bedrock_invoke.py::test_basic_messaging_streaming_bedrock_invoke PASSED [ 11%]
+claude_code/basic_messaging_streaming/test_bedrock_mantle.py::test_basic_messaging_streaming_bedrock_mantle SKIPPED [ 11%]
+claude_code/basic_messaging_streaming/test_openai.py::test_basic_messaging_streaming_openai SKIPPED [ 12%]
+claude_code/basic_messaging_streaming/test_vertex_ai.py::test_basic_messaging_streaming_vertex_ai PASSED [ 12%]
+claude_code/basic_messaging_streaming/test_vertex_ai_gpt.py::test_basic_messaging_streaming_vertex_ai_gpt PASSED [ 12%]
+claude_code/count_tokens/test_anthropic.py::test_count_tokens_anthropic PASSED [ 13%]
+claude_code/count_tokens/test_azure.py::test_count_tokens_azure PASSED   [ 13%]
+claude_code/count_tokens/test_bedrock_converse.py::test_count_tokens_bedrock_converse PASSED [ 13%]
+claude_code/count_tokens/test_bedrock_invoke.py::test_count_tokens_bedrock_invoke PASSED [ 14%]
+claude_code/count_tokens/test_vertex_ai.py::test_count_tokens_vertex_ai SKIPPED [ 14%]
+claude_code/long_context_1m/test_anthropic.py::test_long_context_1m_anthropic SKIPPED [ 14%]
+claude_code/long_context_1m/test_azure.py::test_long_context_1m_azure SKIPPED [ 15%]
+claude_code/long_context_1m/test_bedrock_converse.py::test_long_context_1m_bedrock_converse SKIPPED [ 15%]
+claude_code/long_context_1m/test_bedrock_invoke.py::test_long_context_1m_bedrock_invoke SKIPPED [ 16%]
+claude_code/long_context_1m/test_vertex_ai.py::test_long_context_1m_vertex_ai SKIPPED [ 16%]
+claude_code/passthrough/test_anthropic.py::test_passthrough_anthropic PASSED [ 16%]
+claude_code/passthrough/test_azure.py::test_passthrough_azure SKIPPED    [ 17%]
+claude_code/passthrough/test_bedrock_converse.py::test_passthrough_bedrock_converse PASSED [ 17%]
+claude_code/passthrough/test_bedrock_invoke.py::test_passthrough_bedrock_invoke PASSED [ 17%]
+claude_code/passthrough/test_vertex_ai.py::test_passthrough_vertex_ai PASSED [ 18%]
+claude_code/pdf_input/test_anthropic.py::test_pdf_input_anthropic PASSED [ 18%]
+claude_code/pdf_input/test_azure.py::test_pdf_input_azure PASSED         [ 18%]
+claude_code/pdf_input/test_bedrock_converse.py::test_pdf_input_bedrock_converse SKIPPED [ 19%]
+claude_code/pdf_input/test_bedrock_invoke.py::test_pdf_input_bedrock_invoke PASSED [ 19%]
+claude_code/pdf_input/test_vertex_ai.py::test_pdf_input_vertex_ai PASSED [ 19%]
+claude_code/prompt_caching_1h/test_anthropic.py::test_prompt_caching_1h_anthropic PASSED [ 20%]
+claude_code/prompt_caching_1h/test_azure.py::test_prompt_caching_1h_azure PASSED [ 20%]
+claude_code/prompt_caching_1h/test_bedrock_converse.py::test_prompt_caching_1h_bedrock_converse PASSED [ 20%]
+claude_code/prompt_caching_1h/test_bedrock_invoke.py::test_prompt_caching_1h_bedrock_invoke PASSED [ 21%]
+claude_code/prompt_caching_1h/test_vertex_ai.py::test_prompt_caching_1h_vertex_ai PASSED [ 21%]
+claude_code/prompt_caching_5m/test_anthropic.py::test_prompt_caching_5m_anthropic PASSED [ 21%]
+claude_code/prompt_caching_5m/test_azure.py::test_prompt_caching_5m_azure PASSED [ 22%]
+claude_code/prompt_caching_5m/test_bedrock_converse.py::test_prompt_caching_5m_bedrock_converse PASSED [ 22%]
+claude_code/prompt_caching_5m/test_bedrock_invoke.py::test_prompt_caching_5m_bedrock_invoke PASSED [ 22%]
+claude_code/prompt_caching_5m/test_vertex_ai.py::test_prompt_caching_5m_vertex_ai PASSED [ 23%]
+claude_code/structured_outputs/test_anthropic.py::test_structured_outputs_anthropic PASSED [ 23%]
+claude_code/structured_outputs/test_azure.py::test_structured_outputs_azure PASSED [ 24%]
+claude_code/structured_outputs/test_bedrock_converse.py::test_structured_outputs_bedrock_converse PASSED [ 24%]
+claude_code/structured_outputs/test_bedrock_invoke.py::test_structured_outputs_bedrock_invoke PASSED [ 24%]
+claude_code/structured_outputs/test_vertex_ai.py::test_structured_outputs_vertex_ai PASSED [ 25%]
+claude_code/thinking/test_anthropic.py::test_thinking_anthropic PASSED   [ 25%]
+claude_code/thinking/test_azure.py::test_thinking_azure PASSED           [ 25%]
+claude_code/thinking/test_bedrock_converse.py::test_thinking_bedrock_converse SKIPPED [ 26%]
+claude_code/thinking/test_bedrock_invoke.py::test_thinking_bedrock_invoke PASSED [ 26%]
+claude_code/thinking/test_vertex_ai.py::test_thinking_vertex_ai PASSED   [ 26%]
+claude_code/thinking_with_tool_use/test_anthropic.py::test_thinking_with_tool_use_anthropic PASSED [ 27%]
+claude_code/thinking_with_tool_use/test_azure.py::test_thinking_with_tool_use_azure PASSED [ 27%]
+claude_code/thinking_with_tool_use/test_bedrock_converse.py::test_thinking_with_tool_use_bedrock_converse PASSED [ 27%]
+claude_code/thinking_with_tool_use/test_bedrock_invoke.py::test_thinking_with_tool_use_bedrock_invoke PASSED [ 28%]
+claude_code/thinking_with_tool_use/test_vertex_ai.py::test_thinking_with_tool_use_vertex_ai PASSED [ 28%]
+claude_code/tool_search/test_anthropic.py::test_tool_search_anthropic PASSED [ 28%]
+claude_code/tool_search/test_azure.py::test_tool_search_azure SKIPPED    [ 29%]
+claude_code/tool_search/test_bedrock_converse.py::test_tool_search_bedrock_converse PASSED [ 29%]
+claude_code/tool_search/test_bedrock_invoke.py::test_tool_search_bedrock_invoke SKIPPED [ 29%]
+claude_code/tool_search/test_vertex_ai.py::test_tool_search_vertex_ai SKIPPED [ 30%]
+claude_code/tool_use/test_anthropic.py::test_tool_use_anthropic PASSED   [ 30%]
+claude_code/tool_use/test_azure.py::test_tool_use_azure PASSED           [ 31%]
+claude_code/tool_use/test_azure_openai.py::test_tool_use_azure_openai PASSED [ 31%]
+claude_code/tool_use/test_bedrock_converse.py::test_tool_use_bedrock_converse PASSED [ 31%]
+claude_code/tool_use/test_bedrock_invoke.py::test_tool_use_bedrock_invoke PASSED [ 32%]
+claude_code/tool_use/test_bedrock_mantle.py::test_tool_use_bedrock_mantle SKIPPED [ 32%]
+claude_code/tool_use/test_openai.py::test_tool_use_openai SKIPPED (O...) [ 32%]
+claude_code/tool_use/test_vertex_ai.py::test_tool_use_vertex_ai PASSED   [ 33%]
+claude_code/tool_use/test_vertex_ai_gpt.py::test_tool_use_vertex_ai_gpt PASSED [ 33%]
+claude_code/tool_use_streaming/test_anthropic.py::test_tool_use_streaming_anthropic PASSED [ 33%]
+claude_code/tool_use_streaming/test_azure.py::test_tool_use_streaming_azure PASSED [ 34%]
+claude_code/tool_use_streaming/test_azure_openai.py::test_tool_use_streaming_azure_openai PASSED [ 34%]
+claude_code/tool_use_streaming/test_bedrock_converse.py::test_tool_use_streaming_bedrock_converse PASSED [ 34%]
+claude_code/tool_use_streaming/test_bedrock_invoke.py::test_tool_use_streaming_bedrock_invoke PASSED [ 35%]
+claude_code/tool_use_streaming/test_bedrock_mantle.py::test_tool_use_streaming_bedrock_mantle SKIPPED [ 35%]
+claude_code/tool_use_streaming/test_openai.py::test_tool_use_streaming_openai SKIPPED [ 35%]
+claude_code/tool_use_streaming/test_vertex_ai.py::test_tool_use_streaming_vertex_ai PASSED [ 36%]
+claude_code/tool_use_streaming/test_vertex_ai_gpt.py::test_tool_use_streaming_vertex_ai_gpt PASSED [ 36%]
+claude_code/vision/test_anthropic.py::test_vision_anthropic PASSED       [ 36%]
+claude_code/vision/test_azure.py::test_vision_azure PASSED               [ 37%]
+claude_code/vision/test_bedrock_converse.py::test_vision_bedrock_converse PASSED [ 37%]
+claude_code/vision/test_bedrock_invoke.py::test_vision_bedrock_invoke PASSED [ 37%]
+claude_code/vision/test_vertex_ai.py::test_vision_vertex_ai PASSED       [ 38%]
+claude_code/web_search/test_anthropic.py::test_web_search_anthropic PASSED [ 38%]
+claude_code/web_search/test_azure.py::test_web_search_azure PASSED       [ 39%]
+claude_code/web_search/test_bedrock_converse.py::test_web_search_bedrock_converse PASSED [ 39%]
+claude_code/web_search/test_bedrock_invoke.py::test_web_search_bedrock_invoke PASSED [ 39%]
+claude_code/web_search/test_vertex_ai.py::test_web_search_vertex_ai PASSED [ 40%]
+coverage_registry/test_collector.py::test_compute_coverage_counts_covered_p0_and_gaps PASSED [ 40%]
+coverage_registry/test_collector.py::test_orphan_marker_is_reported_not_counted PASSED [ 40%]
+coverage_registry/test_collector.py::test_logging_and_guardrail_roll_up_into_one_module PASSED [ 41%]
+coverage_registry/test_collector.py::test_llm_cells_roll_up_by_core_endpoint PASSED [ 41%]
+coverage_registry/test_collector.py::test_text_render_uses_plain_coverage_language PASSED [ 41%]
+coverage_registry/test_collector.py::test_json_render_exposes_module_coverage_for_grafana_jobs PASSED [ 42%]
+coverage_registry/test_collector.py::test_prometheus_render_exposes_module_coverage_timeseries PASSED [ 42%]
+coverage_registry/test_collector.py::test_loki_render_exposes_exact_stdout_lines_for_loki PASSED [ 42%]
+coverage_registry/test_collector.py::test_real_registry_loads_and_ids_are_unique PASSED [ 43%]
+coverage_registry/test_collector.py::test_load_registry_rejects_duplicate_ids PASSED [ 43%]
+llm_translation/realtime/test_realtime_e2e.py::test_text_conversation[openai] PASSED [ 43%]
+llm_translation/realtime/test_realtime_e2e.py::test_text_conversation[azure] PASSED [ 44%]
+llm_translation/realtime/test_realtime_e2e.py::test_text_conversation[gemini] PASSED [ 44%]
+llm_translation/realtime/test_realtime_e2e.py::test_text_conversation[vertex_ai] PASSED [ 44%]
+llm_translation/realtime/test_realtime_e2e.py::test_tool_call_round_trip[openai] PASSED [ 45%]
+llm_translation/realtime/test_realtime_e2e.py::test_tool_call_round_trip[azure] PASSED [ 45%]
+llm_translation/realtime/test_realtime_e2e.py::test_tool_call_round_trip[gemini] PASSED [ 45%]
+llm_translation/realtime/test_realtime_e2e.py::test_tool_call_round_trip[vertex_ai] PASSED [ 46%]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[openai] PASSED [ 46%]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[azure] PASSED [ 47%]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[gemini] PASSED [ 47%]
+llm_translation/test_audio_speech_e2e.py::TestAudioSpeech::test_audio_speech_returns_audio PASSED [ 47%]
+llm_translation/test_cache_control.py::TestCacheControl::test_bedrock_prompt_caching_reads_cache PASSED [ 48%]
+llm_translation/test_cache_control.py::TestCacheControl::test_vertex_prompt_caching_reads_cache PASSED [ 48%]
+llm_translation/test_chat_completions_regression_e2e.py::TestChatCompletionsRegression::test_chat_returns_real_completion[gpt-5.5-openai] PASSED [ 48%]
+llm_translation/test_chat_completions_regression_e2e.py::TestChatCompletionsRegression::test_chat_returns_real_completion[claude-haiku-4-5-anthropic] PASSED [ 49%]
+llm_translation/test_chat_completions_regression_e2e.py::TestChatCompletionsRegression::test_chat_returns_real_completion[gemini-2.5-flash-gemini] PASSED [ 49%]
+llm_translation/test_custom_pricing_e2e.py::TestCustomPricing::test_custom_pricing_is_billed_at_configured_rate PASSED [ 49%]
+llm_translation/test_custom_pricing_e2e.py::TestCustomPricing::test_model_info_reports_custom_pricing PASSED [ 50%]
+llm_translation/test_custom_pricing_e2e.py::TestCustomPricing::test_custom_pricing_is_isolated_from_sibling_deployment PASSED [ 50%]
+llm_translation/test_deepseek_reasoning_e2e.py::TestDeepSeekReasoningDisable::test_reasoner_returns_reasoning_by_default PASSED [ 50%]
+llm_translation/test_deepseek_reasoning_e2e.py::TestDeepSeekReasoningDisable::test_reasoning_effort_none_disables_reasoning PASSED [ 51%]
+llm_translation/test_deepseek_reasoning_e2e.py::TestDeepSeekReasoningDisable::test_thinking_disabled_disables_reasoning PASSED [ 51%]
+llm_translation/test_embeddings_endpoint_e2e.py::TestEmbeddingsEndpoint::test_embeddings_returns_vector PASSED [ 51%]
+llm_translation/test_image_generation_e2e.py::TestImageGeneration::test_image_generation_returns_image PASSED [ 52%]
+llm_translation/test_messages_e2e.py::TestAnthropicMessages::test_messages_returns_completion PASSED [ 52%]
+llm_translation/test_messages_mid_conversation_system_e2e.py::TestBedrockInvokeMidConversationSystem::test_flagged_model_keeps_prompt_cache_across_system_reminder PASSED [ 52%]
+llm_translation/test_messages_mid_conversation_system_e2e.py::TestBedrockInvokeMidConversationSystem::test_unflagged_model_hoists_system_reminder_and_succeeds PASSED [ 53%]
+llm_translation/test_ocr_rust_e2e.py::TestRustOcrGateway::test_rust_ocr_response[mistral] PASSED [ 53%]
+llm_translation/test_ocr_rust_e2e.py::TestRustOcrGateway::test_rust_ocr_response[azure-ai] PASSED [ 54%]
+llm_translation/test_ocr_rust_e2e.py::TestRustOcrGateway::test_rust_ocr_response[azure-document-intelligence] PASSED [ 54%]
+llm_translation/test_ocr_rust_e2e.py::TestRustOcrGateway::test_rust_ocr_response[vertex-mistral] PASSED [ 54%]
+llm_translation/test_passthrough_e2e.py::test_gemini_passthrough_nonstreaming_logs_cost PASSED [ 55%]
+llm_translation/test_passthrough_e2e.py::test_gemini_passthrough_streaming_logs_cost PASSED [ 55%]
+llm_translation/test_passthrough_e2e.py::test_gemini_passthrough_tool_call_logs_cost PASSED [ 55%]
+llm_translation/test_passthrough_e2e.py::test_anthropic_passthrough_nonstreaming_logs_cost PASSED [ 56%]
+llm_translation/test_passthrough_e2e.py::test_anthropic_passthrough_streaming_logs_cost PASSED [ 56%]
+llm_translation/test_passthrough_e2e.py::test_anthropic_passthrough_tool_call_logs_cost PASSED [ 56%]
+llm_translation/test_provider_features_e2e.py::TestServiceTier::test_openai_service_tier_is_echoed PASSED [ 57%]
+llm_translation/test_rerank_e2e.py::TestRerank::test_rerank_scores_top_n PASSED [ 57%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_returns_completion PASSED [ 57%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_streaming_returns_completion PASSED [ 58%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_logs_cost PASSED [ 58%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_returns_function_call PASSED [ 58%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_vision_describes_image PASSED [ 59%]
+llm_translation/test_responses_e2e.py::TestResponses::test_responses_anthropic_returns_completion PASSED [ 59%]
+llm_translation/test_vertex_passthrough_e2e.py::TestVertexPassthroughSpendTracking::test_vertex_passthrough_via_managed_model_logs_cost SKIPPED [ 59%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_chat_completions_emits_one_log_event PASSED [ 60%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_messages_emits_one_log_event PASSED [ 60%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_responses_emits_one_log_event PASSED [ 60%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_chat_completions_stream_emits_one_log_event PASSED [ 61%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_messages_stream_emits_one_log_event PASSED [ 61%]
+logging/test_datadog_log_e2e.py::TestDataDogLogDelivery::test_responses_stream_emits_one_log_event PASSED [ 62%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_chat_completions_exports_complete_trace PASSED [ 62%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_messages_exports_complete_trace PASSED [ 62%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_responses_exports_complete_trace PASSED [ 63%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_chat_completions_stream_exports_complete_trace PASSED [ 63%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_messages_stream_exports_complete_trace PASSED [ 63%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_responses_stream_exports_complete_trace PASSED [ 64%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_chat_completions_stream_records_real_ttft PASSED [ 64%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_messages_stream_records_real_ttft PASSED [ 64%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_responses_stream_records_real_ttft PASSED [ 65%]
+logging/test_otel_trace_e2e.py::TestOtelTraceCompleteness::test_failed_chat_completions_error_span_attributes PASSED [ 65%]
+logging/test_prometheus_cardinality_e2e.py::TestPrometheusPerKeyCardinality::test_distinct_key_aliases_produce_distinct_series PASSED [ 65%]
+management/test_management_e2e.py::TestKeyRoutes::test_generate_persists_to_key_info_and_scopes_chat PASSED [ 66%]
+management/test_management_e2e.py::TestKeyRoutes::test_update_models_persists_and_flips_enforcement PASSED [ 66%]
+management/test_management_e2e.py::TestKeyRoutes::test_delete_revokes_the_key_on_chat PASSED [ 66%]
+management/test_management_e2e.py::TestTeamRoutes::test_new_persists_to_team_info_and_binds_keys PASSED [ 67%]
+management/test_management_e2e.py::TestTeamRoutes::test_member_add_and_delete_persist_to_team_info PASSED [ 67%]
+management/test_management_e2e.py::TestUserRoutes::test_new_persists_to_user_info PASSED [ 67%]
+management/test_management_e2e.py::TestOrganizationRoutes::test_new_persists_to_organization_info PASSED [ 68%]
+management/test_management_e2e.py::TestManagementRoutePermissions::test_llm_only_key_forbidden_from_management_writes PASSED [ 68%]
+mcp/test_mcp_datadog_e2e.py::TestDatadogMcpRoundTrip::test_search_logs_finds_seeded_completion PASSED [ 68%]
+mcp/test_mcp_key_access_e2e.py::TestMcpKeyWithoutAccessIsDenied::test_list_tools_denied_without_permission PASSED [ 69%]
+mcp/test_mcp_key_access_e2e.py::TestMcpKeyWithoutAccessIsDenied::test_call_tool_denied_without_permission PASSED [ 69%]
+quota_management/budgets/test_budget_crud_e2e.py::test_budget_crud_roundtrip PASSED [ 70%]
+quota_management/budgets/test_budget_crud_e2e.py::test_budget_delete_removes_it PASSED [ 70%]
+quota_management/budgets/test_budget_crud_e2e.py::test_budget_duration_schedules_reset_on_key PASSED [ 70%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[KeyBudgetCase] PASSED [ 71%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[TeamBudgetCase] PASSED [ 71%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[InternalUserBudgetCase] PASSED [ 71%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[EndUserBudgetCase] PASSED [ 72%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[OrganizationBudgetCase] PASSED [ 72%]
+quota_management/budgets/test_budget_enforcement_e2e.py::test_budget_enforcement[TeamMemberBudgetCase] PASSED [ 72%]
+quota_management/budgets/test_budget_fallback_e2e.py::test_budget_fallback_reroutes_anthropic_messages_to_openai PASSED [ 73%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_key_with_budget_duration_schedules_reset_at_creation PASSED [ 73%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_key_spend_blocks_at_cap PASSED [ 73%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_key_budget_reset_at_advances_after_window PASSED [ 74%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_multi_window_key_resets_each_window_independently PASSED [ 74%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_team_member_budget_reset_at_advances PASSED [ 74%]
+quota_management/budgets/test_budget_reset_advances_e2e.py::test_reset_wait_never_yields_non_budget_error PASSED [ 75%]
+quota_management/budgets/test_budget_reset_e2e.py::TestBudgetResetDiagonal::test_bare_key_budget_resets_after_window PASSED [ 75%]
+quota_management/budgets/test_budget_reset_e2e.py::TestBudgetResetDiagonal::test_team_budget_resets_after_window PASSED [ 75%]
+quota_management/budgets/test_budget_reset_e2e.py::TestBudgetResetDiagonal::test_org_budget_resets_after_window PASSED [ 76%]
+quota_management/budgets/test_budget_reset_e2e.py::TestBudgetResetDiagonal::test_personal_key_user_budget_resets_after_window PASSED [ 76%]
+quota_management/budgets/test_budget_reset_e2e.py::TestBudgetResetDiagonal::test_team_member_key_user_budget_resets_after_window PASSED [ 77%]
+quota_management/budgets/test_model_max_budget_e2e.py::test_model_max_budget_isolates_per_model PASSED [ 77%]
+quota_management/budgets/test_multi_window_budget_e2e.py::test_short_window_blocks_then_resets PASSED [ 77%]
+quota_management/budgets/test_soft_budget_e2e.py::test_soft_budget_does_not_block PASSED [ 78%]
+quota_management/budgets/test_spend_counter_reseed_e2e.py::test_cold_counter_reseed_keeps_counter_equal_to_db_spend PASSED [ 78%]
+quota_management/budgets/test_tag_budget_e2e.py::test_tag_budget_blocks_tagged_requests PASSED [ 78%]
+quota_management/budgets/test_team_member_budget_e2e.py::TestTeamMemberBudget::test_member_spend_attributed_to_team_and_user PASSED [ 79%]
+quota_management/budgets/test_team_member_budget_e2e.py::TestTeamMemberBudget::test_member_spend_over_budget_is_blocked PASSED [ 79%]
+quota_management/budgets/test_team_member_budget_isolation_e2e.py::TestTeamMemberBudgetIsolation::test_blocked_member_does_not_block_peer PASSED [ 79%]
+quota_management/budgets/test_team_member_budget_reset_e2e.py::test_team_member_budget_reset_keeps_advancing PASSED [ 80%]
+quota_management/budgets/test_team_multi_window_budget_e2e.py::test_team_short_window_blocks_then_resets PASSED [ 80%]
+quota_management/budgets/test_user_budget_across_keys_e2e.py::TestUserBudgetAcrossKeys::test_user_budget_blocks_a_second_key PASSED [ 80%]
+quota_management/ratelimit/test_rate_limit_e2e.py::TestKeyRateLimits::test_rpm_limit_blocks_over_limit PASSED [ 81%]
+quota_management/ratelimit/test_rate_limit_e2e.py::TestKeyRateLimits::test_tpm_limit_blocks_over_limit PASSED [ 81%]
+quota_management/ratelimit/test_rate_limit_e2e.py::TestKeyRateLimits::test_rpm_limit_resets_after_window PASSED [ 81%]
+quota_management/ratelimit/test_rate_limit_e2e.py::TestKeyRateLimits::test_headers_report_limit_and_remaining PASSED [ 82%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/keys] PASSED [ 82%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/users] PASSED [ 82%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/tags] PASSED [ 83%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/logs] PASSED [ 83%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/logs/ui] PASSED [ 83%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/logs/v2] PASSED [ 84%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/spend/logs/session/ui] PASSED [ 84%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend] PASSED [ 85%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/keys] PASSED [ 85%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/teams] PASSED [ 85%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/models] PASSED [ 86%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/provider] PASSED [ 86%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/report] PASSED [ 86%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/tags] PASSED [ 87%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/logs] PASSED [ 87%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/spend/all_tag_names] PASSED [ 87%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/all_end_users] PASSED [ 88%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/activity] PASSED [ 88%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/activity/model] PASSED [ 88%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/activity/exceptions] PASSED [ 89%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/global/activity/exceptions/deployment] PASSED [ 89%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/user/daily/activity] PASSED [ 89%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/user/daily/activity/aggregated] PASSED [ 90%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/team/daily/activity] PASSED [ 90%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/organization/daily/activity] PASSED [ 90%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/customer/daily/activity] PASSED [ 91%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/end_user/daily/activity] PASSED [ 91%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/tag/daily/activity] PASSED [ 91%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/key/list] PASSED [ 92%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/user/list] PASSED [ 92%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/team/list] PASSED [ 93%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/organization/list] PASSED [ 93%]
+quota_management/spend_tracking/test_spend_routes.py::test_spend_route_responsive[/customer/list] PASSED [ 93%]
+quota_management/spend_tracking/test_spend_routes.py::test_schema_listed_spend_routes_are_responsive PASSED [ 94%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_chat_completion_writes_nonzero_spend_row PASSED [ 94%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_streaming_chat_completion_tracks_spend PASSED [ 94%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_streaming_messages_via_responses_bridge_tracks_spend PASSED [ 95%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_embedding_writes_nonzero_spend_row PASSED [ 95%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_cache_hit_is_zero_cost_and_suffixed PASSED [ 95%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_key_spend_equals_sum_of_logs PASSED [ 96%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_burst_of_concurrent_calls_loses_no_spend PASSED [ 96%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_spend_logs_v2_pagination_caps_pages_and_keeps_total PASSED [ 96%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_request_tags_round_trip PASSED [ 97%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_tag_spend_matches_sum_of_tagged_logs PASSED [ 97%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_end_user_spend_attributed_on_row PASSED [ 97%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_each_model_on_a_shared_key_gets_its_own_row PASSED [ 98%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_failure_call_writes_failure_status_row SKIPPED [ 98%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_spend_calculate_returns_nonzero_cost PASSED [ 98%]
+quota_management/spend_tracking/test_spend_tracking_e2e.py::test_spend_logs_endpoint_returns_spend PASSED [ 99%]
+router/test_complexity_router_e2e.py::TestComplexityRouterLlmClassifier::test_llm_classifier_runs_and_routes_by_semantic_tier SKIPPED [ 99%]
+load/test_chat_completions_throughput_e2e.py::TestChatCompletionsThroughput::test_sustains_throughput_slo_under_load FAILED [100%]spend-log cleanup best-effort failed: connection failed: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+Multiple connection attempts failed. All failures were:
+- host: 'localhost', port: '5432', hostaddr: '::1': connection failed: connection to server at "::1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+- host: 'localhost', port: '5432', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+
+=================================== FAILURES ===================================
+____ TestChatCompletionsThroughput.test_sustains_throughput_slo_under_load _____
+
+self = <test_chat_completions_throughput_e2e.TestChatCompletionsThroughput object at 0x7f081de9ad50>
+client = LoadClient(proxy=ProxyClient(transport=SplitTransport(data=HttpTransport(base_url='http://internal-k8s-litellm-litellm...='sk-640fc15fce76484546d43452c51f97a3242b06861f74ef85', request_timeout=60.0)), poll_timeout=120.0, poll_interval=5.0))
+load_key = 'sk-nTphwEj24d1m5_-7iHLbag'
+
+    @pytest.mark.covers("reliability.perf.throughput.under_slo")
+    def test_sustains_throughput_slo_under_load(self, client: LoadClient, load_key: str) -> None:
+[compat] session totals:
+  pass             213
+  not_applicable   5
+[compat] per-provider breakdown:
+  anthropic            pass=45
+  azure                pass=39
+  azure_openai         pass=12
+  bedrock_converse     not_applicable=1 pass=36
+  bedrock_invoke       pass=42
+  vertex_ai            pass=39
+  vertex_ai_gpt        not_applicable=4
+        result = run_chat_load(
+            base_url=PROXY_BASE_URL,
+            api_key=load_key,
+            model=LOAD_MODEL,
+            users=LOAD_USERS,
+            spawn_rate=LOAD_SPAWN_RATE,
+            duration_seconds=LOAD_DURATION_SECONDS,
+        )
+    
+        assert result.requests > 0, (
+            f"no requests completed against {PROXY_BASE_URL} in {LOAD_DURATION_SECONDS}s; "
+            f"the load generator never drove traffic (proxy unreachable or model unservable)"
+        )
+>       assert result.failure_ratio <= LOAD_MAX_FAILURE_RATIO, (
+            f"{result.failures}/{result.requests} requests failed "
+            f"({result.failure_ratio:.1%} > {LOAD_MAX_FAILURE_RATIO:.1%} allowed); "
+            f"throughput of {result.requests_per_second:.1f} RPS is not a clean read under this error rate"
+        )
+E       AssertionError: 95449/97121 requests failed (98.3% > 1.0% allowed); throughput of 1633.9 RPS is not a clean read under this error rate
+E       assert 0.9827843617755171 <= 0.01
+E        +  where 0.9827843617755171 = LoadResult(requests=97121, failures=95449, requests_per_second=1633.8659535303982).failure_ratio
+
+load/test_chat_completions_throughput_e2e.py:34: AssertionError
+=============================== warnings summary ===============================
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[openai]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[azure]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[gemini]
+  /app/e2e/llm_translation/realtime/test_realtime_pipecat_e2e.py:101: DeprecationWarning: The `model` parameter is deprecated. Use `settings=LiteLLMRealtimeLLMService.Settings(model=...)` instead. If both are provided, `settings` takes precedence.
+    llm = LiteLLMRealtimeLLMService(
+
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[openai]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[azure]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[gemini]
+  /app/e2e/llm_translation/realtime/test_realtime_pipecat_e2e.py:109: DeprecationWarning: `PipelineTask` is deprecated since 1.3.0 and will be removed in 2.0.0. Use `PipelineWorker` instead.
+    task = PipelineTask(
+
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[openai]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[azure]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[gemini]
+  /app/e2e/llm_translation/realtime/test_realtime_pipecat_e2e.py:122: DeprecationWarning: `PipelineRunner` is deprecated since 1.3.0 and will be removed in 2.0.0. Use `WorkerRunner` instead.
+    await asyncio.wait_for(PipelineRunner().run(task), timeout=45)
+
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[openai]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[azure]
+llm_translation/realtime/test_realtime_pipecat_e2e.py::test_pipecat_tool_smoke[gemini]
+  /usr/local/lib/python3.13/asyncio/tasks.py:507: DeprecationWarning: Passing a worker to WorkerRunner.run() is deprecated; register it with WorkerRunner.add_workers() before calling run() instead.
+    return await fut
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED load/test_chat_completions_throughput_e2e.py::TestChatCompletionsThroughput::test_sustains_throughput_slo_under_load
+===== 1 failed, 263 passed, 24 skipped, 12 warnings in 3468.40s (0:57:48) ======
+COVERAGE_TOTAL percent=43.0 covered=168 total=391
+COVERAGE_MODULE module=core_llms percent=72.4 covered=89 total=123
+COVERAGE_MODULE module=non_core_llms percent=40.9 covered=18 total=44
+COVERAGE_MODULE module=mcp percent=28.6 covered=4 total=14
+COVERAGE_MODULE module=management_ui percent=13.4 covered=9 total=67
+COVERAGE_MODULE module=reliability_performance percent=7.7 covered=2 total=26
+COVERAGE_MODULE module=quota_management percent=95.0 covered=38 total=40
+COVERAGE_MODULE module=logging_guardrails percent=13.7 covered=7 total=51
+COVERAGE_MODULE module=other percent=3.8 covered=1 total=26

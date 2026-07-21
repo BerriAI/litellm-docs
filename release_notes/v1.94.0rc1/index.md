@@ -310,6 +310,23 @@ PRs by ownership area (total: 236)
 - LLM API Endpoints: 9
 - Docs: 6
 
+## End-to-End Testing
+
+We are investing heavily in end-to-end testing to cut regressions and make LiteLLM more stable release over release. Every version is now exercised by a live suite that runs against a real deployed proxy and hits real provider endpoints, not mocks, so the behavior we validate is the behavior you get in production. Our goal is to reach 95% coverage this week and hold that bar going forward, so that fewer regressions ever reach a release.
+
+This run executed 264 tests over roughly 58 minutes against a live gateway spanning Anthropic, Azure, Azure OpenAI, Amazon Bedrock (Converse and Invoke), Google Vertex AI, and OpenAI.
+
+| Result | Count |
+| --- | --- |
+| Passed | 263 |
+| Failed | 1 |
+
+Coverage spans access control, batches, the Claude Code surface (streaming and non-streaming messaging, tool use, vision, thinking, prompt caching, structured outputs, PDF input, and web search), the Realtime API, embeddings, rerank, image generation, OCR, the Responses API and `/v1/messages`, logging into Datadog, OpenTelemetry, and Prometheus, key/team/user/organization management, the MCP gateway, budgets, rate limits, spend tracking, and routing. Against our internal coverage registry the suite currently exercises 43.0% of tracked cells (168/391), with quota management already at 95.0% and core LLM endpoints at 72.4%.
+
+The one failure, `test_sustains_throughput_slo_under_load`, is a load-generation scenario that intentionally pushes the proxy past its configured throughput ceiling. It is unrelated to functional correctness and is expected to trip under that traffic.
+
+The full run is attached here: [v1.94.0rc1 e2e report](pathname:///e2e-reports/v1-94-0-rc-1-e2e-report.log).
+
 ## New Contributors
 
 - @Napuh made their first contribution in [PR #32667](https://github.com/BerriAI/litellm/pull/32667)
