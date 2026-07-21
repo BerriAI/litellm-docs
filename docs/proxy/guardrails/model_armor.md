@@ -35,6 +35,7 @@ guardrails:
       mask_request_content: true       # Enable request content masking
       mask_response_content: true      # Enable response content masking
       fail_on_error: true             # Fail request if Model Armor errors (default: true)
+      sanitize_error_detail: true     # Keep raw Model Armor responses out of errors and logs (default: true)
       default_on: true                # Run by default for all requests
 ```
 
@@ -131,6 +132,7 @@ A document larger than Model Armor's 4 MB byte limit does carry bytes but exceed
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
 - `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
 - `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
+- `sanitize_error_detail` - bool - Keep the raw Model Armor API response out of caller-facing error details, debug logs, and guardrail trace payloads. Default is `true`; set `false` to restore verbose output for debugging
 - `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
