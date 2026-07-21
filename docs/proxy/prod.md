@@ -50,7 +50,9 @@ general_settings:
   proxy_config_reload_interval_seconds: 30
 ```
 
-The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Settings, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
+The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Router Settings on the General tab, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
+
+<Image img={require('../../img/proxy_config_reload_interval_ui.png')} />
 
 ### Bound database connections
 
