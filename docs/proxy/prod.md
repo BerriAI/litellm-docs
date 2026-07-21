@@ -40,6 +40,18 @@ general_settings:
 
 Above roughly 1000 requests per second, also route these writes through Redis with the [Redis transaction buffer](#redis-transaction-buffer) to prevent connection exhaustion and deadlocks.
 
+### Tune config reload across pods
+
+With `store_model_in_db: true`, each pod keeps itself in sync with config added at runtime (models, credentials, guardrails, general settings, etc.) by polling the database on a background job. There is no cross-pod push; a pod converges within one polling interval of a change. That interval defaults to 30 seconds and is tunable, so if you need faster convergence you can lower it, and if you run many pods against a busy database you can raise it to shed load.
+
+```yaml
+general_settings:
+  store_model_in_db: true
+  proxy_config_reload_interval_seconds: 30
+```
+
+The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Settings, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
+
 ### Bound database connections
 
 Cap the connection pool per worker process so your instances cannot exhaust the database. Size it as `MAX_DB_CONNECTIONS / (instances × workers)`; the default is 10.
