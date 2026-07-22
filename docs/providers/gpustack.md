@@ -7,16 +7,16 @@ From GPU to Token Factory in Minutes
 
 1. Multi-Cluster GPU Management
 Manages GPU clusters across multiple environments, including on-premises servers, Kubernetes clusters, and cloud providers.
----
+
 2. Pluggable Inference Engines
 Automatically configures high-performance inference engines such as vLLM, SGLang, and TensorRT-LLM. Supports adding custom inference engines as needed.
----
+
 3. Day 0 Model Support
 Leverages a pluggable engine architecture to enable zero-day deployment of newly released models.
----
+
 4. Performance-Optimized
 Offers pre-tuned modes for low latency or high throughput. Supports extended KV cache (LMCache, HiCache) and speculative decoding (EAGLE3, MTP).
----
+
 5. Enterprise-Grade Operations
 Provides support for automated failure recovery, load balancing, monitoring, authentication, and access control.
 
