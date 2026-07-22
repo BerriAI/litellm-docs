@@ -255,14 +255,12 @@ const sidebars = {
             "claude_code_context_management",
           ]
         },
-        "tutorials/claude_desktop_cowork",
         "tutorials/opencode_integration",
         "tutorials/openclaw_integration",
         "tutorials/cursor_integration",
         "tutorials/github_copilot_integration",
         "tutorials/litellm_gemini_cli",
         "tutorials/litellm_qwen_code_cli",
-        "tutorials/openai_codex",
         "tutorials/retool_assist",
         "tutorials/cost_tracking_coding"
       ]
@@ -412,7 +410,18 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Setup & Deployment",
+          label: "Client Setup",
+          items: [
+            "proxy/client_setup/overview",
+            "proxy/client_setup/claude_code",
+            "proxy/client_setup/claude_desktop",
+            "proxy/client_setup/codex_chatgpt_desktop",
+            "proxy/client_setup/codex_cli",
+          ],
+        },
+        {
+          type: "category",
+          label: "Deploy the Gateway",
           items: [
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
@@ -431,11 +440,6 @@ const sidebars = {
             "proxy/master_key_rotations",
             "proxy/billing_metrics",
           ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
         },
         {
           type: "category",
@@ -502,6 +506,11 @@ const sidebars = {
             },
             { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
           ],
+        },
+        {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
         },
         {
           type: "category",
