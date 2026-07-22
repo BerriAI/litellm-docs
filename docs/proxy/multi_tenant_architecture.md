@@ -65,6 +65,7 @@ A single company separates Production, Staging, and Development into distinct te
 
 ## Related Documentation
 
+- [User Management Hierarchy](./user_management_heirarchy.md) - visual overview of users, teams, organizations, and budgets
 - [Access Control (RBAC)](./access_control.md) - roles, permissions, and onboarding organizations
 - [Service Accounts](./service_accounts.md) - virtual key types and shared production keys
 - [Team Budgets](./team_budgets.md) - budgets across the hierarchy

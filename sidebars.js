@@ -558,6 +558,7 @@ const sidebars = {
           items: [
             "proxy/architecture",
             "proxy/multi_tenant_architecture",
+            "proxy/user_management_heirarchy",
             "proxy/key_auth_arch",
             "proxy/db_info",
           ],
