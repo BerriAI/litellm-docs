@@ -867,6 +867,9 @@ router_settings:
 | JWT_AUDIENCE | Expected audience for JWT tokens
 | JWT_ISSUER | Expected issuer (`iss` claim) for JWT tokens. When set, PyJWT verifies the `iss` claim and rejects tokens from other issuers
 | JWT_PUBLIC_KEY_URL | URL to fetch public key for JWT verification
+| KSM_CONFIG | Base64-encoded Keeper Secrets Manager device configuration, used to authenticate the read-only Keeper secret manager backend
+| KSM_HOSTNAME | Optional regional Keeper Secrets Manager endpoint (e.g. `keepersecurity.com`). Defaults to the SDK's region
+| KSM_TOKEN | Keeper Secrets Manager one-time access token, used to bootstrap a device configuration when `KSM_CONFIG` is not set
 | LAGO_API_BASE | Base URL for Lago API
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
 | LAGO_API_EVENT_CODE | Event code for Lago API events
