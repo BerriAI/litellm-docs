@@ -123,10 +123,6 @@ const config = {
             from: '/docs/proxy/image_handling',
             to: '/docs/proxy/architecture#image-url-handling',
           },
-          {
-            from: '/docs/proxy/user_management_heirarchy',
-            to: '/docs/proxy/multi_tenant_architecture#the-tenancy-hierarchy',
-          },
         ],
       },
     ],
