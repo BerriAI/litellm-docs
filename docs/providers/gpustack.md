@@ -59,7 +59,7 @@ litellm config gpustack as upstream model provider same like openrouter
 ```text
      http://your-gpustack-url
 ```
-get your password with username admin
+    get your password with username admin
 ```text
      sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
 ```
@@ -82,12 +82,12 @@ get your password with username admin
     Copy the API key and save it for later use.
  ```
 ### 2.Usage - config litellm
- ```text
+```text
 1. Open LiteLLM manage ui
 
-```text
+
    http://your-litellm-url:4000/ui
-```
+
 
 2. add gpustack model of deployment
 
