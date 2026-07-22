@@ -564,6 +564,25 @@ litellm_settings:
 
 **Default Behavior**: If no `prometheus_metrics_config` is specified, all metrics are enabled with their default labels (backward compatible).
 
+### Exclude Metrics and Labels Globally
+
+`prometheus_metrics_config` is include-based, so it requires you to enumerate every metric you want to keep. When you only want to drop a small set of metrics or labels, use the global `prometheus_exclude_metrics` and `prometheus_exclude_labels` options instead. Everything not listed stays enabled with its default labels, and metrics added in future LiteLLM releases are emitted automatically without further config changes.
+
+```yaml
+litellm_settings:
+  callbacks: ["prometheus"]
+  # Drop these metrics entirely
+  prometheus_exclude_metrics:
+    - "litellm_input_tokens_metric"
+    - "litellm_output_tokens_metric"
+  # Drop these labels from every metric that would otherwise emit them
+  prometheus_exclude_labels:
+    - "hashed_api_key"
+    - "api_key_alias"
+```
+
+Both lists are validated at startup; an unknown metric or label name raises a configuration error so typos surface immediately. Exclusion always wins, so a metric named in `prometheus_exclude_metrics` is dropped even if a `prometheus_metrics_config` group enables it, and a label in `prometheus_exclude_labels` is removed even when a group's `include_labels` lists it.
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
