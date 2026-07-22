@@ -45,6 +45,7 @@ litellm config gpustack as upstream model provider same like openrouter
 ## 1.Usage - config gpustack
 
 1. install gpustack
+
 ```text
     sudo docker run -d --name gpustack \
     --restart unless-stopped \
@@ -54,6 +55,7 @@ litellm config gpustack as upstream model provider same like openrouter
 ```
 
 2. In GPUStack UI, navigate to the Deployments page and click on Deploy Model to deploy the models you need. Here are some example models:
+   
 ```text
      http://your-gpustack-url
 ```
@@ -71,6 +73,7 @@ get your password with username admin
 3. In the model’s Operations, open API Access Info to see how to integrate with this model.
 
 4. Create an API Key in GPUStack
+
  ```text
     Navigate to the Access Control > API Keys page in GPUStack, then click on New API Key.
 
@@ -83,48 +86,49 @@ get your password with username admin
 1. Open LiteLLM manage ui
 
 ```text
-http://your-litellm-url:4000/ui
+   http://your-litellm-url:4000/ui
 ```
 
 2. add gpustack model of deployment
 
 
+
 2.1. Navigate to the Add Model Page
-1. Click **Models + Endpoints** on the left sidebar menu.
-2. Select the **Add Model** tab at the top of the page.
+    1. Click **Models + Endpoints** on the left sidebar menu.
+    2. Select the **Add Model** tab at the top of the page.
 
 ---
 
 2.2. Configure Basic Model Info
-3. **Provider**: Select `Custom OpenAI` from the dropdown list.
-4. **LiteLLM Model Name(s)**: Enter `glm-5.2-1` (the GPUStack deployment name or route name that LiteLLM will send to the LLM API).
-5. **Model Mappings - Public Model Name**: Enter `glm-5.2-1` (the GPUStack model name).
-6. **Model Mappings - LiteLLM Model Name**: Enter `glm-5.2-1` (the mapped LiteLLM model name).
+    3. **Provider**: Select `Custom OpenAI` from the dropdown list.
+    4. **LiteLLM Model Name(s)**: Enter `glm-5.2-1` (the GPUStack deployment name or route name that LiteLLM will send to the LLM API).
+    5. **Model Mappings - Public Model Name**: Enter `glm-5.2-1` (the GPUStack model name).
+    6. **Model Mappings - LiteLLM Model Name**: Enter `glm-5.2-1` (the mapped LiteLLM model name).
 
 ---
 
 2.3. Configure API Credentials
-7. **API Base**: Enter the endpoint URL, e.g., `https://gpu.abd.com/v1` (append `/v1` for OpenAI-compatible interfaces).
-8. **API Key**: Enter your GPUStack API Key.
+    7. **API Base**: Enter the endpoint URL, e.g., `https://gpu.abd.com/v1` (append `/v1` for OpenAI-compatible interfaces).
+    8. **API Key**: Enter your GPUStack API Key.
 
 ---
 
 2.4. Test and Save
-9. Click the **Test Connect** button at the bottom to verify the connection.
-10. Once the connection test passes, click **Add Model** to complete the setup.
+    9. Click the **Test Connect** button at the bottom to verify the connection.
+    10. Once the connection test passes, click **Add Model** to complete the setup.
 
 
 3. test chat in litellm
 
 3.1. Access the Playground
-1. Click **Playground** on the left sidebar menu.
-2. Ensure you are on the **Chat** tab at the top.
+    1. Click **Playground** on the left sidebar menu.
+    2. Ensure you are on the **Chat** tab at the top.
 
 ---
 
 3.2. Configure Chat Settings
-3. **Endpoint Type**: Select `/v1/chat/completions` from the dropdown list.
-4. **Select Model**: Choose your newly added model name (e.g., `glm-5.2-1`).
+    3. **Endpoint Type**: Select `/v1/chat/completions` from the dropdown list.
+    4. **Select Model**: Choose your newly added model name (e.g., `glm-5.2-1`).
 
 ---
 
