@@ -1,10 +1,10 @@
 ---
 slug: rust-ai-gateway-benchmarks
-title: "Benchmarking the Rust AI Gateway: Overhead, Memory, and Cost"
+title: "Benchmarking the LiteLLM Rust AI Gateway: Overhead, Memory, and Cost"
 date: 2026-07-22T09:00:00
 authors:
   - ishaan
-description: "AIGatewayBench measures the overhead an AI gateway adds on top of the upstream model, isolated against a deterministic mock, across LiteLLM (Rust), LiteLLM (Python v1), Portkey, and Bifrost. The Rust gateway has the lowest tail overhead and memory footprint of the four."
+description: "AIGatewayBench measures the overhead an AI gateway adds on top of the upstream model, isolated against a deterministic mock, across LiteLLM (Rust), LiteLLM (Python v1), Portkey, and Bifrost. The LiteLLM Rust gateway has the lowest overhead and memory footprint of the four."
 keywords: [fastest ai gateway, fastest llm gateway, ai gateway benchmark, llm gateway benchmark, rust ai gateway, ai gateway overhead, ai gateway memory, ai gateway cost, litellm rust, high throughput llm gateway, lightweight ai gateway, coding agent gateway]
 image: ./overhead_comparison.png
 tags: [rust, ai-gateway, performance, benchmarks, engineering]
@@ -13,7 +13,7 @@ hide_table_of_contents: true
 
 *Last Updated: July 2026*
 
-We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench) to measure it against Portkey, Bifrost, and the current LiteLLM Python proxy. Across all four, the Rust gateway has the **lowest p99 added latency and the smallest memory footprint by a wide margin**: roughly `7x` lower tail overhead and `9x` less memory than the next-closest gateway (Bifrost), the lowest cost footprint, and the fastest whole-session times for coding agents. On raw sustained throughput it is close to Bifrost; the separation is in tail overhead, memory, and cost.
+We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench) to measure it against Portkey, Bifrost, and the current LiteLLM Python proxy. Across all four, the LiteLLM Rust gateway has the **lowest p99 added latency and the smallest memory footprint by a wide margin**: roughly `7x` lower overhead and `9x` less memory than the next-closest gateway (Bifrost), the lowest cost footprint, and the fastest whole-session times for coding agents. On raw sustained throughput it is close to Bifrost; the separation is in overhead, memory, and cost.
 
 {/* truncate */}
 
@@ -35,14 +35,6 @@ We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [
 
 ![Whole-session gateway overhead for Claude Code and Codex-style loops](./session_overhead.png)
 
-**Tail overhead under concurrency.** Sweeping concurrency 1 to 64, Rust and Bifrost stay low and close while Python climbs into the hundreds of milliseconds. At concurrency 64 the Rust tail does rise, to about `40ms` added p99 (Bifrost `29ms`), both far below Python (`546ms`) and Portkey (`108ms`). The 256 point was dropped because the direct baseline itself became unreliable there, not because a gateway failed.
-
-![p99 added latency versus concurrency for each gateway](./latency_vs_concurrency.png)
-
-**Streaming (not yet in the Rust beta).** We include time-to-first-token for transparency, not as a result. The Rust `/messages` streaming route and Portkey OSS streaming both return errors on streaming Anthropic requests today and are labeled unavailable; the signed differences for the others reflect measurement noise against the fast mock. Streaming parity is on the beta roadmap.
-
-![Streaming time-to-first-token overhead, with unavailable routes labeled unavailable](./ttft_overhead.png)
-
 ## How to reproduce this with AIGatewayBench
 
 Every gateway points at the same local deterministic Rust mock, so provider latency and network jitter drop out and what remains is the gateway's own cost:
@@ -51,7 +43,17 @@ Every gateway points at the same local deterministic Rust mock, so provider late
 overhead = latency(client -> gateway -> mock) - latency(client -> mock directly)
 ```
 
-The full harness, per-gateway setup, and raw run data are in [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench). Start the mock, start a gateway pointed at it, run a scenario, and regenerate the charts:
+```mermaid
+flowchart LR
+    D["Load driver<br/>persistent Rust reqwest / Locust"]
+    G["Gateway under test:<br/>LiteLLM Rust, Python v1, Portkey, Bifrost"]
+    M["Deterministic Rust<br/>mock upstream"]
+    D -->|"path A: client to gateway to mock"| G
+    G --> M
+    D -.->|"path B: client to mock directly"| M
+```
+
+The gateway's overhead is path A minus path B. Everything except the gateway under test, the mock, the load driver, and the host, is held identical, so the difference is the gateway's own cost. The full harness, per-gateway setup, and raw run data are in [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench). Start the mock, start a gateway pointed at it, run a scenario, and regenerate the charts:
 
 ```bash
 python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
@@ -65,11 +67,11 @@ A few things to keep honest when reading these numbers:
 - Because the upstream is a local mock, the absolute latencies are the gateway's isolated slice, not real-world request latencies. Read them as comparisons under identical conditions.
 - Versions: LiteLLM Rust beta, LiteLLM Python v1 (`litellm[proxy]`), Bifrost `v1.6.4`, current Portkey OSS. Same mock and load driver on one host.
 - Every gateway forwards the Anthropic Messages body with no logging callbacks, spend tracking, or persistence enabled. This isolates forwarding overhead; it is not a full-feature comparison, and enabling those would add cost to every gateway, including ours.
-- Single-host, per-scenario runs (n=5000 overhead, n=2000 per concurrency point, n=100 streaming) without repeated-trial error bars, so treat them as order-of-magnitude differences.
+- Single-host, per-scenario runs (for example n=5000 on the overhead panel) without repeated-trial error bars, so treat them as order-of-magnitude differences.
 - It is a vendor-run benchmark, so the guardrail is reproducibility: every plotted value is a committed CSV in [`results/`](https://github.com/BerriAI/ai-gateway-bench/tree/main/results), and the mock and driver are identical across all four gateways.
 
 ## Conclusions
 
 For a single chat turn, gateway overhead is noise next to model latency and none of this should change your decision. Where it matters is high request rate against fast responses (embeddings, classification, guardrails) and agentic loops that issue many turns per task, and in the memory and CPU footprint that decides how many pods you run and how close each sits to an out-of-memory kill.
 
-On those axes the Rust gateway is the strongest of the four we tested: the lowest tail overhead, the smallest footprint, and the lowest cost per unit of throughput, at parity on raw sustained RPS with the next-best gateway. It is an early beta, streaming and the full feature surface are still landing, and the fastest way to check any claim here is to run AIGatewayBench against your own build. If you want to run the Rust gateway in your stack, [sign up for the early beta](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog), and for the architecture behind the migration see [Migrating LiteLLM to Rust](/blog/litellm-rust-launch).
+On those axes the LiteLLM Rust gateway is the strongest of the four we tested: the lowest overhead, the smallest footprint, and the lowest cost per unit of throughput, at parity on raw sustained RPS with the next-best gateway. It is an early beta, streaming and the full feature surface are still landing, and the fastest way to check any claim here is to run AIGatewayBench against your own build. If you want to run the LiteLLM Rust gateway in your stack, [sign up for the early beta](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog), and for the architecture behind the migration see [Migrating LiteLLM to Rust](/blog/litellm-rust-launch).
