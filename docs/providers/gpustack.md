@@ -46,7 +46,7 @@ litellm config gpustack as upstream model provider same like openrouter
 
 1. install gpustack
 ```text
-sudo docker run -d --name gpustack \
+    sudo docker run -d --name gpustack \
     --restart unless-stopped \
     -p 80:80 \
     --volume gpustack-data:/var/lib/gpustack \
@@ -55,27 +55,27 @@ sudo docker run -d --name gpustack \
 
 2. In GPUStack UI, navigate to the Deployments page and click on Deploy Model to deploy the models you need. Here are some example models:
 ```text
-http://your-gpustack-url
+     http://your-gpustack-url
 ```
 get your password with username admin
 ```text
-sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
+     sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
 ```
+     local deploy model fg with gpustack:
+     qwen3-8b
+     qwen2.5-vl-3b-instruct
+     bge-m3
+     bge-reranker-v2-m3
 
-qwen3-8b
-qwen2.5-vl-3b-instruct
-bge-m3
-bge-reranker-v2-m3
+3. In the model’s Operations, open API Access Info to see how to integrate with this model.
 
-2. In the model’s Operations, open API Access Info to see how to integrate with this model.
+4. Create an API Key in GPUStack
 
-3. Create an API Key in GPUStack
+    Navigate to the Access Control > API Keys page in GPUStack, then click on New API Key.
 
-Navigate to the Access Control > API Keys page in GPUStack, then click on New API Key.
+    Fill in the name, then click Save.
 
-Fill in the name, then click Save.
-
-Copy the API key and save it for later use.
+    Copy the API key and save it for later use.
 
 ### 2.Usage - config litellm
 
