@@ -61,6 +61,7 @@ get your password with username admin
 ```text
      sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
 ```
+     
      local deploy model fg with gpustack:
      qwen3-8b
      qwen2.5-vl-3b-instruct
