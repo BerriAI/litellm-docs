@@ -22,9 +22,7 @@ There are two ways to adopt it.
 
 ## Mode 1: Enable Rust on your existing Python server (low risk)
 
-Mode 1 keeps your current deployment. The Python proxy still terminates the request, runs auth and routing, and calls your callbacks; only the provider translation and network call for the supported routes below run through the Rust core. Because it is opt-in per model (or per process) and falls back to Python on any error, this is the recommended way to start.
-
-### Enable per model
+Mode 1 keeps your current deployment. The Python proxy still terminates the request, runs auth and routing, and calls your callbacks; only the provider translation and network call for the supported routes below run through the Rust core. Because it is opt-in per model and falls back to Python on any error, this is the recommended way to start.
 
 Set `rust: true` in a model's `litellm_params`. Everything else about the deployment stays the same.
 
@@ -59,27 +57,15 @@ curl -i http://localhost:4000/v1/messages \
 
 Look for `x-litellm-rust: true` in the response headers. If the header is absent, the request was served by the Python path (either because the route/provider is not on Rust yet, or because a Rust error triggered the automatic fallback).
 
-### Enable per process
+### What `rust: true` covers today
 
-You can also flip the whole process onto the Rust path with environment variables instead of editing each model. These are read once at startup.
+The Rust core covers a growing subset of routes. When a route or provider is not listed, that deployment transparently stays on the Python path even with `rust: true` set.
 
-| Env var | Route it enables |
+| Route | Providers on the Rust path |
 | --- | --- |
-| `LITELLM_RUST=true` | Anthropic `/v1/messages` (Anthropic, Azure AI) |
-| `LITELLM_USE_RUST_OCR=true` | `/ocr` (Mistral, Azure AI, Vertex AI) |
-
-Accepted truthy values are `1`, `true`, `yes`, `on` (case-insensitive). The per-model `rust: true` flag and these env vars are independent; either one enabling a route is enough.
-
-### What runs on Rust today
-
-The Rust core covers a growing subset of routes. When a route or provider is not listed, requests transparently use the Python path.
-
-| Route | Providers on the Rust path | How to enable |
-| --- | --- | --- |
-| Anthropic `/v1/messages` | `anthropic`, `azure_ai` | `rust: true` or `LITELLM_RUST=true` |
-| `/ocr` | `mistral`, `azure_ai`, `vertex_ai` | `LITELLM_USE_RUST_OCR=true` |
-| Audio transcription | `bedrock` | `rust: true` |
-| Responses API WebSockets | `openai` | `rust: true` |
+| Anthropic `/v1/messages` | `anthropic`, `azure_ai` |
+| Audio transcription | `bedrock` |
+| Responses API WebSockets | `openai` |
 
 Streaming is supported on the Anthropic `/v1/messages` route; requests that need an agentic completion hook stay on the Python path so the hook still runs.
 
