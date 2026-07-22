@@ -28,6 +28,13 @@ Make sure to set up LiteLLM with the [LiteLLM Quickstart](../proxy/docker_quick_
 Install the OpenAI Codex CLI tool globally using npm:
 
 <Tabs>
+<TabItem value="curl" label="curl">
+
+```bash showLineNumbers
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+```
+
+</TabItem>
 <TabItem value="npm" label="npm">
 
 ```bash showLineNumbers
@@ -87,6 +94,18 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.0-flash
       api_key: os.environ/GEMINI_API_KEY
+  - model_name: gpt-5.6-luna
+    litellm_params:
+      model: openai/gpt-5.6-luna
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-5.6-sol
+    litellm_params:
+      model: openai/gpt-5.6-sol
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-5.6-terra
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
   drop_params: true
@@ -99,24 +118,43 @@ This configuration enables routing to specific OpenAI, Anthropic, and Gemini mod
 Set the required environment variables to point Codex to your LiteLLM Proxy:
 
 ```bash
-# Point to your LiteLLM Proxy server
-export OPENAI_BASE_URL=http://0.0.0.0:4000 
-
 # Use your LiteLLM API key (if you've set up authentication)
-export OPENAI_API_KEY="sk-1234"
+export LITELLM_API_KEY="sk-1234"
 ```
 
-## 5. Run Codex with Gemini
+You can also configure Codex directly via `~/.codex/config.toml`:
 
-With everything configured, you can now run Codex with Gemini:
+```toml showLineNumbers
+model = "gpt-5.6-terra"
+model_provider = "litellm"
+model_reasoning_effort = "medium"
+approvals_reviewer = "user"
+
+[model_providers.litellm]
+name = "litellm"
+base_url = "http://localhost:4000/v1"
+env_key = "LITELLM_API_KEY"
+wire_api = "responses"
+stream_idle_timeout_ms = 7200000
+stream_max_retries = 5
+request_max_retries = 4
+
+[projects."/path/to/your/project"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.6-terra" = 1
+```
+
+## 5. Run Codex
+
+With everything configured, you can now run Codex:
 
 ```bash showLineNumbers
-codex --model gemini-2.0-flash --full-auto
+codex
 ```
 
 <Image img={require('../../img/litellm_codex.gif')} />
-
-The `--full-auto` flag allows Codex to automatically generate code without additional prompting.
 
 ## 6. Advanced Options
 
