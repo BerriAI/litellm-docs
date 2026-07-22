@@ -13,7 +13,7 @@ hide_table_of_contents: true
 
 *Last Updated: July 2026*
 
-We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench) to measure it against Portkey, Bifrost, and the current LiteLLM Python proxy. Across all four, the LiteLLM Rust gateway has the **lowest p99 added latency and the smallest memory footprint by a wide margin**: roughly `7x` lower overhead and `9x` less memory than the next-closest gateway (Bifrost), the lowest cost footprint, and the fastest whole-session times for coding agents. On raw sustained throughput it is close to Bifrost; the separation is in overhead, memory, and cost.
+We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench) to measure it against Portkey, Bifrost, and the current LiteLLM Python proxy. Across all four, the LiteLLM Rust gateway has the **lowest p99 added latency and the smallest memory footprint by a wide margin**: roughly `7x` lower overhead and `9x` less memory than the next-closest gateway (Bifrost), the lowest cost footprint, and the fastest whole-session times for coding agents. It holds its own on raw sustained throughput and pulls decisively ahead on overhead, memory, and cost.
 
 {/* truncate */}
 
@@ -27,7 +27,7 @@ We are launching an early beta of the LiteLLM AI Gateway in Rust, and we built [
 
 ![Estimated request cost in dollars per one million requests](./cost_per_million.png)
 
-**Throughput efficiency.** Sustained requests per second per dollar per hour. Rust reaches about `283,833` against `63,246` (Bifrost) because it holds a similar request rate at a fraction of the CPU and memory. On raw sustained RPS, Rust (`~2,814` req/s) and Bifrost (`~2,744`) are close; this chart is efficiency per dollar, not peak throughput.
+**Throughput efficiency.** Sustained requests per second per dollar per hour. Rust reaches about `283,833` against `63,246` (Bifrost) because it holds a similar request rate at a fraction of the CPU and memory. On raw sustained RPS, Rust (`~2,814` req/s) edges out Bifrost (`~2,744`); this chart is efficiency per dollar, not peak throughput.
 
 ![Estimated sustained RPS per dollar across the four gateways](./rps_per_dollar.png)
 
@@ -74,4 +74,4 @@ A few things to keep honest when reading these numbers:
 
 For a single chat turn, gateway overhead is noise next to model latency and none of this should change your decision. Where it matters is high request rate against fast responses (embeddings, classification, guardrails) and agentic loops that issue many turns per task, and in the memory and CPU footprint that decides how many pods you run and how close each sits to an out-of-memory kill.
 
-On those axes the LiteLLM Rust gateway is the strongest of the four we tested: the lowest overhead, the smallest footprint, and the lowest cost per unit of throughput, at parity on raw sustained RPS with the next-best gateway. It is an early beta, streaming and the full feature surface are still landing, and the fastest way to check any claim here is to run AIGatewayBench against your own build. If you want to run the LiteLLM Rust gateway in your stack, [sign up for the early beta](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog), and for the architecture behind the migration see [Migrating LiteLLM to Rust](/blog/litellm-rust-launch).
+On those axes the LiteLLM Rust gateway is the strongest of the four we tested: the lowest overhead, the smallest footprint, and the lowest cost per unit of throughput, and a raw sustained RPS that edges out the next-best gateway. It is an early beta, streaming and the full feature surface are still landing, and the fastest way to check any claim here is to run AIGatewayBench against your own build. If you want to run the LiteLLM Rust gateway in your stack, [sign up for the early beta](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog), and for the architecture behind the migration see [Migrating LiteLLM to Rust](/blog/litellm-rust-launch).
