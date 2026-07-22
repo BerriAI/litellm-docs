@@ -71,13 +71,13 @@ get your password with username admin
 3. In the model’s Operations, open API Access Info to see how to integrate with this model.
 
 4. Create an API Key in GPUStack
-
+ ```text
     Navigate to the Access Control > API Keys page in GPUStack, then click on New API Key.
 
     Fill in the name, then click Save.
 
     Copy the API key and save it for later use.
-
+ ```
 ### 2.Usage - config litellm
 
 1. Open LiteLLM manage ui
