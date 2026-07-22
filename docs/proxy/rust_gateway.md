@@ -12,6 +12,8 @@ import TabItem from '@theme/TabItem';
 
 This is a beta feature and the surface it covers is still growing. The Rust core is opt-in, off by default, and any Rust path that fails or is not yet supported falls back to the existing Python path automatically, so turning it on cannot break a request that Python already handles.
 
+The per-model `rust: true` flag for the Anthropic `/v1/messages` route lands in `v1.94.0-stable` (it first shipped in `v1.94.0-rc.1`). Use a build at or above that version.
+
 :::
 
 LiteLLM is porting its request/response translation to a Rust core (the `litellm-rust` workspace, shipped inside the LiteLLM wheel). The goal is lower per-request CPU and latency while Python keeps owning auth, configuration, routing, logging, callbacks, and spend tracking until each Rust path has parity coverage.
