@@ -61,13 +61,13 @@ get your password with username admin
 ```text
      sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
 ```
-     
+ ```text    
      local deploy model fg with gpustack:
      qwen3-8b
      qwen2.5-vl-3b-instruct
      bge-m3
      bge-reranker-v2-m3
-
+ ```
 3. In the model’s Operations, open API Access Info to see how to integrate with this model.
 
 4. Create an API Key in GPUStack
