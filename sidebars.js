@@ -468,6 +468,7 @@ const sidebars = {
             "proxy/deploy",
             "proxy/prod",
             "proxy/security_best_practices",
+            "proxy/rust_gateway",
             "proxy/server_tuning",
             "proxy/multi_region",
             "proxy/db_read_replica",

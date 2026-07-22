@@ -1,0 +1,92 @@
+---
+title: "[Beta] Rust AI Gateway"
+description: Run LiteLLM request translation on the Rust core. Enable it per model on your existing Python server, or run the standalone Axum server.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# [Beta] Rust AI Gateway
+
+:::info
+
+This is a beta feature and the surface it covers is still growing. The Rust core is opt-in, off by default, and any Rust path that fails or is not yet supported falls back to the existing Python path automatically, so turning it on cannot break a request that Python already handles.
+
+:::
+
+LiteLLM is porting its request/response translation to a Rust core (the `litellm-rust` workspace, shipped inside the LiteLLM wheel). The goal is lower per-request CPU and latency while Python keeps owning auth, configuration, routing, logging, callbacks, and spend tracking until each Rust path has parity coverage.
+
+There are two ways to adopt it.
+
+## Mode 1: Enable Rust on your existing Python server (low risk)
+
+Mode 1 keeps your current deployment. The Python proxy still terminates the request, runs auth and routing, and calls your callbacks; only the provider translation and network call for the supported routes below run through the Rust core. Because it is opt-in per model (or per process) and falls back to Python on any error, this is the recommended way to start.
+
+### Enable per model
+
+Set `rust: true` in a model's `litellm_params`. Everything else about the deployment stays the same.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      rust: true            # run this deployment through the Rust core
+
+  - model_name: azure-claude
+    litellm_params:
+      model: azure_ai/claude-sonnet-5
+      api_base: os.environ/AZURE_AI_API_BASE
+      api_key: os.environ/AZURE_AI_API_KEY
+      rust: true
+```
+
+A response served by the Rust core carries an `x-litellm-rust: true` header, so you can confirm the path per request:
+
+```bash
+curl -i http://localhost:4000/v1/messages \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "claude-sonnet-5",
+    "max_tokens": 128,
+    "messages": [{"role": "user", "content": "hello from rust"}]
+  }'
+```
+
+Look for `x-litellm-rust: true` in the response headers. If the header is absent, the request was served by the Python path (either because the route/provider is not on Rust yet, or because a Rust error triggered the automatic fallback).
+
+### Enable per process
+
+You can also flip the whole process onto the Rust path with environment variables instead of editing each model. These are read once at startup.
+
+| Env var | Route it enables |
+| --- | --- |
+| `LITELLM_RUST=true` | Anthropic `/v1/messages` (Anthropic, Azure AI) |
+| `LITELLM_USE_RUST_OCR=true` | `/ocr` (Mistral, Azure AI, Vertex AI) |
+
+Accepted truthy values are `1`, `true`, `yes`, `on` (case-insensitive). The per-model `rust: true` flag and these env vars are independent; either one enabling a route is enough.
+
+### What runs on Rust today
+
+The Rust core covers a growing subset of routes. When a route or provider is not listed, requests transparently use the Python path.
+
+| Route | Providers on the Rust path | How to enable |
+| --- | --- | --- |
+| Anthropic `/v1/messages` | `anthropic`, `azure_ai` | `rust: true` or `LITELLM_RUST=true` |
+| `/ocr` | `mistral`, `azure_ai`, `vertex_ai` | `LITELLM_USE_RUST_OCR=true` |
+| Audio transcription | `bedrock` | `rust: true` |
+| Responses API WebSockets | `openai` | `rust: true` |
+
+Streaming is supported on the Anthropic `/v1/messages` route; requests that need an agentic completion hook stay on the Python path so the hook still runs.
+
+## Mode 2: Run the standalone Axum server
+
+Mode 2 replaces the Python host with the Rust `litellm-ai-gateway` Axum server binary, so routing and network I/O run entirely in Rust. This is the higher-ceiling option for throughput, but it currently covers fewer routes than the Python host and does not yet have the full proxy feature set.
+
+:::note Pending
+
+A prebuilt Docker image for the Axum server is not published yet. This section will be filled in with the image reference and a deployment example once it ships. In the meantime you can build the server from the `litellm-rust` workspace with the `server` feature; reach out in the community channel if you want to trial it early.
+
+:::
