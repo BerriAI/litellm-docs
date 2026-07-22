@@ -829,6 +829,7 @@ router_settings:
 | GOOGLE_CLIENT_SECRET | Client secret for Google OAuth
 | GOOGLE_KMS_RESOURCE_NAME | Name of the resource in Google KMS
 | GUARDRAILS_AI_API_BASE | Base URL for Guardrails AI API
+| GUARDRAIL_SCANNED_MESSAGES_CACHE_TTL_SECONDS | TTL in seconds for the per-session cache that remembers which message segments a guardrail already scanned when `only_scan_new_messages` is enabled. Default is 86400 (24 hours)
 | HEALTH_CHECK_TIMEOUT_SECONDS | Timeout in seconds for health checks. Default is 60
 | HEROKU_API_BASE | Base URL for Heroku API
 | HEROKU_API_KEY | API key for Heroku services
