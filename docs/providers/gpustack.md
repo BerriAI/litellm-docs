@@ -60,6 +60,7 @@ litellm config gpustack as upstream model provider same like openrouter
      http://your-gpustack-url
 ```
     get your password with username admin
+    
 ```text
      sudo docker exec gpustack cat /var/lib/gpustack/initial_admin_password
 ```
