@@ -82,7 +82,7 @@ get your password with username admin
     Copy the API key and save it for later use.
  ```
 ### 2.Usage - config litellm
-
+ ```text
 1. Open LiteLLM manage ui
 
 ```text
@@ -97,7 +97,6 @@ get your password with username admin
     1. Click **Models + Endpoints** on the left sidebar menu.
     2. Select the **Add Model** tab at the top of the page.
 
----
 
 2.2. Configure Basic Model Info
     3. **Provider**: Select `Custom OpenAI` from the dropdown list.
@@ -105,13 +104,9 @@ get your password with username admin
     5. **Model Mappings - Public Model Name**: Enter `glm-5.2-1` (the GPUStack model name).
     6. **Model Mappings - LiteLLM Model Name**: Enter `glm-5.2-1` (the mapped LiteLLM model name).
 
----
-
 2.3. Configure API Credentials
     7. **API Base**: Enter the endpoint URL, e.g., `https://gpu.abd.com/v1` (append `/v1` for OpenAI-compatible interfaces).
     8. **API Key**: Enter your GPUStack API Key.
-
----
 
 2.4. Test and Save
     9. Click the **Test Connect** button at the bottom to verify the connection.
@@ -124,17 +119,15 @@ get your password with username admin
     1. Click **Playground** on the left sidebar menu.
     2. Ensure you are on the **Chat** tab at the top.
 
----
-
 3.2. Configure Chat Settings
     3. **Endpoint Type**: Select `/v1/chat/completions` from the dropdown list.
     4. **Select Model**: Choose your newly added model name (e.g., `glm-5.2-1`).
 
----
-
 3.3. Start Chatting
-5. Type your test message (e.g., "Hello") in the message input box at the bottom and send it to chat with the model.
 
+    5. Type your test message (e.g., "Hello") in the message input box at the bottom and send it to chat with the model.
+ ```
 ### 3.gpustack best practices with vllm&sglang -dspark config cookbook(updating)
-
-https://github.com/yiminghub2024/gpustack/tree/main/docs/cookbook
+```text
+    https://github.com/yiminghub2024/gpustack/tree/main/docs/cookbook
+ ```
