@@ -8,15 +8,35 @@ import TabItem from '@theme/TabItem';
 SSO is free for up to 5 users. After that, an enterprise license is required. [Get Started with Enterprise here](https://www.litellm.ai/enterprise).
 :::
 
-LiteLLM supports SAML 2.0 single sign-on for the admin UI alongside its existing OIDC providers (Google, Microsoft, Generic OAuth). SAML is configured entirely through environment variables; no changes to `config.yaml` are needed. When SAML is configured and no OIDC provider is set, the existing **SSO** login button on the admin UI automatically redirects to the SAML Identity Provider.
+LiteLLM supports SAML 2.0 single sign-on for the admin UI alongside its existing OIDC providers (Google, Microsoft, Generic OAuth). SAML can be configured from the admin UI (**Admin Settings -> SSO Settings**) or through environment variables; no changes to `config.yaml` are needed. When SAML is configured and no OIDC provider is set, the existing **SSO** login button on the admin UI automatically redirects to the SAML Identity Provider.
 
 ## How it works
 
-<Image img={require('../../img/saml_sso_flow.png')} style={{ width: '800px', height: 'auto' }} />
+```mermaid
+sequenceDiagram
+    participant B as User Browser
+    participant P as LiteLLM Proxy<br/>(Service Provider)
+    participant I as Identity Provider<br/>(Okta / Entra ID / etc.)
+
+    B->>P: 1. GET /sso/saml/login
+    P-->>B: 2. 303 Redirect + state cookie
+    B->>I: 3. SAMLRequest (AuthnRequest)
+    I-->>B: 4. User authenticates
+    B->>P: 5. POST /sso/saml/callback (SAMLResponse)
+    P-->>B: 6. Redirect to /ui/ with session JWT
+```
 
 The proxy acts as a SAML Service Provider (SP). A user clicking the login button is redirected to the Identity Provider (IdP) with a signed AuthnRequest. After the user authenticates at the IdP, the browser POSTs the signed SAML assertion back to the proxy's Assertion Consumer Service (ACS) endpoint. The proxy validates the assertion's signature, audience, and timestamps, provisions the user in the database if needed, and issues a session JWT that logs them into the admin UI.
 
 Both SP-initiated and IdP-initiated flows are supported over the HTTP-POST binding. SP-initiated logins are bound to the browser that started them via an HttpOnly state cookie, so a captured assertion cannot be replayed into another browser. IdP-initiated (unsolicited) responses are rejected by default and only accepted when `SAML_ALLOW_UNSOLICITED=true` is set explicitly.
+
+## Configure from the admin UI
+
+The quickest way to set up SAML is from the dashboard. Go to **Admin Settings -> SSO Settings**, click **Configure SSO**, and pick **SAML SSO** from the provider dropdown. Paste your IdP's metadata (a URL or the inline XML), set the SP Entity ID and Proxy Base URL, and optionally enable IdP-initiated responses, then save.
+
+<Image img={require('../../img/saml_ui_config_form.png')} style={{ width: '800px', height: 'auto' }} />
+
+The settings are stored (encrypted) in the SSO config table and applied as the `SAML_*` variables the handler reads, so they survive restarts without env vars. Prefer environment variables for headless or GitOps deployments; the [Quick start](#quick-start) below covers that path.
 
 ## Quick start
 
@@ -60,7 +80,9 @@ Your IdP needs two values from the proxy:
 
 You can download the SP metadata XML directly from `GET /sso/saml/metadata` and import it into your IdP if it supports metadata upload.
 
-<Image img={require('../../img/saml_sp_metadata.png')} style={{ width: '800px', height: 'auto' }} />
+After saving, the SSO Settings page shows the configured provider, including the SP Entity ID you register at the IdP:
+
+<Image img={require('../../img/saml_ui_configured.png')} style={{ width: '800px', height: 'auto' }} />
 
 ### 4. Start the proxy and test
 
