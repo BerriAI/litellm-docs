@@ -138,6 +138,8 @@ Example log line without `json_logs` (plaintext):
 
 `request_correlation_in_logs` also adds an independent `session_id` field to `StandardLoggingPayload` (sent to logging integrations like S3 and Langfuse), populated the same way. See the [StandardLoggingPayload spec](./logging_spec#standardloggingpayload)
 
+Both `trace_id` and `session_id` are sanitized before they're stored: control characters (including `\r`/`\n`) are stripped and the value is capped at 256 characters, so a caller-supplied `litellm_session_id` can't be used to forge fake log lines or bloat log storage
+
 The flag defaults to `false`, so existing log output is unaffected until you opt in.
 
 ## Control Log Output 
