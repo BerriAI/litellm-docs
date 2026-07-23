@@ -11,6 +11,8 @@ With `true_passthrough` LiteLLM performs no admission of its own and forwards th
 
 Both modes return the upstream's protected-resource metadata verbatim during discovery, so the client always authorizes against the real upstream issuer and the upstream validates the token audience.
 
+Both `auth_type` values also take an orthogonal `dcr_bridge` flag that changes where an OAuth-only client discovers its authorization server. Turn it on when the client cannot register with the upstream IdP on its own or cannot send two separate credentials, which is the case for OpenCode, Claude Code, Cursor, and Claude Desktop. See [Gateway-hosted sign-in (DCR bridge)](#gateway-hosted-sign-in-dcr-bridge) below.
+
 ## true_passthrough
 
 LiteLLM acts as a transparent proxy. It runs no admission check, mints and stores nothing, and forwards the client's `Authorization` header to the upstream unchanged. This is the mode to reach for when the upstream server is the source of truth for who can access it and you do not want LiteLLM gating the route a second time.
@@ -126,6 +128,124 @@ Unlike `true_passthrough`, `oauth_delegate` keeps LiteLLM in the auth and observ
 | `url` | Yes | The upstream MCP server URL. |
 
 At request time the caller sends admission in `x-litellm-api-key` and the upstream token in `Authorization: Bearer <upstream-token>` (or `x-mcp-<alias>-authorization` when addressing a specific server in an aggregate request).
+
+## Gateway-hosted sign-in (DCR bridge) {#gateway-hosted-sign-in-dcr-bridge}
+
+OAuth-only MCP clients such as OpenCode, Claude Code, Cursor, and Claude Desktop connect to a remote server by running one Dynamic Client Registration (RFC 7591) plus PKCE flow against whatever authorization server the server's discovery metadata advertises. They hold no client credential pre-provisioned with the upstream IdP, and they cannot send a separate LiteLLM credential alongside an upstream token, so neither the plain `true_passthrough` request nor the two-header `oauth_delegate` request fits them. The `dcr_bridge` flag closes that gap. When it is on, LiteLLM advertises itself as the authorization server during discovery and hosts the register, authorize, and token endpoints at `/{server_name}/register`, `/{server_name}/authorize`, and `/{server_name}/token`, so the client registers and signs in through the gateway while LiteLLM runs the upstream OAuth behind those endpoints. When it is off, LiteLLM relays the upstream server's own OAuth metadata verbatim, which suits clients already registered with the upstream IdP or capable of running DCR directly against it.
+
+`dcr_bridge` is meaningful only on the two client-forwarded token modes (`true_passthrough` and `oauth_delegate`) and is rejected on any other `auth_type` at create, update, and config load. In the Admin UI it is the "Gateway-hosted sign-in (DCR bridge)" switch on the MCP server form, defaulted on for those two modes; in config it is a boolean field.
+
+### true_passthrough with the bridge
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  miro:
+    url: "https://mcp.miro.com/"
+    transport: http
+    auth_type: true_passthrough
+    dcr_bridge: true
+```
+
+The client discovers the gateway as its authorization server, registers through `POST /{server_name}/register`, and runs PKCE against `GET /{server_name}/authorize` and `POST /{server_name}/token`. LiteLLM performs the upstream registration and token exchange behind those endpoints; where the upstream supports Dynamic Client Registration LiteLLM relays the client's registration to it, and where the server carries no stored `client_id` LiteLLM mints an ephemeral client for the flow and persists nothing. No LiteLLM sign-in is involved, and as with `true_passthrough` generally LiteLLM records no caller identity or spend. This is the transparent option for OAuth-only clients.
+
+### oauth_delegate with the bridge
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  miro:
+    url: "https://mcp.miro.com/"
+    transport: http
+    auth_type: oauth_delegate
+    dcr_bridge: true
+```
+
+This is the combination that keeps LiteLLM in the observability path for OAuth-only clients, so spend, rate limits, audit, and per-tool-call attribution all resolve. Reach for it when you want to see in LiteLLM which server a caller used and which tools it invoked.
+
+An OAuth-only client cannot present a LiteLLM key inline, so the gateway takes the caller's identity from a LiteLLM browser session instead. During the authorize step LiteLLM looks for a LiteLLM UI session cookie; when the browser has none it redirects to LiteLLM login (`/sso/key/generate`) first. After the user signs in and re-initiates the connection, LiteLLM seals that identity together with the upstream token into a gateway-bound credential that the client stores and replays on every later request, and admission, spend, and audit resolve against it.
+
+Two prerequisites follow from that. The gateway must have a working sign-in the user can complete in a browser, whether SSO or username/password; without one there is no identity to bind and the authorize step cannot proceed, which is the usual reason an `oauth_delegate` bridge connection stalls at the login page. And the client's OAuth flow must run in an interactive browser session, which OpenCode, Claude Code, Cursor, and Claude Desktop all do. If your intent is fully scripted, non-interactive delegation, leave `dcr_bridge` off and use the two-header `oauth_delegate` request described above (a LiteLLM key in `x-litellm-api-key` plus the upstream token in `Authorization`) instead.
+
+```mermaid
+sequenceDiagram
+    participant Client as OAuth-only client
+    participant Browser
+    participant LiteLLM as LiteLLM Proxy
+    participant MCP as Upstream MCP Server
+    participant Auth as Upstream OAuth Server
+
+    Client->>LiteLLM: MCP request (no credential)
+    LiteLLM-->>Client: 401 + WWW-Authenticate (gateway is the authorization server)
+    Client->>LiteLLM: POST /{server}/register (DCR)
+    Client->>Browser: open /{server}/authorize
+    Browser->>LiteLLM: GET /{server}/authorize
+    Note over LiteLLM: no LiteLLM session cookie
+    LiteLLM-->>Browser: redirect to LiteLLM login
+    Browser->>LiteLLM: sign in (SSO / username-password)
+    Browser->>LiteLLM: GET /{server}/authorize (with session)
+    LiteLLM->>Auth: authorize upstream, capture code at /callback
+    Auth-->>LiteLLM: upstream authorization code
+    LiteLLM-->>Browser: gateway code, redirect back to client
+    Client->>LiteLLM: POST /{server}/token
+    Note over LiteLLM: seal LiteLLM identity + upstream token into one gateway-bound credential
+    LiteLLM-->>Client: gateway-bound credential
+    Client->>LiteLLM: MCP request + gateway-bound credential
+    Note over LiteLLM: admit, record spend / rate limit / audit / tool calls
+    LiteLLM->>MCP: forward request + upstream token (identity credential stripped)
+    MCP-->>LiteLLM: MCP response
+    LiteLLM-->>Client: MCP response
+```
+
+### Choosing the flag
+
+| Situation | `dcr_bridge` |
+|-----------|--------------|
+| An OAuth-only client (OpenCode, Claude Code, Cursor, Claude Desktop, ChatGPT) that holds no upstream `client_id` and cannot send two credentials | `true` |
+| A client already registered with the upstream IdP, or one that runs DCR directly against the upstream | `false` |
+| A scripted, non-interactive caller that can send `x-litellm-api-key` plus an upstream `Authorization` bearer | `false`, with `auth_type: oauth_delegate` (two-header form) |
+
+### Connecting a client
+
+Point the client at the gateway's server URL, `https://<gateway-host>/<server_name>/mcp`, and let it discover OAuth from there. Do not configure a `client_id` or secret on the client; the gateway handles registration and the token exchange. For a `true_passthrough` bridge server the browser flow authorizes only with the upstream, and for an `oauth_delegate` bridge server it signs in to LiteLLM first and then authorizes with the upstream. The snippets below show the gateway URL in each client's remote-MCP config; follow each client's own MCP documentation for the exact field names, which change over time.
+
+Claude Code registers and runs the browser flow on first use:
+
+```bash
+claude mcp add --transport http miro https://<gateway-host>/miro/mcp
+```
+
+Cursor reads remote MCP servers from `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "miro": {
+      "url": "https://<gateway-host>/miro/mcp"
+    }
+  }
+}
+```
+
+OpenCode reads them from `opencode.json`:
+
+```json
+{
+  "mcp": {
+    "miro": {
+      "type": "remote",
+      "url": "https://<gateway-host>/miro/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+### Config Reference
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `auth_type` | Yes | Must be `true_passthrough` or `oauth_delegate`; `dcr_bridge` is rejected on any other value. |
+| `url` | Yes | The upstream MCP server URL. |
+| `dcr_bridge` | Yes | Set to `true` so the gateway hosts sign-in for OAuth-only clients. Off relays the upstream's own OAuth metadata instead. |
 
 ## Delegate Auth to Upstream (PKCE Passthrough) {#delegate-auth-to-upstream-pkce-passthrough}
 
