@@ -16,7 +16,7 @@ Control which MCP servers are visible to external callers (e.g., ChatGPT, Claude
 
 :::warning Interaction with `delegate_auth_to_upstream`
 
-If an MCP server is **`available_on_public_internet: false`** (internal for IP-based discovery) **and** has **`delegate_auth_to_upstream: true`** with **`auth_type: oauth2`** (interactive PKCE, not M2M), anonymous callers can still use the upstream OAuth **`/authorize`** path without a LiteLLM session. See [MCP OAuth — Delegate Auth to Upstream](./mcp_oauth.md#delegate-auth-to-upstream-pkce-passthrough) for details and mitigations.
+If an MCP server is **`available_on_public_internet: false`** (internal for IP-based discovery) **and** has **`delegate_auth_to_upstream: true`** with **`auth_type: oauth2`** (interactive PKCE, not M2M), anonymous callers can still use the upstream OAuth **`/authorize`** path without a LiteLLM session. See [MCP OAuth Passthrough — Delegate Auth to Upstream](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough) for details and mitigations.
 
 :::
 

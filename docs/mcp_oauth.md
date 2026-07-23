@@ -1,12 +1,14 @@
 # MCP OAuth
 
-LiteLLM supports two OAuth 2.0 flows for MCP servers. Every `auth_type: oauth2` server in `config.yaml` must declare which one it uses via `oauth2_flow`:
+LiteLLM supports several OAuth 2.0 patterns for MCP servers. Every `auth_type: oauth2` server in `config.yaml` must declare its flow via `oauth2_flow`; the passthrough modes are their own `auth_type` values, documented in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md):
 
 | Flow | `oauth2_flow` | Use Case | How It Works |
 |------|---------------|----------|--------------|
 | **Interactive (PKCE)** | `authorization_code` | User-facing apps (Claude Code, Cursor) | Browser-based consent, per-user tokens |
 | **Machine-to-Machine (M2M)** | `client_credentials` | Backend services, CI/CD, automated agents | `client_credentials` grant, proxy-managed tokens |
 | **On-Behalf-Of (OBO)** | n/a (uses `auth_type: oauth2_token_exchange`) | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [MCP OBO Auth](./mcp_obo_auth.md). |
+| **Passthrough (transparent)** | n/a (uses `auth_type: true_passthrough`) | Client already holds the upstream token; LiteLLM adds no auth of its own | Forwards the client's `Authorization` verbatim, no LiteLLM admission. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
+| **Delegated upstream OAuth** | n/a (uses `auth_type: oauth_delegate`) | LiteLLM admits the caller; the upstream owns tool authorization | LiteLLM admission plus a separate forwarded upstream bearer, keeps spend and rate limits. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
 
 ## Interactive OAuth (PKCE)
 
@@ -408,83 +410,6 @@ Check that:
 
 The server has `client_id`/`client_secret`/`token_url` configured so LiteLLM is fetching a machine-to-machine token instead of using the per-user OAuth2 token. To use per-user tokens, remove the client credentials from the server config.
 
+## Passthrough and Delegated Upstream OAuth
 
-## Delegate Auth to Upstream (PKCE Passthrough) {#delegate-auth-to-upstream-pkce-passthrough}
-
-For OAuth2 MCP servers where the client (Claude Code, Cursor, ChatGPT, etc.) already authenticates directly against the upstream server's own OAuth issuer, you can opt the route into **upstream-delegated auth**: LiteLLM stops checking its own API key / SSO and lets the client's PKCE flow run end-to-end with the upstream MCP server.
-
-Use this when the upstream server is the source of truth for who can access it and you don't want LiteLLM to gate the route a second time.
-
-### Setup
-
-```yaml title="config.yaml" showLineNumbers
-mcp_servers:
-  notion_mcp:
-    url: "https://mcp.notion.com/mcp"
-    auth_type: oauth2
-    oauth2_flow: authorization_code
-    delegate_auth_to_upstream: true
-```
-
-That's the entire change. Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
-
-:::warning Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation
-
-Using **`available_on_public_internet: false`** together with **`delegate_auth_to_upstream: true`** on an **`auth_type: oauth2`** interactive server (not `oauth2_flow: client_credentials`) still allows **anonymous** callers to reach the upstream OAuth2 **`/authorize`** flow and complete PKCE for matching MCP routes **without a LiteLLM API key session**. The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)); it does **not** disable this delegate bypass.
-
-**What to do:** Enforce access at the upstream IdP and network edge. The LiteLLM UI surfaces a warning when both settings are enabled; the proxy logs a warning when the server is loaded from config or the database.
-
-:::
-
-### How It Works
-
-1. Client sends an MCP request to LiteLLM with no `x-litellm-api-key` (and optionally no `Authorization` header).
-2. LiteLLM detects that every target server in the request is `auth_type: oauth2` AND has `delegate_auth_to_upstream: true`, and skips its own API-key/SSO check.
-3. LiteLLM also skips its pre-emptive 401, so the upstream MCP server's own `401` + `WWW-Authenticate` flows back to the client.
-4. The client completes PKCE directly with the upstream OAuth issuer.
-5. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM forwards it untouched.
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant LiteLLM as LiteLLM Proxy
-    participant MCP as Upstream MCP Server
-    participant Auth as Upstream OAuth Server
-
-    Client->>LiteLLM: MCP request (no LiteLLM key)
-    LiteLLM->>MCP: Forward request (no Authorization)
-    MCP-->>LiteLLM: 401 + WWW-Authenticate
-    LiteLLM-->>Client: 401 + WWW-Authenticate (passthrough)
-
-    Note over Client,Auth: Client runs PKCE directly with upstream
-    Client->>Auth: Authorize + token exchange (PKCE)
-    Auth-->>Client: access_token
-
-    Client->>LiteLLM: MCP request + Bearer access_token
-    LiteLLM->>MCP: Forward request + Bearer access_token
-    MCP-->>LiteLLM: MCP response
-    LiteLLM-->>Client: MCP response
-```
-
-### Fail-Closed Behavior
-
-The bypass only fires when **every** target the request resolves to opts in. It fails closed and runs normal LiteLLM auth in any of these cases:
-
-- The server's `auth_type` is anything other than `oauth2`.
-- `delegate_auth_to_upstream` is not explicitly `true`.
-- The request targets multiple servers (`x-mcp-servers: a,b`) and any one of them is not delegated.
-- The target server cannot be resolved from the URL path or `x-mcp-servers` header.
-
-### Security Trade-offs
-
-- This flag turns the MCP route into an **unauthenticated** ingress at the LiteLLM layer. Spend tracking, per-key rate limits, and any guardrails that depend on `user_api_key_auth.user_id` will not run for these requests.
-- LiteLLM cannot tell who the caller is — that's the entire point — so per-user auditing must come from the upstream MCP server's own logs.
-- Only enable this on servers whose upstream OAuth issuer you trust to enforce access control.
-
-### Config Reference
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `auth_type` | Yes | Must be `oauth2`. The flag is ignored otherwise. |
-| `oauth2_flow` | Yes | Set to `authorization_code`; delegation passes the client's interactive PKCE flow through to the upstream server. |
-| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into PKCE passthrough. |
+For servers where the client already authenticates directly against the upstream's own OAuth issuer, LiteLLM can forward the client's upstream token instead of managing tokens itself. The transparent `auth_type: true_passthrough` mode, the admission-gated `auth_type: oauth_delegate` mode, and the legacy `delegate_auth_to_upstream` flag are covered in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md).
