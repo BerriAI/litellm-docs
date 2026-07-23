@@ -356,6 +356,40 @@ client = openai.OpenAI(
 </TabItem>
 </Tabs>
 
+### Overwrite outgoing `user` with the key hash
+
+Providers such as OpenAI ban and rate-limit by the `user` field on a request, but that field is caller-controlled, so a client can rotate it to dodge a ban. Turn on `overwrite_user_with_key_hash` when you want the `user` the provider sees to be a tamper-proof identifier tied to the LiteLLM key that made the call, so a provider-side ban or rate limit maps back to exactly one key no matter what the client sent.
+
+When enabled, the proxy force-sets the outgoing `user` on chat/completions requests to the calling key's identity, always overriding any `user` in the request body and setting it even when the client omits `user`. For a virtual key the value is the key's sha256 token hash, which is the same value stored as `user_api_key_hash` in spend logs, so you can map the provider-visible id back to a key and its owner without any extra plumbing. For requests authenticated with the master key the value is the fixed alias `litellm_proxy_master_key`, so neither the master key nor its hash is ever forwarded.
+
+The flag is off by default and only affects keys the proxy itself validated (virtual keys and the master key). It behaves the same regardless of whether a virtual key has a user or sits under a team; the stamp is always the key hash. Requests authenticated by a custom auth handler or a JWT are left untouched, and with the flag off the caller-supplied `user` is preserved, so existing behavior does not change.
+
+```yaml
+litellm_settings:
+  overwrite_user_with_key_hash: true
+```
+
+A request that supplies its own `user` has it replaced before the call is dispatched:
+
+```shell
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-your-virtual-key" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "hi"}],
+    "user": "anything-the-client-sends"
+  }'
+```
+
+The provider receives `user` set to the key's sha256 hash (e.g. `98e983...6401`) rather than `anything-the-client-sends`.
+
+:::info
+
+Whether the `user` value reaches the provider on the wire is each provider's existing behavior, which this setting does not change. OpenAI sends `user` verbatim and Anthropic maps it to `metadata.user_id`; providers that do not accept a `user` param drop it just as they would otherwise.
+
+:::
+
 ### Enable/Disable Virtual Keys
 
 **Disable Keys**
