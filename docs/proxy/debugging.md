@@ -113,6 +113,33 @@ $ litellm
 
 The proxy will now all logs in json format.
 
+## Request Correlation IDs
+
+Set `request_correlation_in_logs: true` to stamp every log line with the request's `trace_id` and `session_id`. This lets you filter your log aggregator down to every line tied to a single request, or every request in a single end-user session, without adding logging calls at each call site. Works with both plaintext and JSON logs
+
+```yaml showLineNumbers
+litellm_settings:
+    request_correlation_in_logs: true
+```
+
+`trace_id` comes from the `x-litellm-trace-id` request header (or is generated per request if the header isn't set). `session_id` comes from `litellm_session_id` in the request body, or from the `x-litellm-session-id` header; see [Request Headers](./request_headers#litellm-headers) for the full resolution order. It's only added to a log line once a session id has actually been supplied
+
+Example log line with `json_logs: true`:
+
+```json showLineNumbers
+{"message": "...", "level": "INFO", "timestamp": "...", "trace_id": "2a5cbcfa-ccdf-493c-858b-eb8e9b07f32c", "session_id": "user-123-session-1"}
+```
+
+Example log line without `json_logs` (plaintext):
+
+```bash showLineNumbers
+15:30:43 - LiteLLM Proxy:ERROR: common_request_processing.py:848 - some log message [trace_id=2a5cbcfa-ccdf-493c-858b-eb8e9b07f32c session_id=user-123-session-1]
+```
+
+`request_correlation_in_logs` also adds an independent `session_id` field to `StandardLoggingPayload` (sent to logging integrations like S3 and Langfuse), populated the same way. See the [StandardLoggingPayload spec](./logging_spec#standardloggingpayload)
+
+The flag defaults to `false`, so existing log output is unaffected until you opt in.
+
 ## Control Log Output 
 
 Turn off fastapi's default 'INFO' logs 
