@@ -524,7 +524,7 @@ Once combined spend across `claude-opus-4-7` and `claude-opus-4-8` crosses $10, 
 }
 ```
 
-Group entries combine with per-model entries; a model that appears in a group and also has its own entry must be within both budgets. Models are matched against the `models` list by exact name, with or without a provider prefix, so a request for `anthropic/claude-opus-4-8` counts toward a group containing `claude-opus-4-8`
+Group entries combine with per-model entries; a model that appears in a group and also has its own entry must be within both budgets. Models are matched against the `models` list by exact name, with or without a provider prefix, so a request for `anthropic/claude-opus-4-8` counts toward a group containing `claude-opus-4-8`. A member written with a provider prefix matches only that provider's route; use the bare model name to cap every route for that model
 
 
 ### Agents
