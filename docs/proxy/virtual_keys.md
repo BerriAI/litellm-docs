@@ -360,7 +360,7 @@ client = openai.OpenAI(
 
 :::info
 
-Available in the next release candidate.
+Available in `v1.95.0-rc.1` and later.
 
 :::
 
