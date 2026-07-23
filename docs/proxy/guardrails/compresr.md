@@ -308,4 +308,4 @@ Nested `optional_params` (each also accepted directly under `litellm_params`; th
 
 ## About Compresr
 
-Compresr is a YC-backed company (W26) built by four EPFL researchers with backgrounds at Microsoft, Bell Labs, and UBS. The bet behind the product: models answer better when you stop feeding them noise, so compression cuts your bill and improves your answers at the same time. Compresr runs as a hosted platform, a Python SDK (`pip install compresr`), and on-prem deployments. Find us at [compresr.ai](https://compresr.ai), in the [docs](https://compresr.ai/docs), on the [YC page](https://www.ycombinator.com/companies/compresr), and on [PyPI](https://pypi.org/project/compresr/).
+Compresr is a YC-backed company (W26) built by four EPFL researchers with backgrounds at Microsoft, Bell Labs, and UBS. Find us at [compresr.ai](https://compresr.ai), on the [YC page](https://www.ycombinator.com/companies/compresr), or on [LinkedIn] (https://www.linkedin.com/company/compresr).
