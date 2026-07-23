@@ -106,7 +106,7 @@ sequenceDiagram
     Auth-->>Client: access_token
 
     Client->>LiteLLM: MCP request + x-litellm-api-key + Authorization: Bearer access_token
-    Note over LiteLLM: Admit caller; strip admission credential; record spend / rate limit / audit
+    Note over LiteLLM: Admit caller, strip admission credential, record spend / rate limit / audit
     LiteLLM->>MCP: Forward request + Bearer access_token (upstream token only)
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response
