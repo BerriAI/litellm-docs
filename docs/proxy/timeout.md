@@ -114,6 +114,47 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+### Keepalive Pings for Idle Streaming Connections
+
+`timeout` and `stream_timeout` cap how long a request is allowed to run. A separate problem is that load balancers and reverse proxies in front of the proxy often close connections that look idle, even when the client is legitimately waiting on a response. Streaming requests to models with long silent gaps before the first token, such as extended or adaptive thinking models, or otherwise slow providers, can trip these idle-connection timeouts before any content arrives.
+
+Set `keepalive_seconds` under a deployment's `litellm_params` to keep the connection alive during these gaps. Once a stream goes silent for longer than `keepalive_seconds`, the proxy sends an SSE comment frame (`: ping`) down the connection, repeating every `keepalive_seconds` until real content resumes. Comment frames are part of the SSE spec, and clients and intermediate proxies are expected to ignore them, so they don't affect the response your application sees.
+
+```yaml
+model_list:
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-8
+      api_key: os.environ/ANTHROPIC_API_KEY
+      keepalive_seconds: 15
+```
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer sk-1234' \
+  -d '{
+    "model": "claude-opus",
+    "messages": [{"role": "user", "content": "Think step by step about..."}],
+    "stream": true
+  }'
+```
+
+`keepalive_seconds` can also be set per request, in which case it always overrides the deployment default:
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer sk-1234' \
+  -d '{
+    "model": "claude-opus",
+    "messages": [{"role": "user", "content": "Think step by step about..."}],
+    "stream": true,
+    "keepalive_seconds": 1
+  }'
+```
+
+An explicit `0` at the request level disables pings even if the deployment sets a non-zero default. The effective value is clamped to the range 1-300 seconds.
 
 ### Setting Dynamic Timeouts - Per Request
 
