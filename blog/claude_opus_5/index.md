@@ -28,7 +28,7 @@ The specs are familiar: a 1M-token context window, up to 128K output tokens, and
 
 ## Before you switch from Opus 4.8
 
-The swap is not free. Requests that omit `thinking` now run with adaptive thinking where the same request on Opus 4.8 ran without it, so latency and output cost both move on workloads you never tuned for reasoning; `max_tokens` still caps thinking and response text together. Priority Tier and web fetch are gone, so plan that capacity and tooling separately. Opus 5's cybersecurity classifiers can also decline a request outright with `stop_reason: "refusal"` and a category in `stop_details`, which is worth handling explicitly or routing around with LiteLLM [fallbacks](../../docs/proxy/reliability).
+The swap is not free. Priority Tier and web fetch are both gone on Opus 5, so plan that capacity and that tooling separately. Opus 5's cybersecurity classifiers can also decline a request outright with `stop_reason: "refusal"` and a category in `stop_details`, which is worth handling explicitly or routing around with LiteLLM [fallbacks](../../docs/proxy/reliability).
 
 Sampling parameters (`temperature`, `top_p`, `top_k`), fixed thinking budgets, and assistant message prefill remain unsupported, same as Opus 4.8.
 
@@ -176,63 +176,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-## Advanced Features
-
-### Adaptive Thinking
-
-:::note
-Opus 5 only supports adaptive thinking. LiteLLM maps every `reasoning_effort` value to `thinking: {type: "adaptive"}`; fixed budgets via `thinking: {type: "enabled", budget_tokens: ...}` are rejected by the Anthropic API with a 400 error.
-:::
-
-<Tabs>
-<TabItem value="completions" label="/chat/completions">
-
-LiteLLM supports adaptive thinking through the `reasoning_effort` parameter:
-
-```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_KEY' \
---data '{
-  "model": "claude-opus-5",
-  "messages": [
-    {
-      "role": "user",
-      "content": "Solve this complex problem: What is the optimal strategy for..."
-    }
-  ],
-  "reasoning_effort": "high"
-}'
-```
-
-</TabItem>
-<TabItem value="messages" label="/v1/messages">
-
-Use the `thinking` parameter with `type: "adaptive"` to enable adaptive thinking mode:
-
-```bash
-curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
---header 'content-type: application/json' \
---data '{
-    "model": "claude-opus-5",
-    "max_tokens": 16000,
-    "thinking": {
-        "type": "adaptive"
-    },
-    "messages": [
-        {
-            "role": "user",
-            "content": "Explain why the sum of two even numbers is always even."
-        }
-    ]
-}'
-```
-
-</TabItem>
-</Tabs>
-
-### Fast Mode
+## Fast Mode
 
 :::info
 Fast mode is **only supported on the Anthropic provider** (`anthropic/claude-opus-5`). It is not available on Azure AI, Vertex AI, or Bedrock, and it cannot be combined with the Batch API.
