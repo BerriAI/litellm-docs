@@ -501,6 +501,7 @@ const sidebars = {
               label: "Setup & SSO",
               items: [
                 "proxy/admin_ui_sso",
+                "proxy/saml_sso",
                 "proxy/ui/ui_edit_logo",
                 "proxy/custom_sso",
                 "proxy/custom_root_ui",

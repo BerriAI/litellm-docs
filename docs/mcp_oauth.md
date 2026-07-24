@@ -412,4 +412,4 @@ The server has `client_id`/`client_secret`/`token_url` configured so LiteLLM is 
 
 ## Passthrough and Delegated Upstream OAuth
 
-For servers where the client already authenticates directly against the upstream's own OAuth issuer, LiteLLM can forward the client's upstream token instead of managing tokens itself. The transparent `auth_type: true_passthrough` mode, the admission-gated `auth_type: oauth_delegate` mode, and the legacy `delegate_auth_to_upstream` flag are covered in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md).
+For servers where the client already authenticates directly against the upstream's own OAuth issuer, LiteLLM can forward the client's upstream token instead of managing tokens itself. The transparent `auth_type: true_passthrough` mode, the admission-gated `auth_type: oauth_delegate` mode, and the legacy `delegate_auth_to_upstream` flag are covered in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md). That page also documents the `dcr_bridge` flag for OAuth-only clients such as OpenCode, Claude Code, Cursor, and Claude Desktop, where the gateway hosts registration and sign-in so the client can connect with a single OAuth flow.
