@@ -14,7 +14,7 @@
 
 ## What is Gondola?
 
-Gondola is a two-sided marketplace on top of Venice AI: holders of Venice's DIEM compute allowance list their keys, and buyers call one OpenAI-compatible gateway that routes each request to the cheapest available key. Buyers top up a USDC balance on Base and pay the metered cost per request. Because routing always picks the cheapest supplier, effective prices are typically below Venice's own list. Gondola is also Anthropic-compatible (`/v1/messages`), and only token counts and timing are logged (prompts and completions are never persisted).
+Gondola is a two-sided marketplace on top of Venice AI: holders of Venice's DIEM compute allowance list their keys, and buyers call one OpenAI-compatible gateway that routes each request to the cheapest available key. Buyers top up a USDC balance on Base and pay the metered cost per request. Because routing always picks the cheapest supplier, effective prices are typically below Venice's own list. Gondola is also Anthropic-compatible (`/v1/messages`). Prompts and completions are never persisted (no content hashing); only per-request metadata like token counts, model, cost, and timing is stored.
 
 The full, live catalog with prices is public and needs no key:
 
