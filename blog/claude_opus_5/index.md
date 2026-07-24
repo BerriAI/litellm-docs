@@ -22,37 +22,25 @@ LiteLLM now supports [Claude Opus 5](https://www.anthropic.com/news/claude-opus-
 
 ## What's new in Opus 5
 
-Opus 5 lands near Fable 5's frontier quality at half the price, and keeps Opus 4.8's per-token rates. A few things stand out for teams running it through a gateway:
+Opus 5 holds Opus 4.8's price, $5 / MTok in and $25 / MTok out, and spends the generation on closing the gap to Fable 5. Anthropic reports it beats every other model on Frontier-Bench v0.1 at more than double Opus 4.8's score and a lower cost per task, triples the next-best score on ARC-AGI 3, and at `max` effort lands within 0.5% of Fable 5's peak CursorBench 3.2 result for half the cost per task ([details from Anthropic](https://www.anthropic.com/news/claude-opus-5)). If you route a tier of work to Fable 5 today purely because Opus 4.8 could not carry it, that split is now worth re-measuring.
 
-- **Frontier coding at Opus prices.** Anthropic reports Opus 5 surpasses every other model on Frontier-Bench v0.1, more than doubling Opus 4.8's score at a lower cost per task, and lands within 0.5% of Fable 5's peak CursorBench 3.2 score at max effort for half the cost per task. It also scores three times the next-best model on ARC-AGI 3. ([details from Anthropic](https://www.anthropic.com/news/claude-opus-5))
-- **Thinking is on by default.** Requests that omit `thinking` now run with adaptive thinking, where the same request on Opus 4.8 ran without it. `max_tokens` still caps thinking plus response text together, so budget accordingly.
-- **The full effort ladder, per request.** `low`, `medium`, `high` (default), `xhigh`, and `max`, set per call via `reasoning_effort` or `output_config`. Anthropic recommends re-sweeping effort rather than carrying over an Opus 4.8 setting, and giving `xhigh` and `max` at least 64K `max_tokens`.
-- **$5 / MTok input and $25 / MTok output**, unchanged from Opus 4.8, with prompt caching at $0.50 / MTok (read) and $6.25 / MTok (5-minute write). The prompt cache minimum drops to 512 tokens, so shorter system prompts now qualify. On Bedrock, the `us.`, `eu.`, `au.`, and `jp.` inference profiles carry the usual 10% regional premium while `global.` stays at base price; LiteLLM tracks every variant automatically.
-- **Fast mode at 2x, not 6x.** Pass `speed: "fast"` on the Anthropic provider for roughly 2.5x faster output at $10 / MTok input and $50 / MTok output. LiteLLM sets the beta header and prices the premium for you.
-- **A May 2026 knowledge cutoff**, the most recent of any Claude model, with a 1M-token context window and up to 128K output tokens.
-- **One gateway, every surface.** Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output, all available across Anthropic, Azure, Vertex AI, and Bedrock with unified spend tracking, logging, and fallbacks.
+The specs are familiar: a 1M-token context window, up to 128K output tokens, and vision, PDF input, computer use, tool calling, prompt caching, and structured output on every provider LiteLLM supports. Two numbers did move. The knowledge cutoff is May 2026, the most recent of any Claude model, and the prompt cache minimum drops from 1,024 tokens to 512, which pulls shorter system prompts into the $0.50 / MTok read rate that previously did not qualify. Fast mode also got cheap enough to consider for interactive work: `speed: "fast"` on the Anthropic provider buys roughly 2.5x faster output at a 2x premium, down from 6x on Opus 4.6.
 
 ## Before you switch from Opus 4.8
 
-Opus 5 is not a drop-in swap for every workload. Four behaviors change:
-
-- **Disabling thinking is capped at `high` effort.** `thinking: {type: "disabled"}` combined with `xhigh` or `max` returns a 400. Either drop the `thinking` field and let adaptive thinking run, or keep it disabled and stay at `high` or below.
-- **Priority Tier is not supported.** If you rely on it for Opus 4.8 capacity, plan that capacity separately.
-- **Web fetch is unavailable** on Opus 5; pick an alternative tool if your agents depend on it.
-- **Cybersecurity classifiers can decline a request** with `stop_reason: "refusal"` and a category in `stop_details`. Handle that stop reason, or use LiteLLM [fallbacks](../../docs/proxy/reliability) to route refused requests to another model.
+The swap is not free. Requests that omit `thinking` now run with adaptive thinking where the same request on Opus 4.8 ran without it, so latency and output cost both move on workloads you never tuned for reasoning; `max_tokens` still caps thinking and response text together. Priority Tier and web fetch are gone, so plan that capacity and tooling separately. Opus 5's cybersecurity classifiers can also decline a request outright with `stop_reason: "refusal"` and a category in `stop_details`, which is worth handling explicitly or routing around with LiteLLM [fallbacks](../../docs/proxy/reliability).
 
 Sampling parameters (`temperature`, `top_p`, `top_k`), fixed thinking budgets, and assistant message prefill remain unsupported, same as Opus 4.8.
 
 ## Enabling Opus 5
 
-Opus 5 ships in the **`v1.95.0-dev.2`** image (and every release after it). How you pick it up depends on where your proxy reads pricing from:
+Opus 5 ships in the **`v1.95.0-dev.2`** image, but most proxies do not need to upgrade at all. On the default remote cost map, open the **Price Data** tab under **Models + Endpoints** in the UI and click **Reload Price Data** (or `POST /reload/model_cost_map` as a proxy admin). That refetches pricing and re-registers provider routing in one step, so `claude-opus-5` becomes available across Anthropic, Azure, Vertex AI, and Bedrock even on an older version.
 
-- **Default (remote cost map): no upgrade needed.** In the LiteLLM UI, open the **Price Data** tab under **Models + Endpoints** and click **Reload Price Data** (or, as a proxy admin, `POST /reload/model_cost_map`). This refetches the latest pricing from LiteLLM's cost map **and** re-registers provider routing in one step, so `claude-opus-5` becomes available across Anthropic, Azure, Vertex AI, and Bedrock, even if you're on an older proxy version.
-- **Running `LITELLM_LOCAL_MODEL_COST_MAP=true`?** The cost map is baked into the image, so the Reload button won't reach it. Pull `v1.95.0-dev.2` or later to get the bundled Opus 5 metadata:
+The exception is `LITELLM_LOCAL_MODEL_COST_MAP=true`, which bakes the cost map into the image and puts it out of the Reload button's reach. Pull `v1.95.0-dev.2` or later for the bundled Opus 5 metadata:
 
-  ```bash
-  docker pull ghcr.io/berriai/litellm:v1.95.0-dev.2
-  ```
+```bash
+docker pull ghcr.io/berriai/litellm:v1.95.0-dev.2
+```
 
 ## Usage
 
@@ -246,7 +234,9 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 ### Effort Levels
 
-Claude Opus 5 supports the full effort ladder: `low`, `medium`, `high` (default), `xhigh`, and `max`. These give you finer-grained control over how much reasoning the model applies to a task. Pass the effort level via the `output_config` parameter.
+Opus 5 takes the full ladder, `low` through `max`, with `high` as the default, set per request through `output_config.effort`.
+
+Treat it as a cost dial rather than a quality knob. Effort buys thinking tokens, and thinking tokens bill at the $25 / MTok output rate, so the only honest way to pick a level is to sweep it against your own evals and read the per-request spend back out of LiteLLM's logs. Two things make that sweep worth redoing instead of inheriting: Anthropic explicitly warns that Opus 4.8's effort tuning does not carry over, and Opus 5's headline result against Fable 5 was measured at `max`, so the top of the ladder is doing real work this generation.
 
 <Tabs>
 <TabItem value="completions" label="/chat/completions">
@@ -323,17 +313,7 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 </TabItem>
 </Tabs>
 
-**Effort level guide:**
-
-| Effort | When to use |
-|--------|-------------|
-| `low` | Short, fast responses for simple lookups, formatting, and classification |
-| `medium` | Balanced tradeoff for everyday Q&A and light reasoning |
-| `high` (default) | Complex reasoning, code generation, analysis |
-| `xhigh` | Hard problems like multi-step math, deep research, and agentic planning |
-| `max` | The hardest tasks where you want maximum reasoning depth regardless of latency |
-
-At `xhigh` or `max`, give the request at least 64K `max_tokens` so thinking and the final response both fit.
+The top two rungs have hard edges. Give `xhigh` and `max` at least 64K `max_tokens` or thinking will crowd out the response, and never pair them with `thinking: {type: "disabled"}`, which returns a 400 on Opus 5.
 
 ### Fast Mode
 
