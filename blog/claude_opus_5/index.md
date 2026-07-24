@@ -385,3 +385,7 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 </TabItem>
 </Tabs>
+
+## Feedback
+
+Running Opus 5 through LiteLLM and hitting something unexpected? Share it on [GitHub discussion #34517](https://github.com/BerriAI/litellm/discussions/34517).
