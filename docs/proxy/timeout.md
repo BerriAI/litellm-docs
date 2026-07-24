@@ -140,7 +140,19 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   }'
 ```
 
-`keepalive_seconds` can also be set per request, in which case it overrides the deployment default:
+`keepalive_seconds` is operator-only by default. A client's request-level `keepalive_seconds` has no effect unless the deployment also sets `allow_client_keepalive_override: true`, since letting any client enable heartbeats at will would let it keep an idle-looking stream alive past a load balancer's timeout indefinitely, tying up a `max_parallel_requests` slot for longer than intended.
+
+```yaml
+model_list:
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-8
+      api_key: os.environ/ANTHROPIC_API_KEY
+      keepalive_seconds: 15
+      allow_client_keepalive_override: true
+```
+
+With override allowed, a request can change the deployment's default, including disabling it with an explicit `0`:
 
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
@@ -154,7 +166,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   }'
 ```
 
-An explicit `0` at the request level disables pings even if the deployment sets a non-zero default. The reverse is also true and takes priority: if the deployment sets `keepalive_seconds: 0`, that is an operator-level disable a request can't override, so requests can narrow the deployment's setting but can't force heartbeats on for a deployment that has turned them off. The effective value is clamped to the range 1-300 seconds.
+If `allow_client_keepalive_override` isn't set, that same request body is silently ignored and the deployment's own configured value applies instead. A deployment-level `keepalive_seconds: 0` is a hard disable that takes priority over everything, including a grant of override permission: it can't be re-enabled by a request no matter what. The effective value is clamped to the range 1-300 seconds.
 
 ### Setting Dynamic Timeouts - Per Request
 
