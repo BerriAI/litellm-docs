@@ -226,9 +226,9 @@ When the model calls `compresr_retrieve`, LiteLLM intercepts the call, restores 
 
 The retrieval loop is bounded:
 
-- **Tenant isolation.** Each original is stored under the virtual key that made the request, so a hash only resolves for the key it was issued to; other keys get nothing. Requests without a virtual key have no identity to scope the store by, so retrieval is disabled for them and a warning is logged once per process.
+- **Tenant isolation.** Original context is stored under the virtual key that made the request, so a hash only resolves for the key it was issued to; other keys get nothing. Requests without a virtual key have no identity to scope the store by, so retrieval is disabled for them and a warning is logged once per process.
 - **Amplification.** A single turn resolves at most 8 hashes, and each hash only once. A made-up hash resolves to nothing and triggers no follow-up request.
-- **Memory.** Originals are kept for 15 minutes, with at most 10 MiB per call (`max_bytes_per_call`), 256 calls, and 256 MiB per process; the oldest are evicted first. An original too large to store never gets a marker, and one that has expired or been evicted simply fails to resolve.
+- **Memory.** The original context is kept in memory for 15 minutes. A single call can store up to 10 MiB of it (`max_bytes_per_call`), and the whole process holds at most 256 calls and 256 MiB, evicting the oldest first. Context too large to store never gets a marker. Context that has expired or been evicted simply fails to resolve.
 
 The store lives in the worker process, so in multi-worker deployments the follow-up may land on a different worker than the one that compressed. Run with `--workers 1` or set `enable_retrieval: false`.
 
