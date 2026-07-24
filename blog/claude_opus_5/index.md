@@ -22,15 +22,20 @@ LiteLLM now supports [Claude Opus 5](https://www.anthropic.com/news/claude-opus-
 
 ## What's new in Opus 5
 
-Opus 5 holds Opus 4.8's price, $5 / MTok in and $25 / MTok out, and spends the generation on closing the gap to Fable 5. Anthropic reports it beats every other model on Frontier-Bench v0.1 at more than double Opus 4.8's score and a lower cost per task, triples the next-best score on ARC-AGI 3, and at `max` effort lands within 0.5% of Fable 5's peak CursorBench 3.2 result for half the cost per task ([details from Anthropic](https://www.anthropic.com/news/claude-opus-5)). If you route a tier of work to Fable 5 today purely because Opus 4.8 could not carry it, that split is now worth re-measuring.
+Key changes ([details from Anthropic](https://www.anthropic.com/news/claude-opus-5)):
 
-The specs are familiar: a 1M-token context window, up to 128K output tokens, and vision, PDF input, computer use, tool calling, prompt caching, and structured output on every provider LiteLLM supports. Two numbers did move. The knowledge cutoff is May 2026, the most recent of any Claude model, and the prompt cache minimum drops from 1,024 tokens to 512, which pulls shorter system prompts into the $0.50 / MTok read rate that previously did not qualify. Fast mode also got cheap enough to consider for interactive work: `speed: "fast"` on the Anthropic provider buys roughly 2.5x faster output at a 2x premium, down from 6x on Opus 4.6.
+- **Much better coding agents:** stronger at large refactors, debugging, multi-file features, and finishing end-to-end work without leaving stubs
+- **Better self-verification:** it checks and iterates on its own work more proactively
+- **Better vision and artifacts:** improved frontend replication, charts and documents, spreadsheets, and slide decks
+- **Same base API price as Opus 4.8:** $5 / MTok input and $25 / MTok output
+- **Thinking is on by default**
+- **Fast mode:** about 2.5x faster, but costs 2x
 
 ## Before you switch from Opus 4.8
 
 The swap is not free. Priority Tier and web fetch are both gone on Opus 5, so plan that capacity and that tooling separately. Opus 5's cybersecurity classifiers can also decline a request outright with `stop_reason: "refusal"` and a category in `stop_details`, which is worth handling explicitly or routing around with LiteLLM [fallbacks](../../docs/proxy/reliability).
 
-Sampling parameters (`temperature`, `top_p`, `top_k`), fixed thinking budgets, and assistant message prefill remain unsupported, same as Opus 4.8.
+Sampling parameters (`temperature`, `top_p`, `top_k`), fixed thinking budgets, and assistant message prefill remain unsupported, same as Opus 4.8. Anthropic's [Opus 5 migration guide](https://platform.claude.com/docs/en/about-claude/models/migration-guide) has the full compatibility checklist.
 
 ## Enabling Opus 5
 
