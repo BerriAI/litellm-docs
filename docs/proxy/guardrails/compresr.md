@@ -13,7 +13,7 @@ This is available on `/v1/chat/completions`, `/v1/messages` (Anthropic format), 
 
 ## How it works
 
-The guardrail runs in-process during the `pre_call` step and calls Compresr's hosted API (`https://api.compresr.ai`), so there is no extra service to deploy. The client and the upstream LLM provider never talk to Compresr directly, and only request input is touched; responses are never modified.
+The guardrail runs in-process during the `pre_call` step and calls Compresr's hosted API (`https://api.compresr.ai`), so there is no extra service to deploy. Only the proxy talks to Compresr, and it sends only the message text selected for compression; neither the client nor the upstream LLM provider ever connects to it. Request input is the only thing rewritten; responses pass through untouched.
 
 Compression happens per message and is query-aware:
 
@@ -22,7 +22,7 @@ Compression happens per message and is query-aware:
 3. **Compress.** Targets are sent to `{api_base}/api/compress/question-specific/` (`.../batch` when there are several), authenticated via `X-API-Key`.
 4. **Rewrite.** The returned `compressed_context` replaces each target's text in place. Unselected messages stay byte-identical, multimodal parts such as images are preserved, and an identical or empty result forwards the request unchanged.
 
-Compression runs on `latte_v2` by default, Compresr's fastest query-specific model. It is extractive: it deletes the spans that do not matter for the query and keeps everything else word for word, so numbers, names, and exact wording survive verbatim.
+Compression runs on `latte_v2` by default, Compresr's fastest query-specific model. It is extractive: it deletes the spans that do not matter for the query and keeps everything else verbatim.
 
 ### Dynamic compression
 
@@ -137,7 +137,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
       }'
 ```
 
-Every request made with the returned key runs through `compresr-compression`; for an existing key, use `/key/update` with the same `guardrails` field. Per-key auth also unlocks [retrieval](#retrieving-compressed-content-compresr_retrieve), whose store is partitioned by virtual key; requests without one still get compression, just not retrieval.
+Every request made with the returned key runs through `compresr-compression`; for an existing key, use `/key/update` with the same `guardrails` field. Authenticating with a virtual key also enables [retrieval](#retrieving-compressed-content-compresr_retrieve), since originals are stored per key. Requests made without a virtual key are still compressed, but cannot retrieve.
 
 ## Enabling compression per request
 
@@ -226,9 +226,9 @@ When the model calls `compresr_retrieve`, LiteLLM intercepts the call, restores 
 
 The retrieval loop is bounded:
 
-- **Tenant isolation.** Originals are scoped to the authenticated virtual key hash plus the request's call id; a hash issued for one tenant never resolves for another, and caller-supplied call ids are ignored. Without per-key auth there is no trustworthy scope to partition by, so retrieval is disabled and a warning is logged once per process.
+- **Tenant isolation.** Originals are scoped to the authenticated virtual key hash plus the request's call id; a hash issued for one tenant never resolves for another, since the tenant boundary comes from the authenticated key, which callers cannot forge. Without per-key auth there is no trustworthy scope to partition by, so retrieval is disabled and a warning is logged once per process.
 - **Amplification.** At most 8 retrievals per turn, each hash expands at most once, and the follow-up only runs if at least one hash actually resolves. A hallucinated hash triggers nothing.
-- **Memory.** Originals expire after 15 minutes. The store holds at most 256 calls, 10 MiB per call (`max_bytes_per_call`), and 256 MiB per process, evicting the oldest first. Markers are only attached for originals that fit, so the model never sees a hash it cannot resolve.
+- **Memory.** Originals expire after 15 minutes. The store holds at most 256 calls, 10 MiB per call (`max_bytes_per_call`), and 256 MiB per process, evicting the oldest first. Markers are only attached for originals that fit; a hash whose original has since expired or been evicted simply fails to resolve, triggering nothing.
 
 The store lives in the worker process, so in multi-worker deployments the follow-up may land on a different worker than the one that compressed. Run with `--workers 1` or set `enable_retrieval: false`.
 
@@ -308,4 +308,4 @@ Nested `optional_params` (each also accepted directly under `litellm_params`; th
 
 ## About Compresr
 
-Compresr is a YC-backed company (W26) built by four EPFL researchers with backgrounds at Microsoft, Bell Labs, and UBS. Find us at [compresr.ai](https://compresr.ai), on the [YC page](https://www.ycombinator.com/companies/compresr), or on [LinkedIn] (https://www.linkedin.com/company/compresr).
+Compresr is a YC-backed company (W26) built by four EPFL researchers with backgrounds at Microsoft, Bell Labs, and UBS. Find us at [compresr.ai](https://compresr.ai), on the [YC page](https://www.ycombinator.com/companies/compresr), or on [LinkedIn](https://www.linkedin.com/company/compresr).
