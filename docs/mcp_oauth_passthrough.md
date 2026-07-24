@@ -193,6 +193,14 @@ mcp_servers:
 
 This combination keeps LiteLLM in the observability path for OAuth-only clients, so spend, rate limits, audit, and per-tool-call attribution all resolve. Reach for it when you want to see in LiteLLM which server a caller used and which tools it invoked.
 
+:::info Version availability
+
+The complete employee-bound flow described below requires **LiteLLM v1.95.0 or later**. That means the gateway-bound credential minted at the token endpoint, the SSO user rather than the browser session key sealed as its subject, and live user and team `mcp_servers` / `mcp_tool_permissions` reloaded on every call.
+
+On v1.93.0 the token endpoint hands the client the upstream provider token instead of a gateway-bound credential, so an OAuth-only client never becomes an employee-bound caller. The v1.94.0 release train adds the mint and the SSO user subject but not the aggregate `/mcp` session admission that reloads permissions per call, so `require_key_mcp_access_defined: true` does not yet give an employee explicit server and tool permissions there.
+
+:::
+
 An OAuth-only client cannot present a LiteLLM key inline, so identity comes from a LiteLLM browser session instead:
 
 - At the authorize step LiteLLM looks for a LiteLLM UI session cookie.
