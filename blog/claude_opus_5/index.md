@@ -34,12 +34,12 @@ Sampling parameters (`temperature`, `top_p`, `top_k`), fixed thinking budgets, a
 
 ## Enabling Opus 5
 
-Opus 5 ships in the **`v1.95.0-dev.2`** image, but most proxies do not need to upgrade at all. On the default remote cost map, open the **Price Data** tab under **Models + Endpoints** in the UI and click **Reload Price Data** (or `POST /reload/model_cost_map` as a proxy admin). That refetches pricing and re-registers provider routing in one step, so `claude-opus-5` becomes available across Anthropic, Azure, Vertex AI, and Bedrock even on an older version.
+Opus 5 ships in the **`v1.95.0-dev.3`** image, cutting later today, but most proxies do not need to upgrade at all. On the default remote cost map, open the **Price Data** tab under **Models + Endpoints** in the UI and click **Reload Price Data** (or `POST /reload/model_cost_map` as a proxy admin). That refetches pricing and re-registers provider routing in one step, so `claude-opus-5` becomes available across Anthropic, Azure, Vertex AI, and Bedrock even on an older version.
 
-The exception is `LITELLM_LOCAL_MODEL_COST_MAP=true`, which bakes the cost map into the image and puts it out of the Reload button's reach. Pull `v1.95.0-dev.2` or later for the bundled Opus 5 metadata:
+The exception is `LITELLM_LOCAL_MODEL_COST_MAP=true`, which bakes the cost map into the image and puts it out of the Reload button's reach. Pull `v1.95.0-dev.3` or later for the bundled Opus 5 metadata:
 
 ```bash
-docker pull ghcr.io/berriai/litellm:v1.95.0-dev.2
+docker pull ghcr.io/berriai/litellm:v1.95.0-dev.3
 ```
 
 ## Usage
@@ -66,7 +66,7 @@ docker run -d \
   -p 4000:4000 \
   -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.95.0-dev.2 \
+  ghcr.io/berriai/litellm:v1.95.0-dev.3 \
   --config /app/config.yaml
 ```
 
@@ -92,7 +92,7 @@ docker run -d \
   -e AZURE_AI_API_KEY=$AZURE_AI_API_KEY \
   -e AZURE_AI_API_BASE=$AZURE_AI_API_BASE \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.95.0-dev.2 \
+  ghcr.io/berriai/litellm:v1.95.0-dev.3 \
   --config /app/config.yaml
 ```
 
@@ -119,7 +119,7 @@ docker run -d \
   -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/credentials.json:/app/credentials.json \
-  ghcr.io/berriai/litellm:v1.95.0-dev.2 \
+  ghcr.io/berriai/litellm:v1.95.0-dev.3 \
   --config /app/config.yaml
 ```
 
@@ -150,7 +150,7 @@ docker run -d \
   -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.95.0-dev.2 \
+  ghcr.io/berriai/litellm:v1.95.0-dev.3 \
   --config /app/config.yaml
 ```
 
