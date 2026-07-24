@@ -43,6 +43,12 @@ pip install litellm==1.92.0
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**Setting `permissions` and `allowed_routes` now requires proxy-admin privileges.** These fields are admin-gated across the key, user, and team endpoints (`/key/update`, `/key/regenerate`, `/user/new`, `/user/update`, and bulk key updates), so non-admin callers that previously set them will now be rejected. See [PR #31810](https://github.com/BerriAI/litellm/pull/31810), [PR #31987](https://github.com/BerriAI/litellm/pull/31987).
+
+:::
+
 ## Key Highlights
 
 - **Claude Sonnet 5** - first-class support across Anthropic, Amazon Bedrock (including the regional inference profiles), Vertex AI, and Azure AI, with a 1M-token context window, reasoning, computer use, PDF input, and introductory pricing through 2026-08-31.

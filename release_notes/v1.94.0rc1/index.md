@@ -43,9 +43,14 @@ pip install litellm==1.94.0rc1
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**User budgets now apply on team keys by default.** A user's personal `max_budget` is now enforced whenever they call through a team key, so it stacks with the team and team-member budgets instead of being skipped as before. If you relied on personal budgets being ignored on team keys, set `general_settings.skip_user_budget_on_team_key: true` to restore the previous behavior. See [PR #32005](https://github.com/BerriAI/litellm/pull/32005).
+
+:::
+
 ## Key Highlights
 
-- **Breaking change: user budgets now apply on team keys by default** - a user's personal `max_budget` is now enforced whenever they call through a team key, so it stacks with the team and team-member budgets instead of being skipped as before. If you relied on personal budgets being ignored on team keys, set `general_settings.skip_user_budget_on_team_key: true` to restore the previous behavior - [PR #32005](https://github.com/BerriAI/litellm/pull/32005).
 - **Router plugin pipeline and Auto-Router v2** - a new `Router(plugins=[...])` extension point, resolvable from proxy YAML config, plus soft-floor adaptive mode, opt-in (now default) session affinity, multi-model tier random-pick, and user-triggered escalation keywords for the complexity router.
 - **MCP client-held credentials mature** - interactive SSO sign-in for `dcr_bridge` `oauth_delegate` DCR clients, client-held refresh envelopes, gateway-bound envelopes minted at the token endpoint, issuer-anchored OAuth discovery (RFC 8414 §3.3) to close the authorization-server mix-up, and ID-JAG support for MCP egress.
 - **Shared DataTable dashboard migration** - Virtual Keys, Teams, Guardrails, Tags, Vector Stores, Prompts, Skills, AI Hub, MCP Toolsets, and Policy Attachments all move onto the shared composable DataTable.

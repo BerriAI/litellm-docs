@@ -43,6 +43,14 @@ pip install litellm==1.93.0
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**Keys are now throttled instead of revoked when they hit a spend limit.** A key that exceeds its budget is rate-limited rather than losing access outright, so workflows that depended on a hard block at the limit will see requests slowed instead of rejected. See [PR #31300](https://github.com/BerriAI/litellm/pull/31300).
+
+**OpenTelemetry error detail keys moved under the `litellm.*` namespace.** Error spans now carry litellm error details under `litellm.*` rather than their previous keys, so dashboards and queries referencing the old attribute names will stop matching. See [PR #32591](https://github.com/BerriAI/litellm/pull/32591).
+
+:::
+
 ## Key Highlights
 
 - **GPT-5.6 and more new models** - day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure, xAI Grok-4.5, OpenAI Realtime 2.1 (and `-mini`), Google Cloud Chirp 3 speech-to-text, and the `jp` regional inference profile for Bedrock Claude Opus 4.8.
