@@ -190,10 +190,10 @@ Fast mode is **only supported on the Anthropic provider** (`anthropic/claude-opu
 Opus 5 runs roughly 2.5x faster with `speed: "fast"`, billed at $10 / MTok input and $50 / MTok output (2x the standard rate, down from the 6x premium on Opus 4.6). LiteLLM adds the `fast-mode-2026-02-01` beta header and tracks the premium in cost calculations automatically.
 
 <Tabs>
-<TabItem value="completions" label="/chat/completions">
+<TabItem value="completions" label="/v1/chat/completions">
 
 ```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
+curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer $LITELLM_KEY' \
 --data '{
@@ -228,6 +228,11 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
     ]
 }'
 ```
+
+</TabItem>
+<TabItem value="responses" label="/v1/responses">
+
+Fast mode on the Responses API is coming soon. The `speed` parameter is not yet forwarded on `/v1/responses`, so requests there run at standard speed and price until support lands.
 
 </TabItem>
 </Tabs>
