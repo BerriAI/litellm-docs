@@ -181,7 +181,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ### Adaptive Thinking
 
 :::note
-When using `reasoning_effort` with Claude Opus 5, all values (`low`, `medium`, `high`, `xhigh`, `max`) are mapped to `thinking: {type: "adaptive"}`. Opus 5 only supports adaptive thinking; explicit budgets via `thinking: {type: "enabled", budget_tokens: ...}` are rejected by the Anthropic API with a 400 error. To control thinking depth, pair adaptive thinking with `output_config.effort` (see [Effort Levels](#effort-levels) below) rather than a fixed budget.
+Opus 5 only supports adaptive thinking. LiteLLM maps every `reasoning_effort` value to `thinking: {type: "adaptive"}`; fixed budgets via `thinking: {type: "enabled", budget_tokens: ...}` are rejected by the Anthropic API with a 400 error.
 :::
 
 <Tabs>
@@ -231,89 +231,6 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 </TabItem>
 </Tabs>
-
-### Effort Levels
-
-Opus 5 takes the full ladder, `low` through `max`, with `high` as the default, set per request through `output_config.effort`.
-
-Treat it as a cost dial rather than a quality knob. Effort buys thinking tokens, and thinking tokens bill at the $25 / MTok output rate, so the only honest way to pick a level is to sweep it against your own evals and read the per-request spend back out of LiteLLM's logs. Two things make that sweep worth redoing instead of inheriting: Anthropic explicitly warns that Opus 4.8's effort tuning does not carry over, and Opus 5's headline result against Fable 5 was measured at `max`, so the top of the ladder is doing real work this generation.
-
-<Tabs>
-<TabItem value="completions" label="/chat/completions">
-
-```bash
-curl --location 'http://0.0.0.0:4000/chat/completions' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_KEY' \
---data '{
-  "model": "claude-opus-5",
-  "messages": [
-    {
-      "role": "user",
-      "content": "Explain quantum computing"
-    }
-  ],
-  "output_config": {
-    "effort": "max"
-  }
-}'
-```
-
-**Using OpenAI SDK:**
-
-```python
-import openai
-
-client = openai.OpenAI(
-    api_key="your-litellm-key",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="claude-opus-5",
-    messages=[{"role": "user", "content": "Explain quantum computing"}],
-    extra_body={"output_config": {"effort": "max"}}
-)
-```
-
-**Using LiteLLM SDK:**
-
-```python
-from litellm import completion
-
-response = completion(
-    model="anthropic/claude-opus-5",
-    messages=[{"role": "user", "content": "Explain quantum computing"}],
-    output_config={"effort": "max"},
-)
-```
-
-</TabItem>
-<TabItem value="messages" label="/v1/messages">
-
-```bash
-curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
---header 'content-type: application/json' \
---data '{
-    "model": "claude-opus-5",
-    "max_tokens": 4096,
-    "messages": [
-        {
-            "role": "user",
-            "content": "Explain quantum computing"
-        }
-    ],
-    "output_config": {
-        "effort": "max"
-    }
-}'
-```
-
-</TabItem>
-</Tabs>
-
-The top two rungs have hard edges. Give `xhigh` and `max` at least 64K `max_tokens` or thinking will crowd out the response, and never pair them with `thinking: {type: "disabled"}`, which returns a 400 on Opus 5.
 
 ### Fast Mode
 
