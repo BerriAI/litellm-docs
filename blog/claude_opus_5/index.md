@@ -26,7 +26,7 @@ Key changes ([details from Anthropic](https://www.anthropic.com/news/claude-opus
 
 - **Much better coding agents:** stronger at large refactors, debugging, multi-file features, and finishing end-to-end work without leaving stubs
 - **Better self-verification:** it checks and iterates on its own work more proactively
-- **Better vision and artifacts:** improved frontend replication (screenshots → website), charts and documents, spreadsheets, and slide decks
+- **Better vision and artifacts:** improved screenshots → website, charts and documents, spreadsheets, and slide decks
 - **Same base API price as Opus 4.8:** $5 / MTok input and $25 / MTok output
 - **Thinking is on by default**
 - **Fast mode:** about 2.5x faster, but costs 2x
