@@ -140,7 +140,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   }'
 ```
 
-`keepalive_seconds` can also be set per request, in which case it always overrides the deployment default:
+`keepalive_seconds` can also be set per request, in which case it overrides the deployment default:
 
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
@@ -154,7 +154,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   }'
 ```
 
-An explicit `0` at the request level disables pings even if the deployment sets a non-zero default. The effective value is clamped to the range 1-300 seconds.
+An explicit `0` at the request level disables pings even if the deployment sets a non-zero default. The reverse is also true and takes priority: if the deployment sets `keepalive_seconds: 0`, that is an operator-level disable a request can't override, so requests can narrow the deployment's setting but can't force heartbeats on for a deployment that has turned them off. The effective value is clamped to the range 1-300 seconds.
 
 ### Setting Dynamic Timeouts - Per Request
 
