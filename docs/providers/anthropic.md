@@ -1479,7 +1479,7 @@ LiteLLM translates OpenAI's `reasoning_effort` to Anthropic's `thinking` paramet
 | "high"           | "budget_tokens": 4096 |
 
 :::note
-`reasoning_effort` maps to Anthropic's [adaptive thinking](https: //docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-4-6`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
+`reasoning_effort` maps to Anthropic's [adaptive thinking](https://docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-4-6`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
 
 ```json
 {
