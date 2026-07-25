@@ -112,7 +112,7 @@ Reserve TPM/RPM capacity for different environments or use cases. This ensures c
 
 :::tip
 
-Reserving TPM/RPM on keys based on priority is a premium feature. Please [get an enterprise license](./enterprise.md) for it. 
+Reserving TPM/RPM on keys based on priority is a premium feature. Please [get an enterprise license](../enterprise.md) for it. 
 :::
 
 ### How Priority Reservation Works
