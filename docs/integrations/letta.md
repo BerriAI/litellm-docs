@@ -924,5 +924,5 @@ for model in models:
 - [LiteLLM Proxy Documentation](/docs/simple_proxy)
 - [LiteLLM SDK Documentation](/docs/#litellm-python-sdk)
 - [Function Calling Guide](/docs/completion/function_call)
-- [Observability Setup](/docs/integrations/observability_integrations)
+- [Observability Setup](/docs/integrations/observability_index)
 - [Router Configuration](/docs/routing)
