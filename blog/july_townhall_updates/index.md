@@ -85,6 +85,8 @@ Progress is tracked in public on [GitHub issue #30484](https://github.com/BerriA
 - **July.** MCP improvements complete, with 80+ fixes shipped, and E2E coverage climbing toward the 95% target.
 - **August.** Fireworks, Cloudflare, and Baseten providers join the E2E suite. Load-testing gates get added to stable releases, with progress reported alongside the August 29 release.
 
+Find our latest stable release [here](https://docs.litellm.ai/release_notes/v1.93.0/v1-93-0).
+
 ## Product
 
 Alongside the security and stability work, we shipped **140 feature commits in July.**
@@ -107,7 +109,7 @@ _*Overhead is gateway p99 minus direct-to-mock p99 on the same endpoint. Cost is
 
 Beta v0 is live now for testing. It supports /v1/messages for Azure and all /ocr providers today. See the [docs](https://docs.litellm.ai/docs/proxy/rust_gateway). Next up is /v1/messages for Bedrock Invoke, with support for all known Bedrock auth methods: STS, keys, and IAM.
 
-This is a gradual rollout, one route at a time, each proven in production before the next begins. Same config, same database, same API. There's nothing for you to change.
+This is a gradual rollout, one route at a time, each proven in production before the next begins. We're targeting full rollout by December 1st. Same config, same database, same API. There's nothing for you to change.
 
 [Get started.](https://docs.litellm.ai/docs/proxy/rust_gateway)
 
