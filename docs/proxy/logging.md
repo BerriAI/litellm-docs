@@ -834,53 +834,6 @@ This is the Span from OTEL Logging
 
 </TabItem>
 
-<TabItem value="Honeycomb" label="Log to Honeycomb">
-
-#### Quick Start - Log to Honeycomb
-
-**Step 1:** Set callbacks and env vars
-
-Add the following to your env
-
-```shell
-OTEL_EXPORTER="otlp_http"
-OTEL_ENDPOINT="https://api.honeycomb.io/v1/traces"
-OTEL_HEADERS="x-honeycomb-team=<your-api-key>"
-```
-
-Add `otel` as a callback on your `litellm_config.yaml`
-
-```shell
-litellm_settings:
-  callbacks: ["otel"]
-```
-
-**Step 2**: Start the proxy, make a test request
-
-Start proxy
-
-```shell
-litellm --config config.yaml --detailed_debug
-```
-
-Test Request
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data ' {
-    "model": "gpt-3.5-turbo",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ]
-    }'
-```
-
-</TabItem>
-
 <TabItem value="SigNoz" label="Log to SigNoz">
 
 #### Quick Start - Log to SigNoz
@@ -929,6 +882,53 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 For logs and metrics as well as traces, plus prebuilt dashboards, see the full **[SigNoz](../observability/signoz)** guide.
+
+</TabItem>
+
+<TabItem value="Honeycomb" label="Log to Honeycomb">
+
+#### Quick Start - Log to Honeycomb
+
+**Step 1:** Set callbacks and env vars
+
+Add the following to your env
+
+```shell
+OTEL_EXPORTER="otlp_http"
+OTEL_ENDPOINT="https://api.honeycomb.io/v1/traces"
+OTEL_HEADERS="x-honeycomb-team=<your-api-key>"
+```
+
+Add `otel` as a callback on your `litellm_config.yaml`
+
+```shell
+litellm_settings:
+  callbacks: ["otel"]
+```
+
+**Step 2**: Start the proxy, make a test request
+
+Start proxy
+
+```shell
+litellm --config config.yaml --detailed_debug
+```
+
+Test Request
+
+```shell
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --data ' {
+    "model": "gpt-3.5-turbo",
+    "messages": [
+        {
+        "role": "user",
+        "content": "what llm are you"
+        }
+    ]
+    }'
+```
 
 </TabItem>
 
