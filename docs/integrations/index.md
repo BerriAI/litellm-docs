@@ -17,6 +17,12 @@ Track, debug, and analyze LLM calls with observability platforms.
 columns={3}
 items={[
   {
+    icon: "🧭",
+    title: "SigNoz",
+    description: "OpenTelemetry-native traces, logs, and metrics.",
+    to: "/docs/observability/signoz",
+  },
+  {
     icon: "🪢",
     title: "Langfuse",
     description: "LLM observability and analytics.",

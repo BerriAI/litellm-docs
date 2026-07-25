@@ -13,6 +13,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 <NavigationCards
 columns={3}
 items={[
+  { icon: "🧭", title: "SigNoz", description: "OpenTelemetry-native traces, logs, and metrics.", to: "/docs/observability/signoz" },
   { icon: "🪢", title: "Langfuse", description: "LLM observability and analytics.", to: "/docs/observability/langfuse_integration" },
   { icon: "🐶", title: "Datadog", description: "Metrics, traces, and dashboards.", to: "/docs/observability/datadog" },
   { icon: "📡", title: "OpenTelemetry", description: "Vendor-neutral tracing.", to: "/docs/observability/opentelemetry_integration" },
