@@ -105,9 +105,11 @@ We've been testing LiteLLM, benchmarked with [AIGatewayBench](https://github.com
 
 _*Overhead is gateway p99 minus direct-to-mock p99 on the same endpoint. Cost is a footprint estimate from measured CPU and peak RSS at 4 vCPU / 16 GB, and excludes token cost._
 
-Beta v0 is live now for testing. It supports /v1/messages for Azure and all /ocr providers today: [docs.litellm.ai/docs/proxy/rust_gateway](https://docs.litellm.ai/docs/proxy/rust_gateway). Next up is /v1/messages for Bedrock Invoke, with support for all known Bedrock auth methods: STS, keys, and IAM.
+Beta v0 is live now for testing. It supports /v1/messages for Azure and all /ocr providers today. See the [docs](https://docs.litellm.ai/docs/proxy/rust_gateway). Next up is /v1/messages for Bedrock Invoke, with support for all known Bedrock auth methods: STS, keys, and IAM.
 
 This is a gradual rollout, one route at a time, each proven in production before the next begins. Same config, same database, same API. There's nothing for you to change.
+
+[Get started.](https://docs.litellm.ai/docs/proxy/rust_gateway)
 
 ## Announcing Autorouter V2
 
@@ -127,9 +129,9 @@ That default is a heuristic scorer weighing seven signals: token count, code pre
 
 We shipped Autorouter V2 to get your feedback on it. Try it today:
 
-- **Local CLI**, without upgrading your LiteLLM instance: [docs.litellm.ai/docs/learn/autorouter_cli](https://docs.litellm.ai/docs/learn/autorouter_cli)
-- **On Proxy:** [docs.litellm.ai/docs/proxy/auto_routing](https://docs.litellm.ai/docs/proxy/auto_routing)
-- **Tell us what breaks:** [GitHub Discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or #litellm-autorouter on Discord.
+- [Local CLI](https://docs.litellm.ai/docs/learn/autorouter_cli)
+- [On Proxy](https://docs.litellm.ai/docs/proxy/auto_routing)
+- Tell us what breaks: [GitHub Discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or #litellm-autorouter on Discord.
 
 ## What's next
 
@@ -143,4 +145,5 @@ We're hiring a Security Engineer for the core gateway. Small team, huge surface 
 
 Thank you for using LiteLLM. **Krrish & Ishaan**
 
-**Questions?** [github.com/BerriAI/litellm](https://github.com/BerriAI/litellm)
+**Questions? Join the conversation** [GitHub Discussion #34595](https://github.com/BerriAI/litellm/discussions/34595)
+
