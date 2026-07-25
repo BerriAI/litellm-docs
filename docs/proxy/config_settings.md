@@ -255,7 +255,7 @@ router_settings:
 | disable_batch_input_file_rate_limiting | boolean | If true, skips pre-reading batch input files during `POST /batches` pre-checks. |
 | skip_batch_input_file_rate_limiting_for_providers | array of strings | Skip batch input-file pre-read for specific providers (for example `["hosted_vllm"]`). |
 | skip_batch_input_file_rate_limiting_for_models | array of strings | Skip batch input-file pre-read for specific model names or prefixes. |
-| allowed_routes | array of strings | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](enterprise#control-available-public-private-routes)|
+| allowed_routes | array of strings | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](../enterprise#control-available-public-private-routes)|
 | key_management_system | string | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | The master key for the proxy [Set up Virtual Keys](virtual_keys) |
 | database_url | string | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
@@ -312,7 +312,7 @@ router_settings:
 | moderation_model | str | The default model to use for moderation. |
 | custom_sso | str | Path to a python file that implements custom SSO logic. [Doc on custom SSO](./custom_sso.md) |
 | allow_client_side_credentials | boolean | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md#client-side-credentials) |
-| admin_only_routes | List[str] | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](./enterprise#control-available-public-private-routes) |
+| admin_only_routes | List[str] | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](../enterprise#control-available-public-private-routes) |
 | use_azure_key_vault | boolean | If true, load keys from azure key vault | 
 | use_google_kms | boolean | If true, load keys from google kms |
 | spend_report_frequency | str | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md#spend-report-frequency) |
