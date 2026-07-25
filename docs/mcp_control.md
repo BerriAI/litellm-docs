@@ -89,7 +89,7 @@ general_settings:
   require_key_mcp_access_defined: true
 ```
 
-Turning this on is the recommended posture. With inheritance, every key issued under a team silently reaches every MCP server that team can reach, so access is granted implicitly and widens whenever the team's list grows; with the flag on, a key reaches only what it was explicitly granted, and the team's list caps rather than defines that grant. Enable it once your keys carry their own `object_permission.mcp_servers` (or an access group), since flipping it on before that will drop MCP access for keys that were relying on inheritance.
+Turning this on is the recommended posture. With inheritance, every key issued under a team silently reaches every MCP server that team can reach, so access is granted implicitly and widens whenever the team's list grows; with the flag on, a key reaches only what it was explicitly granted, and the team's list caps rather than defines that grant. We're looking to make this the default behavior in a future release; follow along and weigh in on the [deprecation discussion](https://github.com/BerriAI/litellm/discussions/32090). Enable it once your keys carry their own `object_permission.mcp_servers` (or an access group), since flipping it on before that will drop MCP access for keys that were relying on inheritance.
 
 A team with an empty `mcp_servers` list still means "no restriction" regardless of this flag, since an empty team list never restricts. The flag only changes what an empty *key* list means when the team does have a list: inherit it (default) versus grant nothing (flag on). Access-group grants on the key remain additive, so attaching a group still reaches its servers even when the flag is enabled.
 
