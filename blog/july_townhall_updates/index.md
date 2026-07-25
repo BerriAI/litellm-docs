@@ -26,7 +26,7 @@ Thank you to everyone who joined our July town hall. We used it to share this mo
 | SSRF / secret exfiltration | 5 | 13% |
 | CVE / dependency / supply-chain | 4 | 11% |
 
-We backport security fixes across the last four major and the last four minor release lines, so staying current is the whole defense. Upgrade to stay covered.
+We backport security fixes across the last four minor release lines, so staying current is the whole defense. Upgrade to stay covered.
 
 ### How we review every PR
 
