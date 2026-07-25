@@ -881,6 +881,57 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 </TabItem>
 
+<TabItem value="SigNoz" label="Log to SigNoz">
+
+#### Quick Start - Log to SigNoz
+
+**Step 1:** Set callbacks and env vars
+
+Add the following to your env
+
+```shell
+OTEL_EXPORTER="otlp_grpc"
+OTEL_ENDPOINT="https://ingest.<region>.signoz.cloud:443"
+OTEL_HEADERS="signoz-ingestion-key=<your-ingestion-key>"
+```
+
+Set `<region>` to match your SigNoz Cloud [region](https://signoz.io/docs/ingestion/signoz-cloud/overview/#endpoint). For a self-hosted instance, point `OTEL_ENDPOINT` at your own collector instead.
+
+Add `otel` as a callback on your `litellm_config.yaml`
+
+```shell
+litellm_settings:
+  callbacks: ["otel"]
+```
+
+**Step 2**: Start the proxy, make a test request
+
+Start proxy
+
+```shell
+litellm --config config.yaml --detailed_debug
+```
+
+Test Request
+
+```shell
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --data ' {
+    "model": "gpt-3.5-turbo",
+    "messages": [
+        {
+        "role": "user",
+        "content": "what llm are you"
+        }
+    ]
+    }'
+```
+
+For logs and metrics as well as traces, plus prebuilt dashboards, see the full **[SigNoz](../observability/signoz)** guide.
+
+</TabItem>
+
 <TabItem value="traceloop" label="Log to Traceloop Cloud">
 
 #### Quick Start - Log to Traceloop

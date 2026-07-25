@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # OpenTelemetry v1
 
-OpenTelemetry is a CNCF standard for observability. It connects to any observability tool, such as Jaeger, Zipkin, Datadog, New Relic, Traceloop, Levo AI and others.
+OpenTelemetry is a CNCF standard for observability. It connects to any observability tool, such as Jaeger, Zipkin, Datadog, New Relic, SigNoz, Traceloop, Levo AI and others.
 
 <Image img={require('../../img/traceloop_dash.png')} />
 
@@ -87,6 +87,21 @@ OTEL_SERVICE_NAME="litellm-proxy"
 ```
 
 For **LiteLLM Proxy** setup, ingest token patterns, and trace verification, see **[Splunk Observability Cloud (OpenTelemetry)](/docs/observability/splunk_observability_cloud)**.
+
+</TabItem>
+
+<TabItem value="signoz" label="SigNoz">
+
+```shell
+OTEL_EXPORTER_OTLP_ENDPOINT="https://ingest.<region>.signoz.cloud:443"
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_EXPORTER_OTLP_HEADERS="signoz-ingestion-key=<your-ingestion-key>"
+OTEL_SERVICE_NAME="litellm-proxy"
+```
+
+Set `<region>` to match your SigNoz Cloud [region](https://signoz.io/docs/ingestion/signoz-cloud/overview/#endpoint). For a self-hosted instance, point `OTEL_EXPORTER_OTLP_ENDPOINT` at your own collector instead.
+
+For **LiteLLM SDK** and **LiteLLM Proxy** setup, logs and metrics as well as traces, and prebuilt dashboards, see **[SigNoz](/docs/observability/signoz)**.
 
 </TabItem>
 
