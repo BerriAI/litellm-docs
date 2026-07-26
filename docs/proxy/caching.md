@@ -231,14 +231,15 @@ just set `REDIS_SSL="True"` in your .env, and LiteLLM will pick this up.
 REDIS_SSL="True"
 ```
 
-For quick testing, you can also use REDIS_URL, eg.:
+You can also point LiteLLM at Redis with a single URL, eg.:
 
 ```
 REDIS_URL="rediss://.."
 ```
 
-but we **don't** recommend using REDIS_URL in prod. We've noticed a performance difference between
-using it vs. redis_host, port, etc.
+:::warning
+When `REDIS_URL` is set, only the URL string reaches the Redis client. Any other `REDIS_*` setting, including `REDIS_PASSWORD`, `REDIS_USERNAME`, `REDIS_SSL` and the socket timeouts, is silently dropped, so credentials and options have to be embedded in the URL itself, as in `rediss://user:pass@host:6379/0?socket_timeout=5`. If you'd rather configure those separately, use `REDIS_HOST`, `REDIS_PORT` and friends instead of `REDIS_URL`
+:::
 
 #### GCP IAM Authentication
 
@@ -317,7 +318,7 @@ Set either `REDIS_URL` or the `REDIS_HOST` in your os environment, to enable cac
 
 **Additional kwargs**  
 :::info
-Use `REDIS_*` environment variables to configure all Redis client library parameters. This is the suggested mechanism for toggling Redis settings as it automatically maps environment variables to Redis client kwargs.
+Use `REDIS_*` environment variables to configure all Redis client library parameters. This is the suggested mechanism for toggling Redis settings as it automatically maps environment variables to Redis client kwargs. This mapping only applies when you connect via `REDIS_HOST` / `REDIS_PORT`; with `REDIS_URL` the extra variables are ignored and must be part of the URL string
 :::
 
 You can pass in any additional redis.Redis arg, by storing the variable + value in your os
