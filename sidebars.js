@@ -877,6 +877,7 @@ const sidebars = {
             "pass_through/assembly_ai",
             "pass_through/bedrock",
             "pass_through/azure_passthrough",
+            "pass_through/chatgpt_codex",
             "pass_through/cohere",
             "pass_through/cursor",
             "pass_through/google_ai_studio",
