@@ -147,6 +147,7 @@ const sidebars = {
           "proxy/guardrails/lasso_security",
           "proxy/guardrails/guardrails_ai",
           "proxy/guardrails/lakera_ai",
+          "proxy/guardrails/llm_as_a_judge",
           "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
           "proxy/guardrails/noma_security",
