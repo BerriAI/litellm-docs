@@ -181,38 +181,55 @@ curl http://localhost:4000/v1/chat/completions \
 
 ### Environment Variables
 
-You can customize token storage locations:
+LiteLLM reads GitHub Copilot settings from the environment when each request is built. This also applies to the OAuth device-code, access-token, and Copilot token requests
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth application client ID |
+| `GITHUB_COPILOT_INTEGRATION_ID` | `vscode-chat` | `copilot-integration-id` header |
+| `GITHUB_COPILOT_EDITOR_VERSION` | `vscode/1.115.0` | `editor-version` header |
+| `GITHUB_COPILOT_EDITOR_PLUGIN_VERSION` | `copilot-chat/0.44.0` | `editor-plugin-version` header |
+| `GITHUB_COPILOT_USER_AGENT` | `GitHubCopilotChat/0.44.0` | `user-agent` header |
+| `GITHUB_COPILOT_ACCEPT` | `application/json` | `accept` header |
+| `GITHUB_COPILOT_CONTENT_TYPE` | `application/json` | `content-type` header |
+| `GITHUB_COPILOT_API_VERSION` | Not set | Optional `x-github-api-version` header |
+| `GITHUB_COPILOT_OPENAI_INTENT` | Not set | Optional `openai-intent` header |
+| `GITHUB_COPILOT_USER_AGENT_LIBRARY_VERSION` | Not set | Optional `x-vscode-user-agent-library-version` header |
+
+Set a header environment variable to an empty string to omit that header. Request-level `extra_headers` take precedence over these values for model requests. Authentication requests use the environment variables because `extra_headers` are not available during OAuth
+
+The token storage and endpoint settings are also configurable
 
 ```bash showLineNumbers title="Environment Variables"
-# Optional: Custom token directory
 export GITHUB_COPILOT_TOKEN_DIR="~/.config/litellm/github_copilot"
-
-# Optional: Custom access token file name
 export GITHUB_COPILOT_ACCESS_TOKEN_FILE="access-token"
-
-# Optional: Custom API key file name
 export GITHUB_COPILOT_API_KEY_FILE="api-key.json"
-
-# Optional: Custom Copilot endpoints for authentication and usage
-# (needed when using GitHub Enterprise subscriptions with custom endpoints or self-hosted GitHub servers
-export GITHUB_COPILOT_API_BASE="https://copilot-api.my-company.ghe.com"
-export GITHUB_COPILOT_DEVICE_CODE_URL="https://my-company.ghe.com/login/device/code"
-export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://my-company.ghe.com/login/oauth/access_token"
-export GITHUB_COPILOT_API_KEY_URL="https://my-company.ghe.com/api/v3/copilot_internal/v2/token"
+export GITHUB_COPILOT_API_BASE="https://copilot-api.example.com"
+export GITHUB_COPILOT_DEVICE_CODE_URL="https://github.example.com/login/device/code"
+export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://github.example.com/login/oauth/access_token"
+export GITHUB_COPILOT_API_KEY_URL="https://github.example.com/api/v3/copilot_internal/v2/token"
 ```
 
-### Headers
+For the proxy, put the same values in the `environment_variables` block
 
-LiteLLM automatically injects the required GitHub Copilot headers (simulating VSCode). You don't need to specify them manually.
+```yaml showLineNumbers title="config.yaml"
+environment_variables:
+  GITHUB_COPILOT_CLIENT_ID: "your-oauth-client-id"
+  GITHUB_COPILOT_INTEGRATION_ID: "your-integration-id"
+  GITHUB_COPILOT_EDITOR_VERSION: "your-editor/1.0.0"
+  GITHUB_COPILOT_EDITOR_PLUGIN_VERSION: "your-plugin/1.0.0"
+  GITHUB_COPILOT_USER_AGENT: "YourClient/1.0.0"
+```
 
-If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`:
+### Request Headers
 
-```python showLineNumbers title="Custom Headers (Optional)"
-extra_headers = {
-    "editor-version": "vscode/1.85.1",           # Editor version
-    "editor-plugin-version": "copilot/1.155.0",  # Plugin version
-    "Copilot-Integration-Id": "vscode-chat",     # Integration ID
-    "user-agent": "GithubCopilot/1.155.0"        # User agent
-}
+Use `extra_headers` when a single model request needs additional headers or must override the environment defaults
+
+```python showLineNumbers title="Custom Request Headers"
+response = completion(
+    model="github_copilot/gpt-4",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_headers={"editor-version": "custom-editor/2.0.0"},
+)
 ```
 
