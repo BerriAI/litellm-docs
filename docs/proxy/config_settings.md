@@ -1184,8 +1184,8 @@ router_settings:
 | SENDGRID_SENDER_EMAIL | Email address used as the sender in SendGrid email transactions 
 | SPEND_LOGS_URL | URL for retrieving spend logs
 | SPEND_LOG_CLEANUP_BATCH_SIZE | Number of logs deleted per batch during cleanup. Default is 1000
-| STALE_OBJECT_CLEANUP_BATCH_SIZE | Max number of stale managed objects updated per cleanup cycle. Default is 1000
 | SSE_KEEPALIVE_INTERVAL_SECONDS | Interval in seconds at which the proxy writes an SSE comment frame to a streaming response that has not produced its first token yet, so hops with an idle timeout (AWS ALB and nginx default to 60s) do not reap a healthy slow-time-to-first-token stream. Set it below the shortest idle timeout in front of the proxy. **Default is 0**, which disables the keepalive
+| STALE_OBJECT_CLEANUP_BATCH_SIZE | Max number of stale managed objects updated per cleanup cycle. Default is 1000
 | SSL_CERTIFICATE | Path to the SSL certificate file
 | SSL_ECDH_CURVE | ECDH curve for SSL/TLS key exchange (e.g., 'X25519' to disable PQC).
 | SSL_SECURITY_LEVEL | [BETA] Security level for SSL/TLS connections. E.g. `DEFAULT@SECLEVEL=1`
