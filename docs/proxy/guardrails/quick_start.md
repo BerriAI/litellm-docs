@@ -233,6 +233,33 @@ Your response headers will include `x-litellm-applied-guardrails` with the guard
 x-litellm-applied-guardrails: aporia-pre-guard
 ```
 
+### Scoping a Guardrail to Specific Model Groups
+
+Set `apply_guardrail_to_model_groups` on a guardrail's `litellm_params` to run it only for requests targeting the listed model groups, leaving every other model group unaffected. This is useful when an expensive `during_call` guardrail only needs to run against one tier, for example a low-intelligence or high-risk model group, instead of paying its latency and cost on every model behind the proxy.
+
+```yaml
+model_list:
+  - model_name: ai-gateway-low-intelligence-general
+    litellm_params:
+      model: bedrock/anthropic.claude-haiku
+  - model_name: ai-gateway-high-intelligence-general
+    litellm_params:
+      model: bedrock/anthropic.claude-sonnet
+
+guardrails:
+  - guardrail_name: "lakera-low-tier-only"
+    litellm_params:
+      guardrail: lakera_v2
+      mode: "during_call"
+      default_on: true
+      api_key: os.environ/LAKERA_API_KEY
+      apply_guardrail_to_model_groups: ["ai-gateway-low-intelligence-general"]
+```
+
+With this config, requests to `ai-gateway-low-intelligence-general` trigger `lakera-low-tier-only`, and requests to `ai-gateway-high-intelligence-general` skip it entirely. Matching is case-insensitive and works identically for every guardrail type (Presidio, Bedrock, custom guardrails, and so on) with no per-guardrail code needed. Leaving `apply_guardrail_to_model_groups` unset or empty runs the guardrail against every model group, matching the guardrail's prior behavior.
+
+`apply_guardrail_to_model_groups` matches exact model group names only. For regex matching or scoping by team/key as well as model, use [Guardrail Policies](./guardrail_policies.md)'s [Model Conditions](./guardrail_policies.md#model-conditions) instead.
+
 ### Guardrail Policies
 
 Need more control? Use [Guardrail Policies](./guardrail_policies.md) to:
