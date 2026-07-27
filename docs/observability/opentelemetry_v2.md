@@ -498,8 +498,15 @@ Request-side keys:
 | `gen_ai.request.temperature`, `top_p`, `top_k`, `max_tokens` | when set on the request |
 | `gen_ai.request.frequency_penalty`, `presence_penalty`, `seed` | when set |
 | `gen_ai.request.stop_sequences` | when set (string array) |
-| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition |
+| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition, for the first 8 tools ([why](#tool-definitions-are-capped)) |
+| `litellm.request.tools.declared` | when the request declares tools; the full count, capped or not |
 | `server.address`, `server.port` | when the provider endpoint is known |
+
+#### Tool definitions are capped
+
+Only the first 8 declared tools get `gen_ai.tool.{idx}.*` attributes. Tool definitions are an unbounded attribute family, one entry per tool per field per active vocabulary, and OpenTelemetry caps a span at 128 attributes by default. An agent that declares a hundred or more tools would otherwise blow past that ceiling, and because the limit evicts the oldest attributes first, the `gen_ai.*` attributes above would be the ones discarded, leaving a span carrying nothing but tool schemas. The cap keeps model, token usage, and cost on the span no matter how many tools a request declares.
+
+`litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring 8 tools or fewer are unaffected and keep full detail.
 
 Response, usage, cost, identity:
 
