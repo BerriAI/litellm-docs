@@ -168,6 +168,22 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 If `allow_client_keepalive_override` isn't set, that same request body is silently ignored and the deployment's own configured value applies instead. A deployment-level `keepalive_seconds: 0` is a hard disable that takes priority over everything, including a grant of override permission: it can't be re-enabled by a request no matter what. The effective value is clamped to the range 1-300 seconds.
 
+`keepalive_seconds` can also be set with an `x-litellm-keepalive-seconds` header instead of a request body field, for clients that can set custom headers more easily than extra body fields:
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'x-litellm-keepalive-seconds: 1' \
+  -d '{
+    "model": "claude-opus",
+    "messages": [{"role": "user", "content": "Think step by step about..."}],
+    "stream": true
+  }'
+```
+
+The header goes through the same `allow_client_keepalive_override` gate as the body field, so it has no effect on a deployment that hasn't opted in either.
+
 ### Setting Dynamic Timeouts - Per Request
 
 LiteLLM supports setting a `timeout` per request 
