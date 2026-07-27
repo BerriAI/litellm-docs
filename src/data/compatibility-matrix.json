@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-07-11T06:11:54Z",
-  "litellm_version": "v1.91.1",
+  "generated_at": "2026-07-27T06:20:47Z",
+  "litellm_version": "v1.93.0",
   "claude_code_version": "2.1.126",
   "providers": [
     "anthropic",
@@ -29,7 +29,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -44,13 +45,15 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -72,7 +75,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -94,7 +98,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -116,7 +121,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -132,13 +138,14 @@
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-converse] no `thinking` content block observed in stream-json events"
+          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -160,7 +167,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -182,7 +190,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -204,7 +213,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -226,7 +236,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -248,7 +259,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -263,13 +275,15 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-haiku-4-5-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     },
@@ -312,7 +326,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] tool_search probe failed: status 404: {\"error\":{\"message\":\"{\\\"error\\\":{\\\"code\\\":\\\"DeploymentNotFound\\\",\\\"message\\\":\\\"The API deployment claude-haiku-4-5 does not exist. If you created the deployment within the last 5 minutes, please wait a moment and try again.\\\",\\\"details\\\":\\\"The API deployment claude-haiku-4-5 does not exist. If you created the deployment within the last 5 minutes, please wait a moment and try again.\\\"}}. Received M"
         }
       }
     },
@@ -333,7 +348,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6-azure] claude CLI failed: exit=1; api_status=404; text=There's an issue with the selected model (claude-sonnet-4-6-azure). It may not exist or you may not have access to it. Run --model to pick a different model."
         }
       }
     }
