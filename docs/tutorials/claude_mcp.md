@@ -59,6 +59,8 @@ The server name under `mcp_servers:` (e.g. `atlassian_mcp`, `github_mcp`) **must
 
 Since Claude Code needs a publicly accessible URL for the OAuth callback, expose your proxy via ngrok or a similar tool.
 
+If Claude Code runs on a machine without a browser (an EC2 instance, an SSH dev box, a container), the OAuth callback to `localhost` cannot reach it from the browser on your laptop; see [Headless and remote machines](../mcp_oauth#headless-and-remote-machines) for the supported paths.
+
 ```bash
 litellm --config /path/to/config.yaml
 

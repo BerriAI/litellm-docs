@@ -151,7 +151,30 @@ The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates 
 
 `PROXY_BASE_URL` is the right escape hatch for ingressed deployments because the operator is declaring the proxy's true public origin out of band, rather than asking the proxy to infer it from headers an attacker might be able to set. The check itself is not relaxed.
 
-## Machine-to-Machine (M2M) Auth
+### Headless and remote machines (EC2, SSH boxes, containers) {#headless-and-remote-machines}
+
+MCP clients complete OAuth by listening on a loopback address (`http://localhost:<port>/callback`, per RFC 8252) and expecting the browser to deliver the authorization code there. That assumption breaks when the client runs on a machine with no browser: the client prints the authorize URL, you open it on your laptop, sign-in succeeds, and the final redirect then resolves `localhost` on the laptop instead of the machine running the client. The flow hangs with the client still waiting. The client registers and owns that redirect URI, so the gateway cannot send the code anywhere else; what it can do is hand the last hop to you
+
+**Manual code delivery (gateway aggregate `/mcp` flow).** When the OAuth client registered a loopback redirect URI, the connect page's "Finish connecting" banner shows a checkbox labeled "My client is on a remote or SSH machine". Check it before clicking Finish connecting. Instead of redirecting, the gateway renders the full callback URL on the page. Deliver it on the machine where the client runs, either by pasting it into the client (Claude Code 2.1.191 and later accepts a pasted callback URL while waiting for OAuth) or from that machine's terminal:
+
+```bash
+curl 'http://localhost:<port>/callback?code=...&state=...'
+```
+
+The code on the page is single-use, bound to the client's PKCE verifier, and expires after 5 minutes, so it is useless to anyone who cannot also act as the waiting client. Requires a proxy build including [PR #34848](https://github.com/BerriAI/litellm/pull/34848)
+
+If you clicked Finish connecting without the checkbox, the laptop browser dead-ends on a connection error; the complete callback URL is still in the address bar and can be copied and delivered the same two ways
+
+**Skip client OAuth with a virtual key.** A headless box never needs the browser dance if the MCP client authenticates with a LiteLLM key instead:
+
+```bash
+claude mcp add --transport http litellm "https://<your-gateway>/mcp/" \
+  --header "x-litellm-api-key: Bearer sk-<your-key>"
+```
+
+Upstream servers whose own auth is interactive OAuth still need a one-time connect from the gateway UI (any browser, any machine); the tokens are stored server side and resolved at call time by the key's user. The key must belong to the same user who connected the servers: a team or service key that carries no user identity resolves no stored token and receives the standard OAuth challenge, indistinguishable from a user who never connected
+
+SSH port-forwarding the callback is not a reliable alternative; clients pick an ephemeral callback port per flow, so there is no stable port to forward
 
 LiteLLM automatically fetches, caches, and refreshes OAuth2 tokens using the `client_credentials` grant. No manual token management required.
 
