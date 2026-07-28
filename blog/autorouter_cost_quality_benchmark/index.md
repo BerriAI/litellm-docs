@@ -70,27 +70,6 @@ The split runs opposite to intuition:
 
 If nearly every request carries a large repo context, there is no cheap tier to route it to, and the lever to reach for is [prompt caching or compression](/blog/save-claude-code-costs-with-litellm) rather than model selection.
 
-## The classifier is the dial
-
-Four classifiers on the same three-model pool, scored offline against a fully graded 809-query grid, alongside a trained router and a cheapest-correct oracle:
-
-| Policy | Accuracy | Cost/1k | haiku/sonnet/opus |
-| --- | --- | --- | --- |
-| All-Haiku (floor) | 68.5% | $1.13 | 100/0/0 |
-| **LiteLLM heuristic (keyword)** | **69.9%** | **$2.04** | **80/16/3** |
-| RouteLLM BERT at matched budget | 71.2% | $2.46 | 80/16/3 |
-| **LiteLLM LLM classifier (Haiku)** | **74.9%** | **$5.44** | **36/35/28** |
-| RouteLLM BERT at matched budget | 74.8% | $4.69 | 36/35/28 |
-| All-Sonnet-5 | 75.3% | $4.81 | 0/100/0 |
-| LiteLLM semantic (MiniLM tier exemplars) | 76.3% | $6.20 | 19/27/54 |
-| All-Opus-5 | 80.6% | $8.38 | 0/0/100 |
-| Oracle (cheapest correct model) | 85.7% | $2.25 | n/a |
-
-- **A trained router buys 1.3 points.** RouteLLM's BERT classifier beats the free keyword heuristic by that much at a matched budget, a small return for a model artifact you have to host and retrain
-- **An LLM classifier ties it.** `classifier_type: llm` with Haiku matches the trained router at a matched budget, so the cheapest path to a better router is a small model reading the prompt
-- **Classification is the bottleneck, not the pool.** The oracle beats all-Opus at roughly a quarter of its cost, so the headroom is in picking better, not in adding models
-- **The heuristic is unstable under paraphrase.** It picks the same model for only 50.7% of reworded queries, though 85% of the flips are upward, so the failure mode is paying too much rather than answering badly
-
 ## Try it
 
 :::info
@@ -127,4 +106,4 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-Point a client at `smart-router` and every response carries `x-litellm-model-name` and `x-litellm-response-cost`, which is all the instrumentation this study needed. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
+Point a client at `smart-router` and every response carries `x-litellm-model-name` and `x-litellm-response-cost`, which is all the instrumentation this study needed. The heuristic classifier above is not the ceiling: switching to `classifier_type: llm`, where `claude-haiku-4-5` reads each prompt and picks the tier, scored about five accuracy points higher in our offline comparison, at roughly 2.5x the spend. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
