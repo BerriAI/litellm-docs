@@ -181,12 +181,11 @@ curl http://localhost:4000/v1/chat/completions \
 
 ### Environment Variables
 
-LiteLLM reads GitHub Copilot settings from the environment when each request is built. This also applies to the OAuth device-code, access-token, and Copilot token requests
+LiteLLM uses GitHub's OAuth device flow and sends the resulting access token directly to the trusted GitHub Copilot API base. Header and endpoint settings are read from the environment when each request is built
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth application client ID |
-| `GITHUB_COPILOT_USE_OAUTH_TOKEN` | Not set | Use the OAuth access token directly instead of exchanging it at `/copilot_internal/v2/token` |
 | `GITHUB_COPILOT_INTEGRATION_ID` | `vscode-chat` | `copilot-integration-id` header |
 | `GITHUB_COPILOT_EDITOR_VERSION` | `vscode/1.115.0` | `editor-version` header |
 | `GITHUB_COPILOT_EDITOR_PLUGIN_VERSION` | `copilot-chat/0.44.0` | `editor-plugin-version` header |
@@ -204,11 +203,9 @@ The token storage and endpoint settings are also configurable
 ```bash showLineNumbers title="Environment Variables"
 export GITHUB_COPILOT_TOKEN_DIR="~/.config/litellm/github_copilot"
 export GITHUB_COPILOT_ACCESS_TOKEN_FILE="access-token"
-export GITHUB_COPILOT_API_KEY_FILE="api-key.json"
 export GITHUB_COPILOT_API_BASE="https://copilot-api.example.com"
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://github.example.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://github.example.com/login/oauth/access_token"
-export GITHUB_COPILOT_API_KEY_URL="https://github.example.com/api/v3/copilot_internal/v2/token"
 ```
 
 For the proxy, put the same values in the `environment_variables` block
@@ -222,16 +219,17 @@ environment_variables:
   GITHUB_COPILOT_USER_AGENT: "YourClient/1.0.0"
 ```
 
-OAuth clients that use their access token directly, such as OpenCode, must enable direct OAuth mode and omit the VS Code identity headers
+OAuth applications can provide their own client identity without selecting a token mode. For example, these values match OpenCode's OAuth behavior
 
-```yaml showLineNumbers title="OpenCode OAuth Identity"
+```yaml showLineNumbers title="Custom OAuth Application"
 environment_variables:
   GITHUB_COPILOT_CLIENT_ID: "Ov23li8tweQw6odWQebz"
-  GITHUB_COPILOT_USER_AGENT: "opencode/1.18.7"
+  GITHUB_COPILOT_USER_AGENT: "opencode/<installed-version>"
   GITHUB_COPILOT_INTEGRATION_ID: ""
   GITHUB_COPILOT_EDITOR_VERSION: ""
   GITHUB_COPILOT_EDITOR_PLUGIN_VERSION: ""
-  GITHUB_COPILOT_USE_OAUTH_TOKEN: "true"
+  GITHUB_COPILOT_API_VERSION: "2026-06-01"
+  GITHUB_COPILOT_OPENAI_INTENT: "conversation-edits"
 ```
 
 ### Request Headers
