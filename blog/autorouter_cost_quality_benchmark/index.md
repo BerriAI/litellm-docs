@@ -32,8 +32,8 @@ Auto routing promises a smaller bill without a worse answer. We measured both ha
 
 - **Router arm:** one model group, four tiers. SIMPLE to `claude-haiku-4-5`, MEDIUM to `claude-sonnet-5`, COMPLEX and REASONING both to `claude-opus-5`, since Opus 5 already thinks by default. Heuristic classifier, no keyword rules, no adaptive sampling
 - **Baseline arm:** the same prompts sent straight to `claude-opus-5`, which is what most teams do today when they point a workload at one frontier model
-- **Cost savings:** `1 - cost(router) / cost(baseline)`, from measured token usage. The live-proxy leg reads each request's cost off the `x-litellm-response-cost` header; the simulations estimate tokens from conversation text
-- **Quality retained:** `pass(router) / pass(baseline)`, one pooled rate with no partial credit, identical prompts and grader on both arms
+- **Cost savings:** what the router spent against what the baseline spent. On the live proxy, LiteLLM reports the cost of every request back in a response header; on the other legs we price the tokens each request actually used
+- **Quality retained:** the router's pass rate against the baseline's, evaluating identical prompts with the same grader on both arms
 
 What counts as a pass:
 
