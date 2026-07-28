@@ -260,6 +260,15 @@ Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
+## Claude Code and Claude Desktop
+
+Two prerequisites before a router is selectable in a Claude client:
+
+1. **The router's `model_name` has to read as an Anthropic model.** It needs `claude`, `anthropic`, or a family name such as `opus`, `sonnet`, or `haiku` somewhere in it, and no other vendor's name, so `claude-auto` is accepted where `smart-router` is rejected.
+2. **On Claude for Teams or Enterprise, that name has to be on the organization's `availableModels` allowlist.** Anything missing from the allowlist is greyed out in the Claude Desktop picker and replaced at CLI startup with `restricted by your organization's settings`.
+
+Both checks run in the client, so a router that fails either one leaves nothing in the LiteLLM logs to explain itself. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
+
 ## See also
 
 - Announcement post: [Auto Router v2: one router for complexity, semantic, and adaptive routing](/blog/autorouter-v2)
