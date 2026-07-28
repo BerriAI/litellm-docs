@@ -28,21 +28,26 @@ Auto routing promises a smaller bill without a worse answer. We measured both ha
 | Simulation, developer chat ([DevGPT](https://github.com/NAIST-SE/DevGPT)) | 2,056 conversations | not measured | **65.4%** | 48% / 27% / 25% |
 | Simulation, code-in-prompt heavy ([WildChat](https://huggingface.co/datasets/allenai/WildChat-1M) code-filtered) | 993 conversations | not measured | **20.0%** | 13% / 34% / 53% |
 
-How each leg ran:
-
-- **Live proxy:** 440 real requests to `POST /v1/chat/completions`, per-request cost read from the `x-litellm-response-cost` header and the routed model from `x-litellm-model-name`
-- **Grading:** five of the six datasets score against their own answer keys or test suites; only [SWE-bench Lite](https://www.swebench.com/) needs a judge, so every SWE-bench answer was judged twice, by `claude-opus-5` and by `gemini-3.6-flash`, to rule out self-preference. The stricter judge leaves retention at 96.6%
-- **RouterArena:** the full 8,400-query set, paired against an all-Opus arm on the same queries and scored by RouterArena's own evaluator
-- **Simulations:** cost-only replays over real conversations, classifying the first user turn and pinning that model for the rest of the conversation the way `session_affinity` does. Neither corpus has an answer key, so quality is not measured there
-
-The two graded legs disagree because the heuristic classifier keys off length, code presence, and reasoning markers. RouterArena's short academic questions score SIMPLE, so 79% of them go to Haiku; the benchmark set with HumanEval, MBPP, and SWE-bench in it reads as code, so 70% goes to Sonnet 5. More Haiku means more savings and more missed answers, and which number resembles your bill depends on your traffic.
-
 ## How it was measured
 
 - **Router arm:** one model group, four tiers. SIMPLE to `claude-haiku-4-5`, MEDIUM to `claude-sonnet-5`, COMPLEX and REASONING both to `claude-opus-5`, since Opus 5 already thinks by default. Heuristic classifier, no keyword rules, no adaptive sampling
 - **Baseline arm:** the same prompts sent straight to `claude-opus-5`, which is what most teams do today when they point a workload at one frontier model
-- **Quality retained:** `pass(router) / pass(baseline)`, with identical prompts and grader on both arms, so grader quirks largely cancel
-- **Cost savings:** `1 - cost(router) / cost(baseline)`, from measured token usage on every request rather than estimates
+- **Cost savings:** `1 - cost(router) / cost(baseline)`. On the live-proxy leg, each of the 440 requests reports its own cost in the `x-litellm-response-cost` header, which is LiteLLM's calculation over the usage Anthropic actually returned, including reasoning tokens. RouterArena costs come from measured token usage priced at list rates; the simulations estimate tokens from the conversation text
+- **Quality retained:** `pass(router) / pass(baseline)`, one pooled rate over all prompts with no partial credit and no per-dataset weighting, with identical prompts and grading on both arms so grader quirks largely cancel
+
+What counts as a pass depends on the dataset:
+
+| Dataset | What it tests | How a pass is decided |
+| --- | --- | --- |
+| [HumanEval](https://huggingface.co/datasets/openai/openai_humaneval) | code generation | the dataset's own unit tests run in a subprocess; pass only if every official assert passes |
+| [MBPP](https://huggingface.co/datasets/google-research-datasets/mbpp) | code generation | same, the dataset's official assertion tests are executed |
+| [GSM8K](https://huggingface.co/datasets/openai/gsm8k) | grade-school math | exact match on the extracted final number |
+| [MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MATH-500) | competition math | LaTeX normalisation, then numeric comparison, then a SymPy equivalence fallback |
+| [MMLU-Pro](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro) | 10-way multiple choice | exact match on the final answer letter |
+| [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite) | real GitHub issues | LLM as judge, comparing the named files, functions, and diff sketch against the patch upstream actually merged |
+| [RouterArena](https://github.com/RouteWorks/RouterArena) | 9 domains, 44 categories | RouterArena's own evaluator scores each answer; about 74% of queries are multiple choice matched on a `\boxed{X}` letter, the rest use per-dataset scorers (numeric or exact match, text overlap, code checks) |
+
+Five of the six live-proxy datasets are graded against their own answer keys or test suites, so no model opinion is involved. SWE-bench Lite is the only judged slice, and since it drives most of the spread between models, every answer was judged twice, once by `claude-opus-5` and once by `gemini-3.6-flash`, to rule out self-preference. The Gemini judge is stricter in absolute terms (Auto Router 90.9%, baseline 94.1%) and leaves retention at 96.6%, so the ratio does not depend on the judge. The simulated legs have no answer key, so they report cost only.
 
 ## Where the savings come from, and what they cost
 
