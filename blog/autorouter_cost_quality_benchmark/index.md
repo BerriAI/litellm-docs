@@ -5,10 +5,13 @@ date: 2026-07-27T10:00:00
 authors:
   - tin
 description: "Two independent evaluations of a four-tier Auto Router config against an all-frontier baseline: 8,619 graded prompts, 14,000 simulated real conversations, and what the cost and quality numbers actually depend on."
+image: ./hero.png
 keywords: [llm router benchmark, auto router, complexity router, llm cost savings, model routing, claude cost optimization, routerarena, litellm auto routing, cheaper llm inference]
 tags: [routing, complexity-router, cost, benchmarks, engineering]
 hide_table_of_contents: false
 ---
+
+![Introducing LiteLLM Autorouter: 75% cost savings with near frontier model quality](./hero.png)
 
 Auto routing promises a smaller bill without a worse answer. We measured both halves against a baseline that sends every request to `claude-opus-5`: 8,619 graded prompts and cost simulations over 14,000 real conversations.
 
