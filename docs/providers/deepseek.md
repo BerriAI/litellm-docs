@@ -143,7 +143,7 @@ model_list:
 2. Run proxy
 
 ```bash
-python litellm/proxy/main.py
+litellm --config /path/to/config.yaml
 ```
 
 3. Test it!
