@@ -186,6 +186,7 @@ LiteLLM reads GitHub Copilot settings from the environment when each request is 
 | Variable | Default | Purpose |
 |---|---|---|
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth application client ID |
+| `GITHUB_COPILOT_USE_OAUTH_TOKEN` | Not set | Use the OAuth access token directly instead of exchanging it at `/copilot_internal/v2/token` |
 | `GITHUB_COPILOT_INTEGRATION_ID` | `vscode-chat` | `copilot-integration-id` header |
 | `GITHUB_COPILOT_EDITOR_VERSION` | `vscode/1.115.0` | `editor-version` header |
 | `GITHUB_COPILOT_EDITOR_PLUGIN_VERSION` | `copilot-chat/0.44.0` | `editor-plugin-version` header |
@@ -219,6 +220,18 @@ environment_variables:
   GITHUB_COPILOT_EDITOR_VERSION: "your-editor/1.0.0"
   GITHUB_COPILOT_EDITOR_PLUGIN_VERSION: "your-plugin/1.0.0"
   GITHUB_COPILOT_USER_AGENT: "YourClient/1.0.0"
+```
+
+OAuth clients that use their access token directly, such as OpenCode, must enable direct OAuth mode and omit the VS Code identity headers
+
+```yaml showLineNumbers title="OpenCode OAuth Identity"
+environment_variables:
+  GITHUB_COPILOT_CLIENT_ID: "Ov23li8tweQw6odWQebz"
+  GITHUB_COPILOT_USER_AGENT: "opencode/1.18.7"
+  GITHUB_COPILOT_INTEGRATION_ID: ""
+  GITHUB_COPILOT_EDITOR_VERSION: ""
+  GITHUB_COPILOT_EDITOR_PLUGIN_VERSION: ""
+  GITHUB_COPILOT_USE_OAUTH_TOKEN: "true"
 ```
 
 ### Request Headers
