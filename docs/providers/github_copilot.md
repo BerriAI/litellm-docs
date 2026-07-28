@@ -196,7 +196,7 @@ LiteLLM uses GitHub's OAuth device flow and sends the resulting access token dir
 | `GITHUB_COPILOT_OPENAI_INTENT` | Not set | Optional `openai-intent` header |
 | `GITHUB_COPILOT_USER_AGENT_LIBRARY_VERSION` | Not set | Optional `x-vscode-user-agent-library-version` header |
 
-Set a header environment variable to an empty string to omit that header. Request-level `extra_headers` take precedence over these values for model requests. Authentication requests use the environment variables because `extra_headers` are not available during OAuth
+Set a header environment variable to an empty string to omit that header. Request-level `extra_headers` take precedence for model requests. OAuth requests use the configured accept, content type, integration, editor, plugin, and user-agent values. API version, intent, and user-agent library version apply only to model requests
 
 The token storage and endpoint settings are also configurable
 
@@ -222,7 +222,7 @@ environment_variables:
   GITHUB_COPILOT_USER_AGENT: "YourClient/1.0.0"
 ```
 
-OAuth applications can provide their own client identity without selecting a token mode. For example, these values match OpenCode's OAuth behavior
+OAuth applications use the same direct OAuth access-token flow and can provide their own client identity. For example, these values match OpenCode's OAuth behavior
 
 ```yaml showLineNumbers title="Custom OAuth Application"
 environment_variables:
