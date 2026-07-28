@@ -260,6 +260,10 @@ Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
+## Claude Code and Claude Desktop
+
+Claude clients apply two client-side checks before a router is selectable. The route needs an Anthropic-shaped `model_name` such as `claude-auto`, and that name has to appear in your organization's `availableModels` allowlist; otherwise the router is greyed out in the Claude Desktop picker and rejected at CLI startup without any request reaching the proxy. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
+
 ## See also
 
 - Announcement post: [Auto Router v2: one router for complexity, semantic, and adaptive routing](/blog/autorouter-v2)
