@@ -281,7 +281,7 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on) |
 | `llm.output_messages.{idx}.message.role`, `content` | response (content capture on) |
 | `input.value`, `output.value` | JSON arrays of the same (content capture on) |
-| `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions |
+| `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
 
@@ -498,15 +498,17 @@ Request-side keys:
 | `gen_ai.request.temperature`, `top_p`, `top_k`, `max_tokens` | when set on the request |
 | `gen_ai.request.frequency_penalty`, `presence_penalty`, `seed` | when set |
 | `gen_ai.request.stop_sequences` | when set (string array) |
-| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition, for the first 8 tools ([why](#tool-definitions-are-capped)) |
+| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition, for the leading tools only ([why](#tool-definitions-are-capped)) |
 | `litellm.request.tools.declared` | when the request declares tools; the full count, capped or not |
 | `server.address`, `server.port` | when the provider endpoint is known |
 
 #### Tool definitions are capped
 
-Only the first 8 declared tools get `gen_ai.tool.{idx}.*` attributes. Tool definitions are an unbounded attribute family, one entry per tool per field per active vocabulary, and OpenTelemetry caps a span at 128 attributes by default. An agent that declares a hundred or more tools would otherwise blow past that ceiling, and because the limit evicts the oldest attributes first, the `gen_ai.*` attributes above would be the ones discarded, leaving a span carrying nothing but tool schemas. The cap keeps model, token usage, and cost on the span no matter how many tools a request declares.
+Only the leading declared tools get `gen_ai.tool.{idx}.*` attributes. Tool definitions are an unbounded attribute family, one entry per tool per field per active vocabulary, and OpenTelemetry caps a span at 128 attributes by default. An agent that declares a hundred or more tools would otherwise blow past that ceiling, and because the limit evicts the oldest attributes first, the `gen_ai.*` attributes above would be the ones discarded, leaving a span carrying nothing but tool schemas. The cap keeps model, token usage, and cost on the span no matter how many tools a request declares.
 
-`litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring 8 tools or fewer are unaffected and keep full detail.
+The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quarter of the span's attribute budget in total, and that allowance is split across the vocabularies that emit them, so the number of tools detailed depends on how many are active: 5 tools each under the default `genai` plus `legacy` pair, 3 tools each once a vendor vocabulary such as `openinference` is layered on. Splitting it this way is what stops three vocabularies spelling the same tools out from summing back past the limit.
+
+`litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring fewer tools than the allowance keep full detail.
 
 Response, usage, cost, identity:
 
