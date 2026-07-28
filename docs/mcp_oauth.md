@@ -161,6 +161,8 @@ MCP clients complete OAuth by listening on a loopback address (`http://localhost
 curl 'http://localhost:<port>/callback?code=...&state=...'
 ```
 
+Quote the URL for the shell you are in: the single-quoted form above is for bash and zsh; in PowerShell use double quotes; avoid cmd.exe, which treats neither form as full quoting
+
 The code on the page is single-use, bound to the client's PKCE verifier, and expires after 5 minutes, so it is useless to anyone who cannot also act as the waiting client. Requires a proxy build including [PR #34848](https://github.com/BerriAI/litellm/pull/34848)
 
 If you clicked Finish connecting without the checkbox, the laptop browser dead-ends on a connection error; the complete callback URL is still in the address bar and can be copied and delivered the same two ways
