@@ -32,8 +32,8 @@ Auto routing promises a smaller bill without a worse answer. We measured both ha
 
 - **Router arm:** one model group, four tiers. SIMPLE to `claude-haiku-4-5`, MEDIUM to `claude-sonnet-5`, COMPLEX and REASONING both to `claude-opus-5`, since Opus 5 already thinks by default. Heuristic classifier, no keyword rules, no adaptive sampling
 - **Baseline arm:** the same prompts sent straight to `claude-opus-5`, which is what most teams do today when they point a workload at one frontier model
-- **Cost savings:** `1 - cost(router) / cost(baseline)`. On the live-proxy leg, each of the 440 requests reports its own cost in the `x-litellm-response-cost` header, which is LiteLLM's calculation over the usage Anthropic actually returned, including reasoning tokens. RouterArena costs come from measured token usage priced at list rates; the simulations estimate tokens from the conversation text
-- **Quality retained:** `pass(router) / pass(baseline)`, one pooled rate over all prompts with no partial credit and no per-dataset weighting, with identical prompts and grading on both arms so grader quirks largely cancel
+- **Cost savings:** `1 - cost(router) / cost(baseline)`, from measured token usage. The live-proxy leg reads each request's cost off the `x-litellm-response-cost` header; the simulations estimate tokens from conversation text
+- **Quality retained:** `pass(router) / pass(baseline)`, one pooled rate with no partial credit, identical prompts and grader on both arms
 
 What counts as a pass:
 
