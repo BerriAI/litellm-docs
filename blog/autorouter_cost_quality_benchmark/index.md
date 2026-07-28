@@ -35,17 +35,14 @@ Auto routing promises a smaller bill without a worse answer. We measured both ha
 - **Cost savings:** `1 - cost(router) / cost(baseline)`. On the live-proxy leg, each of the 440 requests reports its own cost in the `x-litellm-response-cost` header, which is LiteLLM's calculation over the usage Anthropic actually returned, including reasoning tokens. RouterArena costs come from measured token usage priced at list rates; the simulations estimate tokens from the conversation text
 - **Quality retained:** `pass(router) / pass(baseline)`, one pooled rate over all prompts with no partial credit and no per-dataset weighting, with identical prompts and grading on both arms so grader quirks largely cancel
 
-What counts as a pass depends on the dataset:
+What counts as a pass:
 
-| Dataset | What it tests | How a pass is decided |
-| --- | --- | --- |
-| [HumanEval](https://huggingface.co/datasets/openai/openai_humaneval) | code generation | the dataset's own unit tests run in a subprocess; pass only if every official assert passes |
-| [MBPP](https://huggingface.co/datasets/google-research-datasets/mbpp) | code generation | same, the dataset's official assertion tests are executed |
-| [GSM8K](https://huggingface.co/datasets/openai/gsm8k) | grade-school math | exact match on the extracted final number |
-| [MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MATH-500) | competition math | LaTeX normalisation, then numeric comparison, then a SymPy equivalence fallback |
-| [MMLU-Pro](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro) | 10-way multiple choice | exact match on the final answer letter |
-| [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite) | real GitHub issues | LLM as judge, comparing the named files, functions, and diff sketch against the patch upstream actually merged |
-| [RouterArena](https://github.com/RouteWorks/RouterArena) | 9 domains, 44 categories | RouterArena's own evaluator scores each answer; about 74% of queries are multiple choice matched on a `\boxed{X}` letter, the rest use per-dataset scorers (numeric or exact match, text overlap, code checks) |
+| Dataset | How a pass is decided |
+| --- | --- |
+| [HumanEval](https://huggingface.co/datasets/openai/openai_humaneval), [MBPP](https://huggingface.co/datasets/google-research-datasets/mbpp) | the datasets' own unit tests run in a subprocess; pass only if every official assert passes |
+| [GSM8K](https://huggingface.co/datasets/openai/gsm8k), [MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MATH-500), [MMLU-Pro](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro) | answer-key match: the extracted final number, LaTeX normalisation with a SymPy equivalence fallback, and the final answer letter |
+| [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite) | LLM as judge, comparing the named files, functions, and diff sketch against the patch upstream actually merged |
+| [RouterArena](https://github.com/RouteWorks/RouterArena) | RouterArena's own evaluator; about 74% of queries are multiple choice matched on a `\boxed{X}` letter, the rest use per-dataset scorers |
 
 :::note
 
@@ -80,9 +77,9 @@ Four classifiers on the same three-model pool, scored offline against a fully gr
 | Policy | Accuracy | Cost/1k | haiku/sonnet/opus |
 | --- | --- | --- | --- |
 | All-Haiku (floor) | 68.5% | $1.13 | 100/0/0 |
-| LiteLLM heuristic (keyword) | 69.9% | $2.04 | 80/16/3 |
+| **LiteLLM heuristic (keyword)** | **69.9%** | **$2.04** | **80/16/3** |
 | RouteLLM BERT at matched budget | 71.2% | $2.46 | 80/16/3 |
-| LiteLLM LLM classifier (Haiku) | 74.9% | $5.44 | 36/35/28 |
+| **LiteLLM LLM classifier (Haiku)** | **74.9%** | **$5.44** | **36/35/28** |
 | RouteLLM BERT at matched budget | 74.8% | $4.69 | 36/35/28 |
 | All-Sonnet-5 | 75.3% | $4.81 | 0/100/0 |
 | LiteLLM semantic (MiniLM tier exemplars) | 76.3% | $6.20 | 19/27/54 |
