@@ -203,10 +203,13 @@ The token storage and endpoint settings are also configurable
 ```bash showLineNumbers title="Environment Variables"
 export GITHUB_COPILOT_TOKEN_DIR="~/.config/litellm/github_copilot"
 export GITHUB_COPILOT_ACCESS_TOKEN_FILE="access-token"
+export GITHUB_COPILOT_API_KEY_FILE="api-key.json"
 export GITHUB_COPILOT_API_BASE="https://copilot-api.example.com"
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://github.example.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://github.example.com/login/oauth/access_token"
 ```
+
+For compatibility with existing installations, when `GITHUB_COPILOT_API_BASE` is unset LiteLLM reads only `endpoints.api` from the legacy `api-key.json`. The cached exchanged token is ignored. `GITHUB_COPILOT_API_KEY_FILE` can locate a renamed legacy file. `GITHUB_COPILOT_API_KEY_URL` is no longer used and emits a warning when set
 
 For the proxy, put the same values in the `environment_variables` block
 
