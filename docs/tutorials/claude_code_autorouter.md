@@ -12,7 +12,9 @@ Skip the allowlist step and the router is greyed out in the Claude Desktop model
 
 ## Name the router so Claude accepts it
 
-Claude's model pickers and Claude Desktop's third-party inference dialog expect Anthropic-shaped model names. A router called `smart-router`, `auto`, or a bare UUID is rejected in the client before any request is sent, while `claude-auto` or `claude-smart-router` is accepted. Avoid embedding another vendor's name in the router's `model_name`; a name containing `gpt`, `gemini`, `llama`, or similar is treated as non-Anthropic and filtered out.
+Claude's model pickers and Claude Desktop's third-party inference dialog only offer model names that read as Anthropic models. The `model_name` has to contain `claude` or `anthropic`, or a family name such as `opus`, `sonnet`, `haiku`, or `fable`, so `claude-auto`, `claude-smart-router`, and `opus-auto` are all accepted while `smart-router`, `auto`, and a bare UUID are rejected in the client before any request is sent. Another vendor's name anywhere in the string fails the check regardless, so `claude-vs-gpt` is filtered out as non-Anthropic despite the `claude`.
+
+Build the name on `claude` rather than on a family word. A family word changes how the allowlist in the next section treats the route: `opus-auto` counts as a specific Opus entry, which disables the `opus` family wildcard and leaves every Opus version you still want selectable to be listed by hand.
 
 ```yaml title="config.yaml"
 model_list:
@@ -41,8 +43,6 @@ Organizations on Claude for Teams or Claude for Enterprise restrict model select
 ```
 
 Owners set this in the claude.ai console at **Admin Settings > Claude Code > Managed settings**, which covers Claude Desktop and claude.ai sessions. Terminal sessions pointed at LiteLLM need the same list delivered through MDM or a managed settings file, because Claude Code skips the server-managed settings fetch whenever `ANTHROPIC_BASE_URL` points somewhere other than Anthropic. That file lives at `/Library/Application Support/ClaudeCode/managed-settings.json` on macOS, `/etc/claude-code/managed-settings.json` on Linux and WSL, and `C:\Program Files\ClaudeCode\managed-settings.json` on Windows.
-
-Prefer a router name that carries no model family in it. An entry such as `claude-sonnet-auto` counts as a specific Sonnet entry and disables the `sonnet` family wildcard, so every Sonnet version you still want selectable then has to be listed by hand.
 
 This allowlist is a separate control from the Enterprise admin console's per-model restrictions, which govern Anthropic's own models rather than custom gateway IDs. Both apply, so a router is selectable only when it is on `availableModels` and the models it routes to are not restricted for the organization.
 
