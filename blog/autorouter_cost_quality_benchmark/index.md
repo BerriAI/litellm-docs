@@ -1,6 +1,6 @@
 ---
 slug: auto-router-cost-quality-benchmark
-title: "Cut 75% Claude Code cost with near frontier model quality; Benchmarking Auto Router: 40-75% cheaper at 87-97% of frontier quality"
+title: "Cut 75% Claude Code cost with near frontier model quality"
 date: 2026-07-27T10:00:00
 authors:
   - tin
