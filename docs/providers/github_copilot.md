@@ -208,8 +208,7 @@ export GITHUB_COPILOT_DEVICE_CODE_URL="https://company.ghe.com/login/device/code
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://company.ghe.com/login/oauth/access_token"
 ```
 
-Existing `access-token` files are reused without reauthentication. Legacy `api-key.json`, `GITHUB_COPILOT_API_KEY_FILE`, and `GITHUB_COPILOT_API_KEY_URL` are no longer used. Official `*.githubcopilot.com` endpoints are trusted automatically. Standard Enterprise Copilot subdomains are trusted when their parent OAuth host is configured through `GITHUB_COPILOT_DEVICE_CODE_URL` or `GITHUB_COPILOT_ACCESS_TOKEN_URL`. Add exact comma-separated hostnames to `GITHUB_COPILOT_ALLOWED_API_HOSTS` only for nonstandard reverse proxies. Environment and deployment-level API bases use the same trust checks and must use HTTPS without embedded credentials, query parameters, or fragments
-
+Existing `access-token` files are reused without reauthentication. Legacy `api-key.json`, `GITHUB_COPILOT_API_KEY_FILE`, and `GITHUB_COPILOT_API_KEY_URL` are no longer used. Official `*.githubcopilot.com` endpoints are trusted automatically. Configuring an Enterprise OAuth host such as `company.ghe.com` trusts exactly `copilot-api.company.ghe.com`; other subdomains are not inferred. Add exact comma-separated hostnames to `GITHUB_COPILOT_ALLOWED_API_HOSTS` only for nonstandard reverse proxies. Environment and deployment-level API bases use the same trust checks and must use HTTPS without embedded credentials, query parameters, or fragments
 For the proxy, put the same values in the `environment_variables` block
 
 ```yaml showLineNumbers title="config.yaml"
