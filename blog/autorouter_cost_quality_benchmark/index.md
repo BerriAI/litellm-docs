@@ -47,7 +47,11 @@ What counts as a pass depends on the dataset:
 | [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite) | real GitHub issues | LLM as judge, comparing the named files, functions, and diff sketch against the patch upstream actually merged |
 | [RouterArena](https://github.com/RouteWorks/RouterArena) | 9 domains, 44 categories | RouterArena's own evaluator scores each answer; about 74% of queries are multiple choice matched on a `\boxed{X}` letter, the rest use per-dataset scorers (numeric or exact match, text overlap, code checks) |
 
-Five of the six live-proxy datasets are graded against their own answer keys or test suites, so no model opinion is involved. SWE-bench Lite is the only judged slice, and since it drives most of the spread between models, every answer was judged twice, once by `claude-opus-5` and once by `gemini-3.6-flash`, to rule out self-preference. The Gemini judge is stricter in absolute terms (Auto Router 90.9%, baseline 94.1%) and leaves retention at 96.6%, so the ratio does not depend on the judge. The simulated legs have no answer key, so they report cost only.
+:::note
+
+SWE-bench Lite is the only slice scored by LLM as judge; everything else is checked against the dataset's own answer key or test suite. Every SWE-bench answer was judged twice, by `claude-opus-5` and by `gemini-3.6-flash`, and retention holds at 96.6% under the stricter judge.
+
+:::
 
 ## Where the savings come from, and what they cost
 
