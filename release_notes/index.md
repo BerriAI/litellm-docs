@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.93.0 — GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API](/release_notes/v1.93.0/v1-93-0)
+### [v1.94.0 — Router Plugins, MCP Client-Held Credentials & Shared DataTable UI](/release_notes/v1.94.0/v1-94-0)
 
-_July 18, 2026_
+_July 28, 2026_
 
-Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure plus xAI Grok-4.5, OpenAI Realtime 2.1, and Google Cloud Chirp 3 speech-to-text; a new OpenAI-compatible Meta Model API provider serving `muse-spark-1.1` across Chat Completions, `/v1/messages`, and Responses; client-forwarded MCP credentials via `true_passthrough`, `oauth_delegate`, and a `dcr_bridge` sealed-envelope path with PKCE S256 enforced on both authorize arms; the shadcn / Base UI dashboard migration covering the shared DataTable, charts, and the full-height sidebar shell; and a smarter complexity auto router with keyword tier overrides, semantic keyword matching, and an optional LLM-based classifier.
+A `Router(plugins=[...])` extension point resolvable from proxy YAML config, alongside Auto-Router v2 with soft-floor adaptive mode, session affinity on by default, multi-model tier random-pick, and user-triggered escalation keywords; maturing MCP client-held credentials with interactive SSO sign-in for `dcr_bridge` `oauth_delegate` DCR clients, client-held refresh envelopes, issuer-anchored OAuth discovery, and ID-JAG for MCP egress; the shared DataTable migration reaching Virtual Keys, Teams, Guardrails, Tags, Vector Stores, Prompts, Skills, AI Hub, MCP Toolsets, and Policy Attachments; a new beta Cost Optimization page covering savings by driver, spend by tool, and cache leakage; and Python 3.14 support with per-model prompt cache minimums resolved from the cost map.
 
 ---
 
@@ -22,6 +22,7 @@ Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on Open
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
