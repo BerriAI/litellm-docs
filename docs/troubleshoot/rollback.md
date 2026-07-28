@@ -53,7 +53,7 @@ helm rollback <release-name> [revision-number]
 
 If you are rolling back to a version that did not have a specific migration, you may need to resolve the migration state in the database.
 
-> LiteLLM uses `prisma migrate deploy` for production (enabled via `USE_PRISMA_MIGRATE=True`). If a migration partially failed or you are reverting code that expects an older schema, you need to clean up the migration history in the `_prisma_migrations` table. See [Best Practices for Production](../proxy/prod#use-prisma-migrate-deploy).
+> LiteLLM uses `prisma migrate deploy` for production by default. If a migration partially failed or you are reverting code that expects an older schema, you need to clean up the migration history in the `_prisma_migrations` table. See [Best Practices for Production](../proxy/prod#use-prisma-migrate-deploy).
 
 ### Option A — Delete stale migration entries (recommended)
 
