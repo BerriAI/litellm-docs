@@ -106,4 +106,4 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-Point a client at `smart-router` and every response carries `x-litellm-model-name` and `x-litellm-response-cost`, which is all the instrumentation this study needed. The heuristic classifier above is not the ceiling: switching to `classifier_type: llm`, where `claude-haiku-4-5` reads each prompt and picks the tier, scored about five accuracy points higher in our offline comparison, at roughly 2.5x the spend. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
+Point a client at `smart-router` and every response carries `x-litellm-model-name` and `x-litellm-response-cost`, which is all the instrumentation this study needed. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
