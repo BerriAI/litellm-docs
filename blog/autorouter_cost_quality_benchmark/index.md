@@ -126,30 +126,10 @@ One upstream finding is worth passing on to anyone else benchmarking on RouterAr
 
 ## Try it
 
-The config is the one at the top of this post; drop it into `config.yaml`, point a client at `smart-router`, and every response tells you where the request went:
+The config above is the whole setup; drop it into `config.yaml` and point a client at `smart-router`. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
-```bash
-curl -i -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "smart-router", "messages": [{"role": "user", "content": "What is 2+2?"}]}'
+:::info
 
-# x-litellm-model-name: anthropic/claude-haiku-4-5
-# x-litellm-response-cost: 0.0000418
-```
-
-Those two headers are all the instrumentation this study needed, and they are enough to reproduce the cost half of it on your own traffic in an afternoon. Set `classifier_type: llm` if you want quality back at a higher price, and tune `tier_boundaries` if the mix looks wrong for your workload. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing), and see [Auto Router v2](/blog/autorouter-v2) for keyword rules, tier pools, and session affinity.
-
-If you run this on your own traffic, we want the numbers. Post them on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
-
-## Come build the next version with us
-
-The remaining wins are the ones a benchmark cannot pick for us: embedding-based classification to fix the paraphrase instability above, tier boundaries tuned per traffic shape instead of one global default, and reporting that tells a platform team what routing actually saved them last month. We are choosing what to build from real workloads, so we are taking on a small number of design partners.
-
-If enough traffic runs through your gateway that a 40% to 65% cut is real money, we will sit down with your traffic mix, run this same evaluation against it, hand you the numbers, and ship the config that comes out of it.
-
-:::info Apply to be a design partner
-
-[Design partner application](https://cms49ctwm00026rv771kh8igo.zapier.app/application)
+If this is interesting, [apply to be a design partner](https://cms49ctwm00026rv771kh8igo.zapier.app/application). Feedback, questions, and numbers from your own traffic go on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
 
 :::
