@@ -1,6 +1,6 @@
 ---
 slug: auto-router-cost-quality-benchmark
-title: "Benchmarking Auto Router: 40-75% cheaper at 87-97% of frontier quality"
+title: "Cut 75% Claude Code cost with near frontier model quality; Benchmarking Auto Router: 40-75% cheaper at 87-97% of frontier quality"
 date: 2026-07-27T10:00:00
 authors:
   - tin
@@ -68,7 +68,11 @@ The split runs opposite to intuition:
 - **Repo-level work saves the least.** Those prompts are long enough to dominate absolute spend, and the classifier correctly declines to send them to Haiku
 - **Quality is given up in two places.** MATH-500, where Haiku took 19 of the 40 prompts and the arm finished three behind, and SWE-bench Lite
 
-If nearly every request carries a large repo context, there is no cheap tier to route it to, and the lever to reach for is [prompt caching or compression](/blog/save-claude-code-costs-with-litellm) rather than model selection.
+## Auto-routing and prompt caching
+
+A question we keep hearing: do I have to choose between auto-routing and prompt caching?
+
+No. Session affinity already lets you keep a conversation on the model its first turn picked, so the cache holds. We are actively building out a solution to make the two work together. Stay tuned.
 
 ## Try it
 
