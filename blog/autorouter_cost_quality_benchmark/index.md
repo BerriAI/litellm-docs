@@ -10,7 +10,7 @@ tags: [routing, complexity-router, cost, benchmarks, engineering]
 hide_table_of_contents: false
 ---
 
-Auto routing promises a smaller bill without a worse answer. We measured both halves against a baseline that sends every request to `claude-opus-5`: 8,619 graded prompts, about $111 of real API spend, and cost simulations over 14,000 real conversations.
+Auto routing promises a smaller bill without a worse answer. We measured both halves against a baseline that sends every request to `claude-opus-5`: 8,619 graded prompts and cost simulations over 14,000 real conversations.
 
 {/* truncate */}
 
