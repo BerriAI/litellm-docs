@@ -16,43 +16,7 @@ Across 8,619 graded prompts and about $111 of real API spend, Auto Router cut co
 
 {/* truncate */}
 
-## What was measured
-
-We tested our auto-router using this configuration:
-
-```yaml title="config.yaml"
-model_list:
-  - model_name: claude-haiku-4-5           # $1 / $5 per 1M tokens
-    litellm_params:
-      model: anthropic/claude-haiku-4-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-sonnet-5            # $3 / $15
-    litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus-5              # $5 / $25
-    litellm_params:
-      model: anthropic/claude-opus-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: smart-router
-    litellm_params:
-      model: auto_router/complexity_router
-      complexity_router_config:
-        tiers:
-          SIMPLE:    claude-haiku-4-5
-          MEDIUM:    claude-sonnet-5
-          COMPLEX:   claude-opus-5
-          REASONING: claude-opus-5
-        classifier_type: heuristic         # local scoring, sub-millisecond, no API call
-      complexity_router_default_model: claude-sonnet-5
-```
-
-One model group over a three-model Claude pool, classified by the heuristic scorer. No keyword rules, no LLM classifier, no adaptive sampling, and REASONING pinned to the same model as COMPLEX because Opus 5 already thinks by default. The baseline arm sends the identical prompts to `claude-opus-5` directly, which is what most teams do today when they point a workload at one frontier model. Both arms use the same prompts, the same request format, and the same grader, so grader quirks affect both sides and largely cancel in the ratio.
-
-Quality retained is the ratio of the two pass rates, `pass(router) / pass(baseline)`. Cost savings is `1 - cost(router) / cost(baseline)`, computed from actual measured token usage on every request rather than from estimates.
-
-## Results
+## The results
 
 | Evaluation | Prompts | Quality retained | Cost savings | Router routing mix (haiku/sonnet/opus) |
 | --- | --- | --- | --- | --- |
@@ -65,6 +29,12 @@ The first leg ran through a live LiteLLM proxy on `localhost:4000`, 440 real req
 The second leg ran the full 8,400-query set from [RouterArena](https://github.com/RouteWorks/RouterArena), the public router benchmark, paired against an all-Opus arm on the same queries with RouterArena's own automated evaluator.
 
 The two legs disagree on both axes, and they disagree for one reason. The heuristic classifier keys mostly off length, code presence, and reasoning markers, so RouterArena's short academic questions score SIMPLE and 79% of them go to Haiku; the benchmark set with HumanEval, MBPP, and SWE-bench in it reads as code, so 70% goes to Sonnet 5. More Haiku means more savings and more missed answers. Both numbers are real, and which one resembles your bill depends entirely on your traffic.
+
+## How it was measured
+
+One model group over a three-model Claude pool (`claude-haiku-4-5`, `claude-sonnet-5`, `claude-opus-5`), classified by the heuristic scorer. No keyword rules, no LLM classifier, no adaptive sampling, and REASONING pinned to the same model as COMPLEX because Opus 5 already thinks by default. The full config is at the bottom of this post. The baseline arm sends the identical prompts to `claude-opus-5` directly, which is what most teams do today when they point a workload at one frontier model. Both arms use the same prompts, the same request format, and the same grader, so grader quirks affect both sides and largely cancel in the ratio.
+
+Quality retained is the ratio of the two pass rates, `pass(router) / pass(baseline)`. Cost savings is `1 - cost(router) / cost(baseline)`, computed from actual measured token usage on every request rather than from estimates.
 
 ## Where the savings come from, and what they cost
 
@@ -126,10 +96,34 @@ One upstream finding is worth passing on to anyone else benchmarking on RouterAr
 
 ## Try it
 
-The config above is the whole setup; drop it into `config.yaml` and point a client at `smart-router`. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
+If this is interesting, [apply to be a design partner](https://cms49ctwm00026rv771kh8igo.zapier.app/application). Try it yourself with the configuration below, and post any feedback, questions, or numbers from your own traffic on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
 
-:::info
+```yaml title="config.yaml"
+model_list:
+  - model_name: claude-haiku-4-5           # $1 / $5 per 1M tokens
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-sonnet-5            # $3 / $15
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-opus-5              # $5 / $25
+    litellm_params:
+      model: anthropic/claude-opus-5
+      api_key: os.environ/ANTHROPIC_API_KEY
 
-If this is interesting, [apply to be a design partner](https://cms49ctwm00026rv771kh8igo.zapier.app/application). Feedback, questions, and numbers from your own traffic go on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
+  - model_name: smart-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        tiers:
+          SIMPLE:    claude-haiku-4-5
+          MEDIUM:    claude-sonnet-5
+          COMPLEX:   claude-opus-5
+          REASONING: claude-opus-5
+        classifier_type: heuristic         # local scoring, sub-millisecond, no API call
+      complexity_router_default_model: claude-sonnet-5
+```
 
-:::
+Point a client at `smart-router` and every response carries `x-litellm-model-name` and `x-litellm-response-cost`, which is all the instrumentation this study needed. Full reference, including the classifier and tier-boundary knobs, on the [Auto Routing docs page](/docs/proxy/auto_routing).
