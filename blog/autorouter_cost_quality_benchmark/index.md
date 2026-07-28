@@ -14,6 +14,18 @@ Auto routing promises a smaller bill without a worse answer. We measured both ha
 
 {/* truncate */}
 
+:::info[🚀 Help shape the Auto-Router]
+
+Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
+
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://cms49ctwm00026rv771kh8igo.zapier.app/application">Apply to Become a Design Partner</a>
+
+<br /><br />
+
+Already testing it? Share your results in [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
+
+:::
+
 ## The results
 
 - **40.4% cheaper at 97.1% of frontier quality**, on 220 prompts from six public benchmarks replayed through a live proxy
@@ -72,13 +84,18 @@ The split runs opposite to intuition:
 
 A question we keep hearing: do I have to choose between auto-routing and prompt caching?
 
-No. Session affinity already lets you keep a conversation on the model its first turn picked, so the cache holds. We are actively building out a solution to make the two work together. Stay tuned.
+No. Session affinity already lets you keep a conversation on the model its first turn picked, so the cache holds for the rest of that conversation. What it costs you is the routing decision on every turn after the first: once a session is pinned, a one-line follow-up stays on whatever model the opening turn earned. Closing that gap is the first item below.
+
+## What's next
+
+- **Prompt caching that survives a tier change.** Affinity pins a conversation today because switching models means a cold cache. We are testing a background refresher that keeps the prefix warm on every tier, so a session can move without paying the write cost twice
+- **Routing decisions you can inspect.** Surfacing why a request landed on the tier it did, not just which model served it. That same signal feeds back into the classifier, so it improves against real traffic rather than benchmarks
 
 ## Try it
 
 :::info
 
-If this is interesting, [apply to be a design partner](https://cms49ctwm00026rv771kh8igo.zapier.app/application). Try it yourself with the configuration below, and post any feedback, questions, or numbers from your own traffic on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
+Try it yourself with the configuration below, and post any feedback, questions, or numbers from your own traffic on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172). If you want to work on this with us directly, [apply to be a design partner](https://cms49ctwm00026rv771kh8igo.zapier.app/application).
 
 :::
 
