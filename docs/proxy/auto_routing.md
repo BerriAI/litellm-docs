@@ -262,7 +262,12 @@ Tier and classifier dropdowns exclude embedding-mode models; the semantic embedd
 
 ## Claude Code and Claude Desktop
 
-Claude clients apply two client-side checks before a router is selectable. The route's `model_name` has to read as an Anthropic model, meaning it contains `claude`, `anthropic`, or a family name such as `opus`, `sonnet`, or `haiku`, and carries no other vendor's name; `claude-auto` works, `smart-router` does not. That name also has to appear in your organization's `availableModels` allowlist. Miss either check and the router is greyed out in the Claude Desktop picker and rejected at CLI startup, with no request reaching the proxy. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
+Two prerequisites before a router is selectable in a Claude client:
+
+1. **The router's `model_name` has to read as an Anthropic model.** It needs `claude`, `anthropic`, or a family name such as `opus`, `sonnet`, or `haiku` somewhere in it, and no other vendor's name, so `claude-auto` is accepted where `smart-router` is rejected.
+2. **On Claude for Teams or Enterprise, that name has to be on the organization's `availableModels` allowlist.** Anything missing from the allowlist is greyed out in the Claude Desktop picker and replaced at CLI startup with `restricted by your organization's settings`.
+
+Both checks run in the client, so a router that fails either one leaves nothing in the LiteLLM logs to explain itself. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
 
 ## See also
 
