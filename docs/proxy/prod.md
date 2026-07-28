@@ -246,11 +246,13 @@ To ensure only one service manages database migrations, use our [Helm PreSync ho
 
 ### Use prisma migrate deploy
 
-Use this to handle db migrations across LiteLLM versions in production:
+LiteLLM runs `prisma migrate deploy` on startup by default, so db migrations are handled across versions in production with no configuration. To stop a pod from running migrations at all, set `DISABLE_SCHEMA_UPDATE=true` as described in [Run migrations from the Helm PreSync hook](#run-migrations-from-the-helm-presync-hook).
 
-```bash
-USE_PRISMA_MIGRATE="True"
-```
+:::info
+
+Older versions gated this behind `USE_PRISMA_MIGRATE="True"`. That flag was removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555) when migrate deploy became the default, and this page continued to recommend it after the fact. Setting `USE_PRISMA_MIGRATE` today does nothing; it is safe to remove from your environment, and removing it does not change migration behavior
+
+:::
 
 The migrate deploy command:
 
