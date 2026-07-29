@@ -520,17 +520,23 @@ LiteLLM emits the following histograms when `enable_metrics=True` is set on the 
 |---|---|---|
 | `gen_ai.client.operation.duration` | `s` | End-to-end operation duration including LiteLLM overhead. |
 | `gen_ai.client.token.usage` | `{token}` | Token usage. Records two histograms per call (label `gen_ai.token.type` is `"input"` or `"output"`). |
-| `gen_ai.client.token.cost` | `USD` | Computed request cost. |
-| `gen_ai.client.response.time_to_first_token` | `s` | Time from request start to first streamed token (streaming requests only). |
-| `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
+| `gen_ai.usage.cost` | `USD` | Computed request cost. |
+| `gen_ai.server.time_to_first_token` | `s` | Time from request start to first streamed token (streaming requests only). |
+| `gen_ai.server.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
 | `gen_ai.client.response.duration` | `s` | LLM API generation time, excluding LiteLLM overhead. |
+
+:::note Renamed in this release
+
+`gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
+
+:::
 
 Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.framework="litellm"`.
 
 | Common metric ask | Metric |
 |---|---|
-| TTFT | `gen_ai.client.response.time_to_first_token` |
-| TPS | derived as `1 / gen_ai.client.response.time_per_output_token` |
+| TTFT | `gen_ai.server.time_to_first_token` |
+| TPS | derived as `1 / gen_ai.server.time_per_output_token` |
 | Token usage | `gen_ai.client.token.usage` (split by `gen_ai.token.type`) |
 | Vendor/model latency (excludes overhead) | `gen_ai.client.response.duration` |
 | Vendor/model latency (includes overhead) | `gen_ai.client.operation.duration` |
@@ -541,13 +547,13 @@ Even with metrics off, every metric below can be derived from spans. This is wha
 
 | Metric | How to derive from spans |
 |---|---|
-| **TTFT** (Time to First Token) | Streaming requests only. Use the dedicated `gen_ai.client.response.time_to_first_token` metric, or capture `completion_start_time` from request `kwargs` via a custom callback. |
-| **TPOT** (Time per Output Token) | Use the `gen_ai.client.response.time_per_output_token` metric, or derive as `gen_ai.client.response.duration ÷ gen_ai.usage.output_tokens`. |
+| **TTFT** (Time to First Token) | Streaming requests only. Use the dedicated `gen_ai.server.time_to_first_token` metric, or capture `completion_start_time` from request `kwargs` via a custom callback. |
+| **TPOT** (Time per Output Token) | Use the `gen_ai.server.time_per_output_token` metric, or derive as `gen_ai.client.response.duration ÷ gen_ai.usage.output_tokens`. |
 | **Total response duration** | `gen_ai.client.response.duration` metric, or `end_time − start_time` of the LLM-call span (or proxy root span minus LiteLLM overhead — see `hidden_params.litellm_overhead_time_ms`). |
 | **Vendor (provider) latency** | Duration of the `raw_gen_ai_request` span (default mode) — pure time spent waiting on the upstream provider. In semconv mode, use `gen_ai.client.response.duration`. |
 | **LiteLLM overhead** | `hidden_params.litellm_overhead_time_ms` on the proxy root span. Or `Received Proxy Server Request.duration − raw_gen_ai_request.duration`. |
 | **Token usage** | `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.total_tokens` on the LLM span (or `gen_ai.client.token.usage` metric). |
-| **Cost** | `gen_ai.cost.total_cost` (and the rest of `gen_ai.cost.*`) on the LLM span; or `gen_ai.client.token.cost` metric. |
+| **Cost** | `gen_ai.cost.total_cost` (and the rest of `gen_ai.cost.*`) on the LLM span; or `gen_ai.usage.cost` metric. |
 | **Guardrail evaluation time** | Duration of each `guardrail` span. Disambiguate by `guardrail_name` and `guardrail_mode`. |
 | **Router / auth / Redis / DB latency** | Duration of the corresponding [service-hook span](#service-hook-spans-aka-infrastructure-spans) (`router`, `auth`, `redis`, `postgres`, …). |
 | **Retry / fallback count** | `hidden_params.x-litellm-attempted-retries` and `hidden_params.x-litellm-attempted-fallbacks` on the proxy root span. |
