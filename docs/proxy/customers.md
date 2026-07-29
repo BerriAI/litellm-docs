@@ -397,7 +397,9 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 }'
 ```
 
-The customer will be subject to the default budget limits (RPM, TPM, and $ budget). Customers with explicit budgets are unaffected.
+The customer will be subject to the default budget limits (RPM, TPM, and $ budget). Customers with explicit budgets are unaffected, and the default also applies to customers that don't exist in the database yet. LiteLLM caches the budget object for 60 seconds, so edits to it take up to a minute to apply.
+
+The float setting `max_end_user_budget` is no longer enforced; if you have it in your config, replace it with `max_end_user_budget_id` as shown above.
 
 ### Quick Start 
 
@@ -410,9 +412,15 @@ curl -X POST 'http://0.0.0.0:4000/customer/new'
     -H 'Content-Type: application/json'         
     -d '{
         "user_id" : "my-customer-id",
-        "max_budget": "0", # 👈 CAN BE FLOAT
+        "max_budget": 10
     }'
 ```
+
+`/customer/new` accepts budget fields inline: `max_budget`, `soft_budget`, `budget_duration`, `tpm_limit`, `rpm_limit`, `max_parallel_requests` and `model_max_budget`. Set either `max_budget` or `budget_id`, not both; passing both is rejected. Customer `tpm_limit` and `rpm_limit` are stored on a budget object, so they only apply when the customer is linked to one, either inline as above or through `budget_id`.
+
+`/customer/update` accepts a narrower set of fields: `user_id`, `alias`, `blocked`, `max_budget`, `budget_id`, `allowed_model_region`, `default_model` and `object_permission`. Anything else, including `tpm_limit`, `rpm_limit` and `budget_duration`, is silently dropped; to change those, update the budget object with `/budget/update` instead.
+
+Customer budgets are global per deployment. Spend is tracked against the customer id alone, so the same customer shares one budget across every virtual key and team, and a customer budget can't be scoped to a single key or team.
 
 **Test it!**
 

@@ -231,7 +231,8 @@ router_settings:
 | user_url_allowed_hosts | array of strings | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf). |
 | disable_copilot_system_to_assistant | boolean | **DEPRECATED** - GitHub Copilot API supports system prompts. |
 | default_team_params | object | Default parameters applied to every new team created via `/team/new` (including SSO auto-created teams). Only fills in fields not explicitly set in the request. Sub-fields: `max_budget` (float), `budget_duration` (string, e.g. `"30d"`), `tpm_limit` (integer), `rpm_limit` (integer), `team_member_permissions` (array of strings, e.g. `["/team/daily/activity", "/key/generate"]`), `models` (array of strings — only applied to SSO auto-created teams). |
-| budget_reset_time | string | Available in the next release candidate (after `v1.94.0rc1`). Wall-clock time of day (in the configured `timezone`) that day/week/month budgets reset at, as a quoted 24-hour `"HH:MM"` or `"HH:MM:SS"` string, e.g. `"09:00"`. Defaults to midnight when unset; sub-day durations ignore it. A malformed value fails config load at startup. [Further docs](./budget_reset_and_tz#configuring-the-reset-time-of-day) |
+| budget_reset_time | string | Available in the next release (after `v1.94.0`). Wall-clock time of day (in the configured `timezone`) that day/week/month budgets reset at, as a quoted 24-hour `"HH:MM"` or `"HH:MM:SS"` string, e.g. `"09:00"`. Defaults to midnight when unset; sub-day durations ignore it. A malformed value fails config load at startup. [Further docs](./budget_reset_and_tz#configuring-the-reset-time-of-day) |
+| overwrite_user_with_key_hash | boolean | Available in `v1.95.0-rc.1` and later. Default `false`. When `true`, force-sets the outgoing `user` on chat/completions to the calling key's identity, overriding any client-supplied value and setting it even when absent: a virtual key's sha256 hash (equal to `user_api_key_hash` in spend logs) or the `litellm_proxy_master_key` alias for master-key requests. Gives a stable, tamper-proof end-user id so provider-side abuse monitoring or other handling keyed on `user` maps back to one key. Only affects proxy-validated keys; custom-auth and JWT requests are left untouched. [Further docs](./virtual_keys#overwrite-outgoing-user-with-the-key-hash) |
 
 ### general_settings - Reference
 
@@ -1214,7 +1215,7 @@ router_settings:
 | UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
 | UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
-| USE_PRISMA_MIGRATE | Flag to use prisma migrate instead of prisma db push. Recommended for production environments.
+| USE_PRISMA_MIGRATE | Removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555); `prisma migrate deploy` is now the default. Setting this has no effect and it is safe to remove.
 | VANTAGE_API_KEY | API key for Vantage cost-import integration
 | VANTAGE_BASE_URL | Base URL for Vantage API. Default is `https://api.vantage.sh`
 | VANTAGE_EXPORT_FREQUENCY | Export frequency for Vantage — `hourly` (default), `daily`, or `interval`

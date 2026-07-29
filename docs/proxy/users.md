@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 **Agent budgets**: Set rate limits (tpm/rpm) and session-level caps (iterations, dollar budget) on agents [**Jump**](#agents)
 
-***If a key belongs to a team, both the team budget and the user's personal budget are enforced. The `skip_user_budget_on_team_key` setting will be available in the `v1.94.0` release candidate. To keep the old behavior where only the team (and team-member) budgets apply, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).***
+***If a key belongs to a team, both the team budget and the user's personal budget are enforced. The `skip_user_budget_on_team_key` setting is available in `v1.94.0` and above. To keep the old behavior where only the team (and team-member) budgets apply, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).***
 :::
 
 Requirements: 
@@ -202,7 +202,7 @@ Apply a budget across all calls an internal user (key owner) can make on the pro
 
 :::info
 
-For keys with a `team_id` set, the user's personal budget is enforced alongside the team budget. The `skip_user_budget_on_team_key` setting will be available in the `v1.94.0` release candidate. To keep the old behavior where only the team budget applies, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).
+For keys with a `team_id` set, the user's personal budget is enforced alongside the team budget. The `skip_user_budget_on_team_key` setting is available in `v1.94.0` and above. To keep the old behavior where only the team budget applies, set `skip_user_budget_on_team_key: true` under `general_settings` in `config.yaml`, or toggle it at runtime from the Admin UI General Settings table (`Router Settings` > `General`).
 
 To apply a budget to a user within a team, use team member budgets.
 
@@ -592,17 +592,31 @@ curl -X PATCH 'http://localhost:4000/v1/agents/<agent_id>' \
 
 Use this to budget `user` passed to `/chat/completions`, **without needing to create a key for every user**
 
-**Step 1. Modify config.yaml**
-Define `litellm.max_end_user_budget`
+**Step 1. Create the budget**
+
+```shell
+curl --location 'http://0.0.0.0:4000/budget/new' \
+        --header 'Authorization: Bearer sk-1234' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "budget_id": "default-customer-budget",
+        "max_budget": 0.0001
+        }'
+```
+
+**Step 2. Point `max_end_user_budget_id` at that budget in config.yaml**
+
 ```yaml
 general_settings:
   master_key: sk-1234
 
 litellm_settings:
-  max_end_user_budget: 0.0001 # budget for 'user' passed to /chat/completions
+  max_end_user_budget_id: "default-customer-budget" # applied to any 'user' without their own budget
 ```
 
-2. Make a /chat/completions call, pass 'user' - First call Works 
+This budget applies to every customer that has no budget of their own, including customers that don't exist in the database yet. LiteLLM caches the budget object for 60 seconds, so edits to it take up to a minute to apply. The float setting `max_end_user_budget` is no longer enforced; if you have it in your config, replace it with `max_end_user_budget_id` as shown above.
+
+3. Make a /chat/completions call, pass 'user' - First call Works 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
@@ -619,7 +633,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         }'
 ```
 
-3. Make a /chat/completions call, pass 'user' - Call Fails, since 'ishaan3' over budget
+4. Make a /chat/completions call, pass 'user' - Call Fails, since 'ishaan3' over budget
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
@@ -638,8 +652,10 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Error
 ```shell
-{"error":{"message":"Budget has been exceeded: User ishaan3 has exceeded their budget. Current spend: 0.0008869999999999999; Max Budget: 0.0001","type":"auth_error","param":"None","code":401}}%                
+{"error":{"message":"ExceededBudget: End User=ishaan3 over budget. Spend=0.0008869999999999999, Budget=0.0001","type":"auth_error","param":"None","code":401}}%
 ```
+
+Customer budgets are global per deployment. Spend is tracked against the customer id alone, so the same customer shares one budget across every virtual key and team, and a customer budget can't be scoped to a single key or team.
 
 ## Reset Budgets 
 

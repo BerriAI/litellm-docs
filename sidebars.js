@@ -139,6 +139,7 @@ const sidebars = {
           "proxy/guardrails/aporia_api",
           "proxy/guardrails/azure_content_guardrail",
           "proxy/guardrails/bedrock",
+          "proxy/guardrails/compresr",
           "proxy/guardrails/crowdstrike_aidr",
           "proxy/guardrails/enkryptai",
           "proxy/guardrails/ibm_guardrails",
@@ -147,6 +148,7 @@ const sidebars = {
           "proxy/guardrails/lasso_security",
           "proxy/guardrails/guardrails_ai",
           "proxy/guardrails/lakera_ai",
+          "proxy/guardrails/llm_as_a_judge",
           "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
           "proxy/guardrails/noma_security",
@@ -231,6 +233,7 @@ const sidebars = {
           items: [
             "claude_code_compatibility",
             "tutorials/claude_code_cut_costs",
+            "tutorials/claude_code_autorouter",
             "tutorials/claude_responses_api",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
@@ -500,6 +503,7 @@ const sidebars = {
               label: "Setup & SSO",
               items: [
                 "proxy/admin_ui_sso",
+                "proxy/saml_sso",
                 "proxy/ui/ui_edit_logo",
                 "proxy/custom_sso",
                 "proxy/custom_root_ui",
