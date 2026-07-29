@@ -1253,12 +1253,12 @@ model_list:
     api_key: os.environ/PREDIBASE_API_KEY
     tenant_id: os.environ/PREDIBASE_TENANT_ID
     max_new_tokens: 256
-    cooldown_time: 0 # disable cooldowns for this deployment
   model_info:
     allowed_fails: 1 # cool this deployment down after 1 fail, instead of the router default
+    cooldown_time: 0 # disable cooldowns for this deployment
 ```
 
-`allowed_fails` and `cooldown_time` can be set under either `model_info` or `litellm_params`; use whichever fits your config layout.
+`allowed_fails` must be set under `model_info`, not `litellm_params`: unlike `model_info`, `litellm_params` is copied into the actual request sent to the LLM provider, so a router-only setting placed there would leak into that request. `cooldown_time` can be set under either location (`model_info` takes priority if both are set), matching its pre-existing behavior on the router's primary failure path.
 
 </TabItem>
 </Tabs>
