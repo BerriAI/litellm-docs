@@ -596,8 +596,14 @@ Each successful LLM call records the standard OpenTelemetry GenAI client metrics
 | `gen_ai.client.token.usage` | `{token}` | Tokens consumed, split into input and output by the `gen_ai.token.type` attribute |
 | `gen_ai.usage.cost` | `USD` | LiteLLM's computed cost for the call |
 | `gen_ai.server.time_to_first_token` | `s` | Time to the first streamed token (streaming calls) |
-| `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token |
+| `gen_ai.server.time_per_output_token` | `s` | Average time per output token |
 | `gen_ai.client.response.duration` | `s` | Provider-side generation time |
+
+:::note Renamed in this release
+
+`gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
+
+:::
 
 Every sample carries the same identity attributes as the matching span (operation, provider/system, request model, framework, and selected `metadata.*` fields), so you can group the histograms by model, provider, key, or team. These are the same six metrics the [v1 OpenTelemetry integration](./opentelemetry_integration) emits, with identical names and units, so a dashboard built for one reads the other.
 

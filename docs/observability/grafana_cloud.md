@@ -74,11 +74,11 @@ LiteLLM exports histograms with cumulative aggregation temporality, which is wha
 
 ::: The integration also queries agent counters (`gen_ai_agent_invocations_total` and friends) and ships VectorDB, MCP, and GPU dashboards. LiteLLM emits no counter instruments and no agent telemetry, so those panels stay empty
 
-Two further instruments, `gen_ai.client.response.time_per_output_token` and `gen_ai.client.response.duration`, are emitted but not read by the prebuilt dashboards. Chart them yourself when you want per-token generation speed
+Two further instruments, `gen_ai.server.time_per_output_token` and `gen_ai.client.response.duration`, are emitted but not read by the prebuilt dashboards. Chart them yourself when you want per-token generation speed
 
 :::note
 
-Cost and time-to-first-token were previously emitted as `gen_ai.client.token.cost` and `gen_ai.client.response.time_to_first_token`, which the prebuilt dashboards do not match. If your panels are empty and Explore shows those older names, upgrade LiteLLM
+Cost, time-to-first-token, and time-per-output-token were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The prebuilt dashboards do not match those names, and neither do the GenAI semantic conventions. If your panels are empty and Explore shows the older names, upgrade LiteLLM; if you hand-built panels against them, repoint those queries at the names in the table above
 
 :::
 
