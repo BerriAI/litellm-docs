@@ -574,6 +574,29 @@ litellm_settings:
 
 **Default Behavior**: If no `prometheus_metrics_config` is specified, all metrics are enabled with their default labels (backward compatible).
 
+## Managed Batch and File Metrics
+
+Use these to monitor [managed batches and files](./managed_batches) and the `CheckBatchCost` background poller that attributes spend once a provider batch finishes. They are emitted automatically when `prometheus` is in `callbacks` on an Enterprise proxy; no extra configuration is needed.
+
+| Metric Name | Description |
+|-------------|-------------|
+| `litellm_managed_batch_created_total` | Total number of managed batches created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_created_total` | Total number of managed files created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_deleted_total` | Total number of managed file deletion attempts. Labels: `"result"`, where result is `success` or `blocked` (blocked means the caller was not allowed to delete the file) |
+| `litellm_managed_file_size_bytes` | Size in bytes of the most recent managed file seen for a label combination (gauge). Labels: `"purpose", "file_type", "model", "api_provider", "user"`, where file_type is `input` for uploads and `output` for batch output files |
+| `litellm_managed_batch_duration_seconds` | Histogram of completed batch wall-clock duration (`completed_at - created_at`), observed when `CheckBatchCost` processes the batch. Labels: `"model", "api_provider"` |
+
+`CheckBatchCost` poller health:
+
+| Metric Name | Description |
+|-------------|-------------|
+| `litellm_check_batch_cost_last_run_timestamp` | Unix timestamp of the last poll cycle. Alert on `time() - litellm_check_batch_cost_last_run_timestamp` to catch a stalled or crashed poller |
+| `litellm_check_batch_cost_jobs_polled` | Number of unprocessed batches found by the last poll cycle. A value that keeps climbing means batches are being created faster than they are cost-tracked |
+| `litellm_check_batch_cost_jobs_processed_total` | Total number of batches successfully cost-tracked. Labels: `"model", "api_provider"` |
+| `litellm_check_batch_cost_errors_total` | Total poller errors by kind. Labels: `"error_type"`, one of `invalid_model_id`, `invalid_unified_id`, `unmanaged_no_matching_deployment`, `deployment_not_found`, `provider_retrieval_error`, `cost_tracking_error` |
+
+A batch whose cost never lands shows up as a rising `litellm_check_batch_cost_errors_total` with `error_type="cost_tracking_error"` or `provider_retrieval_error`, since those rows are deliberately left unprocessed so the next cycle retries them.
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
