@@ -142,6 +142,8 @@ Both `trace_id` and `session_id` are sanitized before they're stored: control ch
 
 The flag defaults to `false`, so existing log output is unaffected until you opt in.
 
+This currently applies to requests handled by the proxy and to `litellm.acompletion()` calls made directly through the SDK. Synchronous SDK calls (`litellm.completion()`) don't stamp `trace_id`/`session_id` yet; support for that path is planned as a follow-up.
+
 ## Control Log Output 
 
 Turn off fastapi's default 'INFO' logs 
