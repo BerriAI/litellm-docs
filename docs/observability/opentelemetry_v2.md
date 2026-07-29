@@ -452,7 +452,7 @@ None beyond the canonical `gen_ai.*` and `litellm.*` keys listed in [Span attrib
 
 #### Setup notes
 
-Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use.
+Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
 
 </TabItem>
 
@@ -594,8 +594,8 @@ Each successful LLM call records the standard OpenTelemetry GenAI client metrics
 |---|---|---|
 | `gen_ai.client.operation.duration` | `s` | Wall-clock time for the whole LLM call |
 | `gen_ai.client.token.usage` | `{token}` | Tokens consumed, split into input and output by the `gen_ai.token.type` attribute |
-| `gen_ai.client.token.cost` | `USD` | LiteLLM's computed cost for the call |
-| `gen_ai.client.response.time_to_first_token` | `s` | Time to the first streamed token (streaming calls) |
+| `gen_ai.usage.cost` | `USD` | LiteLLM's computed cost for the call |
+| `gen_ai.server.time_to_first_token` | `s` | Time to the first streamed token (streaming calls) |
 | `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token |
 | `gen_ai.client.response.duration` | `s` | Provider-side generation time |
 
