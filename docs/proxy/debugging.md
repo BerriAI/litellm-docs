@@ -124,6 +124,8 @@ litellm_settings:
 
 `trace_id` comes from the `x-litellm-trace-id` request header (or is generated per request if the header isn't set). `session_id` comes from `litellm_session_id` in the request body, or from the `x-litellm-session-id` header; see [Request Headers](./request_headers#litellm-headers) for the full resolution order. It's only added to a log line once a session id has actually been supplied
 
+If neither of those explicit headers is present, `trace_id`/`session_id` fall back to the standard [W3C Trace Context](https://www.w3.org/TR/trace-context/) `traceparent` header and [W3C Baggage](https://www.w3.org/TR/baggage/) `baggage` header respectively: the trace-id from `traceparent` becomes `trace_id`, and a `session.id` entry in `baggage` becomes `session_id`. This lets a request already carrying real OpenTelemetry trace context correlate litellm's logs with the same trace in your existing observability backend, without needing a separate litellm-specific header. The explicit litellm headers always take precedence when present
+
 Example log line with `json_logs: true`:
 
 ```json showLineNumbers
