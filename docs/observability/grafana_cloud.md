@@ -48,7 +48,16 @@ Keep `OTEL_EXPORTER="otlp_http"`. The gateway is an HTTP endpoint, and Grafana C
 
 Traces arrive as standard [OpenTelemetry GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/) spans, so **Explore**, with Tempo selected, shows a span per LLM call with model, provider, token counts, and latency, nested under the proxy's HTTP server span. LiteLLM stamps a `service.name` resource attribute, so the spans are also grouped by service wherever Grafana keys off it
 
+![LiteLLM traces in Grafana Cloud Tempo](/img/observability/grafana_cloud_traces.png)
+
+Each request is one trace: the server span for the route, an `auth` span, and a `chat <model>` span carrying the GenAI attributes
+
+![gen_ai span attributes on a LiteLLM LLM-call span](/img/observability/grafana_cloud_span_attributes.png)
+
 Metrics arrive as OTLP histograms and are queryable in **Explore**, with your hosted Prometheus selected, under their Prometheus-normalized names:
+
+![LiteLLM GenAI cost metric in Grafana Cloud](/img/observability/grafana_cloud_metrics.png)
+
 
 | LiteLLM instrument | Queryable as |
 |---|---|
