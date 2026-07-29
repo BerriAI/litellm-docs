@@ -100,6 +100,9 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       session_affinity: true
       session_affinity_ttl_seconds: 3600
 
+      # Tier for prompts that match nothing at all
+      default_tier: MEDIUM
+
       # Tune heuristic scorer boundaries and weights (all optional)
       tier_boundaries:
         simple_medium:     0.15
@@ -137,6 +140,14 @@ Three ways to pick a tier. Pick one; the router falls back to the heuristic scor
 | questionComplexity | Multiple question marks                         |
 
 Two or more reasoning markers auto-routes to `REASONING` regardless of the weighted score.
+
+**No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead; whichever tier you name has to exist in `tiers`, or `default_model` has to be set.
+
+```yaml
+default_tier: MEDIUM   # SIMPLE | MEDIUM | COMPLEX | REASONING
+```
+
+The check is on the individual dimensions rather than the weighted score, since contributions cancel: "hi, quick python question" comes to zero with three dimensions firing (short prompt, simple indicator, code keyword), and that is real evidence of a simple request, so it stays SIMPLE. Prompts under the `simple` token threshold or over the `complex` one fire `tokenCount` and score normally too. The LLM classifier falls back to this scorer when it times out or errors, so `default_tier` also decides where unmatched traffic lands during a classifier outage.
 
 **LLM classifier.** Uses a small fast model (Haiku, gpt-4o-mini, whatever you point it at) with structured output. Goes through the same `Router` instance, so credentials, budgets, and fallbacks apply. Timeout, empty content, or schema mismatch falls back to the heuristic scorer.
 
@@ -197,6 +208,7 @@ Every routing decision emits one greppable line naming its cause. `cause=` is gr
 
 ```
 ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
+ComplexityRouter: routing decision cause=complexity_scorer,      tier=MEDIUM,     score=0.000,  signals=['no-signal'],                            routed_model=gpt-4o
 ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model=claude-sonnet-5
