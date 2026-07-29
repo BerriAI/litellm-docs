@@ -36,6 +36,8 @@ litellm_settings:
 
 Start the proxy and send a request; traces land in Tempo and metrics in the hosted Prometheus, both queryable from Explore
 
+If you enabled metrics, also apply the attribute filter in [Filter metric attributes](#filter-metric-attributes-required) before sending real traffic. Without it the default attribute set puts nearly every request in its own time series, which makes rate-based queries return zero
+
 :::info Why `Basic%20` and not `Basic `
 
 `OTEL_HEADERS` follows the OTLP spec, which encodes header values in [W3C Baggage](https://www.w3.org/TR/baggage/#baggage-http-header-format) format, so a space is written `%20`. Grafana Cloud's own setup screens hand you the value in exactly this form. LiteLLM decodes it before the header goes on the wire, so a literal space works too if you prefer to write one
@@ -66,9 +68,26 @@ Metrics arrive as OTLP histograms and are queryable in **Explore**, with your ho
 | `gen_ai.usage.cost` | `gen_ai_usage_cost_USD_sum` |
 | `gen_ai.server.time_to_first_token` | `gen_ai_server_time_to_first_token_seconds_bucket` |
 
-These four are the names Grafana Cloud's **AI Observability** integration dashboards query, so installing that integration from **Connections > Add new connection > AI Observability** points its cost, token, and latency panels at LiteLLM data without building them yourself.
+### The prebuilt AI Observability dashboards do not work with LiteLLM
 
-The same integration's metric list also covers agent counters such as `gen_ai_agent_invocations_total`, plus separate VectorDB, MCP, and GPU dashboards. LiteLLM emits no counter instruments and no agent, vector-store, or GPU telemetry, so anything reading those has no LiteLLM data to draw on
+Grafana Cloud ships an **AI Observability** integration whose GenAI dashboards query these same metric names, so it looks like installing it should give you cost, token, and latency panels for free. It does not, and the reason is worth knowing before you spend time on it
+
+Twenty of its twenty-two GenAI panels scope every query to `telemetry_sdk_name="openlit"`:
+
+```promql
+sum(increase(gen_ai_client_operation_duration_seconds_count{
+    telemetry_sdk_name="openlit", ...}[$__range]))
+```
+
+LiteLLM is not instrumented by OpenLIT, so it never carries that label and those panels render `No data` while the metrics sit in Prometheus fully queryable. Only **Request Rate by Platform & Model**, which omits the predicate, shows LiteLLM data
+
+There is no configuration that fixes this. Setting `telemetry.sdk.name` through `OTEL_RESOURCE_ATTRIBUTES` does reach LiteLLM's OTel resource, but Grafana Cloud's OTLP gateway promotes only a small allowlist of resource attributes to Prometheus labels (`service.name`, `deployment.environment`) and drops `telemetry.sdk.*`. The label the dashboards filter on can only arrive as a per-datapoint attribute, which LiteLLM has no setting to add
+
+The integration's other five dashboards (**Agent Observability**, **VectorDB Observability**, **MCP Observability**, **GPU Monitoring**, **GenAI Evaluations**) read signals LiteLLM does not emit at all; Agent Observability in particular wants counters such as `gen_ai_agent_invocations_total`, and LiteLLM emits no counter instruments
+
+Build your own panels against the metric names above instead. LiteLLM ships a dashboard that does exactly that at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel); import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
+
+![LiteLLM GenAI dashboard in Grafana Cloud](/img/observability/grafana_cloud_litellm_dashboard.png)
 
 :::note Histogram temporality
 
@@ -116,9 +135,13 @@ prometheus.remote_write "grafana_cloud" {
 
 LiteLLM maintains Grafana dashboards for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard); import the JSON and point it at your hosted Prometheus data source
 
-## Control cardinality
+## Filter metric attributes (required)
 
-Grafana Cloud bills on active series, and both telemetry paths default to attribute sets rich enough to multiply them. A per-request field such as a request ID creates one series per request, so this is worth setting before you send production volume, not after the first bill
+This is not an optimisation you can defer. LiteLLM's default metric attribute set includes per-request fields, so nearly every request produces its own time series. Measured against Grafana Cloud, 358 requests across three models produced **240 series per model**, each holding a single sample
+
+That breaks the metrics, not just the bill. `rate()` and `increase()` need at least two samples in a series, so with one sample apiece they evaluate to **zero** and every rate-based panel plots a flat line at the axis. Grafana's own dashboards are built almost entirely on `rate()` and `increase()`, as is the LiteLLM dashboard above
+
+Applying the allowlist below to the same workload gave **2 series per model** (one per token type) and `rate()` returned real values. Set it before you send production traffic
 
 For OTLP metrics, filter attributes with an allowlist or denylist under `callback_settings.otel.attributes`:
 
@@ -160,4 +183,8 @@ Grafana Cloud's **Cost Management > Cardinality** page shows which metrics and l
 
 **Nothing arrives at all.** Confirm `LITELLM_OTEL_V2=true` is set; without it the v2 integration does not run. Set `OTEL_EXPORTER="console"` to check that LiteLLM is producing spans before blaming the network
 
-**Metrics land but the AI Observability dashboards are empty.** Those dashboards query the metric names in the table above. Older LiteLLM releases emit cost and time-to-first-token under different names that will not match; check in Explore which names are actually arriving
+**Rate-based panels plot a flat line at zero.** The metric attribute filter is not applied, so each request has its own time series with a single sample and `rate()` has nothing to compute over. See [Filter metric attributes](#filter-metric-attributes-required). Confirm with `count by (gen_ai_request_model) (gen_ai_client_token_usage_sum)`; a handful of series per model is healthy, hundreds is not
+
+**Grafana's prebuilt AI Observability dashboards are empty.** Expected, and not fixable from LiteLLM's side; see [The prebuilt AI Observability dashboards do not work with LiteLLM](#the-prebuilt-ai-observability-dashboards-do-not-work-with-litellm)
+
+**A panel you built is empty.** Check the metric names in Explore. Older LiteLLM releases emit cost and time-to-first-token under different names, so a query written against a current release will not match them
