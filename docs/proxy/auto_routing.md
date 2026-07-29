@@ -141,7 +141,7 @@ Three ways to pick a tier. Pick one; the router falls back to the heuristic scor
 
 Two or more reasoning markers auto-routes to `REASONING` regardless of the weighted score.
 
-**No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead; whichever tier you name has to exist in `tiers`, or `default_model` has to be set.
+**No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead. A `default_tier` you set explicitly has to have a model behind it, either its own non-empty entry in `tiers` or a `default_model`; the config is rejected at load rather than failing on the first unmatched request.
 
 ```yaml
 default_tier: MEDIUM   # SIMPLE | MEDIUM | COMPLEX | REASONING
