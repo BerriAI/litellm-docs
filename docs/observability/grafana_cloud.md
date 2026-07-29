@@ -68,11 +68,13 @@ Metrics arrive as OTLP histograms and are queryable in **Explore**, with your ho
 
 These four are the names Grafana Cloud's **AI Observability** integration dashboards query, so installing that integration from **Connections > Add new connection > AI Observability** points its cost, token, and latency panels at LiteLLM data without building them yourself.
 
+The same integration's metric list also covers agent counters such as `gen_ai_agent_invocations_total`, plus separate VectorDB, MCP, and GPU dashboards. LiteLLM emits no counter instruments and no agent, vector-store, or GPU telemetry, so anything reading those has no LiteLLM data to draw on
+
 :::note Histogram temporality
 
 LiteLLM exports histograms with cumulative aggregation temporality, which is what Grafana Cloud's OTLP gateway accepts. Older LiteLLM releases sent delta histograms, which the gateway rejects with `invalid temporality and type combination`; the symptom is `Failed to export batch code: 400` in the proxy log and no GenAI metrics in Grafana at all
 
-::: The integration also queries agent counters (`gen_ai_agent_invocations_total` and friends) and ships VectorDB, MCP, and GPU dashboards. LiteLLM emits no counter instruments and no agent telemetry, so those panels stay empty
+:::
 
 Two further instruments, `gen_ai.server.time_per_output_token` and `gen_ai.client.response.duration`, are emitted but not read by the prebuilt dashboards. Chart them yourself when you want per-token generation speed
 
