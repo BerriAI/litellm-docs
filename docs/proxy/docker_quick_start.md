@@ -171,7 +171,7 @@ console.log(response.choices[0].message.content);
 
 ## Running without a database
 
-If you only need the OpenAI-compatible API (no Admin UI model management, virtual keys, or spend tracking), you can run the plain `litellm` image with a config file instead:
+If you only need the OpenAI-compatible API (no Admin UI model management, virtual keys, or spend tracking), you can run the plain `litellm` image with a config file instead. Start from this `litellm_config.yaml`, which declares the models the gateway serves and reads each provider key from the environment:
 
 ```yaml
 # litellm_config.yaml
@@ -181,6 +181,23 @@ model_list:
       model: openai/gpt-5.5
       api_key: os.environ/OPENAI_API_KEY
 ```
+
+Then start the gateway with either Docker Compose or a single `docker run`.
+
+<Tabs>
+<TabItem value="config-compose" label="Docker Compose" default>
+
+Download the config-only compose file into the same directory as your `litellm_config.yaml`:
+
+```bash
+curl -sSLO https://docs.litellm.ai/docker-compose-config.yml
+OPENAI_API_KEY=<your-openai-key> docker compose -f docker-compose-config.yml up -d
+```
+
+The [compose file](https://docs.litellm.ai/docker-compose-config.yml) defines a single `litellm` service, mounts `./litellm_config.yaml` at `/app/config.yaml`, and passes `--config /app/config.yaml`. For every additional provider key your config references with `os.environ/`, add a matching entry under `environment:`; Compose also picks up a `.env` file in the same directory, so you can keep the keys out of the compose file itself. Edit `litellm_config.yaml` and run `docker compose -f docker-compose-config.yml restart` to pick up model changes.
+
+</TabItem>
+<TabItem value="config-run" label="docker run">
 
 ```bash
 docker run \
@@ -192,7 +209,10 @@ docker run \
   --config /app/config.yaml
 ```
 
-Requests authenticate with the master key. See the [full config reference](./configs.md) for everything the file supports.
+</TabItem>
+</Tabs>
+
+Requests authenticate with the master key. The Admin UI is unavailable in this mode; logging in at `http://localhost:4000/ui` fails with "Authentication Error, Not connected to DB!", so verify the gateway with `curl http://localhost:4000/v1/models -H 'Authorization: Bearer sk-1234'` instead. See the [full config reference](./configs.md) for everything the file supports.
 
 ## Next steps
 
