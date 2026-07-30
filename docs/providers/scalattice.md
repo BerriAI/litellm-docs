@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Scalattice
 
 ## Overview
@@ -125,8 +122,7 @@ litellm --config config.yaml
 # RUNNING on http://0.0.0.0:4000
 ```
 
-<Tabs>
-<TabItem value="openai-sdk" label="OpenAI SDK">
+### OpenAI SDK
 
 ```python showLineNumbers title="Scalattice via Proxy - Non-streaming"
 from openai import OpenAI
@@ -161,8 +157,7 @@ for chunk in response:
         print(chunk.choices[0].delta.content, end="")
 ```
 
-</TabItem>
-<TabItem value="litellm-sdk" label="LiteLLM SDK">
+### LiteLLM SDK
 
 ```python showLineNumbers title="Scalattice via Proxy - LiteLLM SDK"
 import litellm
@@ -176,8 +171,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-</TabItem>
-<TabItem value="curl" label="cURL">
+### cURL
 
 ```bash showLineNumbers title="Scalattice via Proxy - cURL"
 curl http://localhost:4000/v1/chat/completions \
@@ -188,9 +182,6 @@ curl http://localhost:4000/v1/chat/completions \
     "messages": [{"role": "user", "content": "What is machine learning?"}]
   }'
 ```
-
-</TabItem>
-</Tabs>
 
 For more on the proxy, see [LiteLLM Proxy](../providers/litellm_proxy).
 
