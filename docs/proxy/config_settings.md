@@ -979,6 +979,7 @@ router_settings:
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
 | LITELLM_REASONING_AUTO_SUMMARY | If set to "true", automatically enables detailed reasoning summaries (`summary: "detailed"`) for reasoning models across all translation paths (Anthropic adapter, Responses API, etc.). Default is "false"
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM
+| LITELLM_SET_REPLICA_IDENTITY_FULL | Set to `true` to run `ALTER TABLE ... REPLICA IDENTITY FULL` on every LiteLLM table at the end of each migration run. Logical replication consumers such as Neon or lakehouse sync need FULL replica identity to read the old row of an UPDATE or DELETE; Prisma leaves new tables at the Postgres default. Requires the migration user to own the tables. Default is `false`
 | LITELLM_SENSITIVE_ROUTING_TTL | TTL in seconds for sticky sensitive-data routing decisions; controls how long a session stays pinned to the on-premise model selected by a routing guardrail. Default is 3600
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
