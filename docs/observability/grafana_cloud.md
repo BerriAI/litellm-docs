@@ -58,7 +58,9 @@ Each request is one trace: the server span for the route, an `auth` span, and a 
 
 Metrics arrive as OTLP histograms and are queryable in **Explore**, with your hosted Prometheus selected, under their Prometheus-normalized names:
 
-![LiteLLM GenAI cost metric in Grafana Cloud](/img/observability/grafana_cloud_metrics.png)
+![LiteLLM GenAI spend by model in Grafana Cloud](/img/observability/grafana_cloud_metrics.png)
+
+![LiteLLM token throughput by model in Grafana Cloud](/img/observability/grafana_cloud_token_rate.png)
 
 
 | LiteLLM instrument | Queryable as |
