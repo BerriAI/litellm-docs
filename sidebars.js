@@ -1164,6 +1164,7 @@ const sidebars = {
         },
         "providers/sambanova",
         "providers/sap",
+        "providers/scalattice",
         "providers/scaleway",
         "providers/stability",
         "providers/synthetic",
