@@ -1346,6 +1346,8 @@ litellm_settings:
     s3_endpoint_url: https://s3.amazonaws.com  # [OPTIONAL] S3 endpoint URL, if you want to use Backblaze/cloudflare s3 buckets
     s3_use_virtual_hosted_style: false # [OPTIONAL] use virtual-hosted-style URLs (bucket.endpoint/key) instead of path-style (endpoint/bucket/key). Useful for S3-compatible services like MinIO
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
+    s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
+    s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
 ```
 
 **Step 3**: Start the proxy, make a test request
@@ -1373,6 +1375,22 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 Your logs should be available on the specified s3 Bucket
+
+### Server-Side Encryption (SSE-KMS)
+
+For buckets that require encryption with a customer-managed KMS key (common in enterprise AWS environments), set `s3_server_side_encryption` and `s3_sse_kms_key_id`. Both the `s3` and `s3_v2` callbacks send them on every upload (`ServerSideEncryption` / `SSEKMSKeyId` on boto3, `x-amz-server-side-encryption` / `x-amz-server-side-encryption-aws-kms-key-id` on the signed PUT)
+
+```yaml
+litellm_settings:
+  success_callback: ["s3_v2"]
+  s3_callback_params:
+    s3_bucket_name: logs-bucket-litellm
+    s3_region_name: us-west-2
+    s3_server_side_encryption: aws:kms
+    s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id
+```
+
+If only `s3_sse_kms_key_id` is set, `aws:kms` is inferred. If `s3_server_side_encryption` is set to a non-KMS value such as `AES256`, the key id is ignored with a warning since S3 rejects that combination. The logging credentials need `kms:GenerateDataKey` on the key
 
 ### Team Alias Prefix in Object Key
 
