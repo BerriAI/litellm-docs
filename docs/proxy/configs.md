@@ -121,6 +121,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
+## config.yaml vs database settings
+
+Once `store_model_in_db` is enabled (via `general_settings.store_model_in_db: true` or `STORE_MODEL_IN_DB="True"`), the Admin UI and the `/config/update` API write settings into the `LiteLLM_Config` table, and the database becomes the source of truth for whatever they wrote. On startup and on every config refresh, the proxy loads your `config.yaml` first and then overlays the database rows for `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables`. The overlay is a deep merge in which the database value wins on any key that exists in both places, so editing that key in the YAML and restarting your pods will not change the running value. Treat the YAML as bootstrap for these four sections, and change UI-written keys in the UI (or delete the row from `LiteLLM_Config`) rather than in the file
+
+A few specifics are worth knowing. Database values of `null` and empty lists are treated as "no value" and do not overwrite what the YAML provides, so a key you never set in the UI still comes from the file. The overlay also applies to those four settings sections only; `model_list` is not merged this way, since models added through the UI or API are stored in `LiteLLM_ProxyModelTable` and served alongside your YAML models, meaning a database model never replaces a same-named YAML entry but becomes an additional deployment that gets load balanced with it (see [Model Management](./model_management.md)). And with `store_model_in_db` off, the database is never read for config, so your `config.yaml` is fully authoritative
+
 ## LLM configs `model_list`
 
 ### Model-specific params (API Base, Keys, Temperature, Max Tokens, Organization, Headers etc.)
