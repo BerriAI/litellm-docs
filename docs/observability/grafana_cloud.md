@@ -1,24 +1,22 @@
 # Grafana Cloud
 
-Send LiteLLM traces and metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP, and scrape the proxy's operational Prometheus metrics alongside them. Everything here uses LiteLLM's built-in OpenTelemetry and Prometheus support; there is nothing to install on the Grafana side beyond a token
-
-Grafana Cloud accepts OTLP directly, so a single endpoint carries both traces and GenAI metrics and no collector or Alloy agent is required. Reach for the [Prometheus](#prometheus-metrics) path when you also want the operational `litellm_*` metrics, which are exposed for scraping rather than pushed over OTLP
+Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP. One endpoint carries both signals, so there is no collector or agent to run
 
 ## Prerequisites
 
 - A Grafana Cloud stack
-- An access policy token with the `traces:write` and `metrics:write` scopes. Create one from **Connections > Add new connection > OpenTelemetry (OTLP)**, or from **Access Policies** in your Grafana Cloud account
-- Your stack's OTLP endpoint and instance ID, shown on that same page. The endpoint looks like `https://otlp-gateway-prod-us-west-0.grafana.net/otlp`; the region in it varies per stack
+- An access policy token with the `traces:write` and `metrics:write` scopes, from **Connections > Add new connection > OpenTelemetry (OTLP)**
+- Your stack's OTLP endpoint and numeric instance ID, shown on that same page
 
-## Send traces and metrics over OTLP
+## Setup
 
-Grafana Cloud authenticates OTLP with HTTP Basic auth, where the username is your stack's numeric instance ID and the password is the access policy token. Build the credential once:
+Grafana Cloud authenticates OTLP with HTTP Basic auth: the username is your instance ID, the password is the token. Build the credential once:
 
 ```shell
 echo -n "<instance-id>:<access-policy-token>" | base64
 ```
 
-Then point LiteLLM at the gateway:
+Point LiteLLM at the gateway:
 
 ```shell title=".env"
 LITELLM_OTEL_V2=true
@@ -32,36 +30,41 @@ OTEL_HEADERS="Authorization=Basic%20<base64-from-above>"
 ```yaml title="config.yaml"
 litellm_settings:
   callbacks: ["otel"]
+
+callback_settings:
+  otel:
+    attributes:
+      include_list:
+        - gen_ai.operation.name
+        - gen_ai.system
+        - gen_ai.request.model
+        - gen_ai.framework
+        - metadata.user_api_key_team_id
 ```
 
-Start the proxy and send a request; traces land in Tempo and metrics in the hosted Prometheus, both queryable from Explore
+The `include_list` keeps metric attributes to a bounded set, which is what lets `rate()` and `increase()` aggregate cleanly and keeps your active series count low. Set it before sending production traffic. It applies to metrics only, so traces keep their full attribute set; see [Control metric attribute cardinality](./opentelemetry_v2#control-metric-attribute-cardinality) for the denylist form
 
-If you enabled metrics, also apply the attribute filter in [Filter metric attributes](#filter-metric-attributes-required) before sending real traffic. Without it the default attribute set puts nearly every request in its own time series, which makes rate-based queries return zero
+Start the proxy and send a request. Traces land in Tempo, metrics in the hosted Prometheus, both queryable from Explore
 
 :::info Why `Basic%20` and not `Basic `
 
-`OTEL_HEADERS` follows the OTLP spec, which encodes header values in [W3C Baggage](https://www.w3.org/TR/baggage/#baggage-http-header-format) format, so a space is written `%20`. Grafana Cloud's own setup screens hand you the value in exactly this form. LiteLLM decodes it before the header goes on the wire, so a literal space works too if you prefer to write one
+`OTEL_HEADERS` follows the OTLP spec, which encodes values in [W3C Baggage](https://www.w3.org/TR/baggage/#baggage-http-header-format) format, so a space is written `%20`. Grafana Cloud's setup screens hand you the value in exactly this form. A literal space works too
 
 :::
 
-Keep `OTEL_EXPORTER="otlp_http"`. The gateway is an HTTP endpoint, and Grafana Cloud's own setup screens configure OTLP over HTTP
+To send traces only, drop `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS`
 
-### What Grafana renders
+## Traces
 
-Traces arrive as standard [OpenTelemetry GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/) spans, so **Explore**, with Tempo selected, shows a span per LLM call with model, provider, token counts, and latency, nested under the proxy's HTTP server span. LiteLLM stamps a `service.name` resource attribute, so the spans are also grouped by service wherever Grafana keys off it
+Each request is one trace: the server span for the route, an `auth` span, and a `chat <model>` span carrying canonical [OpenTelemetry GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/) attributes for model, provider, token counts, and latency
 
 ![LiteLLM traces in Grafana Cloud Tempo](/img/observability/grafana_cloud_traces.png)
 
-Each request is one trace: the server span for the route, an `auth` span, and a `chat <model>` span carrying the GenAI attributes
-
 ![gen_ai span attributes on a LiteLLM LLM-call span](/img/observability/grafana_cloud_span_attributes.png)
 
-Metrics arrive as OTLP histograms and are queryable in **Explore**, with your hosted Prometheus selected, under their Prometheus-normalized names:
+## Metrics
 
-![LiteLLM GenAI spend by model in Grafana Cloud](/img/observability/grafana_cloud_metrics.png)
-
-![LiteLLM token throughput by model in Grafana Cloud](/img/observability/grafana_cloud_token_rate.png)
-
+Metrics arrive as OTLP histograms, queryable in Explore under their Prometheus-normalized names:
 
 | LiteLLM instrument | Queryable as |
 |---|---|
@@ -69,57 +72,30 @@ Metrics arrive as OTLP histograms and are queryable in **Explore**, with your ho
 | `gen_ai.client.token.usage` | `gen_ai_client_token_usage_bucket` |
 | `gen_ai.usage.cost` | `gen_ai_usage_cost_USD_sum` |
 | `gen_ai.server.time_to_first_token` | `gen_ai_server_time_to_first_token_seconds_bucket` |
+| `gen_ai.server.time_per_output_token` | `gen_ai_server_time_per_output_token_seconds_bucket` |
+| `gen_ai.client.response.duration` | `gen_ai_client_response_duration_seconds_bucket` |
 
-### The prebuilt AI Observability dashboards do not work with LiteLLM
+![LiteLLM GenAI spend by model in Grafana Cloud](/img/observability/grafana_cloud_metrics.png)
 
-Grafana Cloud ships an **AI Observability** integration whose GenAI dashboards query these same metric names, so it looks like installing it should give you cost, token, and latency panels for free. It does not, and the reason is worth knowing before you spend time on it
+![LiteLLM token throughput by model in Grafana Cloud](/img/observability/grafana_cloud_token_rate.png)
 
-Twenty of its twenty-two GenAI panels scope every query to `telemetry_sdk_name="openlit"`:
+## Dashboard
 
-```promql
-sum(increase(gen_ai_client_operation_duration_seconds_count{
-    telemetry_sdk_name="openlit", ...}[$__range]))
-```
+LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
 
-LiteLLM is not instrumented by OpenLIT, so it never carries that label and those panels render `No data` while the metrics sit in Prometheus fully queryable. Only **Request Rate by Platform & Model**, which omits the predicate, shows LiteLLM data
-
-There is no configuration that fixes this. Setting `telemetry.sdk.name` through `OTEL_RESOURCE_ATTRIBUTES` does reach LiteLLM's OTel resource, but Grafana Cloud's OTLP gateway promotes only a small allowlist of resource attributes to Prometheus labels (`service.name`, `deployment.environment`) and drops `telemetry.sdk.*`. The label the dashboards filter on can only arrive as a per-datapoint attribute, which LiteLLM has no setting to add
-
-The integration's other five dashboards (**Agent Observability**, **VectorDB Observability**, **MCP Observability**, **GPU Monitoring**, **GenAI Evaluations**) read signals LiteLLM does not emit at all; Agent Observability in particular wants counters such as `gen_ai_agent_invocations_total`, and LiteLLM emits no counter instruments
-
-Build your own panels against the metric names above instead. LiteLLM ships a dashboard that does exactly that at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel); import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
+Spend, tokens, request count and p95 duration as stats, then request rate, spend per hour, token throughput split by input and output, and p95 duration, time to first token, and provider generation time, all by model
 
 ![LiteLLM GenAI dashboard in Grafana Cloud](/img/observability/grafana_cloud_litellm_dashboard.png)
 
-:::note Histogram temporality
-
-LiteLLM exports histograms with cumulative aggregation temporality, which is what Grafana Cloud's OTLP gateway accepts. Older LiteLLM releases sent delta histograms, which the gateway rejects with `invalid temporality and type combination`; the symptom is `Failed to export batch code: 400` in the proxy log and no GenAI metrics in Grafana at all
-
-:::
-
-Two further instruments, `gen_ai.server.time_per_output_token` and `gen_ai.client.response.duration`, are emitted but not read by the prebuilt dashboards. Chart them yourself when you want per-token generation speed
-
-:::note
-
-Cost, time-to-first-token, and time-per-output-token were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The prebuilt dashboards do not match those names, and neither do the GenAI semantic conventions. If your panels are empty and Explore shows the older names, upgrade LiteLLM; if you hand-built panels against them, repoint those queries at the names in the table above
-
-:::
-
-### Send only traces
-
-Metrics are opt-in. Drop `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` and the same endpoint carries traces alone
-
 ## Prometheus metrics
 
-The OTLP path covers per-request GenAI telemetry. LiteLLM's operational metrics, budgets, rate limits, deployment health, spend, and the rest documented in [Prometheus metrics](../proxy/prometheus), live on the proxy's `/metrics` endpoint instead and reach Grafana Cloud by scraping
-
-Point [Grafana Alloy](https://grafana.com/docs/alloy/latest/) at the proxy and remote_write to your stack:
+The OTLP path covers per-request GenAI telemetry. LiteLLM's operational metrics (budgets, rate limits, deployment health, spend) live on the proxy's `/metrics` endpoint and reach Grafana Cloud by scraping. Point [Grafana Alloy](https://grafana.com/docs/alloy/latest/) at the proxy:
 
 ```alloy title="config.alloy"
 prometheus.scrape "litellm" {
-  targets    = [{__address__ = "litellm-proxy:4000"}]
+  targets      = [{__address__ = "litellm-proxy:4000"}]
   bearer_token = "<litellm-api-key>"
-  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+  forward_to   = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
 prometheus.remote_write "grafana_cloud" {
@@ -133,35 +109,9 @@ prometheus.remote_write "grafana_cloud" {
 }
 ```
 
-`/metrics` requires a LiteLLM API key by default, which is what `bearer_token` above supplies; set `require_auth_for_metrics_endpoint: false` under `litellm_settings` to expose it unauthenticated instead. Multi-worker deployments also need `PROMETHEUS_MULTIPROC_DIR` set, otherwise each worker reports only its own share
+`/metrics` requires a LiteLLM API key by default, which `bearer_token` supplies; set `require_auth_for_metrics_endpoint: false` under `litellm_settings` to expose it unauthenticated. Multi-worker deployments need `PROMETHEUS_MULTIPROC_DIR` set so workers report a combined view
 
-LiteLLM maintains Grafana dashboards for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard); import the JSON and point it at your hosted Prometheus data source
-
-## Filter metric attributes (required)
-
-This is not an optimisation you can defer. LiteLLM's default metric attribute set includes per-request fields, so nearly every request produces its own time series. Measured against Grafana Cloud, 358 requests across three models produced **240 series per model**, each holding a single sample
-
-That breaks the metrics, not just the bill. `rate()` and `increase()` need at least two samples in a series, so with one sample apiece they evaluate to **zero** and every rate-based panel plots a flat line at the axis. Grafana's own dashboards are built almost entirely on `rate()` and `increase()`, as is the LiteLLM dashboard above
-
-Applying the allowlist below to the same workload gave **2 series per model** (one per token type) and `rate()` returned real values. Set it before you send production traffic
-
-For OTLP metrics, filter attributes with an allowlist or denylist under `callback_settings.otel.attributes`:
-
-```yaml title="config.yaml"
-callback_settings:
-  otel:
-    attributes:
-      include_list:
-        - gen_ai.operation.name
-        - gen_ai.system
-        - gen_ai.request.model
-        - gen_ai.framework
-        - metadata.user_api_key_team_id
-```
-
-The filter applies to metrics only, so traces keep their full attribute set. See [Control metric attribute cardinality](./opentelemetry_v2#control-metric-attribute-cardinality) for the full list and the denylist form
-
-For Prometheus metrics, restrict labels per metric with `include_labels`:
+Bound the label sets the same way you did for OTLP:
 
 ```yaml title="config.yaml"
 litellm_settings:
@@ -175,18 +125,4 @@ litellm_settings:
         - "team"
 ```
 
-Grafana Cloud's **Cost Management > Cardinality** page shows which metrics and labels dominate your series count once data is flowing, which is the fastest way to find what to trim
-
-## Troubleshooting
-
-**401 or 403 from the OTLP gateway.** The base64 credential is `instance-id:token`, not the token alone, and the instance ID is the numeric stack ID rather than your stack name. Re-run the `base64` command and confirm the token carries `traces:write` and `metrics:write`
-
-**Traces arrive but metrics do not.** `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS=true` is required in addition to `LITELLM_OTEL_V2=true`. Metrics also export on a 5 second period, so allow a moment after the first request. If the proxy log shows `Failed to export batch code: 400` naming a temporality problem, see the note above
-
-**Nothing arrives at all.** Confirm `LITELLM_OTEL_V2=true` is set; without it the v2 integration does not run. Set `OTEL_EXPORTER="console"` to check that LiteLLM is producing spans before blaming the network
-
-**Rate-based panels plot a flat line at zero.** The metric attribute filter is not applied, so each request has its own time series with a single sample and `rate()` has nothing to compute over. See [Filter metric attributes](#filter-metric-attributes-required). Confirm with `count by (gen_ai_request_model) (gen_ai_client_token_usage_sum)`; a handful of series per model is healthy, hundreds is not
-
-**Grafana's prebuilt AI Observability dashboards are empty.** Expected, and not fixable from LiteLLM's side; see [The prebuilt AI Observability dashboards do not work with LiteLLM](#the-prebuilt-ai-observability-dashboards-do-not-work-with-litellm)
-
-**A panel you built is empty.** Check the metric names in Explore. Older LiteLLM releases emit cost and time-to-first-token under different names, so a query written against a current release will not match them
+See [Prometheus metrics](../proxy/prometheus) for the full metric reference and the dashboards LiteLLM maintains for them
