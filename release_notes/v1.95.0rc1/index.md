@@ -52,6 +52,7 @@ pip install litellm==1.95.0rc1
 - **SAML 2.0 SSO for the admin UI** - a second enterprise SSO path alongside the existing OIDC flow.
 - **The dashboard finishes its shadcn and DataTable migration** - roughly twenty routes move onto shadcn and the shared composable DataTable, plus new react-hook-form and zod form infrastructure behind Organization Settings and Create Organization.
 - **Budget resets get correct** - a configurable `budget_reset_time` of day, word-form `budget_duration` values that no longer silently collapse to daily, and repair for users and teams whose `budget_reset_at` was left NULL.
+- **Provider-level abuse controls per end user** - with `overwrite_user_with_key_hash`, LiteLLM resolves the identity behind an incoming request, stamps the resolved virtual key hash into the outgoing `user` param, and forwards that to the provider. Providers can then ban or rate-limit at the level of an individual user rather than your entire organization. See [PR #34417](https://github.com/BerriAI/litellm/pull/34417).
 
 ## New Models / Updated Models
 
