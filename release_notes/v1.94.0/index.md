@@ -43,9 +43,13 @@ pip install litellm==1.94.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger Known issue - fixed in v1.94.1
 
-**User budgets now apply on team keys by default.** A user's personal `max_budget` is now enforced whenever they call through a team key, so it stacks with the team and team-member budgets instead of being skipped as before. If you relied on personal budgets being ignored on team keys, set `general_settings.skip_user_budget_on_team_key: true` to restore the previous behavior. See [PR #32005](https://github.com/BerriAI/litellm/pull/32005).
+**A user's personal `max_budget` was enforced on their team keys, which could lock them out of the Admin UI.** Upgrade to [`v1.94.1`](/release_notes/v1.94.1/v1-94-1).
+
+Once a user's personal spend crossed their own budget, their team keys returned `429 ExceededBudget` even with team budget remaining. The check also runs on management routes, and the Admin UI session token is team-scoped, so the dashboard rendered empty for affected users.
+
+`v1.94.1` reverts this and removes the `general_settings.skip_user_budget_on_team_key` opt-out; remove it from your config if you set it.
 
 :::
 
