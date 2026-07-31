@@ -45,6 +45,7 @@ pip install litellm==1.95.0rc1
 
 ## Key Highlights
 
+- **Provider-level abuse controls per end user** - with `overwrite_user_with_key_hash`, LiteLLM resolves the identity behind an incoming request, stamps the resolved virtual key hash into the outgoing `user` param, and forwards that to the provider. Providers can then ban or rate-limit at the level of an individual user rather than your entire organization. See [PR #34417](https://github.com/BerriAI/litellm/pull/34417).
 - **Claude Opus 5 on day zero, everywhere** - the new 1M-context Opus lands simultaneously on Anthropic, Amazon Bedrock (including the `us`, `eu`, `au`, `jp`, and `global` inference profiles), Google Vertex AI, and Azure AI Foundry, with adaptive thinking, xhigh reasoning effort, computer use, PDF input, and prompt caching all recorded in the cost map.
 - **Gemini 3.6 Flash and Gemini 3.5 Flash Lite** - day-0 pricing on both Google AI Studio and Vertex AI, at $1.50/$7.50 and $0.30/$2.50 per 1M tokens respectively.
 - **MCP gateway grows a real front door** - an always-on aggregate DCR discovery endpoint, identity-only session tokens, RFC 8707 resource indicators on upstream OAuth legs, MCP server support on the Anthropic `/v1/messages` API, and a standalone `/connect` route that no longer depends on the Chat UI flag.
