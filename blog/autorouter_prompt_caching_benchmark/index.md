@@ -65,7 +65,7 @@ We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffi
 
 - The router moves between tiers in **seconds**, not minutes
 - The cache on the model you left is still there when the session switches back
-- Claude Code writes to the **1 hour** cache, which is where the 99.3% figure comes from
+- This holds especially for coding agents like Claude Code, which write to the **1 hour** cache and leave an even wider margin before anything expires
 
 ## What about cache warming?
 
