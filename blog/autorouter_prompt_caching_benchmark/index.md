@@ -56,15 +56,11 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffic.
 
-| | Share of returns |
+| Provider cache state | Share of returns |
 | --- | --- |
 | Still warm at 5m TTL | **97.4%** |
 | Still warm at 1h TTL | **99.3%** |
 | Past TTL, the only returns a switch could have hurt | **2.6% / 0.7%** |
-
-- **Most of the back and forth with a model falls inside the 5 minute TTL**, which is the default. You do not need the 1 hour setting for a switch to come back warm
-- The reason is pace. Median idle time at return is **10 seconds** and calls land about 3 seconds apart, so a model rarely sits idle long enough to expire before the session needs it again
-- Coding agents like Claude Code write to the **1 hour** cache, which leaves an even wider margin
 
 ## We tried a background cache warmer. It wasn't worth it
 
