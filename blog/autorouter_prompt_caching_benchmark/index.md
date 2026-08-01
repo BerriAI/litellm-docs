@@ -34,7 +34,6 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **Auto-routing does not break prompt caching.** The two compound on every dataset we measured
 - **37% to 69% cheaper** than caching alone on a single model
 - **The real failure mode is the opposite one.** Running a router with caching switched off is about **4x more expensive** than caching one fixed model
-- **Sessions return to a tier in a median of 10 seconds**, far inside any cache lifetime, so a switch is not an eviction
 
 | Evaluation | Sample | Router + caching, vs caching alone |
 | --- | --- | --- |
