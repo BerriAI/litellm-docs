@@ -56,7 +56,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffic.
 
-| Provider cache state | Share of switch-backs |
+| Provider cache state | % of Model Returns with Warm Cache |
 | --- | --- |
 | Still warm at 5m TTL | **97.4%** |
 | Still warm at 1h TTL | **99.3%** |
