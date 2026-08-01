@@ -67,9 +67,9 @@ We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffi
 - The cache on the model you left is still there when the session switches back
 - This holds especially for coding agents like Claude Code, which write to the **1 hour** cache and leave an even wider margin before anything expires
 
-## What about cache warming?
+## We tried a background cache warmer. It wasn't worth it
 
-A background refresher that replays a session's prefix sounds like the fix, if switching really did strand the cache.
+If switching really did strand the cache, a background refresher that replays a session's prefix would be the fix. We built the measurement for it first.
 
 **Only 4% of cache misses are preventable by a background cache warmer.** The rest either happened while the cache was still alive, or after the model had been idle so long that keeping it warm costs more than the write it avoids.
 
@@ -77,13 +77,15 @@ A background refresher that replays a session's prefix sounds like the fix, if s
 | --- | --- | --- |
 | General chat | ~1,700 tokens | **0.10% more expensive** |
 | Agent traces, multi-hour gaps | large | **0.63% more expensive** |
-| Our gateway, agentic | ~190,000 tokens | **0.9% cheaper**, one rescue worth ~$1.82 against a ~$0.06 replay |
+| Our gateway, agentic | ~190,000 tokens | **0.9% cheaper** |
 
-- **Most misses happen while the cache is still alive.** The request did not match the cached prefix, so no refresher helps. On one router that was **51 calls rewriting ~160,000 token prefixes**, against **7** a warmer could have rescued: roughly **10x the warming opportunity**, and a prompt stability problem instead
-- **One avoided cache write is worth about 19 replays** at the 1h TTL, 11.5 at 5m, and replays fire on every idle session whether or not it returns
-- **The refresh interval must match the TTL in use.** One tuned for a 5m cache fires ~13x more often than a 1h cache needs, which alone turns a positive result negative
+Warming only pays on the third row, and only barely. Three reasons it stays marginal:
 
-Warming is worth roughly plus or minus two percent: a narrow optimization for long sessions with large stable prefixes, not the thing standing between a deployment and its savings.
+- **Most misses are not about expiry.** The cache was still alive; the request just did not match the cached prefix. On one router that was **51 calls rewriting ~160,000 token prefixes**, against **7** a warmer could have rescued. That is a prompt stability problem, and about **10x** larger than the warming opportunity next to it
+- **You pay on every idle session, and win on few.** One avoided cache write is worth about **19 replays** at the 1h TTL, but replays fire whether or not the session ever comes back
+- **The refresh interval has to match the TTL.** One tuned for a 5m cache fires **~13x** more often than a 1h cache needs, which alone turns a positive result negative
+
+Warming is worth roughly plus or minus one percent: a narrow optimization for long sessions with large stable prefixes, not the thing standing between a deployment and its savings.
 
 ## See it on your own traffic
 
