@@ -11,7 +11,7 @@ tags: [routing, complexity-router, caching, cost, benchmarks, engineering]
 hide_table_of_contents: false
 ---
 
-![Can you use prompt caching and auto-routing together? We measured it](./hero.png)
+![Auto-Router x Prompt Caching: measured across five datasets](./hero.png)
 
 **Yes, you can use prompt caching with Auto-Routing.** The two compound rather than cancel out. We measured it across five datasets, two of which report what the provider's cache actually did.
 
