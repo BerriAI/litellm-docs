@@ -141,7 +141,15 @@ Three ways to pick a tier. Pick one; the router falls back to the heuristic scor
 
 Two or more reasoning markers auto-routes to `REASONING` regardless of the weighted score.
 
-**No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead. A `default_tier` you set explicitly has to have a model behind it, either its own non-empty entry in `tiers` or a `default_model`; the config is rejected at load rather than failing on the first unmatched request.
+**No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead.
+
+`default_tier` is not a special tier; it names which tier no-signal traffic is classified as, and that tier resolves to a model exactly like a classified one, through its own entry in `tiers`, then `default_model`, then the MEDIUM tier. A `default_tier` you set explicitly has to be servable by one of those, and the config is rejected at load rather than failing on the first unmatched request. With routing plugins configured that chain stops at the tier's own models, since a model the plugins never vetted must not serve, so the tier itself has to name one.
+
+:::warning Upgrading
+
+This changes where unmatched traffic lands on existing deployments, with no config change on your side. On a 257-session agent corpus the tier mix moved from 84/13/3/0 to 47/49/3/0 (SIMPLE/MEDIUM/COMPLEX/REASONING) and the blended per-turn price proxy rose about 53%, because half the turns that were being served as SIMPLE had matched nothing rather than matched as simple. That is the point of the change, but it is a spend increase you should expect rather than discover. Pin `default_tier: SIMPLE` to keep the old behavior.
+
+:::
 
 ```yaml
 default_tier: MEDIUM   # SIMPLE | MEDIUM | COMPLEX | REASONING
