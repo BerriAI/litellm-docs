@@ -1054,13 +1054,7 @@ div[class*='announcementBar'] a:hover {
   table-layout: auto;
 }
 
-.blog-wrapper .markdown table th:not(:first-child),
-.blog-wrapper .markdown table td:not(:first-child) {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.blog-wrapper .markdown table th:first-child,
-.blog-wrapper .markdown table td:first-child {
+.blog-wrapper .markdown table th,
+.blog-wrapper .markdown table td {
   text-align: left;
 }
