@@ -107,8 +107,10 @@ litellm --config /path/to/config.yaml
 
 ### 3. Test Fallbacks
 
-:::warning Deprecated for Proxy requests
-Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, and `mock_testing_content_policy_fallbacks` are stripped from incoming Proxy requests and have no effect. These flags remain supported only for direct `litellm.Router` calls in tests.
+:::warning Requires an explicit opt-in on the Proxy
+On the Proxy, the mock testing request params are rejected with a `400` unless an admin opts in. This covers `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, `mock_testing_content_policy_fallbacks`, `mock_testing_rate_limit_error`, `mock_timeout`, and `mock_delay`.
+
+Direct `litellm.Router` calls are unaffected and need no opt-in.
 :::
 
 For direct `Router` tests, pass `mock_testing_fallbacks=True` to trigger fallbacks.
@@ -135,7 +137,37 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-The mock-testing flags are deprecated for Proxy requests. To validate Proxy fallbacks, trigger an actual provider error in a non-production environment and send a normal request without a `mock_testing_*` flag.
+Enable the mock testing params in `general_settings`:
+
+```yaml
+general_settings:
+  dangerously_allow_mock_testing_request_params: true
+```
+
+Then pass `mock_testing_fallbacks` on the request:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer sk-1234' \
+-d '{
+  "model": "gpt-3.5-turbo",
+  "messages": [{"role": "user", "content": "ping"}],
+  "mock_testing_fallbacks": true
+}'
+```
+
+The response is served by the fallback deployment, and the `x-litellm-attempted-fallbacks` response header reports how many fallbacks were attempted.
+
+:::danger Read before enabling in production
+While this setting is on, **any** caller with a valid key on the Proxy can inject synthetic failures and latency into their own requests. Such a request consumes a connection and a concurrency slot without reaching a provider, and returns an error the caller chose.
+
+It is intended for staging, and for controlled failover drills in production. Turn it off when the drill is finished.
+
+The setting is read from `config.yaml` only. It cannot be changed from the Admin UI or the `/config/update` API.
+:::
+
+If you would rather not enable it at all, trigger an actual provider error in a non-production environment and send a normal request instead.
 
 </TabItem>
 </Tabs>
