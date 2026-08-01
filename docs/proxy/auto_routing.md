@@ -186,7 +186,7 @@ match_threshold: 0.5
 A tier value can be a single model name or a list.
 
 - **Single string:** pins the tier to one model.
-- **List:** router random-picks per request (uniform), same idea as simple-shuffle. Empty pools raise at config load rather than falling through to `default_model`.
+- **List:** router random-picks per request (uniform), same idea as simple-shuffle. An empty pool means the tier names no models, so it resolves like a tier you left out of the map entirely, falling through to `default_model`; with `adaptive: true` it is rejected at config load instead.
 - **List + `adaptive: true`:** Thompson-sample across the pool. Cold requests sample only inside the classified tier so cost weights do not collapse initial traffic on the cheapest model. Models configured in multiple tiers use their minimum distance from the classified tier. Feedback from a later turn attributes back to the model that actually served the previous response.
 
 ## Session affinity

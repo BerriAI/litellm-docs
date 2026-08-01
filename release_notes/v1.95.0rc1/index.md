@@ -43,6 +43,12 @@ pip install litellm==1.95.0rc1
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**Auto-routing sends prompts that match no scoring dimension to `default_tier` (MEDIUM) instead of SIMPLE.** The heuristic scorer had no way to say "I don't know"; a prompt matching none of its keyword lists scored 0.0, and 0.0 fell under the `simple_medium` boundary into SIMPLE, so absence of evidence was read as evidence of simplicity. This applies to every deployment on the heuristic scorer with no config change on your side, and it also covers LLM-classifier timeouts and errors, which fall back to that scorer. On a 257-session agent corpus the tier mix moved from 84/13/3/0 to 47/49/3/0 (SIMPLE/MEDIUM/COMPLEX/REASONING) and the blended per-turn price proxy rose about 53%. Set `default_tier: SIMPLE` on `complexity_router_config` to keep the previous behavior. See [PR #35050](https://github.com/BerriAI/litellm/pull/35050).
+
+:::
+
 ## Key Highlights
 
 - **Claude Opus 5 on day zero, everywhere** - the new 1M-context Opus lands simultaneously on Anthropic, Amazon Bedrock (including the `us`, `eu`, `au`, `jp`, and `global` inference profiles), Google Vertex AI, and Azure AI Foundry, with adaptive thinking, xhigh reasoning effort, computer use, PDF input, and prompt caching all recorded in the cost map.
