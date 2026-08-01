@@ -1,6 +1,6 @@
 ---
 slug: auto-router-prompt-caching-benchmark
-title: "Does auto-routing break prompt caching? We measured it"
+title: "75% Cost Savings Without Sacrificing Prompt Caching"
 date: 2026-07-31T10:00:00
 authors:
   - tin
