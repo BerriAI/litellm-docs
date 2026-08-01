@@ -85,7 +85,7 @@ Warming only pays on the third row, and only barely. Three reasons it stays marg
 - **You pay on every idle session, and win on few.** One avoided cache write is worth about **19 replays** at the 1h TTL, but replays fire whether or not the session ever comes back
 - **The refresh interval has to match the TTL.** One tuned for a 5m cache fires **~13x** more often than a 1h cache needs, which alone turns a positive result negative
 
-Warming is worth roughly plus or minus one percent: a narrow optimization for long sessions with large stable prefixes, not the thing standing between a deployment and its savings.
+Warming is worth roughly plus or minus two percent: a narrow optimization for long sessions with large stable prefixes, not the thing standing between a deployment and its savings.
 
 ## See it on your own traffic
 
