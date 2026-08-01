@@ -1044,3 +1044,23 @@ div[class*='announcementBar'] a:hover {
   color: var(--ifm-color-emphasis-700);
   font-size: 0.9rem;
 }
+
+/* Blog tables: Docusaurus defaults tables to display:block with overflow, so each
+   shrinks to its own content and no two line up. Render them as real tables at a
+   common width, still scrollable on narrow screens via the wrapper. */
+.blog-wrapper .markdown table {
+  display: table;
+  width: 100%;
+  table-layout: auto;
+}
+
+.blog-wrapper .markdown table th:not(:first-child),
+.blog-wrapper .markdown table td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.blog-wrapper .markdown table th:first-child,
+.blog-wrapper .markdown table td:first-child {
+  text-align: left;
+}

@@ -52,21 +52,19 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 ## Why auto-routing doesn't break prompt caching
 
-> We analyzed **4,684 real tier returns** from live LiteLLM gateway traffic to measure what actually happens when the router switches models.
+**99.3% of the time a session switches back to a model it used earlier, that model's cache is still warm.** The router comes back long before the cache expires, so a switch is not an eviction.
 
-### Key finding
-
-**99.3% of tier returns are already warm.** The router comes back to a model long before its cache expires, so a switch is not an eviction.
+We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffic.
 
 | Metric | Result |
 | --- | --- |
-| Median time before returning to a model | **10 seconds** |
+| Median time before switching back to a model | **10 seconds** |
 | 75th percentile | 21 seconds |
-| Returns after the 5-minute cache expired | **3%** |
-| Returns after the 1-hour cache expired | **1%** |
+| Switch-backs after the 5-minute cache expired | **3%** |
+| Switch-backs after the 1-hour cache expired | **1%** |
 
 - The router moves between tiers in **seconds**, not minutes
-- The cache on the model you left is still there when the session comes back
+- The cache on the model you left is still there when the session switches back
 - Claude Code writes to the **1 hour** cache, which is where the 99.3% figure comes from
 
 ## What that means for cache warming
