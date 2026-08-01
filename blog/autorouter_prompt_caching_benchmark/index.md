@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Can you use prompt caching and auto-routing together? We measured it](./hero.png)
 
-The most common objection we hear about auto-routing: switching models throws away your prompt cache. Provider caches are per-model, so moving a session from Haiku to Sonnet should mean the new model starts cold and pays a full prefix write. We measured it across five datasets, two of which report what the provider's cache actually did.
+**Yes, you can use prompt caching with Auto-Routing.** The two compound rather than cancel out. We measured it across five datasets, two of which report what the provider's cache actually did.
 
 {/* truncate */}
 
