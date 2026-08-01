@@ -742,8 +742,8 @@ const sidebars = {
           type: "category",
           label: "Cost Optimization",
           items: [
-            "proxy/auto_routing",
-            "proxy/auto_routing_semantic",
+            { type: "doc", id: "proxy/auto_routing", label: "Auto-Router v2" },
+            { type: "doc", id: "proxy/auto_routing_semantic", label: "Auto-Router v1 (Semantic, deprecated)" },
             "adaptive_router",
             {
               type: "link",
@@ -1223,8 +1223,8 @@ const sidebars = {
         "routing_plugins",
         "adaptive_router",
         "scheduler",
-        "proxy/auto_routing",
-        "proxy/auto_routing_semantic",
+        { type: "doc", id: "proxy/auto_routing", label: "Auto-Router v2" },
+        { type: "doc", id: "proxy/auto_routing_semantic", label: "Auto-Router v1 (Semantic, deprecated)" },
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",
