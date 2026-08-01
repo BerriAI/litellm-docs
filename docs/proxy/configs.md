@@ -630,6 +630,27 @@ general_settings:
 - `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
 - `database_extra_connection_params` is an untyped passthrough — any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
 
+### Bounding Statement and Lock Time
+
+`database_connect_timeout` and `database_socket_timeout` bound the *connection*. Neither bounds a statement that is already running, so a slow write can keep executing on the server long after the Prisma client has stopped waiting for it, holding its row locks the whole time. Later writes to the same rows queue behind those locks, and under sustained traffic that queue is what exhausts database sessions.
+
+Set the two Postgres-side bounds to cap it:
+
+```yaml
+general_settings:
+  database_statement_timeout: 60 # seconds; cancels any statement running longer than this
+  database_lock_timeout: 15      # seconds; fails a statement that waits this long for someone else's lock
+```
+
+LiteLLM delivers both through the standard libpq `options` parameter on `DATABASE_URL` (`options=-c statement_timeout=60000 -c lock_timeout=15000`); Postgres has no Prisma URL parameter of its own for them. A cancelled statement surfaces to LiteLLM as SQLSTATE `57014`, `canceling statement due to statement timeout`.
+
+**Notes:**
+- Both are **opt-in**. Leave them unset and nothing changes.
+- Keep `database_lock_timeout` well below `database_statement_timeout`, so a write blocked behind another transaction's lock fails fast instead of consuming the whole statement budget.
+- Neither is applied to `DIRECT_URL`, which Prisma uses for migrations. Migrations legitimately run long and are never cancelled by these settings.
+- Any `options` value you pinned on `DATABASE_URL` yourself is preserved, and a setting you pinned there wins over the configured one. `database_extra_connection_params` wins over both.
+- These are the same bounds you would set on the server or in an RDS parameter group. Setting them here scopes them to LiteLLM's own connections instead of every client of that database.
+
 ### Disable Server-Side Prepared Statements
 
 Set `database_disable_prepared_statements: true` to stop Prisma from reusing server-side prepared statements. It appends `pgbouncer=true` to the Prisma connection URL, so each query is prepared fresh instead of reusing a cached plan.
