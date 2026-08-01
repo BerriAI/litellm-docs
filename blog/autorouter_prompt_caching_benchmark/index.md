@@ -77,7 +77,7 @@ A background refresher that replays a session's prefix sounds like the fix, if s
 | --- | --- | --- |
 | General chat | ~1,700 tokens | **0.10% more expensive** |
 | Agent traces, multi-hour gaps | large | **0.63% more expensive** |
-| Our gateway, agentic | ~190,000 tokens | **a small net saving**, one rescue worth ~$1.82 against a ~$0.06 replay |
+| Our gateway, agentic | ~190,000 tokens | **0.9% cheaper**, one rescue worth ~$1.82 against a ~$0.06 replay |
 
 - **Most misses happen while the cache is still alive.** The request did not match the cached prefix, so no refresher helps. On one router that was **51 calls rewriting ~160,000 token prefixes**, against **7** a warmer could have rescued: roughly **10x the warming opportunity**, and a prompt stability problem instead
 - **One avoided cache write is worth about 19 replays** at the 1h TTL, 11.5 at 5m, and replays fire on every idle session whether or not it returns
