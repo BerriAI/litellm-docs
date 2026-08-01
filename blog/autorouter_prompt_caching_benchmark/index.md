@@ -109,13 +109,6 @@ The Auto-Router Benchmarks tab now reports prompt cache behaviour per router, fr
 GET /auto_router/benchmarks?start_date=2026-07-01&end_date=2026-07-31
 ```
 
-## Caveats
-
-- Cache behaviour is **measured** on the gateway spend logs and agent traces, **modelled** on WildChat, DevGPT and TwinRouterBench
-- The positive warming result rests on **7 rescued writes** in a single router
-- The warming cost side is modelled, because warming is not running yet
-- All arithmetic uses Anthropic's cache rates; OpenAI's automatic caching has no write premium and changes the constants
-
 ## Try it
 
 :::info
