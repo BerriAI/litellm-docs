@@ -54,7 +54,7 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 Measured over 4,684 tier returns on live gateway traffic:
 
-| | |
+| Measurement | Value |
 | --- | --- |
 | Median time since that tier was last used | **10 seconds** |
 | 75th percentile | 21 seconds |
@@ -69,12 +69,12 @@ Measured over 4,684 tier returns on live gateway traffic:
 
 A background refresher that replays a session's prefix sounds like the fix, if switching really did strand the cache. Narrowing from every cache miss to what a refresher could actually prevent:
 
-| Stage | Share |
-| --- | --- |
-| Misses on a return to a tier already used | 18.4% of return turns |
-| ... tier had gone idle past the TTL | 27.1% |
-| ... came back soon enough to bridge | 36.8% |
-| **Preventable by a refresher** | **4.0% of all cache misses** |
+| Stage | Share | Of what |
+| --- | --- | --- |
+| Missed on a return to a tier already used | 18.4% | of return turns |
+| That tier had gone idle past the TTL | 27.1% | of those misses |
+| It came back soon enough to bridge | 36.8% | of those expired |
+| **Preventable by a refresher** | **4.0%** | **of all cache misses** |
 
 - **Most return misses happen while the cache is still alive.** The request did not match the cached prefix, so no refresher helps
 - On one router that was **51 calls rewriting ~160,000 token prefixes**, against **7** a refresher could have rescued
