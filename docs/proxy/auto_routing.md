@@ -143,7 +143,9 @@ Two or more reasoning markers auto-routes to `REASONING` regardless of the weigh
 
 **No signal.** The scorer only recognizes what is on its keyword lists, so a prompt can be genuinely hard and match none of them; a logic puzzle, a business tradeoff, a piece of prose to edit. When no dimension fires the router returns `default_tier` (MEDIUM by default) instead of consulting the boundaries, because absence of evidence is not evidence of simplicity. The decision log shows `signals=['no-signal']` for these. Set `default_tier: SIMPLE` to send unmatched traffic to the cheapest tier instead.
 
-`default_tier` is not a special tier; it names which tier no-signal traffic is classified as, and that tier resolves to a model exactly like a classified one, through its own entry in `tiers`, then `default_model`, then the MEDIUM tier. A `default_tier` you set explicitly has to be servable by one of those, and the config is rejected at load rather than failing on the first unmatched request. With routing plugins configured that chain stops at the tier's own models, since a model the plugins never vetted must not serve, so the tier itself has to name one.
+`default_tier` is not a special tier; it names which tier no-signal traffic is classified as, and that tier resolves to a model exactly like a classified one, through its own entry in `tiers`, then `default_model`, then the MEDIUM tier. It has to be servable by one of those whether you set it or take the default, and the config is rejected at load rather than failing on the first unmatched request. A partial `tiers` map is unaffected, since the proxy derives `complexity_router_default_model` from the MEDIUM-then-SIMPLE tier whenever you leave it unset and the chain terminates there.
+
+With routing plugins configured that chain stops at the tier's own models, since a model the plugins never vetted must not serve. A plugin config therefore has to give `default_tier` models in `tiers`, or point it at a tier that has them; `default_model` will not stand in, and a plugin config whose `tiers` omits MEDIUM is rejected at load rather than raising on the first unmatched request.
 
 :::warning Upgrading
 
