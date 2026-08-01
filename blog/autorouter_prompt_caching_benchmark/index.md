@@ -56,15 +56,14 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffic.
 
-| Metric | Result |
+| | Share of returns |
 | --- | --- |
-| Median time before switching back to a model | **10 seconds** |
-| 75th percentile | 21 seconds |
-| Switch-backs after the 5-minute cache expired | **3%** |
-| Switch-backs after the 1-hour cache expired | **1%** |
+| Still warm at 5m TTL | **97.4%** |
+| Still warm at 1h TTL | **99.3%** |
+| Past TTL, the only returns a switch could have hurt | **2.6% / 0.7%** |
 
-- The router moves between tiers in **seconds**, not minutes
-- The cache on the model you left is still there when the session switches back
+- Median idle time before a session returns to a model is **10 seconds**, against a 3,600-second lifetime, so it is not close
+- The router moves between tiers in **seconds**, not minutes; the cache on the model you left is still there when the session switches back
 - This holds especially for coding agents like Claude Code, which write to the **1 hour** cache and leave an even wider margin before anything expires
 
 ## We tried a background cache warmer. It wasn't worth it
