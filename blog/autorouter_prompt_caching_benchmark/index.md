@@ -25,7 +25,7 @@ Get early access, work directly with the LiteLLM team, and influence the roadmap
 
 <br /><br />
 
-Already testing it? Share your results in [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
+Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -94,7 +94,7 @@ GET /auto_router/benchmarks?start_date=2026-07-01&end_date=2026-07-31
 
 :::info
 
-Point a client at an auto-router with prompt caching on, then check the Auto-Router Benchmarks tab against your own traffic. Share numbers or questions on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+Point a client at an auto-router with prompt caching on, then check the Auto-Router Benchmarks tab against your own traffic. Share numbers or questions on [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
 
 :::
 
