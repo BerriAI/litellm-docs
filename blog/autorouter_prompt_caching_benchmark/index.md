@@ -50,20 +50,24 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **Cache behaviour:** read from `usage.cache_read_input_tokens` and `cache_creation_input_tokens` on the gateway spend logs and agent traces; modelled on the other three legs
 - **Turn classification:** one window function partitioned by session and model, labelling each turn as staying on a model, first visiting a tier, or returning to one already used
 
-## Why switching costs less than it looks
+## Why auto-routing doesn't break prompt caching
 
-Measured over 4,684 tier returns on live gateway traffic:
+> We analyzed **4,684 real tier returns** from live LiteLLM gateway traffic to measure what actually happens when the router switches models.
 
-| Measurement | Value |
+### Key finding
+
+**99.3% of tier returns are already warm.** The router comes back to a model long before its cache expires, so a switch is not an eviction.
+
+| Metric | Result |
 | --- | --- |
-| Median time since that tier was last used | **10 seconds** |
+| Median time before returning to a model | **10 seconds** |
 | 75th percentile | 21 seconds |
-| Returns where the 5m cache had already expired | **3%** |
-| Returns where the 1h cache had already expired | **1%** |
+| Returns after the 5-minute cache expired | **3%** |
+| Returns after the 1-hour cache expired | **1%** |
 
 - The router moves between tiers in **seconds**, not minutes
-- The cache on the tier you left is still there when the session comes back
-- Claude Code writes to the **1 hour** cache, where **99.3%** of returns are already warm before anything else is done
+- The cache on the model you left is still there when the session comes back
+- Claude Code writes to the **1 hour** cache, which is where the 99.3% figure comes from
 
 ## What that means for cache warming
 
