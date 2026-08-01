@@ -176,7 +176,7 @@ Classifying a request is half the job; the tier still needs something that can a
 
 Resolution never falls to a cheaper tier. That is the model the classifier already ruled out, so a COMPLEX request is not answered by the SIMPLE model just because SIMPLE happens to be healthy. The last step is best effort rather than an error because cooldowns expire and the health view is a snapshot; a request that might succeed is sent instead of failed.
 
-When the ladder climbs, `tier_fallback_from` records the tier the request was classified into, on the spend log's routing decision and in the log line, so a cheap request sitting on an expensive model is explainable after the fact.
+Two facts ride on the routing decision, because neither survives in the routed model name alone. `tier_fallback_from` records the tier the request was classified into whenever the ladder climbed, so a cheap request sitting on an expensive model is explainable after the fact. `resolved_by` records how the model was obtained when it did not come from a tier pool at all: `default_model` when the ladder was exhausted, `best_effort` when nothing reported a live deployment and the tier was served anyway. The two are independent, so an exhausted ladder can carry both, and the ordinary path carries neither.
 
 Two cases are deliberately not routed around. A tier configured as an empty pool (`SIMPLE: []`) raises, since that is a config error rather than a gap to work around. And a routing plugin that narrows a tier to zero candidates raises, since refusing every candidate is a policy decision and climbing past it would serve exactly what the plugin denied; plugins run against whichever tier the ladder settles on, so they always vet what is served. If the health view itself cannot be read, the pool is treated as live and resolution behaves as it did before, rather than declaring every tier dead and pushing traffic to the top.
 
@@ -210,6 +210,7 @@ Every routing decision emits one greppable line naming its cause. `cause=` is gr
 ```
 ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
 ComplexityRouter: routing decision cause=complexity_scorer,      tier=MEDIUM,     score=-0.150, signals=['short (7 tokens)'],                     routed_model=gpt-4o, tier_fallback_from=SIMPLE
+ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)'],                     routed_model=claude-sonnet-5, resolved_by=default_model
 ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model=claude-sonnet-5
