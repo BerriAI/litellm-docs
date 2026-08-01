@@ -79,12 +79,6 @@ If switching really did strand the cache, a background refresher that replays a 
 | Agent traces, multi-hour gaps | large | **0.63% more expensive** |
 | Our gateway, agentic | ~190,000 tokens | **0.9% cheaper** |
 
-Warming only pays on the third row, and only barely. Three reasons it stays marginal:
-
-- **Most misses are not about expiry.** The cache was still alive; the request just did not match the cached prefix. On one router that was **51 calls rewriting ~160,000 token prefixes**, against **7** a warmer could have rescued. That is a prompt stability problem, and about **10x** larger than the warming opportunity next to it
-- **You pay on every idle session, and win on few.** One avoided cache write is worth about **19 replays** at the 1h TTL, but replays fire whether or not the session ever comes back
-- **The refresh interval has to match the TTL.** One tuned for a 5m cache fires **~13x** more often than a 1h cache needs, which alone turns a positive result negative
-
 Warming is worth roughly plus or minus two percent: a narrow optimization for long sessions with large stable prefixes, not the thing standing between a deployment and its savings.
 
 ## See it on your own traffic
