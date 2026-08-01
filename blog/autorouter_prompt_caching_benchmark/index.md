@@ -4,11 +4,14 @@ title: "Does auto-routing break prompt caching? We measured it"
 date: 2026-07-31T10:00:00
 authors:
   - tin
+image: ./hero.png
 description: "The most common objection to auto-routing is that switching models throws away your prompt cache. We measured it across five datasets, including real gateway traffic with the provider's own cache accounting, and the answer is no."
 keywords: [prompt caching, auto router, llm cost savings, model routing, cache warming, anthropic prompt cache, litellm auto routing, prefix cache]
 tags: [routing, complexity-router, caching, cost, benchmarks, engineering]
 hide_table_of_contents: false
 ---
+
+![Can you use prompt caching and auto-routing together? We measured it](./hero.png)
 
 The most common objection we hear about auto-routing: switching models throws away your prompt cache. Provider caches are per-model, so moving a session from Haiku to Sonnet should mean the new model starts cold and pays a full prefix write. We measured it across five datasets, two of which report what the provider's cache actually did.
 
