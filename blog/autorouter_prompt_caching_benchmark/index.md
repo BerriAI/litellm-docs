@@ -25,7 +25,7 @@ Get early access, work directly with the LiteLLM team, and influence the roadmap
 
 <br /><br />
 
-Already testing it? Share your results in [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172).
+Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -34,7 +34,6 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **Auto-routing does not break prompt caching.** The two compound on every dataset we measured
 - **37% to 69% cheaper** than caching alone on a single model
 - **The real failure mode is the opposite one.** Running a router with caching switched off is about **4x more expensive** than caching one fixed model
-- **Sessions return to a tier in a median of 10 seconds**, far inside any cache lifetime, so a switch is not an eviction
 
 | Evaluation | Sample | Router + caching, vs caching alone |
 | --- | --- | --- |
@@ -56,16 +55,11 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 We measured this on **4,684 real switch-backs** from live LiteLLM gateway traffic.
 
-| Metric | Result |
+| Provider cache state | % of Model Returns with Warm Cache |
 | --- | --- |
-| Median time before switching back to a model | **10 seconds** |
-| 75th percentile | 21 seconds |
-| Switch-backs after the 5-minute cache expired | **3%** |
-| Switch-backs after the 1-hour cache expired | **1%** |
-
-- The router moves between tiers in **seconds**, not minutes
-- The cache on the model you left is still there when the session switches back
-- This holds especially for coding agents like Claude Code, which write to the **1 hour** cache and leave an even wider margin before anything expires
+| Still warm at 5m TTL | **97.4%** |
+| Still warm at 1h TTL | **99.3%** |
+| Past TTL, the only ones a switch could have hurt | **2.6% / 0.7%** |
 
 ## We tried a background cache warmer. It wasn't worth it
 
@@ -99,7 +93,7 @@ GET /auto_router/benchmarks?start_date=2026-07-01&end_date=2026-07-31
 
 :::info
 
-Point a client at an auto-router with prompt caching on, then check the Auto-Router Benchmarks tab against your own traffic. Share numbers or questions on [discussion #32172](https://github.com/BerriAI/litellm/discussions/32172). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+Point a client at an auto-router with prompt caching on, then check the Auto-Router Benchmarks tab against your own traffic. Share numbers or questions on [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
 
 :::
 
