@@ -50,6 +50,7 @@ const sidebars = {
             "observability/braintrust",
             "observability/opik_integration",
             "observability/deepeval_integration",
+            "observability/eucompliance_integration",
             "observability/helicone_integration",
             "observability/humanloop",
             "observability/langfuse_integration",
