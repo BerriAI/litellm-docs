@@ -10,7 +10,7 @@ Use this if you want to write code to run a custom guardrail
 
 ### 1. Write a `CustomGuardrail` Class
 
-The simplest way to create a custom guardrail is by implementing the `apply_guardrail` method. This method is called to check text content and can block requests by raising an exception.
+You only have to implement one method: `apply_guardrail`. LiteLLM pulls the content out of a request (or a response), hands it to you as `inputs`, and writes back whatever you return. Raise an exception to block the call.
 
 **Example `CustomGuardrail` Class**
 
@@ -18,14 +18,18 @@ Create a new file called `custom_guardrail.py` and add this code to it:
 
 ```python
 import os
-from typing import Optional, List
+from typing import TYPE_CHECKING, List, Literal, Optional
+
 from litellm.integrations.custom_guardrail import CustomGuardrail
-from litellm.types.guardrails import PiiEntityType
-from litellm._logging import verbose_proxy_logger
 from litellm.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
+from litellm.types.utils import GenericGuardrailAPIInputs
+
+if TYPE_CHECKING:
+    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+
 
 class myCustomGuardrail(CustomGuardrail):
     def __init__(self, api_key: Optional[str] = None, api_base: Optional[str] = None, **kwargs):
@@ -35,41 +39,72 @@ class myCustomGuardrail(CustomGuardrail):
 
     async def apply_guardrail(
         self,
-        text: str, # IMPORTANT: This is the text to check against your guardrail rules. It's extracted from the request or response across all LLM call types.
-        language: Optional[str] = None, # ignore 
-        entities: Optional[List[PiiEntityType]] = None, # ignore
-        request_data: Optional[dict] = None, # ignore
-    ) -> str:
+        inputs: GenericGuardrailAPIInputs,
+        request_data: dict,
+        input_type: Literal["request", "response"],
+        logging_obj: Optional["LiteLLMLoggingObj"] = None,
+    ) -> GenericGuardrailAPIInputs:
         """
-        Check text content against your guardrail rules.
-        Raise an exception to block the request.
-        Return the text (optionally modified) to allow it through.
+        Check the extracted content against your guardrail rules.
+        Raise an exception to block the call.
+        Return the inputs (optionally modified) to allow it through.
         """
-        result = await self._check_with_api(text, request_data)
-        
-        if result.get("action") == "BLOCK":
-            raise Exception(f"Content blocked: {result.get('reason', 'Policy violation')}")
-        
-        return text
+        checked_texts: List[str] = []
+        for text in inputs.get("texts") or []:
+            result = await self._check_with_api(text, request_data)
 
-    async def _check_with_api(self, text: str, request_data: Optional[dict]) -> dict:
+            if result.get("action") == "BLOCK":
+                raise Exception(f"Content blocked: {result.get('reason', 'Policy violation')}")
+
+            checked_texts.append(result.get("masked_text") or text)
+
+        inputs["texts"] = checked_texts
+        return inputs
+
+    async def _check_with_api(self, text: str, request_data: dict) -> dict:
         async_client = get_async_httpx_client(llm_provider=httpxSpecialProvider.LoggingCallback)
-        
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
-        
+
         response = await async_client.post(
             f"{self.api_base}/check",
             headers=headers,
             json={"text": text},
             timeout=5,
         )
-        
+
         response.raise_for_status()
         return response.json()
 ```
+
+### `apply_guardrail` parameters
+
+| Parameter | What it is |
+|-----------|------------|
+| `inputs` | Everything LiteLLM pulled out of this call. Keys below. |
+| `request_data` | The request body. `request_data["metadata"]` holds the caller — `user_api_key_user_id`, `user_api_key_team_id`, and so on. |
+| `input_type` | `"request"` on the way in, `"response"` on the way out. Lets one class handle both directions. |
+| `logging_obj` | LiteLLM's logging object for the call, if you want to attach your own metadata. |
+
+Every key in `inputs` is optional — you only get the ones this call actually had:
+
+| Key | What's in it |
+|-----|--------------|
+| `texts` | The text to check. This is the one most guardrails use. |
+| `images` | Images from the request, as base64 or URLs. |
+| `tools` | Tool definitions sent to the LLM. |
+| `tool_calls` | Tool calls the LLM asked for. |
+| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
+| `model` | The model this call is routed to. |
+
+**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place — LiteLLM maps them back onto the original request or response.
+
+`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
+
+While streaming, you can also set `stream_holdback_chars` — a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
 :::tip Advanced: Using Individual Event Hooks
 
@@ -104,16 +139,24 @@ guardrails:
   - guardrail_name: "my-custom-guardrail"
     litellm_params:
       guardrail: custom_guardrail.myCustomGuardrail  # 👈 Key change
-      mode: "during_call"               # runs apply_guardrail method
+      mode: "pre_call"                  # when apply_guardrail runs - see Mode Options below
       api_key: os.environ/MY_GUARDRAIL_API_KEY
       api_base: https://api.myguardrail.com
 ```
 
 :::info Mode Options
 
-- `during_call` - Default mode, runs `apply_guardrail` method (or `async_moderation_hook` if using individual hooks)
-- `pre_call` - Runs `async_pre_call_hook` for input modification
-- `post_call` - Runs `async_post_call_success_hook` for output validation
+`apply_guardrail` runs in all three modes. The mode decides *when* it runs and whether it sees the request or the response.
+
+| Mode | Runs | `input_type` | Can it mask? |
+|------|------|--------------|--------------|
+| `pre_call` | Before the LLM call | `"request"` | Yes |
+| `during_call` | Alongside the LLM call | `"request"` | Blocking only — see below |
+| `post_call` | After the LLM responds | `"response"` | Yes |
+
+**If you mask or rewrite content, use `pre_call`.** `during_call` runs your guardrail in parallel with the LLM call to save latency, so it reliably *blocks* a bad request, but your edits may not land before the request leaves.
+
+If you implement the individual event hooks instead, the same three modes call `async_pre_call_hook`, `async_moderation_hook`, and `async_post_call_success_hook`.
 
 :::
 
@@ -660,7 +703,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 | Component | Description | Optional | Checked Data | Can Modify Input | Can Modify Output | Can Fail Call |
 |-----------|-------------|----------|--------------|------------------|-------------------|----------------|
-| `apply_guardrail` | Simple method to check and optionally modify text | ✅ | INPUT or OUTPUT | ✅ | ✅ | ✅ |
+| `apply_guardrail` | Single method to check and optionally modify the extracted inputs, for both request and response | ✅ | INPUT or OUTPUT | ✅ | ✅ | ✅ |
 | `async_pre_call_hook` | A hook that runs before the LLM API call | ✅ | INPUT | ✅ | ❌ | ✅ |
 | `async_moderation_hook` | A hook that runs during the LLM API call| ✅ | INPUT | ❌ | ❌ | ✅ |
 | `async_post_call_success_hook` | A hook that runs after a successful LLM API call. For streaming, runs on the assembled response after delivery (audit-only, cannot block). | ✅ | INPUT, OUTPUT | ❌ | ✅ | ✅ (non-streaming only) |
@@ -673,11 +716,11 @@ class myCustomGuardrail(CustomGuardrail):
 
 **A.** Yes, one function works in both - See implementation [here](https://github.com/BerriAI/litellm/blob/0292b84dc47473ddeff29bd5a86f529bc523034b/litellm/proxy/utils.py#L825)
 
-**Q. What do I get in the inputs of `apply_guardrail`? What does each field represent (what is text, language, entities, request_data)?**
+**Q. What do I get in the inputs of `apply_guardrail`? What does each field represent?**
 
-**A.** The main one you should care about is 'text' - this is what you'll want to send to your api for verification - See implementation [here](https://github.com/BerriAI/litellm/blob/0292b84dc47473ddeff29bd5a86f529bc523034b/litellm/llms/anthropic/chat/guardrail_translation/handler.py#L102)
+**A.** See [the parameter reference above](#apply_guardrail-parameters). The one you should care about first is `inputs["texts"]`, the extracted text you'll send to your API for verification - See implementation [here](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/chat/guardrail_translation/handler.py)
 
-**Q. Is this function agnostic to the LLM provider? Meaning does it pass the same values for OpenAI and Anthropic for example?
+**Q. Is this function agnostic to the LLM provider? Meaning does it pass the same values for OpenAI and Anthropic for example?**
 
 **A.** Yes
 
