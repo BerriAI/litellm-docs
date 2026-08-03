@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.94.0 — Router Plugins, MCP Client-Held Credentials & Shared DataTable UI](/release_notes/v1.94.0/v1-94-0)
+### [v1.95.0 — Claude Opus 5, MCP Gateway DCR & Rust /v1/messages](/release_notes/v1.95.0/v1-95-0)
 
-_July 28, 2026_
+_August 1, 2026_
 
-A `Router(plugins=[...])` extension point resolvable from proxy YAML config, alongside Auto-Router v2 with soft-floor adaptive mode, session affinity on by default, multi-model tier random-pick, and user-triggered escalation keywords; maturing MCP client-held credentials with interactive SSO sign-in for `dcr_bridge` `oauth_delegate` DCR clients, client-held refresh envelopes, issuer-anchored OAuth discovery, and ID-JAG for MCP egress; the shared DataTable migration reaching Virtual Keys, Teams, Guardrails, Tags, Vector Stores, Prompts, Skills, AI Hub, MCP Toolsets, and Policy Attachments; a new beta Cost Optimization page covering savings by driver, spend by tool, and cache leakage; and Python 3.14 support with per-model prompt cache minimums resolved from the cost map.
+Day-0 support for the 1M-context Claude Opus 5 across Anthropic, Amazon Bedrock, Google Vertex AI, and Azure AI Foundry, joined by Gemini 3.6 Flash and Gemini 3.5 Flash Lite; an MCP gateway front door built on always-on aggregate DCR discovery, identity-only session tokens, RFC 8707 resource indicators, and a standalone `/connect` route; native Anthropic `/v1/messages` routed through the Rust axum gateway alongside a Responses API WebSockets port and SigV4 in `litellm-core`; SAML 2.0 SSO for the admin UI; roughly twenty dashboard routes completing the shadcn and shared DataTable migration; and a budget-reset correctness pass covering reset time of day, word-form durations, and NULL `budget_reset_at` repair. Note that user budgets are no longer enforced on team keys, reverting the `v1.94.0` change.
 
 ---
 
@@ -22,6 +22,7 @@ A `Router(plugins=[...])` extension point resolvable from proxy YAML config, alo
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
 | [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |

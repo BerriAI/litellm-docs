@@ -1,7 +1,7 @@
 ---
-title: "v1.95.0rc1 - Claude Opus 5, MCP Gateway DCR & Rust /v1/messages"
-slug: "v1-95-0-rc-1"
-date: 2026-07-30T00:12:53
+title: "v1.95.0 - Claude Opus 5, MCP Gateway DCR & Rust /v1/messages"
+slug: "v1-95-0"
+date: 2026-08-01T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,18 +30,24 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.95.0-rc.1
+docker.litellm.ai/berriai/litellm:1.95.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.95.0rc1
+pip install litellm==1.95.0
 ```
 
 </TabItem>
 </Tabs>
+
+:::danger Breaking Changes
+
+**User budgets are no longer enforced on team keys.** This reverts [PR #32005](https://github.com/BerriAI/litellm/pull/32005), which shipped in `v1.94.0` and made a user's personal `max_budget` stack on top of the team and team-member budgets. Team keys are back to team budgets only, and the `skip_user_budget_on_team_key` opt-out introduced alongside it is removed; leaving it in `general_settings` is now a no-op. If you added that flag to restore the old behavior, you can drop it. See [PR #35271](https://github.com/BerriAI/litellm/pull/35271).
+
+:::
 
 ## Key Highlights
 
@@ -207,6 +213,7 @@ Beyond the new entries, this release raises the advertised context window on `az
     - Center vertical toolbar dividers and truncate long team names in the models table team dropdown - [PR #34684](https://github.com/BerriAI/litellm/pull/34684), [PR #34689](https://github.com/BerriAI/litellm/pull/34689)
     - Serve `/ui/assets` from the nginx image instead of the SPA fallback, and bundle provider logos as static imports - [PR #34066](https://github.com/BerriAI/litellm/pull/34066), [PR #34125](https://github.com/BerriAI/litellm/pull/34125), [PR #34163](https://github.com/BerriAI/litellm/pull/34163)
     - Return Models + Endpoints tabs to in-memory routing while keeping the `?model` drill-in - [PR #34629](https://github.com/BerriAI/litellm/pull/34629)
+    - Land general login on the keys dashboard and send MCP consent to `/ui/connect` - [PR #35523](https://github.com/BerriAI/litellm/pull/35523)
 
 ## AI Integrations
 
@@ -261,6 +268,7 @@ Beyond the new entries, this release raises the advertised context window on `az
     - Enforce a global `max_budget` against the resettable proxy budget row so `budget_duration` is honored - [PR #33732](https://github.com/BerriAI/litellm/pull/33732)
     - Set `budget_reset_at` when a JWT upsert seeds a `budget_duration` - [PR #34050](https://github.com/BerriAI/litellm/pull/34050)
     - Reject failed atomic budget reservations under `fail_closed_budget_enforcement` - [PR #34429](https://github.com/BerriAI/litellm/pull/34429)
+    - Stop enforcing user budgets on team keys, reverting the hierarchy change that shipped in `v1.94.0` - [PR #35271](https://github.com/BerriAI/litellm/pull/35271)
     - Handle a tz-aware `temp_budget_expiry`, apply `temp_budget_increase` for cache-hit keys, and derive the increase without mutating the token - [PR #33840](https://github.com/BerriAI/litellm/pull/33840), [PR #33841](https://github.com/BerriAI/litellm/pull/33841), [PR #34121](https://github.com/BerriAI/litellm/pull/34121)
     - Raise the dashboard session budget default to $1 and make it configurable in config and the Admin UI - [PR #34146](https://github.com/BerriAI/litellm/pull/34146)
 - **[Cost tracking](../../docs/proxy/cost_tracking)**
@@ -343,11 +351,11 @@ Beyond the new entries, this release raises the advertised context window on `az
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 292)
+PRs by ownership area (total: 294)
 
-- UI: 54
+- UI: 55
 - Other (CI / chore / tests / build / version bumps): 46
-- Spend / Budgets / Rate Limits: 33
+- Spend / Budgets / Rate Limits: 34
 - LLM API Endpoints: 31
 - MCP: 29
 - Auth & Management: 28
@@ -371,4 +379,4 @@ This window added 62 test PRs, the largest single-release investment in the suit
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.94.0-rc.1...v1.95.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.94.0...v1.95.0
