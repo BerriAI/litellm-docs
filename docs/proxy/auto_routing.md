@@ -79,6 +79,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       classifier_llm_config:
         model: claude-haiku-4-5-20251001
         timeout_ms: 2000
+      # Prior conversation the classifier sees (LLM classifier only)
+      classifier_context_window_size: 3          # default 3; 0 disables
+      classifier_context_per_turn_chars: 200     # default 200
+      classifier_context_include_assistant_turns: false   # default false
 
       # Keyword rules, run before the scorer, escalate to the highest matched tier
       keyword_tier_rules:
@@ -146,6 +150,57 @@ classifier_llm_config:
   model: claude-haiku-4-5-20251001
   timeout_ms: 2000
 ```
+
+### Classifier context window
+
+:::info
+
+Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
+
+:::
+
+The LLM classifier does not see the request in isolation. By default it also receives the last 3 prior turns of the conversation, truncated to 200 characters each, so a referring follow-up like "now do the same for the streaming path" is rated against what it refers to rather than on its own length. Without that context a hard follow-up mid-session classifies as whatever landed last, which in an agentic harness is often a `<system-reminder>` blob that barely varies across the session and pins every turn to one tier.
+
+Only turns carrying text a human wrote count toward the window. Tool output never qualifies (`tool_result` blocks on the Messages surface, the `tool` role on chat completions), complete `<system-reminder>` blocks are stripped before a turn is considered, and a turn left empty after stripping is skipped rather than spending a slot. A turn whose text equals the ask being classified is excluded so the ask is never quoted twice. Prior turns are sent oldest first and numbered `[1]`, `[2]`, `[3]`, and a turn cut at the character limit gets a trailing `...` so the classifier can tell it was clipped. When prior conversation exists, a single depth line (`Conversation so far: ~N tokens across the request`) is included as well.
+
+The call is split so the system role carries only the operator's rubric, byte-identical across sessions and therefore prompt-cacheable, while everything caller-supplied (their system prompt, the prior turns, the ask) is quoted as labeled sections of the user turn. A three-turn conversation on the defaults produces:
+
+```
+system: <rubric, operator-authored, identical on every request>
+
+user:   Caller system prompt, quoted as task context:
+        <the caller's own system prompt>
+
+        Recent conversation (context only, do not classify these):
+        [1] add a health check endpoint
+        [2] now wire it into the readiness probe
+
+        Conversation so far: ~1240 tokens across the request
+
+        Classify this message:
+        now do the same for the streaming path
+```
+
+Set `classifier_context_window_size: 0` to turn it off; the classifier then receives the current ask and nothing else, no prior turns and no depth line, and the rubric closes on "classify only the current message" to match. Raise `classifier_context_per_turn_chars` if turns are being clipped before the part that carries the difficulty. Both settings apply only when `classifier_type: llm`; the heuristic scorer and keyword rules always read the current human ask alone.
+
+Note that `session_affinity` skips reclassification after a session's first turn, so on a router that turns it on the context window only comes into play on turn one, or on requests where no `session_id` is resolvable from metadata. It is off by default, so by default every turn is classified and the window applies throughout.
+
+### Assistant turns in the context window
+
+`classifier_context_include_assistant_turns` is off by default and puts the model's own replies in the window. It exists for the conversation where difficulty is stated by the assistant rather than by the user: the assistant answers "here is the plan, it is complex, should I execute?", the user answers "yes", and with user turns alone the router rates the word "yes" and picks the cheapest tier. With it on, the classifier rates the work the current message approves, judged in the conversation it continues.
+
+```yaml
+classifier_type: llm
+classifier_llm_config:
+  model: claude-haiku-4-5-20251001
+classifier_context_include_assistant_turns: true
+classifier_context_window_size: 3
+classifier_context_per_turn_chars: 200
+```
+
+Enabling it changes what `classifier_context_window_size` counts: the last N turns of the conversation across both roles rather than the last N user turns, so budget accordingly if a chatty exchange should still carry several user asks. Turns are labeled by role in the payload only when this is on, which keeps the prompt of every existing deployment unchanged. Assistant replies share `classifier_context_per_turn_chars` with user turns, so raise it if replies truncate before the part that states the difficulty.
+
+It ships off by default for two reasons: turning it on shifts tier decisions, and therefore spend, on an already-deployed router, and assistant text becomes net-new egress to the classifier deployment, which may be a different provider than the routed model. Assistant text reaches the classifier payload and nothing else; `keyword_tier_rules`, escalation keywords, the heuristic scorer, and semantic matching still read only the human ask, so an assistant echoing an escalation keyword back cannot pick the tier.
 
 **Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
 
@@ -267,6 +322,8 @@ response = await router.acompletion(
 Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-Router v2 [Recommended]". Configure the four tier model groups, optionally enable Semantic Keyword Matching, LLM Classifier, or Adaptive, then click **Test Connection**. Test Connection runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
+
+Selecting **LLM Classifier** reveals the classifier context settings alongside the classifier model and timeout: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
