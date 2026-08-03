@@ -177,6 +177,14 @@ ingress:
   enabled: true
   className: "<alb | gce | azure-application-gateway>"
   host: llm.example.com
+  # optional: routes the chart does not ship a rule for, e.g. a passthrough
+  # prefix added after this chart version or a custom
+  # general_settings.pass_through_endpoints path. Additive: every built-in
+  # UI, gateway, and backend path is still rendered
+  extraPaths:
+    - path: /watsonx
+      pathType: Prefix     # default; Exact and ImplementationSpecific also work
+      service: gateway     # default; backend and ui also work
 ```
 
 ```bash
