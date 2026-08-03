@@ -19,7 +19,7 @@ Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Sug
 | Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, or lexical/semantic keyword rules               |
 | Tier value   | One model                         | One model, random pool, or adaptive (Thompson-sampled) pool                |
 | Latency      | ~100-500ms (embedding call)       | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
-| Session pin  | No                                | Opt-in `session_affinity`, keyed by `session_id` from request metadata     |
+| Session pin  | No                                | Opt-in `session_affinity` (off by default), keyed by `session_id` metadata |
 | Log          | No routing-cause signal           | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM) |
 | Best for     | Intent-based routing              | Cost/quality tiering, hybrid rule + classifier setups, prompt-cache pinning |
 
@@ -100,7 +100,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       # Thompson-sample within the tier's pool
       adaptive: true
 
-      # Pin a session to its first-turn model to preserve prompt cache
+      # Pin a session to its first-turn model to preserve prompt cache (default false)
       session_affinity: true
       session_affinity_ttl_seconds: 3600
 
@@ -183,7 +183,7 @@ user:   Caller system prompt, quoted as task context:
 
 Set `classifier_context_window_size: 0` to turn it off; the classifier then receives the current ask and nothing else, no prior turns and no depth line, and the rubric closes on "classify only the current message" to match. Raise `classifier_context_per_turn_chars` if turns are being clipped before the part that carries the difficulty. Both settings apply only when `classifier_type: llm`; the heuristic scorer and keyword rules always read the current human ask alone.
 
-Note that `session_affinity` is on by default and skips reclassification after a session's first turn, so the context window only comes into play on requests that actually get classified: when `session_affinity: false`, or when no `session_id` is resolvable from request metadata.
+Note that `session_affinity` skips reclassification after a session's first turn, so on a router that turns it on the context window only comes into play on turn one, or on requests where no `session_id` is resolvable from metadata. It is off by default, so by default every turn is classified and the window applies throughout.
 
 ### Assistant turns in the context window
 
@@ -227,16 +227,24 @@ A tier value can be a single model name or a list.
 
 ## Session affinity
 
-On by default. Pins the first-turn model for a session and skips reclassification on later turns, so provider-side prompt caches keyed to that model do not get invalidated when a follow-up ("thanks!") would otherwise classify into a different tier. It also keeps a multi-turn session on a single model, which avoids provider errors when conversation history produced by one model (for example an Anthropic `thinking` block) is replayed to a different model on a later turn.
+Off by default: every turn is classified on its own merits, so each one lands on the cheapest tier adequate for it.
 
-Set `session_affinity: false` to reclassify every turn instead.
+Set `session_affinity: true` to pin the first-turn model for a session and skip reclassification on later turns. Turning it on buys two things. Provider-side prompt caches keyed to that model stop getting invalidated when a follow-up ("thanks!") would otherwise classify into a different tier. And a multi-turn session stays on a single model, which avoids provider errors when conversation history produced by one model (for example an Anthropic `thinking` block) is replayed to a different model on a later turn.
+
+The trade is that the whole session inherits the first turn's tier. A conversation that opens with one hard question then continues with simple follow-ups keeps paying the expensive tier for all of them.
 
 ```yaml
-session_affinity: true   # default; set false to reclassify every turn
+session_affinity: true          # default false; set true to pin a session to its first-turn model
 session_affinity_ttl_seconds: 3600
 ```
 
-`session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working.
+`session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual, whatever this is set to. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working. `session_affinity` is ignored when `plugins` are configured, so a mid-session policy change still applies on later turns rather than being skipped by a cached pin.
+
+:::info Changed default
+
+`session_affinity` used to default to `true`. Routers created before that changed have no `session_affinity` key stored, so they pick up the new `false` default and start reclassifying every turn. Add `session_affinity: true` to any router that should keep pinning.
+
+:::
 
 ## Custom technical keywords
 
@@ -316,6 +324,8 @@ Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
 Selecting **LLM Classifier** reveals the classifier context settings alongside the classifier model and timeout: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
+
+**Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
 ## Claude Code and Claude Desktop
 
