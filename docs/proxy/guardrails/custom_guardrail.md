@@ -10,7 +10,7 @@ Use this if you want to write code to run a custom guardrail
 
 ### 1. Write a `CustomGuardrail` Class
 
-The simplest way to create a custom guardrail is by implementing the `apply_guardrail` method. LiteLLM extracts the content of a request (or a response) into a single `inputs` payload, hands it to your method, and writes whatever you return back into the request or response. Raise an exception to block the call.
+You only have to implement one method: `apply_guardrail`. LiteLLM pulls the content out of a request (or a response), hands it to you as `inputs`, and writes back whatever you return. Raise an exception to block the call.
 
 **Example `CustomGuardrail` Class**
 
@@ -82,20 +82,29 @@ class myCustomGuardrail(CustomGuardrail):
 
 ### `apply_guardrail` parameters
 
-`inputs` is a `GenericGuardrailAPIInputs` TypedDict (all keys optional) holding everything LiteLLM extracted for this call:
+| Parameter | What it is |
+|-----------|------------|
+| `inputs` | Everything LiteLLM pulled out of this call. Keys below. |
+| `request_data` | The request body. `request_data["metadata"]` holds the caller — `user_api_key_user_id`, `user_api_key_team_id`, and so on. |
+| `input_type` | `"request"` on the way in, `"response"` on the way out. Lets one class handle both directions. |
+| `logging_obj` | LiteLLM's logging object for the call, if you want to attach your own metadata. |
 
-| Key | Description |
-|-----|-------------|
-| `texts` | The text to check against your guardrail rules, extracted from the request or response across all LLM call types |
-| `images` | Base64 or URL images found in the request |
-| `tools` | Tool/function definitions sent to the LLM |
-| `tool_calls` | Tool calls requested by the LLM |
-| `structured_messages` | The messages in OpenAI format, so you can tell system content apart from user content |
-| `model` | The model the call is routed to |
+Every key in `inputs` is optional — you only get the ones this call actually had:
 
-`request_data` is the request body, including `metadata` with the caller's identity (`user_api_key_user_id`, `user_api_key_team_id`, etc.). `input_type` is `"request"` when the guardrail runs on the way in and `"response"` on the way out, which lets one class handle both directions. `logging_obj` is the LiteLLM logging object for the call, useful if you want to attach your own logged metadata.
+| Key | What's in it |
+|-----|--------------|
+| `texts` | The text to check. This is the one most guardrails use. |
+| `images` | Images from the request, as base64 or URLs. |
+| `tools` | Tool definitions sent to the LLM. |
+| `tool_calls` | Tool calls the LLM asked for. |
+| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
+| `model` | The model this call is routed to. |
 
-Return the same `inputs` payload to allow the call, mutating (or replacing) `texts`, `tool_calls`, or `structured_messages` to mask content; LiteLLM maps the returned values back onto the original request or response structure. Raising blocks the call.
+**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place — LiteLLM maps them back onto the original request or response.
+
+`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
+
+While streaming, you can also set `stream_holdback_chars` — a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
 :::tip Advanced: Using Individual Event Hooks
 
@@ -130,18 +139,24 @@ guardrails:
   - guardrail_name: "my-custom-guardrail"
     litellm_params:
       guardrail: custom_guardrail.myCustomGuardrail  # 👈 Key change
-      mode: "during_call"               # runs apply_guardrail method
+      mode: "pre_call"                  # when apply_guardrail runs - see Mode Options below
       api_key: os.environ/MY_GUARDRAIL_API_KEY
       api_base: https://api.myguardrail.com
 ```
 
 :::info Mode Options
 
-If your class implements `apply_guardrail`, it runs in every mode; the mode decides when it runs and whether it sees the request or the response.
+`apply_guardrail` runs in all three modes. The mode decides *when* it runs and whether it sees the request or the response.
 
-- `during_call` - Default mode, runs `apply_guardrail` with `input_type="request"` in parallel with the LLM call (or `async_moderation_hook` if using individual hooks)
-- `pre_call` - Runs `apply_guardrail` with `input_type="request"` before the LLM call, so you can modify the input (or `async_pre_call_hook` if using individual hooks)
-- `post_call` - Runs `apply_guardrail` with `input_type="response"` for output validation (or `async_post_call_success_hook` if using individual hooks)
+| Mode | Runs | `input_type` | Can it mask? |
+|------|------|--------------|--------------|
+| `pre_call` | Before the LLM call | `"request"` | Yes |
+| `during_call` | Alongside the LLM call | `"request"` | Blocking only — see below |
+| `post_call` | After the LLM responds | `"response"` | Yes |
+
+**If you mask or rewrite content, use `pre_call`.** `during_call` runs your guardrail in parallel with the LLM call to save latency, so it reliably *blocks* a bad request, but your edits may not land before the request leaves.
+
+If you implement the individual event hooks instead, the same three modes call `async_pre_call_hook`, `async_moderation_hook`, and `async_post_call_success_hook`.
 
 :::
 

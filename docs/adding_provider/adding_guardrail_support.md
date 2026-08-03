@@ -175,7 +175,9 @@ async def process_input_messages(
     return data
 ```
 
-`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model`; populate the keys your endpoint format actually has, and map back whichever keys the guardrail returned. Passing everything in a single call rather than one call per message lets a guardrail provider see the whole conversation and costs one round trip instead of many.
+`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model` — populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
+
+Send everything in one call rather than one call per message. The guardrail provider gets to see the whole conversation, and you pay one round trip instead of many.
 
 #### B. Process Output Response
 
