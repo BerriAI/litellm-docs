@@ -67,6 +67,19 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --data-raw '{"models": ["gpt-3.5-turbo", "gpt-4"], "metadata": {"user": "ishaan@berri.ai"}}'
 ```
 
+## What a key inherits from its owner
+
+A key's owner is whoever its `user_id` points at, and that is not always the person who created it. `/key/generate` stamps the caller's `user_id` on the new key automatically only when the caller is *not* a proxy admin; a proxy admin has to pass `user_id` explicitly, so an admin-created key with no `user_id` has no owner and inherits nothing from the admin. Keys minted from the Admin UI for a specific user, and [service account keys](./service_accounts.md) (whose `user_id` is always `null`), follow the same rule.
+
+Inheritance is not uniform across permission surfaces. Model access and MCP access are always evaluated against the key row itself, while management-route access is decided by the *role* of the owning user, which is why a key owned by a proxy admin can call admin endpoints.
+
+| Surface | What the key inherits from its owner | How to override it on the key |
+|---|---|---|
+| [Models](./key_auth_arch.md) | Nothing when the key belongs to a team. On a key with no `team_id`, the owner's `models` list applies on top of the key's own list, and `no-default-models` on the owner denies everything outside a team | Set `models` on the key (or `all-team-models` to defer to the team) |
+| [Management routes](./access_control.md) (`/key/*`, `/user/*`, `/team/*`) | The owner's role in full. If the owner is `proxy_admin`, every non-admin route restriction is skipped and the key can manage keys, users, and teams | Set `allowed_routes` on the key; it is enforced for every role, including admin-owned keys |
+| [MCP servers and tools](../mcp_control.md) | The owner's MCP entitlement as a ceiling, never as a grant, and an empty key list inherits the team's servers unless `require_key_mcp_access_defined` is on. Admin ownership grants no MCP access at all | Set `object_permission.mcp_servers` / `mcp_access_groups` / `mcp_tool_permissions`, or `no-mcp-servers` to opt out |
+| Budgets and rate limits | The owner's `tpm_limit` and `rpm_limit` whenever they are set, and the owner's `max_budget` for keys with no team | Set the same fields on the key, or use a service account key to apply team limits only |
+
 ## Spend Tracking 
 
 Get spend per:
