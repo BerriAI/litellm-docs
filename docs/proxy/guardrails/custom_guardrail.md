@@ -80,7 +80,7 @@ class myCustomGuardrail(CustomGuardrail):
         return response.json()
 ```
 
-#### `apply_guardrail` parameters
+### `apply_guardrail` parameters
 
 `inputs` is a `GenericGuardrailAPIInputs` TypedDict (all keys optional) holding everything LiteLLM extracted for this call:
 
@@ -705,7 +705,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 **A.** See [the parameter reference above](#apply_guardrail-parameters). The one you should care about first is `inputs["texts"]`, the extracted text you'll send to your API for verification - See implementation [here](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/chat/guardrail_translation/handler.py)
 
-**Q. Is this function agnostic to the LLM provider? Meaning does it pass the same values for OpenAI and Anthropic for example?
+**Q. Is this function agnostic to the LLM provider? Meaning does it pass the same values for OpenAI and Anthropic for example?**
 
 **A.** Yes
 
