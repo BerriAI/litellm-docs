@@ -75,22 +75,10 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 
 | Surface | What the key inherits from its owner | How to override it on the key |
 |---|---|---|
-| Models | Nothing when the key belongs to a team. On a key with no `team_id`, the owner's `models` list applies on top of the key's own list, and `no-default-models` on the owner denies everything outside a team | Set `models` on the key (or `all-team-models` to defer to the team) |
-| Management routes (`/key/*`, `/user/*`, `/team/*`) | The owner's role in full. If the owner is `proxy_admin`, every non-admin route restriction is skipped and the key can manage keys, users, and teams | Set `allowed_routes` on the key; it is enforced for every role, including admin-owned keys |
-| MCP servers and tools | The owner's MCP entitlement as a ceiling, never as a grant. Admin ownership grants no MCP access at all | Set `object_permission.mcp_servers` / `mcp_access_groups` / `mcp_tool_permissions`, or `no-mcp-servers` to opt out |
+| [Models](./key_auth_arch.md) | Nothing when the key belongs to a team. On a key with no `team_id`, the owner's `models` list applies on top of the key's own list, and `no-default-models` on the owner denies everything outside a team | Set `models` on the key (or `all-team-models` to defer to the team) |
+| [Management routes](./access_control.md) (`/key/*`, `/user/*`, `/team/*`) | The owner's role in full. If the owner is `proxy_admin`, every non-admin route restriction is skipped and the key can manage keys, users, and teams | Set `allowed_routes` on the key; it is enforced for every role, including admin-owned keys |
+| [MCP servers and tools](../mcp_control.md) | The owner's MCP entitlement as a ceiling, never as a grant, and an empty key list inherits the team's servers unless `require_key_mcp_access_defined` is on. Admin ownership grants no MCP access at all | Set `object_permission.mcp_servers` / `mcp_access_groups` / `mcp_tool_permissions`, or `no-mcp-servers` to opt out |
 | Budgets and rate limits | The owner's `tpm_limit` and `rpm_limit` whenever they are set, and the owner's `max_budget` for keys with no team | Set the same fields on the key, or use a service account key to apply team limits only |
-
-### Models
-
-The key's own `models` list is checked on every request regardless of who owns the key; only the master key bypasses it. A key attached to a team must additionally pass the team's list, and the effective access is the intersection, so admin ownership never widens model access. The owner's list is consulted only for a key with no `team_id`, which is what makes `no-default-models` on a user (usually set through `default_internal_user_params.models`) a reliable way to force all traffic through teams. For sentinels, wildcards, and access-group expansion see [How Key-Based Auth Works](./key_auth_arch.md).
-
-### Management endpoints
-
-Route authorization reads the role of the user the key is attached to. An owner with role `proxy_admin` short-circuits the non-admin route checks entirely, so their keys reach the management API with the same power the admin has in the UI; an owner with role `internal_user` reaches only self-serve routes and the team routes their team membership allows, and a key with no owner reaches neither. Two knobs constrain this independently of the owner: `allowed_routes` on the key, which is applied to all roles before any role logic runs, and `permissions` (for example `{"get_spend_routes": true}`), which grants a specific route group to a key whose owner is not an admin. If you want an admin's key to behave like an application key, either create it with `allowed_routes: ["llm_api_routes"]` or leave `user_id` unset. See [Access Control](./access_control.md) for the full role matrix.
-
-### MCP
-
-MCP access is additive from the key and its team, then capped. A key with no MCP grant of its own inherits its team's servers unless `require_key_mcp_access_defined` is on, in which case the team is a ceiling and the key must grant servers explicitly; `no-mcp-servers` on the key opts out of everything and overrides team inheritance. The owning user's own entitlement and the org's list then cap the result, so ownership can only narrow MCP access, never expand it. Being owned by a proxy admin grants no MCP servers; the admin role only matters for MCP management operations such as testing a server connection. See [MCP Permission Management](../mcp_control.md).
 
 ## Spend Tracking 
 
