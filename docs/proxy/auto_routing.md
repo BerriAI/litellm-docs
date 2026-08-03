@@ -151,6 +151,21 @@ classifier_llm_config:
   timeout_ms: 2000
 ```
 
+**Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
+
+Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
+
+```yaml
+keyword_tier_rules:
+  - keywords: ["hi", "hello", "thanks"]
+    tier: SIMPLE
+  - keywords: ["kubernetes", "k8s", "istio"]
+    tier: REASONING
+semantic_keyword_matching: true
+embedding_model: voyage-3-5
+match_threshold: 0.5
+```
+
 ### Classifier context window
 
 :::info
@@ -201,21 +216,6 @@ classifier_context_per_turn_chars: 200
 Enabling it changes what `classifier_context_window_size` counts: the last N turns of the conversation across both roles rather than the last N user turns, so budget accordingly if a chatty exchange should still carry several user asks. Turns are labeled by role in the payload only when this is on, which keeps the prompt of every existing deployment unchanged. Assistant replies share `classifier_context_per_turn_chars` with user turns, so raise it if replies truncate before the part that states the difficulty.
 
 It ships off by default for two reasons: turning it on shifts tier decisions, and therefore spend, on an already-deployed router, and assistant text becomes net-new egress to the classifier deployment, which may be a different provider than the routed model. Assistant text reaches the classifier payload and nothing else; `keyword_tier_rules`, escalation keywords, the heuristic scorer, and semantic matching still read only the human ask, so an assistant echoing an escalation keyword back cannot pick the tier.
-
-**Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
-
-Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
-
-```yaml
-keyword_tier_rules:
-  - keywords: ["hi", "hello", "thanks"]
-    tier: SIMPLE
-  - keywords: ["kubernetes", "k8s", "istio"]
-    tier: REASONING
-semantic_keyword_matching: true
-embedding_model: voyage-3-5
-match_threshold: 0.5
-```
 
 ## Tier pools
 
