@@ -831,9 +831,19 @@ const sidebars = {
         "image_generation",
         "image_variations",
         "videos",
-        "vector_store_files",
-        "vector_stores/create",
-        "vector_stores/search",
+        {
+          type: "category",
+          label: "/vector_stores - Vector Stores",
+          items: [
+            "vector_stores/index",
+            "vector_stores/managed_vector_stores",
+            "vector_stores/create",
+            "vector_stores/search",
+            "vector_store_files",
+            "rag_ingest",
+            "rag_query",
+          ]
+        },
         {
           type: "category",
           label: "/mcp - Model Context Protocol",
@@ -902,8 +912,6 @@ const sidebars = {
             "proxy/pass_through_guardrails"
           ]
         },
-        "rag_ingest",
-        "rag_query",
         "realtime",
         "proxy/realtime_webrtc",
         "rerank",
@@ -1022,6 +1030,7 @@ const sidebars = {
             "providers/gemini",
             "providers/gemini/videos",
             "providers/gemini/music",
+            "providers/gemini_file_search",
             "providers/google_ai_studio/files",
             "providers/google_ai_studio/image_gen",
             "providers/google_ai_studio/realtime",
@@ -1152,6 +1161,7 @@ const sidebars = {
         "providers/predibase",
         "providers/pydantic_ai_agent",
         "providers/ragflow",
+        "providers/ragflow_vector_store",
         "providers/recraft",
         "providers/replicate",
         {
