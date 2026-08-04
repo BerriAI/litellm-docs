@@ -303,7 +303,8 @@ router_settings:
 | proxy_batch_polling_interval | int | Time (in seconds) to wait before polling a batch, to check if it's completed. **Default is 6000 seconds (1 hour)** |
 | proxy_config_reload_interval_seconds | int | How often each pod reloads config-in-DB objects (models, credentials, guardrails, etc.) from the database when `store_model_in_db` is enabled. Lower values speed up cross-pod convergence at the cost of more DB load; applied on proxy startup. Env: `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS`. **Default is 30 seconds** |
 | alerting_args | dict | Args for Slack Alerting [Doc on Slack Alerting](./alerting.md) |
-| custom_key_generate | str | Custom function for key generation [Doc on custom key generation](./virtual_keys.md#custom--key-generate) |
+| custom_key_generate | str | Custom function for key generation [Doc on custom key generation](./virtual_keys.md#custom-keygenerate) |
+| custom_key_update | str | Custom function for key updates. Required if `custom_key_generate` policies should also apply to key edits [Doc on custom key update](./virtual_keys.md#custom-keyupdate) |
 | allowed_ips | List[str] | List of IPs allowed to access the proxy. If not set, all IPs are allowed. |
 | embedding_model | str | The default model to use for embeddings - ignores model set in request |
 | default_team_disabled | boolean | If true, users cannot create 'personal' keys (keys with no team_id). |
