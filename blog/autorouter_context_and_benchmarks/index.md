@@ -11,13 +11,9 @@ tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
 ---
 
-![Correct tier on referential follow-ups rising from 14% with no prior turns to 78% with two](./hero.png)
-
 "Yes, do that."
 
-Your router sees a short, simple message and sends it to the cheap tier, where it green-lights a database migration. The classifier was only ever shown the current turn, so it had no way to know what "that" was.
-
-We measured how often this happens, across 5,600 live classifier calls. On follow-ups that only make sense against their history, the router picked the right tier **14% of the time**. Give the classifier three prior turns and that goes to **78%**, 5.6x more accurate, for under a tenth of a cent per request and no measurable latency.
+Your router sees a short, simple message and sends it to the cheap tier, where it green-lights a database migration. The classifier was only ever shown the current turn, so it had no way to know what "that" was. Across 5,600 live classifier calls, follow-ups that only make sense against their history routed to the right tier **14% of the time**; give the classifier three prior turns and that goes to **78%**, 5.6x more accurate, for under a tenth of a cent per request and no measurable latency.
 
 That fix ships in v1.97, along with cost and usage benchmarks for the auto router, so you can see what routing saved you instead of guessing, and with savings now rolling into the Cost Optimization totals. Session affinity also flips off by default, because our caching data says it was costing you routing quality to buy a cache hit you would get anyway.
 
