@@ -30,7 +30,7 @@ import os
 os.environ["LITELLM_OTEL_V2"] = "true"
 os.environ["ARIZE_SPACE_ID"] = ""
 os.environ["ARIZE_API_KEY"] = ""
-os.environ["ARIZE_PROJECT_NAME"] = ""   # required: Arize rejects spans with no project
+os.environ["ARIZE_PROJECT_NAME"] = ""   # recommended: names the project traces land in
 # LLM API Keys
 os.environ["OPENAI_API_KEY"] = ""
 
@@ -68,7 +68,7 @@ litellm_settings:
 LITELLM_OTEL_V2=true
 ARIZE_SPACE_ID="your-space-id"
 ARIZE_API_KEY="your-api-key"
-ARIZE_PROJECT_NAME="your-project-name"   # required: Arize rejects spans with no project
+ARIZE_PROJECT_NAME="your-project-name"   # recommended: names the project traces land in
 ```
 
 3. Start LiteLLM Proxy
@@ -111,7 +111,7 @@ The `openinference` mapper stamps the OpenInference vocabulary onto the LLM-call
 |---|---|---|
 | `ARIZE_SPACE_ID` | Yes | `ARIZE_SPACE_KEY` is the deprecated name and is still read for backward compatibility; prefer `ARIZE_SPACE_ID` in new configs |
 | `ARIZE_API_KEY` | Yes | |
-| `ARIZE_PROJECT_NAME` | In practice, yes | litellm does not enforce it, but Arize rejects spans that arrive with no project, so omitting it means traces silently do not land |
+| `ARIZE_PROJECT_NAME` | No | Names the project traces land in. Nothing enforces it and spans are not rejected without it, but set it so your traces are grouped where you expect |
 | `ARIZE_ENDPOINT` | No | gRPC endpoint, defaults to `https://otlp.arize.com/v1` |
 | `ARIZE_HTTP_ENDPOINT` | No | Use instead of `ARIZE_ENDPOINT` to export over HTTP |
 

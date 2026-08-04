@@ -101,7 +101,7 @@ litellm_settings:
 LITELLM_OTEL_V2=true
 ARIZE_SPACE_ID="your-space-id"
 ARIZE_API_KEY="your-api-key"
-ARIZE_PROJECT_NAME="your-project-name"   # required: Arize rejects spans with no project
+ARIZE_PROJECT_NAME="your-project-name"   # recommended: names the project traces land in
 ```
 
 </TabItem>
@@ -244,7 +244,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 
 | Preset | Callback | Required env vars | Optional env vars | Destination | Vocabulary | Per-request creds |
 |---|---|---|---|---|---|---|
-| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY`, `ARIZE_PROJECT_NAME` | `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
+| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY` | `ARIZE_PROJECT_NAME` (names the project traces land in), `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
 | Arize Phoenix | `arize_phoenix` | `PHOENIX_API_KEY` | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` or `PHOENIX_COLLECTOR_ENDPOINT` (gRPC), `PHOENIX_PROJECT_NAME` | Phoenix (self-hosted or Phoenix Cloud) | OpenInference | No |
 | Langfuse | `langfuse_otel` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | `LANGFUSE_HOST` (or `LANGFUSE_OTEL_HOST`; default `https://us.cloud.langfuse.com`, EU is `https://cloud.langfuse.com`), `OTEL_IGNORE_CONTEXT_PROPAGATION` (set `true` to drop inbound `traceparent`) | Langfuse Cloud or self-hosted | Langfuse | Yes |
 | Weave (W&B) | `weave_otel` | `WANDB_API_KEY`, `WANDB_PROJECT_ID` (`<entity>/<project>`) | `WANDB_HOST` (default `https://trace.wandb.ai`) | Weights & Biases Weave | OpenInference + Weave | Yes |
