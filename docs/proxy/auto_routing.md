@@ -100,8 +100,8 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       # Thompson-sample within the tier's pool
       adaptive: true
 
-      # Pin a session to its first-turn model to preserve prompt cache (default false)
-      session_affinity: true
+      # Pin a session to its first-turn model to preserve prompt cache
+      session_affinity: false   # default; set true to pin
       session_affinity_ttl_seconds: 3600
 
       # Tune heuristic scorer boundaries and weights (all optional)
