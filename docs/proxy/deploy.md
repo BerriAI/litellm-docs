@@ -239,7 +239,7 @@ spec:
     spec:
       containers:
       - name: litellm
-        image: docker.litellm.ai/berriai/litellm:main-v1.90.2 # pin a version, do not use :latest
+        image: docker.litellm.ai/berriai/litellm:v1.90.2 # pin a version, do not use :latest
         args:
           - "--config"
           - "/app/proxy_server_config.yaml"
