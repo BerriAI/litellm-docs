@@ -11,6 +11,18 @@ tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
 ---
 
+:::info[🚀 Help shape the Auto-Router]
+
+Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
+
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+
+<br /><br />
+
+Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
+
 v1.97 makes three changes to the auto router.
 
 The LLM classifier now receives a window of prior conversation turns, defaulting to three. Measured across 5,600 live classifier calls, this raises tier agreement on referential follow-ups from 14% to 78%, costs at most $0.61 per 1,000 requests, and produces no latency change we can distinguish from zero. A new Benchmarks view prices routed traffic against an all-frontier baseline and reports the difference, and those savings now also appear in the Cost Optimization totals. Session affinity is off by default, following prompt cache measurements showing that pinning bought little and cost routing quality.
@@ -165,18 +177,6 @@ Configs that do not mention `session_affinity` will classify every turn after up
 ```
 
 Affinity requires a resolvable `session_id` in metadata and is ignored when `plugins` are set.
-
-:::info[🚀 Help shape the Auto-Router]
-
-Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
-
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
-
-<br /><br />
-
-Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
-
-:::
 
 ## Try it
 
