@@ -113,9 +113,8 @@ The preset routes spans to `LEVOAI_COLLECTOR_URL` with `Authorization: Bearer $L
 | `LEVOAI_ORG_ID` | Yes | |
 | `LEVOAI_WORKSPACE_ID` | Yes | |
 | `LEVOAI_COLLECTOR_URL` | Yes | Used as-is with no path manipulation, so provide the exact URL Levo gave you |
-| `LEVOAI_ENV_NAME` | No | Tags spans with an environment label in the Levo UI |
 
-All four required variables are validated at startup; the integration raises if any is missing.
+All four are validated at startup; the integration raises if any is missing. To label spans with an environment, set `OTEL_ENVIRONMENT_NAME`, which stamps `deployment.environment` on every span.
 
 ## Full OpenTelemetry reference
 

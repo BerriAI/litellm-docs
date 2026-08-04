@@ -249,7 +249,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Langfuse | `langfuse_otel` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | `LANGFUSE_HOST` (or `LANGFUSE_OTEL_HOST`; default `https://us.cloud.langfuse.com`, EU is `https://cloud.langfuse.com`), `OTEL_IGNORE_CONTEXT_PROPAGATION` (set `true` to drop inbound `traceparent`) | Langfuse Cloud or self-hosted | Langfuse | Yes |
 | Weave (W&B) | `weave_otel` | `WANDB_API_KEY`, `WANDB_PROJECT_ID` (`<entity>/<project>`) | `WANDB_HOST` (default `https://trace.wandb.ai`) | Weights & Biases Weave | OpenInference + Weave | Yes |
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
-| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | `LEVOAI_ENV_NAME` | Levo collector | canonical `gen_ai.*` only | No |
+| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
 
 Notes:
@@ -436,7 +436,7 @@ No vendor mapper is added. Traces carry only the canonical keys from [Span attri
 #### Setup notes
 
 - The collector URL is used as-is, no path manipulation, so provide the exact URL Levo gave you.
-- `LEVOAI_ENV_NAME` is optional and tags spans with an environment label in the Levo UI.
+- To label spans with an environment, set `OTEL_ENVIRONMENT_NAME`; the Levo preset reads no environment variable of its own beyond the four required ones.
 
 </TabItem>
 

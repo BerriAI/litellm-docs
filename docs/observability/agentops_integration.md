@@ -95,7 +95,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 Open the AgentOps dashboard. AgentOps does not add a vendor mapper, so spans arrive in the canonical `gen_ai.*` schema; see [Span attributes](./opentelemetry_v2#span-attributes) for the full list of keys.
 
-The preset sets three resource-level labels on the traces: `service.name` from `AGENTOPS_SERVICE_NAME`, a fixed `telemetry.sdk.name` of `agentops`, and `deployment.environment` from `AGENTOPS_ENVIRONMENT` when you set it. Your project is not a resource attribute; it is encoded in the auth token, which AgentOps uses to route the trace.
+The preset sets three resource-level labels on the traces: `service.name` from `AGENTOPS_SERVICE_NAME`, a fixed `telemetry.sdk.name` of `agentops`, and `deployment.environment` from `AGENTOPS_ENVIRONMENT` when you set it. AgentOps routes the trace by the project encoded in the auth token, so the project never appears as a resource attribute.
 
 ![LiteLLM trace in AgentOps](/img/observability/otel_v2_agentops.png)
 
