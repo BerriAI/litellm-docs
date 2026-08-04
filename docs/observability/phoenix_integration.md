@@ -110,9 +110,15 @@ Phoenix uses the same OpenInference vocabulary as Arize AX, so the LLM-call span
 | Variable | Required | Notes |
 |---|---|---|
 | `PHOENIX_API_KEY` | Phoenix Cloud only | Required when the endpoint is on `app.phoenix.arize.com`; litellm raises without it. Self-hosted Phoenix does not need one |
-| `PHOENIX_COLLECTOR_HTTP_ENDPOINT` | No | HTTP collector endpoint; takes precedence over the gRPC variable |
-| `PHOENIX_COLLECTOR_ENDPOINT` | No | gRPC collector endpoint |
+| `PHOENIX_COLLECTOR_HTTP_ENDPOINT` | No | Collector endpoint; takes precedence over `PHOENIX_COLLECTOR_ENDPOINT` when both are set |
+| `PHOENIX_COLLECTOR_ENDPOINT` | No | Collector endpoint, used when the HTTP variable is unset |
 | `PHOENIX_PROJECT_NAME` | No | Defaults to `default`; also readable as `PHOENIX_COLLECTOR_PROJECT_NAME` |
+
+If neither endpoint variable is set, litellm falls back to `http://localhost:6006/v1/traces`.
+
+### Protocol is inferred from the endpoint, not the variable name
+
+Neither variable is tied to a protocol. litellm picks the protocol from the value you give it: an endpoint starting with `grpc://`, or containing `:4317` without a `/v1/traces` path, exports over gRPC, and anything else exports over HTTP. So a Phoenix Cloud URL works in either variable, and pointing `PHOENIX_COLLECTOR_ENDPOINT` at `https://app.phoenix.arize.com/v1/traces` sends over HTTP as intended.
 
 ### Picking the right collector endpoint
 
