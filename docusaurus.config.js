@@ -131,6 +131,26 @@ const config = {
             from: '/docs/observability/phoenix_integration',
             to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
           },
+          {
+            from: '/docs/observability/langfuse_otel_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/langtrace_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/levo_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/agentops_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/telemetry',
+            to: '/docs/observability/opentelemetry_v2',
+          },
         ],
       },
     ],

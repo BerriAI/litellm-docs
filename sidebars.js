@@ -45,6 +45,11 @@ const sidebars = {
           type: "category",
           label: "LLM observability platforms",
           items: [
+            {
+              type: "link",
+              label: "AgentOps",
+              href: "/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets",
+            },
             "observability/argilla",
             {
               type: "link",
@@ -64,6 +69,16 @@ const sidebars = {
             "observability/humanloop",
             "observability/langfuse_integration",
             "observability/langsmith_integration",
+            {
+              type: "link",
+              label: "Langtrace",
+              href: "/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets",
+            },
+            {
+              type: "link",
+              label: "Levo",
+              href: "/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets",
+            },
             "observability/literalai_integration",
             "observability/logfire_integration",
             "observability/lunary_integration",
