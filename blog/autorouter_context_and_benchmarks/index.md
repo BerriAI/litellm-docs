@@ -11,6 +11,10 @@ tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
 ---
 
+![LiteLLM Autorouter V2: routing accuracy on complex scenarios, 5.6x more accurate by reading the last N turns of the conversation before picking a model](./autorouter-v2-hero.png)
+
+<br /><br />
+
 :::info[🚀 Help shape the Auto-Router]
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
@@ -22,8 +26,6 @@ Get early access, work directly with the LiteLLM team, and influence the roadmap
 Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
-
-![LiteLLM Autorouter V2: routing accuracy on complex scenarios, 5.6x more accurate by reading the last N turns of the conversation before picking a model](./autorouter-v2-hero.png)
 
 v1.97 makes three changes to the auto router.
 
