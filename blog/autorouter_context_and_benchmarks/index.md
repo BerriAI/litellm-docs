@@ -1,11 +1,11 @@
 ---
 slug: auto-router-context-and-benchmarks
-title: "Auto Router v1.97: usage benchmarks and 5.6x more accurate follow-up routing"
+title: "Auto Router v1.97: usage benchmarks and better quality for lower cost"
 date: 2026-08-04T10:00:00
 authors:
   - tin
 description: "v1.97 adds cost and usage benchmarks for the auto router, gives the LLM classifier a window of prior turns, and turns session affinity off by default. Across 5,600 live classifier calls, prior turns raised tier agreement on referential follow-ups from 14% to 78% at under a tenth of a cent per request, with no measurable latency change."
-image: ./benchmarks-overview.png
+image: ./autorouter-v2-hero.png
 keywords: [auto router, complexity router, llm classifier, conversation context, session affinity, llm cost savings, model routing, litellm auto routing, router benchmarks]
 tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
@@ -23,9 +23,13 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
+![LiteLLM Autorouter V2: routing accuracy on complex scenarios, 5.6x more accurate by reading the last N turns of the conversation before picking a model](./autorouter-v2-hero.png)
+
 v1.97 makes three changes to the auto router.
 
-The LLM classifier now receives a window of prior conversation turns, defaulting to three. Measured across 5,600 live classifier calls, this raises tier agreement on referential follow-ups from 14% to 78%, costs at most $0.61 per 1,000 requests, and produces no latency change we can distinguish from zero. A new Benchmarks view prices routed traffic against an all-frontier baseline and reports the difference, and those savings now also appear in the Cost Optimization totals. Session affinity is off by default, following prompt cache measurements showing that pinning bought little and cost routing quality.
+* The LLM classifier now receives a window of prior conversation turns, defaulting to three. This improves accuracy of follow-up classifications from 14% to 78%, costs at most $0.61 per 1,000 requests, and no additional latency.
+* A new Benchmarks view prices routed traffic against an all-frontier baseline and reports the difference, and those savings now also appear in the Cost Optimization totals.
+* Session affinity is now off by default, following our [previous post](/blog/auto-router-prompt-caching-benchmark) showing this was leading to worse quality without cost improvements.
 
 :::warning Two defaults changed
 
@@ -37,25 +41,25 @@ The LLM classifier now receives a window of prior conversation turns, defaulting
 
 ## Cost and usage benchmarks
 
-Auto routing is hard to evaluate in production because the counterfactual is not recorded anywhere. Spend is known; what the same traffic would have cost on a single frontier model is not, and that comparison is what determines whether routing is worth running. The Benchmarks view computes it.
+The Benchmarks view shows your savings using your router against a fixed model (Opus, for example) on your actual usage.
 
 ![Auto-Router Benchmarks tab showing total estimated savings against an all-frontier baseline, session counts, and prompt cache behaviour by bucket](./benchmarks-overview.png)
 
-Per router and per time range, it prices routed traffic against the same traffic sent to one frontier model at list prices and reports the difference in dollars and percent, alongside the session economics behind it: sessions on the router, turns per session, tokens per session, and savings per session. The baseline is priced with a warm single-model cache rather than a cold one, so a router that thrashes the prompt cache can report a loss. That result is accurate and worth surfacing.
+Per router and per time range, it prices routed traffic against the same traffic sent to one frontier model at list prices and reports the difference in dollars and percent, alongside: sessions on the router, turns per session, tokens per session, and savings per session. The baseline is priced with a warm single-model cache rather than a cold one.
 
-Prompt cache behaviour can be broken down per router rather than blended, since tier ladders differ between routers and an average hides which one is paying for cold writes. Each turn falls into exactly one of three buckets: staying on the same model, visiting a tier for the first time, or returning to a tier used earlier in the session. Only the third is a cache miss that routing could have avoided. The view also estimates the value of a background cache warmer on your traffic, netting rescued cache writes against the cost of the replays.
-
-### Savings roll up into Cost Optimization
-
-Router savings previously appeared only in the router's own view. They now feed the Cost Optimization section alongside prompt compression and prompt caching, with their own card, savings line, and slice of the by-driver breakdown, so the top-line figure covers every mechanism rather than a subset.
-
-![Cost Optimization usage tab showing total saved split across compression, prompt caching, and auto-router savings](./cost-optimization.png)
-
-The two views answer different questions and their savings figures will not match. Benchmarks prices traffic against one frontier model end to end; the Cost Optimization card counts the difference between the tier the router picked and the priciest tier it could have picked. The Benchmarks numbers are queryable directly:
+The view also estimates the value of a background cache warmer on your traffic, netting rescued cache writes against the cost of the replays. The Benchmarks numbers are queryable directly:
 
 ```bash
 GET /auto_router/benchmarks?start_date=2026-07-01&end_date=2026-07-31
 ```
+
+### Savings roll up into Cost Optimization
+
+Router savings now feed into the Cost Optimization section alongside prompt compression and prompt caching, with their own card, savings line, and slice of the by-driver breakdown.
+
+![Cost Optimization usage tab showing total saved split across compression, prompt caching, and auto-router savings](./cost-optimization.png)
+
+The two views answer different questions and their savings figures will not match. Benchmarks prices traffic against one frontier model end to end; the Cost Optimization card counts the difference between the tier the router picked and the priciest tier it could have picked.
 
 ## The LLM classifier can see prior turns
 
@@ -67,7 +71,12 @@ Everything in this section requires `classifier_type: llm`. The heuristic scorer
 
 ### The problem
 
-The LLM classifier previously saw one turn, the current one. That is sufficient when a turn describes its own difficulty and insufficient when it is referential. Turns such as "yes please", "keep going", or "now do the same for the streaming path" are short and carry no signal of their own, so they classify as simple while the work they authorise may be substantial.
+The LLM classifier previously only saw the current turn, which does not work well for multi-turn queries:
+
+* Turn 1: "Make a plan to redesign this component"
+* Turn 2: "Yes, go ahead"
+
+Turn 2 may be classified as simple while the work it authorises is substantial.
 
 Three new fields on `complexity_router_config` address this:
 
@@ -85,11 +94,13 @@ Three new fields on `complexity_router_config` address this:
 
 Prior turns are inserted oldest-first, numbered `[1]`, `[2]`, `[3]`, each clipped to `classifier_context_per_turn_chars` with a trailing ellipsis marking the cut.
 
-Turns without human-written text do not consume a slot. Tool output is excluded, `<system-reminder>` blocks are stripped, turns left empty after stripping are skipped, and a turn identical to the ask being classified is dropped. With `classifier_context_include_assistant_turns` enabled, assistant messages join the window with role labels, and that text reaches the classifier payload only; keyword rules, escalation, the heuristic scorer, and semantic matching continue to read the human message alone.
+Turns without human-written text do not consume a slot. Tool output is excluded, `<system-reminder>` blocks are stripped, turns left empty after stripping are skipped, and a turn identical to the ask being classified is dropped.
+
+With `classifier_context_include_assistant_turns` enabled, assistant messages join the window with role labels, and that text reaches the classifier payload only; keyword rules, escalation, the heuristic scorer, and semantic matching continue to read the human message alone.
 
 ### What we measured
 
-5,600 live classifier calls against real providers: two sweeps of seven configurations each (`classifier_context_window_size` of 0, 1, 2, 3, 5, 8, 10), one with assistant turns in the window and one without, across three multi-turn datasets, with two repeats per conversation. Everything else was byte-identical between configurations, including the conversations, the rubric, the classifier model (`gpt-5.4-mini`), and the per-turn cap. Work items were shuffled across configurations so that provider drift during the run could not concentrate on one value of N.
+5,600 live classifier calls against real providers: two sweeps of seven configurations each (`classifier_context_window_size` of 0, 1, 2, 3, 5, 8, 10), one with assistant turns in the window and one without, across three multi-turn datasets, with two repeats per conversation. Everything else was identical between configurations, including the conversations, the rubric, the classifier model (`gpt-5.4-mini`), and the per-turn cap.
 
 **Quality.** Agreement between the tier the router picked and the reference tier:
 
@@ -111,7 +122,7 @@ MT-Bench's ceiling reflects its reference labels rather than router behaviour. I
 
 ![Agreement against window size across three datasets](./agreement-vs-window.png)
 
-**Latency.** Paired per conversation against N=0, every 95% bootstrap CI contains zero in both sweeps:
+**Latency.** Paired per conversation against N=0, every 95% bootstrap CI contains **zero** in both sweeps:
 
 | Window | Assistant turns on | Assistant turns off |
 |---|---|---|
@@ -124,7 +135,7 @@ MT-Bench's ceiling reflects its reference labels rather than router behaviour. I
 
 Prompt tokens and latency correlate at r = 0.007 with assistant turns on and r = 0.018 with them off, across a 318 to 1,043 token range. The window adds prefill only; output remains a small fixed structured tier. p50 sits near 600 ms in every configuration.
 
-**Cost.** The classifier costs at most $0.61 per 1,000 requests, under a tenth of a cent each:
+**Cost.** The classifier costs at most $0.61 per 1,000 requests:
 
 | Window | Classifier $/1k req (follow-ups / MT-Bench / ShareGPT) | Modelled routed $/1k req |
 |---|---|---|
@@ -160,13 +171,13 @@ Latency was measured on a single VM at concurrency 10. The paired differences ca
 
 </details>
 
-## Session affinity is off by default
+## Session affinity now off by default
 
-Session affinity pins a session to the model that handled its first turn and skips reclassification thereafter, with the goal of keeping provider prompt caches warm. Two measurements motivated the change of default.
+Session affinity pins a session to the model that handled its first turn and skips reclassification thereafter, with the goal of keeping provider prompt caches warm. Two things motivated the change of default.
 
-The first is cache survival. Our [prompt caching benchmark](/blog/auto-router-prompt-caching-benchmark) examined 4,684 switch-backs and found 97.4% still warm at the 5-minute TTL and 99.3% at an hour. Provider caches survive routing changes well enough that pinning was trading routing quality for cache hits that would have occurred anyway.
+Our [prompt caching benchmark](/blog/auto-router-prompt-caching-benchmark) examined 4,684 switch-backs and found 97.4% still warm at the 5-minute TTL and 99.3% at an hour. Provider caches survive routing changes well enough that pinning was trading routing quality for cache hits that would have occurred anyway.
 
-The second is the context window above. With affinity on, the window applies only on the first turn or when no `session_id` resolves, since every subsequent turn reuses the pinned model without reclassifying. Pinning served in part as a substitute for a classifier without access to conversation history, which is no longer the constraint.
+Additionally, pinning served in part as a substitute for a classifier without access to conversation history, which is no longer needed.
 
 Configs that do not mention `session_affinity` will classify every turn after upgrading. To retain the previous behaviour, for strict per-session model consistency or for prefixes long enough that a miss is expensive, set it explicitly:
 
