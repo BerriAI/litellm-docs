@@ -101,7 +101,7 @@ litellm_settings:
 LITELLM_OTEL_V2=true
 ARIZE_SPACE_ID="your-space-id"
 ARIZE_API_KEY="your-api-key"
-ARIZE_PROJECT_NAME="your-project-name"   # required: Arize rejects spans with no project
+ARIZE_PROJECT_NAME="your-project-name"   # recommended: names the project traces land in
 ```
 
 </TabItem>
@@ -244,13 +244,13 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 
 | Preset | Callback | Required env vars | Optional env vars | Destination | Vocabulary | Per-request creds |
 |---|---|---|---|---|---|---|
-| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY`, `ARIZE_PROJECT_NAME` | `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
-| Arize Phoenix | `arize_phoenix` | `PHOENIX_API_KEY` | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` or `PHOENIX_COLLECTOR_ENDPOINT` (gRPC), `PHOENIX_PROJECT_NAME` | Phoenix (self-hosted or Phoenix Cloud) | OpenInference | No |
+| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY` | `ARIZE_PROJECT_NAME` (names the project traces land in), `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
+| Arize Phoenix | `arize_phoenix` | `PHOENIX_API_KEY` (Phoenix Cloud only; self-hosted needs none) | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` or `PHOENIX_COLLECTOR_ENDPOINT` (protocol inferred from the value), `PHOENIX_PROJECT_NAME` | Phoenix (self-hosted or Phoenix Cloud) | OpenInference | No |
 | Langfuse | `langfuse_otel` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | `LANGFUSE_HOST` (or `LANGFUSE_OTEL_HOST`; default `https://us.cloud.langfuse.com`, EU is `https://cloud.langfuse.com`), `OTEL_IGNORE_CONTEXT_PROPAGATION` (set `true` to drop inbound `traceparent`) | Langfuse Cloud or self-hosted | Langfuse | Yes |
 | Weave (W&B) | `weave_otel` | `WANDB_API_KEY`, `WANDB_PROJECT_ID` (`<entity>/<project>`) | `WANDB_HOST` (default `https://trace.wandb.ai`) | Weights & Biases Weave | OpenInference + Weave | Yes |
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
-| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | `LEVOAI_ENV_NAME` | Levo collector | canonical `gen_ai.*` only | No |
-| AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (default `production`) | AgentOps (`https://otlp.agentops.cloud`) | canonical `gen_ai.*` only | No |
+| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
+| AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
 
 Notes:
 
@@ -305,7 +305,7 @@ Same as the Arize tab above.
 
 #### Setup notes
 
-Phoenix has more than one collector endpoint shape, and picking the wrong one is the most common Phoenix setup mistake. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` (or `PHOENIX_COLLECTOR_ENDPOINT` for gRPC) at the shape that matches your deployment:
+Phoenix has more than one collector endpoint shape, and picking the wrong one is the most common Phoenix setup mistake. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` (or `PHOENIX_COLLECTOR_ENDPOINT`, which takes over when the first is unset) at the shape that matches your deployment. Neither variable is tied to a protocol: litellm infers it from the value, exporting over gRPC only for a `grpc://` endpoint or a `:4317` one without a `/v1/traces` path, and over HTTP otherwise.
 
 | Deployment | Endpoint |
 |---|---|
@@ -387,7 +387,7 @@ No vendor mapper is added, so the LLM-call span carries only the canonical keys 
 | Attribute | Purpose |
 |---|---|
 | `service.name` | From `AGENTOPS_SERVICE_NAME` (default `agentops`) |
-| `deployment.environment` | From `AGENTOPS_ENVIRONMENT` (default `production`) |
+| `deployment.environment` | From `AGENTOPS_ENVIRONMENT`; only stamped when set |
 
 #### Setup notes
 
@@ -436,7 +436,7 @@ No vendor mapper is added. Traces carry only the canonical keys from [Span attri
 #### Setup notes
 
 - The collector URL is used as-is, no path manipulation, so provide the exact URL Levo gave you.
-- `LEVOAI_ENV_NAME` is optional and tags spans with an environment label in the Levo UI.
+- To label spans with an environment, set `OTEL_ENVIRONMENT_NAME`; the Levo preset reads no environment variable of its own beyond the four required ones.
 
 </TabItem>
 
