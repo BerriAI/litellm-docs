@@ -144,7 +144,7 @@ proxy_config:
 helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml
 ```
 
-The chart lives at [`deploy/charts/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm); the published chart versions carry LiteLLM release numbers (for example `1.90.2`), and `helm show values oci://ghcr.io/berriai/litellm-helm` lists every knob. Beyond the values above it supports autoscaling (`autoscaling.*` or `keda.*`), PodDisruptionBudgets (`pdb.*`), a Prometheus ServiceMonitor (`serviceMonitor.*`), read replica routing (`db.readReplicaUrl`, see [Database Read Replica](./db_read_replica.md)), graceful drain on shutdown (`lifecycle`), and ArgoCD or Helm hooks for the migrations job (`migrationJob.hooks.*`, see [Helm PreSync hooks](./prod.md#run-migrations-from-the-helm-presync-hook)).
+The chart lives at [`helm/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/helm/litellm-helm); the published chart versions carry LiteLLM release numbers (for example `1.90.2`), and `helm show values oci://ghcr.io/berriai/litellm-helm` lists every knob. Beyond the values above it supports [autoscaling](#autoscaling) (`autoscaling.*` or `keda.*`), PodDisruptionBudgets (`pdb.*`), a Prometheus ServiceMonitor (`serviceMonitor.*`), read replica routing (`db.readReplicaUrl`, see [Database Read Replica](./db_read_replica.md)), graceful drain on shutdown (`lifecycle`), and ArgoCD or Helm hooks for the migrations job (`migrationJob.hooks.*`, see [Helm PreSync hooks](./prod.md#run-migrations-from-the-helm-presync-hook)).
 
 </TabItem>
 <TabItem value="micro" label="Microservices (litellm)">
@@ -186,12 +186,41 @@ helm upgrade --install litellm \
   -f values.yaml
 ```
 
-This deploys `gateway`, `backend`, and `ui` as separate services with per-component autoscaling, so you can run many gateway replicas against a small fixed backend. It requires external Postgres and Redis (no bundled subcharts) and supports reader/writer database splits, IAM database auth, and Redis Cluster mode. Pin the chart to `1.89.0` or newer: the component images (`ghcr.io/berriai/litellm-gateway`, `-backend`, `-ui`, `-migrations`) are published to GHCR from `v1.89.0` onward, and each component's image tag defaults to the chart version, so older chart versions resolve to image tags that were never pushed. Every knob (per-component scaling and probes, read replica routing, Redis Cluster, migrations job, ingress) is documented in the [chart's values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml).
+This deploys `gateway`, `backend`, and `ui` as separate services with per-component autoscaling, so you can run many gateway replicas against a small fixed backend. It requires external Postgres and Redis (no bundled subcharts) and supports reader/writer database splits, IAM database auth, and Redis Cluster mode. Pin the chart to `1.89.0` or newer: the component images (`ghcr.io/berriai/litellm-gateway`, `-backend`, `-ui`, `-migrations`) are published to GHCR from `v1.89.0` onward, and each component's image tag defaults to the chart version, so older chart versions resolve to image tags that were never pushed. Every knob (per-component scaling and probes, read replica routing, Redis Cluster, migrations job, ingress) is documented in the [chart's values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml); see [Autoscaling](#autoscaling) for the scaling blocks.
 
 </TabItem>
 </Tabs>
 
 Both charts run the migrations job automatically and keep `DISABLE_SCHEMA_UPDATE=true` on the proxy pods. Expose the service through your cloud's ingress: the [AWS Load Balancer Controller](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html) on EKS, [GKE Ingress](https://cloud.google.com/kubernetes-engine/docs/concepts/ingress) on GKE, or [Application Gateway Ingress (AGIC)](https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview) on AKS, with health checks on `/health/readiness`, then point your DNS record at the resulting load balancer. For secrets, prefer your cloud's secret manager over plain Kubernetes secrets ([Key Vault CSI driver](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-driver) on AKS, for example); the charts consume whatever secret you mount.
+
+### Autoscaling
+
+Both charts can scale themselves, and both ship autoscaling off or conservative by default. For the thresholds to aim at, and why memory is not one of them, see [autoscaling in the production checklist](./prod.md#autoscaling).
+
+`litellm-helm` offers two mutually exclusive mechanisms. `autoscaling.*` renders a standard HorizontalPodAutoscaler, and `keda.*` renders a KEDA `ScaledObject` for scaling on queue depth, Prometheus queries, or anything else KEDA can read. Enabling both renders only the HPA, so pick one.
+
+```yaml
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage and behavior are also accepted
+
+keda:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  pollingInterval: 30   # seconds between trigger evaluations
+  cooldownPeriod: 300   # seconds of quiet before scaling back to minReplicas
+  triggers: []          # required; a ScaledObject with no triggers will not scale
+```
+
+`keda.triggers` is empty by default and has no useful default, so supply the trigger yourself; the chart's `values.yaml` carries a commented Prometheus example. `keda.fallback`, `keda.behavior`, and `keda.restoreToOriginalReplicaCount` are passed through for controlling what happens when the metric source is unavailable and how replicas settle after a scale event.
+
+The componentized chart scales each component on its own, under `gateway.hpa`, `backend.hpa`, and `ui.hpa`. The gateway and backend autoscale out of the box and the UI does not, with maximums sized to the shape of each component's traffic: the gateway defaults to `maxReplicas: 10` at 70 percent CPU and 80 percent memory, the backend to `maxReplicas: 4` at 70 percent CPU, and the UI to `maxReplicas: 3` at 80 percent CPU with `enabled: false`. Raising the gateway's ceiling is usually all you need, since it is the only component that sees LLM traffic.
+
+Whichever mechanism you use, set the maximum against what your database can serve. The connection pool is per worker, so the ceiling on replicas is also a ceiling on Postgres connections; `litellm-helm` defaults `maxReplicas` to 100, which at the default pool limit of 10 asks for roughly 1000 connections at full scale-out. See [bounding database connections](./prod.md#bound-database-connections).
 
 ### Kubernetes without Helm
 
