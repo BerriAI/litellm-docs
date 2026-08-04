@@ -33,7 +33,7 @@ Auto routing has a measurement problem: the counterfactual is invisible. You kno
 
 Per router and per time range, it prices your routed traffic against the same traffic sent to one frontier model at list prices, and reports the gap in dollars and percent alongside the session economics behind it: sessions on the router, turns per session, tokens per session, and savings per session. The baseline is priced with a warm single-model cache rather than a cold-priced strawman, so a router that thrashes the prompt cache can show a loss. That is a real cost, and you should be able to see it.
 
-Below that sits prompt cache behaviour, which you can read across every router or narrow to one with the picker, since tier ladders differ and a blended rate hides which router is paying for cold writes. Turns land in exactly one of three buckets, staying on the same model, visiting a tier for the first time, or returning to a tier it used before, and only the last of those is a cache miss routing could have avoided. The view also estimates what a background cache warmer would be worth on your traffic, netting rescued cache writes against the cost of the replays.
+Below that, prompt cache behaviour can be broken down per router rather than blended, because tier ladders differ and an average would hide which router is paying for cold writes. Turns land in exactly one of three buckets, staying on the same model, visiting a tier for the first time, or returning to a tier it used before, and only the last of those is a cache miss routing could have avoided. The view also estimates what a background cache warmer would be worth on your traffic, netting rescued cache writes against the cost of the replays.
 
 ### Savings roll up into Cost Optimization
 
