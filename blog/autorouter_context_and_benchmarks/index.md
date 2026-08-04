@@ -4,8 +4,8 @@ title: "Autorouter: spend tracking and 5.6x more accurate routing on follow-ups"
 date: 2026-08-04T10:00:00
 authors:
   - tin
-description: "The LLM classifier used to see one turn, so 'yes, do that' routed to the cheap tier. Across 5,600 live classifier calls, three prior turns took agreement on referential follow-ups from 14% to 78%, for under a tenth of a cent per request and no measurable latency."
-image: ./hero.png
+description: "The LLM classifier used to see one turn, so 'yes, do that' routed to the cheap tier. Across 5,600 live classifier calls, showing it prior turns took agreement on referential follow-ups from 14% to 78%, for under a tenth of a cent per request and no measurable latency."
+image: ./benchmarks-overview.png
 keywords: [auto router, complexity router, llm classifier, conversation context, session affinity, llm cost savings, model routing, litellm auto routing, router benchmarks]
 tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 "Yes, do that."
 
-Your router sees a short, simple message and sends it to the cheap tier, where it green-lights a database migration. The classifier was only ever shown the current turn, so it had no way to know what "that" was. Across 5,600 live classifier calls, follow-ups that only make sense against their history routed to the right tier **14% of the time**; give the classifier three prior turns and that goes to **78%**, 5.6x more accurate, for under a tenth of a cent per request and no measurable latency.
+Your router sees a short, simple message and sends it to the cheap tier, where it green-lights a database migration. The classifier was only ever shown the current turn, so it had no way to know what "that" was. Across 5,600 live classifier calls, follow-ups that only make sense against their history routed to the right tier **14% of the time**; give the classifier a couple of prior turns and that goes to **78%**, 5.6x more accurate, for under a tenth of a cent per request and no measurable latency.
 
 That fix ships in v1.97, along with cost and usage benchmarks for the auto router, so you can see what routing saved you instead of guessing, and with savings now rolling into the Cost Optimization totals. Session affinity also flips off by default, because our caching data says it was costing you routing quality to buy a cache hit you would get anyway.
 
@@ -29,11 +29,11 @@ That fix ships in v1.97, along with cost and usage benchmarks for the auto route
 
 Auto routing has a measurement problem: the counterfactual is invisible. You know what you spent. You don't know what the same traffic would have cost on a single frontier model, which is the only number that tells you whether routing is working. The new **Auto-Router Benchmarks** view computes it for you.
 
-![Auto-Router Benchmarks tab showing total estimated savings against an all-frontier baseline, session counts, and per-router prompt cache behaviour](./benchmarks-overview.png)
+![Auto-Router Benchmarks tab showing total estimated savings against an all-frontier baseline, session counts, and prompt cache behaviour by bucket](./benchmarks-overview.png)
 
 Per router and per time range, it prices your routed traffic against the same traffic sent to one frontier model at list prices, and reports the gap in dollars and percent alongside the session economics behind it: sessions on the router, turns per session, tokens per session, and savings per session. The baseline is priced with a warm single-model cache rather than a cold-priced strawman, so a router that thrashes the prompt cache can show a loss. That is a real cost, and you should be able to see it.
 
-Below that, prompt cache behaviour is broken out per router rather than blended, because tier ladders differ and an average would hide which router is paying for cold writes. Turns land in exactly one of three buckets, staying on the same model, visiting a tier for the first time, or returning to a tier it used before, and only the last of those is a cache miss routing could have avoided. The view also estimates what a background cache warmer would be worth on your traffic, netting rescued cache writes against the cost of the replays.
+Below that sits prompt cache behaviour, which you can read across every router or narrow to one with the picker, since tier ladders differ and a blended rate hides which router is paying for cold writes. Turns land in exactly one of three buckets, staying on the same model, visiting a tier for the first time, or returning to a tier it used before, and only the last of those is a cache miss routing could have avoided. The view also estimates what a background cache warmer would be worth on your traffic, netting rescued cache writes against the cost of the replays.
 
 ### Savings roll up into Cost Optimization
 
@@ -41,7 +41,7 @@ Router savings used to live only in the router's own view. They now feed the **C
 
 ![Cost Optimization usage tab showing total saved split across compression, prompt caching, and auto-router savings](./cost-optimization.png)
 
-Both views read the same data, which you can pull directly:
+The two views answer different questions, so their savings figures won't match: Benchmarks prices your traffic against one frontier model end to end, while the Cost Optimization card counts only the difference between the tier the router picked and the priciest tier it could have picked. The Benchmarks numbers are queryable directly:
 
 ```bash
 GET /auto_router/benchmarks?start_date=2026-07-01&end_date=2026-07-31
@@ -127,7 +127,7 @@ What moves money is which tier gets picked, and it moves both ways.
 
 On the short-reply set, routed cost more than doubles, from $2.87 to about $6.50 per 1k. At N=0 those requests were going to the cheap tier while approving hard work; the tier mix was 66% SIMPLE at N=0 and 30% at N=2. The extra spend is the correct spend. The old number was cheap because it was wrong. On MT-Bench and ShareGPT it drifts down instead, as context resolves ambiguous follow-ups into MEDIUM rather than REASONING.
 
-Which of those two your traffic looks like, we can't tell you from here. That's the whole reason the Benchmarks view exists: check the tier mix after a day and you'll know which failure mode you had.
+Which of those two your traffic looks like, we can't tell you from here. That's the whole reason the Benchmarks view exists: compare your routed spend against the baseline after a day and you'll know which failure mode you had.
 
 ### What to run
 
@@ -213,6 +213,6 @@ model_list:
 
 Every response carries `x-litellm-model-name` and `x-litellm-response-cost`, so you can check the tier per request before trusting any aggregate.
 
-Then give it a day of real traffic and open Benchmarks. The tier mix will tell you more about your workload than any of our datasets can.
+Then give it a day of real traffic and open Benchmarks. Your own routed-versus-baseline number will tell you more about your workload than any of our datasets can.
 
 Full docs: [Auto Routing](https://docs.litellm.ai/docs/proxy/auto_routing).
