@@ -93,7 +93,7 @@ Turns without human-written text don't eat a slot. Tool output is excluded, `<sy
 | 8 | 87.5% | 55.6% | 91.2% |
 | 10 | 90.0% | 55.6% | 88.8% |
 
-The sharpest cut is the 36 follow-ups whose last turn only makes sense against the history, the "yes, do that" cases from the top of this post. Agreement there runs **14% at N=0, 47% at N=1, 78% at N=2**, then flat out to N=10. Self-describing controls in the same set sit at 80% with no window and 91 to 95% with one, so the window isn't just lifting every number; it fixes the cases it was built for.
+The sharpest cut is the 36 follow-ups whose last turn only makes sense against the history, the "yes, do that" cases from the top of this post. Agreement there runs **14% at N=0, 47% at N=1, 78% at N=2**, then flat out to N=10. Self-describing controls in the same set sit at 80% with no window and 91 to 95% with one, so the window barely moves cases that already routed correctly while lifting the referential cases it was built for.
 
 Note what N=1 does *not* do. Handing the classifier a single prior turn recovers less than half the gap: it learns that a conversation happened, not what it was about, and roughly a third of referential cases stay misrouted. If you've built this yourself with one turn of lookback, that's the number to know.
 
