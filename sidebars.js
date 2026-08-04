@@ -46,6 +46,16 @@ const sidebars = {
           label: "LLM observability platforms",
           items: [
             "observability/argilla",
+            {
+              type: "link",
+              label: "Arize",
+              href: "/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets",
+            },
+            {
+              type: "link",
+              label: "Arize Phoenix",
+              href: "/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets",
+            },
             "observability/athina_integration",
             "observability/braintrust",
             "observability/opik_integration",

@@ -123,6 +123,14 @@ const config = {
             from: '/docs/proxy/image_handling',
             to: '/docs/proxy/architecture#image-url-handling',
           },
+          {
+            from: '/docs/observability/arize_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/phoenix_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
         ],
       },
     ],
