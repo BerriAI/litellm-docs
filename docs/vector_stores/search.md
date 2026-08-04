@@ -273,7 +273,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 
 ## Setting Up Vector Stores
 
-To use vector store search, configure your vector stores in the `vector_store_registry`. See the [Vector Store Configuration Guide](../completion/knowledgebase.md) for:
+To search a store that already exists on a provider, register it with LiteLLM first via `config.yaml`, `POST /vector_store/new`, or the Admin UI; see [Managed Vector Stores](./managed_vector_stores.md). For provider-specific configuration, see the [Vector Store Configuration Guide](../completion/knowledgebase.md):
 
 - Provider-specific configuration (Bedrock, OpenAI, Azure, Vertex AI, PG Vector)
 - Python SDK and Proxy setup examples  
