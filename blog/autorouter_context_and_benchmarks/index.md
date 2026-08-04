@@ -11,7 +11,7 @@ tags: [routing, complexity-router, cost, benchmarks, observability, product]
 hide_table_of_contents: false
 ---
 
-![Classifier agreement against context window size, 14% to 78% on referential follow-ups](./hero.png)
+![Correct tier on referential follow-ups rising from 14% with no prior turns to 78% with two](./hero.png)
 
 "Yes, do that."
 
@@ -19,7 +19,7 @@ Your router sees a short, simple message and sends it to the cheap tier, where i
 
 We measured how often this happens, across 5,600 live classifier calls. On follow-ups that only make sense against their history, the router picked the right tier **14% of the time**. Give the classifier three prior turns and that goes to **78%**, 5.6x more accurate, for under a tenth of a cent per request and no measurable latency.
 
-That fix ships in v1.96.x, along with cost and usage benchmarks for the auto router, so you can see what routing saved you instead of guessing, and with savings now rolling into the Cost Optimization totals. Session affinity also flips off by default, because our caching data says it was costing you routing quality to buy a cache hit you would get anyway.
+That fix ships in v1.97, along with cost and usage benchmarks for the auto router, so you can see what routing saved you instead of guessing, and with savings now rolling into the Cost Optimization totals. Session affinity also flips off by default, because our caching data says it was costing you routing quality to buy a cache hit you would get anyway.
 
 :::warning Two defaults changed
 
@@ -31,19 +31,17 @@ That fix ships in v1.96.x, along with cost and usage benchmarks for the auto rou
 
 ## Cost and usage benchmarks
 
-Auto routing has a measurement problem: the counterfactual is invisible. You know what you spent. You don't know what the same traffic would have cost on a single frontier model, which is the only number that tells you whether routing is working. The new **Benchmarks** view computes it for you.
+Auto routing has a measurement problem: the counterfactual is invisible. You know what you spent. You don't know what the same traffic would have cost on a single frontier model, which is the only number that tells you whether routing is working. The new **Auto-Router Benchmarks** view computes it for you.
 
-![Auto Router Benchmarks tab](./benchmarks-overview.png)
+![Auto-Router Benchmarks tab showing total estimated savings against an all-frontier baseline, session counts, and per-router prompt cache behaviour](./benchmarks-overview.png)
 
-Per router and per time range, it reports spend by tier so you can see where the money goes, the tier mix as a percentage of requests so you can check whether the classifier is sending traffic where you expected, and token usage by tier including the prompt, completion, and cache-read split. Against that it puts a baseline cost for the same traffic on one frontier model, and the resulting savings in both absolute and percentage terms over the window you pick.
+Per router and per time range, it prices your routed traffic against the same traffic sent to one frontier model at list prices, and reports the gap in dollars and percent alongside the session economics behind it: sessions on the router, turns per session, tokens per session, and savings per session. The baseline is priced with a warm single-model cache rather than a cold-priced strawman, so a router that thrashes the prompt cache can show a loss. That is a real cost, and you should be able to see it.
 
-It also breaks out classifier overhead. The LLM classifier is a real API call on the hot path, and until now its cost was mixed into everything else; it is a line item now.
-
-![Tier mix and spend by tier](./benchmarks-tier-mix.png)
+Below that, prompt cache behaviour is broken out per router rather than blended, because tier ladders differ and an average would hide which router is paying for cold writes. Turns land in exactly one of three buckets, staying on the same model, visiting a tier for the first time, or returning to a tier it used before, and only the last of those is a cache miss routing could have avoided. The view also estimates what a background cache warmer would be worth on your traffic, netting rescued cache writes against the cost of the replays.
 
 ### Savings roll up into Cost Optimization
 
-Router savings used to live only in the router's own view. They now feed the **Cost Optimization** section alongside prompt compression and prompt caching, as their own card, savings line, and slice of the by-driver breakdown, so the top-line number covers everything rather than a subset. Auto-router savings are measured against the priciest model the router could have picked.
+Router savings used to live only in the router's own view. They now feed the **Cost Optimization** section alongside prompt compression and prompt caching, as their own card, savings line, and slice of the by-driver breakdown, so the top-line number covers everything rather than a subset. Auto-router savings there are measured against the priciest model the router could have picked.
 
 ![Cost Optimization usage tab showing total saved split across compression, prompt caching, and auto-router savings](./cost-optimization.png)
 
