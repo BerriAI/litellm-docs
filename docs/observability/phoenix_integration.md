@@ -109,7 +109,7 @@ Phoenix uses the same OpenInference vocabulary as Arize AX, so the LLM-call span
 
 | Variable | Required | Notes |
 |---|---|---|
-| `PHOENIX_API_KEY` | Yes | |
+| `PHOENIX_API_KEY` | Phoenix Cloud only | Required when the endpoint is on `app.phoenix.arize.com`; litellm raises without it. Self-hosted Phoenix does not need one |
 | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` | No | HTTP collector endpoint; takes precedence over the gRPC variable |
 | `PHOENIX_COLLECTOR_ENDPOINT` | No | gRPC collector endpoint |
 | `PHOENIX_PROJECT_NAME` | No | Defaults to `default`; also readable as `PHOENIX_COLLECTOR_PROJECT_NAME` |

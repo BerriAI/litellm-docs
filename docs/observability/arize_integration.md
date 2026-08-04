@@ -111,7 +111,7 @@ The `openinference` mapper stamps the OpenInference vocabulary onto the LLM-call
 |---|---|---|
 | `ARIZE_SPACE_ID` | Yes | `ARIZE_SPACE_KEY` is the deprecated name and is still read for backward compatibility; prefer `ARIZE_SPACE_ID` in new configs |
 | `ARIZE_API_KEY` | Yes | |
-| `ARIZE_PROJECT_NAME` | Yes | Arize rejects spans with no project |
+| `ARIZE_PROJECT_NAME` | In practice, yes | litellm does not enforce it, but Arize rejects spans that arrive with no project, so omitting it means traces silently do not land |
 | `ARIZE_ENDPOINT` | No | gRPC endpoint, defaults to `https://otlp.arize.com/v1` |
 | `ARIZE_HTTP_ENDPOINT` | No | Use instead of `ARIZE_ENDPOINT` to export over HTTP |
 
@@ -128,7 +128,7 @@ litellm_settings:
   callbacks: ["arize", "langfuse_otel"]
 ```
 
-### Per-team and per-key credentials
+### Per-team and per-key credentials {#pass-arize-spacekey-per-request}
 
 Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Configure this from the Admin UI or the API as described in [per-key / per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant).
 
