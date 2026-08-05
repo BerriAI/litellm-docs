@@ -464,11 +464,14 @@ router_settings:
 
 | Name | Description |
 |------|-------------|
+| A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
+| AI21_API_BASE | Base URL for AI21. Default is https://api.ai21.com/studio/v1
+| AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
 | AISPEND_ACCOUNT_ID | Account ID for AI Spend
 | AISPEND_API_KEY | API Key for AI Spend
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
@@ -482,7 +485,17 @@ router_settings:
 | AIOHTTP_TTL_DNS_CACHE | DNS cache time-to-live for aiohttp in seconds. **Default is 300**
 | AKTO_GUARDRAIL_API_BASE | Base URL for the Akto Guardrail API (e.g. `http://localhost:9090`). Used by the Akto guardrail integration.
 | AKTO_API_KEY | API key for authenticating with the Akto Guardrail service.
+| ALEPH_ALPHA_API_BASE | Base URL for Aleph Alpha. Default is https://api.aleph-alpha.com/complete
+| ALEPH_ALPHA_API_KEY | API key for Aleph Alpha
 | ALLOWED_EMAIL_DOMAINS | List of email domains allowed for access
+| AMAZON_NOVA_API_BASE | Base URL for Amazon Nova. Default is https://api.nova.amazon.com/v1
+| ANTHROPIC_AWS_API_BASE | Base URL for Claude on AWS, read after `ANTHROPIC_AWS_BASE_URL`
+| ANTHROPIC_AWS_API_KEY | API key for Claude on AWS. When it is set, requests carry the key instead of being signed with AWS SigV4
+| ANTHROPIC_AWS_BASE_URL | Base URL for Claude on AWS, read before `ANTHROPIC_AWS_API_BASE`. When neither is set the endpoint is derived from the resolved AWS region
+| ANTHROPIC_AWS_WORKSPACE_ID | Anthropic workspace ID sent with Claude on AWS requests, unless a workspace ID is passed per request. `ANTHROPIC_WORKSPACE_ID` is accepted as a fallback
+| ANTHROPIC_WORKSPACE_ID | Fallback for `ANTHROPIC_AWS_WORKSPACE_ID`
+| ANYSCALE_API_BASE | Base URL for Anyscale. Default is https://api.endpoints.anyscale.com/v1
+| APISERPENT_API_BASE | Base URL for the APISerpent search provider
 | APSCHEDULER_COALESCE | Whether to combine multiple pending executions of a job into one. **Default is False**
 | APSCHEDULER_MAX_INSTANCES | Maximum number of concurrent instances of each job. **Default is 1**
 | APSCHEDULER_MISFIRE_GRACE_TIME | Grace time in seconds for misfired jobs. **Default is 1**
@@ -494,6 +507,7 @@ router_settings:
 | ARGILLA_SAMPLING_RATE | Sampling rate for Argilla logging
 | ARGILLA_DATASET_NAME | Dataset name for Argilla logging
 | ARGILLA_BASE_URL | Base URL for Argilla service
+| ARK_API_BASE | Base URL for Volcengine Ark responses, read after `VOLCENGINE_API_BASE`
 | ATHINA_API_KEY | API key for Athina service
 | ATHINA_BASE_URL | Base URL for Athina service (defaults to `https://log.athina.ai`)
 | AUTH_STRATEGY | Strategy used for authentication (e.g., OAuth, API key)
@@ -506,6 +520,7 @@ router_settings:
 | ANTHROPIC_TOKEN_COUNTING_BETA_VERSION | Beta version header for Anthropic token counting API. Default is `token-counting-2024-11-01`
 | AWS_ACCESS_KEY_ID | Access Key ID for AWS services
 | AWS_BATCH_ROLE_ARN | ARN of the AWS IAM role for batch operations
+| AWS_BEDROCK_RUNTIME_ENDPOINT | Endpoint URL for the Bedrock runtime, used when neither `api_base` nor `aws_bedrock_runtime_endpoint` is passed per request. Overrides the endpoint LiteLLM would otherwise derive from the AWS region
 | AWS_DEFAULT_REGION | Default AWS region for service interactions when AWS_REGION is not set
 | AWS_PROFILE_NAME | AWS CLI profile name to be used
 | AWS_REGION | AWS region for service interactions (takes precedence over AWS_DEFAULT_REGION)
@@ -530,6 +545,8 @@ router_settings:
 | AZURE_DEFAULT_RESPONSES_API_VERSION | Version of the Azure Default Responses API being used. Default is "preview"
 | AZURE_DOCUMENT_INTELLIGENCE_API_VERSION | API version for Azure Document Intelligence service
 | AZURE_DOCUMENT_INTELLIGENCE_DEFAULT_DPI | Default DPI (dots per inch) setting for Azure Document Intelligence service
+| AZURE_SPEECH_API_BASE | Base URL for Azure Speech audio transcription
+| AZURE_SPEECH_API_KEY | API key for Azure Speech audio transcription
 | AZURE_TENANT_ID | Tenant ID for Azure Active Directory
 | AZURE_USERNAME | Username for Azure services, use in conjunction with AZURE_PASSWORD for azure ad token with basic username/password workflow
 | AZURE_PASSWORD | Password for Azure services, use in conjunction with AZURE_USERNAME for azure ad token with basic username/password workflow
@@ -555,16 +572,23 @@ router_settings:
 | AZURE_VECTOR_STORE_COST_PER_GB_PER_DAY | Cost per GB per day for Azure Vector Store service
 | BACKGROUND_HEALTH_CHECK_MAX_TOKENS | Optional global default for `max_tokens` on proxy background health checks when a model has no `health_check_max_tokens`. If unset, non-wildcard models default to 5. Applies to wildcard routes when set. Default is unset
 | BACKGROUND_HEALTH_CHECK_MAX_TOKENS_REASONING | For **non-wildcard** reasoning models (`supports_reasoning(model)=true`), this takes precedence over `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` when set. If unset, reasoning models fall back to `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` (if set) or default behavior. Wildcard routes ignore this. Default is unset
+| BASETEN_API_BASE | Base URL for Baseten. Default is https://inference.baseten.co/v1
 | BATCH_STATUS_POLL_INTERVAL_SECONDS | Interval in seconds for polling batch status. Default is 3600 (1 hour)
 | BATCH_STATUS_POLL_MAX_ATTEMPTS | Maximum number of attempts for polling batch status. Default is 24 (for 24 hours)
+| BEDROCK_API_BASE | Base URL for Bedrock rerank requests
+| BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
 | BERRISPEND_ACCOUNT_ID | Account ID for BerriSpend service
+| BFL_API_BASE | Base URL for Black Forest Labs image generation and editing
+| BLACK_FOREST_LABS_API_KEY | API key for Black Forest Labs, read after `BFL_API_KEY`
 | BRAINTRUST_API_KEY | API key for Braintrust integration
 | BRAINTRUST_API_BASE | Base URL for Braintrust API. Default is https://api.braintrustdata.com/v1
 | BRAINTRUST_MOCK | Enable mock mode for Braintrust integration testing. When set to true, intercepts Braintrust API calls and returns mock responses without making actual network calls. Default is false
 | BRAINTRUST_MOCK_LATENCY_MS | Mock latency in milliseconds for Braintrust API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
+| BRAVE_API_BASE | Base URL for the Brave search provider
 | CACHED_STREAMING_CHUNK_DELAY | Delay in seconds for cached streaming chunks. Default is 0.02
+| CEREBRAS_API_BASE | Base URL for Cerebras. Default is https://api.cerebras.ai/v1
 | CHATGPT_API_BASE | Base URL for ChatGPT API. Default is https://chatgpt.com/backend-api/codex
 | CHATGPT_AUTH_FILE | Filename for ChatGPT authentication data. Default is "auth.json"
 | CHATGPT_DEFAULT_INSTRUCTIONS | Default system instructions for ChatGPT provider
@@ -576,12 +600,18 @@ router_settings:
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
 | CLI_SSO_CLAIM_MAP | Comma-separated allowlist mapping OIDC claim paths to LiteLLM user `metadata` keys for CLI SSO (e.g. `employment_type->acme_employment_type,org_info.department->department`). Scalar values are also returned in `/sso/cli/poll` as `attribution_metadata`. Alias: `LITELLM_CLI_SSO_CLAIM_MAP`
+| CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
 | CLOUDZERO_EXPORT_INTERVAL_MINUTES | Interval in minutes for CloudZero data export operations
 | CLOUDZERO_MAX_FETCHED_DATA_RECORDS | Maximum number of data records to fetch from CloudZero
 | CLOUDZERO_TIMEZONE | Timezone for date handling (default: UTC)
+| CODESTRAL_API_BASE | Base URL for Codestral. Default is https://codestral.mistral.ai/v1
+| COMETAPI_API_BASE | Base URL for CometAPI, read after `COMETAPI_BASE_URL`. Default is https://api.cometapi.com/v1
+| COMETAPI_API_KEY | API key for CometAPI, read after `COMETAPI_KEY`
+| COMETAPI_BASE_URL | Base URL for CometAPI image generation, read before `COMETAPI_API_BASE`
 | CONFIG_FILE_PATH | File path for configuration file
+| CRW_API_BASE | Base URL for the FastCRW search provider
 | CYBERARK_ACCOUNT | CyberArk account name for secret management
 | CYBERARK_API_BASE | Base URL for CyberArk API
 | CYBERARK_API_KEY | API key for CyberArk secret management service
@@ -595,6 +625,8 @@ router_settings:
 | COHERE_API_BASE | Base URL for Cohere API. Default is https://api.cohere.com
 | COMPETITOR_LLM_TEMPERATURE | Temperature setting for the LLM used in competitor discovery. Default is 0.3
 | CURSOR_API_BASE | API base URL for Cursor AI provider integration. Default is https://api.cursor.com
+| DASHSCOPE_API_BASE_IMAGE | Base URL for DashScope image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+| DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
 | DATABASE_HOST | Hostname for the database server
 | DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from RDS IAM env vars
 | DATABASE_NAME | Name of the database
@@ -614,9 +646,15 @@ router_settings:
 | DATABRICKS_CLIENT_ID | Client ID for Databricks OAuth M2M authentication (Service Principal application ID)
 | DATABRICKS_CLIENT_SECRET | Client secret for Databricks OAuth M2M authentication
 | DATABRICKS_USER_AGENT | Custom user agent string for Databricks API requests. Used for partner telemetry attribution
+| DATAFORSEO_API_BASE | Base URL for the DataForSEO search provider
 | DAYS_IN_A_MONTH | Days in a month for calculation purposes. Default is 28
 | DAYS_IN_A_WEEK | Days in a week for calculation purposes. Default is 7
 | DAYS_IN_A_YEAR | Days in a year for calculation purposes. Default is 365
+| DEEPGRAM_API_BASE | Base URL for Deepgram audio transcription. Default is https://api.deepgram.com/v1
+| DEEPINFRA_API_BASE | Base URL for DeepInfra. Default is https://api.deepinfra.com/v1/openai
+| DEEPSEEK_ANTHROPIC_API_BASE | Base URL for DeepSeek's Anthropic-compatible `/messages` endpoint, read before `DEEPSEEK_API_BASE`
+| DEEPSEEK_API_BASE | Base URL for DeepSeek. Default is https://api.deepseek.com/beta
+| DISABLE_KEY_NAME | Flag to stop storing the abbreviated key name on generated keys. That abbreviation is what the UI shows to identify which key spent what, so setting this makes spend harder to attribute to a key. **Default is False**
 | DRAIN_ENDPOINT_TOKEN | Shared secret required on the `X-Drain-Token` header to call the `/health/drain` endpoint. When set (here or via `general_settings.drain_endpoint_token`), drain calls without the matching token are rejected with 401; when unset the endpoint keeps its opt-in-only behavior. Have the kubelet send it from the preStop `httpGet.httpHeaders`. |
 | DYNAMOAI_API_KEY | API key for DynamoAI Guardrails service
 | DYNAMOAI_API_BASE | Base URL for DynamoAI API. Default is https://api.dynamo.ai
@@ -624,6 +662,110 @@ router_settings:
 | DYNAMOAI_POLICY_IDS | Comma-separated list of DynamoAI policy IDs to apply
 | DD_BASE_URL | Base URL for Datadog integration
 | DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
+| ELEVENLABS_API_BASE | Base URL for ElevenLabs. Default is https://api.elevenlabs.io
+| EMPOWER_API_BASE | Base URL for Empower. Default is https://app.empower.dev/api/v1
+| EXA_API_BASE | Base URL for the Exa AI search provider
+| FAL_AI_API_BASE | Base URL for fal.ai image generation
+| FEATHERLESS_AI_API_BASE | Base URL for Featherless AI, read before `FEATHERLESS_API_BASE`
+| FEATHERLESS_API_BASE | Alias for `FEATHERLESS_AI_API_BASE`
+| FEATHERLESS_API_KEY | Alias for `FEATHERLESS_AI_API_KEY`
+| FIRECRAWL_API_BASE | Base URL for the Firecrawl search provider
+| FIREWORKSAI_API_KEY | Alias for the Fireworks AI API key, read after `FIREWORKS_API_KEY` and `FIREWORKS_AI_API_KEY`
+| FIREWORKS_ACCOUNT_ID | Fireworks AI account ID, required to list models from Fireworks AI's `/models` endpoint. That request fails with an explicit error when it is unset
+| FIREWORKS_AI_TOKEN | Last of the four accepted names for the Fireworks AI API key, after `FIREWORKS_API_KEY`, `FIREWORKS_AI_API_KEY` and `FIREWORKSAI_API_KEY`
+| FIREWORKS_API_BASE | Base URL for Fireworks AI. Default is https://api.fireworks.ai/inference/v1
+| FRIENDLIAI_API_KEY | API key for FriendliAI, with `FRIENDLI_TOKEN` accepted as a fallback
+| FRIENDLI_API_BASE | Base URL for FriendliAI. Default is https://api.friendli.ai/serverless/v1
+| GALADRIEL_API_BASE | Base URL for Galadriel. Default is https://api.galadriel.com/v1
+| GDC_API_BASE | Base URL for GDC
+| GDC_API_KEY | API key for GDC
+| GIGACHAT_API_BASE | Base URL for GigaChat
+| GIGACHAT_API_KEY | Credentials for GigaChat, read after `GIGACHAT_CREDENTIALS` and exchanged for an access token at `GIGACHAT_AUTH_URL`
+| GIGACHAT_AUTH_URL | OAuth token endpoint used to exchange GigaChat credentials for an access token. Defaults to the GigaChat production auth URL
+| GITHUB_API_BASE | Base URL for GitHub Models. Default is https://models.inference.ai.azure.com
+| GOOGLE_PSE_API_BASE | Base URL for the Google Programmable Search Engine search provider
+| GROQ_API_BASE | Base URL for Groq. Default is https://api.groq.com/openai/v1
+| HYPERBOLIC_API_BASE | Base URL for Hyperbolic
+| INCEPTION_API_BASE | Base URL for Inception. Default is https://api.inceptionlabs.ai/v1
+| JINA_AI_API_BASE | Base URL for Jina AI embeddings. Default is https://api.jina.ai/v1
+| JINA_AI_TOKEN | Fallback for `JINA_AI_API_KEY`
+| LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
+| LANGFLOW_API_KEY | API key for Langflow
+| LEMONADE_API_KEY | API key for Lemonade
+| LINKUP_API_BASE | Base URL for the Linkup search provider
+| LLAMAFILE_API_KEY | API key for llamafile. llamafile does not require one, so a placeholder is used when this is unset
+| LLAMA_API_BASE | Base URL for Llama API. Default is https://api.llama.com/compat/v1
+| MANUS_API_BASE | Base URL for Manus. Default is https://api.manus.im
+| MARITALK_API_BASE | Base URL for MariTalk. Default is https://chat.maritaca.ai/api
+| MARITALK_API_KEY | API key for MariTalk
+| MISTRAL_AZURE_API_BASE | Base URL for Mistral models served through Azure AI
+| MISTRAL_AZURE_API_KEY | API key for Mistral models served through Azure AI
+| MODELSCOPE_API_BASE | Base URL for ModelScope
+| MODELSCOPE_API_KEY | API key for ModelScope
+| MORPH_API_BASE | Base URL for Morph. Default is https://api.morphllm.com/v1
+| NEBIUS_API_BASE | Base URL for Nebius. Default is https://api.studio.nebius.ai/v1
+| NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
+| NOVITA_API_BASE | Base URL for Novita. Default is https://api.novita.ai/v3/openai
+| NSCALE_API_BASE | Base URL for Nscale
+| OLLAMA_API_BASE | Base URL for Ollama. Default is http://localhost:11434
+| OLLAMA_API_KEY | API key for Ollama, for deployments that sit behind an authenticating proxy
+| OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
+| OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
+| OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
+| OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
+| PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
+| PERPLEXITY_API_BASE | Base URL for Perplexity. Default is https://api.perplexity.ai
+| PG_VECTOR_API_BASE | Base URL for a pgvector vector store
+| PG_VECTOR_API_KEY | API key for a pgvector vector store
+| PINSTRIPES_API_KEY | API key for Pinstripes
+| PROMETHEUS_SELECTED_INSTANCE | Prometheus `instance` label to restrict to when the proxy queries `PROMETHEUS_URL` for fallback metrics. Series carrying any other instance are skipped; when unset, every instance is counted
+| REDIS_AZURE_AD_TOKEN | Flag enabling Azure AD authentication for Redis. Set it to `true`, not to a token. Ignored with a warning when a GCP IAM service account is configured as well. **Default is False**
+| REDUCTO_API_KEY | API key for Reducto OCR
+| REPLICATE_API_BASE | Base URL for Replicate. Default is https://api.replicate.com/v1
+| RUNWAYML_API_BASE | Base URL for RunwayML
+| RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
+| SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
+| SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
+| SERPER_API_BASE | Base URL for the Serper search provider
+| SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
+| SONIOX_API_KEY | API key for Soniox
+| SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
+| STABILITY_API_BASE | Base URL for Stability AI image generation and editing
+| TAVILY_API_BASE | Base URL for the Tavily search provider
+| TINYFISH_API_BASE | Base URL for the TinyFish search provider
+| TOGETHER_AI_API_BASE | Base URL for Together AI. Default is https://api.together.xyz/v1
+| TOGETHER_AI_API_KEY | Alias for the Together AI API key, read after `TOGETHER_API_KEY` and before `TOGETHERAI_API_KEY`
+| TOGETHER_AI_TOKEN | Last of the four accepted names for the Together AI API key, after `TOGETHER_API_KEY`, `TOGETHER_AI_API_KEY` and `TOGETHERAI_API_KEY`
+| TOGETHER_API_KEY | First of the four accepted names for the Together AI API key, ahead of `TOGETHER_AI_API_KEY`, `TOGETHERAI_API_KEY` and `TOGETHER_AI_TOKEN`
+| TOPAZ_API_BASE | Base URL for Topaz Labs. Default is https://api.topazlabs.com
+| V0_API_BASE | Base URL for v0. Default is https://api.v0.dev/v1
+| VERCEL_AI_GATEWAY_API_BASE | Base URL for the Vercel AI Gateway. Default is https://ai-gateway.vercel.sh/v1
+| VERTEXAI_API_BASE | Base URL for Vertex AI, read before `VERTEX_API_BASE`
+| VERTEX_API_BASE | Alias for `VERTEXAI_API_BASE`
+| VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
+| VLLM_API_BASE | Base URL for a self-hosted vLLM server
+| VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
+| VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
+| VOYAGE_AI_TOKEN | Last of the three accepted names for the Voyage AI API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
+| VOYAGE_API_BASE | Base URL for Voyage AI rerank requests
+| WANDB_API_BASE | Base URL for Weights & Biases Inference. Default is https://api.inference.wandb.ai/v1
+| WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
+| WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
+| WATSONX_SPACE_ID | Deployment space ID for watsonx.ai, read after `WATSONX_DEPLOYMENT_SPACE_ID`
+| WML_URL | Last of the four accepted names for the watsonx base URL, after `WATSONX_API_BASE`, `WATSONX_URL` and `WX_URL`
+| WORKER_CONFIG | Serialized proxy configuration that the `litellm` CLI passes to the worker processes it starts. Set by the CLI itself; to point the proxy at a config file of your own use `CONFIG_FILE_PATH`
+| WX_API_KEY | Alias for the watsonx API key, read first when generating an IAM token and after `WATSONX_APIKEY` and `WATSONX_API_KEY` when authenticating a request
+| WX_PROJECT_ID | Alias for `WATSONX_PROJECT_ID`, with `PROJECT_ID` accepted as a further fallback
+| WX_REGION | Alias for `WATSONX_REGION`
+| WX_SPACE_ID | Alias for `WATSONX_SPACE_ID`
+| WX_URL | Alias for the watsonx base URL, read after `WATSONX_API_BASE` and `WATSONX_URL`
+| XAI_API_BASE | Base URL for xAI. Default is https://api.x.ai
+| XAI_OAUTH_API_BASE | Base URL for the xAI OAuth flow, read before `XAI_API_BASE`
+| XAI_OAUTH_AUTH_FILE | Name of the file, inside `XAI_OAUTH_TOKEN_DIR`, that holds the xAI OAuth tokens written by `litellm xai-oauth login`. Default is auth.json
+| XAI_OAUTH_TOKEN_DIR | Directory holding the xAI OAuth token file. Default is ~/.config/litellm/xai_oauth
+| YOUCOM_API_BASE | Base URL for the You.com search provider
+| ZAI_API_BASE | Base URL for Z.ai
 | _DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
 | DD_AGENT_HOST | Hostname or IP of DataDog agent (e.g., "localhost"). When set, logs are sent to agent instead of direct API
 | DD_AGENT_PORT | Port of DataDog agent for log intake. Default is 10518
