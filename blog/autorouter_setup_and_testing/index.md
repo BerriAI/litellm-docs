@@ -1,6 +1,6 @@
 ---
 slug: auto-router-setup-and-testing
-title: "AutoRouter: 1-Click setup"
+title: "AutoRouter: 1 Click Deploy"
 date: 2026-08-05T10:00:00
 authors:
   - tin
@@ -11,7 +11,7 @@ tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
 ---
 
-![LiteLLM Auto-Router: pick a preset, router's ready](./hero.png)
+![LiteLLM Auto-Router: router ready in 1 click](./hero.png)
 
 We've made it easier than ever to setup and test your Auto-Router, and with customizable tier names + classifier system prompts you can go beyond complexity routing. 
 
