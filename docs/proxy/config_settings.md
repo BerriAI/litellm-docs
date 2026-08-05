@@ -688,7 +688,7 @@ router_settings:
 | DEFAULT_MOCK_RESPONSE_COMPLETION_TOKEN_COUNT | Default token count for mock response completions. Default is 20
 | DEFAULT_MOCK_RESPONSE_PROMPT_TOKEN_COUNT | Default token count for mock response prompts. Default is 10
 | DEFAULT_MODEL_CREATED_AT_TIME | Default creation timestamp for models. Default is 1677610602
-| DEFAULT_NUM_WORKERS_LITELLM_PROXY | Default number of workers for LiteLLM proxy when `NUM_WORKERS` is not set. Default is 1. **We strongly recommend setting NUM_WORKERS to the number of vCPUs available** (e.g. `NUM_WORKERS=8` or `--num_workers 8`).
+| DEFAULT_NUM_WORKERS_LITELLM_PROXY | Default number of workers for LiteLLM proxy when `NUM_WORKERS` is not set. Default is 1. **On a single container, VM, or bare-metal host, set NUM_WORKERS to the number of vCPUs available** (e.g. `NUM_WORKERS=8` or `--num_workers 8`); CPU, memory, and the database connection pool are all per worker, so size the host and `database_connection_pool_limit` accordingly. On Kubernetes run one worker per pod and scale with replicas instead, see [Production Best Practices](./prod.md#workers-and-scaling).
 | DEFAULT_PROMPT_INJECTION_SIMILARITY_THRESHOLD | Default threshold for prompt injection similarity. Default is 0.7
 | DEFAULT_POLLING_INTERVAL | Default polling interval for schedulers in seconds. Default is 0.03
 | DEFAULT_REASONING_EFFORT_DISABLE_THINKING_BUDGET | Default reasoning effort disable thinking budget. Default is 0
@@ -722,6 +722,7 @@ router_settings:
 | LITELLM_ENABLE_HSTS | Flag to send the `Strict-Transport-Security` response header on proxy and UI responses. Only takes effect for deployments served over HTTPS. **Default is false**
 | DISABLE_AIOHTTP_TRANSPORT | Flag to disable aiohttp transport. When this is set to True, litellm will use httpx instead of aiohttp. **Default is False**
 | DISABLE_AIOHTTP_TRUST_ENV | Flag to disable aiohttp trust environment. When this is set to True, litellm will not trust the environment for aiohttp eg. `HTTP_PROXY` and `HTTPS_PROXY` environment variables will not be used when this is set to True. **Default is False**
+| DISABLE_PRISMA_HEALTH_CHECK_ON_STARTUP | Flag to skip the `SELECT 1` verification query the proxy runs against the database once Prisma has connected and migrations have been applied. The Prisma connection itself is unaffected; only the extra reachability probe is skipped, so a database that accepts the connection but cannot serve queries is discovered on the first request instead of at startup. **Default is False**
 | DISABLE_SCHEMA_UPDATE | Toggle to disable schema updates
 | DYNAMIC_RATE_LIMIT_ERROR_THRESHOLD_PER_MINUTE | Threshold for deployment failures per minute before enforcing rate limits in parallel request limiter. Default is 1
 | DOCS_DESCRIPTION | Description text for documentation pages
@@ -739,6 +740,8 @@ router_settings:
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
+| EXPERIMENTAL_OPENAI_BASE_LLM_HTTP_HANDLER | Flag to send `openai` chat completion requests through LiteLLM's shared HTTP handler instead of the OpenAI Python SDK client. **Default is False**
+| EXPERIMENTAL_UI_LOGIN | Controls the self-signed admin UI session token. When true, a successful UI login returns an encrypted token carrying the user's role and model access with a fixed 10 minute expiry rather than issuing a database-backed virtual key. Independently of that, the proxy tries to decrypt any incoming token that does not start with `sk-` as one of these session tokens unless this is explicitly set to false. **Default is unset**
 | FAROS_API_KEY | API key for sending LLM usage data to Faros AI
 | FAROS_API_URL | Base URL for the Faros AI API. Default is https://prod.api.faros.ai
 | FAROS_GRAPH | Faros graph that LiteLLM usage data is written to. Default is "default"
@@ -979,6 +982,7 @@ router_settings:
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
+| LITELLM_STORE_AUDIT_LOGS | Flag to record an audit log entry for every create, update and delete performed on management objects such as keys, teams and users. Environment equivalent of `litellm_settings.store_audit_logs`; either source enabling it is enough, and writing the entries requires an enterprise license. **Default is False**
 | LITELLM_STREAM_INACTIVITY_TIMEOUT_SECONDS | Maximum seconds to wait for the next chunk from an async streaming provider before raising a Timeout. Guards against a provider that keeps the connection warm with keepalive bytes but stops sending content. Default is None (disabled)
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
@@ -998,6 +1002,8 @@ router_settings:
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
 | LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
+| LITELLM_PRISMA_BOOTSTRAP_TIMEOUT | Seconds allowed for the one-time install of the Node toolchain the Prisma CLI runs on, performed once per container before any migration. Raise it on slow or bandwidth-constrained nodes where the install takes longer than ten minutes. A non-positive or non-numeric value is ignored with a warning and the default applies. **Default is 600**
+| LITELLM_PRISMA_COMMAND_TIMEOUT | Seconds any single Prisma migration command may run before it is killed and retried. Raise it when migrations against a large or heavily loaded database legitimately take longer than a minute. A value that is not a positive number is ignored with a warning and the default applies, so a typo cannot accidentally disable the timeout. **Default is 60**
 | LITELM_ENVIRONMENT | Environment for LiteLLM Instance. This is currently only logged to DeepEval to determine the environment for DeepEval integration.
 | LITELLM_ASYNCIO_QUEUE_MAXSIZE | Maximum size for asyncio queues (e.g. log queues, spend update queues, and cookbook examples such as realtime audio in `nova_sonic_realtime.py`). Bounds in-memory growth to prevent OOM. Default is 1000.
 | LOGFIRE_TOKEN | Token for Logfire logging service
@@ -1200,6 +1206,7 @@ router_settings:
 | SUPABASE_KEY | API key for Supabase service
 | SUPABASE_URL | Base URL for Supabase instance
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
+| STORE_PROMPTS_IN_SPEND_LOGS | Flag to persist the request and response payloads of each call on its SpendLogs row, so prompts and completions are visible in the logs UI. Environment equivalent of `general_settings.store_prompts_in_spend_logs`; either source enabling it is enough. **Default is False**
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
 | TEST_EMAIL_ADDRESS | Email address used for testing purposes
 | TOGETHER_AI_4_B | Size parameter for Together AI 4B model. Default is 4
@@ -1221,6 +1228,9 @@ router_settings:
 | UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
 | UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
+| USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
+| USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
+| USE_LITELLM_PROXY | Flag to route every `litellm` SDK completion call through a LiteLLM proxy by default, which lets model names stay in their original provider format such as `gemini/gemini-3.5-flash`. Environment equivalent of `litellm.use_litellm_proxy = True`. **Default is False**
 | USE_PRISMA_MIGRATE | Removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555); `prisma migrate deploy` is now the default. Setting this has no effect and it is safe to remove.
 | VANTAGE_API_KEY | API key for Vantage cost-import integration
 | VANTAGE_BASE_URL | Base URL for Vantage API. Default is `https://api.vantage.sh`
