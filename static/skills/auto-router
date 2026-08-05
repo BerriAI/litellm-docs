@@ -22,8 +22,15 @@ Bearer $LITELLM_API_KEY"` lists the same names. If the models are managed in the
 (added through the Admin UI or `/model/new`) and no `model_list` exists in a file, use that
 listing and create the router through the management API in step 4.
 
-Show the user the list you found. If you cannot find any models, stop and ask where the
-config lives rather than guessing.
+Show the user every chat model you found as a numbered menu they can pick from later, one
+line each: the `model_name` they would call, the underlying provider model behind it from
+`litellm_params.model`, and a short note on where it sits, roughly cheapest to strongest.
+Say outright that these are their options and that nothing outside the list can be routed
+to without adding a deployment first. Keep the embedding models in a separate short list,
+since they are only usable for semantic keyword matching, not as tier targets.
+
+If the list is long, still show all of it rather than a sample. If you cannot find any
+models, stop and ask where the config lives rather than guessing.
 
 ## 2. Ask what to name the router
 
@@ -39,9 +46,10 @@ See https://docs.litellm.ai/docs/tutorials/claude_code_autorouter
 
 ## 3. Ask which model serves each tier
 
-Show the user the four tiers with what each one catches, list the models you found, and ask
-them to assign one per tier. Do not pre-fill an assignment; if they ask you to recommend
-one, say what you would pick and why, then still wait for their confirmation.
+Show the four tiers with what each one catches, repeat the numbered model menu next to the
+question so the user does not have to scroll for it, and ask them to assign one per tier.
+Accept a number or a name. Do not pre-fill an assignment; if they ask you to recommend one,
+say what you would pick and why, then still wait for their confirmation.
 
 - `SIMPLE`: greetings, one-line lookups, trivial questions
 - `MEDIUM`: ordinary questions and short edits
@@ -51,7 +59,10 @@ one, say what you would pick and why, then still wait for their confirmation.
 Tell them a model may serve several tiers, and that a tier can hold a list of models the
 router picks from at random rather than a single name. Also ask which model should serve as
 the fallback when classification fails, which is what `complexity_router_default_model`
-sets.
+sets, offering the same menu.
+
+If a tier has no good candidate in what they serve, say so plainly and name the models they
+would have to add rather than quietly reusing one that does not fit.
 
 ## 4. Write the config
 
@@ -91,13 +102,14 @@ backend default applies.
 | Classifier | Heuristic scorer, no API call, sub-millisecond, scores prompt length, code presence, reasoning markers, technical terms | `classifier_type: llm` reads the request more accurately, at one small model call per request |
 | Session affinity | Off, so every turn is classified on its own merits | `session_affinity: true` pins a session to its first-turn model, preserving provider prompt caches and avoiding replay of one model's history to another, at the cost of the whole session inheriting the first turn's tier. `session_affinity_ttl_seconds` defaults to 3600 |
 | Keyword rules | None | `keyword_tier_rules` forces chosen phrases into a tier before the classifier runs |
-| Semantic matching | Off | `semantic_keyword_matching: true` plus an `embedding_model` extends those rules to paraphrases |
+| Semantic matching | Off | `semantic_keyword_matching: true` plus an `embedding_model` picked from the embedding models you listed extends those rules to paraphrases |
 | Adaptive routing | Off, so a tier with several models picks uniformly at random | `adaptive: true` Thompson-samples within the tier by observed quality |
 | Technical keyword list | Built-in list only | `custom_technical_keywords` appends domain terms the built-in list misses |
 | Scorer thresholds | Built-in boundaries and weights | `tier_boundaries`, `token_thresholds`, and `dimension_weights` move where the scorer draws each tier |
 
-If the user takes the LLM classifier, ask which of their models should do the classifying,
-a small fast one, and add:
+If the user takes the LLM classifier, show the same model menu again, ask which one should
+do the classifying, noting that a small fast model is what this wants since it runs on
+every request, and add:
 
 ```yaml
         classifier_type: llm
