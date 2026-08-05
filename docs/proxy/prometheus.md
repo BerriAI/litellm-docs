@@ -130,6 +130,26 @@ Track LiteLLM's own response cache. All three metrics carry the labels `"model",
 | `litellm_remaining_api_key_budget_metric`                | Remaining Budget for API Key (A key Created on LiteLLM) Labels: `"hashed_api_key", "api_key_alias"`|
 | `litellm_api_key_budget_remaining_hours_metric`          | Hours before the API Key budget is reset Labels: `"hashed_api_key", "api_key_alias"`|
 
+### Internal User - Budget
+
+Only emitted for requests attached to an internal user; the max budget and reset hours gauges additionally require the user to have a budget set. Use [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup) to emit them for all users on a schedule.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_user_budget_metric`              | Remaining Budget for Internal User Labels: `"user"`|
+| `litellm_user_max_budget_metric`                    | Max Budget for Internal User Labels: `"user"`|
+| `litellm_user_budget_remaining_hours_metric`        | Hours before the Internal User budget is reset Labels: `"user"`|
+
+### Organization - Budget
+
+Only emitted for requests attached to an organization, with the same conditions as the internal user metrics above.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_org_budget_metric`               | Remaining Budget for Organization Labels: `"org_id", "org_alias"`|
+| `litellm_org_max_budget_metric`                     | Max Budget for Organization Labels: `"org_id", "org_alias"`|
+| `litellm_org_budget_remaining_hours_metric`         | Hours before the Organization budget is reset Labels: `"org_id", "org_alias"`|
+
 ### Virtual Key - Rate Limit
 
 | Metric Name          | Description                          |
@@ -145,8 +165,8 @@ If you want litellm to emit the budget metrics for all keys, teams irrespective 
 **How this works:**
 
 - If the `prometheus_initialize_budget_metrics` is set to `true`
-  - Every 5 minutes litellm runs a cron job to read all keys, teams from the database
-  - It then emits the budget metrics for each key, team
+  - Every 5 minutes litellm runs a cron job to read all keys, teams, internal users, and organizations from the database
+  - It then emits the budget metrics for each of them
   - This is used to populate the budget metrics on the `/metrics` endpoint
 
 ```yaml
@@ -205,6 +225,41 @@ Monitor failures while shipping logs to downstream callbacks like S3 cold storag
 - `langfuse` - Langfuse logging failures
 - `otel` -  OpenTelemetry logging failures
 
+## Guardrail Metrics
+
+Only emitted when [guardrails](guardrails/quick_start) run.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_guardrail_requests_total` | Total number of guardrail invocations. Labels: `"guardrail_name", "status", "hook_type"` |
+| `litellm_guardrail_errors_total` | Total number of errors encountered during guardrail execution. Labels: `"guardrail_name", "error_type", "hook_type"` |
+| `litellm_guardrail_latency_seconds` | Histogram of guardrail execution latency (seconds). Labels: `"guardrail_name", "status", "error_type", "hook_type"` |
+
+## MCP Gateway Metrics
+
+Only emitted for MCP tool calls made through the [MCP gateway](../mcp). Both metrics carry the labels `"mcp_tool_name", "mcp_server_name", "hashed_api_key", "api_key_alias", "team", "team_alias", "user", "end_user"`.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_mcp_tool_calls_total` | Total MCP tool calls, segmented by tool and server name |
+| `litellm_mcp_tool_call_spend_metric` | Total spend on MCP tool calls; only incremented when the call has a nonzero cost |
+
+## Managed Batch Metrics
+
+Enterprise only. Emitted when using [LiteLLM managed batches](managed_batches) and the CheckBatchCost background job that cost-tracks them.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_managed_batch_created_total` | Total number of managed batches created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_created_total` | Total number of managed files created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_deleted_total` | Total number of managed file deletions, success or blocked. Labels: `"result"` |
+| `litellm_managed_file_size_bytes` | Size of the most recent managed batch file in bytes, last-seen value per label combination. Labels: `"purpose", "file_type", "model", "api_provider", "user"` |
+| `litellm_managed_batch_duration_seconds` | Histogram of completed batch duration in seconds (completed_at - created_at). Labels: `"model", "api_provider"` |
+| `litellm_check_batch_cost_jobs_polled` | Number of unprocessed batches found by the last CheckBatchCost poll |
+| `litellm_check_batch_cost_jobs_processed_total` | Total number of batches successfully cost-tracked by CheckBatchCost. Labels: `"model", "api_provider"` |
+| `litellm_check_batch_cost_errors_total` | Total number of errors in CheckBatchCost by error type. Labels: `"error_type"` |
+| `litellm_check_batch_cost_last_run_timestamp` | Unix timestamp of the last CheckBatchCost job run |
+
 ## LLM Provider Metrics
 
 Use this for LLM API Error monitoring and tracking remaining rate limits and token limits
@@ -240,11 +295,19 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | `litellm_remaining_requests_metric`             | Track `x-ratelimit-remaining-requests` returned from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id"` |
 | `litellm_remaining_tokens_metric`                | Track `x-ratelimit-remaining-tokens` return from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id"` |
 
+### Provider Budget
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
+
 ### Deployment State 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_deployment_state`             | The state of the deployment: 0 = healthy, 1 = partial outage, 2 = complete outage. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
 | `litellm_deployment_latency_per_output_token`       | Latency per output token for deployment. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
+| `litellm_deployment_tpm_limit`             | Configured TPM limit for the deployment; only set for deployments with a tpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
+| `litellm_deployment_rpm_limit`             | Configured RPM limit for the deployment; only set for deployments with an rpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
 
 #### Fallback (Failover) Metrics
 
@@ -269,6 +332,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | `litellm_overhead_with_guardrails_latency_metric`             | Latency overhead (seconds) added by LiteLLM processing including pre_call and post_call guardrails - tracked for labels "model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id". During_call (moderation) guardrails run concurrently with the LLM API call, so they are excluded from this number |
 | `litellm_llm_api_latency_metric`  | Latency (seconds) for just the LLM API call - tracked for labels "model", "hashed_api_key", "api_key_alias", "team", "team_alias", "requested_model", "end_user", "user", "model_id", "api_provider", "service_tier" |
 | `litellm_llm_api_time_to_first_token_metric`             | Time to first token for LLM API call - tracked for labels `model`, `hashed_api_key`, `api_key_alias`, `team`, `team_alias`, `requested_model`, `end_user`, `user`, `model_id`, `api_provider`, `service_tier` [Note: only emitted for streaming requests] |
+| `litellm_request_queue_time_seconds`             | Time (seconds) a request spent queued inside the proxy between arrival and the start of processing - tracked for labels "end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model", "model_id", "api_provider". Pairs well with `litellm_in_flight_requests` for diagnosing pod overload |
 
 ### Segmenting latency and spend by service tier
 
