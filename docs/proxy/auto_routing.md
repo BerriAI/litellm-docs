@@ -58,6 +58,16 @@ curl -X POST http://localhost:4000/v1/chat/completions \
   -d '{"model": "smart-router", "messages": [{"role": "user", "content": "What is 2+2?"}]}'
 ```
 
+## Set it up with your agent
+
+To get started, tell your agent:
+
+```
+run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions
+```
+
+It reads the models your proxy already serves, asks how you want the router named and which model should serve each tier, and calls out the defaults it is assuming before it writes anything.
+
 ## Full config
 
 Every knob v2 exposes. All fields on `complexity_router_config` are optional except `tiers`.
