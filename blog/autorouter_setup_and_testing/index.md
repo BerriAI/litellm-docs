@@ -5,7 +5,7 @@ date: 2026-08-05T10:00:00
 authors:
   - tin
 image: ./hero.png
-description: "Six changes to the Auto-Router: a one-line agent setup skill, Test Routing in the UI, Anthropic and OpenAI family presets, a replaceable classifier prompt, renameable tiers, and configurable reminder markers."
+description: "Six changes to the Auto-Router: 1-click Anthropic and OpenAI presets, a one-line agent setup skill, Test Routing in the UI, a replaceable classifier prompt, customizable tiers, and configurable reminder markers."
 keywords: [auto router, llm routing, litellm, model routing, claude code, llm classifier, complexity router]
 tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
