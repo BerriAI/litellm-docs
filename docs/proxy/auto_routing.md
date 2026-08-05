@@ -84,11 +84,20 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
         COMPLEX:   claude-sonnet-5
         REASONING: gpt-5.5
 
+      # Display names for the tiers; config keys stay canonical
+      tier_labels:
+        SIMPLE:    Cheap
+        MEDIUM:    Standard
+        COMPLEX:   Premium
+        REASONING: Deep
+
       # LLM classifier instead of the heuristic scorer
       classifier_type: llm
       classifier_llm_config:
         model: claude-haiku-4-5-20251001
         timeout_ms: 2000
+        # system_prompt: <your rubric>         # replaces the built-in rubric entirely; omit for the default
+      classifier_fallback: heuristic           # default; or default_model
       # Prior conversation the classifier sees (LLM classifier only)
       classifier_context_window_size: 3          # default 3; 0 disables
       classifier_context_per_turn_chars: 200     # default 200
@@ -106,6 +115,9 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
       # Append to the built-in technical keyword list
       custom_technical_keywords: [kafka, redis, postgresql, udp, dns]
+
+      # Marker pair whose blocks are stripped before classification
+      reminder_markers: ["<system-reminder>", "</system-reminder>"]   # default
 
       # Thompson-sample within the tier's pool
       adaptive: true
@@ -136,7 +148,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
 ## Classification
 
-Three ways to pick a tier. Pick one; the router falls back to the heuristic scorer if the LLM classifier errors or if no keyword rule matches.
+Three ways to pick a tier. Pick one; the router falls back to the heuristic scorer if no keyword rule matches, and, unless `classifier_fallback` says otherwise, if the LLM classifier errors.
 
 **Heuristic scorer (default).** Zero API calls, sub-millisecond. Scores each request across seven dimensions and maps the score to a tier.
 
@@ -152,7 +164,7 @@ Three ways to pick a tier. Pick one; the router falls back to the heuristic scor
 
 Two or more reasoning markers auto-routes to `REASONING` regardless of the weighted score.
 
-**LLM classifier.** Uses a small fast model (Haiku, gpt-4o-mini, whatever you point it at) with structured output. Goes through the same `Router` instance, so credentials, budgets, and fallbacks apply. Timeout, empty content, or schema mismatch falls back to the heuristic scorer.
+**LLM classifier.** Uses a small fast model (Haiku, gpt-4o-mini, whatever you point it at) with structured output. Goes through the same `Router` instance, so credentials, budgets, and fallbacks apply. Timeout, empty content, or schema mismatch falls back to the heuristic scorer, or to `complexity_router_default_model` with `classifier_fallback: default_model`, which is what a classifier grading something other than complexity wants since a complexity score would produce a tier unrelated to its taxonomy.
 
 ```yaml
 classifier_type: llm
@@ -186,7 +198,7 @@ Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/Berr
 
 The LLM classifier does not see the request in isolation. By default it also receives the last 3 prior turns of the conversation, truncated to 200 characters each, so a referring follow-up like "now do the same for the streaming path" is rated against what it refers to rather than on its own length. Without that context a hard follow-up mid-session classifies as whatever landed last, which in an agentic harness is often a `<system-reminder>` blob that barely varies across the session and pins every turn to one tier.
 
-Only turns carrying text a human wrote count toward the window. Tool output never qualifies (`tool_result` blocks on the Messages surface, the `tool` role on chat completions), complete `<system-reminder>` blocks are stripped before a turn is considered, and a turn left empty after stripping is skipped rather than spending a slot. A turn whose text equals the ask being classified is excluded so the ask is never quoted twice. Prior turns are sent oldest first and numbered `[1]`, `[2]`, `[3]`, and a turn cut at the character limit gets a trailing `...` so the classifier can tell it was clipped. When prior conversation exists, a single depth line (`Conversation so far: ~N tokens across the request`) is included as well.
+Only turns carrying text a human wrote count toward the window. Tool output never qualifies (`tool_result` blocks on the Messages surface, the `tool` role on chat completions), complete reminder blocks are stripped before a turn is considered (`<system-reminder>` ... `</system-reminder>` by default, another pair with `reminder_markers`), and a turn left empty after stripping is skipped rather than spending a slot. A turn whose text equals the ask being classified is excluded so the ask is never quoted twice. Prior turns are sent oldest first and numbered `[1]`, `[2]`, `[3]`, and a turn cut at the character limit gets a trailing `...` so the classifier can tell it was clipped. When prior conversation exists, a single depth line (`Conversation so far: ~N tokens across the request`) is included as well.
 
 The call is split so the system role carries only the operator's rubric, byte-identical across sessions and therefore prompt-cacheable, while everything caller-supplied (their system prompt, the prior turns, the ask) is quoted as labeled sections of the user turn. A three-turn conversation on the defaults produces:
 
@@ -329,11 +341,13 @@ response = await router.acompletion(
 
 ## UI
 
-Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-Router v2 [Recommended]". Configure the four tier model groups, optionally enable Semantic Keyword Matching, LLM Classifier, or Adaptive, then click **Test Connection**. Test Connection runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
+Models + Endpoints > Add Model > Auto Router tab. The form opens on the two things every router needs, a name and a **Template**: pick one of the bundled templates to prefill all four tiers, or **Custom Configuration** to fill them in yourself. A template whose models this proxy does not serve is greyed out with the missing names, so anything selectable is applicable. Everything else lives under **Detailed Configuration**, collapsed by default with a one-line summary of the tiers it currently holds; expand it to set the tier model groups, tier display names, Semantic Keyword Matching, LLM Classifier, escalation keywords, or Adaptive.
+
+**Test Routing** sends one prompt through the classifier for the config in the form, without creating the router, and shows the model it would pick with the same routing-decision card the logs drawer uses. Nothing is sent to the model it routes to, so a heuristic config spends nothing, while an LLM classifier or semantic matching bills its classifier or embedding call to your key. **Test Connection** instead runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
-Selecting **LLM Classifier** reveals the classifier context settings alongside the classifier model and timeout: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
+Selecting **LLM Classifier** reveals, alongside the classifier model and timeout, a **Classifier Prompt** editor (`classifier_llm_config.system_prompt`, prefilled with the built-in rubric for the router's context window size and tier names, and sent only once you edit it), an **If the classifier fails** choice between scoring with the heuristic and routing to the default model (`classifier_fallback`, the second option available only once the router has a default model), and the classifier context settings: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
