@@ -111,6 +111,9 @@ backend default applies.
 | Reminder markers | `<system-reminder>` and `</system-reminder>` | `reminder_markers` supplies the harness's own two-element open/close pair |
 | Scorer thresholds | Built-in boundaries and weights | `tier_boundaries`, `token_thresholds`, and `dimension_weights` move where the scorer draws each tier |
 
+The classifier prompt, classifier fallback, and reminder marker settings require LiteLLM
+v1.97.x or later. Leave them out on older builds.
+
 If the user takes the LLM classifier, show the same model menu again, ask which one should
 do the classifying, noting that a small fast model is what this wants since it runs on
 every request, and add:
@@ -133,7 +136,8 @@ classifies the current message alone.
 
 Ask whether they want a custom classifier prompt. If they do, fetch the live built-in rubric
 with `GET /auto_router/classifier/default_prompt?context_window_size=N` and show it as the
-starting point; do not invent a replacement rubric. A custom
+starting point; do not invent a replacement rubric. If the request fails or returns 404, the
+build does not support custom classifier prompts, so say so and skip this option. A custom
 `classifier_llm_config.system_prompt` becomes the entire system role, so it can define a
 different taxonomy, while the response still has to be one of `SIMPLE`, `MEDIUM`, `COMPLEX`,
 or `REASONING`. Ask whether classifier failures should score with the heuristic or route to
@@ -167,10 +171,11 @@ ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE, score=-
 The two requests should report different tiers. If they do not, show the user what you saw
 rather than tuning thresholds on your own.
 
-On a UI or database-managed proxy, the same pre-save check is available with **Test Routing**
-on the Add Auto Router form, or through `POST /auto_router/test_routing`. In the UI, the
-**Template** dropdown is the shortcut for a family setup; **Anthropic Family** and **OpenAI
-Family** prefill the equivalent tier configuration before the user reviews and saves it.
+On a UI or database-managed proxy running v1.97.x or later, the same pre-save check is
+available with **Test Routing** on the Add Auto Router form, or through
+`POST /auto_router/test_routing`. In the UI, the **Template** dropdown is the shortcut for a
+family setup; **Anthropic Family** and **OpenAI Family** prefill the equivalent tier
+configuration before the user reviews and saves it.
 
 ## 7. Hand back
 

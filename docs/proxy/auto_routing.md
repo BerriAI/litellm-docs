@@ -166,6 +166,21 @@ classifier_llm_config:
   timeout_ms: 2000
 ```
 
+**Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
+
+Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
+
+```yaml
+keyword_tier_rules:
+  - keywords: ["hi", "hello", "thanks"]
+    tier: SIMPLE
+  - keywords: ["kubernetes", "k8s", "istio"]
+    tier: REASONING
+semantic_keyword_matching: true
+embedding_model: voyage-3-5
+match_threshold: 0.5
+```
+
 ### Custom classifier prompt
 
 :::info
@@ -207,21 +222,6 @@ litellm_params:
 ```
 
 `default_model` requires a configured default model. The router raises during initialization when the fallback is selected without one. The setting applies only to `classifier_type: llm`.
-
-**Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
-
-Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
-
-```yaml
-keyword_tier_rules:
-  - keywords: ["hi", "hello", "thanks"]
-    tier: SIMPLE
-  - keywords: ["kubernetes", "k8s", "istio"]
-    tier: REASONING
-semantic_keyword_matching: true
-embedding_model: voyage-3-5
-match_threshold: 0.5
-```
 
 ### Escalation keywords
 
