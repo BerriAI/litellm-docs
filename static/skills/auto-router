@@ -105,6 +105,10 @@ backend default applies.
 | Semantic matching | Off | `semantic_keyword_matching: true` plus an `embedding_model` picked from the embedding models you listed extends those rules to paraphrases |
 | Adaptive routing | Off, so a tier with several models picks uniformly at random | `adaptive: true` Thompson-samples within the tier by observed quality |
 | Technical keyword list | Built-in list only | `custom_technical_keywords` appends domain terms the built-in list misses |
+| Escalation keywords | `["LITELLM ESCALATE"]`; matching the exact case-sensitive phrase raises the newest human ask one tier | `escalation_keywords: []` disables it, or replace the phrase list |
+| Classifier prompt | Built-in complexity rubric | `classifier_llm_config.system_prompt` replaces the rubric entirely and can classify a different taxonomy |
+| Classifier fallback | `heuristic` after an LLM classifier failure | `classifier_fallback: default_model` skips scoring and routes to `complexity_router_default_model` |
+| Reminder markers | `<system-reminder>` and `</system-reminder>` | `reminder_markers` supplies the harness's own two-element open/close pair |
 | Scorer thresholds | Built-in boundaries and weights | `tier_boundaries`, `token_thresholds`, and `dimension_weights` move where the scorer draws each tier |
 
 If the user takes the LLM classifier, show the same model menu again, ask which one should
@@ -126,6 +130,18 @@ instead of on its own length. Assistant replies are excluded
 (`classifier_context_include_assistant_turns: false`); turning them on helps when the
 assistant states the difficulty and the user only answers "yes". A window size of 0
 classifies the current message alone.
+
+Ask whether they want a custom classifier prompt. If they do, fetch the live built-in rubric
+with `GET /auto_router/classifier/default_prompt?context_window_size=N` and show it as the
+starting point; do not invent a replacement rubric. A custom
+`classifier_llm_config.system_prompt` becomes the entire system role, so it can define a
+different taxonomy, while the response still has to be one of `SIMPLE`, `MEDIUM`, `COMPLEX`,
+or `REASONING`. Ask whether classifier failures should score with the heuristic or route to
+the default model; the latter requires `complexity_router_default_model`.
+
+If the user's client is an agent harness that wraps injected context in its own marker pair
+rather than `<system-reminder>` and `</system-reminder>`, ask for the exact open and close
+markers and set `reminder_markers` to that two-element sequence.
 
 ## 6. Verify
 
@@ -150,6 +166,11 @@ ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE, score=-
 
 The two requests should report different tiers. If they do not, show the user what you saw
 rather than tuning thresholds on your own.
+
+On a UI or database-managed proxy, the same pre-save check is available with **Test Routing**
+on the Add Auto Router form, or through `POST /auto_router/test_routing`. In the UI, the
+**Template** dropdown is the shortcut for a family setup; **Anthropic Family** and **OpenAI
+Family** prefill the equivalent tier configuration before the user reviews and saves it.
 
 ## 7. Hand back
 

@@ -89,6 +89,9 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       classifier_llm_config:
         model: claude-haiku-4-5-20251001
         timeout_ms: 2000
+        # Replaces the built-in classifier rubric when set
+        system_prompt: null
+      classifier_fallback: heuristic             # default; or default_model
       # Prior conversation the classifier sees (LLM classifier only)
       classifier_context_window_size: 3          # default 3; 0 disables
       classifier_context_per_turn_chars: 200     # default 200
@@ -106,6 +109,8 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
       # Append to the built-in technical keyword list
       custom_technical_keywords: [kafka, redis, postgresql, udp, dns]
+      escalation_keywords: ["LITELLM ESCALATE"]  # empty list disables one-tier escalation
+      reminder_markers: ["<system-reminder>", "</system-reminder>"]  # open, close
 
       # Thompson-sample within the tier's pool
       adaptive: true
@@ -161,6 +166,48 @@ classifier_llm_config:
   timeout_ms: 2000
 ```
 
+### Custom classifier prompt
+
+:::info
+
+The configurable classifier prompt is not merged yet. It is planned for **v1.97.x** in [PR #35855](https://github.com/BerriAI/litellm/pull/35855). `classifier_llm_config.system_prompt` is ignored by current builds.
+
+:::
+
+Set `classifier_llm_config.system_prompt` to replace the classifier's entire built-in system role:
+
+```yaml
+classifier_type: llm
+classifier_llm_config:
+  model: claude-haiku-4-5-20251001
+  system_prompt: |
+    Classify each request by data sensitivity.
+    Return exactly one of SIMPLE, MEDIUM, COMPLEX, or REASONING.
+```
+
+The built-in rubric is not appended. Its injection-defense paragraph and its context-window closing line are removed as well, so include the safeguards your taxonomy needs. The response schema still accepts only `SIMPLE`, `MEDIUM`, `COMPLEX`, or `REASONING`; the prompt can redefine those buckets for data sensitivity, task type, or another taxonomy, but cannot rename them. LiteLLM applies the string verbatim. There are no placeholders or templating rules.
+
+The caller's system prompt, prior turns, and current ask remain in the variable user payload. The prompt-cache split is therefore unchanged: the custom text becomes the stable, cacheable system message, while request-specific context remains in the user message. To start from the exact built-in rubric, call `GET /auto_router/classifier/default_prompt?context_window_size=N`; the UI editor uses this endpoint rather than maintaining a frontend copy. This setting applies only when `classifier_type: llm`. Empty or whitespace-only values are rejected; omit the key to use the built-in rubric.
+
+### Classifier fallback
+
+:::info
+
+`classifier_fallback` is part of the same unmerged **v1.97.x** work in [PR #35855](https://github.com/BerriAI/litellm/pull/35855). Current builds ignore this field and continue using the heuristic fallback.
+
+:::
+
+`classifier_fallback` defaults to `heuristic`. When an LLM classifier errors, times out, or returns an unparseable response, `heuristic` runs the local complexity scorer. Set it to `default_model` when the custom taxonomy makes a complexity score meaningless; the router skips scoring and sends the request straight to `complexity_router_default_model`.
+
+```yaml
+litellm_params:
+  complexity_router_config:
+    classifier_fallback: default_model
+  complexity_router_default_model: gpt-4o
+```
+
+`default_model` requires a configured default model. The router raises during initialization when the fallback is selected without one. The setting applies only to `classifier_type: llm`.
+
 **Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
 
 Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
@@ -174,6 +221,18 @@ keyword_tier_rules:
 semantic_keyword_matching: true
 embedding_model: voyage-3-5
 match_threshold: 0.5
+```
+
+## Escalation keywords
+
+`escalation_keywords` defaults to `["LITELLM ESCALATE"]`. Matching is a case-sensitive substring test against the newest human ask, so the default phrase must appear in that exact uppercase form. Set an empty list to disable escalation.
+
+When a phrase matches, the router moves one step toward the next configured tier. It skips gaps in the configured tier map and leaves a request in the highest configured tier unchanged. The check applies after a classifier or keyword rule chooses a tier, so a matching phrase can raise a keyword-rule result as well as a classifier result. It reads the newest human ask only; tool output, assistant text, and older asks cannot trigger it.
+
+With session affinity, a matching newest ask raises the pinned model to the next configured tier and refreshes the session pin. Without a resolvable session ID, each request is classified normally. A `default_model` classifier fallback has no classified tier, so escalation is not applied to that direct fallback route.
+
+```yaml
+escalation_keywords: ["LITELLM ESCALATE"]
 ```
 
 ### Classifier context window
@@ -226,6 +285,24 @@ classifier_context_per_turn_chars: 200
 Enabling it changes what `classifier_context_window_size` counts: the last N turns of the conversation across both roles rather than the last N user turns, so budget accordingly if a chatty exchange should still carry several user asks. Turns are labeled by role in the payload only when this is on, which keeps the prompt of every existing deployment unchanged. Assistant replies share `classifier_context_per_turn_chars` with user turns, so raise it if replies truncate before the part that states the difficulty.
 
 It ships off by default for two reasons: turning it on shifts tier decisions, and therefore spend, on an already-deployed router, and assistant text becomes net-new egress to the classifier deployment, which may be a different provider than the routed model. Assistant text reaches the classifier payload and nothing else; `keyword_tier_rules`, escalation keywords, the heuristic scorer, and semantic matching still read only the human ask, so an assistant echoing an escalation keyword back cannot pick the tier.
+
+### Harness reminder markers
+
+:::info
+
+Configurable reminder markers are not merged yet. They are planned for **v1.97.x** in [PR #35874](https://github.com/BerriAI/litellm/pull/35874). Current builds ignore `reminder_markers` and continue using the built-in `<system-reminder>` pair.
+
+:::
+
+`reminder_markers` replaces the built-in `<system-reminder>` and `</system-reminder>` pair with a harness-specific two-element open/close sequence. Matching strips surrounding whitespace and lowercases both markers, so matching is case-insensitive. Blank entries and an identical open and close marker are rejected. Only complete blocks are removed; an unclosed opener remains in the text.
+
+The pair affects current-ask selection, escalation-keyword matching, literal and semantic keyword routing, prior-turn classifier context, and session-affinity escalation. It is therefore useful for an agent harness that sends injected context with its own delimiters rather than `<system-reminder>`.
+
+```yaml
+reminder_markers:
+  - "<<<begin_internal_context>>>"
+  - "<<<end_internal_context>>>"
+```
 
 ## Tier pools
 
@@ -329,11 +406,49 @@ response = await router.acompletion(
 
 ## UI
 
-Models + Endpoints > Add Model > Auto Router tab. Router Type defaults to "Auto-Router v2 [Recommended]". Configure the four tier model groups, optionally enable Semantic Keyword Matching, LLM Classifier, or Adaptive, then click **Test Connection**. Test Connection runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
+:::info
+
+The Template dropdown and Test Routing flow ship in **v1.97.x** ([PR #35746](https://github.com/BerriAI/litellm/pull/35746), [PR #35859](https://github.com/BerriAI/litellm/pull/35859)).
+
+:::
+
+Go to Models + Endpoints > Add Model > Auto Router. Router Type defaults to "Auto-Router v2 [Recommended]". The form opens with the router name and an optional **Template** dropdown. **Anthropic Family**, **OpenAI Family**, and **Custom Configuration** are available.
+
+The family templates prefill the complete complexity-router configuration and collapse **Detailed Configuration** behind a one-line tier summary:
+
+| Template | SIMPLE | MEDIUM | COMPLEX | REASONING | Other values |
+| --- | --- | --- | --- | --- | --- |
+| Anthropic Family | `claude-haiku-4-5` | `claude-sonnet-5` | `claude-opus-5` | `claude-opus-5` | Heuristic; session affinity off; `LITELLM ESCALATE` |
+| OpenAI Family | `gpt-5.4-nano` | `gpt-5.4-mini` | `gpt-5.4` | `o3` | Heuristic; session affinity off; `LITELLM ESCALATE` |
+
+Templates are UI prefills only. Nothing about the selected template is persisted; the resulting values are ordinary `complexity_router_config` fields. A template that references a model group the proxy does not serve is greyed out with the missing names, and submit checks the edited config again in case availability changed.
+
+Configure the four tier model groups, optionally enable Semantic Keyword Matching, LLM Classifier, or Adaptive, then click **Test Connection**. Test Connection runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
-Selecting **LLM Classifier** reveals the classifier context settings alongside the classifier model and timeout: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
+Selecting **LLM Classifier** reveals the classifier model, timeout, context settings, and **Classifier Prompt** controls. The prompt editor is opened with **Change default prompt**, or **Edit custom prompt** when an override exists; **Reset to default** removes the override. It is prefilled from the live default rubric. The **If the classifier fails** choice offers **Score with the heuristic** and **Route to the default model**; the second choice is disabled until a default model exists. Saving text identical to the default stores nothing, so the router continues receiving future built-in rubric updates. The context controls are **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and **Include Assistant Turns** (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM.
+
+**Test Routing** sits next to **Test Connection**. It classifies one pasted prompt against the config currently on screen and displays the routed model plus the same routing-decision trace shown in logs. It never sends anything to the routed model. An LLM classifier call and the embedding call used by semantic matching still run and can spend. If the selected model is not a model group served by the proxy, the result shows `This proxy has no model group by that name`.
+
+The UI uses `POST /auto_router/test_routing`, which is also available to API clients:
+
+```json
+{
+  "prompt": "think step by step about how to shard this table",
+  "complexity_router_config": {
+    "tiers": {
+      "SIMPLE": ["gpt-4o-mini"],
+      "MEDIUM": ["gpt-4o"],
+      "COMPLEX": ["claude-sonnet-5"],
+      "REASONING": ["gpt-5.5"]
+    },
+    "classifier_type": "heuristic"
+  }
+}
+```
+
+The response contains `routed_model`, `routed_model_configured`, and `routing_decision`. The request may also include `default_model`, `router_name`, and `team_id`.
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
