@@ -60,65 +60,13 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Have a coding agent set it up
 
-The setup is one new `model_list` entry that reuses models you already have, so it is a good task to hand to Claude Code, Cursor, Codex, or any agent with access to your proxy config. Paste the prompt below as-is; it pins the agent to the defaults on this page (heuristic classifier, no keyword rules, no semantic matching, adaptive and session affinity off) and to the model names your config already declares, which is where an agent left to itself usually goes wrong.
+Tell Claude Code, Cursor, Codex, or any agent with access to your proxy config:
 
-````text title="Prompt for your coding agent"
-Set up a LiteLLM auto router in my proxy with the default settings, following
-https://docs.litellm.ai/docs/proxy/auto_routing.
-
-1. Find the config the proxy actually loads (the file passed to `litellm --config`,
-   commonly config.yaml) and read its `model_list`. Every model you reference has to be
-   an existing `model_name` from that list, spelled exactly as it appears. Do not add
-   deployments, providers, or API keys.
-2. Choose four routing targets from that list: the cheapest usable model for SIMPLE, a
-   mid-tier model for MEDIUM, the strongest general model for COMPLEX, and a reasoning
-   model for REASONING. Reuse a name across tiers when the list has nothing better.
-   Tell me which model you picked for each tier and why before you edit anything.
-3. Append one entry to `model_list`, and change nothing else in the file:
-
-   - model_name: claude-auto
-     litellm_params:
-       model: auto_router/complexity_router
-       complexity_router_config:
-         tiers:
-           SIMPLE:    <simple model>
-           MEDIUM:    <medium model>
-           COMPLEX:   <complex model>
-           REASONING: <reasoning model>
-       complexity_router_default_model: <medium model>
-
-   Keep the name `claude-auto` if Claude Code or Claude Desktop will call this router,
-   since those clients only offer Anthropic-shaped names; otherwise name it whatever
-   fits my conventions. Add no other keys: the heuristic classifier, no keyword rules,
-   no semantic matching, adaptive off, and session affinity off are the defaults I want.
-4. Restart the proxy, then send one trivial request and one hard one and show me both
-   responses and the model each landed on:
-
-   curl -s $LITELLM_PROXY_URL/v1/chat/completions \
-     -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-     -d '{"model":"claude-auto","messages":[{"role":"user","content":"what is 2+2?"}]}'
-
-   curl -s $LITELLM_PROXY_URL/v1/chat/completions \
-     -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-     -d '{"model":"claude-auto","messages":[{"role":"user","content":"Think step by step and design a multi-region active-active Postgres failover strategy."}]}'
-
-5. Confirm the routing worked by grepping the proxy logs for the decision lines, which
-   look like `ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE,
-   ... routed_model=...`. The two requests should report different tiers. If they do
-   not, report what you saw rather than tuning thresholds.
-````
-
-If you set routers up more than once, save the same text as a Claude Code slash command at `.claude/commands/litellm-auto-router.md` in the repo that holds your proxy config (or `~/.claude/commands/` for every repo), and run it as `/litellm-auto-router`. Cursor reads the same shape from `.cursor/commands/`, and any agent that loads `AGENTS.md` picks it up if you paste it there instead.
-
-If your models live in the database rather than in a config file (added through the UI or `/model/new`), tell the agent to create the router with the management API instead of editing YAML, using the same `litellm_params` body:
-
-```bash
-curl -X POST $LITELLM_PROXY_URL/model/new \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'Content-Type: application/json' \
-  -d '{"model_name": "claude-auto", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "gpt-4o-mini", "MEDIUM": "gpt-4o", "COMPLEX": "claude-sonnet-5", "REASONING": "gpt-5.5"}}, "complexity_router_default_model": "gpt-4o"}}'
+```
+run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions
 ```
 
-Once the defaults are running, the tuning knobs are in the next section; [`lite autoroute`](../learn/autorouter_cli.md) is the way to try tier assignments against your real proxy without touching its config at all.
+It reads your `model_list`, proposes a model per tier, adds the router on the defaults, and verifies both a trivial and a hard request land on different tiers.
 
 ## Full config
 

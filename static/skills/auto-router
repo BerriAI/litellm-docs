@@ -1,0 +1,98 @@
+# Skill: set up a LiteLLM auto router
+
+You are setting up a LiteLLM auto router for the user with the default settings. An auto
+router is a single model name that classifies each incoming request and forwards it to the
+cheapest model that can handle it, so a trivial question does not pay for a frontier model.
+Reference documentation: https://docs.litellm.ai/docs/proxy/auto_routing
+
+Follow these steps in order and stop to ask the user whenever a step is ambiguous.
+
+## 1. Find the proxy config
+
+Locate the config the LiteLLM proxy actually loads: the file passed to `litellm --config`,
+commonly `config.yaml` or `proxy_config.yaml` at the repo root or under a `litellm/`
+directory. Read its `model_list`.
+
+If the models are managed in the database instead (added through the Admin UI or
+`/model/new`) and no `model_list` exists in a file, use the management API in step 3
+instead of editing YAML.
+
+## 2. Pick one model per tier
+
+Choose four routing targets, using only `model_name` values that already exist in the
+config, spelled exactly as they appear. Do not add deployments, providers, or API keys, and
+do not invent model names.
+
+- `SIMPLE`: the cheapest usable chat model
+- `MEDIUM`: a mid-tier general model
+- `COMPLEX`: the strongest general model
+- `REASONING`: a reasoning model
+
+Reuse a name across tiers when the list has nothing better. Tell the user which model you
+picked for each tier and why before editing anything.
+
+## 3. Add the router
+
+Append one entry to `model_list` and change nothing else in the file:
+
+```yaml
+  - model_name: claude-auto
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        tiers:
+          SIMPLE:    <simple model>
+          MEDIUM:    <medium model>
+          COMPLEX:   <complex model>
+          REASONING: <reasoning model>
+      complexity_router_default_model: <medium model>
+```
+
+Keep the name `claude-auto` if Claude Code or Claude Desktop will call this router, since
+those clients only offer model names that read as Anthropic models. Otherwise name it to
+match the user's conventions.
+
+Add no other keys. The defaults being requested are the heuristic classifier (no extra API
+call per request), no keyword rules, no semantic matching, adaptive off, and session
+affinity off.
+
+For a database-managed proxy, create the same deployment through the management API:
+
+```bash
+curl -X POST $LITELLM_PROXY_URL/model/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'Content-Type: application/json' \
+  -d '{"model_name": "claude-auto", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}, "complexity_router_default_model": "<medium model>"}}'
+```
+
+## 4. Verify the routing
+
+Restart the proxy, then send one trivial request and one hard one, and show the user both
+responses and the model each landed on:
+
+```bash
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"claude-auto","messages":[{"role":"user","content":"what is 2+2?"}]}'
+
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"claude-auto","messages":[{"role":"user","content":"Think step by step and design a multi-region active-active Postgres failover strategy."}]}'
+```
+
+Confirm the decisions in the proxy logs, which carry one line per routing decision:
+
+```
+ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE, score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
+```
+
+The two requests should report different tiers. If they do not, report what you saw rather
+than tuning thresholds.
+
+## 5. Hand back
+
+Tell the user the router name to call, the tier assignments, and where the tuning knobs
+live: https://docs.litellm.ai/docs/proxy/auto_routing#full-config
+
+If the router will serve Claude Code or Claude Desktop, point them at
+https://docs.litellm.ai/docs/tutorials/claude_code_autorouter for the model-name and
+organization allowlist requirements those clients enforce before a router is selectable.
