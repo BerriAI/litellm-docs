@@ -205,7 +205,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 <TabItem value="helm" label="Helm">
 
-The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml).
+The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
 
 #### Step 1. Create a Secret for your license + provider keys
 
