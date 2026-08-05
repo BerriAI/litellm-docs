@@ -688,7 +688,9 @@ router_settings:
 | HYPERBOLIC_API_BASE | Base URL for Hyperbolic
 | INCEPTION_API_BASE | Base URL for Inception. Default is https://api.inceptionlabs.ai/v1
 | JINA_AI_API_BASE | Base URL for Jina AI embeddings. Default is https://api.jina.ai/v1
+| JINA_AI_API_KEY | API key for Jina AI
 | JINA_AI_TOKEN | Fallback for `JINA_AI_API_KEY`
+| JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
 | LEMONADE_API_KEY | API key for Lemonade
