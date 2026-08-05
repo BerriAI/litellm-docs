@@ -84,12 +84,9 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
         COMPLEX:   claude-sonnet-5
         REASONING: gpt-5.5
 
-      # Display names for the tiers; config keys stay canonical
-      tier_labels:
-        SIMPLE:    Cheap
-        MEDIUM:    Standard
-        COMPLEX:   Premium
-        REASONING: Deep
+      # Optional display names; omit to keep SIMPLE/MEDIUM/COMPLEX/REASONING everywhere
+      # tier_labels:
+      #   SIMPLE: Cheap
 
       # LLM classifier instead of the heuristic scorer
       classifier_type: llm
