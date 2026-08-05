@@ -11,7 +11,7 @@ tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
 ---
 
-![LiteLLM Auto-Router: get started in 1 click, go beyond complexity routing](./hero.png)
+![LiteLLM Auto-Router: pick a preset, router's ready](./hero.png)
 
 We've made it easier than ever to setup and test your Auto-Router, and with customizable tier names + classifier system prompts you can go beyond complexity routing. 
 
