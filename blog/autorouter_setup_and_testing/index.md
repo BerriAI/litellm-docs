@@ -11,7 +11,7 @@ tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
 ---
 
-![LiteLLM Auto-Router: router ready in 1 click](./hero.png)
+![LiteLLM Autorouter V2: always use the latest models](./hero.png)
 
 We've made it easier than ever to setup and test your Auto-Router, and with customizable tier names + classifier system prompts you can go beyond complexity routing. 
 
@@ -40,8 +40,9 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 ![Add Auto Router form with the Anthropic Family template applied and the detailed configuration collapsed to a tier summary](./presets.png)
 
 - Add Auto Router now opens on a name field and a **Template** dropdown: Anthropic family, OpenAI family, or Custom
-- Picking a family fills in the whole config and collapses the detail behind a one-line tier summary
-- Presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
+- Picking a family builds the whole config for you with the **latest models** in that family, so every tier is on current models without writing any YAML
+- The detail collapses behind a one-line tier summary; presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
+- More families are coming; today Anthropic and OpenAI are covered, and Custom is there for everything else
 
 ## Let your agent set up the router
 
