@@ -25,6 +25,7 @@ liteLLM provides `input_callbacks`, `success_callbacks` and `failure_callbacks`,
 - [Slack](https://slack.dev/bolt-python/concepts)
 - [Arize](https://docs.arize.com/)
 - [PromptLayer](https://docs.promptlayer.com/)
+- [Paritok](./paritok_integration) — context-compression proxy callback
 
 This is **not** an extensive list. Please check the dropdown for all logging integrations.
 

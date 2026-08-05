@@ -106,6 +106,7 @@ const sidebars = {
           items: [
             "observability/callbacks",
             "observability/custom_callback",
+            "observability/paritok_integration",
             "observability/generic_api",
             "observability/raw_request_response",
             "observability/scrub_data",
