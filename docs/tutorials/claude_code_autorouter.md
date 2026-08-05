@@ -30,7 +30,7 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-To have Claude Code write that entry itself against the models your proxy already serves, tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`; the skill names the router `claude-auto` and leaves every other setting at its default.
+To have an agent write that entry against the models your proxy already serves, tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`, and say the router is for Claude Code so it picks an accepted name.
 
 If API callers already use a non-Anthropic name, keep both by declaring a second `model_list` entry with the same `complexity_router_config` under the Claude-facing name. `router_settings.model_group_alias` does not work here, because alias resolution runs after auto-router dispatch and the aliased call fails with `Unmapped LLM provider`.
 

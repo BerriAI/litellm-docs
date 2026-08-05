@@ -58,15 +58,15 @@ curl -X POST http://localhost:4000/v1/chat/completions \
   -d '{"model": "smart-router", "messages": [{"role": "user", "content": "What is 2+2?"}]}'
 ```
 
-## Have a coding agent set it up
+## Set it up with your agent
 
-Tell Claude Code, Cursor, Codex, or any agent with access to your proxy config:
+To get started, tell your agent:
 
 ```
 run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions
 ```
 
-It reads your `model_list`, proposes a model per tier, adds the router on the defaults, and verifies both a trivial and a hard request land on different tiers.
+It reads the models your proxy already serves, asks how you want the router named and which model should serve each tier, and calls out the defaults it is assuming before it writes anything.
 
 ## Full config
 

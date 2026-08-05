@@ -1,42 +1,63 @@
 # Skill: set up a LiteLLM auto router
 
-You are setting up a LiteLLM auto router for the user with the default settings. An auto
-router is a single model name that classifies each incoming request and forwards it to the
-cheapest model that can handle it, so a trivial question does not pay for a frontier model.
+You are helping the user add an auto router to their LiteLLM proxy. An auto router is one
+model name that classifies each request and forwards it to the cheapest model that can
+handle it, so a trivial question does not pay for a frontier model.
+
 Reference documentation: https://docs.litellm.ai/docs/proxy/auto_routing
 
-Follow these steps in order and stop to ask the user whenever a step is ambiguous.
+This is an interactive setup. Ask the questions below, wait for answers, and never invent a
+model the user does not already serve. Ask everything you still need in as few messages as
+possible rather than one question at a time, and skip any question the user has already
+answered in their request.
 
-## 1. Find the proxy config
+## 1. Find the models the proxy already serves
 
-Locate the config the LiteLLM proxy actually loads: the file passed to `litellm --config`,
-commonly `config.yaml` or `proxy_config.yaml` at the repo root or under a `litellm/`
-directory. Read its `model_list`.
+Locate the config the proxy loads: the file passed to `litellm --config`, commonly
+`config.yaml` or `proxy_config.yaml`. Read its `model_list` and note every `model_name`
+along with which are chat models and which are embedding models.
 
-If the models are managed in the database instead (added through the Admin UI or
-`/model/new`) and no `model_list` exists in a file, use the management API in step 3
-instead of editing YAML.
+If a running proxy is reachable, `curl -s $LITELLM_PROXY_URL/v1/models -H "Authorization:
+Bearer $LITELLM_API_KEY"` lists the same names. If the models are managed in the database
+(added through the Admin UI or `/model/new`) and no `model_list` exists in a file, use that
+listing and create the router through the management API in step 4.
 
-## 2. Pick one model per tier
+Show the user the list you found. If you cannot find any models, stop and ask where the
+config lives rather than guessing.
 
-Choose four routing targets, using only `model_name` values that already exist in the
-config, spelled exactly as they appear. Do not add deployments, providers, or API keys, and
-do not invent model names.
+## 2. Ask for the router name
+
+Ask what to call the router; it becomes the model name callers request. Suggest
+`auto-router` as the default.
+
+One constraint worth raising only if it applies: Claude Code and Claude Desktop only offer
+model names that read as Anthropic models, so if the user plans to call the router from one
+of those, the name has to contain `claude`, `anthropic`, or a family word such as `opus`,
+`sonnet`, or `haiku`, and no other vendor's name. Point them at
+https://docs.litellm.ai/docs/tutorials/claude_code_autorouter when that is the case.
+
+## 3. Ask which model serves each tier
+
+Propose an assignment from the models you found, then ask the user to confirm or change it:
 
 - `SIMPLE`: the cheapest usable chat model
 - `MEDIUM`: a mid-tier general model
 - `COMPLEX`: the strongest general model
 - `REASONING`: a reasoning model
 
-Reuse a name across tiers when the list has nothing better. Tell the user which model you
-picked for each tier and why before editing anything.
+Explain what each tier catches so the choice is informed: SIMPLE takes greetings and
+one-line lookups, MEDIUM ordinary questions, COMPLEX multi-step or code-heavy work, and
+REASONING anything asking to think step by step or prove something. The same model may
+serve several tiers when the list has nothing better, and a tier can be a list of models
+the router picks from at random. Also ask which tier should be the fallback when
+classification fails; MEDIUM is the usual answer.
 
-## 3. Add the router
+## 4. Write the config
 
-Append one entry to `model_list` and change nothing else in the file:
+Append one entry to `model_list`, changing nothing else in the file:
 
 ```yaml
-  - model_name: claude-auto
+  - model_name: <router name>
     litellm_params:
       model: auto_router/complexity_router
       complexity_router_config:
@@ -45,26 +66,59 @@ Append one entry to `model_list` and change nothing else in the file:
           MEDIUM:    <medium model>
           COMPLEX:   <complex model>
           REASONING: <reasoning model>
-      complexity_router_default_model: <medium model>
+      complexity_router_default_model: <fallback model>
 ```
 
-Keep the name `claude-auto` if Claude Code or Claude Desktop will call this router, since
-those clients only offer model names that read as Anthropic models. Otherwise name it to
-match the user's conventions.
-
-Add no other keys. The defaults being requested are the heuristic classifier (no extra API
-call per request), no keyword rules, no semantic matching, adaptive off, and session
-affinity off.
-
-For a database-managed proxy, create the same deployment through the management API:
+For a database-managed proxy, create the same deployment through the management API
+instead:
 
 ```bash
 curl -X POST $LITELLM_PROXY_URL/model/new \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'Content-Type: application/json' \
-  -d '{"model_name": "claude-auto", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}, "complexity_router_default_model": "<medium model>"}}'
+  -d '{"model_name": "<router name>", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}, "complexity_router_default_model": "<fallback model>"}}'
 ```
 
-## 4. Verify the routing
+## 5. State the defaults you are assuming
+
+Everything not written above runs on its default. Tell the user these explicitly and offer
+to change any of them now:
+
+- Classification uses the built-in heuristic scorer: no extra API call, sub-millisecond,
+  scores prompt length, code presence, reasoning markers, and technical terms. The
+  alternative is an LLM classifier, which costs one small model call per request and reads
+  the request more accurately.
+- Session affinity is off, so every turn of a conversation is classified on its own merits
+  and lands on the cheapest tier adequate for it. Turning it on (`session_affinity: true`,
+  with `session_affinity_ttl_seconds` defaulting to 3600) pins a session to its first-turn
+  model, which preserves provider prompt caches and avoids replaying one model's
+  conversation history to another, at the cost of the whole session inheriting the first
+  turn's tier.
+- No keyword rules and no semantic matching, so nothing short-circuits the classifier.
+  `keyword_tier_rules` can force chosen phrases into a tier, and
+  `semantic_keyword_matching` extends that to paraphrases using an embedding model.
+- Adaptive routing is off, so a tier holding several models picks among them uniformly at
+  random rather than Thompson-sampling by observed quality.
+
+If the user picks the LLM classifier, ask which model should classify (a small fast one,
+chosen from the models they already serve) and add:
+
+```yaml
+        classifier_type: llm
+        classifier_llm_config:
+          model: <small fast model>
+          timeout_ms: 2000
+```
+
+Then tell them what that turns on by default: the classifier sees the last 3 prior human
+turns of the conversation, truncated to 200 characters each
+(`classifier_context_window_size: 3`, `classifier_context_per_turn_chars: 200`), so a
+follow-up like "now do the same for the streaming path" is rated against what it refers to.
+Assistant replies are excluded (`classifier_context_include_assistant_turns: false`); the
+setting exists for conversations where the assistant states the difficulty and the user
+only answers "yes". Set the window size to 0 to classify the current message alone. Any
+value left at its default should stay out of the config.
+
+## 6. Verify
 
 Restart the proxy, then send one trivial request and one hard one, and show the user both
 responses and the model each landed on:
@@ -72,27 +126,24 @@ responses and the model each landed on:
 ```bash
 curl -s $LITELLM_PROXY_URL/v1/chat/completions \
   -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-  -d '{"model":"claude-auto","messages":[{"role":"user","content":"what is 2+2?"}]}'
+  -d '{"model":"<router name>","messages":[{"role":"user","content":"what is 2+2?"}]}'
 
 curl -s $LITELLM_PROXY_URL/v1/chat/completions \
   -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-  -d '{"model":"claude-auto","messages":[{"role":"user","content":"Think step by step and design a multi-region active-active Postgres failover strategy."}]}'
+  -d '{"model":"<router name>","messages":[{"role":"user","content":"Think step by step and design a multi-region active-active Postgres failover strategy."}]}'
 ```
 
-Confirm the decisions in the proxy logs, which carry one line per routing decision:
+The proxy logs carry one line per routing decision:
 
 ```
 ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE, score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
 ```
 
-The two requests should report different tiers. If they do not, report what you saw rather
-than tuning thresholds.
+The two requests should report different tiers. If they do not, show the user what you saw
+rather than tuning thresholds on your own.
 
-## 5. Hand back
+## 7. Hand back
 
-Tell the user the router name to call, the tier assignments, and where the tuning knobs
-live: https://docs.litellm.ai/docs/proxy/auto_routing#full-config
-
-If the router will serve Claude Code or Claude Desktop, point them at
-https://docs.litellm.ai/docs/tutorials/claude_code_autorouter for the model-name and
-organization allowlist requirements those clients enforce before a router is selectable.
+Tell the user the router name to call, the tier assignments, the defaults in force, and
+where the remaining knobs live:
+https://docs.litellm.ai/docs/proxy/auto_routing#full-config
