@@ -6,15 +6,15 @@ handle it, so a trivial question does not pay for a frontier model.
 
 Reference documentation: https://docs.litellm.ai/docs/proxy/auto_routing
 
-This is an interactive setup. Ask the questions below, wait for answers, and never invent a
-model the user does not already serve. Ask everything you still need in as few messages as
-possible rather than one question at a time, and skip any question the user has already
-answered in their request.
+This setup is interactive. Every choice below belongs to the user: ask, wait for the
+answer, and never pick a router name or a tier model on their behalf. Never reference a
+model the proxy does not already serve. Batch the questions into as few messages as you can
+rather than asking one at a time, and skip anything the user already told you.
 
 ## 1. Find the models the proxy already serves
 
 Locate the config the proxy loads: the file passed to `litellm --config`, commonly
-`config.yaml` or `proxy_config.yaml`. Read its `model_list` and note every `model_name`
+`config.yaml` or `proxy_config.yaml`. Read its `model_list` and note every `model_name`,
 along with which are chat models and which are embedding models.
 
 If a running proxy is reachable, `curl -s $LITELLM_PROXY_URL/v1/models -H "Authorization:
@@ -25,32 +25,33 @@ listing and create the router through the management API in step 4.
 Show the user the list you found. If you cannot find any models, stop and ask where the
 config lives rather than guessing.
 
-## 2. Ask for the router name
+## 2. Ask what to name the router
 
-Ask what to call the router; it becomes the model name callers request. Suggest
-`auto-router` as the default.
+The name becomes the model name callers request. Ask the user for it and use exactly what
+they give you. Do not propose a name, and do not fall back to one if they are undecided;
+ask again instead.
 
-One constraint worth raising only if it applies: Claude Code and Claude Desktop only offer
-model names that read as Anthropic models, so if the user plans to call the router from one
-of those, the name has to contain `claude`, `anthropic`, or a family word such as `opus`,
-`sonnet`, or `haiku`, and no other vendor's name. Point them at
-https://docs.litellm.ai/docs/tutorials/claude_code_autorouter when that is the case.
+Raise one constraint only if the user says the router will be called from a client that
+filters model names by vendor, such as Claude Code or Claude Desktop: those accept only
+names that read as Anthropic models, meaning the name has to contain `claude`, `anthropic`,
+or a family word such as `opus`, `sonnet`, or `haiku`, with no other vendor's name in it.
+See https://docs.litellm.ai/docs/tutorials/claude_code_autorouter
 
 ## 3. Ask which model serves each tier
 
-Propose an assignment from the models you found, then ask the user to confirm or change it:
+Show the user the four tiers with what each one catches, list the models you found, and ask
+them to assign one per tier. Do not pre-fill an assignment; if they ask you to recommend
+one, say what you would pick and why, then still wait for their confirmation.
 
-- `SIMPLE`: the cheapest usable chat model
-- `MEDIUM`: a mid-tier general model
-- `COMPLEX`: the strongest general model
-- `REASONING`: a reasoning model
+- `SIMPLE`: greetings, one-line lookups, trivial questions
+- `MEDIUM`: ordinary questions and short edits
+- `COMPLEX`: multi-step or code-heavy work
+- `REASONING`: anything asking to think step by step, prove, or plan at length
 
-Explain what each tier catches so the choice is informed: SIMPLE takes greetings and
-one-line lookups, MEDIUM ordinary questions, COMPLEX multi-step or code-heavy work, and
-REASONING anything asking to think step by step or prove something. The same model may
-serve several tiers when the list has nothing better, and a tier can be a list of models
-the router picks from at random. Also ask which tier should be the fallback when
-classification fails; MEDIUM is the usual answer.
+Tell them a model may serve several tiers, and that a tier can hold a list of models the
+router picks from at random rather than a single name. Also ask which model should serve as
+the fallback when classification fails, which is what `complexity_router_default_model`
+sets.
 
 ## 4. Write the config
 
@@ -78,45 +79,41 @@ curl -X POST $LITELLM_PROXY_URL/model/new \
   -d '{"model_name": "<router name>", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}, "complexity_router_default_model": "<fallback model>"}}'
 ```
 
-## 5. State the defaults you are assuming
+## 5. Lay out the defaults and ask what else to change
 
-Everything not written above runs on its default. Tell the user these explicitly and offer
-to change any of them now:
+Everything not written above runs on its default. Before you finish, show the user this
+list, say these are the defaults now in force, and ask whether they want to change any of
+them. Apply whatever they pick, and leave every value they keep out of the config so the
+backend default applies.
 
-- Classification uses the built-in heuristic scorer: no extra API call, sub-millisecond,
-  scores prompt length, code presence, reasoning markers, and technical terms. The
-  alternative is an LLM classifier, which costs one small model call per request and reads
-  the request more accurately.
-- Session affinity is off, so every turn of a conversation is classified on its own merits
-  and lands on the cheapest tier adequate for it. Turning it on (`session_affinity: true`,
-  with `session_affinity_ttl_seconds` defaulting to 3600) pins a session to its first-turn
-  model, which preserves provider prompt caches and avoids replaying one model's
-  conversation history to another, at the cost of the whole session inheriting the first
-  turn's tier.
-- No keyword rules and no semantic matching, so nothing short-circuits the classifier.
-  `keyword_tier_rules` can force chosen phrases into a tier, and
-  `semantic_keyword_matching` extends that to paraphrases using an embedding model.
-- Adaptive routing is off, so a tier holding several models picks among them uniformly at
-  random rather than Thompson-sampling by observed quality.
+| Setting | Default in force | What changing it buys |
+| --- | --- | --- |
+| Classifier | Heuristic scorer, no API call, sub-millisecond, scores prompt length, code presence, reasoning markers, technical terms | `classifier_type: llm` reads the request more accurately, at one small model call per request |
+| Session affinity | Off, so every turn is classified on its own merits | `session_affinity: true` pins a session to its first-turn model, preserving provider prompt caches and avoiding replay of one model's history to another, at the cost of the whole session inheriting the first turn's tier. `session_affinity_ttl_seconds` defaults to 3600 |
+| Keyword rules | None | `keyword_tier_rules` forces chosen phrases into a tier before the classifier runs |
+| Semantic matching | Off | `semantic_keyword_matching: true` plus an `embedding_model` extends those rules to paraphrases |
+| Adaptive routing | Off, so a tier with several models picks uniformly at random | `adaptive: true` Thompson-samples within the tier by observed quality |
+| Technical keyword list | Built-in list only | `custom_technical_keywords` appends domain terms the built-in list misses |
+| Scorer thresholds | Built-in boundaries and weights | `tier_boundaries`, `token_thresholds`, and `dimension_weights` move where the scorer draws each tier |
 
-If the user picks the LLM classifier, ask which model should classify (a small fast one,
-chosen from the models they already serve) and add:
+If the user takes the LLM classifier, ask which of their models should do the classifying,
+a small fast one, and add:
 
 ```yaml
         classifier_type: llm
         classifier_llm_config:
-          model: <small fast model>
+          model: <classifier model>
           timeout_ms: 2000
 ```
 
-Then tell them what that turns on by default: the classifier sees the last 3 prior human
-turns of the conversation, truncated to 200 characters each
+Then tell them what that turns on by default and ask whether to change it: the classifier
+sees the last 3 prior human turns, truncated to 200 characters each
 (`classifier_context_window_size: 3`, `classifier_context_per_turn_chars: 200`), so a
-follow-up like "now do the same for the streaming path" is rated against what it refers to.
-Assistant replies are excluded (`classifier_context_include_assistant_turns: false`); the
-setting exists for conversations where the assistant states the difficulty and the user
-only answers "yes". Set the window size to 0 to classify the current message alone. Any
-value left at its default should stay out of the config.
+follow-up like "now do the same for the streaming path" is rated against what it refers to
+instead of on its own length. Assistant replies are excluded
+(`classifier_context_include_assistant_turns: false`); turning them on helps when the
+assistant states the difficulty and the user only answers "yes". A window size of 0
+classifies the current message alone.
 
 ## 6. Verify
 
@@ -144,6 +141,6 @@ rather than tuning thresholds on your own.
 
 ## 7. Hand back
 
-Tell the user the router name to call, the tier assignments, the defaults in force, and
+Tell the user the router name to call, the tier assignments, the settings in force, and
 where the remaining knobs live:
 https://docs.litellm.ai/docs/proxy/auto_routing#full-config
