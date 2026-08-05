@@ -1,17 +1,17 @@
 ---
 slug: auto-router-setup-and-testing
-title: "Auto-Router: Get Started in 1 Command, & Go beyond Complexity Routing"
+title: "AutoRouter: 1-Click setup"
 date: 2026-08-05T10:00:00
 authors:
   - tin
 image: ./hero.png
-description: "Six changes to the Auto-Router: a one-line agent setup skill, Test Routing in the UI, Anthropic and OpenAI family presets, a replaceable classifier prompt, renameable tiers, and configurable reminder markers."
+description: "Six changes to the Auto-Router: 1-click Anthropic and OpenAI presets, a one-line agent setup skill, Test Routing in the UI, a replaceable classifier prompt, customizable tiers, and configurable reminder markers."
 keywords: [auto router, llm routing, litellm, model routing, claude code, llm classifier, complexity router]
 tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
 ---
 
-![LiteLLM Auto-Router: get started in 1 click, go beyond complexity routing](./hero.png)
+![LiteLLM Auto-Router: pick a preset, router's ready](./hero.png)
 
 We've made it easier than ever to setup and test your Auto-Router, and with customizable tier names + classifier system prompts you can go beyond complexity routing. 
 
@@ -35,6 +35,14 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
+## 1-Click Presets for Anthropic and OpenAI Families
+
+![Add Auto Router form with the Anthropic Family template applied and the detailed configuration collapsed to a tier summary](./presets.png)
+
+- Add Auto Router now opens on a name field and a **Template** dropdown: Anthropic family, OpenAI family, or Custom
+- Picking a family fills in the whole config and collapses the detail behind a one-line tier summary
+- Presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
+
 ## Let your agent set up the router
 
 Paste this into Claude Code, Codex, Cursor, or any agent with shell access:
@@ -49,28 +57,17 @@ run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instruc
 
 ## Test Routing in the UI during setup
 
-![Test Routing modal showing the tier, score, signals and routed model for a test prompt](./test-routing.png)
-
 - **Test Routing** now sits beside Test Connection on the Add Auto Router form
 - Send a prompt, see the tier it lands in and why, against the config currently on screen
 - Nothing is created and nothing is sent to the routed model, so it costs nothing beyond your LLM classifier (if enabled)
-
-
-## Presets for the Anthropic and OpenAI families
-
-- Add Auto Router now opens on a name field and a **Template** dropdown: Anthropic family, OpenAI family, or Custom
-- Picking a family fills in the whole config and collapses the detail behind a one-line tier summary
-- Presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
 
 ## Replace the classifier's system prompt
 
 The LLM classifier shipped with one built-in rubric, so the router could only grade complexity. `classifier_llm_config.system_prompt` now allows you to define your own routing criteria — whether you want a more in-depth prompt for complexity or routing based on another criterion such as data sensitivity or model capability (vision, audio, image).
 
-![Classification Method panel with the Classifier Prompt override and fallback options](./classifier-prompt.png)
-
 - `classifier_fallback` decides what happens when classification fails: the heuristic scorer, or straight to `default_model`
 
-## Rename the tiers
+## Customize your tiers
 
 Along with the above change, you can now change the tier names from the default: SIMPLE / MEDIUM / COMPLEX / REASONING. If your team prefers Fast / Standard / Premium / Deep or Image / Video / Audio / Text, an optional `tier_labels` map renames them.
 
