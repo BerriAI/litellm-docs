@@ -223,7 +223,7 @@ embedding_model: voyage-3-5
 match_threshold: 0.5
 ```
 
-## Escalation keywords
+### Escalation keywords
 
 `escalation_keywords` defaults to `["LITELLM ESCALATE"]`. Matching is a case-sensitive substring test against the newest human ask, so the default phrase must appear in that exact uppercase form. Set an empty list to disable escalation.
 
