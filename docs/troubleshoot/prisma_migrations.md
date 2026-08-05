@@ -1,6 +1,6 @@
 # Troubleshooting Prisma Migration Errors
 
-Common Prisma migration issues encountered when upgrading or downgrading LiteLLM proxy versions, and how to fix them.
+Common Prisma migration issues encountered when upgrading or downgrading LiteLLM proxy versions, plus the query engine resolution failure that can stop the proxy before any migration runs, and how to fix them.
 
 For a full guide on safely reverting your LiteLLM version, see the **[Safe Rollback Guide](rollback)**.
 
@@ -115,3 +115,29 @@ LIMIT 20;
 ```bash
 DATABASE_URL="<your_database_url>" prisma db push
 ```
+
+---
+
+### 4. `PermissionError` while resolving the query engine
+
+**Example error:**
+
+```
+PermissionError: [Errno 13] Permission denied:
+'/usr/local/lib/python3.11/site-packages/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x'
+```
+
+**Cause:** before Prisma can talk to your database it has to decide which query engine binary to run, and it does that by walking the engine paths the Prisma CLI recorded when the client was generated. A generated client carries five of them, one per supported platform, so the walk always runs. It tests each candidate with `Path.exists()`, which reports a missing file as `False` but re-raises `PermissionError` when a directory on the way to the candidate denies the running uid; it only swallows `ENOENT`, `ENOTDIR`, `EBADF` and `ELOOP`. An image that generates the client as one uid and runs as another, or that installs the client somewhere the runtime uid cannot traverse, therefore dies at startup rather than moving on to the next candidate. Python 3.14 returns `False` here and is unaffected; every other interpreter LiteLLM supports, 3.10 through 3.13, raises.
+
+**How to fix:** point Prisma at an engine the runtime uid can read, setting both variables together. `PRISMA_QUERY_ENGINE_BINARY` on its own does not clear this, because the walk that raises runs before Prisma reads that variable. `PRISMA_BINARY_PLATFORM` is the one that short-circuits the walk, before any candidate is tested, so neither variable substitutes for the other:
+
+```bash
+export PRISMA_BINARY_PLATFORM=debian-openssl-3.0.x
+export PRISMA_QUERY_ENGINE_BINARY=/opt/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x
+```
+
+`PRISMA_BINARY_PLATFORM` has to name a platform the client was actually generated for. Prisma looks the name up directly in the generated paths, so naming one you did not generate trades the `PermissionError` for a `KeyError`. `PRISMA_QUERY_ENGINE_BINARY` has to point at an engine file the runtime uid can both read and execute. Set both in the environment rather than patching `BINARY_PATHS` at import time: `PRISMA_BINARY_PLATFORM` is a declared Prisma config option and `PRISMA_QUERY_ENGINE_BINARY` is read from the environment directly, so neither depends on Prisma internals that a version bump can move.
+
+The official images already avoid the condition by baking the Prisma CLI and engines at a fixed, world-readable `/opt/prisma`, so any uid can resolve them. `v1.95.0` is the first stable release carrying that for both image variants. The standard image has had it since `v1.94.0`, but the whole `1.94.x` line lacks it for `litellm-non_root`, so a non-root deployment on `v1.94.1` or earlier still needs the two variables above. Custom images and plain `pip install` deployments are outside both fixes and always need them.
+
+Images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`; `ghcr.io/berriai/litellm-non_root:v1.95.0` is the non-root variant.
