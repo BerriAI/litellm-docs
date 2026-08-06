@@ -44,6 +44,8 @@ The numbers come from a new per-session rollup table so the tab stays fast at sc
 
 ![The Auto-Router Usage tab in Cost Optimization](./auto-router-usage-tab.png)
 
+Next up: benchmarking the Auto-Router against your existing traffic, so you can see the savings before you switch.
+
 ## Per-request logging of the LLM classifier cost
 
 When the complexity router uses an LLM classifier, that classifier call is billed, but until now it was invisible on the request that triggered it. You can now quantify routing overhead per request.
