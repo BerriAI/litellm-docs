@@ -102,20 +102,7 @@ In cases where encounter other errors when apply Zscaler AI Guard, return exampl
 }
 ```
 
-Each scan waits up to 5 seconds by default. If requests fail with `litellm.Timeout: Connection timed out. Timeout passed=5.0`, the scan is taking longer than that, which is most common under load because the limit also covers waiting for a free connection. Raise it with the `timeout` param on the guardrail, in seconds:
-
-```yaml
-guardrails:
-  - guardrail_name: "zscaler-ai-guard-during-guard"
-    litellm_params:
-      guardrail: zscaler_ai_guard
-      mode: "during_call"
-      api_key: os.environ/ZSCALER_AI_GUARD_API_KEY
-      policy_id: os.environ/ZSCALER_AI_GUARD_POLICY_ID
-      timeout: 30
-```
-
-The value applies to each individual Zscaler AI Guard API call and can differ per guardrail, so a pre-call and a post-call guardrail can carry different limits. You can also set it from the Admin UI when adding or editing the guardrail. It must be positive; a zero or negative value is ignored and the 5 second default is used instead.
+Each scan waits up to 5 seconds by default. If requests fail with `litellm.Timeout: Connection timed out. Timeout passed=5.0`, the scan is taking longer than that, which is most common under load because the limit also covers waiting for a free connection. Raise it with the `timeout` param shown above, in seconds. It applies to each individual Zscaler AI Guard API call and can differ per guardrail, so a pre-call and a post-call guardrail can carry different limits. You can also set it from the Admin UI when adding or editing the guardrail. It must be positive; a zero or negative value is ignored and the 5 second default is used instead.
 
 ## 6. Sending User Information to Zscaler AI Guard (Optional)
 If you need to send end-user information to Zscaler AI Guard for analysis, you can set the configuration in the environment variables to True and include the relevant information in custom_headers on Zscaler AI Guard.
