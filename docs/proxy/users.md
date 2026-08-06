@@ -19,6 +19,12 @@ Requirements:
 
 - Need to a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc) [**See Setup**](./virtual_keys.md#setup)
 
+:::warning Budgets require a database
+
+Every budget on this page is enforced against spend read from the database, so none of them cap anything on a [DB-less deployment](./docker_quick_start.md#running-without-a-database). `litellm_settings.max_budget` fails open there rather than erroring: the proxy's global spend is only loaded when a database client exists, and with no total to compare against, the global budget check is skipped and requests keep being served past the limit. Key, team, and user budgets are unavailable for the same reason, since virtual keys cannot be resolved without a database (`No DB Connected`). Run with a database if a budget is part of how you bound spend.
+
+:::
+
 
 ## Set Budgets
 

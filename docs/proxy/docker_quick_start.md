@@ -194,6 +194,14 @@ docker run \
 
 Requests authenticate with the master key. See the [full config reference](./configs.md) for everything the file supports.
 
+:::warning Budgets are not enforced without a database
+
+`litellm_settings.max_budget` is not a spend cap on this path. Loading the proxy's global spend requires a database client, so without one the running total stays unknown and the global budget check never fires; a proxy configured with `max_budget: 100` keeps serving requests past $100 with no error and no alert. Key and team budgets are not an alternative here either, because virtual keys themselves need a database (requests carrying one fail with `No DB Connected`), so the master key is the only credential and it has no budget of its own.
+
+If a budget is part of how you bound spend, run LiteLLM with a database as shown at the top of this page. Without one, bound spend upstream instead, at your provider's own spending limits.
+
+:::
+
 ## Next steps
 
 Going to production: the [Production Deployment guide](./deploy.md) covers Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, and the [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are covered in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
