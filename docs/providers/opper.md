@@ -6,7 +6,9 @@ https://opper.ai
 
 **We support ALL Opper models, just set `opper/` as a prefix when sending completion requests**
 
-Opper is an EU-hosted LLM gateway with an OpenAI-compatible API, giving you access to 300+ models (Anthropic, OpenAI, Google, Mistral, open-weight models on EU infrastructure, and more) through a single API key. Model IDs follow the `provider/model` convention, e.g. `anthropic/claude-haiku-4-5`.
+Opper is an EU-hosted LLM gateway with an OpenAI-compatible API, giving you access to 500+ models (Anthropic, OpenAI, Google, Mistral, open-weight models on EU infrastructure, and more) through a single API key. Model IDs follow the `provider/model` convention, e.g. `anthropic/claude-haiku-4-5`.
+
+Opper is built for compliance-sensitive workloads: EU data residency, zero data retention (ZDR) available, and organization-level model allowlists so the models endpoint only returns what your compliance rules permit. It runs in production for everyone from single developers on the standard tier to enterprise deployments.
 
 Opper reports the actual request cost (USD) in `usage.cost` on every response; LiteLLM records it as the provider-reported response cost, so spend tracking reflects real gateway numbers instead of static price-map estimates.
 
@@ -79,4 +81,4 @@ model_list:
 
 ## Discovering models
 
-Opper's model list (with per-token pricing and compliance metadata) is available at `GET https://api.opper.ai/v3/compat/models`; the list is filtered to the models your key is permitted to use.
+Opper's model list (with per-token pricing) is available at `GET https://api.opper.ai/v3/compat/models`; the list is filtered to the models your organization's compliance rules permit your key to use.
