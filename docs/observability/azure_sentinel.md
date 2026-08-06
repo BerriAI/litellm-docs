@@ -120,6 +120,27 @@ You should see following logs in Azure Workspace.
 | `AZURE_SENTINEL_TENANT_ID` | Azure Tenant ID for OAuth2 authentication | None (falls back to `AZURE_TENANT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_ID` | Application (client) ID for OAuth2 authentication | None (falls back to `AZURE_CLIENT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_SECRET` | Client secret for OAuth2 authentication | None (falls back to `AZURE_CLIENT_SECRET`) | ✅ Yes |
+| `AZURE_SENTINEL_AUTHORITY_HOST` | Microsoft Entra authority host that issues the OAuth2 token | None (falls back to `AZURE_AUTHORITY_HOST`, then `https://login.microsoftonline.com`) | ❌ No |
+| `AZURE_SENTINEL_OAUTH_SCOPE` | OAuth2 scope requested for the Logs Ingestion API | The Azure Monitor audience matching the authority host | ❌ No |
+
+## Sovereign clouds (Azure Government, Azure China)
+
+Azure Government and Azure China use their own Entra authority and their own Azure Monitor audience, so pointing `AZURE_SENTINEL_ENDPOINT` at a sovereign ingestion endpoint is not enough on its own. Set the authority host as well, and LiteLLM derives the matching audience for you:
+
+```bash
+AZURE_SENTINEL_ENDPOINT="https://your-dcr-endpoint.usgovarizona-1.ingest.monitor.azure.us"
+AZURE_AUTHORITY_HOST="https://login.microsoftonline.us"
+```
+
+| Cloud | Authority host | Derived audience |
+|-------|----------------|------------------|
+| Azure Public Cloud (default) | `https://login.microsoftonline.com` | `https://monitor.azure.com/.default` |
+| Azure Government | `https://login.microsoftonline.us` | `https://monitor.azure.us/.default` |
+| Azure China (21Vianet) | `https://login.partner.microsoftonline.cn`, or the legacy `https://login.chinacloudapi.cn` | `https://monitor.azure.cn/.default` |
+
+If the ingestion endpoint and the resolved audience end up in different clouds, LiteLLM logs a warning at startup naming both, since Azure would reject that combination. For an authority host that is not in the table above, LiteLLM logs a warning and falls back to the Azure Public Cloud audience, so set `AZURE_SENTINEL_OAUTH_SCOPE` explicitly in that case. The authority host must be an https origin with no path, because the client secret is posted to it.
+
+`AZURE_AUTHORITY_HOST` is shared: LiteLLM already documents it for the `azure_storage` logging callback and for Azure OpenAI OIDC, and the Azure SDK reads it for any credential LiteLLM builds. If your Sentinel workspace lives in a different cloud than the rest of your Azure resources, set `AZURE_SENTINEL_AUTHORITY_HOST` to override it for Sentinel only.
 
 ## How It Works
 
