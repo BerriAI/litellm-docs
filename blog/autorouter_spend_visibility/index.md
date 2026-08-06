@@ -44,7 +44,7 @@ The numbers come from a new per-session rollup table so the tab stays fast at sc
 
 ![The Auto-Router Usage tab in Cost Optimization](./auto-router-usage-tab.png)
 
-Next up: benchmarking the Auto-Router against your existing traffic, so you can see the savings before you switch.
+Next up: benchmarking the Auto-Router quality and # of turns against equivalent usage for your org.
 
 ## Per-request logging of the LLM classifier cost
 
