@@ -1102,6 +1102,8 @@ router_settings:
 | LITELLM_KEY_ROTATION_GRACE_PERIOD | Duration to keep old key valid after rotation (e.g. "24h", "2d"). Default is empty (immediate revoke). Used for scheduled rotations and as fallback when not specified in regenerate request.
 | LITELLM_KEY_ROTATION_LOCK_TTL_SECONDS | TTL in seconds for the distributed lock used by the key rotation job. Default is 600 (10 minutes).
 | LITELLM_LICENSE | License key for LiteLLM usage
+| LITELLM_ACTIVE_REQUEST_INCLUDE_USER_EMAIL | Set to `true` to include the caller's email address in the records behind `GET /global/active_requests`. Off by default, because those records are stored in Redis
+| LITELLM_ACTIVE_REQUEST_TTL_SECONDS | How long a record behind `GET /global/active_requests` survives without being removed, in seconds. This is the cleanup path for a worker that dies mid-request, so it is also the maximum age of a stale row. Default is `1800`, clamped to 300..86400
 | LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS | Set to `True` to use the local bundled Anthropic beta headers config only, disabling remote fetching. Default is `False`
 | LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS | Comma-separated list of absolute directories from which the `oidc/file/` provider is permitted to read token files. Defaults to `/var/run/secrets,/run/secrets`.
 | LITELLM_LOCAL_BLOG_POSTS | When set to `True`, uses the local bundled blog posts only, disabling remote fetching from GitHub. Default is `False`
