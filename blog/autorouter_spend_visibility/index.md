@@ -31,8 +31,6 @@ Everything below ships in **v1.97.x**.
 
 ## See Auto-Router savings + usage benchmarked against a relevant model
 
-![The Auto-Router Usage tab in Cost Optimization](./auto-router-usage-tab.png)
-
 The most common question from teams piloting the Auto-Router is "how much is this actually saving me". There is now a tab that answers it.
 
 Cost Optimization has a new **Auto-Router Usage** tab. It covers the last 24 hours, 7 days, or 30 days, for a single router or all routers combined, and shows:
@@ -43,6 +41,10 @@ Cost Optimization has a new **Auto-Router Usage** tab. It covers the last 24 hou
 
 
 The numbers come from a new per-session rollup table so the tab stays fast at scale; in our load tests, a 30-day window over 400k sessions reads in 38 ms.
+
+![The Auto-Router Usage tab in Cost Optimization](./auto-router-usage-tab.png)
+
+Next up: benchmarking the Auto-Router quality and # of turns against equivalent usage for your org.
 
 ## Per-request logging of the LLM classifier cost
 
