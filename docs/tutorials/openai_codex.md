@@ -156,7 +156,21 @@ codex
 
 <Image img={require('../../img/litellm_codex.gif')} />
 
-## 6. Advanced Options
+## 6. Using the Codex Desktop App
+
+The Codex desktop app reads the same `~/.codex/config.toml` as the CLI, so the configuration from step 4 works for the app with no extra LiteLLM setup. Set `model` and `model_provider` as shown above, then start the app and open a new session; requests are routed through your LiteLLM proxy.
+
+Two caveats specific to the app:
+
+**API key visibility.** The app resolves `env_key` from its own environment. On macOS, apps launched from Finder or the Dock do not inherit variables exported in your shell profile, so `LITELLM_API_KEY` can be missing even though `codex` works fine in your terminal. Either launch the app from a terminal or set the variable at the login session level and restart the app:
+
+```bash showLineNumbers
+launchctl setenv LITELLM_API_KEY sk-1234
+```
+
+**Model selection.** With a custom provider there is no UI for changing the model of a session in the app (see [openai/codex#15364](https://github.com/openai/codex/issues/15364)). A session uses whatever `model` was set in `config.toml` when the session was created. To use a different LiteLLM model, update `model` in `config.toml` and start a new session.
+
+## 7. Advanced Options
 
 ### Using Different Models
 
