@@ -33,23 +33,23 @@ The short version: **`gemini-3.5-flash-lite` is our pick**. It posts the top acc
 
 ## The results
 
-Every classifier saw exactly the same 100 prompts, stratified 25 per tier across `simple` / `medium` / `complex` / `reasoning`. `within-1` means the predicted tier was at most one rung off. `under` means it predicted a cheaper tier than the truth (quality risk); `over` means a more expensive one (wasted spend). Cost is per 1,000 classifications.
+Every classifier saw exactly the same 100 prompts, stratified 25 per tier across `simple` / `medium` / `complex` / `reasoning`. Latency is the median per classification; cost is per 1,000 classifications.
 
-| Classifier | Accuracy | Macro-F1 | Within-1 | Under | Over | p50 | p95 | $/1k |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **gemini-3.5-flash-lite** | **65%** | **0.637** | 0.84 | 0.22 | 0.13 | 0.50s | 0.67s | $0.092 |
-| gpt-4o-mini | 64% | 0.603 | 0.80 | 0.13 | 0.23 | 0.59s | 1.20s | $0.044 |
-| claude-haiku-4-5 | 63% | 0.610 | 0.83 | 0.24 | 0.13 | 0.78s | 2.57s | $0.337 |
-| deepseek-v3.2 (dedicated GPU) | 63% | 0.618 | 0.85 | 0.28 | 0.09 | 0.16s | 0.24s | $0.162 |
-| grok-4.1-fast | 61% | 0.587 | 0.81 | 0.21 | 0.18 | 0.41s | 3.30s | $0.057 |
-| gpt-5.4-nano | 55% | 0.535 | 0.74 | 0.29 | 0.16 | 0.71s | 1.80s | $0.088 |
-| gemma-3-4b (dedicated GPU) | 51% | 0.518 | 0.85 | 0.28 | 0.21 | 0.22s | 1.93s | $0.061 |
-| ministral-3b | 49% | 0.457 | 0.74 | 0.19 | 0.32 | 0.33s | 0.57s | n/a |
-| llama-3.1-8b (dedicated GPU) | 48% | 0.477 | 0.82 | 0.24 | 0.28 | 0.16s | 0.21s | $0.031 |
-| **heuristic (no LLM)** | **45%** | 0.433 | 0.77 | 0.33 | 0.22 | ~0ms | ~0ms | $0 |
-| qwen3-4b (dedicated GPU) | 44% | 0.405 | 0.87 | 0.34 | 0.22 | 0.64s | 0.94s | $0.060 |
+| Classifier | Accuracy | Latency | Cost per 1k |
+| --- | --- | --- | --- |
+| **gemini-3.5-flash-lite** | **65%** | 0.50s | $0.09 |
+| gpt-4o-mini | 64% | 0.59s | $0.04 |
+| claude-haiku-4-5 | 63% | 0.78s | $0.34 |
+| deepseek-v3.2 (dedicated GPU) | 63% | 0.16s | $0.16 |
+| grok-4.1-fast | 61% | 0.41s | $0.06 |
+| gpt-5.4-nano | 55% | 0.71s | $0.09 |
+| gemma-3-4b (dedicated GPU) | 51% | 0.22s | $0.06 |
+| ministral-3b | 49% | 0.33s | n/a |
+| llama-3.1-8b (dedicated GPU) | 48% | 0.16s | $0.03 |
+| **heuristic (no LLM)** | **45%** | ~0ms | free |
+| qwen3-4b (dedicated GPU) | 44% | 0.64s | $0.06 |
 
-We also ran several of the open models on local CPU. Accuracy tracked the GPU runs within a few points, and the latency numbers are not comparable to hosted endpoints, so those rows are omitted.
+We also ran several of the open models on local CPU. Accuracy tracked the GPU runs within a few points, and the latency numbers are not comparable to hosted endpoints, so those rows are omitted. We also tracked macro-F1, how often each model landed within one tier of the truth, the split between under-routing (quality risk) and over-routing (wasted spend), and p95 latency; the sections below quote those where they change the story.
 
 ## How it was measured
 
