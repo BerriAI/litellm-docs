@@ -17,8 +17,6 @@ hide_table_of_contents: false
 
 :::info[🚀 Help shape the Auto-Router]
 
-Everything below ships in **v1.97.x**.
-
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
 <a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
@@ -28,6 +26,8 @@ Get early access, work directly with the LiteLLM team, and influence the roadmap
 Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
+
+Everything below ships in **v1.97.x**.
 
 ## See Auto-Router savings + usage benchmarked against a relevant model
 
