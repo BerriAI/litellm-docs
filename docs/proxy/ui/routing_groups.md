@@ -2,9 +2,13 @@ import Image from '@theme/IdealImage';
 
 # Manage Routing Groups
 
-Routing groups let you apply different routing strategies to different models in the same router — for example, latency-based routing for `gpt-4o` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
+:::warning Deprecated
+Prefer setting a [Routing Strategy on the model itself](../../routing.md#per-model-group-routing-strategy): Models + Endpoints > Add Model > Advanced Settings, or the model edit view. A routing group only assigns a strategy to its member `model_name`s; the group name is not a callable model and never appears in `/v1/models`. Existing groups keep working, and a strategy set on a model overrides its group
+:::
 
-For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies).
+Routing groups let you apply different routing strategies to different models in the same router; for example, latency-based routing for `gpt-4o` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
+
+For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-deprecated).
 
 > Click any screenshot below to open the full Scribe walkthrough.
 
@@ -58,7 +62,7 @@ router_settings:
         ttl: 3600
 ```
 
-See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies) for the full schema, multi-group examples, and runtime update behavior.
+See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-deprecated) for the full schema, multi-group examples, and runtime update behavior.
 
 ## Test a Request
 

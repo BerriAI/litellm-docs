@@ -846,7 +846,38 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
-## Routing Groups - Per-Model Strategies
+## Per-Model-Group Routing Strategy
+
+Set the load-balancing strategy directly on a model definition with `model_info.routing_strategy` (optionally `model_info.routing_strategy_args`). The strategy applies to the whole model group: every deployment sharing that `model_name`. This is the preferred way to give one model a different strategy than the router default, and it works the same whether the model comes from `config.yaml`, the `/model/new` API, or the dashboard's Add Model form (Advanced Settings has a Routing Strategy dropdown; the model edit view has the same field).
+
+```yaml
+model_list:
+  - model_name: claude-quality
+    litellm_params:
+      model: bedrock/us.anthropic.claude-opus-5
+      aws_region_name: us-west-2
+    model_info:
+      routing_strategy: cost-based-routing
+  - model_name: claude-quality
+    litellm_params:
+      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      aws_region_name: us-west-2
+
+router_settings:
+  routing_strategy: simple-shuffle
+```
+
+Requests for `claude-quality` are cost-routed between its two deployments; every other model keeps the router's top-level strategy. Setting the field on one deployment of the group is enough. If deployments of the same `model_name` disagree, the first one in `model_list` order wins and a warning is logged once. An unsupported value is ignored with a warning instead of failing traffic. An empty string counts as unset, which is how you clear the field through `PATCH /model/{id}/update` (a PATCH merge cannot delete a `model_info` key).
+
+Precedence, most specific first: a per-request `routing_strategy` forwarded from key or team `router_settings`, then `model_info.routing_strategy`, then a legacy `routing_groups` entry, then the router's top-level `routing_strategy`.
+
+Supported values: `simple-shuffle`, `latency-based-routing`, `cost-based-routing`, `usage-based-routing-v2`, `usage-based-routing`, `least-busy`.
+
+## Routing Groups - Per-Model Strategies (Deprecated)
+
+:::warning Deprecated
+Prefer [`model_info.routing_strategy`](#per-model-group-routing-strategy) on the model definition. Routing groups only assign a strategy to their member `model_name`s; the group name is not a callable model and never appears in `/v1/models`. Existing `routing_groups` configs keep working, and a `model_info.routing_strategy` on a model overrides its group's strategy.
+:::
 
 Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
 
