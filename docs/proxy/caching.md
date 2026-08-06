@@ -650,6 +650,37 @@ $ litellm --config /path/to/config.yaml
 
 </Tabs>
 
+## Tuning semantic cache hits
+
+The semantic backends (`redis-semantic`, `valkey-semantic`, `qdrant-semantic`) embed the incoming request, run a nearest-neighbor search against previously cached prompts, and return the stored response when cosine similarity is at or above `similarity_threshold`. There is no default, so you always set it explicitly.
+
+The text that gets embedded is the concatenated content of **every** message on the request, not just the newest one. Two turns of the same conversation therefore share nearly all of their text and sit very close together in embedding space; a long chat routinely scores above 0.95 against its own earlier turn even when the latest user message asks something completely different. Multi-turn and agentic workloads are where this bites: the request looks new to the caller, but the cache answers with the response from an earlier step in the same loop.
+
+Assistant `tool_calls` are not part of the embedded text either, only message content is. Two agent steps that differ solely in which tool the model called embed to the same vector and will match at any threshold.
+
+Every response carries `x-litellm-semantic-similarity`, so pick a threshold from your real traffic rather than guessing. Single-turn workloads such as classification or FAQ lookups are usually fine around 0.8 to 0.9. Conversational and agentic traffic needs a much tighter bound, typically 0.97 or higher:
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: valkey-semantic
+    similarity_threshold: 0.99
+```
+
+For an agent loop specifically, the more reliable option is to skip the cache entirely on those calls and keep semantic caching for the rest of your traffic:
+
+```shell
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{
+    "model": "gpt-5.6",
+    "messages": [{"role": "user", "content": "step 3 of the plan"}],
+    "cache": {"no-cache": true}
+  }'
+```
+
 ## Usage
 
 ### Basic
