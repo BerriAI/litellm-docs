@@ -322,6 +322,8 @@ router_settings:
 | use_google_kms | boolean | If true, load keys from google kms |
 | spend_report_frequency | str | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md#spend-report-frequency) |
 | ui_access_mode | Literal["admin_only"] | If set, restricts access to the UI to admin users only. [Docs](./ui.md#restrict-ui-access) |
+| max_failed_login_attempts | integer | Number of failed Admin UI sign-in attempts allowed for one username from one source address within `failed_login_window_seconds`, before further attempts are refused with 429 and a `Retry-After` header. Only genuine credential rejections count, and a successful sign-in clears the count. Configurable from config.yaml only. Defaults to 10 |
+| failed_login_window_seconds | integer | Fixed window in seconds over which failed Admin UI sign-in attempts are counted. The window starts at the first failure and is not extended by later attempts. Configurable from config.yaml only. Defaults to 900 |
 | litellm_jwtauth | Dict[str, Any] | Settings for JWT authentication. [Docs](./token_auth.md) |
 | litellm_license | str | The license key for the proxy. [Docs](../enterprise.md#how-does-deployment-with-enterprise-license-work) |
 | oauth2_config_mappings | Dict[str, str] | Define the OAuth2 config mappings | 
@@ -464,6 +466,7 @@ router_settings:
 
 | Name | Description |
 |------|-------------|
+| LITELLM_DISABLE_LOGIN_RATE_LIMIT | Set to `true` to turn off the Admin UI failed sign-in attempt accounting entirely |
 | A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
