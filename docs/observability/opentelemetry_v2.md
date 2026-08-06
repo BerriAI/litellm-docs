@@ -668,12 +668,12 @@ One proxy can serve many tenants and send each tenant's traces only to that tena
 
 ```
 Proxy admin                          Team admin
-  creates a destination  ───────►      picks it from a list
-  (backend + secrets + scope)          (only ones in their scope show up)
-        │                                      │
-        └──────────► at request time ◄─────────┘
-              the proxy matches caller to destination
-              and sends that request's trace there
+  creates a destination  ───────►      sees which ones reach their team
+  (backend + secrets + scope)          (read-only, on the team's info page)
+        │
+        └──────────► at request time
+              the proxy matches the caller against every
+              destination's scope and sends the trace there
 ```
 
 ### The idea in one minute
@@ -682,49 +682,52 @@ There are two pieces.
 
 A **destination** is a named place to send traces, created by the proxy admin. It reuses the same backends and credentials as the [presets](#2-send-traces-to-a-specific-tool-presets) above: it holds which backend it is (`langfuse_otel`, `arize`, `weave_otel`, or a `generic` OTLP endpoint, meaning any backend that speaks the OpenTelemetry Protocol), the connection details and secrets for that backend, and an **access scope** that says which teams or organizations are allowed to use it. An **organization** here is a group of teams; a team belongs to one org.
 
-A **team, key, or organization** turns a destination on by listing its name in a setting called `logging_exporters`. That is the only thing a team admin ever touches; the secrets stay with the proxy admin.
+The access scope is the whole of the routing decision. A team does not opt in and cannot turn a destination on or off; if the scope names the team, or the team's organization, or the destination is global, that team's traces go there. Teams see which destinations reach them as a read-only `resolved_logging_exporters` list on `/team/info` and `/organization/info`; the names are all they see, never the endpoints, the secrets, or the scope map itself.
 
-At request time the proxy looks at the key that made the call, the team that key belongs to, and that team's organization, collects every destination name those three list, keeps only the destinations whose access scope actually includes this caller, and sends the request's trace to each one. If nothing matches, the trace goes only to your normal global exporter from the sections above.
+At request time the proxy takes the team the calling key belongs to and that team's organization, keeps every destination whose scope includes one of them, builds each one from its stored values, and sends the request's trace to all of them. If nothing matches, the trace goes only to your normal global exporter from the sections above.
 
 ### Who can change what
 
-Three roles appear below. The **proxy admin** runs the whole proxy and holds every secret. An **org admin** runs one organization (a group of teams). A **team admin** runs a single team. The split exists so a team admin can opt their own team in without ever seeing or editing another tenant's secrets.
+Destinations are proxy-admin-owned end to end. Only a **proxy admin** can create one, edit its backend, host or secrets, or change its access scope; the `/credentials` endpoints answer 401 to anything else, so a team-scoped key cannot even list them. A **team admin** never handles another tenant's secrets because they never touch destinations at all.
 
-| Action | Proxy admin | Org admin (of the team's org) | Team admin (of the team) |
+| Action | Proxy admin | Org admin | Team admin |
 |---|:-:|:-:|:-:|
 | Create or delete a destination | Yes | No | No |
 | Edit a destination's backend, host, or secrets | Yes | No | No |
-| Make a destination global, or grant it to whole orgs | Yes | No | No |
-| Grant a destination to a team | Yes, any team | Yes, teams in their org | Yes, their own team |
-| Turn a destination on for a team or key (`logging_exporters`) | Yes | Yes | Yes (their team) |
+| Set the access scope: global, orgs, or teams | Yes | No | No |
+| See which destinations reach their own team or org | Yes | Yes, names only | Yes, names only |
 
 ### Set it up in the UI
 
-This is the common path, and it always takes two things to be true before a team's traces flow: the destination's access scope must include the team, and the team must list the destination in its **Logging Exporters**. The admin handles the first; the team admin handles the second. Note these are two different screens: the admin works in **Settings, Logging Callbacks** (where destinations are created), and the team admin works in a team's **Logging Exporters** picker (where a destination is switched on).
+This is the common path, and one thing has to be true before a team's traces flow: the destination's access scope must include that team, either directly, through its organization, or by being global. A proxy admin does all of it on one screen, **Logging & Alerts**, then **Logging Callbacks**.
 
 Proxy admin, create the destination:
 
-1. Open the proxy UI and go to **Settings**, then **Logging Callbacks**.
-2. Click to add a logging destination. Choose the **backend** (`langfuse_otel`, `arize`, `weave_otel`, or `generic`), fill in the **host** and the **secrets** for that backend, and set the **Access** scope: make it Global (every team), or pick specific Teams or Orgs. The secret values are the same ones you would set as that preset's env vars, copied from the backend's own dashboard (for example, your Langfuse project's API keys); see the [Preset reference](#preset-reference) for which fields each backend needs.
+1. Open the proxy UI and go to **Logging & Alerts**, then **Logging Callbacks**.
+2. Click **Add Callback** and pick the backend's **scoped destination** entry from the Callback dropdown, for example `Langfuse OTEL (scoped destination)`. The plain `Langfuse OTEL` entry above it is the proxy-wide callback from the sections above, not a destination. Give it a **Name**, fill in the **host** and the **secrets** for that backend, and set the access scope: turn on **Global** for every team, or pick specific **Teams** or **Organizations**. The secret values are the same ones you would set as that preset's env vars, copied from the backend's own dashboard (for example, your Langfuse project's API keys); see the [Preset reference](#preset-reference) for which fields each backend needs.
 3. Save. From now on the secrets and the Global/Org scope are admin-only; team admins can only attach the destination to teams already in its scope.
 
-![Adding a logging destination: choose the backend, set the host and secrets, then set the access scope with the Global, Teams, Organizations, and Auto-enable controls](/img/observability/otel_v2_destination_admin.png)
+![Adding a logging destination: the Callback dropdown set to Langfuse OTEL (scoped destination), with the name, host and secret fields above the Global, Teams and Organizations scope controls](/img/observability/otel_v2_destination_admin.png)
 
-The destinations you create appear in the Logging Callbacks list, each tagged with its access scope:
+The destinations you create appear in the Logging Callbacks list alongside your proxy-wide callbacks, each tagged with its access scope. `Mode` stays empty for a destination, since a destination has no success/failure mode of its own:
 
-![Active logging callbacks, each row showing its scope: one Global, one scoped to a single team](/img/observability/otel_v2_destinations_list.png)
+![Active logging callbacks: one Global destination, one scoped to a team, one scoped to an organization, and one showing the Not active badge](/img/observability/otel_v2_destinations_list.png)
 
-Team admin, switch it on for a team:
+A **Not active** badge means the destination cannot be built from the values it holds, usually because a required field is missing, so it receives no traces even where its scope would grant it. Fix the values and the badge clears.
 
-1. Go to **Teams**, pick your team, open **Settings** (or go to **Virtual Keys**, pick a key, and edit it).
-2. In the **Logging Exporters** multi-select, choose the destination. Only destinations in your scope appear here; other tenants' destinations are never listed.
-3. Save. Every request from that team or key now also sends its trace to the destination you picked.
+To change who a destination reaches after creating it, open the row's actions menu and choose **Edit scope**. This edits only the access scope; the host and secrets stay where they are.
+
+![The Edit scope dialog for a destination, with the Global toggle off and the Teams multi-select holding one team](/img/observability/otel_v2_destination_scope.png)
+
+That is the whole setup. Traces from every team in the scope start flowing on the next request, with no step on the team's side.
+
+To check a team is covered, open **Teams**, pick the team, and read its `resolved_logging_exporters`; it names every destination that will receive that team's traces. Other tenants' destinations never appear there.
 
 ### Set it up over the API
 
-The UI calls these endpoints; you can use them directly. The placeholders are: `$ADMIN_KEY` is a proxy-admin virtual key and `$TEAM_ADMIN_KEY` is the team admin's virtual key (mint either on the **Virtual Keys** page in the UI, or with `/key/generate`), `<team-id>` comes from the Teams page, and `pk-...` / `sk-...` are the backend's own keys from its dashboard. As in the UI, both the grant (step 1 or 2) and the turn-on (step 3) must be done before traces flow.
+The UI calls these endpoints; you can use them directly. `$ADMIN_KEY` is a proxy-admin virtual key (mint one on the **Virtual Keys** page in the UI, or with `/key/generate`), `<team-id>` comes from the Teams page, and `pk-...` / `sk-...` are the backend's own keys from its dashboard. Creating the destination is the only write; there is no second call to turn it on.
 
-Step 1, proxy admin creates a destination (here a Langfuse destination granted to one team):
+Proxy admin creates a destination, here a Langfuse destination granted to one team:
 
 ```shell
 curl -X POST http://localhost:4000/credentials \
@@ -745,23 +748,30 @@ curl -X POST http://localhost:4000/credentials \
   }'
 ```
 
-`credential_type` must be `logging`, and `description` names the backend. Step 2 (an alternative to the grant in step 1): a team admin grants their own team with a narrow patch, and cannot touch secrets, host, or the global/org scope:
+`credential_type` must be `logging`, and `description` names the backend. `access` accepts exactly `global`, `teams` and `orgs`; anything else is rejected with a 400, and per-key access is deliberately unsupported.
+
+To widen or narrow the scope later, patch the same credential. `credential_info` is replaced wholesale rather than merged, so send the fields you want to keep:
 
 ```shell
 curl -X PATCH http://localhost:4000/credentials/tenant-a-langfuse \
-  -H "Authorization: Bearer $TEAM_ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"credential_info": {"access": {"teams": ["<their-team-id>"]}}}'
+  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "credential_name": "tenant-a-langfuse",
+    "credential_info": {
+      "credential_type": "logging",
+      "description": "langfuse_otel",
+      "access": { "teams": ["<team-id>", "<other-team-id>"] }
+    },
+    "credential_values": {}
+  }'
 ```
 
-Step 3, turn the destination on for a team by adding its name to the team's `logging_exporters`:
+Confirm it landed by reading the team back; `resolved_logging_exporters` names every destination that will receive that team's traces:
 
 ```shell
-curl -X POST http://localhost:4000/team/update \
-  -H "Authorization: Bearer $TEAM_ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"team_id": "<team-id>", "metadata": {"logging_exporters": ["tenant-a-langfuse"]}}'
+curl "http://localhost:4000/team/info?team_id=<team-id>" \
+  -H "Authorization: Bearer $ADMIN_KEY"
 ```
-
-The same `metadata.logging_exporters` works on a key (`/key/update`) and on an organization, and the proxy unions all three at request time.
 
 ### Backends and the fields each one needs
 
@@ -776,15 +786,11 @@ The admin fills these into the destination's secret fields; the values come from
 
 ### Good to know
 
-Resolution is **default-deny**: a team only reaches a destination it both lists in `logging_exporters` and is in scope for. A misconfigured or misspelled name simply sends nothing, rather than leaking a trace to the wrong tenant.
+Resolution is **default-deny**. An `access` that grants nobody, whether it is absent, `{}`, or names only teams that do not exist, sends nothing rather than leaking a trace to the wrong tenant. The same holds for a destination whose values do not build; it is reported as **Not active** in the UI, is left out of `resolved_logging_exporters`, and receives nothing.
 
-Two shortcuts skip the per-team opt-in, and both are admin-only, set on the destination itself. A destination marked **global** is available to every team without an admin granting it team by team; a team admin still lists it to turn it on. A destination marked **auto-enable** goes further and applies to every request automatically, without any team listing it at all; use it when you want one backend to capture every request's trace across the whole proxy. In the UI both are toggles in the destination modal next to the Access scope; over the API they are `credential_info.access.global` and `credential_info.auto_enable`, for example:
+Set `access.global` to `true` to reach every team on the proxy without naming them. It is the one scope that does not need an org or team id, and it is still admin-only, so no team can grant itself global reach.
 
-```shell
-curl -X PATCH http://localhost:4000/credentials/tenant-a-langfuse \
-  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"credential_info": {"auto_enable": true}}'
-```
+Destinations are additive with the global exporter, not a replacement for it. A request whose team matches two destinations sends its trace to both of them and to your configured exporter; two destinations that resolve to the same endpoint and headers collapse to one send.
 
 This routing applies to **traces only**. The GenAI client metrics (see [Metrics](#metrics)) still go to your single globally-configured exporter, not to per-tenant destinations.
 
