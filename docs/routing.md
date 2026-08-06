@@ -867,7 +867,7 @@ router_settings:
   routing_strategy: simple-shuffle
 ```
 
-Requests for `claude-quality` are cost-routed between its two deployments; every other model keeps the router's top-level strategy. Setting the field on one deployment of the group is enough. If deployments of the same `model_name` disagree, the first one in `model_list` order wins and a warning is logged once. An unsupported value is ignored with a warning instead of failing traffic. An empty string counts as unset, which is how you clear the field through `PATCH /model/{id}/update` (a PATCH merge cannot delete a `model_info` key).
+Requests for `claude-quality` are cost-routed between its two deployments; every other model keeps the router's top-level strategy. Setting the field on one deployment of the group is enough. If deployments of the same `model_name` disagree, the configured deployment with the smallest deployment id wins (stable across edits) and a warning is logged once per offending config. An unsupported value is ignored with a warning instead of failing traffic. An empty string counts as unset, which is how you clear the field through `PATCH /model/{id}/update` (a PATCH merge cannot delete a `model_info` key).
 
 Precedence, most specific first: a per-request `routing_strategy` forwarded from key or team `router_settings`, then `model_info.routing_strategy`, then a legacy `routing_groups` entry, then the router's top-level `routing_strategy`.
 
