@@ -1,6 +1,6 @@
 ---
 slug: auto-router-classifier-benchmark
-title: "Pick the right LLM classifier to get the same performance at 1/8th of the price"
+title: "Pick the Right LLM Classifier to Achieve Same performance at 1/8th price"
 date: 2026-08-06T10:00:00
 authors:
   - tin
