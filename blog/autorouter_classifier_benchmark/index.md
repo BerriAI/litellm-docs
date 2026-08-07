@@ -1,6 +1,6 @@
 ---
 slug: auto-router-classifier-benchmark
-title: "We tested 13 LLMs as prompt classifiers. Paying 8x more bought nothing."
+title: "Pick the right LLM classifier to get 1/8th of the price"
 date: 2026-08-06T10:00:00
 authors:
   - tin
