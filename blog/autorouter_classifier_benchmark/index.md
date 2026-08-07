@@ -69,7 +69,7 @@ We also ran the open-source models on a laptop CPU. They scored about the same, 
 | complex | llm-query-complexity-benchmark HIGH (MMLU-Pro, PubMedQA), RouterArena *hard*, hand-authored system design and open-ended synthesis |
 | reasoning | MATH-500 level 5, AIME 2025, BIG-Bench-Hard, hand-authored proofs and puzzles |
 
-## Fine tuning
+## How to get past 65% accuracy
 
 We tested every lightweight model on the market and they top out around the same mark. To go further:
 
