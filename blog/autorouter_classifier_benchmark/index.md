@@ -32,7 +32,6 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 ## Key findings
 
 - **The ceiling is 65%, and the top four are a tie.** `gemini-3.5-flash-lite`, `gpt-4o-mini`, `claude-haiku-4-5` and `grok-4.1-fast` land within 4 points of each other, inside the noise at this sample size. Pick on latency and price; accuracy will not separate them
-- **Every model fails on the same boundary: `medium`.** Recall on `medium` runs 0.20 to 0.40 across the entire field while `simple` and `reasoning` run 0.76 to 1.00. The 4-way framing is what is hard, not the routing
 - **Do not use a reasoning model as a classifier.** `gpt-5.4-nano` is the newest model in the table and the worst hosted one, 10 points below `gpt-4o-mini` at higher latency. For a one-word answer, thinking tokens are pure overhead
 - **On dedicated GPUs, open models win on latency and give up accuracy.** `llama-3.1-8b` on an H100 is the fastest classifier here (p50 0.164s, $0.031/1k) at 48%. Only `deepseek-v3.2` on 8xH200 matches the hosted group, at 3.7x `gpt-4o-mini`'s price
 - **The free heuristic is a real floor at 45%.** Every hosted model beats it, but by 16 to 20 points rather than 40. That gap is what the classifier hop buys
