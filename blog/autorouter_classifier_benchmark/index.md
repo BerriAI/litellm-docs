@@ -29,6 +29,8 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 :::
 
+Our current [LiteLLM Auto-Router v2](/blog/autorouter-v2) will save you up to 75% token costs, whilst retaining more than 90% quality. We often get asked what is the best LLM classifier, so we did internal testing across 12 different lightweight classifiers.
+
 ## Key findings
 
 - **We identified four top performers:** `gemini-3.5-flash-lite` (65%), `gpt-4o-mini` (64%), `claude-haiku-4-5` (63%) and `grok-4.1-fast` (61%). All four score between 61% and 65%, close enough that the gaps are noise at this sample size, so pick on latency and price; accuracy will not separate them
