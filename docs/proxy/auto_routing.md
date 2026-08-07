@@ -19,7 +19,7 @@ Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Sug
 | Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, or lexical/semantic keyword rules               |
 | Tier value   | One model                         | One model, random pool, or adaptive (Thompson-sampled) pool                |
 | Latency      | ~100-500ms (embedding call)       | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
-| Session pin  | No                                | Opt-in `session_affinity` (off by default), keyed by `session_id` metadata |
+| Session pin  | No                                | Opt-in `session_affinity` (off by default) pins the model; `deployment_affinity` (on by default) pins the deployment, both keyed by `session_id` metadata |
 | Log          | No routing-cause signal           | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM) |
 | Best for     | Intent-based routing              | Cost/quality tiering, hybrid rule + classifier setups, prompt-cache pinning |
 
@@ -262,6 +262,32 @@ session_affinity_ttl_seconds: 3600
 :::info Changed default
 
 `session_affinity` used to default to `true`. Routers created before that changed have no `session_affinity` key stored, so they pick up the new `false` default and start reclassifying every turn. Add `session_affinity: true` to any router that should keep pinning.
+
+:::
+
+## Deployment affinity
+
+`session_affinity` pins which model group a session routes to. `deployment_affinity` pins which deployment inside that group serves it, and the two are independent.
+
+The distinction matters when a model group fans out across several deployments of the same model, since provider prompt caches are per deployment. Without a deployment pin the router load-balances across the group on every turn, so a conversation that stays in one tier still lands on a different deployment roughly half the time and the cache it warmed goes unused.
+
+On by default, because re-shuffling a conversation across deployments of the same model discards that cache for no benefit. Set it to `false` to keep every turn load-balanced across the group, which is what a deployment set with tight per-deployment rate limits wants.
+
+```yaml
+deployment_affinity: true       # default; false keeps every turn load-balanced
+session_affinity: false         # default; independent of the above
+session_affinity_ttl_seconds: 3600
+```
+
+Pins are held per model group, so switching tiers does not disturb the pin left behind in the previous group. A session that classifies SIMPLE, escalates to COMPLEX on the next turn, then comes back down returns to the deployment it used the first time rather than being reshuffled. That is the combination `session_affinity` cannot express on its own, since pinning the model freezes the tier along with it.
+
+Do not confuse this with the router-level `deployment_affinity` listed under [`optional_pre_call_checks`](./config_settings.md), which pins on the caller's API key rather than the session and applies to every model group instead of the ones an auto-router targets. The setting on this page lives inside `complexity_router_config` and is keyed by session.
+
+`session_id` is read from request metadata exactly as it is for `session_affinity`; when none is resolvable there is nothing to key a pin on, so the router load-balances as usual and writes no pin. Pins are scoped by the caller's hashed API key, so two callers reusing the same client-supplied `session_id` cannot read or steer each other's pin. Like `session_affinity`, it is suppressed when `plugins` are configured. `session_affinity_ttl_seconds` bounds both pins, and it measures idle time rather than total session length, since every hit refreshes it.
+
+:::info Changed default
+
+`deployment_affinity` is new and defaults to `true`, so an auto-router whose callers send a `session_id` starts pinning deployments without any config change. Tiering, spend, and which model serves a turn are unaffected; only the choice among deployments of one model group changes. Set `deployment_affinity: false` to keep the previous load-balanced behavior.
 
 :::
 
