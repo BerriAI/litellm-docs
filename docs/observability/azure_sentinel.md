@@ -123,6 +123,18 @@ You should see following logs in Azure Workspace.
 | `AZURE_SENTINEL_AUTHORITY_HOST` | Microsoft Entra authority host that issues the OAuth2 token | None (falls back to `AZURE_AUTHORITY_HOST`, then `https://login.microsoftonline.com`) | ❌ No |
 | `AZURE_SENTINEL_OAUTH_SCOPE` | OAuth2 scope requested for the Logs Ingestion API | The Azure Monitor audience matching the authority host | ❌ No |
 
+## Sovereign clouds
+
+Azure Government and Azure China use their own Entra authority and their own Azure Monitor audience, so pointing `AZURE_SENTINEL_ENDPOINT` at a sovereign ingestion endpoint is not enough on its own. Set the authority host and LiteLLM derives the matching audience:
+
+| Cloud | Authority host | Derived audience |
+|-------|----------------|------------------|
+| Azure Public Cloud (default) | `https://login.microsoftonline.com` | `https://monitor.azure.com/.default` |
+| Azure Government | `https://login.microsoftonline.us` | `https://monitor.azure.us/.default` |
+| Azure China (21Vianet) | `https://login.partner.microsoftonline.cn`, or the legacy `https://login.chinacloudapi.cn` | `https://monitor.azure.cn/.default` |
+
+`AZURE_AUTHORITY_HOST` is shared with the `azure_storage` callback and Azure OpenAI OIDC; use `AZURE_SENTINEL_AUTHORITY_HOST` to scope it to Sentinel alone. For an authority host outside the table, LiteLLM falls back to the public-cloud audience and logs a warning, so set `AZURE_SENTINEL_OAUTH_SCOPE` explicitly there. These values are read when the callback is first used, so restart the proxy to apply a change
+
 ## How It Works
 
 The Azure Sentinel integration uses the [Azure Monitor Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview) to send logs to your Log Analytics workspace. The integration:
