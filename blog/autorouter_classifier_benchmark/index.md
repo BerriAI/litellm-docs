@@ -36,7 +36,6 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **Do not use a reasoning model as a classifier.** `gpt-5.4-nano` is the newest model in the table and the worst hosted one, 10 points below `gpt-4o-mini` at higher latency. For a one-word answer, thinking tokens are pure overhead
 - **On dedicated GPUs, open models win on latency and give up accuracy.** `llama-3.1-8b` on an H100 is the fastest classifier here (p50 0.164s, $0.031/1k) at 48%. Only `deepseek-v3.2` on 8xH200 matches the hosted group, at 3.7x `gpt-4o-mini`'s price
 - **The free heuristic is a real floor at 45%.** Every hosted model beats it, but by 16 to 20 points rather than 40. That gap is what the classifier hop buys
-- **Our pick: `gpt-4o-mini`.** One point behind the table-topping `gemini-3.5-flash-lite` at half the price; inside a statistical tie, price decides
 
 ## The results
 
