@@ -1,19 +1,19 @@
 ---
-slug: auto-router-improvements-aug-2026
-title: "4 Auto-Router improvements: warmer caches, honest dashboards"
+slug: auto-router-warm-prompt-cache
+title: "Your prompt cache no longer goes cold every other turn"
 date: 2026-08-06T12:00:00
 authors:
   - tin
-description: "Sessions now stick to a single deployment so your prompt cache stays warm, today's savings show up on the dashboard, the expired-miss stat answers whether cache warming is worth it, and 1-click presets work with wildcard models."
+description: "Auto-router sessions now pin to a single deployment instead of a model group, so the provider's prompt cache stays warm for the whole conversation. Plus three smaller fixes to the cost dashboard and 1-click presets."
 image: ./hero.png
 keywords: [auto router, llm routing, prompt caching, session affinity, cost dashboard, litellm, model routing, cost optimization]
 tags: [routing, complexity-router, ui, engineering]
 hide_table_of_contents: false
 ---
 
-![LiteLLM Autorouter V2: 4 improvements](./hero.png)
+![LiteLLM Autorouter V2: your prompt cache stays warm](./hero.png)
 
-Four Auto-Router improvements shipped today. All four come down to the same two things: keeping your prompt cache warm, and showing you the savings you actually earned.
+Prompt caching and auto-routing were quietly fighting each other. As of today they compound.
 
 {/* truncate */}
 
@@ -29,39 +29,24 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 :::
 
-## 1. Sessions now stick to one deployment, not just one model
+## Sessions now stick to one deployment
 
-- Session affinity used to pin a conversation to a **model group**. If that group runs across several deployments, the conversation still bounced between them
-- Every bounce is a cold prompt cache. You pay full price to re-read the same context, roughly every other turn
-- Sessions now pin to the exact deployment that served the first turn, so the provider's cache stays warm for the whole conversation
-- Session pins are also scoped per API key now. Two different keys that happened to use the same session id used to share one pin
+- Session affinity used to pin a conversation to a **model group**
+- If that group runs across several deployments, which is what most production setups look like, the conversation still bounced between them
+- Every bounce lands on a deployment that has never seen the conversation, so the provider cache is cold and you pay full price to re-read the same context
+- On a fanned group that happened roughly every other turn
 
-**Why you care:** prompt caching and auto-routing finally compound instead of fighting each other. See [PR #36146](https://github.com/BerriAI/litellm/pull/36146).
+Sessions now pin to the exact deployment that served the first turn, and the pin lasts for the session's TTL. The conversation stays where its cache lives.
 
-## 2. Today's savings now show up today
+**Why you care:** on long conversations, most of what you send is context you already sent. Keeping the cache warm is the difference between paying for that context once and paying for it over and over.
 
-- Spend is bucketed by UTC day. The dashboard asked for a range ending on **your** local today
-- If you are in Pacific time, everything you sent after 5pm went into tomorrow's UTC bucket and simply did not appear
-- Your dashboard read $0 for the entire evening, every evening, even while the router was saving you money
-- The cost optimization dashboard now includes the current UTC day
+One related fix in the same change: session pins are now scoped per API key. Two different keys that happened to pick the same session id used to share a single pin.
 
-**Why you care:** you can check today's savings today, instead of waiting until tomorrow to find out they existed. See [PR #36051](https://github.com/BerriAI/litellm/pull/36051).
+## Also shipped today
 
-## 3. The expired-miss stat now answers a real question
-
-- Expired misses are the turns where a session came back to a tier after that tier's cache had already expired
-- The percentage was divided only by return visits, which made the number look far worse than reality
-- It is now a share of all measured turns
-
-**Why you care:** the number now tells you whether paying for background cache warming is worth it, which is the only reason to look at it. Tab names got shorter too: "Overall" and "Auto-Router". See [PR #36037](https://github.com/BerriAI/litellm/pull/36037).
-
-## 4. 1-click presets work with wildcard models
-
-- If your models are configured as wildcards (`anthropic/*`, `openai/*`, `bedrock/*`), both family templates showed up greyed out: "Missing: claude-opus-5, claude-sonnet-5"
-- The models were not missing. The template check and the tier dropdown right below it were reading two different lists of your models
-- Templates now expand wildcards the same way the dropdown does
-
-**Why you care:** if you run wildcard deployments, 1-click setup is actually 1 click. See [PR #36111](https://github.com/BerriAI/litellm/pull/36111).
+- **Today's savings show up today.** Spend is bucketed by UTC day, but the dashboard asked for a range ending on your local today. West of UTC, everything after 5pm PT landed in tomorrow's bucket, so the dashboard read $0 all evening, every evening. The cost optimization dashboard now includes the current UTC day
+- **The expired-miss stat answers a real question.** It now measures expired misses as a share of all measured turns instead of only return visits, which is the number you need to decide whether background cache warming is worth paying for. Tab names got shorter too: "Overall" and "Auto-Router"
+- **1-click presets work with wildcard models.** If your models are configured as wildcards (`anthropic/*`, `openai/*`), the family templates showed up greyed out claiming your models were missing. They were not missing; the template check and the tier dropdown were reading two different lists
 
 ## Try it
 
