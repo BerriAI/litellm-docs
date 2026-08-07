@@ -142,6 +142,8 @@ If the ingestion endpoint and the resolved audience end up in different clouds, 
 
 `AZURE_AUTHORITY_HOST` is shared: LiteLLM already documents it for the `azure_storage` logging callback and for Azure OpenAI OIDC, and the Azure SDK reads it for any credential LiteLLM builds. If your Sentinel workspace lives in a different cloud than the rest of your Azure resources, set `AZURE_SENTINEL_AUTHORITY_HOST` to override it for Sentinel only.
 
+These settings are read once, when the callback is first used. Changing them from the Admin UI saves the new value but does not affect a logger that is already running, so restart the proxy to apply a change.
+
 ## How It Works
 
 The Azure Sentinel integration uses the [Azure Monitor Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview) to send logs to your Log Analytics workspace. The integration:
