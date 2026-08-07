@@ -80,15 +80,14 @@ Open models were also run on local CPU; accuracy tracked the GPU runs within a f
 | claude-haiku-4-5 | 0.88 | 0.36 | 0.40 | 0.88 |
 | grok-4.1-fast | 0.76 | 0.24 | 0.56 | 0.88 |
 
-Medium prompts leak in both directions: they look short and ordinary, which pulls them down to `simple`, and any arithmetic pulls them up a rung toward `reasoning`. For routing this is encouraging rather than damning. The difficulty lives in the 4-way framing; if what your router needs is a cheap-vs-expensive split, that binary question is far easier than these numbers suggest.
+Medium prompts leak both ways: they look short and ordinary, which pulls them down to `simple`, and any arithmetic pulls them up toward `reasoning`. The difficulty lives in the 4-way framing; a cheap-vs-expensive split is a far easier question than these numbers suggest.
 
-Is this expected, and what do you do about it?
+Why it happens, and what to do about it:
 
-- **Partly structural.** `medium` is an interior class with a neighbour on both sides, and interior classes in any ordinal scheme bleed into their neighbours; `simple` and `reasoning` sit at the ends with only one direction to leak
-- **The errors are correlated.** Four unrelated model families miss in the same place and the same directions, so ensembling classifiers would buy almost nothing; the blur is in the tier definitions, and no specific model is weak here
-- **Tier-to-model assignment absorbs most of it.** Every hosted model lands within one tier of the truth at least 80% of the time, so the real cost of an error is the gap between adjacent tiers; keep neighbouring tiers on models of neighbouring strength and the most common mistake is benign
-- **Error direction is steerable.** A medium prompt misread upward wastes a little money; misread downward it produces a visibly worse answer. Telling the classifier to round up when torn converts quality risk into a small, bounded over-spend
-- **Few-shot examples belong on the boundary.** The points every model loses sit exactly on the simple/medium and medium/reasoning lines, which is where a handful of contrast examples helps most
+- **Partly structural.** `medium` has a neighbour on both sides; `simple` and `reasoning` can only leak one way
+- **The errors are correlated.** Four unrelated model families miss the same way, so ensembling buys nothing. The blur is in the tier definitions, not in any one model
+- **Adjacent tiers absorb it.** Every hosted model lands within one tier at least 80% of the time, so keep neighbouring tiers on models of neighbouring strength
+- **Round up when torn.** Misreading medium upward wastes a little money; downward it produces a visibly worse answer. Few-shot examples earn their keep on exactly these two boundaries
 
 ## What's next
 
