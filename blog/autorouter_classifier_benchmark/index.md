@@ -75,9 +75,9 @@ We tested every lightweight model on the market and they top out around the same
 
 - **Write the prompt around your own traffic.** The classifier prompt and the tier names are both replaceable. "Customer support reply" and "SQL generation" are much easier to spot than "medium"
 - **Round up when torn.** Guessing a tier too high wastes a little money; guessing too low gives your user a worse answer. Break ties upward
-- **Let the router learn from outcomes**, which is what adaptive routing does
+- **Let the router learn from outcomes**, which is what [adaptive routing](/docs/adaptive_router) does
 
-Adaptive routing keeps a running score of how well each model does on each kind of request, learned from your traffic, and picks accordingly. The classifier still sets a floor so a hard prompt never lands on a cheap model. The difference is what gets graded: a classifier is graded on matching a human label, adaptive routing is graded on whether the answer was any good.
+[Adaptive routing](/docs/adaptive_router) keeps a running score of how well each model does on each kind of request, learned from your traffic, and picks accordingly. The classifier still sets a floor so a hard prompt never lands on a cheap model. The difference is what gets graded: a classifier is graded on matching a human label, adaptive routing is graded on whether the answer was any good.
 
 ## What's next
 
