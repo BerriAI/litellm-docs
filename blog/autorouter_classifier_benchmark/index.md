@@ -54,14 +54,13 @@ Every classifier saw exactly the same 100 prompts, stratified 25 per tier across
 | **heuristic (no LLM)** | **45%** | ~0ms | free |
 | qwen3-4b (dedicated GPU) | 44% | 0.64s | $0.06 |
 
-Open-source models were also run on local CPU; accuracy came out close to the GPU runs and the latency is not comparable to hosted endpoints, so those rows are omitted.
+We also ran the open-source models on a laptop CPU. They scored about the same, but the timings mean nothing next to a hosted API, so those rows are left out.
 
 ## How it was measured
 
-- **Same prompt for every model**, `temperature=0`, `max_tokens=8` except models that must be allowed to think. No per-model prompt tuning; this measures the model and only the model
-- **Also tracked:** macro-F1, within-one-tier accuracy, the split between under-routing (quality risk) and over-routing (wasted spend), and p95 latency
-- **Dedicated-GPU rows** ran on on-demand H100/H200 deployments, measured warm; first call on a cold deployment costs 20 to 24 seconds. Dedicated-GPU latency and shared-endpoint latency are different products, so compare within a deployment type
-- **Labels are not LLM-judged.** The common trap is generating ground truth with a big LLM and then scoring small LLMs against it, which measures agreement with a judge rather than correctness. Every item in the 400-item set takes its tier from an intrinsic property of its source:
+- **Every model got the same prompt**, `temperature=0`, `max_tokens=8`. We tuned nothing per model, so the only thing being measured is the model
+- **We ran the open-source models on rented H100s and H200s**, and we threw away the first call because a cold GPU takes 20 seconds to answer. Don't compare their speed to the hosted APIs; you are renting a whole GPU with no one else in the queue
+- **No LLM wrote the answer key.** It is tempting to have a big model label the prompts, but then you are just testing whether small models agree with a big one. Instead each prompt keeps the difficulty its source already gave it:
 
 | Tier | Sources |
 | --- | --- |
