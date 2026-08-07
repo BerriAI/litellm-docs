@@ -82,6 +82,10 @@ Open models were also run on local CPU; accuracy tracked the GPU runs within a f
 
 Medium prompts leak in both directions: they look short and ordinary, which pulls them down to `simple`, and any arithmetic pulls them up a rung toward `reasoning`. For routing this is encouraging rather than damning. The difficulty lives in the 4-way framing; if what your router needs is a cheap-vs-expensive split, that binary question is far easier than these numbers suggest.
 
+Part of this is structural and fully expected: `medium` is an interior class with a neighbour on both sides, and interior classes in any ordinal scheme bleed into their neighbours, while `simple` and `reasoning` sit at the ends with only one direction to leak. The interesting part is that four unrelated model families miss in the same place and the same directions. Correlated errors mean ensembling classifiers would buy almost nothing, and they point at the tier definitions blurring at that boundary rather than at any weakness in a specific model.
+
+It also means the fix lives in the router, in three places, rather than in a better classifier. First, tier-to-model assignment: every hosted model is within one tier of the truth at least 80% of the time, so the real cost of an error is the capability and price gap between adjacent tiers, and keeping neighbouring tiers on models of neighbouring strength makes the most common mistake benign. Second, error direction is steerable: a misread medium prompt that goes up a tier wastes a little money, one that goes down produces a visibly worse answer, so a classifier prompt that says to round up when torn converts quality risk into a small, bounded over-spend. Third, boundary examples: the points every model loses sit exactly on the simple/medium and medium/reasoning lines, which is precisely where a handful of few-shot contrast examples helps most.
+
 ## What's next
 
 - **Binary and 3-tier collapses** of the same predictions, since a cheap-vs-expensive router changes the accuracy story completely
