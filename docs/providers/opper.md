@@ -81,4 +81,4 @@ model_list:
 
 ## Discovering models
 
-Opper's model list (with per-token pricing) is available at `GET https://api.opper.ai/v3/compat/models`; the list is filtered to the models your organization's compliance rules permit your key to use.
+Opper's model list (with per-token pricing and per-model compliance metadata such as region and zero data retention status) is available at `GET https://api.opper.ai/v3/compat/models`; the list is filtered to the models your organization's compliance rules permit your key to use.
