@@ -34,7 +34,7 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **We identified four top performers:** `gemini-3.5-flash-lite` (65%), `gpt-4o-mini` (64%), `claude-haiku-4-5` (63%) and `grok-4.1-fast` (61%). All four score between 61% and 65%, close enough that the gaps are noise at this sample size, so pick on latency and price; accuracy will not separate them
 - **Do not use a model built for reasoning as a classifier.** Anything that thinks before it answers (o3, `gpt-5.4-nano`) spends latency and tokens for zero accuracy gain. Classification is a one-word answer, so thinking is pure overhead
 - **Open-source models are faster, and less accurate.** `llama-3.1-8b` on your own GPU is the fastest classifier we tested, at 0.16s, but only gets 48%. `deepseek-v3.2` is the one that keeps up with the hosted models, and it costs more to run
-- **The free heuristic is a real floor at 45%.** It scores locally, with no API call and nothing added to your latency. Our pick gets 64% against its 45%, and that gap is the whole value of paying for a classifier hop
+- **The non-LLM heuristic classifier baselines at 45%.** It scores locally, so it is a solid option when you want zero added latency and zero cost. An LLM classifier buys you the jump from 45% to 64%
 
 ## The results
 
