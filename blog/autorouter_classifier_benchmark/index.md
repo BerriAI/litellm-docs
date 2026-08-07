@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Which LLM should classify your prompts?](./hero.png)
 
-The Auto Router's value rides on one hop: a small classifier reads the prompt and picks the tier of model that answers it. We benchmarked 12 LLMs plus the built-in zero-cost heuristic in that hop, same prompt, same dataset, same harness. **Our pick is `gpt-4o-mini`**: 64% tier accuracy at $0.04 per 1,000 classifications.
+**Our pick for the Auto Router's classifier is `gpt-4o-mini`: second-best accuracy at half the leader's price.** One prompt, one dataset, 13 classifiers; the only variable is the model in the hop.
 
 {/* truncate */}
 
