@@ -69,17 +69,15 @@ We also ran the open-source models on a laptop CPU. They scored about the same, 
 | complex | llm-query-complexity-benchmark HIGH (MMLU-Pro, PubMedQA), RouterArena *hard*, hand-authored system design and open-ended synthesis |
 | reasoning | MATH-500 level 5, AIME 2025, BIG-Bench-Hard, hand-authored proofs and puzzles |
 
-## How do you get past 65%?
+## Fine tuning
 
-Not by shopping for a better classifier. Four unrelated model families all top out around the same number and miss on the same tier, which says the ceiling belongs to the task rather than to any one model. Three things move it:
+We tested every lightweight model on the market and they top out around the same mark. To go further:
 
-- **Customize the tier definitions.** The classifier prompt is replaceable, and the tier names with it. Tiers written in your own vocabulary, "customer support reply" or "SQL generation" instead of "medium", are a far easier call than a generic 4-way complexity scale
-- **Round up when torn.** A prompt misread upward wastes a little money; misread downward it produces a visibly worse answer. Steering ties toward the more capable tier converts quality risk into a small, bounded over-spend
-- **Let the router learn from outcomes.** This is the real answer, and it is where adaptive routing comes in
+- **Write the prompt around your own traffic.** The classifier prompt and the tier names are both replaceable. "Customer support reply" and "SQL generation" are much easier to spot than "medium"
+- **Round up when torn.** Guessing a tier too high wastes a little money; guessing too low gives your user a worse answer. Break ties upward
+- **Let the router learn from outcomes**, which is what adaptive routing does
 
-Adaptive routing stops treating the tier as the final word. It keeps a per-model quality estimate for each type of request, updates it from what actually happened on your traffic, and picks the model that scores best on your own quality-versus-cost weighting. The classifier still sets the floor, so a hard prompt never drops to a cheap model; above that floor the router is free to learn that one model handles your code review requests better than its tier suggests, and another is overkill for your summarization.
-
-The important difference is what gets graded. A classifier is graded on agreeing with a human label, which is exactly the subjective judgement that caps this benchmark at 65%. Adaptive routing is graded on whether the answer was good, on your traffic, which is the thing you actually wanted to know.
+Adaptive routing keeps a running score of how well each model does on each kind of request, learned from your traffic, and picks accordingly. The classifier still sets a floor so a hard prompt never lands on a cheap model. The difference is what gets graded: a classifier is graded on matching a human label, adaptive routing is graded on whether the answer was any good.
 
 ## What's next
 
