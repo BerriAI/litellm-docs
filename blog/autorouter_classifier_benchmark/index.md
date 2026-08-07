@@ -92,11 +92,6 @@ Is this expected, and what do you do about it?
 
 ## What's next
 
-- **Binary and 3-tier collapses** of the same predictions, since a cheap-vs-expensive router changes the accuracy story completely
-- **Few-shot and constrained decoding** for the small open models, to separate format failure from judgement failure
-- **Embedding plus logistic regression** head-to-head on the same items; at roughly $0.02 per million and sub-10ms it is the real competitor for this hop
-- **Outcome-based ground truth** in the RouterBench style, where the label is "did the cheap model answer correctly", making the results directly comparable to RouteLLM
-- **A hybrid**: heuristic first, LLM only when the heuristic's margin is thin
 - **Auto Router evaluation on your live traffic.** Everything above is scored on public benchmarks; the next step is replaying your own production prompts through the router, so the accuracy and savings numbers are measured on the traffic you actually serve rather than ours
 - **Adaptive routing trained on your live traffic.** The classifier picks a tier; adaptive routing then learns which model inside that tier earns its price on your requests, scoring real outcomes instead of following a fixed tier-to-model mapping
 
