@@ -1180,6 +1180,7 @@ const sidebars = {
         "providers/sambanova",
         "providers/sap",
         "providers/scaleway",
+        "providers/scx_ai",
         "providers/stability",
         "providers/synthetic",
         "providers/snowflake",
