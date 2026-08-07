@@ -436,6 +436,73 @@ Falling back to the default-tagged pool can return the deployment the request tr
 | Scope | Only gates exhaustion caused by `!` or `&`. Plain-tag exhaustion keeps its existing behavior: fall back to the default pool if one exists, otherwise raise |
 | Fallback pool | The same default-tagged pool used for untagged and ban-only requests, without re-applying the request's own `!`/`&` constraints |
 
+## Per-Model-Group Tag Filtering (`enable_tag_filtering`)
+
+Set `enable_tag_filtering` in `model_info` to override `router_settings.enable_tag_filtering` for one model group only, in either direction. It is checked at the model-group level: the router looks at any deployment in the requested `model_name` group, and if that deployment's `model_info.enable_tag_filtering` is set, it replaces the router-wide default for every request to that group. Set it consistently on every deployment sharing the group, the same convention `allow_fail_open` already uses.
+
+This matters on a proxy that serves many unrelated model groups. Turning on `router_settings.enable_tag_filtering` globally to satisfy one group's `&`/`!`-driven compliance routing would expose every other group's requests to tag evaluation too. Setting `model_info.enable_tag_filtering: true` on just that group's deployments avoids that. The reverse works too: carve out one tag-immune catch-all or incident-response model group while the rest of the proxy enforces tag filtering everywhere else.
+
+### Quick example
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{
+    "model": "chat-compliance",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "metadata": {"tags": ["&provider:anthropic"]}
+  }'
+# router_settings.enable_tag_filtering is false, but chat-compliance opts in via
+# model_info.enable_tag_filtering: true, so the "&" constraint still applies
+```
+
+### Config example
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: chat-compliance
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      api_key: os.environ/ANTHROPIC_API_KEY
+      tags: ["provider:anthropic"]
+    model_info:
+      enable_tag_filtering: true # opt in for this group only
+
+  - model_name: chat-compliance
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+      tags: ["provider:openai"]
+    model_info:
+      enable_tag_filtering: true
+
+  - model_name: incident-response
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      enable_tag_filtering: false # opt out for this group only
+
+router_settings:
+  enable_tag_filtering: false # router-wide default; chat-compliance overrides it
+
+general_settings:
+  master_key: sk-1234
+```
+
+With this config, `chat-compliance` evaluates tags on every request even though the router-wide default is off, while every other model group, including `incident-response`, ignores tags and falls back to ordinary load-balanced routing. Flip the router-wide default to `true` instead and `chat-compliance` still evaluates tags, unaffected, while `incident-response`'s explicit `enable_tag_filtering: false` keeps it exempt.
+
+### enable_tag_filtering semantics
+
+| Behavior | Detail |
+|----------|--------|
+| Location | `model_info.enable_tag_filtering`, not `litellm_params`. Set it on every deployment sharing the model group; the router checks any one member |
+| Precedence | Low to high: `router_settings.enable_tag_filtering` (router-wide default), then `model_info.enable_tag_filtering` if set on the requested group, which overrides the router default in either direction for that group alone, then request-level `enable_tag_filtering` from key/team settings |
+| Request-level escalation only | The request-level setting, set by the proxy from key/team settings, can only turn filtering on. A request-level `enable_tag_filtering=True` still wins over a group that opted itself out with `enable_tag_filtering: false`; there is no request-level way to turn filtering off over what the router and the model group already decided |
+| Default | Unset. The model group defers to `router_settings.enable_tag_filtering`, exactly as before this override existed |
+| Scope | Applies to the whole tag-filtering decision for the group, not just `&`/`!` handling. A group with filtering disabled ignores plain, negation, and required tags alike |
+
 ## Regex-based tag routing (`tag_regex`)
 
 Use `tag_regex` on a deployment to match incoming requests by their headers (e.g. `User-Agent`) — without requiring the client to send explicit tags. Patterns are operator-configured and compiled server-side, not supplied by callers.
