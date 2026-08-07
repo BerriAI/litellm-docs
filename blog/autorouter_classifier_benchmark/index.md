@@ -59,7 +59,7 @@ We also ran the open-source models on a laptop CPU. They scored about the same, 
 ## How it was measured
 
 - **Every model got the same prompt**, `temperature=0`, `max_tokens=8`. We tuned nothing per model, so the only thing being measured is the model
-- **We ran the open-source models on rented H100s and H200s**, and we threw away the first call because a cold GPU takes 20 seconds to answer. Don't compare their speed to the hosted APIs; you are renting a whole GPU with no one else in the queue
+- **We ran the open-source models on rented H100s and H200s**, and we threw away the first call because a cold GPU takes 20 seconds to answer
 - **No LLM wrote the answer key.** It is tempting to have a big model label the prompts, but then you are just testing whether small models agree with a big one. Instead each prompt keeps the difficulty its source already gave it:
 
 | Tier | Sources |
