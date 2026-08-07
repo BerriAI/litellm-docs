@@ -69,6 +69,7 @@ response = completion(
 - **Vision** = Image understanding
 - **Audio** = Audio input support
 - **Caching** = Prompt caching for cost savings
+- **Structured outputs** = JSON / schema-constrained responses
 - **Code generation** = Optimized for code tasks
 
 **Pricing:** See [xAI's pricing page](https://docs.x.ai/docs/models) for current rates.
