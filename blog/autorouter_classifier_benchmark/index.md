@@ -102,8 +102,6 @@ Try it yourself with the configuration below, and post any feedback, questions, 
 
 :::
 
-The Auto Router ships with the heuristic classifier by default (local scoring, sub-millisecond, no API call). To put our pick in the hop instead, add it to your `model_list` and point `classifier_llm_config` at it. If the classification call fails, times out, or returns something unparseable, the router falls back to the heuristic automatically, so the LLM classifier never adds availability risk.
-
 ```yaml title="config.yaml"
 model_list:
   - model_name: claude-haiku-4-5           # $1 / $5 per 1M tokens
