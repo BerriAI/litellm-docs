@@ -70,23 +70,17 @@ Open models were also run on local CPU; accuracy tracked the GPU runs within a f
 | complex | llm-query-complexity-benchmark HIGH (MMLU-Pro, PubMedQA), RouterArena *hard*, hand-authored system design and open-ended synthesis |
 | reasoning | MATH-500 level 5, AIME 2025, BIG-Bench-Hard, hand-authored proofs and puzzles |
 
-## Every model fails on the same boundary: medium
+## How do you get past 65%?
 
-| Classifier | simple | medium | complex | reasoning |
-| --- | --- | --- | --- | --- |
-| gemini-3.5-flash-lite | 0.84 | 0.40 | 0.48 | 0.88 |
-| gpt-4o-mini | 0.80 | 0.24 | 0.52 | 1.00 |
-| claude-haiku-4-5 | 0.88 | 0.36 | 0.40 | 0.88 |
-| grok-4.1-fast | 0.76 | 0.24 | 0.56 | 0.88 |
+Not by shopping for a better classifier. Four unrelated model families all top out around the same number and miss on the same tier, which says the ceiling belongs to the task rather than to any one model. Three things move it:
 
-Medium prompts leak both ways: they look short and ordinary, which pulls them down to `simple`, and any arithmetic pulls them up toward `reasoning`. The difficulty lives in the 4-way framing; a cheap-vs-expensive split is a far easier question than these numbers suggest.
+- **Customize the tier definitions.** The classifier prompt is replaceable, and the tier names with it. Tiers written in your own vocabulary, "customer support reply" or "SQL generation" instead of "medium", are a far easier call than a generic 4-way complexity scale
+- **Round up when torn.** A prompt misread upward wastes a little money; misread downward it produces a visibly worse answer. Steering ties toward the more capable tier converts quality risk into a small, bounded over-spend
+- **Let the router learn from outcomes.** This is the real answer, and it is where adaptive routing comes in
 
-Why it happens, and what to do about it:
+Adaptive routing stops treating the tier as the final word. It keeps a per-model quality estimate for each type of request, updates it from what actually happened on your traffic, and picks the model that scores best on your own quality-versus-cost weighting. The classifier still sets the floor, so a hard prompt never drops to a cheap model; above that floor the router is free to learn that one model handles your code review requests better than its tier suggests, and another is overkill for your summarization.
 
-- **Partly structural.** `medium` has a neighbour on both sides; `simple` and `reasoning` can only leak one way
-- **The errors are correlated.** Four unrelated model families miss the same way, so ensembling buys nothing. The blur is in the tier definitions, not in any one model
-- **Adjacent tiers absorb it.** Every hosted model lands within one tier at least 80% of the time, so keep neighbouring tiers on models of neighbouring strength
-- **Round up when torn.** Misreading medium upward wastes a little money; downward it produces a visibly worse answer. Few-shot examples earn their keep on exactly these two boundaries
+The important difference is what gets graded. A classifier is graded on agreeing with a human label, which is exactly the subjective judgement that caps this benchmark at 65%. Adaptive routing is graded on whether the answer was good, on your traffic, which is the thing you actually wanted to know.
 
 ## What's next
 
