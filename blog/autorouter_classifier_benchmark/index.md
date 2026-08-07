@@ -82,14 +82,6 @@ Open models were also run on local CPU; accuracy tracked the GPU runs within a f
 
 Medium prompts leak in both directions: they look short and ordinary, which pulls them down to `simple`, and any arithmetic pulls them up a rung toward `reasoning`. For routing this is encouraging rather than damning. The difficulty lives in the 4-way framing; if what your router needs is a cheap-vs-expensive split, that binary question is far easier than these numbers suggest.
 
-Two more failure modes worth naming. `qwen3-4b` burns roughly 295 output tokens per classification when it cannot be forced to skip thinking, and said "reasoning" twice in 100 items. The 4B-class models land at or below the free heuristic on this prompt, but their failure mode is format compliance rather than tier judgement, so few-shot examples or constrained decoding could close some of that gap.
-
-## Caveats, stated plainly
-
-- **n=100** (25 per tier) means roughly ±5pp, so single-point differences are noise and we treated them as such
-- **Latency was measured warm** at moderate concurrency; tails on shared endpoints move with time of day
-- **This scores tier prediction against human-defined labels.** The economically purer question, "would the cheap model have answered this correctly", is a different framing and it is next
-
 ## What's next
 
 - **Binary and 3-tier collapses** of the same predictions, since a cheap-vs-expensive router changes the accuracy story completely
