@@ -1,6 +1,6 @@
 ---
 slug: auto-router-classifier-benchmark
-title: "Which LLM should classify your prompts? A 13-way bake-off"
+title: "We tested 13 LLMs as prompt classifiers. Paying 8x more bought nothing."
 date: 2026-08-06T10:00:00
 authors:
   - tin
