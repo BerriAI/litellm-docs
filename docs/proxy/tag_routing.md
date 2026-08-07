@@ -425,6 +425,8 @@ curl http://localhost:4000/v1/chat/completions \
 
 :::caution
 Falling back to the default-tagged pool can return the deployment the request tried to exclude. Only set `allow_fail_open` on a model group where a `!`/`&` constraint that can't be honored is acceptable to degrade rather than fail; do not set it on a group where the constraint is a hard compliance requirement (for example, "never route this account's traffic to Provider X").
+
+Request tags are merged with key/team tags into the same flat list before this logic runs, and nothing in that list records which tag came from where. An authenticated caller can add their own `&` tag that matches nothing, exhausting the pool on purpose, and the resulting fallback discards every constraint at once, including an inherited key/team-level requirement the caller never controlled and could not have satisfied. Do not set `allow_fail_open` on a group whose deployments carry a key/team-enforced constraint that must always hold.
 :::
 
 ### allow_fail_open semantics
