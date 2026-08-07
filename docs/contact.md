@@ -4,12 +4,6 @@ Have a question, need help getting set up, or want to talk about pricing? Reach 
 
 <div className="contact-grid">
 
-<a className="contact-card" href="mailto:support@berri.ai">
-  <div className="contact-card__icon">📧</div>
-  <div className="contact-card__title">Support</div>
-  <div className="contact-card__desc">support@berri.ai</div>
-</a>
-
 <a className="contact-card" href="mailto:sales@berri.ai">
   <div className="contact-card__icon">💼</div>
   <div className="contact-card__title">Sales</div>
