@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Which LLM should classify your prompts?](./hero.png)
 
-The Auto Router's value rides on one hop: a small classifier reads the prompt and picks the tier of model that answers it. **Our pick is `gemini-3.5-flash-lite`**, at 65% tier accuracy, p95 of 0.67s, and $0.09 per 1,000 classifications. We ran 12 LLMs plus the built-in zero-cost heuristic through one identical prompt, one dataset, one harness; the only variable across rows is the classifier model.
+The Auto Router's value rides on one hop: a small classifier reads the prompt and picks the tier of model that answers it. We benchmarked 12 LLMs plus the built-in zero-cost heuristic in that hop, same prompt, same dataset, same harness. **Our pick is `gpt-4o-mini`**: 64% tier accuracy at $0.04 per 1,000 classifications.
 
 {/* truncate */}
 
@@ -36,7 +36,7 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **Do not use a reasoning model as a classifier.** `gpt-5.4-nano` is the newest model in the table and the worst hosted one, 10 points below `gpt-4o-mini` at higher latency. For a one-word answer, thinking tokens are pure overhead
 - **On dedicated GPUs, open models win on latency and give up accuracy.** `llama-3.1-8b` on an H100 is the fastest classifier here (p50 0.164s, $0.031/1k) at 48%. Only `deepseek-v3.2` on 8xH200 matches the hosted group, at 3.7x `gpt-4o-mini`'s price
 - **The free heuristic is a real floor at 45%.** Every hosted model beats it, but by 16 to 20 points rather than 40. That gap is what the classifier hop buys
-- **Cheapest good option:** `gpt-4o-mini`, one point behind the winner at half the price
+- **Our pick: `gpt-4o-mini`.** One point behind the table-topping `gemini-3.5-flash-lite` at half the price; inside a statistical tie, price decides
 
 ## The results
 
@@ -107,7 +107,7 @@ Try it yourself with the configuration below, and post any feedback, questions, 
 
 :::
 
-The Auto Router ships with the heuristic classifier by default (local scoring, sub-millisecond, no API call). To put the winner in the hop instead, add it to your `model_list` and point `classifier_llm_config` at it. If the classification call fails, times out, or returns something unparseable, the router falls back to the heuristic automatically, so the LLM classifier never adds availability risk.
+The Auto Router ships with the heuristic classifier by default (local scoring, sub-millisecond, no API call). To put our pick in the hop instead, add it to your `model_list` and point `classifier_llm_config` at it. If the classification call fails, times out, or returns something unparseable, the router falls back to the heuristic automatically, so the LLM classifier never adds availability risk.
 
 ```yaml title="config.yaml"
 model_list:
@@ -123,10 +123,10 @@ model_list:
     litellm_params:
       model: anthropic/claude-opus-5
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: gemini-3.5-flash-lite      # the classifier: 65% tier accuracy, p95 0.67s, ~$0.09/1k
+  - model_name: gpt-4o-mini                # the classifier: 64% tier accuracy, ~$0.04/1k
     litellm_params:
-      model: gemini/gemini-3.5-flash-lite
-      api_key: os.environ/GEMINI_API_KEY
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
 
   - model_name: smart-router
     litellm_params:
@@ -139,7 +139,7 @@ model_list:
           REASONING: claude-opus-5
         classifier_type: llm
         classifier_llm_config:
-          model: gemini-3.5-flash-lite     # a model_name from model_list above
+          model: gpt-4o-mini               # a model_name from model_list above
           timeout_ms: 3000                 # on timeout, falls back to the heuristic
       complexity_router_default_model: claude-sonnet-5
 ```
