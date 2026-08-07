@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Which LLM should classify your prompts?](./hero.png)
 
-**Our pick for the Auto Router's classifier is `gpt-4o-mini`: second-best accuracy at half the leader's price.** One prompt, one dataset, 13 classifiers; the only variable is the model in the hop.
+**Our pick for the Auto Router's classifier is `gpt-4o-mini`: second-best accuracy at half the leader's price.** We tested 13 classifiers on the same 100 prompts to find it.
 
 {/* truncate */}
 
