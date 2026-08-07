@@ -31,10 +31,10 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 
 ## Key findings
 
-- **The ceiling is 65%, and the top four are a tie.** `gemini-3.5-flash-lite`, `gpt-4o-mini`, `claude-haiku-4-5` and `grok-4.1-fast` land within 4 points of each other, inside the noise at this sample size. Pick on latency and price; accuracy will not separate them
-- **Do not use a reasoning model as a classifier.** `gpt-5.4-nano` is the newest model in the table and the worst hosted one, 10 points below `gpt-4o-mini` at higher latency. For a one-word answer, thinking tokens are pure overhead
-- **On dedicated GPUs, open models win on latency and give up accuracy.** `llama-3.1-8b` on an H100 is the fastest classifier here (p50 0.164s, $0.031/1k) at 48%. Only `deepseek-v3.2` on 8xH200 matches the hosted group, at 3.7x `gpt-4o-mini`'s price
-- **The free heuristic is a real floor at 45%.** Every hosted model beats it, but by 16 to 20 points rather than 40. That gap is what the classifier hop buys
+- **We identified four top performers:** `gemini-3.5-flash-lite` (65%), `gpt-4o-mini` (64%), `claude-haiku-4-5` (63%) and `grok-4.1-fast` (61%). They land within 4 points of each other, inside the noise at this sample size, so pick on latency and price; accuracy will not separate them
+- **Do not use a model built for reasoning as a classifier.** Anything that thinks before it answers (o3, `gpt-5.4-nano`) spends latency and tokens for zero accuracy gain. `gpt-5.4-nano` is the newest model we tested and the worst hosted one, 10 points below `gpt-4o-mini` and slower. Classification is a one-word answer, so thinking is pure overhead
+- **Open-source models are faster, and less accurate.** Run on your own GPU, `llama-3.1-8b` is the fastest classifier in the field (0.16s, $0.03/1k) but scores 48%, 16 points behind `gpt-4o-mini`. Only `deepseek-v3.2` keeps up with the hosted models, and it needs 8 H200s to do it, at 3.7x `gpt-4o-mini`'s price
+- **The free heuristic is a real floor at 45%.** It scores locally, with no API call and nothing added to your latency. Our pick beats it by 19 points, and that gap is the whole value of paying for a classifier hop
 
 ## The results
 
