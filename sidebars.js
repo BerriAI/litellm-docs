@@ -241,6 +241,7 @@ const sidebars = {
             "tutorials/claude_code_cut_costs",
             "tutorials/claude_code_autorouter",
             "tutorials/claude_responses_api",
+            "tutorials/claude_code_okta_sso",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
             "tutorials/claude_code_customer_tracking",
