@@ -541,6 +541,7 @@ Budget and Spend Alerts
 |------------|-------------|---------|
 | `budget_alerts` | Notifications related to budget limits or thresholds | ✅ |
 | `spend_reports` | Periodic reports on spending across teams or tags | ✅ |
+| `sgr_limit_alerts` | Fires once per window when successful gateway requests pass the soft threshold of `sgr_limit`, and again when they reach it | ✅ |
 | `failed_tracking_spend` | Alerts when spend tracking fails | ✅ |
 | `daily_reports` | Daily Spend reports | ✅ |
 | `fallback_reports` | Weekly Reports on LLM fallback occurrences | ✅ |
