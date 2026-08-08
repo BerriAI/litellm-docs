@@ -5,20 +5,28 @@ import Image from '@theme/IdealImage';
 
 Benchmarks for LiteLLM Gateway (Proxy Server) tested against a fake OpenAI endpoint.
 
-
 LiteLLM Gateway has **8ms P95 latency** at 1k RPS (See benchmarks [here](#4-instances))
+
+:::tip Production Deployment
+
+The rule of thumb is **one worker per CPU core**, with resource **requests** sized to the worker count (`requests.cpu = num_workers` and `requests.memory = num_workers × 4Gi`, each `<=` the corresponding limit). Kubernetes schedules pods on requests, not limits, so running more workers than the requested CPUs provide (for example 4 workers on a pod that only requests 1 CPU) causes CPU contention and node pressure. We recommend **1 worker per pod** (requests = limits = 1 CPU / 4Gi) and scaling **horizontally** (more pods); multiple workers per pod also works as long as requests are sized accordingly. See [Best Practices for Production](./proxy/prod) for the resource math and full guidance on server configuration, worker recycling, and hitless restarts.
+
+:::
 
 ## Machine Spec used for testing
 
-Each machine deploying LiteLLM had the following specs:
+Each LiteLLM instance under test had the following specs:
 
 - 4 CPU
 - 8GB RAM
+- 4 workers per instance (1 worker per CPU core)
 
 ## Configuration
 
 - Database: PostgreSQL
 - Redis: Not used
+- Deployment: litellm-helm chart (litellm-database image)
+- Pod resource requests sized to the worker count (see the production deployment note above)
 
 
 ### 2 Instance LiteLLM Proxy
@@ -49,9 +57,9 @@ In these tests the baseline latency characteristics are measured against a fake-
 |  | Aggregated | 77 | 130 | 180 | 57.53 | 2340 |
 
 #### Key Findings
-- Doubling from 2 to 4 LiteLLM instances halves median latency: 200 ms → 100 ms.
-- High-percentile latencies drop significantly: P95 630 ms → 150 ms, P99 1,200 ms → 240 ms.
-- Setting workers equal to CPU count gives optimal performance.
+- Doubling from 2 to 4 LiteLLM instances halves median latency: 200 ms to 100 ms.
+- High-percentile latencies drop significantly: P95 630 ms to 150 ms, P99 1,200 ms to 240 ms.
+- Set the worker count equal to the pod's CPU cores (1 worker per CPU core) for optimal performance. In production we run 1 CPU per pod, so that means 1 worker per pod, scaled horizontally across pods. See [production best practices](./proxy/prod#3-choose-your-server-uvicorn-vs-gunicorn) for details.
 
 
 ## Setting Up Benchmarking with Network Mock
@@ -81,7 +89,7 @@ general_settings:
 **2. Start the proxy:**
 
 ```bash
-litellm --config benchmark_config.yaml --port 4000 --num_workers 8
+litellm --config benchmark_config.yaml --port 4000 --num_workers 4
 ```
 
 **3. Run the benchmark script:**
@@ -131,13 +139,13 @@ End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake
 | Category | Specification |
 |----------|---------------|
 | **Load Testing** | Locust: 1,000 concurrent users, 500 ramp-up |
-| **System** | 4 vCPUs, 8 GB RAM, 4 workers, 4 instances |
+| **System** | 4 vCPUs, 8 GB RAM, 4 workers per instance (1 per CPU core), 4 instances |
 | **Database** | PostgreSQL (Redis unused) |
 
 
 ## Infrastructure Recommendations
 
-Recommended specifications based on benchmark results and industry standards for API gateway deployments.
+Recommended specifications based on benchmark results and industry standards for API gateway deployments. For full production configuration guidance (server choice, worker recycling, Kubernetes deployment), see [Best Practices for Production](./proxy/prod).
 
 ### PostgreSQL
 
