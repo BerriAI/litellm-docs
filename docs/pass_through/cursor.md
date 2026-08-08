@@ -34,6 +34,8 @@ Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
 
 Navigate to **Models + Endpoints → LLM Credentials** and click **Add Credential**. Select **Cursor** from the provider dropdown — you'll see the Cursor logo. Enter your API key from [cursor.com/settings](https://cursor.com/settings).
 
+Alternatively, set the `CURSOR_API_KEY` environment variable on the proxy.
+
 <Image img={require('../../img/cursor_add_credential.png')} alt="Add Cursor credential with logo" style={{maxWidth: '800px'}} />
 
 ### 2. Launch a Cursor Agent
