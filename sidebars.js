@@ -941,6 +941,7 @@ const sidebars = {
             "search/serper",
             "search/you_com",
             "search/apiserpent",
+            "search/tinyfish",
           ]
         },
         "skills",
