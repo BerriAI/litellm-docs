@@ -260,10 +260,10 @@ print(response.choices[0].message.reasoning_content)
 print("\nFinal Response:")
 print(completion.choices[0].message.content)
 
-print("\nNumber of completion tokens (input):")
+print("\nNumber of completion tokens:")
 print(completion.usage.completion_tokens)
 
-print("\nNumber of reasoning tokens (input):")
+print("\nNumber of reasoning tokens:")
 print(completion.usage.completion_tokens_details.reasoning_tokens)
 ```
 </TabItem>
@@ -289,10 +289,10 @@ print(response.choices[0].message.reasoning_content)
 print("\nFinal Response:")
 print(completion.choices[0].message.content)
 
-print("\nNumber of completion tokens (input):")
+print("\nNumber of completion tokens:")
 print(completion.usage.completion_tokens)
 
-print("\nNumber of reasoning tokens (input):")
+print("\nNumber of reasoning tokens:")
 print(completion.usage.completion_tokens_details.reasoning_tokens)
 ```
 
@@ -310,9 +310,9 @@ I can double-check that: 100 * 3 is 300, and 1 * 3 is 3, so 300 + 3 = 303. Yes, 
 Final Response:
 The result of 101 multiplied by 3 is 303.
 
-Number of completion tokens (input):
+Number of completion tokens:
 14
 
-Number of reasoning tokens (input):
+Number of reasoning tokens:
 310
 ```
