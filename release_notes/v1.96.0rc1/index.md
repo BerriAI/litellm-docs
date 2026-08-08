@@ -43,6 +43,14 @@ pip install litellm==1.96.0rc1
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**Auto-routers now pin a session to one deployment inside each model group by default.** The new `complexity_router_config.deployment_affinity` defaults to `true`, so an auto-router whose callers send a session id (via `x-litellm-session-id`, `x-litellm-trace-id`, or any `x-<vendor>-session-id` header) stops load-balancing those turns across deployments of the same model group. Tiering, spend, and which model serves a turn are unaffected; only the choice among deployments of one group changes. Set `deployment_affinity: false` under `complexity_router_config` to keep the previous behavior. See [PR #36146](https://github.com/BerriAI/litellm/pull/36146).
+
+**Session deployment pins are now scoped by API key, so existing pins miss once on upgrade.** Callers using `optional_pre_call_checks: ["session_affinity"]` will see each active session take one load-balanced turn before re-pinning, because the cache key gained a hashed-API-key segment. No action is required and pins re-establish on the next request. The scoping closes a hole where two callers sending the same client-supplied session id shared one pin. See [PR #36146](https://github.com/BerriAI/litellm/pull/36146).
+
+:::
+
 ## Key Highlights
 
 `v1.96.0rc1` is the current release candidate for 1.96.0.
