@@ -60,8 +60,14 @@ Schedule the cleanup using standard cron syntax. This takes precedence over `max
 
 Examples:
 - `"0 4 * * *"` – Run at 04:00 AM daily
-- `"0 0 * * 0"` – Run at midnight every Sunday
+- `"0 0 * * sun"` – Run at midnight every Sunday
 - `"*/30 * * * *"` – Run every 30 minutes
+
+:::warning Use day names in the weekday field
+
+Use day names (`sun`, `mon`, ...) instead of numbers in the weekday field. LiteLLM schedules the cleanup with APScheduler, which numbers weekdays 0=Monday through 6=Sunday, while standard cron uses 0=Sunday through 6=Saturday. Numeric weekday values are not translated between the two conventions, so `"0 0 * * 0"` fires on Monday, not Sunday. Day names mean the same thing in both conventions and always behave as expected.
+
+:::
 
 ## How it works
 
