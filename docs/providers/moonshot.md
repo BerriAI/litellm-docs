@@ -20,6 +20,26 @@ https://platform.moonshot.ai/
 
 **We support ALL Moonshot AI models, just set `moonshot/` as a prefix when sending completion requests**
 
+## Supported Models
+
+**See all LiteLLM supported Moonshot AI models [here](https://models.litellm.ai)**
+
+| Model | Context Window | Vision | Reasoning |
+|-------|----------------|--------|-----------|
+| `moonshot/kimi-k2.6` | 262,144 | Yes | Yes |
+| `moonshot/kimi-k2.5` | 262,144 | Yes | Yes |
+| `moonshot/kimi-k2-thinking` | 262,144 | No | Yes |
+| `moonshot/kimi-k2-thinking-turbo` | 262,144 | No | Yes |
+| `moonshot/moonshot-v1-8k` | 8,192 | No | No |
+| `moonshot/moonshot-v1-32k` | 32,768 | No | No |
+| `moonshot/moonshot-v1-128k` | 131,072 | No | No |
+| `moonshot/moonshot-v1-auto` | 131,072 | No | No |
+| `moonshot/moonshot-v1-8k-vision-preview` | 8,192 | Yes | No |
+| `moonshot/moonshot-v1-32k-vision-preview` | 32,768 | Yes | No |
+| `moonshot/moonshot-v1-128k-vision-preview` | 131,072 | Yes | No |
+
+Moonshot discontinued the `kimi-k2` series on May 25, 2026, which covers `kimi-k2.5` and the `kimi-k2-thinking` models listed above, along with `kimi-latest` (January 28, 2026) and `kimi-thinking-preview` (November 11, 2025). LiteLLM still carries cost tracking for those names so existing logs keep resolving, but new integrations should use `kimi-k2.6`. Dated snapshots such as `moonshot-v1-8k-0430` and the remaining `kimi-latest` variants are also supported; see the [Moonshot model list](https://platform.kimi.ai/docs/models) for the current lineup.
+
 ## Required Variables
 
 ```python showLineNumbers title="Environment Variables"
@@ -221,7 +241,7 @@ For more detailed information on using the LiteLLM Proxy, see the [LiteLLM Proxy
 
 ## Image / Vision Support
 
-Moonshot vision models (`kimi-k2.5`, `kimi-latest`, `moonshot-v1-*-vision-preview`, etc.) accept the standard OpenAI content array with `image_url` blocks.
+Moonshot vision models (`kimi-k2.6`, `kimi-k2.5`, `moonshot-v1-*-vision-preview`, etc.) accept the standard OpenAI content array with `image_url` blocks.
 
 LiteLLM automatically detects when your messages contain images and preserves the content array so the image payload reaches the Moonshot API. For text-only requests the content is flattened to a plain string, as required by Moonshot text models.
 
@@ -232,7 +252,7 @@ import litellm
 os.environ["MOONSHOT_API_KEY"] = ""
 
 response = litellm.completion(
-    model="moonshot/kimi-k2.5",
+    model="moonshot/kimi-k2.6",
     messages=[
         {
             "role": "user",
@@ -253,6 +273,10 @@ print(response.choices[0].message.content)
 ## Moonshot AI Limitations & LiteLLM Handling
 
 LiteLLM automatically handles the following [Moonshot AI limitations](https://platform.moonshot.ai/docs/guide/migrating-from-openai-to-kimi#about-api-compatibility) to provide seamless OpenAI compatibility:
+
+### Temperature on Reasoning Models
+**Limitation**: Reasoning models such as `kimi-k2.6` and `kimi-k2.5` reject every temperature except their own default  
+**LiteLLM Handling**: Drops `temperature` entirely so the model default applies. This is keyed off the model's reasoning support, so it covers `kimi-k2.6`, `kimi-k2.5`, and the `kimi-k2-thinking` models. The two limitations below apply to every other Moonshot model, including the `moonshot-v1` series and non-reasoning Kimi models such as `kimi-latest`
 
 ### Temperature Range Limitation
 **Limitation**: Moonshot AI only supports temperature range [0, 1] (vs OpenAI's [0, 2])  
