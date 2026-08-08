@@ -31,6 +31,13 @@ entry stays here until the named fix has landed in a `v*-stable` release;
 the next daily run after that tag is cut will flip the cells green and
 the entry will be removed.
 
+### Legacy `thinking` params rejected with 400 on Sonnet 4.6 / Opus 4.6
+
+- **Affected versions**: v1.83.9 – v1.87.x
+- **Symptom**: Requests to Sonnet 4.6 or Opus 4.6 that use the legacy `thinking` parameter shape (e.g. `"thinking": {"type": "enabled", "budget_tokens": 31999}`) fail with `400 output_config.effort: Input should be 'low', 'medium', 'high' or 'max'`. This is because LiteLLM's legacy-thinking translator mapped high `budget_tokens` values to `effort=xhigh`, which is not a valid effort tier for these models. Requests that already use the modern `output_config.effort` parameter are **not affected**. Claude Code's default configuration sends the legacy shape, so unmodified Claude Code sessions hit this error.
+- **Workaround**: If upgrading is not immediately possible, add `drop_params: true` to the affected model entry in your proxy config. Extended thinking will be disabled but requests will succeed.
+- **Status**: Fixed in v1.88.0.
+
 ### Opus 4.7 extended thinking on Bedrock Invoke + Vertex AI
 
 - **Affected cells**: `extended_thinking × bedrock_invoke`, `extended_thinking × vertex_ai`. Anthropic-native and Azure Foundry are unaffected on the same tier.
