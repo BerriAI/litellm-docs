@@ -65,7 +65,15 @@ Restart Claude Desktop. Open a new conversation and send a message. All requests
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-04-22/9e72faf1-0b5e-49d5-8ac4-b64dcd2b2f94/ascreenshot_813a1b584a1f4523ab7f7702f5985be0_text_export.jpeg)
 
-You can verify traffic is flowing by checking the LiteLLM Dashboard under **Usage** — you should see requests attributed to your virtual key.
+You can verify traffic is flowing by checking the LiteLLM Dashboard under **Usage**; you should see requests attributed to your virtual key.
+
+---
+
+## Things to Know When Switching to a Gateway
+
+Your existing chat history may not carry over when you switch Claude Desktop to route through a gateway. Before switching, ask your Claude to summarize what it is currently working on so you can export the relevant memory and paste it into your first conversation on the gateway.
+
+Auto mode may not appear when using a gateway. If you do not see it, select a model explicitly instead.
 
 ---
 
