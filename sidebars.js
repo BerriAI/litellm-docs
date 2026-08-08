@@ -1080,6 +1080,7 @@ const sidebars = {
         "providers/clarifai",
         "providers/cloudflare_workers",
         "providers/codestral",
+        "providers/cognition",
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
