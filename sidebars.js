@@ -147,6 +147,7 @@ const sidebars = {
           "proxy/guardrails/bedrock",
           "proxy/guardrails/compresr",
           "proxy/guardrails/crowdstrike_aidr",
+          "proxy/guardrails/deepkeep",
           "proxy/guardrails/enkryptai",
           "proxy/guardrails/ibm_guardrails",
           "proxy/guardrails/grayswan",
