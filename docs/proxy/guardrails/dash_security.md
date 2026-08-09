@@ -77,6 +77,9 @@ litellm --config config.yaml --port 4000
 
 ### 4. Test the integration
 
+<Tabs>
+<TabItem value="allowed" label="Allowed request">
+
 ```bash
 curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
@@ -87,6 +90,31 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
     "messages": [{"role": "user", "content": "Hello, how are you?"}]
   }'
 ```
+
+The call reaches the model and returns a normal chat completion.
+
+</TabItem>
+<TabItem value="blocked" label="Blocked request">
+
+When a request violates one of your Dash policies, the guardrail returns `BLOCKED` and LiteLLM rejects the call with HTTP 400:
+
+```json
+{
+  "error": {
+    "message": "Action blocked by security policy",
+    "type": "None",
+    "param": "None",
+    "code": "400"
+  }
+}
+```
+
+`message` is the reason Dash returned. Prompt and model blocks use the message configured on the matching Dash policy, so it is whatever your team wrote. MCP tool blocks name the server and tool, for example `MCP blocked: github/delete_repo`.
+
+</TabItem>
+</Tabs>
+
+On the response path Dash redacts instead of erroring: the call still returns `200`, with the offending output replaced.
 
 ## Guardrail Modes
 
