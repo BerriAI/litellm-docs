@@ -8,8 +8,8 @@ import TabItem from '@theme/TabItem';
 - **Gateway visibility**: Centralize LiteLLM proxy traffic in Dash for detection, session grouping, and audit
 - **Pre-LLM enforcement**: Block unsafe prompts and tool definitions before they reach the model
 - **Post-response enforcement**: Redact or block model output and generated tool calls after the LLM responds
-- **Tenant policies**: Apply Dash detection and response policies configured for your organization
-- **Identity-aware sessions**: Group traffic by stable caller identity (virtual key, end user, email) with a 30-minute sliding window
+- **Organization policies**: Apply the detection and response policies configured for your organization in Dash
+- **Identity-aware sessions**: Group traffic by stable caller identity (virtual key, end user, or email)
 
 :::info Integration type
 Dash Security uses LiteLLM's built-in `guardrail: generic_guardrail_api`. There is no native `guardrail: dash_security` provider in LiteLLM.
@@ -29,7 +29,7 @@ Before you begin, ensure you have:
 
 In Dash, open **Integrations → AI Gateway → LiteLLM** and create an integration. Copy the generated guardrail block. It includes:
 
-- `api_base` — your tenant-specific Dash DDC base URL for this integration (see below)
+- `api_base` — the Dash guardrail endpoint URL for this integration (copy from the wizard)
 - `api_key` — the integration token LiteLLM sends as `x-api-key`
 
 Store the token securely. Dash shows it once at creation time.
@@ -50,7 +50,7 @@ guardrails:
     litellm_params:
       guardrail: generic_guardrail_api
       mode: [pre_call, post_call]
-      api_base: "https://<your-ddc-host>/api/v1/litellm/<integration-id>"
+      api_base: os.environ/DASH_API_BASE
       api_key: os.environ/DASH_LITELLM_TOKEN
       default_on: true
       unreachable_fallback: fail_open
@@ -59,13 +59,13 @@ guardrails:
 
 :::warning Important
 - The value `guardrail: generic_guardrail_api` must not be changed. This is the LiteLLM built-in guardrail type. You may customize `guardrail_name`.
-- **`api_base` is tenant- and integration-specific.** Copy it from the Dash LiteLLM integration UI. It points at your Dash DDC endpoint for that integration (for example `https://<your-ddc-host>/api/v1/litellm/<integration-id>`). LiteLLM appends `/beta/litellm_basic_guardrail_api` automatically — do not include that suffix in `api_base`.
-- Do not hard-code a shared public Dash URL. Each customer integration has its own route and credential.
+- **`api_base` is unique per integration.** Copy it from the Dash LiteLLM integration wizard (or set `DASH_API_BASE` to that value). LiteLLM appends `/beta/litellm_basic_guardrail_api` automatically, so `api_base` does not need to include it.
 :::
 
-Set the token in your environment:
+Set environment variables:
 
 ```bash
+export DASH_API_BASE="https://<your-dash-guardrail-endpoint>"  # copy from the Dash wizard
 export DASH_LITELLM_TOKEN="your-dash-litellm-integration-token"
 ```
 
@@ -94,9 +94,9 @@ Dash Security supports all Generic Guardrail API execution modes:
 
 | Mode | When it runs | What Dash evaluates | Typical use |
 |------|--------------|---------------------|-------------|
-| **`pre_call`** | Before the LLM call | User/system input, structured messages, **tool definitions**, and **prior assistant tool calls** in conversation history on supported chat endpoints | Block unsafe prompts, disallowed tools, and risky historical tool calls before the model runs |
+| **`pre_call`** | Before the LLM call | User/system input, structured messages, tool definitions, and prior assistant tool calls in conversation history on supported chat endpoints | Block unsafe prompts and disallowed tools before the model runs |
 | **`during_call`** | In parallel with the LLM call | Same inputs as `pre_call` | Lower added latency when you still want pre-flight inspection |
-| **`post_call`** | After the LLM response | Model output text and **newly generated tool calls** on supported chat endpoints | Redact or block unsafe completions and tool invocations before the client executes them |
+| **`post_call`** | After the LLM response | Model output text and newly generated tool calls on supported chat endpoints | Redact or block unsafe completions and tool invocations before the client executes them |
 
 :::tip Recommended
 Use `mode: [pre_call, post_call]` for complete input and output coverage. Each LLM call is evaluated twice (before and after the model).
@@ -104,29 +104,30 @@ Use `mode: [pre_call, post_call]` for complete input and output coverage. Each L
 
 ### Tool and MCP coverage
 
-On supported LLM endpoints (`/v1/chat/completions`, `/v1/messages`, `/v1/responses`), the Generic Guardrail API can forward:
+On supported LLM endpoints (`/v1/chat/completions`, `/v1/messages`, `/v1/responses`), the Generic Guardrail API forwards tool information so Dash can enforce tool and MCP policies:
 
-- **`tools`** (pre_call only) — tool definitions available to the model, so Dash can inspect schemas before the call
-- **`tool_calls` on the request path** (pre_call) — prior assistant tool calls already present in the conversation history (not newly generated by this turn)
-- **`tool_calls` on the response path** (post_call) — tool invocations the model just generated; Dash can block these before your client executes them
+- **`pre_call`** — the tool definitions available to the model, so Dash can evaluate which tools and MCP servers are in scope before the call runs
+- **`post_call`** — the tool calls the model just generated, so Dash can block a disallowed call before your client executes it
 
-**Not supported today:** LiteLLM proxy-brokered MCP traffic on `/mcp` is **not** sent through the Generic Guardrail API. MCP gateway hooks require future Generic API support. Configure MCP enforcement through Dash's supported integration paths instead of expecting `/mcp` to flow through this guardrail.
+Because blocking a generated tool call requires the response payload, tool and MCP enforcement needs `post_call`. Use `mode: [pre_call, post_call]`; `during_call` alone does not deliver the response.
+
+**Not supported today:** LiteLLM proxy-brokered MCP traffic on `/mcp` is not sent through the Generic Guardrail API.
 
 ## Failure controls
 
-Two LiteLLM settings control behavior when Dash is unreachable or returns an error. They compose with the Generic Guardrail API defaults documented in [Generic Guardrail API — Error handling](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api#error-handling-unreachable_fallback-and-fail_on_error).
+Two LiteLLM settings control behavior when the Dash guardrail endpoint is unreachable or returns an error. They compose with the Generic Guardrail API defaults documented in [Generic Guardrail API — Error handling](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api#error-handling-unreachable_fallback-and-fail_on_error).
 
 | Setting | Fail-open (Dash default) | Fail-closed |
-|---------|------------------------|-------------|
-| `unreachable_fallback` | `fail_open` — proceed if Dash is unreachable (network error, timeout, or upstream 502/503/504) | `fail_closed` — block when Dash cannot be reached |
+|---------|--------------------------|-------------|
+| `unreachable_fallback` | `fail_open` — proceed if the Dash endpoint is unreachable (network error, timeout, or upstream 502/503/504) | `fail_closed` — block when the Dash endpoint cannot be reached |
 | `fail_on_error` | `false` — proceed on any guardrail error (malformed body, non-2xx, serialization errors, etc.) | `true` — block on any guardrail error |
 
-**Fail-open (recommended for gateway availability):** Dash's generated configuration defaults to `unreachable_fallback: fail_open` and `fail_on_error: false` so a Dash or DDC outage does not take down LiteLLM. Errors are still logged by LiteLLM at critical level when fail-open applies.
+**Fail-open (recommended for availability):** Dash's generated configuration defaults to `unreachable_fallback: fail_open` and `fail_on_error: false` so temporary unavailability of the Dash guardrail endpoint does not interrupt LiteLLM Proxy traffic. LiteLLM still logs these errors at critical level when fail-open applies.
 
 **Fail-closed (recommended for strict security):** Enable **Fail closed** when creating the LiteLLM integration in Dash, or set `unreachable_fallback: fail_closed` and `fail_on_error: true` manually. Use this when Dash is a hard security boundary and you prefer blocking traffic over bypassing the guardrail.
 
 :::danger
-With `fail_on_error: false`, any guardrail failure is bypassed for that request. A valid `BLOCKED` response from Dash still blocks. Choose fail-closed only when you accept blocking LiteLLM traffic on Dash errors.
+With `fail_on_error: false`, any guardrail failure is bypassed for that request. A valid `BLOCKED` response from Dash still blocks. Choose fail-closed only if you would rather reject LiteLLM traffic than let a request through unevaluated.
 :::
 
 <Tabs>
@@ -138,7 +139,7 @@ guardrails:
     litellm_params:
       guardrail: generic_guardrail_api
       mode: [pre_call, post_call]
-      api_base: "https://<your-ddc-host>/api/v1/litellm/<integration-id>"
+      api_base: os.environ/DASH_API_BASE
       api_key: os.environ/DASH_LITELLM_TOKEN
       default_on: true
       unreachable_fallback: fail_open
@@ -154,7 +155,7 @@ guardrails:
     litellm_params:
       guardrail: generic_guardrail_api
       mode: [pre_call, post_call]
-      api_base: "https://<your-ddc-host>/api/v1/litellm/<integration-id>"
+      api_base: os.environ/DASH_API_BASE
       api_key: os.environ/DASH_LITELLM_TOKEN
       default_on: true
       unreachable_fallback: fail_closed
@@ -170,7 +171,7 @@ guardrails:
     litellm_params:
       guardrail: generic_guardrail_api
       mode: during_call
-      api_base: "https://<your-ddc-host>/api/v1/litellm/<integration-id>"
+      api_base: os.environ/DASH_API_BASE
       api_key: os.environ/DASH_LITELLM_TOKEN
       default_on: true
       unreachable_fallback: fail_open
@@ -182,18 +183,12 @@ guardrails:
 
 ## Identity and session tracking
 
-Dash groups LiteLLM traffic into sessions for detection and dashboards. Session grouping priority:
+Dash groups requests from the same caller identity within a rolling 30-minute window into one session. Identity therefore determines how accurate sessions, user attribution, and dashboards are — provide a stable one on every request:
 
-1. **Stable identity + 30-minute sliding window** — when LiteLLM forwards a usable caller identity in `request_data`, Dash keys a 30-minute sliding window on the first available signal (in order): virtual-key hash (`user_api_key_hash`), end-user id (`user_api_key_end_user_id`), user email (`user_api_key_user_email`), or key alias (`user_api_key_alias`). Requests from the same identity within the window share one session.
-2. **`litellm_trace_id` fallback** — only when no usable identity exists, Dash uses a distinct `litellm_trace_id` (when it differs from `litellm_call_id`).
-3. **`litellm_call_id` fallback** — per-turn id when neither identity nor a distinct trace id is available.
+- **`user` field** — pass an end-user identifier on `/v1/chat/completions` (and other supported endpoints). Without it, LiteLLM may send a placeholder user id, which limits user-level visibility in Dash.
+- **LiteLLM virtual keys** — configure `user_id`, email, team, or org metadata on the virtual key used as the bearer token so identity is forwarded even when clients omit the `user` field.
 
-Provide stable identity on every request:
-
-- **`user` field** — pass an end-user identifier on `/v1/chat/completions` (and other supported endpoints). Without it, LiteLLM may send the placeholder `default_user_id`, which limits user-level visibility in Dash.
-- **LiteLLM virtual keys** — configure `user_id`, email, team, or org metadata on the virtual key used as the bearer token. LiteLLM forwards these in `request_data` (`user_api_key_user_email`, `user_api_key_end_user_id`, `user_api_key_alias`, `user_api_key_team_alias`, etc.).
-
-Example using a virtual key and explicit end-user id (both forwarded to Dash):
+Example:
 
 ```bash
 curl -X POST "http://localhost:4000/v1/chat/completions" \
@@ -206,18 +201,16 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   }'
 ```
 
-Configure the virtual key in LiteLLM with the caller's email or `user_id` so `request_data` carries stable identity even when clients omit the `user` field.
-
 ## Configuration reference
 
 | Parameter | Description |
 |-----------|-------------|
 | `guardrail` | Must be `generic_guardrail_api` |
-| `api_base` | Dash DDC base URL for your integration (from the Dash UI). LiteLLM appends `/beta/litellm_basic_guardrail_api`. |
+| `api_base` | Dash guardrail endpoint URL from the integration wizard (for example via `DASH_API_BASE`). LiteLLM appends `/beta/litellm_basic_guardrail_api`. |
 | `api_key` | Integration token from Dash (sent as `x-api-key`) |
 | `mode` | `pre_call`, `post_call`, `during_call`, or an array such as `[pre_call, post_call]` |
 | `default_on` | When `true`, apply to all requests unless overridden per call |
-| `unreachable_fallback` | `fail_open` or `fail_closed` when Dash is unreachable |
+| `unreachable_fallback` | `fail_open` or `fail_closed` when the Dash endpoint is unreachable |
 | `fail_on_error` | `true` (fail closed on any error) or `false` (fail open on errors) |
 
 ## Support and resources

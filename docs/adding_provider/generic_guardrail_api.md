@@ -329,14 +329,14 @@ guardrails:
     litellm_params:
       guardrail: generic_guardrail_api
       mode: [pre_call, post_call]
-      api_base: "https://<your-ddc-host>/api/v1/litellm/<integration-id>"
+      api_base: os.environ/DASH_API_BASE
       api_key: os.environ/DASH_LITELLM_TOKEN
       default_on: true
       unreachable_fallback: fail_open
       fail_on_error: false
 ```
 
-The `api_base` and API token are tenant- and integration-specific — copy them from the LiteLLM integration wizard in Dash. See the [Dash Security documentation](../proxy/guardrails/dash_security.md) for failure controls, tool coverage, and identity guidance.
+Set `DASH_API_BASE` and `DASH_LITELLM_TOKEN` to the values from the LiteLLM integration wizard in Dash. See the [Dash Security documentation](../proxy/guardrails/dash_security.md) for failure controls, tool coverage, and identity guidance.
 
 ## Usage
 
