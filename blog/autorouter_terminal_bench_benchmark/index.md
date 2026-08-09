@@ -47,7 +47,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 | Router: 4o-mini (3 user) | 76.2% | 16/21 | $18.58 | $1.16 | 8.3 min | 67.9s | 18%/36%/45% | 55% | 78% |
 | Opus-5 only | 76.2% | 16/21 | $19.74 | $1.23 | 6.4 min | 94.6s | 0%/0%/99% | 4% | 89% |
 | Router: heuristic | 66.7% | 14/21 | $11.11 | $0.79 | 5.6 min | 43.3s | 32%/53%/14% | 48% | 83% |
-| Router: 4o-mini (ctx 0) | 66.7% | 14/21 | $12.86 | $0.92 | 6.8 min | 53.1s | 33%/34%/34% | 58% | 79% |
+| Router: 4o-mini (1-message) | 66.7% | 14/21 | $12.86 | $0.92 | 6.8 min | 53.1s | 33%/34%/34% | 58% | 79% |
 | Router: 4o-mini (6 both) | 61.9% | 13/21 | $17.23 | $1.33 | 6.3 min | 112.3s | 5%/50%/44% | 46% | 80% |
 | Sonnet-5 only | 57.1% | 12/21 | $9.76 | $0.81 | 8.5 min | 60.5s | 0%/99%/0% | 1% | 93% |
 | Haiku-4.5 only | 33.3% | 7/21 | $4.24 | $0.61 | 4.9 min | 12.6s | 100%/0%/0% | 0% | 93% |
@@ -56,11 +56,11 @@ Cost is the total for all 21 tasks and includes the classifier call, which ran b
 
 ## Breakdown of Context Window Results
 
-`ctx 0` sends only the current user message to the classifier. `3 user` sends the last 3 user messages. `6 both` sends the last 6 messages including assistant replies. All three use the same 4o-mini classifier and the same tier mapping, so the only variable is what the classifier reads. 5.4-mini with no context beat all, overall.
+`1-message` sends only the current user message to the classifier. `3 user` sends the last 3 user messages. `6 both` sends the last 6 messages including assistant replies. All three use the same 4o-mini classifier and the same tier mapping, so the only variable is what the classifier reads. 5.4-mini with no context beat all, overall.
 
-| Context window | Solve rate | Relative to ctx 0 | Total cost | Relative to ctx 0 | Median task wall clock |
+| Context window | Solve rate | Relative to 1-message | Total cost | Relative to 1-message | Median task wall clock |
 |---|---:|---:|---:|---:|---:|
-| ctx 0 | 66.7% | reference | $12.86 | reference | 6.8 min |
+| 1-message | 66.7% | reference | $12.86 | reference | 6.8 min |
 | Last 3 user messages | 76.2% | +14% | $18.58 | +44% | 8.3 min |
 | Last 6 messages, user and assistant | 61.9% | -7% | $17.23 | +34% | 6.3 min |
 
