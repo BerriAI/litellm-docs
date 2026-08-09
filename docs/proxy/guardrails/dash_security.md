@@ -6,13 +6,13 @@ import TabItem from '@theme/TabItem';
 [Dash Security](https://www.dash.security/) integrates with [LiteLLM Proxy](https://docs.litellm.ai) via the [Generic Guardrail API](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api), providing AI gateway visibility and policy enforcement for LiteLLM traffic.
 
 - **Gateway visibility**: Centralize LiteLLM proxy traffic in Dash for detection, session grouping, and audit
-- **Pre-LLM enforcement**: Block unsafe prompts and tool definitions before they reach the model
+- **Pre-LLM enforcement**: Block unsafe prompts and inspect tool definitions before they reach the model
 - **Post-response enforcement**: Redact or block model output and generated tool calls after the LLM responds
 - **Organization policies**: Apply the detection and response policies configured for your organization in Dash
 - **Identity-aware sessions**: Group traffic by stable caller identity (virtual key, end user, or email)
 
 :::info Integration type
-Dash Security uses LiteLLM's built-in `guardrail: generic_guardrail_api`. There is no native `guardrail: dash_security` provider in LiteLLM.
+Dash Security integrates through LiteLLM's built-in `guardrail: generic_guardrail_api`.
 :::
 
 ## Prerequisites
@@ -94,7 +94,7 @@ Dash Security supports all Generic Guardrail API execution modes:
 
 | Mode | When it runs | What Dash evaluates | Typical use |
 |------|--------------|---------------------|-------------|
-| **`pre_call`** | Before the LLM call | User/system input, structured messages, tool definitions, and prior assistant tool calls in conversation history on supported chat endpoints | Block unsafe prompts and disallowed tools before the model runs |
+| **`pre_call`** | Before the LLM call | User/system input, structured messages, tool definitions, and prior assistant tool calls in conversation history on supported chat endpoints | Block unsafe prompts and disallowed tool calls already in the conversation |
 | **`during_call`** | In parallel with the LLM call | Same inputs as `pre_call` | Lower added latency when you still want pre-flight inspection |
 | **`post_call`** | After the LLM response | Model output text and newly generated tool calls on supported chat endpoints | Redact or block unsafe completions and tool invocations before the client executes them |
 
