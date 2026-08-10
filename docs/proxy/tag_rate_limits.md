@@ -180,6 +180,17 @@ model_list:
 
 A single-deployment `model_name`, or a fallback position (which by construction never has more than one deployment behind the same name), always resolves to exactly one shared bucket, so this doesn't change behavior for the common case.
 
+`concurrency_limits` only supports chain-wide entries: every deployment sharing a `model_name` must declare the identical value. A divergent per-deployment concurrency value is dropped with a warning rather than creating a per-deployment reservation, since a concurrency slot has to be released on completion and there's no reliable way to know, after the fact, which of several candidate deployments would have owned it. `token_limits`, `request_limits`, and `dollar_limits` don't have this restriction since they're plain counters, not reserve/release resources.
+
+## Tag Identity and Trust
+
+A tag value is whatever the caller's tags resolve to, the same identity [Request Tags](request_tags.md) and [Setting Tag Budgets](tag_budgets.md) already use. If a rate limit's `tag_id` is meant to represent a real, distinct caller (e.g. `end_user_id` per end user), that's only enforceable to the extent the tag itself is trustworthy:
+
+- A tag attached to a virtual key (via `/key/generate` metadata) is server-provisioned and can't be spoofed by the caller.
+- A tag sent by the caller directly, via `metadata.tags` in the request body or the `x-litellm-tags` header, can be set to anything, including a fresh value on every request, which defeats a limit meant to cap one identity's usage over time.
+
+If callers are untrusted, either provision tags on the key instead of accepting them from the request, or set `general_settings.reject_clientside_metadata_tags: true` to block client-supplied tags outright. That flag currently covers the common chat/embeddings routes; it does not yet cover Bedrock-invoke, `/v1/messages`, Responses, batches, or files routes, which resolve tags from a separate `litellm_metadata` field the check doesn't inspect.
+
 ## Enable the Callback
 
 `tag_rate_limiter` is opt-in, not a default proxy hook. Add it to `litellm_settings.callbacks`:
