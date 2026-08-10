@@ -38,6 +38,7 @@ litellm_settings:
   # Debugging - see debugging docs for more options
   # Use `--debug` or `--detailed_debug` CLI flags, or set LITELLM_LOG env var to "INFO", "DEBUG", or "ERROR"
   json_logs: boolean # if true, logs will be in json format
+  request_correlation_in_logs: boolean # if true, stamps every log line with the request's trace_id and session_id
 
   # Fallbacks, reliability
   default_fallbacks: ["claude-opus"] # set default_fallbacks, in case a specific model group is misconfigured / bad.
@@ -210,6 +211,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | langfuse_default_tags | array of strings | `[]` | Default tags for Langfuse Logging. Use this if you want to control which LiteLLM-specific fields are logged as tags by the LiteLLM proxy. By default LiteLLM Proxy logs no LiteLLM-specific fields as tags. [Further docs](./logging#litellm-specific-tags-on-langfuse---cache_hit-cache_key) |
 | set_verbose | boolean | `false` | [DEPRECATED - see debugging docs](./debugging) Use `--debug` or `--detailed_debug` CLI flags, or set `LITELLM_LOG` env var to "INFO", "DEBUG", or "ERROR" instead. |
 | json_logs | boolean | `false` | If true, logs will be in json format. If you need to store the logs as JSON, just set the `litellm.json_logs = True`. We currently just log the raw POST request from litellm as a JSON [Further docs](./debugging) |
+| request_correlation_in_logs | boolean | `false` | If true, stamps every log line (plaintext or JSON) with the request's `trace_id` and `session_id`, and adds a `session_id` field to `StandardLoggingPayload`. [Further docs](./debugging#request-correlation-ids) |
 | default_fallbacks | array of strings | `[]` | List of fallback models to use if a specific model group is misconfigured / bad. [Further docs](./reliability#default-fallbacks) |
 | request_timeout | integer | `6000` (seconds) | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) |
 | force_ipv4 | boolean | `false` | If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API |
@@ -305,7 +307,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | proxy_batch_polling_interval | int | `3600` (seconds) | Time (in seconds) to wait before polling a batch, to check if it's completed. **Default is 6000 seconds (1 hour)** |
 | proxy_config_reload_interval_seconds | int | `30` | How often each pod reloads config-in-DB objects (models, credentials, guardrails, etc.) from the database when `store_model_in_db` is enabled. Lower values speed up cross-pod convergence at the cost of more DB load; applied on proxy startup. Env: `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS`. **Default is 30 seconds** |
 | alerting_args | dict | `null` | Args for Slack Alerting [Doc on Slack Alerting](./alerting.md) |
-| custom_key_generate | str | `null` | Custom function for key generation [Doc on custom key generation](./virtual_keys.md#custom--key-generate) |
+| custom_key_generate | str | `null` | Custom function for key generation [Doc on custom key generation](./virtual_keys.md#custom-keygenerate) |
+| custom_key_update | str | `null` | Custom function for key updates. Required if `custom_key_generate` policies should also apply to key edits [Doc on custom key update](./virtual_keys.md#custom-keyupdate) |
 | allowed_ips | List[str] | `null` (all IPs) | List of IPs allowed to access the proxy. If not set, all IPs are allowed. |
 | embedding_model | str | n/a | **No longer read by the proxy**; the `/embeddings` route does not read it; set a default model on the request or use `model_list` aliases. The default model to use for embeddings - ignores model set in request |
 | default_team_disabled | boolean | `false` | If true, users cannot create 'personal' keys (keys with no team_id). |
@@ -349,7 +352,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | health_check_concurrency | integer | `null` (unbounded) | Maximum number of concurrent health check operations |
 | health_check_skip_disabled_background_models | boolean | `false` | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs (not only the background loop). [Doc on health checks](health) |
 | health_check_staleness_threshold | integer | `600` (seconds) | Maximum age in seconds for health check results before marking deployments as stale |
-| maximum_spend_logs_cleanup_cron | string | `null` | Cron expression for scheduling automatic spend log cleanup tasks |
+| maximum_spend_logs_cleanup_cron | string | `null` | Cron expression for scheduling automatic spend log cleanup tasks. Use day names (`sun`, `mon`, ...) rather than numbers in the weekday field: the scheduler numbers weekdays 0=Monday through 6=Sunday, unlike standard cron. See [spend log deletion](spend_logs_deletion) |
 | mcp_client_side_auth_header_name | string | `null` | HTTP header name for client-side MCP server credentials |
 | mcp_internal_ip_ranges | list | `null` (RFC1918 + loopback) | CIDR ranges considered internal for non-public MCP server access control |
 | mcp_required_fields | list | `null` | List of required field names for MCP server submissions |
@@ -429,6 +432,8 @@ router_settings:
 | stream_timeout | Optional[float] | The default timeout for a streaming request. If not set, the 'timeout' value is used. |
 | ttft_timeout | Optional[float] | Raise a `litellm.Timeout` if no first token arrives within this many seconds of the connection being accepted, to detect providers that hang before sending any content. When set, a non-streaming call is internally promoted to streaming and the caller still receives a standard response. Best set per deployment. Defaults to None (off). |
 | stream_idle_timeout | Optional[float] | Raise a `litellm.Timeout` if the gap between consecutive tokens exceeds this many seconds, to detect providers that stall mid-stream. Keep it well above the model's per-token p99 so it acts as a freeze detector rather than a slowness detector. Best set per deployment. Defaults to None (off). |
+| keepalive_seconds | Optional[float] | Send an SSE `: ping` comment on a streaming response whenever the upstream model goes silent for longer than this many seconds, repeating every `keepalive_seconds` until real content resumes. Use this to stop load balancers or reverse proxies from closing SSE connections that look idle during long silent gaps (e.g. extended thinking before the first visible token). Operator-only by default: a request-level `keepalive_seconds` in the request body is ignored unless the deployment also sets `allow_client_keepalive_override: true`, in which case a request can narrow or change the deployment's value, including disabling it with an explicit `0`. A deployment-level `0` is always a hard disable a request can't override, regardless of override permission. Effective value is clamped to the range 1-300 seconds. Defaults to None (off). |
+| allow_client_keepalive_override | Optional[bool] | Whether a request's `keepalive_seconds` is allowed to override this deployment's `keepalive_seconds`. Defaults to `false`, meaning `keepalive_seconds` is operator-only for this deployment and any request-level value is silently ignored. |
 | debug_level | Literal["DEBUG", "INFO"] | The debug level for the logging library in the router. Defaults to "INFO". |
 | client_ttl | int | Time-to-live for cached clients in seconds. Defaults to 3600. |
 | cache_kwargs | dict | Additional keyword arguments for the cache initialization. Use this for non-string Redis parameters that may fail when set via `REDIS_*` environment variables. |
@@ -465,11 +470,14 @@ router_settings:
 
 | Name | Description |
 |------|-------------|
+| A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
+| AI21_API_BASE | Base URL for AI21. Default is https://api.ai21.com/studio/v1
+| AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
 | AISPEND_ACCOUNT_ID | Account ID for AI Spend
 | AISPEND_API_KEY | API Key for AI Spend
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
@@ -483,7 +491,17 @@ router_settings:
 | AIOHTTP_TTL_DNS_CACHE | DNS cache time-to-live for aiohttp in seconds. **Default is 300**
 | AKTO_GUARDRAIL_API_BASE | Base URL for the Akto Guardrail API (e.g. `http://localhost:9090`). Used by the Akto guardrail integration.
 | AKTO_API_KEY | API key for authenticating with the Akto Guardrail service.
+| ALEPH_ALPHA_API_BASE | Base URL for Aleph Alpha. Default is https://api.aleph-alpha.com/complete
+| ALEPH_ALPHA_API_KEY | API key for Aleph Alpha
 | ALLOWED_EMAIL_DOMAINS | List of email domains allowed for access
+| AMAZON_NOVA_API_BASE | Base URL for Amazon Nova. Default is https://api.nova.amazon.com/v1
+| ANTHROPIC_AWS_API_BASE | Base URL for Claude on AWS, read after `ANTHROPIC_AWS_BASE_URL`
+| ANTHROPIC_AWS_API_KEY | API key for Claude on AWS. When it is set, requests carry the key instead of being signed with AWS SigV4
+| ANTHROPIC_AWS_BASE_URL | Base URL for Claude on AWS, read before `ANTHROPIC_AWS_API_BASE`. When neither is set the endpoint is derived from the resolved AWS region
+| ANTHROPIC_AWS_WORKSPACE_ID | Anthropic workspace ID sent with Claude on AWS requests, unless a workspace ID is passed per request. `ANTHROPIC_WORKSPACE_ID` is accepted as a fallback
+| ANTHROPIC_WORKSPACE_ID | Fallback for `ANTHROPIC_AWS_WORKSPACE_ID`
+| ANYSCALE_API_BASE | Base URL for Anyscale. Default is https://api.endpoints.anyscale.com/v1
+| APISERPENT_API_BASE | Base URL for the APISerpent search provider
 | APSCHEDULER_COALESCE | Whether to combine multiple pending executions of a job into one. **Default is False**
 | APSCHEDULER_MAX_INSTANCES | Maximum number of concurrent instances of each job. **Default is 1**
 | APSCHEDULER_MISFIRE_GRACE_TIME | Grace time in seconds for misfired jobs. **Default is 1**
@@ -495,6 +513,7 @@ router_settings:
 | ARGILLA_SAMPLING_RATE | Sampling rate for Argilla logging
 | ARGILLA_DATASET_NAME | Dataset name for Argilla logging
 | ARGILLA_BASE_URL | Base URL for Argilla service
+| ARK_API_BASE | Base URL for Volcengine Ark responses, read after `VOLCENGINE_API_BASE`
 | ATHINA_API_KEY | API key for Athina service
 | ATHINA_BASE_URL | Base URL for Athina service (defaults to `https://log.athina.ai`)
 | AUTH_STRATEGY | Strategy used for authentication (e.g., OAuth, API key)
@@ -507,6 +526,7 @@ router_settings:
 | ANTHROPIC_TOKEN_COUNTING_BETA_VERSION | Beta version header for Anthropic token counting API. Default is `token-counting-2024-11-01`
 | AWS_ACCESS_KEY_ID | Access Key ID for AWS services
 | AWS_BATCH_ROLE_ARN | ARN of the AWS IAM role for batch operations
+| AWS_BEDROCK_RUNTIME_ENDPOINT | Endpoint URL for the Bedrock runtime, used when neither `api_base` nor `aws_bedrock_runtime_endpoint` is passed per request. Overrides the endpoint LiteLLM would otherwise derive from the AWS region
 | AWS_DEFAULT_REGION | Default AWS region for service interactions when AWS_REGION is not set
 | AWS_PROFILE_NAME | AWS CLI profile name to be used
 | AWS_REGION | AWS region for service interactions (takes precedence over AWS_DEFAULT_REGION)
@@ -531,6 +551,8 @@ router_settings:
 | AZURE_DEFAULT_RESPONSES_API_VERSION | Version of the Azure Default Responses API being used. Default is "preview"
 | AZURE_DOCUMENT_INTELLIGENCE_API_VERSION | API version for Azure Document Intelligence service
 | AZURE_DOCUMENT_INTELLIGENCE_DEFAULT_DPI | Default DPI (dots per inch) setting for Azure Document Intelligence service
+| AZURE_SPEECH_API_BASE | Base URL for Azure Speech audio transcription
+| AZURE_SPEECH_API_KEY | API key for Azure Speech audio transcription
 | AZURE_TENANT_ID | Tenant ID for Azure Active Directory
 | AZURE_USERNAME | Username for Azure services, use in conjunction with AZURE_PASSWORD for azure ad token with basic username/password workflow
 | AZURE_PASSWORD | Password for Azure services, use in conjunction with AZURE_USERNAME for azure ad token with basic username/password workflow
@@ -544,6 +566,7 @@ router_settings:
 | AZURE_SENTINEL_ENDPOINT | Endpoint for Azure Sentinel logging
 | AZURE_SENTINEL_TENANT_ID | Tenant ID for Azure Sentinel authentication
 | AZURE_SENTINEL_CLIENT_ID | Client ID for Azure Sentinel authentication
+| AZURE_SENTINEL_AUTHORITY_HOST | Microsoft Entra authority host for Azure Sentinel logging, e.g. "https://login.microsoftonline.us" for Azure Government; falls back to AZURE_AUTHORITY_HOST, then to the Azure Public Cloud authority
 | AZURE_KEY_VAULT_URI | URI for Azure Key Vault
 | AZURE_OPERATION_POLLING_TIMEOUT | Timeout in seconds for Azure operation polling
 | AZURE_STORAGE_ACCOUNT_KEY | The Azure Storage Account Key to use for Authentication to Azure Blob Storage logging
@@ -552,19 +575,27 @@ router_settings:
 | AZURE_STORAGE_TENANT_ID | The Application Tenant ID to use for Authentication to Azure Blob Storage logging
 | AZURE_STORAGE_CLIENT_ID | The Application Client ID to use for Authentication to Azure Blob Storage logging
 | AZURE_STORAGE_CLIENT_SECRET | The Application Client Secret to use for Authentication to Azure Blob Storage logging
+| AZURE_STORAGE_ENDPOINT_SUFFIX | The storage endpoint suffix to use for Azure Blob Storage logging, e.g. core.usgovcloudapi.net for Azure Government. Defaults to core.windows.net
 | AZURE_VECTOR_STORE_COST_PER_GB_PER_DAY | Cost per GB per day for Azure Vector Store service
 | BACKGROUND_HEALTH_CHECK_MAX_TOKENS | Optional global default for `max_tokens` on proxy background health checks when a model has no `health_check_max_tokens`. If unset, non-wildcard models default to 5. Applies to wildcard routes when set. Default is unset
 | BACKGROUND_HEALTH_CHECK_MAX_TOKENS_REASONING | For **non-wildcard** reasoning models (`supports_reasoning(model)=true`), this takes precedence over `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` when set. If unset, reasoning models fall back to `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` (if set) or default behavior. Wildcard routes ignore this. Default is unset
+| BASETEN_API_BASE | Base URL for Baseten. Default is https://inference.baseten.co/v1
 | BATCH_STATUS_POLL_INTERVAL_SECONDS | Interval in seconds for polling batch status. Default is 3600 (1 hour)
 | BATCH_STATUS_POLL_MAX_ATTEMPTS | Maximum number of attempts for polling batch status. Default is 24 (for 24 hours)
+| BEDROCK_API_BASE | Base URL for Bedrock rerank requests
+| BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
 | BERRISPEND_ACCOUNT_ID | Account ID for BerriSpend service
+| BFL_API_BASE | Base URL for Black Forest Labs image generation and editing
+| BLACK_FOREST_LABS_API_KEY | API key for Black Forest Labs, read after `BFL_API_KEY`
 | BRAINTRUST_API_KEY | API key for Braintrust integration
 | BRAINTRUST_API_BASE | Base URL for Braintrust API. Default is https://api.braintrustdata.com/v1
 | BRAINTRUST_MOCK | Enable mock mode for Braintrust integration testing. When set to true, intercepts Braintrust API calls and returns mock responses without making actual network calls. Default is false
 | BRAINTRUST_MOCK_LATENCY_MS | Mock latency in milliseconds for Braintrust API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
+| BRAVE_API_BASE | Base URL for the Brave search provider
 | CACHED_STREAMING_CHUNK_DELAY | Delay in seconds for cached streaming chunks. Default is 0.02
+| CEREBRAS_API_BASE | Base URL for Cerebras. Default is https://api.cerebras.ai/v1
 | CHATGPT_API_BASE | Base URL for ChatGPT API. Default is https://chatgpt.com/backend-api/codex
 | CHATGPT_AUTH_FILE | Filename for ChatGPT authentication data. Default is "auth.json"
 | CHATGPT_DEFAULT_INSTRUCTIONS | Default system instructions for ChatGPT provider
@@ -576,12 +607,18 @@ router_settings:
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
 | CLI_SSO_CLAIM_MAP | Comma-separated allowlist mapping OIDC claim paths to LiteLLM user `metadata` keys for CLI SSO (e.g. `employment_type->acme_employment_type,org_info.department->department`). Scalar values are also returned in `/sso/cli/poll` as `attribution_metadata`. Alias: `LITELLM_CLI_SSO_CLAIM_MAP`
+| CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
 | CLOUDZERO_EXPORT_INTERVAL_MINUTES | Interval in minutes for CloudZero data export operations
 | CLOUDZERO_MAX_FETCHED_DATA_RECORDS | Maximum number of data records to fetch from CloudZero
 | CLOUDZERO_TIMEZONE | Timezone for date handling (default: UTC)
+| CODESTRAL_API_BASE | Base URL for Codestral. Default is https://codestral.mistral.ai/v1
+| COMETAPI_API_BASE | Base URL for CometAPI, read after `COMETAPI_BASE_URL`. Default is https://api.cometapi.com/v1
+| COMETAPI_API_KEY | API key for CometAPI, read after `COMETAPI_KEY`
+| COMETAPI_BASE_URL | Base URL for CometAPI image generation, read before `COMETAPI_API_BASE`
 | CONFIG_FILE_PATH | File path for configuration file
+| CRW_API_BASE | Base URL for the FastCRW search provider
 | CYBERARK_ACCOUNT | CyberArk account name for secret management
 | CYBERARK_API_BASE | Base URL for CyberArk API
 | CYBERARK_API_KEY | API key for CyberArk secret management service
@@ -595,6 +632,8 @@ router_settings:
 | COHERE_API_BASE | Base URL for Cohere API. Default is https://api.cohere.com
 | COMPETITOR_LLM_TEMPERATURE | Temperature setting for the LLM used in competitor discovery. Default is 0.3
 | CURSOR_API_BASE | API base URL for Cursor AI provider integration. Default is https://api.cursor.com
+| DASHSCOPE_API_BASE_IMAGE | Base URL for DashScope image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+| DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
 | DATABASE_HOST | Hostname for the database server
 | DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment (experimental) when `IAM_TOKEN_DB_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from RDS IAM env vars
 | DATABASE_NAME | Name of the database
@@ -614,9 +653,15 @@ router_settings:
 | DATABRICKS_CLIENT_ID | Client ID for Databricks OAuth M2M authentication (Service Principal application ID)
 | DATABRICKS_CLIENT_SECRET | Client secret for Databricks OAuth M2M authentication
 | DATABRICKS_USER_AGENT | Custom user agent string for Databricks API requests. Used for partner telemetry attribution
+| DATAFORSEO_API_BASE | Base URL for the DataForSEO search provider
 | DAYS_IN_A_MONTH | Days in a month for calculation purposes. Default is 28
 | DAYS_IN_A_WEEK | Days in a week for calculation purposes. Default is 7
 | DAYS_IN_A_YEAR | Days in a year for calculation purposes. Default is 365
+| DEEPGRAM_API_BASE | Base URL for Deepgram audio transcription. Default is https://api.deepgram.com/v1
+| DEEPINFRA_API_BASE | Base URL for DeepInfra. Default is https://api.deepinfra.com/v1/openai
+| DEEPSEEK_ANTHROPIC_API_BASE | Base URL for DeepSeek's Anthropic-compatible `/messages` endpoint, read before `DEEPSEEK_API_BASE`
+| DEEPSEEK_API_BASE | Base URL for DeepSeek. Default is https://api.deepseek.com/beta
+| DISABLE_KEY_NAME | Flag to stop storing the abbreviated key name on generated keys. That abbreviation is what the UI shows to identify which key spent what, so setting this makes spend harder to attribute to a key. **Default is False**
 | DRAIN_ENDPOINT_TOKEN | Shared secret required on the `X-Drain-Token` header to call the `/health/drain` endpoint. When set (here or via `general_settings.drain_endpoint_token`), drain calls without the matching token are rejected with 401; when unset the endpoint keeps its opt-in-only behavior. Have the kubelet send it from the preStop `httpGet.httpHeaders`. |
 | DYNAMOAI_API_KEY | API key for DynamoAI Guardrails service
 | DYNAMOAI_API_BASE | Base URL for DynamoAI API. Default is https://api.dynamo.ai
@@ -624,6 +669,112 @@ router_settings:
 | DYNAMOAI_POLICY_IDS | Comma-separated list of DynamoAI policy IDs to apply
 | DD_BASE_URL | Base URL for Datadog integration
 | DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
+| ELEVENLABS_API_BASE | Base URL for ElevenLabs. Default is https://api.elevenlabs.io
+| EMPOWER_API_BASE | Base URL for Empower. Default is https://app.empower.dev/api/v1
+| EXA_API_BASE | Base URL for the Exa AI search provider
+| FAL_AI_API_BASE | Base URL for fal.ai image generation
+| FEATHERLESS_AI_API_BASE | Base URL for Featherless AI, read before `FEATHERLESS_API_BASE`
+| FEATHERLESS_API_BASE | Alias for `FEATHERLESS_AI_API_BASE`
+| FEATHERLESS_API_KEY | Alias for `FEATHERLESS_AI_API_KEY`
+| FIRECRAWL_API_BASE | Base URL for the Firecrawl search provider
+| FIREWORKSAI_API_KEY | Alias for the Fireworks AI API key, read after `FIREWORKS_API_KEY` and `FIREWORKS_AI_API_KEY`
+| FIREWORKS_ACCOUNT_ID | Fireworks AI account ID, required to list models from Fireworks AI's `/models` endpoint. That request fails with an explicit error when it is unset
+| FIREWORKS_AI_TOKEN | Last of the four accepted names for the Fireworks AI API key, after `FIREWORKS_API_KEY`, `FIREWORKS_AI_API_KEY` and `FIREWORKSAI_API_KEY`
+| FIREWORKS_API_BASE | Base URL for Fireworks AI. Default is https://api.fireworks.ai/inference/v1
+| FRIENDLIAI_API_KEY | API key for FriendliAI, with `FRIENDLI_TOKEN` accepted as a fallback
+| FRIENDLI_API_BASE | Base URL for FriendliAI. Default is https://api.friendli.ai/serverless/v1
+| GALADRIEL_API_BASE | Base URL for Galadriel. Default is https://api.galadriel.com/v1
+| GDC_API_BASE | Base URL for GDC
+| GDC_API_KEY | API key for GDC
+| GIGACHAT_API_BASE | Base URL for GigaChat
+| GIGACHAT_API_KEY | Credentials for GigaChat, read after `GIGACHAT_CREDENTIALS` and exchanged for an access token at `GIGACHAT_AUTH_URL`
+| GIGACHAT_AUTH_URL | OAuth token endpoint used to exchange GigaChat credentials for an access token. Defaults to the GigaChat production auth URL
+| GITHUB_API_BASE | Base URL for GitHub Models. Default is https://models.inference.ai.azure.com
+| GOOGLE_PSE_API_BASE | Base URL for the Google Programmable Search Engine search provider
+| GROQ_API_BASE | Base URL for Groq. Default is https://api.groq.com/openai/v1
+| HYPERBOLIC_API_BASE | Base URL for Hyperbolic
+| INCEPTION_API_BASE | Base URL for Inception. Default is https://api.inceptionlabs.ai/v1
+| JINA_AI_API_BASE | Base URL for Jina AI embeddings. Default is https://api.jina.ai/v1
+| JINA_AI_API_KEY | API key for Jina AI
+| JINA_AI_TOKEN | Fallback for `JINA_AI_API_KEY`
+| JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
+| LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
+| LANGFLOW_API_KEY | API key for Langflow
+| LEMONADE_API_KEY | API key for Lemonade
+| LINKUP_API_BASE | Base URL for the Linkup search provider
+| LLAMAFILE_API_KEY | API key for llamafile. llamafile does not require one, so a placeholder is used when this is unset
+| LLAMA_API_BASE | Base URL for Llama API. Default is https://api.llama.com/compat/v1
+| MANUS_API_BASE | Base URL for Manus. Default is https://api.manus.im
+| MARITALK_API_BASE | Base URL for MariTalk. Default is https://chat.maritaca.ai/api
+| MARITALK_API_KEY | API key for MariTalk
+| MISTRAL_AZURE_API_BASE | Base URL for Mistral models served through Azure AI
+| MISTRAL_AZURE_API_KEY | API key for Mistral models served through Azure AI
+| MODELSCOPE_API_BASE | Base URL for ModelScope
+| MODELSCOPE_API_KEY | API key for ModelScope
+| MORPH_API_BASE | Base URL for Morph. Default is https://api.morphllm.com/v1
+| NEBIUS_API_BASE | Base URL for Nebius. Default is https://api.studio.nebius.ai/v1
+| NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
+| NOVITA_API_BASE | Base URL for Novita. Default is https://api.novita.ai/v3/openai
+| NSCALE_API_BASE | Base URL for Nscale
+| OLLAMA_API_BASE | Base URL for Ollama. Default is http://localhost:11434
+| OLLAMA_API_KEY | API key for Ollama, for deployments that sit behind an authenticating proxy
+| OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
+| OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
+| OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
+| OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
+| PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
+| PERPLEXITY_API_BASE | Base URL for Perplexity. Default is https://api.perplexity.ai
+| PG_VECTOR_API_BASE | Base URL for a pgvector vector store
+| PG_VECTOR_API_KEY | API key for a pgvector vector store
+| PINSTRIPES_API_KEY | API key for Pinstripes
+| PROMETHEUS_SELECTED_INSTANCE | Prometheus `instance` label to restrict to when the proxy queries `PROMETHEUS_URL` for fallback metrics. Series carrying any other instance are skipped; when unset, every instance is counted
+| REDIS_AZURE_AD_TOKEN | Flag enabling Azure AD authentication for Redis. Set it to `true`, not to a token. Ignored with a warning when a GCP IAM service account is configured as well. **Default is False**
+| REDUCTO_API_KEY | API key for Reducto OCR
+| REPLICATE_API_BASE | Base URL for Replicate. Default is https://api.replicate.com/v1
+| RUNWAYML_API_BASE | Base URL for RunwayML
+| RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
+| SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
+| SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
+| SERPER_API_BASE | Base URL for the Serper search provider
+| SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
+| SONIOX_API_KEY | API key for Soniox
+| SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
+| STABILITY_API_BASE | Base URL for Stability AI image generation and editing
+| TAVILY_API_BASE | Base URL for the Tavily search provider
+| TINYFISH_API_BASE | Base URL for the TinyFish search provider
+| TOGETHER_AI_API_BASE | Base URL for Together AI. Default is https://api.together.xyz/v1
+| TOGETHER_AI_API_KEY | Alias for the Together AI API key, read after `TOGETHER_API_KEY` and before `TOGETHERAI_API_KEY`
+| TOGETHER_AI_TOKEN | Last of the four accepted names for the Together AI API key, after `TOGETHER_API_KEY`, `TOGETHER_AI_API_KEY` and `TOGETHERAI_API_KEY`
+| TOGETHER_API_KEY | First of the four accepted names for the Together AI API key, ahead of `TOGETHER_AI_API_KEY`, `TOGETHERAI_API_KEY` and `TOGETHER_AI_TOKEN`
+| TOPAZ_API_BASE | Base URL for Topaz Labs. Default is https://api.topazlabs.com
+| V0_API_BASE | Base URL for v0. Default is https://api.v0.dev/v1
+| VERCEL_AI_GATEWAY_API_BASE | Base URL for the Vercel AI Gateway. Default is https://ai-gateway.vercel.sh/v1
+| VERTEXAI_API_BASE | Base URL for Vertex AI, read before `VERTEX_API_BASE`
+| VERTEX_API_BASE | Alias for `VERTEXAI_API_BASE`
+| VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
+| VLLM_API_BASE | Base URL for a self-hosted vLLM server
+| VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
+| VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
+| VOYAGE_AI_TOKEN | Last of the three accepted names for the Voyage AI API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
+| VOYAGE_API_BASE | Base URL for Voyage AI rerank requests
+| WANDB_API_BASE | Base URL for Weights & Biases Inference. Default is https://api.inference.wandb.ai/v1
+| WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
+| WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
+| WATSONX_SPACE_ID | Deployment space ID for watsonx.ai, read after `WATSONX_DEPLOYMENT_SPACE_ID`
+| WML_URL | Last of the four accepted names for the watsonx base URL, after `WATSONX_API_BASE`, `WATSONX_URL` and `WX_URL`
+| WORKER_CONFIG | Serialized proxy configuration that the `litellm` CLI passes to the worker processes it starts. Set by the CLI itself; to point the proxy at a config file of your own use `CONFIG_FILE_PATH`
+| WX_API_KEY | Alias for the watsonx API key, read first when generating an IAM token and after `WATSONX_APIKEY` and `WATSONX_API_KEY` when authenticating a request
+| WX_PROJECT_ID | Alias for `WATSONX_PROJECT_ID`, with `PROJECT_ID` accepted as a further fallback
+| WX_REGION | Alias for `WATSONX_REGION`
+| WX_SPACE_ID | Alias for `WATSONX_SPACE_ID`
+| WX_URL | Alias for the watsonx base URL, read after `WATSONX_API_BASE` and `WATSONX_URL`
+| XAI_API_BASE | Base URL for xAI. Default is https://api.x.ai
+| XAI_OAUTH_API_BASE | Base URL for the xAI OAuth flow, read before `XAI_API_BASE`
+| XAI_OAUTH_AUTH_FILE | Name of the file, inside `XAI_OAUTH_TOKEN_DIR`, that holds the xAI OAuth tokens written by `litellm xai-oauth login`. Default is auth.json
+| XAI_OAUTH_TOKEN_DIR | Directory holding the xAI OAuth token file. Default is ~/.config/litellm/xai_oauth
+| YOUCOM_API_BASE | Base URL for the You.com search provider
+| ZAI_API_BASE | Base URL for Z.ai
 | _DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
 | DD_AGENT_HOST | Hostname or IP of DataDog agent (e.g., "localhost"). When set, logs are sent to agent instead of direct API
 | DD_AGENT_PORT | Port of DataDog agent for log intake. Default is 10518
@@ -688,7 +839,7 @@ router_settings:
 | DEFAULT_MOCK_RESPONSE_COMPLETION_TOKEN_COUNT | Default token count for mock response completions. Default is 20
 | DEFAULT_MOCK_RESPONSE_PROMPT_TOKEN_COUNT | Default token count for mock response prompts. Default is 10
 | DEFAULT_MODEL_CREATED_AT_TIME | Default creation timestamp for models. Default is 1677610602
-| DEFAULT_NUM_WORKERS_LITELLM_PROXY | Default number of workers for LiteLLM proxy when `NUM_WORKERS` is not set. Default is 1. **We strongly recommend setting NUM_WORKERS to the number of vCPUs available** (e.g. `NUM_WORKERS=8` or `--num_workers 8`).
+| DEFAULT_NUM_WORKERS_LITELLM_PROXY | Default number of workers for LiteLLM proxy when `NUM_WORKERS` is not set. Default is 1. **On a single container, VM, or bare-metal host, set NUM_WORKERS to the number of vCPUs available** (e.g. `NUM_WORKERS=8` or `--num_workers 8`); CPU, memory, and the database connection pool are all per worker, so size the host and `database_connection_pool_limit` accordingly. On Kubernetes run one worker per pod and scale with replicas instead, see [Production Best Practices](./prod.md#workers-and-scaling).
 | DEFAULT_PROMPT_INJECTION_SIMILARITY_THRESHOLD | Default threshold for prompt injection similarity. Default is 0.7
 | DEFAULT_POLLING_INTERVAL | Default polling interval for schedulers in seconds. Default is 0.03
 | DEFAULT_REASONING_EFFORT_DISABLE_THINKING_BUDGET | Default reasoning effort disable thinking budget. Default is 0
@@ -722,6 +873,7 @@ router_settings:
 | LITELLM_ENABLE_HSTS | Flag to send the `Strict-Transport-Security` response header on proxy and UI responses. Only takes effect for deployments served over HTTPS. **Default is false**
 | DISABLE_AIOHTTP_TRANSPORT | Flag to disable aiohttp transport. When this is set to True, litellm will use httpx instead of aiohttp. **Default is False**
 | DISABLE_AIOHTTP_TRUST_ENV | Flag to disable aiohttp trust environment. When this is set to True, litellm will not trust the environment for aiohttp eg. `HTTP_PROXY` and `HTTPS_PROXY` environment variables will not be used when this is set to True. **Default is False**
+| DISABLE_PRISMA_HEALTH_CHECK_ON_STARTUP | Flag to skip the `SELECT 1` verification query the proxy runs against the database once Prisma has connected and migrations have been applied. The Prisma connection itself is unaffected; only the extra reachability probe is skipped, so a database that accepts the connection but cannot serve queries is discovered on the first request instead of at startup. **Default is False**
 | DISABLE_SCHEMA_UPDATE | Toggle to disable schema updates
 | DYNAMIC_RATE_LIMIT_ERROR_THRESHOLD_PER_MINUTE | Threshold for deployment failures per minute before enforcing rate limits in parallel request limiter. Default is 1
 | DOCS_DESCRIPTION | Description text for documentation pages
@@ -739,6 +891,8 @@ router_settings:
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
+| EXPERIMENTAL_OPENAI_BASE_LLM_HTTP_HANDLER | Flag to send `openai` chat completion requests through LiteLLM's shared HTTP handler instead of the OpenAI Python SDK client. **Default is False**
+| EXPERIMENTAL_UI_LOGIN | Controls the self-signed admin UI session token. When true, a successful UI login returns an encrypted token carrying the user's role and model access with a fixed 10 minute expiry rather than issuing a database-backed virtual key. Independently of that, the proxy tries to decrypt any incoming token that does not start with `sk-` as one of these session tokens unless this is explicitly set to false. **Default is unset**
 | FAROS_API_KEY | API key for sending LLM usage data to Faros AI
 | FAROS_API_URL | Base URL for the Faros AI API. Default is https://prod.api.faros.ai
 | FAROS_GRAPH | Faros graph that LiteLLM usage data is written to. Default is "default"
@@ -979,6 +1133,7 @@ router_settings:
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
+| LITELLM_STORE_AUDIT_LOGS | Flag to record an audit log entry for every create, update and delete performed on management objects such as keys, teams and users. Environment equivalent of `litellm_settings.store_audit_logs`; either source enabling it is enough, and writing the entries requires an enterprise license. **Default is False**
 | LITELLM_STREAM_INACTIVITY_TIMEOUT_SECONDS | Maximum seconds to wait for the next chunk from an async streaming provider before raising a Timeout. Guards against a provider that keeps the connection warm with keepalive bytes but stops sending content. Default is None (disabled)
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
@@ -998,6 +1153,8 @@ router_settings:
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
 | LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
+| LITELLM_PRISMA_BOOTSTRAP_TIMEOUT | Seconds allowed for the one-time install of the Node toolchain the Prisma CLI runs on, performed once per container before any migration. Raise it on slow or bandwidth-constrained nodes where the install takes longer than ten minutes. A non-positive or non-numeric value is ignored with a warning and the default applies. **Default is 600**
+| LITELLM_PRISMA_COMMAND_TIMEOUT | Seconds any single Prisma migration command may run before it is killed and retried. Raise it when migrations against a large or heavily loaded database legitimately take longer than a minute. A value that is not a positive number is ignored with a warning and the default applies, so a typo cannot accidentally disable the timeout. **Default is 60**
 | LITELM_ENVIRONMENT | Environment for LiteLLM Instance. This is currently only logged to DeepEval to determine the environment for DeepEval integration.
 | LITELLM_ASYNCIO_QUEUE_MAXSIZE | Maximum size for asyncio queues (e.g. log queues, spend update queues, and cookbook examples such as realtime audio in `nova_sonic_realtime.py`). Bounds in-memory growth to prevent OOM. Default is 1000.
 | LOGFIRE_TOKEN | Token for Logfire logging service
@@ -1200,6 +1357,7 @@ router_settings:
 | SUPABASE_KEY | API key for Supabase service
 | SUPABASE_URL | Base URL for Supabase instance
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
+| STORE_PROMPTS_IN_SPEND_LOGS | Flag to persist the request and response payloads of each call on its SpendLogs row, so prompts and completions are visible in the logs UI. Environment equivalent of `general_settings.store_prompts_in_spend_logs`; either source enabling it is enough. **Default is False**
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
 | TEST_EMAIL_ADDRESS | Email address used for testing purposes
 | TOGETHER_AI_4_B | Size parameter for Together AI 4B model. Default is 4
@@ -1221,6 +1379,9 @@ router_settings:
 | UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
 | UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
+| USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
+| USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
+| USE_LITELLM_PROXY | Flag to route every `litellm` SDK completion call through a LiteLLM proxy by default, which lets model names stay in their original provider format such as `gemini/gemini-3.5-flash`. Environment equivalent of `litellm.use_litellm_proxy = True`. **Default is False**
 | USE_PRISMA_MIGRATE | Removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555); `prisma migrate deploy` is now the default. Setting this has no effect and it is safe to remove.
 | VANTAGE_API_KEY | API key for Vantage cost-import integration
 | VANTAGE_BASE_URL | Base URL for Vantage API. Default is `https://api.vantage.sh`
