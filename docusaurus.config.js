@@ -123,6 +123,14 @@ const config = {
             from: '/docs/proxy/image_handling',
             to: '/docs/proxy/architecture#image-url-handling',
           },
+          {
+            from: '/docs/observability/langfuse_otel_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/telemetry',
+            to: '/docs/observability/opentelemetry_v2',
+          },
         ],
       },
     ],

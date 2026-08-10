@@ -1243,6 +1243,8 @@ Defaults:
 
 **Set Per Model**
 
+`allowed_fails` and `cooldown_time` can also be set on a single deployment instead of the whole router. A deployment-level value overrides the router-level one for that deployment only, so a flaky third-party endpoint can get a shorter fuse than the rest of your fleet without affecting them.
+
 ```yaml
 model_list:
 - model_name: fake-openai-endpoint
@@ -1251,8 +1253,12 @@ model_list:
     api_key: os.environ/PREDIBASE_API_KEY
     tenant_id: os.environ/PREDIBASE_TENANT_ID
     max_new_tokens: 256
-    cooldown_time: 0 # 👈 KEY CHANGE
+  model_info:
+    allowed_fails: 1 # cool this deployment down after 1 fail, instead of the router default
+    cooldown_time: 0 # disable cooldowns for this deployment
 ```
+
+`allowed_fails` must be set under `model_info`, not `litellm_params`: unlike `model_info`, `litellm_params` is copied into the actual request sent to the LLM provider, so a router-only setting placed there would leak into that request. `cooldown_time` can be set under either location (`model_info` takes priority if both are set), matching its pre-existing behavior on the router's primary failure path.
 
 </TabItem>
 </Tabs>
@@ -1519,6 +1525,24 @@ router_settings:
 
 </TabItem>
 </Tabs>
+
+`AllowedFailsPolicy` also supports `ServiceUnavailableErrorAllowedFails`, `BadGatewayErrorAllowedFails`, and `NotFoundErrorAllowedFails`.
+
+#### Per-deployment allowed_fails_policy
+
+`allowed_fails_policy` can be scoped to a single deployment by setting it under that deployment's `model_info` instead of `router_settings`. A deployment-level policy takes full precedence over the router-level one for that deployment, so a rate-limited third-party endpoint can cool down after its first `RateLimitError` while the rest of your fleet keeps the router-wide tolerance.
+
+```yaml
+model_list:
+- model_name: gpt-4
+  litellm_params:
+    model: openai/gpt-4
+    api_key: os.environ/OPENAI_API_KEY
+  model_info:
+    allowed_fails_policy:
+      RateLimitErrorAllowedFails: 0 # cool down after the first RateLimitError
+      InternalServerErrorAllowedFails: 5
+```
 
 ### Caching
 

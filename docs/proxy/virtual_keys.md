@@ -536,6 +536,53 @@ general_settings:
   custom_key_generate: custom_auth.custom_generate_key_fn
 ```
 
+:::warning
+
+`custom_key_generate` only runs on `/key/generate`. Key edits (`/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and editing a key in the Admin UI, which calls `/key/update`) skip it, so a user can create a compliant key and then edit it out of compliance, e.g. remove its expiration date. Set [`custom_key_update`](#custom-keyupdate) as well if your policy should also hold on edits.
+
+:::
+
+### Custom /key/update
+
+If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, and `/team/key/bulk_update`. The Admin UI edit key flow calls `/key/update`, so this also covers edits made from the UI.
+
+#### 1. Write a custom `custom_update_key_fn`
+
+The input to the `custom_update_key_fn` function is a single parameter: `data` [(Type: UpdateKeyRequest)](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/_types.py)
+
+The output contract is the same as `custom_generate_key_fn`: return `{"decision": True}` to allow the update, or `{"decision": False, "message": "..."}` to reject it. Rejected updates fail with a `403`.
+
+Update requests only contain the fields being changed, so an unset field means "leave as is", not "clear". Use `data.model_fields_set` to tell an omitted field apart from one explicitly set to `None`. For example, the Admin UI sends `duration: null` when a key is edited to "Never expires", which the function below rejects.
+
+```python
+from litellm.proxy._types import UpdateKeyRequest
+
+
+async def custom_update_key_fn(data: UpdateKeyRequest) -> dict:
+    """
+    Asynchronous function that decides if a key update should be allowed.
+
+    Args:
+        data (UpdateKeyRequest): The requested changes to the key.
+
+    Returns:
+        dict: A dictionary containing the decision and an optional message.
+    """
+    if "duration" in data.model_fields_set and data.duration is None:
+        return {
+            "decision": False,
+            "message": "This violates LiteLLM Proxy Rules. Keys must keep an expiration date.",
+        }
+    return {"decision": True}
+```
+
+#### 2. Pass the filepath (relative to the config.yaml)
+
+```yaml
+general_settings:
+  custom_key_generate: custom_auth.custom_generate_key_fn
+  custom_key_update: custom_auth.custom_update_key_fn
+```
 
 ### Upperbound /key/generate params
 Use this, if you need to set default upperbounds for `max_budget`, `budget_duration` or any `key/generate` param per key. 
