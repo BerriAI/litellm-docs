@@ -405,65 +405,64 @@ router_settings:
   fallbacks=[{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
 ```
 
-| Name | Type | Description |
-|------|------|-------------|
-| routing_strategy | string | The strategy used for routing requests. Options: "simple-shuffle", "least-busy", "usage-based-routing", "latency-based-routing". Default is "simple-shuffle". [More information here](../routing) |
-| redis_host | string | The host address for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them** |
-| redis_password | string | The password for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them** |
-| redis_port | string | The port number for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them**|
-| redis_db | int | The database number for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them**|
-| enable_pre_call_check | boolean | If true, checks if a call is within the model's context window before making the call. [More information here](reliability) |
-| content_policy_fallbacks | array of objects | Specifies fallback models for content policy violations. [More information here](reliability) |
-| fallbacks | array of objects | Specifies fallback models for all types of errors. [More information here](reliability) |
-| enable_tag_filtering | boolean | If true, uses tag based routing for requests [Tag Based Routing](tag_routing) |
-| enable_weighted_failover | boolean | If true and `routing_strategy` is `simple-shuffle`, a retryable failure on one deployment re-picks (weighted) across other deployments in the same model group before cross-group fallbacks. Default: false. |
-| tag_filtering_match_any | boolean | Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags |
-| cooldown_time | integer | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
-| disable_cooldowns | boolean | If true, disables cooldowns for all models. [More information here](reliability) |
-| retry_policy | object | Specifies the number of retries for different types of exceptions. [More information here](reliability) |
-| allowed_fails | integer | The number of failures allowed before cooling down a model. [More information here](reliability) |
-| allowed_fails_policy | object | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
-| default_max_parallel_requests | Optional[int] | The default maximum number of parallel requests for a deployment. |
-| default_priority | (Optional[int]) | The default priority for a request. Only for '.scheduler_acompletion()'. Default is None. | 
-| polling_interval | (Optional[float]) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
-| max_fallbacks | Optional[int] | The maximum number of fallbacks to try before exiting the call. Defaults to 5. |
-| default_litellm_params | Optional[dict] | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
-| timeout | Optional[float] | The default timeout for a request. Default is 10 minutes. |
-| stream_timeout | Optional[float] | The default timeout for a streaming request. If not set, the 'timeout' value is used. |
-| ttft_timeout | Optional[float] | Raise a `litellm.Timeout` if no first token arrives within this many seconds of the connection being accepted, to detect providers that hang before sending any content. When set, a non-streaming call is internally promoted to streaming and the caller still receives a standard response. Best set per deployment. Defaults to None (off). |
-| stream_idle_timeout | Optional[float] | Raise a `litellm.Timeout` if the gap between consecutive tokens exceeds this many seconds, to detect providers that stall mid-stream. Keep it well above the model's per-token p99 so it acts as a freeze detector rather than a slowness detector. Best set per deployment. Defaults to None (off). |
-| keepalive_seconds | Optional[float] | Send an SSE `: ping` comment on a streaming response whenever the upstream model goes silent for longer than this many seconds, repeating every `keepalive_seconds` until real content resumes. Use this to stop load balancers or reverse proxies from closing SSE connections that look idle during long silent gaps (e.g. extended thinking before the first visible token). Operator-only by default: a request-level `keepalive_seconds` in the request body is ignored unless the deployment also sets `allow_client_keepalive_override: true`, in which case a request can narrow or change the deployment's value, including disabling it with an explicit `0`. A deployment-level `0` is always a hard disable a request can't override, regardless of override permission. Effective value is clamped to the range 1-300 seconds. Defaults to None (off). |
-| allow_client_keepalive_override | Optional[bool] | Whether a request's `keepalive_seconds` is allowed to override this deployment's `keepalive_seconds`. Defaults to `false`, meaning `keepalive_seconds` is operator-only for this deployment and any request-level value is silently ignored. |
-| debug_level | Literal["DEBUG", "INFO"] | The debug level for the logging library in the router. Defaults to "INFO". |
-| client_ttl | int | Time-to-live for cached clients in seconds. Defaults to 3600. |
-| cache_kwargs | dict | Additional keyword arguments for the cache initialization. Use this for non-string Redis parameters that may fail when set via `REDIS_*` environment variables. |
-| routing_strategy_args | dict | Additional keyword arguments for the routing strategy - e.g. lowest latency routing default ttl |
-| model_group_alias | dict | Model group alias mapping. E.g. `{"claude-3-haiku": "claude-3-haiku-20240229"}` |
-| num_retries | int | Number of retries for a request. Defaults to 3. |
-| default_fallbacks | Optional[List[str]] | Fallbacks to try if no model group-specific fallbacks are defined. |
-| caching_groups | Optional[List[tuple]] | List of model groups for caching across model groups. Defaults to None. - e.g. caching_groups=[("openai-gpt-3.5-turbo", "azure-gpt-3.5-turbo")]|
-| alerting_config | AlertingConfig | [SDK-only arg] Slack alerting configuration. Defaults to None. [Further Docs](../routing.md#alerting-) |
-| assistants_config | AssistantsConfig | Set on proxy via `assistant_settings`. [Further docs](../assistants.md) |
-| set_verbose | boolean | [DEPRECATED PARAM - see debug docs](./debugging) If true, sets the logging level to verbose. |
-| retry_after | int | Time to wait before retrying a request in seconds. Defaults to 0. If `x-retry-after` is received from LLM API, this value is overridden. |
-| provider_budget_config | ProviderBudgetConfig | Provider budget configuration. Use this to set llm_provider budget limits. example $100/day to OpenAI, $100/day to Azure, etc. Defaults to None. [Further Docs](./provider_budget_routing.md) |
-| enable_pre_call_checks | boolean | If true, checks if a call is within the model's context window before making the call. **Required** for `model_info.max_input_tokens` enforcement. Default: false. [More information here](reliability) |
-| model_group_retry_policy | Dict[str, RetryPolicy] | [SDK-only arg] Set retry policy for model groups. |
-| context_window_fallbacks | List[Dict[str, List[str]]] | Fallback models for context window violations. |
-| redis_url | str | URL for Redis server. **Known performance issue with Redis URL.** |
-| cache_responses | boolean | Flag to enable caching LLM Responses, if cache set under `router_settings`. If true, caches responses. Defaults to False. |
-| router_general_settings | RouterGeneralSettings | [SDK-Only] Router general settings - contains optimizations like 'async_only_mode'. [Docs](../routing.md#router-general-settings) |
-| optional_pre_call_checks | List[str] | List of pre-call checks to add to the router. Supported: `router_budget_limiting`, `prompt_caching`, `responses_api_deployment_check`, `encrypted_content_affinity` (requires LiteLLM >= 1.82.3), `deployment_affinity`, `session_affinity`, `forward_client_headers_by_model_group` |
-| deployment_affinity_ttl_seconds | int | TTL (seconds) for user-key → deployment affinity mapping when `deployment_affinity` is enabled (configured at Router init / proxy startup). Defaults to `3600` (1 hour). |
-| model_group_affinity_config | Dict[str, List[str]] | Per-model-group affinity flags. Keys are model group names; values are lists of checks to enable (`deployment_affinity`, `responses_api_deployment_check`, `session_affinity`). Groups not listed fall back to the global `optional_pre_call_checks`. [Docs](../response_api.md#per-model-group-affinity-configuration) |
-| ignore_invalid_deployments | boolean | If true, ignores invalid deployments. Default for proxy is True - to prevent invalid models from blocking other models from being loaded. |
-| search_tools | List[SearchToolTypedDict] | List of search tool configurations for Search API integration. Each tool specifies a search_tool_name and litellm_params with search_provider, api_key, api_base, etc. [Further Docs](../search/index.md) |
-| guardrail_list | List[GuardrailTypedDict] | List of guardrail configurations for guardrail load balancing. Enables load balancing across multiple guardrail deployments with the same guardrail_name. [Further Docs](./guardrails/guardrail_load_balancing.md) |
-| enable_health_check_routing | boolean | If true, enables health check-driven deployment filtering to avoid routing requests to unhealthy deployments |
-| health_check_staleness_threshold | integer | Maximum age in seconds for cached health check results before marking deployments as stale |
-| health_check_ignore_transient_errors | boolean | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
-| routing_groups | Optional[List[RoutingGroup]] | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. Defaults to None. |
-| plugins | Optional[List[RoutingPlugin]] | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. Defaults to None. |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| routing_strategy | string | `simple-shuffle` | The strategy used for routing requests. Options: "simple-shuffle", "least-busy", "usage-based-routing", "latency-based-routing". Default is "simple-shuffle". [More information here](../routing) |
+| redis_host | string | `null` | The host address for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them** |
+| redis_password | string | `null` | The password for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them** |
+| redis_port | string | `null` | The port number for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them**|
+| redis_db | int | `null` | The database number for the Redis server. **Only set this if you have multiple instances of LiteLLM Proxy and want current tpm/rpm tracking to be shared across them**|
+| content_policy_fallbacks | array of objects | `[]` | Specifies fallback models for content policy violations. [More information here](reliability) |
+| fallbacks | array of objects | `[]` | Specifies fallback models for all types of errors. [More information here](reliability) |
+| enable_tag_filtering | boolean | `false` | If true, uses tag based routing for requests [Tag Based Routing](tag_routing) |
+| enable_weighted_failover | boolean | `false` | If true and `routing_strategy` is `simple-shuffle`, a retryable failure on one deployment re-picks (weighted) across other deployments in the same model group before cross-group fallbacks. Default: false. |
+| tag_filtering_match_any | boolean | `true` | Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags |
+| cooldown_time | integer | `5` (seconds) | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
+| disable_cooldowns | boolean | `false` | If true, disables cooldowns for all models. [More information here](reliability) |
+| retry_policy | object | `null` | Specifies the number of retries for different types of exceptions. [More information here](reliability) |
+| allowed_fails | integer | `3` | The number of failures allowed before cooling down a model. [More information here](reliability) |
+| allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
+| default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
+| default_priority | (Optional[int]) | `null` | The default priority for a request. Only for '.scheduler_acompletion()'. Default is None. |
+| polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
+| max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
+| default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
+| timeout | Optional[float] | `null` (uses `litellm_settings.request_timeout`) | The default timeout for a request. Default is 10 minutes. |
+| stream_timeout | Optional[float] | `null` (uses `timeout`) | The default timeout for a streaming request. If not set, the 'timeout' value is used. |
+| ttft_timeout | Optional[float] | `null` (off) | Raise a `litellm.Timeout` if no first token arrives within this many seconds of the connection being accepted, to detect providers that hang before sending any content. When set, a non-streaming call is internally promoted to streaming and the caller still receives a standard response. Best set per deployment. |
+| stream_idle_timeout | Optional[float] | `null` (off) | Raise a `litellm.Timeout` if the gap between consecutive tokens exceeds this many seconds, to detect providers that stall mid-stream. Keep it well above the model's per-token p99 so it acts as a freeze detector rather than a slowness detector. Best set per deployment. |
+| keepalive_seconds | Optional[float] | `null` (off) | Send an SSE `: ping` comment on a streaming response whenever the upstream model goes silent for longer than this many seconds, repeating every `keepalive_seconds` until real content resumes. Use this to stop load balancers or reverse proxies from closing SSE connections that look idle during long silent gaps (e.g. extended thinking before the first visible token). Operator-only by default: a request-level `keepalive_seconds` in the request body is ignored unless the deployment also sets `allow_client_keepalive_override: true`, in which case a request can narrow or change the deployment's value, including disabling it with an explicit `0`. A deployment-level `0` is always a hard disable a request can't override, regardless of override permission. Effective value is clamped to the range 1-300 seconds. Defaults to None (off). |
+| allow_client_keepalive_override | Optional[bool] | `false` | Whether a request's `keepalive_seconds` is allowed to override this deployment's `keepalive_seconds`. Defaults to `false`, meaning `keepalive_seconds` is operator-only for this deployment and any request-level value is silently ignored. |
+| debug_level | Literal["DEBUG", "INFO"] | `INFO` | The debug level for the logging library in the router. |
+| client_ttl | int | `3600` (seconds) | Time-to-live for cached clients in seconds. |
+| cache_kwargs | dict | `{}` | Additional keyword arguments for the cache initialization. Use this for non-string Redis parameters that may fail when set via `REDIS_*` environment variables. |
+| routing_strategy_args | dict | `{}` | Additional keyword arguments for the routing strategy - e.g. lowest latency routing default ttl |
+| model_group_alias | dict | `{}` | Model group alias mapping. E.g. `{"claude-3-haiku": "claude-3-haiku-20240229"}` |
+| num_retries | int | `2` | Number of retries for a request. |
+| default_fallbacks | Optional[List[str]] | `null` | Fallbacks to try if no model group-specific fallbacks are defined. |
+| caching_groups | Optional[List[tuple]] | `null` | List of model groups for caching across model groups. - e.g. caching_groups=[("openai-gpt-3.5-turbo", "azure-gpt-3.5-turbo")]|
+| alerting_config | AlertingConfig | `null` | [SDK-only arg] Slack alerting configuration. [Further Docs](../routing.md#alerting-) |
+| assistants_config | AssistantsConfig | `null` | Set on proxy via `assistant_settings`. [Further docs](../assistants.md) |
+| set_verbose | boolean | `false` | [DEPRECATED PARAM - see debug docs](./debugging) If true, sets the logging level to verbose. |
+| retry_after | int | `0` (seconds) | Time to wait before retrying a request in seconds. If `x-retry-after` is received from LLM API, this value is overridden. |
+| provider_budget_config | ProviderBudgetConfig | `null` | Provider budget configuration. Use this to set llm_provider budget limits. example $100/day to OpenAI, $100/day to Azure, etc. [Further Docs](./provider_budget_routing.md) |
+| enable_pre_call_checks | boolean | `false` | If true, checks if a call is within the model's context window before making the call. **Required** for `model_info.max_input_tokens` enforcement. [More information here](reliability) |
+| model_group_retry_policy | Dict[str, RetryPolicy] | `{}` | [SDK-only arg] Set retry policy for model groups. |
+| context_window_fallbacks | List[Dict[str, List[str]]] | `[]` | Fallback models for context window violations. |
+| redis_url | str | `null` | URL for Redis server. **Known performance issue with Redis URL.** |
+| cache_responses | boolean | `false` | Flag to enable caching LLM Responses, if cache set under `router_settings`. If true, caches responses. |
+| router_general_settings | RouterGeneralSettings | `{async_only_mode: true, pass_through_all_models: false}` on the proxy (`async_only_mode: false` in the SDK) | [SDK-Only] Router general settings - contains optimizations like 'async_only_mode'. [Docs](../routing.md#router-general-settings) |
+| optional_pre_call_checks | List[str] | `null` | List of pre-call checks to add to the router. Supported: `router_budget_limiting`, `prompt_caching`, `responses_api_deployment_check`, `encrypted_content_affinity` (requires LiteLLM >= 1.82.3), `deployment_affinity`, `session_affinity`, `forward_client_headers_by_model_group` |
+| deployment_affinity_ttl_seconds | int | `3600` (seconds) | TTL (seconds) for user-key → deployment affinity mapping when `deployment_affinity` is enabled (configured at Router init / proxy startup). |
+| model_group_affinity_config | Dict[str, List[str]] | `null` | Per-model-group affinity flags. Keys are model group names; values are lists of checks to enable (`deployment_affinity`, `responses_api_deployment_check`, `session_affinity`). Groups not listed fall back to the global `optional_pre_call_checks`. [Docs](../response_api.md#per-model-group-affinity-configuration) |
+| ignore_invalid_deployments | boolean | `true` on the proxy (`false` in the SDK) | If true, ignores invalid deployments. The proxy always sets this so an invalid model does not block the rest of the `model_list` from loading. |
+| search_tools | List[SearchToolTypedDict] | `null` | List of search tool configurations for Search API integration. Each tool specifies a search_tool_name and litellm_params with search_provider, api_key, api_base, etc. [Further Docs](../search/index.md) |
+| guardrail_list | List[GuardrailTypedDict] | `null` | List of guardrail configurations for guardrail load balancing. Enables load balancing across multiple guardrail deployments with the same guardrail_name. [Further Docs](./guardrails/guardrail_load_balancing.md) |
+| enable_health_check_routing | boolean | `false` | If true, enables health check-driven deployment filtering to avoid routing requests to unhealthy deployments |
+| health_check_staleness_threshold | integer | `600` (seconds) | Maximum age in seconds for cached health check results before marking deployments as stale |
+| health_check_ignore_transient_errors | boolean | `false` | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
+| routing_groups | Optional[List[RoutingGroup]] | `null` | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. |
+| plugins | Optional[List[RoutingPlugin]] | `null` | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. |
 
 
 ### environment variables - Reference
