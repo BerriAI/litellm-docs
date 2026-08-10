@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-07-11T06:11:54Z",
-  "litellm_version": "v1.91.1",
-  "claude_code_version": "2.1.126",
+  "generated_at": "2026-08-10T21:27:04Z",
+  "litellm_version": "v1.95.0",
+  "claude_code_version": "2.1.226",
   "providers": [
     "anthropic",
     "bedrock_invoke",
@@ -22,8 +22,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -65,8 +64,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -87,8 +85,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -109,8 +106,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -153,8 +149,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -175,8 +170,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -198,7 +192,7 @@
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 litellm.BadRequestError: BedrockException - {\"message\":\"A text block must be included when using documents. Add a text block and retry your request.\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\nAvailable Model Group Fallbacks=None; stderr=\u26a0 claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login \u00b7 Unset it to load your organization's connectors"
         },
         "vertex_ai": {
           "status": "pass"
@@ -219,8 +213,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -241,8 +234,7 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; text=API Error: Content block is not a text block"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
@@ -312,7 +304,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-azure] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"tool_search_server not supported in your workspace.\\\"},\\\"request_id\\\":\\\"req_011CdumgXzAN9iNwH1MAKgGF\\\"}. Received Model Group=claude-haiku-4-5-azure\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         }
       }
     },
