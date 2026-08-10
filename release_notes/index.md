@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.95.0 — Claude Opus 5, MCP Gateway DCR & Rust /v1/messages](/release_notes/v1.95.0/v1-95-0)
+### [v1.96.0 — MCP Entitlements, Redis Config Sync & Auto-Router Context](/release_notes/v1.96.0/v1-96-0)
 
-_August 1, 2026_
+_August 9, 2026_
 
-Day-0 support for the 1M-context Claude Opus 5 across Anthropic, Amazon Bedrock, Google Vertex AI, and Azure AI Foundry, joined by Gemini 3.6 Flash and Gemini 3.5 Flash Lite; an MCP gateway front door built on always-on aggregate DCR discovery, identity-only session tokens, RFC 8707 resource indicators, and a standalone `/connect` route; native Anthropic `/v1/messages` routed through the Rust axum gateway alongside a Responses API WebSockets port and SigV4 in `litellm-core`; SAML 2.0 SSO for the admin UI; roughly twenty dashboard routes completing the shadcn and shared DataTable migration; and a budget-reset correctness pass covering reset time of day, word-form durations, and NULL `budget_reset_at` repair. Note that user budgets are no longer enforced on team keys, reverting the `v1.94.0` change.
+An internal user's `object_permission` becomes a real MCP entitlement level that intersects the key, team, agent, and org scopes and is enforced at both `tools/list` and `tools/call`; a new `post_mcp_call` guardrail mode that finally lets a guardrail mask or reject the contents of an MCP tool result; config changes propagating to every pod through a coordination-Redis invalidation event instead of the 30s poll; OpenAI's GPT-5.6 price cut of 20% on terra and 80% on luna, mirrored onto Bedrock Mantle with new flex long-context rates; a complexity classifier that now sees prior and assistant turns and records its tier decision in spend logs; a generic `/management/v1` list contract with `GET /management/v1/budgets` on top of it; and operational hardening for large deployments covering DB statement and lock timeouts, `REPLICA IDENTITY FULL`, and an unreachable Redis that no longer blocks every request. Note that mock testing request params are now gated behind a config flag that is off by default.
 
 ---
 
@@ -22,6 +22,7 @@ Day-0 support for the 1M-context Claude Opus 5 across Anthropic, Amazon Bedrock,
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
 | [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
 | [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
