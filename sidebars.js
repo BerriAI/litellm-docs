@@ -74,6 +74,7 @@ const sidebars = {
           items: [
             "observability/azure_sentinel",
             "observability/datadog",
+            "observability/ducklake",
             "observability/gcs_bucket_integration",
             "observability/grafana_cloud",
             "observability/newrelic",
