@@ -28,11 +28,9 @@ Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
 
 ## Quick Start
 
-### 1. Configure the OpenAI Base URL
+### 1. Add Your Cursor API Key to the Proxy
 
-Go to **Cursor → Settings → Models → API Keys** and set the OpenAI Base URL to `LITELLM_PROXY_BASE_URL/cursor`.
-
-The proxy also needs your Cursor API key to reach the Cursor Cloud Agents API. Add it as a credential under **Models + Endpoints → LLM Credentials** (select **Cursor** from the provider dropdown), or set the `CURSOR_API_KEY` environment variable on the proxy.
+The proxy needs your Cursor API key to authenticate to the Cursor Cloud Agents API on your behalf. Add it as a credential under **Models + Endpoints → LLM Credentials** (select **Cursor** from the provider dropdown), or set the `CURSOR_API_KEY` environment variable on the proxy.
 
 ### 2. Launch a Cursor Agent
 
