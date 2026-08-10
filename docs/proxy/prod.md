@@ -69,6 +69,8 @@ Each instance multiplies your total connections: 3 instances × 4 workers × 10 
 
 :::
 
+Once an autoscaler owns the replica count, the instance count in that formula is `maxReplicas`, not the number of pods you are running today. The `litellm-helm` chart defaults `autoscaling.maxReplicas` and `keda.maxReplicas` to 100, so a deployment that scales out fully asks for roughly 1000 connections at the default pool limit of 10, which is far past what a stock Postgres accepts. Set `maxReplicas` from what your database can serve, and see [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts) for the full division.
+
 ### Keep error logs out of the database
 
 LLM exceptions are written to the database by default. Under sustained provider errors this bloats the spend logs table; send exceptions to your logging stack (see [alerting](#turn-on-alerting) and [logging callbacks](./logging.md)) instead.
@@ -119,9 +121,7 @@ export LITELLM_SALT_KEY="sk-1234"
 
 ### Machine specifications
 
-For optimal performance in production, we recommend the following resource configuration.
-
-**1. Memory `requests` and `limits`**
+Give each pod 1 vCPU and 4Gi of memory, as both requests and limits, and scale both with the worker count if you run more than one worker per container.
 
 ```yaml
 resources:
@@ -133,20 +133,31 @@ resources:
     memory: "4Gi"
 ```
 
-**2. HPA thresholds**
+Both figures are per worker, so that multiplication is real rather than notional: a container running 8 workers wants 8 vCPU and 32Gi, not 1 vCPU and 4Gi. Sizing a multi-worker container from the single-worker numbers is a common way to end up under-provisioned, and it is the main reason to keep one worker per pod on Kubernetes and let replicas rather than workers carry the concurrency.
+
+4Gi is a floor rather than a target. The proxy's steady-state footprint is not a function of how many requests it is serving concurrently: Prisma runs the query engine as a separate process whose resident memory behaves as a high-water mark, growing to fit the largest single statement that engine has ever executed, and glibc does not hand that memory back to the operating system afterwards. A pod's floor therefore ratchets up to its worst-ever write and stays there for the life of the worker. Provision below 4Gi and a single large write is enough to push the pod past its limit and have the kernel OOM-kill it, which surfaces as a crash loop under traffic that looks unremarkable on every other metric.
+
+The largest statements come from spend logging with `store_prompts_in_spend_logs` enabled, because each row then carries a full prompt and response rather than counters. If you store prompts, treat 4Gi as the minimum and give the pod headroom above it.
+
+### Autoscaling
+
+Scale on CPU, and leave the memory target unset. Memory is not a usable scaling signal for the proxy: the query engine's resident memory reflects the largest write a pod has ever done rather than what it is doing now, so a memory target ratchets replicas up after one large write and never scales them back in. Provision memory as the floor above and let CPU drive the replica count.
 
 ```yaml
 targetCPUUtilizationPercentage: 60
-targetMemoryUtilizationPercentage: 80
 ```
+
+60 rather than a higher threshold because a replica is not useful the moment it is created. The `litellm-helm` startup probe allows up to 300 seconds for a pod to pass its first readiness check, so a replica added at 80 percent CPU arrives minutes after the saturation that triggered it. Both charts ship higher defaults, 80 on `litellm-helm` and 70 on the componentized chart's gateway, chosen so the charts install cleanly anywhere; lower them for production.
 
 ### Workers and scaling
 
-Run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler use the [thresholds above](#machine-specifications) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
+On Kubernetes, or anywhere else a pod-level autoscaler is reading CPU, run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler read the [CPU threshold above](#autoscaling) against a single process, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
 ```
+
+On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
 
 If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
 
@@ -220,7 +231,7 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 The Helm PreSync hook flow is in beta.
 :::
 
-To ensure only one service manages database migrations, use our [Helm PreSync hook for Database Migrations](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/templates/migrations-job.yaml). This ensures migrations are handled during `helm upgrade` or `helm install`, while LiteLLM pods explicitly disable migrations.
+To ensure only one service manages database migrations, use our [Helm PreSync hook for Database Migrations](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/templates/migrations-job.yaml). This ensures migrations are handled during `helm upgrade` or `helm install`, while LiteLLM pods explicitly disable migrations.
 
 1. **Helm PreSync Hook**:
    - The Helm PreSync hook is configured in the chart to run database migrations during deployments.

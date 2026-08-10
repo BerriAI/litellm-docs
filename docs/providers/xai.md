@@ -13,63 +13,30 @@ https://docs.x.ai/docs
 
 ## Supported Models
 
-
-
-**Latest Release** - Grok 4.1 Fast: Optimized for high-performance agentic tool calling with 2M context and prompt caching.
+**Grok 4.5** - Frontier model for coding, agentic tasks, and knowledge work with 500K context, reasoning (low/medium/high), vision, tools, web search, and prompt caching.
 
 | Model | Context | Features |
 |-------|---------|----------|
-| `xai/grok-4-1-fast-reasoning` | 2M tokens | **Reasoning**, Function calling, Vision, Audio, Web search, Caching |
-| `xai/grok-4-1-fast-non-reasoning` | 2M tokens | Function calling, Vision, Audio, Web search, Caching |
-
-**When to use:**
-- ✅ **Reasoning model**: Complex analysis, planning, multi-step reasoning problems
-- ✅ **Non-reasoning model**: Simple queries, faster responses, lower token usage
+| `xai/grok-4.5` | 500K tokens | **Reasoning**, Function calling, Vision, Web search, Caching |
 
 **Example:**
 ```python
 from litellm import completion
 
-# With reasoning
 response = completion(
-    model="xai/grok-4-1-fast-reasoning",
-    messages=[{"role": "user", "content": "Analyze this problem step by step..."}]
-)
-
-# Without reasoning
-response = completion(
-    model="xai/grok-4-1-fast-non-reasoning",
-    messages=[{"role": "user", "content": "What's 2+2?"}]
+    model="xai/grok-4.5",
+    messages=[{"role": "user", "content": "Find and fix the bug, then explain it."}],
+    reasoning_effort="high",  # low | medium | high (default high)
 )
 ```
-
----
-
-### All Available Models
-
-| Model Family | Model | Context | Features |
-|--------------|-------|---------|----------|
-| **Grok 4.1** | `xai/grok-4-1-fast-reasoning` | 2M | **Reasoning**, Tools, Vision, Audio, Web search, Caching |
-| | `xai/grok-4-1-fast-non-reasoning` | 2M | Tools, Vision, Audio, Web search, Caching |
-| **Grok 4** | `xai/grok-4` | 256K | Tools, Web search |
-| | `xai/grok-4-0709` | 256K | Tools, Web search |
-| | `xai/grok-4-fast-reasoning` | 2M | **Reasoning**, Tools, Web search |
-| | `xai/grok-4-fast-non-reasoning` | 2M | Tools, Web search |
-| **Grok 3** | `xai/grok-3` | 131K | Tools, Web search |
-| | `xai/grok-3-mini` | 131K | Tools, Web search |
-| | `xai/grok-3-fast-beta` | 131K | Tools, Web search |
-| **Grok Code** | `xai/grok-code-fast` | 256K | **Reasoning**, Tools, Code generation, Caching |
-| **Grok 2** | `xai/grok-2` | 131K | Tools, **Vision** |
-| | `xai/grok-2-vision-latest` | 32K | Tools, **Vision** |
 
 **Features:**
 - **Reasoning** = Chain-of-thought reasoning with reasoning tokens
 - **Tools** = Function calling / Tool use
 - **Web search** = Live internet search
 - **Vision** = Image understanding
-- **Audio** = Audio input support
 - **Caching** = Prompt caching for cost savings
-- **Code generation** = Optimized for code tasks
+- **Structured outputs** = JSON / schema-constrained responses
 
 **Pricing:** See [xAI's pricing page](https://docs.x.ai/docs/models) for current rates.
 
@@ -87,7 +54,7 @@ import os
 
 os.environ['XAI_API_KEY'] = ""
 response = completion(
-    model="xai/grok-3-mini-beta",
+    model="xai/grok-4.5",
     messages=[
         {
             "role": "user",
@@ -97,7 +64,6 @@ response = completion(
     max_tokens=10,
     response_format={ "type": "json_object" },
     seed=123,
-    stop=["\n\n"],
     temperature=0.2,
     top_p=0.9,
     tool_choice="auto",
@@ -115,7 +81,7 @@ import os
 
 os.environ['XAI_API_KEY'] = ""
 response = completion(
-    model="xai/grok-3-mini-beta",
+    model="xai/grok-4.5",
     messages=[
         {
             "role": "user",
@@ -126,7 +92,6 @@ response = completion(
     max_tokens=10,
     response_format={ "type": "json_object" },
     seed=123,
-    stop=["\n\n"],
     temperature=0.2,
     top_p=0.9,
     tool_choice="auto",
@@ -147,7 +112,7 @@ from litellm import completion
 os.environ["XAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="xai/grok-2-vision-latest",
+    model="xai/grok-4.5",
     messages=[
         {
             "role": "user",
@@ -246,31 +211,31 @@ LiteLLM supports reasoning usage for xAI models.
 
 <TabItem value="python" label="LiteLLM Python SDK">
 
-```python showLineNumbers title="reasoning with xai/grok-3-mini-beta"
+```python showLineNumbers title="reasoning with xai/grok-4.5"
 import litellm
 response = litellm.completion(
-    model="xai/grok-3-mini-beta",
+    model="xai/grok-4.5",
     messages=[{"role": "user", "content": "What is 101*3?"}],
-    reasoning_effort="low",
+    reasoning_effort="low",  # low | medium | high
 )
 
 print("Reasoning Content:")
 print(response.choices[0].message.reasoning_content)
 
 print("\nFinal Response:")
-print(completion.choices[0].message.content)
+print(response.choices[0].message.content)
 
-print("\nNumber of completion tokens (input):")
-print(completion.usage.completion_tokens)
+print("\nNumber of completion tokens:")
+print(response.usage.completion_tokens)
 
-print("\nNumber of reasoning tokens (input):")
-print(completion.usage.completion_tokens_details.reasoning_tokens)
+print("\nNumber of reasoning tokens:")
+print(response.usage.completion_tokens_details.reasoning_tokens)
 ```
 </TabItem>
 
 <TabItem value="curl" label="LiteLLM Proxy - OpenAI SDK Usage">
 
-```python showLineNumbers title="reasoning with xai/grok-3-mini-beta"
+```python showLineNumbers title="reasoning with xai/grok-4.5"
 import openai
 client = openai.OpenAI(
     api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
@@ -278,22 +243,22 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="xai/grok-3-mini-beta",
+    model="xai/grok-4.5",
     messages=[{"role": "user", "content": "What is 101*3?"}],
-    reasoning_effort="low",
+    reasoning_effort="low",  # low | medium | high
 )
 
 print("Reasoning Content:")
 print(response.choices[0].message.reasoning_content)
 
 print("\nFinal Response:")
-print(completion.choices[0].message.content)
+print(response.choices[0].message.content)
 
-print("\nNumber of completion tokens (input):")
-print(completion.usage.completion_tokens)
+print("\nNumber of completion tokens:")
+print(response.usage.completion_tokens)
 
-print("\nNumber of reasoning tokens (input):")
-print(completion.usage.completion_tokens_details.reasoning_tokens)
+print("\nNumber of reasoning tokens:")
+print(response.usage.completion_tokens_details.reasoning_tokens)
 ```
 
 </TabItem>
@@ -310,9 +275,9 @@ I can double-check that: 100 * 3 is 300, and 1 * 3 is 3, so 300 + 3 = 303. Yes, 
 Final Response:
 The result of 101 multiplied by 3 is 303.
 
-Number of completion tokens (input):
+Number of completion tokens:
 14
 
-Number of reasoning tokens (input):
+Number of reasoning tokens:
 310
 ```

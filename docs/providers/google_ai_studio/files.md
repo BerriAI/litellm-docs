@@ -172,6 +172,9 @@ Configure your Azure Blob Storage account by setting the following environment v
 - `AZURE_STORAGE_FILE_SYSTEM` - The container/filesystem name where files will be stored
 - `AZURE_STORAGE_ACCOUNT_KEY` - Your account key
 
+**Optional Environment Variables:**
+- `AZURE_STORAGE_ENDPOINT_SUFFIX` - The storage endpoint suffix, e.g. `core.usgovcloudapi.net` for Azure Government. Defaults to `core.windows.net`
+
 ### Step 2: Pass Azure Blob Storage as Target Storage
 
 When uploading files, specify `target_storage: "azure_storage"` to use Azure Blob Storage instead of the default storage.

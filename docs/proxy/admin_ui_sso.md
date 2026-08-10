@@ -380,6 +380,60 @@ If you don't see all your keys this could be due to a cached token. So just re-l
 
 :::
 
+### Auto-add SSO users to teams (OIDC)
+
+For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the token returned by your identity provider into the user's `team_ids`. On every SSO login, LiteLLM reads that claim and adds the user as a member of each matching team.
+
+#### Step 1: Point LiteLLM at the claim containing the team ids
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  master_key: sk-1234
+  litellm_jwtauth:
+    team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
+```
+
+This assumes the token from your provider looks like this:
+
+```json
+{
+  ...,
+  "groups": ["team_id_1", "team_id_2"]
+}
+```
+
+If you're unsure what your provider sends, inspect the received claims with the [SSO debug flow](#debugging-sso-jwt-fields).
+
+#### Step 2: Create the teams on LiteLLM
+
+The claim values must match the `team_id` of teams that already exist on LiteLLM. Teams are not auto-created from OIDC claims, and a claim value with no matching team is skipped.
+
+```bash showLineNumbers title="Create team with team_id matching the SSO group value"
+curl -X POST '<PROXY_BASE_URL>/team/new' \
+-H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
+-H 'Content-Type: application/json' \
+-d '{
+    "team_alias": "team_1",
+    "team_id": "team_id_1"
+}'
+```
+
+#### Step 3: Test the SSO flow
+
+Log in via SSO and verify the user's team memberships on the UI (Internal Users page). Here's a [video walkthrough](https://www.loom.com/share/8959be458edf41fd85937452c29a33f3?sid=7ebd6d37-569a-4023-866e-e0cde67cb23e).
+
+Some providers only include the groups claim in the access token, not in the userinfo response. In that case, configure the claim via `ui_access_mode`, which also decodes the access token. Note this form additionally restricts UI login to members of the given group:
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  ui_access_mode:
+    type: "restricted_sso_group"
+    restricted_sso_group: "<group required for UI access>"
+    sso_group_jwt_field: "groups"
+```
+
+For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](./saml_sso.md).
+
 ### Disable `Default Team` on Admin UI
 
 Use this if you want to hide the Default Team on the Admin UI

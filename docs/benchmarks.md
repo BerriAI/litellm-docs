@@ -19,6 +19,7 @@ Each machine deploying LiteLLM had the following specs:
 
 - Database: PostgreSQL
 - Redis: Not used
+- Load generator: Locust, 1000 users, each with 0.5s to 1s of think time between requests. See [Locust Settings](#locust-settings) before comparing these numbers against your own run.
 
 
 ### 2 Instance LiteLLM Proxy
@@ -130,7 +131,7 @@ End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake
 
 | Category | Specification |
 |----------|---------------|
-| **Load Testing** | Locust: 1,000 concurrent users, 500 ramp-up |
+| **Load Testing** | Locust: 1,000 users with 0.5s to 1s think time, 500 ramp-up |
 | **System** | 4 vCPUs, 8 GB RAM, 4 workers, 4 instances |
 | **Database** | PostgreSQL (Redis unused) |
 
@@ -187,6 +188,15 @@ See [Production Configuration](./proxy/prod) for detailed best practices.
 
 - 1000 Users
 - 500 user Ramp Up
+- `wait_time = between(0.5, 1)`, so every user sleeps 0.5s to 1s between requests
+
+### Why the think time matters when you reproduce these numbers
+
+A Locust user spends its time either waiting on a response or sleeping. With a 0.75s mean think time and ~110ms responses, each of the 1000 users completes a request about every 0.86s, so the run offers ~1160 RPS and holds roughly **130 requests in flight** at any instant. That in-flight depth, not the user count, is what the latency columns above describe.
+
+A closed-loop client with no think time is measuring something else. 1000 concurrent workers that send the next request the moment the previous one returns hold **1000 requests in flight**, about 8x the queue depth of these runs. Once a gateway is saturated its throughput is fixed, and by Little's Law the latency each client observes is just `requests in flight / throughput`. So the same deployment, at the same RPS, reports roughly 8x the latency purely because the client queued 8x as much work into it. Latency and concurrency are not independent, and neither number means anything without the other.
+
+To compare against the tables above, either keep the 0.5s to 1s think time, or hold your client's in-flight request count near 130 and report it alongside the latency. It is also worth reporting RPS first: if your run shows higher RPS and higher latency than these tables, your gateway is faster than this benchmark and your client is simply queueing deeper.
 
 ## How to measure LiteLLM Overhead
 

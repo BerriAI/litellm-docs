@@ -350,6 +350,12 @@ $ litellm --config /path/to/config.yaml
 
 <TabItem value="qdrant-semantic" label="Qdrant Semantic cache">
 
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
+
 Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 #### Step 1: Add `cache` to the config.yaml
@@ -411,6 +417,12 @@ one**
 </TabItem>
 
 <TabItem value="valkey-semantic" label="Valkey Semantic cache">
+
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
 
 Semantic caching on a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, such as AWS ElastiCache for Valkey. RediSearch and RedisVL are not required.
 
@@ -555,6 +567,12 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 
 <TabItem value="redis-sem" label="redis semantic cache">
+
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
 
 Caching can be enabled by adding the `cache` key in the `config.yaml`
 
@@ -942,6 +960,43 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+## Semantic Caching and Multi-Turn Agentic Traffic
+
+Semantic caches (`redis-semantic`, `qdrant-semantic`, `valkey-semantic`) embed the text content of the entire `messages` array (system prompt included) and serve the closest cached response whose cosine similarity clears `similarity_threshold`.
+
+This works well for single-shot prompts, but it is a poor fit for multi-turn or agentic workloads (coding agents, tool-calling loops, any client that resends the whole conversation each turn). Each new turn is the previous request plus a small appended delta, so consecutive turns are nearly identical text and their embeddings are ~0.99 similar. At any practical threshold, every turn matches the previous turn's cached entry and the client replays a stale response, which typically shows up as an agent repeating the same tool call over and over. Raising `similarity_threshold` does not reliably fix this. Assistant `tool_calls` are also not part of the embedded text, which makes consecutive agent turns even harder to tell apart.
+
+The recommendation is to keep semantic caching for single-shot traffic and exclude agentic traffic with one of the options below. If you still want caching for agentic traffic, use an exact-match cache (`type: redis`) instead: it keys on a hash of the full request, so any change to the conversation is a cache miss and stale replays cannot happen.
+
+### Option 1: Disable caching on the keys used by agentic tools
+
+Set the `cache` field in the virtual key's metadata. The proxy applies it to every request made with that key, so no client-side changes are needed.
+
+```shell
+curl http://localhost:4000/key/generate \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "metadata": {"cache": {"no-cache": true}}
+  }'
+```
+
+Supported key-level cache controls: `ttl`, `s-maxage`, `no-cache`, `no-store`.
+
+### Option 2: Make caching opt-in
+
+Set `mode: default_off` in `cache_params` (see the Set Caching Default Off section further down this page) so nothing is cached or served from cache unless the caller opts in with `"cache": {"use-cache": true}`.
+
+### Option 3: Opt out per request
+
+Send `"cache": {"no-cache": true}` in the request body, as shown in [Dynamic Cache Controls](#dynamic-cache-controls).
+
+:::note
+
+Caching only runs on the call types listed in `supported_call_types` (OpenAI-compatible surfaces such as `/chat/completions`, `/completions`, `/embeddings`, `/responses`). Requests on `/v1/messages` (Anthropic format) and provider passthrough routes never go through the cache.
+
+:::
 
 ## Set cache for proxy, but not on the actual llm api call
 
