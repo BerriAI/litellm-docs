@@ -1136,6 +1136,7 @@ const sidebars = {
         "providers/minimax",
         "providers/moonshot",
         "providers/morph",
+        "providers/nadir",
         "providers/nebius",
         "providers/nlp_cloud",
         "providers/nano-gpt",
