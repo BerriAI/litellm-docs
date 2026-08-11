@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-10T21:27:04Z",
-  "litellm_version": "v1.95.0",
-  "claude_code_version": "2.1.226",
+  "generated_at": "2026-08-11T06:24:42Z",
+  "litellm_version": "v1.96.0",
+  "claude_code_version": "2.1.227",
   "providers": [
     "anthropic",
     "bedrock_invoke",
@@ -305,7 +305,7 @@
         },
         "azure": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-azure] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"tool_search_server not supported in your workspace.\\\"},\\\"request_id\\\":\\\"req_011CdumgXzAN9iNwH1MAKgGF\\\"}. Received Model Group=claude-haiku-4-5-azure\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "error": "[claude-haiku-4-5-azure] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"tool_search_server not supported in your workspace.\\\"},\\\"request_id\\\":\\\"req_011CdvUe3NvquWPzTSb4Vayq\\\"}. Received Model Group=claude-haiku-4-5-azure\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
         }
       }
     },
