@@ -18,9 +18,17 @@ router_settings:
   redis_host: os.environ/REDIS_HOST
   redis_port: os.environ/REDIS_PORT
   redis_password: os.environ/REDIS_PASSWORD
+
+litellm_settings:
+  cache: True
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
 ```
 
-`REDIS_HOST`, `REDIS_PORT` and `REDIS_PASSWORD` (or a single `REDIS_URL`) in the environment are enough on their own; the proxy picks them up for coordination even when no cache block is set. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache, see [Caching](./caching.md) and [Production Best Practices](./prod.md#redis).
+Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its own: the proxy reads them only when the config points at Redis, as above. The `router_settings` block covers router state (cooldowns, usage and latency based routing), and the cache block covers response caching and everything coordinated proxy-wide (rate limits, budgets, cache invalidation, the pod lock). Configure both. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache with `general_settings.coordination_redis`, see [Caching](./caching.md) and [Production Best Practices](./prod.md#redis).
 
 ## What breaks without Redis
 
