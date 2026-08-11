@@ -153,7 +153,8 @@ guardrails:
       # breakdown: Optional[bool] = True,
       # metadata: Optional[Dict] = None,
       # dev_info: Optional[bool] = True,
-      # on_flagged: Optional[str] = "block",  # "block" or "monitor"
+      # on_flagged: Optional[str] = "block",  # "block", "monitor", or "inject_system_message"
+      # advisory_system_message: Optional[str] = None,  # custom template, only used with on_flagged: "inject_system_message"
 ```
 
 - `api_base`: (Optional[str]) The base of the Lakera integration. Defaults to `https://api.lakera.ai` 
@@ -166,3 +167,36 @@ guardrails:
 - `on_flagged`: (Optional[str]) Action to take when content is flagged. Defaults to `"block"`. 
   - `"block"`: Raises an HTTP 400 exception when violations are detected (default behavior)
   - `"monitor"`: Logs violations but allows the request to proceed. Useful for tuning security policies without blocking legitimate requests.
+  - `"inject_system_message"`: Appends an advisory system message to the request and lets the real LLM call proceed (HTTP 200), instead of blocking or allowing silently. See [Advisory mode](#advisory-mode) below for how it works and its limitations.
+- `advisory_system_message`: (Optional[str]) Custom advisory message template, used only when `on_flagged: "inject_system_message"`. Must be a valid `str.format()` string containing a real `{reason}` placeholder (an escaped `{{reason}}` is rejected); an invalid template raises an error when the guardrail is configured, not on the first flagged request. Defaults to a built-in generic message when unset.
+
+## Advisory mode
+
+`on_flagged: "inject_system_message"` is for detectors prone to false positives, for example a prompt-injection heuristic tripping on legitimate instructional language, where the operator wants the LLM itself to weigh whether a flag is real rather than hard-blocking every flagged request or allowing it with no signal at all.
+
+```yaml showLineNumbers title="litellm config.yaml"
+guardrails:
+  - guardrail_name: "lakera-advisory"
+    litellm_params:
+      guardrail: lakera_v2
+      mode: "pre_call"
+      on_flagged: "inject_system_message"
+      # advisory_system_message: "Custom template with a {reason} placeholder"
+      api_key: os.environ/LAKERA_API_KEY
+      api_base: os.environ/LAKERA_API_BASE
+```
+
+On a flag, the guardrail appends a system message to the request and the real LLM call proceeds normally (HTTP 200). With the default template, that message reads:
+
+```
+The user's latest message was flagged for {reason} by a content safety guardrail. This may be a false positive. Use your judgment: respond helpfully if the request is legitimate, or decline if it is not.
+```
+
+`{reason}` is filled in from Lakera's own detector breakdown, for example "a potential prompt injection attempt", "personally identifiable information", or "policy-violating content". Set `advisory_system_message` to override the wording, keeping a real `{reason}` placeholder in the template.
+
+Advisory mode skips PII masking: a PII-only flag still gets the advisory message instead of redaction, rather than showing the model already-masked text alongside a note about a flag it can no longer see.
+
+Advisory mode has two limitations tied to when in the request lifecycle the guardrail runs:
+
+- **`mode: "during_call"` is not supported.** `during_call` runs the guardrail concurrently with the LLM request with no barrier between the two, so there is no reliable point at which to append the advisory before the request is dispatched. Configuring `on_flagged: "inject_system_message"` with a mode that includes `during_call` raises an error when the guardrail is configured. Use `mode: "pre_call"` instead.
+- **`mode: "post_call"` behaves like `on_flagged: "monitor"`.** By the time a post-call guardrail runs, the LLM has already produced its response, so there is nothing left to inject the advisory into. The flag is logged and the response is returned unchanged.
