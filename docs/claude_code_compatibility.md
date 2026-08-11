@@ -11,7 +11,7 @@ This table is regenerated daily by an automated populator that runs the
 [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) against
 the latest stable LiteLLM proxy across each supported provider. The
 Claude provider columns run Haiku 4.5, Sonnet 4.5, and Opus 4.7 in
-parallel; the GPT provider columns (OpenAI, Azure OpenAI, Bedrock
+parallel. The GPT provider columns (OpenAI, Azure OpenAI, Bedrock
 Mantle) run GPT-5.6 Sol, Terra, and Luna. A cell goes green only if all
 three model tiers of its column family pass.
 
