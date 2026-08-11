@@ -157,6 +157,7 @@ const sidebars = {
           "proxy/guardrails/llm_as_a_judge",
           "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
+          "proxy/guardrails/needlepath",
           "proxy/guardrails/noma_security",
           "proxy/guardrails/dynamoai",
           "proxy/guardrails/openai_moderation",
