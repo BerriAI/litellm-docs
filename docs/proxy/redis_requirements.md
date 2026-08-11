@@ -11,7 +11,15 @@ Almost everything the proxy enforces (rate limits, budgets, cooldowns, cache hit
 
 The Admin UI shows a banner while no Redis is configured. If you deliberately run a single worker, set `LITELLM_DISABLE_NO_REDIS_WARNING=true` to hide it.
 
+:::warning
+
+Multi-pod deployments without Redis are in beta, and the list below is not exhaustive. It covers the best known functionality that we know does not work fully, or at all, across pods without Redis; other features may also misbehave in that setup. The GA approach for a multi-pod deployment is to run it with Redis.
+
+:::
+
 ## Configure Redis
+
+For provisioning Redis and wiring the proxy to it end to end, see [Set Up Redis](./redis_setup.md). The short version:
 
 ```yaml
 router_settings:
@@ -28,9 +36,11 @@ litellm_settings:
     password: os.environ/REDIS_PASSWORD
 ```
 
-Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its own: the proxy reads them only when the config points at Redis, as above. The `router_settings` block covers router state (cooldowns, usage and latency based routing), and the cache block covers response caching and everything coordinated proxy-wide (rate limits, budgets, cache invalidation, the pod lock). Configure both. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache with `general_settings.coordination_redis`, see [Caching](./caching.md) and [Production Best Practices](./prod.md#redis).
+Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its own: the proxy reads them only when the config points at Redis, as above. The `router_settings` block covers router state (cooldowns, usage and latency based routing), and the cache block covers response caching and everything coordinated proxy-wide (rate limits, budgets, cache invalidation, the pod lock). Configure both. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache with `general_settings.coordination_redis`, see [Set Up Redis](./redis_setup.md) and [Caching](./caching.md).
 
 ## What breaks without Redis
+
+The most well-known functionality that is degraded or unavailable across pods:
 
 | Feature | Without Redis |
 | --- | --- |
