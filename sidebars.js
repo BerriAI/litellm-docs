@@ -750,6 +750,7 @@ const sidebars = {
           items: [
             "proxy/auto_routing",
             "proxy/auto_routing_semantic",
+            "proxy/auto_routing_benchmark",
             "adaptive_router",
             {
               type: "link",
@@ -1242,6 +1243,7 @@ const sidebars = {
         "scheduler",
         "proxy/auto_routing",
         "proxy/auto_routing_semantic",
+        "proxy/auto_routing_benchmark",
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",
