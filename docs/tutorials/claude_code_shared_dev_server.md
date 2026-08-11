@@ -1,78 +1,56 @@
 # Claude Code on a shared dev server
 
-Developers who SSH into a shared Linux box and run Claude Code there can authenticate to LiteLLM with their own SSO identity, with no per-user key to issue and no long-lived credential sitting on a multi-user host. Claude Code talks to LiteLLM, LiteLLM talks to your identity provider and to Bedrock (or whatever providers you configured), and every request is attributed to the developer who signed in.
+Developers who SSH into a shared Linux box and run Claude Code there can authenticate to LiteLLM with their own SSO identity, with no per-user key to issue and no long-lived credential sitting on a multi-user host. Claude Code talks to LiteLLM, LiteLLM routes to Bedrock (or whatever providers you configured), and every request is attributed to the developer who signed in.
 
-There are two ways to get there. The [`lite` CLI](../proxy/management_cli) does it out of the box. If installing a third-party binary on the dev server is a problem, the same flow is a short in-house script against two proxy endpoints, and this page shows both.
+Nothing below changes the command developers type. They keep running `claude`, and the credential and base URL are supplied to it in the background.
 
-Both approaches assume the proxy has SSO configured and is started with `EXPERIMENTAL_UI_LOGIN="True"`, which turns on the CLI login endpoints. See [CLI Authentication](../proxy/cli_sso) for the proxy-side setup.
+## The mechanism: managed settings plus a credential helper
 
-## How the login works
-
-`POST /sso/cli/start` returns a login id, a polling secret, and a short verification code. The developer opens `<proxy>/sso/key/generate?source=litellm-cli&key=<login_id>` in a browser, which can be their laptop rather than the server they are SSH'd into, signs in through your normal proxy SSO flow, and confirms the verification code. Meanwhile the terminal polls `GET /sso/cli/poll/<login_id>` with the polling secret until the proxy hands back a token.
-
-The proxy is the only party that talks to your identity provider, so nothing on the dev server needs an OIDC client id, a client secret, or a redirect URI.
-
-The token that comes back is a short-lived, per-session credential scoped to the user and team that signed in, not a managed virtual key. It inherits that user's and team's model access and budgets, spend lands on those same budgets, it does not appear in the Keys UI, and it cannot be rotated mid-session. Default lifetime is 24 hours, set by `LITELLM_CLI_JWT_EXPIRATION_HOURS` on the proxy, so a developer signs in roughly once a day. If you need a long-lived, rotatable, revocable credential instead, issue a virtual key from the dashboard and skip all of this.
-
-## Option 1: the `lite` CLI
-
-Install it on the dev server:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
-```
-
-Point it at the proxy, ideally from `/etc/profile.d` so every developer inherits it:
-
-```bash
-export LITELLM_PROXY_URL=https://litellm.yourcompany.com
-```
-
-Then sign in and start Claude Code through the proxy:
-
-```bash
-lite login
-lite claude
-```
-
-`lite claude` resolves the stored token, checks it against the proxy so bad credentials fail immediately, sets `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`, clears any stray `ANTHROPIC_API_KEY`, and execs Claude Code. Anything after `claude` is passed through untouched, so `lite claude --resume` and friends keep working. `--base-url` belongs to `lite` rather than to the agent, so it goes before the subcommand: `lite --base-url https://litellm.yourcompany.com claude`.
-
-### Keeping the plain `claude` command
-
-Developers who don't want to change how they launch Claude Code don't have to. `lite up` patches `~/.claude/settings.json` to point Claude Code at the proxy and to fetch a fresh token through Claude Code's [`apiKeyHelper`](https://code.claude.com/docs/en/settings), so plain `claude` works from any terminal on the box:
-
-```bash
-lite up
-```
-
-It backs the file up first, holds the patch until you press Ctrl-C, then restores it. If the process is killed uncleanly, `lite down` restores the backup. The settings it writes look like this:
+Claude Code reads two things from [managed settings](https://code.claude.com/docs/en/settings), which on Linux live at `/etc/claude-code/managed-settings.json` and take precedence over anything a developer puts in their own `~/.claude/settings.json`:
 
 ```json
 {
   "env": {
     "ANTHROPIC_BASE_URL": "https://litellm.yourcompany.com"
   },
-  "apiKeyHelper": "/usr/local/bin/lite --base-url https://litellm.yourcompany.com auth print-token"
+  "apiKeyHelper": "/usr/local/bin/claude-litellm-auth.sh"
 }
 ```
 
-You can also write those two lines yourself, as a permanent per-user `~/.claude/settings.json` or as [managed settings](https://code.claude.com/docs/en/settings) at `/etc/claude-code/managed-settings.json` that developers cannot override. That is the better fit for a shared server: it survives reboots, needs no long-running `lite up` process, and leaves `claude` as the only command anyone has to learn. An `alias claude="lite claude"` in `/etc/profile.d` works too, but it only applies to interactive shells and breaks any script or editor extension that invokes `claude` directly.
+`env` sets the environment variables Claude Code runs with, which is how it gets pointed at the proxy instead of api.anthropic.com. [`apiKeyHelper`](https://code.claude.com/docs/en/settings) is a command Claude Code runs to fetch a credential, re-running it whenever its cached value goes stale (`CLAUDE_CODE_API_KEY_HELPER_TTL_MS`, default 5 minutes). Claude Code reads the helper's stdout as the credential, so the helper must print the token and nothing else, with any prompts or diagnostics on stderr.
 
-Either way the daily loop is `lite login` once every 24 hours, then `claude` as usual.
+Push those two files, the settings and the helper script, through whatever configuration management already owns the box, and the setup is done. The Claude Code commands developers already run keep working unchanged.
 
-## Option 2: an in-house script
+Since managed settings cannot be overridden locally, this also pins traffic to the proxy: a developer cannot point Claude Code back at api.anthropic.com with their own `ANTHROPIC_BASE_URL` or `ANTHROPIC_API_KEY`.
 
-If procuring the CLI means a security review you'd rather skip, the login flow is two HTTP calls, so an in-house script can replace it. Save this as `/usr/local/bin/litellm-auth.sh`, `chmod 755`, and have developers run `litellm-auth.sh login` once a day:
+## Where the credential comes from
+
+The only real decision is what the helper script does to get a token, and there are two answers.
+
+### Option 1: the developer's Okta token, validated by LiteLLM
+
+The helper runs Okta's device authorization grant, caches the access token with its refresh token, and hands the access token to Claude Code. LiteLLM validates it against Okta's JWKS and creates the user on first request, so no LiteLLM-issued credential exists at all. Because Okta refresh tokens are long-lived, sign-in happens once and refreshes are silent from then on, which is the closest thing to zero interaction.
+
+This is the path with a full walkthrough, including the complete helper script, in [Claude Code with Okta SSO](./claude_code_okta_sso). It needs an Okta native app with the device grant enabled, and LiteLLM JWT auth, which is an enterprise feature.
+
+### Option 2: a token from the proxy's own SSO flow
+
+If you would rather not create an Okta app or enable JWT auth, the proxy can mint the token itself off the SSO connection it already has. The helper calls two endpoints, and Okta is only ever talked to by the proxy, so nothing on the dev server needs a client id, a client secret, or a redirect URI.
+
+`POST /sso/cli/start` returns a login id, a polling secret, and a short verification code. The developer opens `<proxy>/sso/key/generate?source=litellm-cli&key=<login_id>` in a browser, which can be their laptop rather than the server they are SSH'd into, signs in through your normal proxy SSO flow, and confirms the verification code. Meanwhile the script polls `GET /sso/cli/poll/<login_id>` with the polling secret until the proxy hands back a token. This requires starting the proxy with `EXPERIMENTAL_UI_LOGIN="True"`, which enables those endpoints; see [CLI Authentication](../proxy/cli_sso).
+
+The token is a short-lived, per-session credential scoped to the user and team that signed in, not a managed virtual key. It inherits that user's and team's model access and budgets, spend lands on those same budgets, it does not appear in the Keys UI, and it cannot be rotated mid-session. Default lifetime is 24 hours, set by `LITELLM_CLI_JWT_EXPIRATION_HOURS` on the proxy, so unlike option 1 the developer signs in again roughly once a day. There is no browser on the dev server and Claude Code gives a helper no way to prompt, so that sign-in is a separate command rather than something Claude Code can trigger: developers run `claude-litellm-auth.sh login` when the day's token has expired, and `claude` itself stays untouched.
+
+Save this as `/usr/local/bin/claude-litellm-auth.sh` and `chmod 755` it. Called with no arguments it prints the cached token, which is what `apiKeyHelper` needs:
 
 ```bash
 #!/usr/bin/env bash
-# In-house equivalent of the `lite` CLI's login + token commands, for coding agents
-# on a shared dev box.
+# Fetches a LiteLLM token through the proxy's SSO flow and caches it for Claude Code.
 #
-#   litellm-auth.sh login    sign in through the proxy's SSO, cache the token
-#   litellm-auth.sh token    print the cached token (Claude Code apiKeyHelper)
-#   litellm-auth.sh whoami   show who the cached token belongs to
-#   litellm-auth.sh logout   drop the cached token
+#   claude-litellm-auth.sh          print the cached token (this is what apiKeyHelper runs)
+#   claude-litellm-auth.sh login    sign in through the proxy's SSO, cache the token
+#   claude-litellm-auth.sh whoami   show who the cached token belongs to
+#   claude-litellm-auth.sh logout   drop the cached token
 #
 # Requires curl and jq. LITELLM_PROXY_URL must point at the proxy.
 set -euo pipefail
@@ -183,29 +161,26 @@ case "${1:-token}" in
 esac
 ```
 
-Then wire Claude Code to it once per machine, in `/etc/claude-code/managed-settings.json` so nobody has to touch their own config:
+The script reads `LITELLM_PROXY_URL`, so set it alongside the base URL in the managed settings `env` block, or export it from `/etc/profile.d`.
 
-```json
-{
-  "env": {
-    "ANTHROPIC_BASE_URL": "https://litellm.yourcompany.com"
-  },
-  "apiKeyHelper": "/usr/local/bin/litellm-auth.sh token"
-}
+A few details worth keeping if you rewrite it. The cache records which proxy issued the token and the script refuses to hand a token to a different one, so a developer who logs into staging cannot silently send work code there. The cache file is `0600` inside a `0700` directory, which matters on a host where other people have shell access. The local expiry is stamped five minutes short of the real lifetime, so a long Claude Code session fails with a clear "run login again" message rather than a 401 mid-request. Passing `LITELLM_TEAM_ID` matters when a developer belongs to several LiteLLM teams: the poll response comes back asking which team to bill, and the script re-polls with that team id.
+
+## If installing the LiteLLM CLI is an option
+
+The [`lite` CLI](../proxy/management_cli) does all of the above with nothing to write. Install it on the box:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
 ```
 
-Claude Code reads the helper's stdout as the API key, which is why the script keeps every prompt and diagnostic on stderr and prints nothing but the token. The command stays `claude`.
-
-A few details worth keeping if you rewrite the script. The cache records which proxy issued the token and the script refuses to hand a token to a different proxy, so a developer who logs into staging can't silently send work code to it. The cache file is `0600` inside a `0700` directory, which matters on a host where other people have shell access. The local expiry is stamped five minutes short of the real lifetime, so a long Claude Code session fails with a clear "run login again" message rather than a 401 mid-request. And `whoami` exists mostly so developers can answer "am I still signed in?" without reading JSON.
-
-Passing `LITELLM_TEAM_ID` matters when a developer belongs to several LiteLLM teams: the poll response comes back asking which team to bill, and the script re-polls with that team id. If your developers each belong to one team, that branch never fires.
+Then `export LITELLM_PROXY_URL=https://litellm.yourcompany.com` from `/etc/profile.d`, and developers run `lite login` once a day. `lite claude` launches Claude Code with the proxy variables set, forwarding its own flags untouched, and `lite up` patches Claude Code's settings so plain `claude` routes through the proxy from any terminal. To keep `claude` as the only command without a long-running `lite up` process, write the same managed settings as above with `apiKeyHelper` set to `lite --base-url https://litellm.yourcompany.com auth print-token`, which prints the token from the last `lite login` and nothing else. `--base-url` belongs to `lite` rather than to the subcommand, so it goes first.
 
 ## Verifying the setup
 
-After signing in, before involving Claude Code at all:
+After a sign-in, before involving Claude Code at all:
 
 ```bash
-export TOKEN=$(litellm-auth.sh token)   # or: lite --base-url "$LITELLM_PROXY_URL" auth print-token
+export TOKEN=$(/usr/local/bin/claude-litellm-auth.sh)
 
 curl -X POST "$LITELLM_PROXY_URL/v1/messages" \
   -H "Authorization: Bearer $TOKEN" \
@@ -221,7 +196,7 @@ A successful response means the whole chain works, and the request shows up unde
 
 ## Related docs
 
+- [Claude Code with Okta SSO](./claude_code_okta_sso): the option 1 helper script and the JWT auth config it needs
+- [CLI Authentication](../proxy/cli_sso): proxy-side setup for the login endpoints option 2 uses, including token lifetime and OIDC claim mapping
 - [Management CLI](../proxy/management_cli): everything `lite` can do, and the details of the login credential
-- [CLI Authentication](../proxy/cli_sso): proxy-side setup for the CLI login flow, including token lifetime and OIDC claim mapping
-- [Claude Code with Okta SSO (JWT Auth)](./claude_code_okta_sso): the alternative where Claude Code carries an Okta access token directly and LiteLLM validates it against Okta's JWKS
 - [Bedrock](../providers/bedrock): configuring Bedrock models on the proxy
