@@ -582,6 +582,8 @@ router_settings:
 | BATCH_STATUS_POLL_MAX_ATTEMPTS | Maximum number of attempts for polling batch status. Default is 24 (for 24 hours)
 | BEDROCK_API_BASE | Base URL for Bedrock rerank requests
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
+| BEDROCK_IAM_CACHE_FETCH_LOCK_STRIPES | Single-flight lock stripe count for the Bedrock IAM AssumeRole credential cache. Default is 64
+| BEDROCK_IAM_CACHE_MAX_ENTRIES | Maximum number of distinct AWS credential-argument sets held in the Bedrock IAM AssumeRole credential cache. Default is 1000
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
 | BERRISPEND_ACCOUNT_ID | Account ID for BerriSpend service
