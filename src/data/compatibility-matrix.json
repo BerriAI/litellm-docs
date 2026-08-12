@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-11T06:24:42Z",
-  "litellm_version": "v1.96.0",
-  "claude_code_version": "2.1.227",
+  "generated_at": "2026-08-12T06:20:52Z",
+  "litellm_version": "v1.96.2",
+  "claude_code_version": "2.1.228",
   "providers": [
     "anthropic",
     "bedrock_invoke",
@@ -192,7 +192,7 @@
         },
         "bedrock_converse": {
           "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 litellm.BadRequestError: BedrockException - {\"message\":\"A text block must be included when using documents. Add a text block and retry your request.\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\nAvailable Model Group Fallbacks=None; stderr=\u26a0 claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login \u00b7 Unset it to load your organization's connectors"
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=I'll read the PDF file for you.API Error: 400 litellm.BadRequestError: BedrockException - {\"message\":\"A text block must be included when using documents. Add a text block and retry your request.\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\nAvailable Model Group Fallbacks=None; stderr=\u26a0 claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login \u00b7 Unset it to load your organization's connectors"
         },
         "vertex_ai": {
           "status": "pass"
@@ -304,8 +304,7 @@
           "status": "pass"
         },
         "azure": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-azure] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"tool_search_server not supported in your workspace.\\\"},\\\"request_id\\\":\\\"req_011CdvUe3NvquWPzTSb4Vayq\\\"}. Received Model Group=claude-haiku-4-5-azure\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\"param\":\"None\",\"code\":\"400\"}}"
+          "status": "pass"
         }
       }
     },
