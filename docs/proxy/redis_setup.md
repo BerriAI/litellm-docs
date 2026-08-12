@@ -9,7 +9,7 @@ Redis is what makes a multi-pod LiteLLM deployment behave like one gateway. Rate
 
 ## Get a Redis
 
-Use Redis 7.0 or newer, in the same region and VPC as the proxy, since every request path that touches Redis pays the round trip. A managed instance is the usual choice in production: AWS ElastiCache for Redis (or Valkey), GCP Memorystore, Azure Cache for Redis, Redis Cloud and Upstash all work. Enable TLS and in-transit encryption, keep it private to the VPC, and set a password.
+Use Redis 7.0 or newer, in the same region and VPC as the proxy, since every request path that touches Redis pays the round trip. A managed instance is the usual choice in production; for how big it needs to be and which SKU to pick on AWS, Azure or GCP, see [Redis Sizing](./redis_sizing.md). Enable TLS and in-transit encryption, keep it private to the VPC, and set a password.
 
 Self-hosting is fine too. On Kubernetes, the Bitnami Redis chart with one primary and replicas is enough:
 
@@ -24,8 +24,6 @@ Locally, or for testing that the proxy picks Redis up at all:
 ```bash
 docker run -d --name litellm-redis -p 6379:6379 redis:7
 ```
-
-Sizing is modest. Coordination keys are counters and small JSON blobs, so a few hundred megabytes covers most deployments; response caching is what grows memory, and its size follows your traffic and TTL. Set `maxmemory-policy` to `allkeys-lru` if you cache responses, so eviction drops cache entries rather than refusing writes.
 
 ## Point the proxy at it
 
@@ -88,4 +86,4 @@ redis-cli -h "$REDIS_HOST" -a "$REDIS_PASSWORD" --scan --pattern '*' | head
 
 ## Once it is running
 
-Above roughly 1000 requests per second or 10 instances, also route spend writes through Redis with the [Redis transaction buffer](./prod.md#redis-transaction-buffer), and keep the default `simple-shuffle` routing strategy, since usage-based routing adds a Redis lookup to the request path. Scrape the `litellm_redis_*` and `litellm_pod_lock_manager_size` metrics from [Prometheus](./prometheus.md) to see queue depth and which pod holds the flush lock. If you see `Got exception from REDIS No connection available` under load, raise `max_connections` in `cache_params`.
+Above roughly 1000 requests per second or 10 instances, also route spend writes through Redis with the [Redis transaction buffer](./prod.md#redis-transaction-buffer), and keep the default `simple-shuffle` routing strategy, since usage-based routing adds a Redis lookup to the request path. [Redis Sizing](./redis_sizing.md) covers what to watch once it is carrying traffic, including the eviction counter and the `litellm_redis_*` queue-depth metrics.
