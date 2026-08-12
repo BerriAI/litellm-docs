@@ -135,7 +135,7 @@ print(formatted_string)
 ### 7. `get_max_tokens`
 
 Input: Accepts a model name - e.g., gpt-3.5-turbo (to get a complete list, call litellm.model_list).
-Output: Returns the maximum number of tokens allowed for the given model
+Output: Returns the maximum number of output tokens allowed for the given model
 
 ```python 
 from litellm import get_max_tokens 
