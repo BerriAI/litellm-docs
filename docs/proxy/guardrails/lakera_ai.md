@@ -155,6 +155,8 @@ guardrails:
       # dev_info: Optional[bool] = True,
       # on_flagged: Optional[str] = "block",  # "block", "monitor", or "inject_system_message"
       # advisory_system_message: Optional[str] = None,  # custom template, only used with on_flagged: "inject_system_message"
+      # skip_system_message_in_guardrail: Optional[bool] = None,  # exclude role: system from Lakera's inspection
+      # skip_tool_message_in_guardrail: Optional[bool] = None,  # exclude role: tool from Lakera's inspection
 ```
 
 - `api_base`: (Optional[str]) The base of the Lakera integration. Defaults to `https://api.lakera.ai` 
@@ -169,6 +171,12 @@ guardrails:
   - `"monitor"`: Logs violations but allows the request to proceed. Useful for tuning security policies without blocking legitimate requests.
   - `"inject_system_message"`: Appends an advisory system message to the request and lets the real LLM call proceed (HTTP 200), instead of blocking or allowing silently. See [Advisory mode](#advisory-mode) below for how it works and its limitations.
 - `advisory_system_message`: (Optional[str]) Custom advisory message template, used only when `on_flagged: "inject_system_message"`. Must be a valid `str.format()` string containing a real `{reason}` placeholder (an escaped `{{reason}}` is rejected); an invalid template raises an error when the guardrail is configured, not on the first flagged request. Defaults to a built-in generic message when unset.
+- `skip_system_message_in_guardrail`: (Optional[bool]) Exclude `role: system` messages from what's sent to Lakera for inspection. The LLM still receives the full conversation; only Lakera's view is filtered. If unset, falls back to the global `litellm_settings.skip_system_message_in_guardrail`. See [Guardrails quick start](./quick_start#skip-system-messages-in-guardrail-evaluation) for the global setting and Admin UI controls.
+- `skip_tool_message_in_guardrail`: (Optional[bool]) Same as above, for `role: tool` messages (tool call results). Falls back to `litellm_settings.skip_tool_message_in_guardrail` if unset. See [Guardrails quick start](./quick_start#skip-tool-messages-in-guardrail-evaluation).
+
+Unlike most other guardrails that run via a direct hook on the raw request, Lakera v2 honors both skip flags directly; most direct-hook guardrails do not. See [Where the skip flags apply](./quick_start#where-the-skip-flags-apply) for the full picture across guardrails.
+
+When either flag excludes a message that Lakera would otherwise have masked in place for a PII-only violation, Lakera v2 blocks instead of masking: masking rewrites the request's `messages` from the (now-shorter) inspected list, which would silently drop the excluded message from what's actually sent to the LLM.
 
 ## Advisory mode
 
