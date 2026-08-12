@@ -44,13 +44,13 @@ Slack is one of the servers that needs explicit client credentials. LiteLLM norm
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps), click **Create New App**, then **From scratch**, and pick the workspace agents should reach.
 2. Open **OAuth & Permissions**.
-3. Under **Redirect URLs**, add your proxy's OAuth callback and click **Save URLs**:
+3. Under **Redirect URLs**, add `{PROXY_BASE_URL}/callback` and click **Save URLs**:
 
    ```
-   https://llm.example.com/ui/mcp/oauth/callback
+   https://llm.example.com/callback
    ```
 
-4. Replace `https://llm.example.com` with the origin users see in their address bar. It must match `PROXY_BASE_URL`; see [Reverse proxy and ingress configuration](../mcp_oauth.md#reverse-proxy-and-ingress-configuration) if LiteLLM sits behind an ingress.
+4. Replace `https://llm.example.com` with the origin users see in their address bar. This is the value LiteLLM sends upstream as the `redirect_uri`, so a mismatch fails the flow at Slack's consent screen. See [Reverse proxy and ingress configuration](../mcp_oauth.md#reverse-proxy-and-ingress-configuration) if LiteLLM sits behind an ingress.
 5. Under **User Token Scopes**, add the scopes for the capabilities you want, matching the table in [Tools provided](#oauth-scopes-by-capability). Start read-only for a broad rollout and add write scopes for teams you trust.
 6. From **Basic Information**, copy the **Client ID** and **Client Secret**.
 
