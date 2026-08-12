@@ -1,40 +1,28 @@
 ---
-title: Database and Redis Sizing
-description: How to size Postgres and Redis for LiteLLM Proxy, with instance recommendations for AWS, Azure, and GCP.
+title: Database Sizing
+description: How to size Postgres for LiteLLM Proxy, with instance recommendations for AWS, Azure, and GCP.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Database and Redis Sizing
+# Database Sizing
 
-This page sizes the two stateful dependencies of LiteLLM Proxy: Postgres, which is required as soon as you use virtual keys or usage tracking, and Redis, which is required as soon as you run more than one instance. The numbers below start from the [gateway benchmarks](../benchmarks.md), which were run against 4 vCPU / 8GB gateway instances, and extend them to the managed offerings on AWS, Azure, and GCP. For the configuration knobs that go with this sizing, see [Production Best Practices](./prod.md); for what actually lives in the database, see [What is stored in the DB](./db_info.md).
+This page sizes the Postgres instance behind LiteLLM Proxy, which is required as soon as you use virtual keys or usage tracking. The numbers below start from the [gateway benchmarks](../benchmarks.md), which were run against 4 vCPU / 8GB gateway instances, and extend them to the managed offerings on AWS, Azure, and GCP. Redis is sized separately in [Redis Sizing](./redis_sizing.md). For the configuration knobs that go with this sizing, see [Production Best Practices](./prod.md); for what actually lives in the database, see [What is stored in the DB](./db_info.md).
 
-## What the proxy asks of each dependency
+## What the proxy asks of the database
 
 Postgres is on the authentication path and on the accounting path, and those two shapes are very different. Authentication is a small number of indexed point reads per request against `LiteLLM_VerificationToken`, `LiteLLM_UserTable`, and `LiteLLM_TeamTable`, and it is cached, so at steady state it costs the database almost nothing. Accounting is the expensive half: spend has to be written back to key, user, team, and org rows, and per-request log rows land in `LiteLLM_SpendLogs`. That write path, not the read path, is what determines the instance you need, and it is why [batching spend writes](./prod.md#batch-spend-writes) and (above roughly 1000 RPS) the [Redis transaction buffer](./prod.md#redis-transaction-buffer) matter more to database sizing than raw request volume does.
 
-Redis carries rate limit counters, router and cooldown state, the response cache, and, when enabled, the spend update queue. It is small and latency sensitive rather than large: a working set of a few GB is typical even at high traffic, because nothing in it is durable history. Treat its RAM as headroom for cache entries you choose to keep, not as a function of RPS.
-
 ## Sizing by request rate
 
-Postgres, sized for the write path above. Storage is dominated by `LiteLLM_SpendLogs`, so it tracks retention rather than throughput; budget roughly 1 to 2 KB per logged request without prompts, and 10x that with `store_prompts_in_spend_logs` enabled.
+Sized for the write path above. Storage is dominated by `LiteLLM_SpendLogs`, so it tracks retention rather than throughput; budget roughly 1 to 2 KB per logged request without prompts, and 10x that with `store_prompts_in_spend_logs` enabled.
 
 | Sustained RPS | vCPU | RAM | Storage | Connections needed |
 |---------------|------|-----|---------|--------------------|
 | Up to 1K | 4 | 16GB | 200GB SSD, 3000+ IOPS | 100 to 200 |
 | 1K to 5K | 8 | 32GB | 500GB SSD, 5000+ IOPS | 200 to 500 |
 | 5K+ | 16+ | 64GB | 1TB+ SSD, 10000+ IOPS | 500+, plus a [read replica](./db_read_replica.md) |
-
-Redis, sized for counters and router state plus whatever you cache:
-
-| Sustained RPS | vCPU | RAM |
-|---------------|------|-----|
-| Up to 1K | 2 | 8GB |
-| 1K to 5K | 4 | 16GB |
-| 5K+ | 8+ | 32GB+ |
-
-Run Redis 7.0 or newer, with persistence on if you use the transaction buffer, and size it so that eviction does not happen during normal operation. Rate limit counters and queued spend updates are live state, so a cache that is evicting under pressure is dropping accounting work rather than just losing cache hits.
 
 ## Connections break before CPU does
 
@@ -55,25 +43,19 @@ If you need more application connections than the instance can serve, put a pool
 <Tabs>
 <TabItem value="aws" label="AWS">
 
-**Postgres.** Use RDS for PostgreSQL on a Graviton general purpose class, `db.m7g.large` up to 1K RPS, `db.m7g.xlarge` for 1K to 5K, and `db.m7g.2xlarge` or larger beyond that; see the [DB instance classes](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) for the full list. Take gp3 storage, which gives a [baseline of 3000 IOPS and 125 MiB/s](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) at any size and steps up to 12,000 IOPS and 500 MiB/s once a Postgres volume passes 400 GiB, so the 500GB row in the table above buys throughput as well as capacity. Run [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html) for production, and enable [Performance Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html) so a spend-write hot spot is visible as a wait event rather than as unexplained latency.
+Use RDS for PostgreSQL on a Graviton general purpose class, `db.m7g.large` up to 1K RPS, `db.m7g.xlarge` for 1K to 5K, and `db.m7g.2xlarge` or larger beyond that; see the [DB instance classes](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) for the full list. Take gp3 storage, which gives a [baseline of 3000 IOPS and 125 MiB/s](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) at any size and steps up to 12,000 IOPS and 500 MiB/s once a Postgres volume passes 400 GiB, so the 500GB row in the table above buys throughput as well as capacity. Run [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html) for production, and enable [Performance Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html) so a spend-write hot spot is visible as a wait event rather than as unexplained latency.
 
 Choose Aurora PostgreSQL instead when you want the reader endpoint: it pairs directly with LiteLLM's [read replica routing](./db_read_replica.md), which is the cleanest way past the 5K RPS row. Aurora's `max_connections` default uses the same memory formula as RDS.
-
-**Redis.** Use ElastiCache with the Valkey or Redis OSS engine at 7.x or newer on a Graviton node, `cache.m7g.large` (6.38 GiB) up to 1K RPS and `cache.m7g.xlarge` (12.93 GiB) above it; the [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheNodes.SupportedTypes.html) list exact usable memory per node, which is below the nominal instance memory. Enable Multi-AZ with automatic failover, and if you outgrow a single shard use cluster mode with LiteLLM's [Redis Cluster config](./caching.md#redis-cluster) rather than a larger node, since sharding spreads the counter keyspace.
 
 </TabItem>
 <TabItem value="azure" label="Azure">
 
-**Postgres.** Use Azure Database for PostgreSQL flexible server on the General Purpose tier, `D4ds_v5` (4 vCore, 16GB) up to 1K RPS and `D8ds_v5` (8 vCore, 32GB) for 1K to 5K, moving to Memory Optimized `E8ds_v5` or larger if your working set stops fitting in cache; the [compute options](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-compute) list every product name. Avoid the Burstable tier in production, since a credit-exhausted instance stalls the spend write path. Use [Premium SSD v2 storage](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) so IOPS are provisioned independently of disk size, and turn on [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The [built-in PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) is the easiest answer to the connection ceiling above; enable it, point `DATABASE_URL` at port 6432, and set `database_disable_prepared_statements: true`.
-
-**Redis.** Use [Azure Managed Redis](https://learn.microsoft.com/en-us/azure/redis/overview) on the Balanced tier, which sits at a 4:1 memory-to-vCPU ratio and, unlike Azure Cache for Redis, gives an instance more than one vCPU; `B5` (6GB, 2 vCPU) is enough for counters and router state alone, `B10` (12GB, 4 vCPU) is the safer default once you cache responses, and `B20` (24GB, 8 vCPU) covers the 5K RPS row. Compute Optimized is worth considering if throughput rather than capacity is the constraint. On the older Azure Cache for Redis, use the Premium tier (`P1` and up), not Standard, because Basic and Standard run on a single vCPU. Enable zone redundancy and, if you use the transaction buffer, data persistence.
+Use Azure Database for PostgreSQL flexible server on the General Purpose tier, `D4ds_v5` (4 vCore, 16GB) up to 1K RPS and `D8ds_v5` (8 vCore, 32GB) for 1K to 5K, moving to Memory Optimized `E8ds_v5` or larger if your working set stops fitting in cache; the [compute options](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-compute) list every product name. Avoid the Burstable tier in production, since a credit-exhausted instance stalls the spend write path. Use [Premium SSD v2 storage](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) so IOPS are provisioned independently of disk size, and turn on [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The [built-in PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) is the easiest answer to the connection ceiling above; enable it, point `DATABASE_URL` at port 6432, and set `database_disable_prepared_statements: true`.
 
 </TabItem>
 <TabItem value="gcp" label="GCP">
 
-**Postgres.** Use Cloud SQL for PostgreSQL on the Enterprise Plus edition with an N2 machine type, 4 vCPU / 16GB up to 1K RPS and 8 vCPU / 32GB for 1K to 5K; the [instance settings reference](https://cloud.google.com/sql/docs/postgres/instance-settings) covers machine series and the [editions comparison](https://cloud.google.com/sql/docs/postgres/editions-intro) covers what Enterprise Plus adds, including the data cache and sub-second planned failover. Note that SSD IOPS on Cloud SQL scale with both vCPU count and disk size (30 read and 30 write IOPS per GB, capped by the [per-vCPU limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview)), so a small disk on a large machine is a throughput ceiling you cannot raise with a flag. Enable regional high availability and automatic storage increase.
-
-**Redis.** Use [Memorystore for Redis Cluster](https://cloud.google.com/memorystore/docs/cluster/cluster-node-specification), where capacity comes from node type times shard count rather than from a single instance size. `redis-standard-small` (5.2GB writable per node) at 3 shards is a reasonable floor, `redis-highmem-medium` (10.4GB writable) at 3 shards covers the 1K to 5K row, and beyond that add shards rather than scaling node type up, which is Google's own price-performance guidance. Skip `redis-shared-core-nano`, which has no SLA. Point LiteLLM at the cluster with the [Redis Cluster config](./caching.md#redis-cluster).
+Use Cloud SQL for PostgreSQL on the Enterprise Plus edition with an N2 machine type, 4 vCPU / 16GB up to 1K RPS and 8 vCPU / 32GB for 1K to 5K; the [instance settings reference](https://cloud.google.com/sql/docs/postgres/instance-settings) covers machine series and the [editions comparison](https://cloud.google.com/sql/docs/postgres/editions-intro) covers what Enterprise Plus adds, including the data cache and sub-second planned failover. Note that SSD IOPS on Cloud SQL scale with both vCPU count and disk size (30 read and 30 write IOPS per GB, capped by the [per-vCPU limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview)), so a small disk on a large machine is a throughput ceiling you cannot raise with a flag. Enable regional high availability and automatic storage increase.
 
 </TabItem>
 </Tabs>

@@ -9,7 +9,7 @@ import Image from '@theme/IdealImage';
 
 # Production Best Practices
 
-Work through this page before going live. It covers the production configuration, machine sizing and worker strategy, Redis, and database and migrations; each section stands alone, so you can also use it as a review checklist for an existing deployment. For how large to make the Postgres and Redis instances themselves, including instance recommendations for AWS, Azure, and GCP, see [Database and Redis Sizing](./db_sizing.md). For deeper container tuning such as alternative servers, TLS at the proxy, keepalive, and loading config from object storage, see [Server Tuning](./server_tuning.md).
+Work through this page before going live. It covers the production configuration, machine sizing and worker strategy, Redis, and database and migrations; each section stands alone, so you can also use it as a review checklist for an existing deployment. For how large to make the Postgres and Redis instances themselves, including instance recommendations for AWS, Azure, and GCP, see [Database Sizing](./db_sizing.md) and [Redis Sizing](./redis_sizing.md). For deeper container tuning such as alternative servers, TLS at the proxy, keepalive, and loading config from object storage, see [Server Tuning](./server_tuning.md).
 
 ## Configuration
 
@@ -187,7 +187,7 @@ litellm_settings:
     password: os.environ/REDIS_PASSWORD
 ```
 
-Keep the default `simple-shuffle` routing strategy for high-traffic deployments; usage-based routing adds Redis lookups to the request path. For how much Redis to provision and which managed offering to pick on each cloud, see [Database and Redis Sizing](./db_sizing.md).
+Keep the default `simple-shuffle` routing strategy for high-traffic deployments; usage-based routing adds Redis lookups to the request path. For how much Redis to provision and which managed offering to pick on each cloud, see [Redis Sizing](./redis_sizing.md).
 
 ### Redis transaction buffer
 
@@ -202,7 +202,7 @@ Monitor it with the `litellm_pod_lock_manager_size` Prometheus metric (which pod
 
 ## Database and migrations
 
-For instance sizes, storage and IOPS, the connection ceiling on each cloud's managed Postgres, and how to keep the spend log write path from being the thing you resize for, see [Database and Redis Sizing](./db_sizing.md).
+For instance sizes, storage and IOPS, the connection ceiling on each cloud's managed Postgres, and how to keep the spend log write path from being the thing you resize for, see [Database Sizing](./db_sizing.md).
 
 ### Gracefully handle DB unavailability
 

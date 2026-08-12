@@ -17,8 +17,8 @@ Each machine deploying LiteLLM had the following specs:
 
 ## Configuration
 
-- Database: PostgreSQL. See [Database and Redis Sizing](./proxy/db_sizing.md) for how to size yours
-- Redis: Not used. Recommended in production; see [Database and Redis Sizing](./proxy/db_sizing.md)
+- Database: PostgreSQL. See [Database Sizing](./proxy/db_sizing.md) for how to size yours
+- Redis: Not used. Recommended in production; see [Redis Sizing](./proxy/redis_sizing.md)
 - Load generator: Locust, 1000 users, each with 0.5s to 1s of think time between requests. See [Locust Settings](#locust-settings) before comparing these numbers against your own run.
 
 
@@ -138,7 +138,7 @@ End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake
 
 ## Infrastructure Recommendations
 
-The runs above used a single PostgreSQL instance and no Redis, which is a benchmark configuration rather than a production one. For the instance sizes to run at each request rate, the connection math that decides whether a deployment survives a scale-out, and concrete PostgreSQL and Redis picks on AWS, Azure, and GCP, see [Database and Redis Sizing](./proxy/db_sizing.md). For the gateway-side configuration that goes with it, see [Production Best Practices](./proxy/prod.md).
+The runs above used a single PostgreSQL instance and no Redis, which is a benchmark configuration rather than a production one. For instance sizes at each request rate, the connection math that decides whether a deployment survives a scale-out, and concrete managed-service picks on AWS, Azure, and GCP, see [Database Sizing](./proxy/db_sizing.md) and [Redis Sizing](./proxy/redis_sizing.md). For the gateway-side configuration that goes with it, see [Production Best Practices](./proxy/prod.md).
 
 ## Locust Settings
 
