@@ -132,11 +132,12 @@ The SDK (no proxy) emits `litellm_request` as the root if no parent context exis
 | `guardrail` | `INTERNAL` (OpenInference kind = `guardrail`) | `litellm_request` if present, else proxy root | One span per guardrail execution (pre-call, during-call, or post-call) |
 | `Failed Proxy Server Request` | `INTERNAL` | proxy root | When the proxy raises an exception before completing the request |
 | `{route}` (e.g. `/user/info`, `/key/info`) | `INTERNAL` | proxy root | Management-endpoint calls (non-LLM proxy routes) |
-| `auth`, `router`, `self`, `proxy_pre_call`, `redis`, `postgres`, `batch_write_to_db`, `reset_budget_job`, `pod_lock_manager` | `INTERNAL` | proxy root | Service-hook spans — see below |
+| `auth`, `router`, `self`, `proxy_pre_call`, `reset_budget_job`, `pod_lock_manager` | `INTERNAL` | proxy root | Service-hook spans; see below |
+| `redis`, `postgres`, `batch_write_to_db` | `CLIENT` | proxy root | Datastore service-hook spans, carrying `db.*` semconv; see below |
 
 ### Service-hook spans (a.k.a. "infrastructure" spans)
 
-LiteLLM has a separate hook (`async_service_success_hook` / `async_service_failure_hook`) that records timing for internal subsystems like the router, auth checks, Redis, Postgres, and the proxy pre-call pipeline. When the OTEL integration is active and a parent span is in context, each of these hooks creates an INTERNAL child span.
+LiteLLM has a separate hook (`async_service_success_hook` / `async_service_failure_hook`) that records timing for internal subsystems like the router, auth checks, Redis, Postgres, and the proxy pre-call pipeline. When the OTEL integration is active and a parent span is in context, each of these hooks creates a child span: `CLIENT` for the datastore services (`redis`, `postgres`, `batch_write_to_db`), `INTERNAL` for the rest.
 
 The span **name is the `ServiceTypes` enum value** (`auth`, `router`, `self`, `proxy_pre_call`, `redis`, `postgres`, …). The full set is defined in `litellm/types/services.py`. `self` is the LiteLLM SDK itself (e.g. timing of `make_openai_chat_completion_request`); `router` may appear multiple times per request (once for `async_get_available_deployment`, once for the wrapping `acompletion`).
 
@@ -152,6 +153,52 @@ Each service-hook span carries:
 These spans are **operational/infrastructure spans**, not GenAI semantic spans. They are useful for SRE-level debugging (where is time being spent inside LiteLLM?) but they do **not** carry `gen_ai.*` attributes. If you only want AI-semantic spans in your backend, filter on the presence of `gen_ai.system` (or on span name).
 
 There is currently **no env var that disables individual service-hook spans**. If you need them filtered, do it at the OTLP collector / backend layer (e.g. via a tail-based sampler that drops by `name`).
+
+### Database spans: which PostgreSQL server the work hit
+
+LiteLLM reaches PostgreSQL through Prisma, whose Python client talks to a local Rust query engine over loopback HTTP. Anything instrumenting the transport (ddtrace's httpx patching, an httpx OTEL instrumentor) therefore sees a call to `localhost` and attributes the wait to the LiteLLM process itself, which is why a slow budget or auth lookup can show up as `litellm-server -> localhost` with nothing identifying it as database time.
+
+The `postgres`, `batch_write_to_db` and `redis` service-hook spans carry [OTel database semantic conventions](https://opentelemetry.io/docs/specs/semconv/database/) naming the datastore, so those spans are recognizable as database work regardless of what the transport layer reports:
+
+| Attribute | Value |
+|---|---|
+| `db.system.name` | `postgresql` for `postgres` and `batch_write_to_db`, `redis` for the Redis services |
+| `db.system` | The same value, dual-emitted because Datadog's OTLP intake still infers a span's database type from this key rather than from `db.system.name` |
+| `db.operation.name` | The LiteLLM repository action (same value as `call_type`, e.g. `get_data`, `_PROXY_track_cost_callback`) |
+| `server.address` | Host from `DATABASE_URL`. PostgreSQL only |
+| `server.port` | Port from `DATABASE_URL`, defaulting to `5432`. PostgreSQL only |
+| `db.namespace` | `{database}` or `{database}\|{schema}` from `DATABASE_URL`, with Prisma's default `public` schema left implicit. PostgreSQL only |
+
+Only the host, port, database and schema are read. The user, password and IAM token in the connection string are never parsed out, so no credential reaches an exporter, and no SQL text or bind value is ever attached.
+
+A DB span example, for a virtual-key lookup against RDS:
+
+```
+postgres
+  db.system.name    = postgresql
+  db.system         = postgresql
+  db.operation.name = get_data
+  server.address    = litellm-prod.abc123.us-east-1.rds.amazonaws.com
+  server.port       = 5432
+  db.namespace      = litellm|reporting
+  service           = postgres
+  call_type         = get_data
+  table_name        = combined_view
+```
+
+Datastore spans are `CLIENT` spans, so a backend that types spans from kind plus `db.system` renders them as database calls rather than as internal work. Filter on `db.system.name = postgresql` to get every LiteLLM database operation, and group by `server.address` to correlate the same window against the database's own metrics (RDS `DatabaseConnections`, `ReadLatency`, CPU).
+
+#### Reading pool wait against query latency
+
+A `postgres` span is one duration covering everything LiteLLM waited for: acquiring a Prisma connection from the pool, the loopback hop to the query engine, and the query itself. LiteLLM does not break that down, because the query engine does not report the split back to the Python client. To tell which part dominates, compare three signals over the same window:
+
+- The `postgres` span duration, which is the total the request paid
+- The transport span your APM produces for the loopback call (ddtrace's httpx span, or an httpx OTEL instrumentor), which bounds the client-side hop
+- The database's own query timing (`pg_stat_statements`, RDS Performance Insights) for the same statements
+
+Span duration far above the database's query time, with the transport span short, means the wait is in front of the query: connection-pool saturation or query-engine queueing. Raise `general_settings.database_connection_pool_limit` ([DB pool limits](../proxy/configs#configure-db-pool-limits--connection-timeouts)) or reduce concurrent DB work. Span duration tracking the database's own query time means the database is the bottleneck.
+
+When `DATABASE_URL_READ_REPLICA` is set, `server.address`, `server.port` and `db.namespace` are omitted and only `db.system.name`, `db.system` and `db.operation.name` remain. Reader-versus-writer routing is decided per Prisma call underneath the span, so no single endpoint is true for every span, and naming the writer would pin replica read latency onto the primary.
 
 ### Why don't I see a `litellm_request` span?
 

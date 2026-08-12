@@ -526,7 +526,7 @@ Status and errors:
 
 **Guardrail span** — uses the `litellm.guardrail.*` namespace: `name`, `mode`, `status`, `provider`, `action`, `response`, `violation_categories`, `confidence_score`, `risk_score`, `masked_entity_count`, `duration`, `id`, `policy_template`, `detection_method`. `status` is one of `success`, `guardrail_intervened`, `guardrail_failed_to_respond`, or `not_run`; a blocking `guardrail_intervened` or `guardrail_failed_to_respond` also sets span status to `ERROR`.
 
-**Datastore span** (redis, postgres) — `db.system.name`, `db.operation.name`, `litellm.service.name`, `litellm.service.call_type`.
+**Datastore span** (redis, postgres) — `db.system.name`, `db.system`, `db.operation.name`, `litellm.service.name`, `litellm.service.call_type`. PostgreSQL spans also carry `server.address`, `server.port` and `db.namespace` derived from `DATABASE_URL`, so database work stays identifiable as PostgreSQL rather than as the loopback address of Prisma's local query engine. Credentials from the connection string are never exported. See [Database spans](./opentelemetry_integration#database-spans-which-postgresql-server-the-work-hit) for how to read pool wait against query latency.
 
 **Internal service span** — the `litellm.service.*` keys only (no `db.*`).
 
