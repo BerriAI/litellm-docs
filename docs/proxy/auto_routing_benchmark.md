@@ -1,63 +1,137 @@
 # Auto Routing Benchmark: Cost Ladders
 
-Auto routing is usually sold on a single promise: send easy requests to a cheap model, keep quality, cut the bill. This page reports what that promise measured out to on one concrete setup, a three-rung Gemini 3.x ladder, so you can calibrate what to expect and which strategy to reach for
+This benchmark evaluates how well LiteLLM routing strategies reduce cost while preserving response quality. It compares the semantic [Auto Router](./auto_routing_semantic.md), the rule-based `complexity_router`, fixed-model baselines, and a cost-matched shuffled control on a three-model Gemini 3.x cost ladder.
 
-The short version is that routing by intent carried real signal, routing by rule-based complexity score did not, and the middle rung of the ladder was worse than the rung fourteen times cheaper than it
+## Key findings
 
-## What was measured
+- The semantic Auto Router preserved more quality than the `complexity_router` at the same cost. At approximately 58% savings, the semantic router achieved a 46.8% win rate against the flagship and 82/90 exact-match answers. The fitted `complexity_router` achieved 41.5% and 71/90.
+- The semantic router performed significantly better than the shuffled control. The `complexity_router` did not.
+- The rule-based complexity score was not predictive of when the cheap model would produce an acceptable answer.
+- The middle model in this ladder cost 14.1 times more than the cheap model while producing worse results. Model-tier selection was therefore as important as router selection.
 
-300 test prompts across three strata: 120 real chat turns from WildChat-1M, 90 verifiable problems from MATH-500 levels 4 and 5 plus MMLU-Pro, and 90 code tasks from BigCodeBench. A separate 100-prompt train slice, drawn from disjoint index ranges, was used for every fitting decision so no evaluation prompt ever informed a router's configuration
+## Benchmark design
 
-Three rungs were generated once per prompt at temperature 0, giving a 3 x 300 response matrix. Every arm is a selection over that one matrix, so arms are exactly paired and no sampling noise separates them. Quality is blinded pairwise preference against the all-flagship arm, judged by a model from a different family, with every pair judged in both orders and disagreements resolved as ties. The 90 verifiable prompts also carry mechanical exact-match scoring with no model in the loop
+### Evaluation dataset
+
+The evaluation used 300 prompts across three categories:
+
+| Category | Prompts | Source |
+|---|---:|---|
+| Chat | 120 | WildChat-1M |
+| Verifiable reasoning | 90 | MATH-500 levels 4 and 5, plus MMLU-Pro |
+| Code | 90 | BigCodeBench |
+
+A separate 100-prompt training set was used for all configuration and threshold-fitting decisions. The training and evaluation prompts came from disjoint index ranges.
+
+### Response generation and scoring
+
+Each of the three models generated one response per evaluation prompt at temperature 0, producing a fixed 3 x 300 response matrix. Every routing strategy selected from this same matrix. This design pairs the strategies exactly and prevents generation sampling from affecting comparisons.
+
+Quality was measured in two ways:
+
+1. A model from a different provider family performed blinded, pairwise comparisons against the all-flagship baseline. Each pair was judged in both response orders, and conflicting judgments were recorded as ties.
+2. The 90 verifiable reasoning prompts were scored with mechanical exact match, without an LLM judge.
+
+The reported cost includes the selected model's input, output, and thinking tokens.
 
 ## Results
 
-| Arm | Win-rate vs flagship | 95% CI | Cost | Saving | Exact match |
-|---|---|---|---|---|---|
-| All-flagship (baseline) | 50.0% | | $9.320 | | 82/90 |
-| `auto_router`, threshold 0.3 | 48.2% | [45.8%, 50.5%] | $4.893 | 47.5% | 82/90 |
-| `auto_router`, threshold 0.2 | 46.8% | [44.0%, 49.5%] | $3.894 | 58.2% | 82/90 |
-| All-cheap | 43.7% | [40.0%, 47.5%] | $0.247 | 97.4% | 81/90 |
+| Strategy | Win rate vs. flagship | 95% CI | Cost | Savings vs. flagship | Exact match |
+|---|---:|---:|---:|---:|---:|
+| All flagship (baseline) | 50.0% | | $9.320 | | 82/90 |
+| Semantic Auto Router, threshold 0.3 | 48.2% | [45.8%, 50.5%] | $4.893 | 47.5% | 82/90 |
+| Semantic Auto Router, threshold 0.2 | 46.8% | [44.0%, 49.5%] | $3.894 | 58.2% | 82/90 |
+| All cheap | 43.7% | [40.0%, 47.5%] | $0.247 | 97.4% | 81/90 |
 | `complexity_router`, fitted | 41.5% | [38.0%, 45.0%] | $3.889 | 58.3% | 71/90 |
-| `complexity_router`, stock | 39.8% | [36.0%, 43.7%] | $2.053 | 78.0% | 76/90 |
+| `complexity_router`, default | 39.8% | [36.0%, 43.7%] | $2.053 | 78.0% | 76/90 |
 | Shuffled control | 39.2% | [35.7%, 42.7%] | $3.784 | 59.4% | 68/90 |
 
-A win-rate of 50% means indistinguishable from the flagship; ties count as half
+A 50% win rate means that a strategy was indistinguishable from the all-flagship baseline. Ties count as half a win.
 
-The cleanest comparison is the pair at matched cost. At 58.2% savings the semantic router scored 46.8%; at 58.3% savings the complexity router scored 41.5%. Same spend, five points of quality apart, and an eleven point gap on mechanically scored answers
+### Comparison at matched cost
 
-## The control arm
+The clearest comparison is between the two strategies with approximately 58% savings:
 
-The shuffled control takes the complexity router's exact tier assignments and permutes them across prompts with a fixed seed, so it costs the same by construction and differs only in whether the routing decision was informed. It is the arm that tells you whether a router is thinking or whether its tier mix is doing the work
+| Strategy | Savings | Win rate vs. flagship | Exact match |
+|---|---:|---:|---:|
+| Semantic Auto Router, threshold 0.2 | 58.2% | 46.8% | 82/90 |
+| `complexity_router`, fitted | 58.3% | 41.5% | 71/90 |
 
-The semantic router beat it by 9.0 points [+5.3, +12.7] at threshold 0.3 and 7.7 points [+3.8, +11.5] at threshold 0.2. The complexity router beat it by 2.3 points [-0.2, +4.8] when fitted and 0.7 points [-2.5, +3.8] as shipped. Both complexity intervals span zero
+At effectively the same cost, the semantic router achieved a 5.3 percentage-point higher win rate and answered 11 more verifiable prompts correctly.
 
-Any router benchmark without a control like this cannot separate a smart router from a cheap tier mix, and will read as a success either way
+## Does the routing decision add value?
 
-## Why the complexity score did not separate
+The shuffled control uses the fitted `complexity_router`'s exact tier counts but randomly assigns those tiers to prompts using a fixed seed. Its cost is therefore similar by construction. Comparing a router with this control tests whether the routing decisions add value beyond the overall mix of cheap and expensive models.
 
-Each train prompt was labelled by running flagship and cheap head to head and asking whether the cheap answer was worse. Against those labels, the complexity score's AUC was 0.524 pooled and 0.420 on the chat stratum, where below 0.5 means mildly inverted. Mean scores were identical to three decimals between prompts where the cheap model sufficed and prompts where it did not. No threshold beat always guessing "cheap"
+Compared with the shuffled control:
 
-The cause is structural rather than a tuning failure. The default weights lean hardest on code presence and reasoning markers, so the scorer keys on what a prompt is about. On this setup 97% of chat scored into the cheapest tier and 97% of code into the middle one, while the labels said the cheap model sufficed on 90% of verifiable reasoning and only 50% of chat. The expensive rung should have been going to open ended chat, which is the one place the scorer never sent it
+- The semantic router improved win rate by 9.0 points at threshold 0.3, with a 95% confidence interval of [+5.3, +12.7].
+- The semantic router improved win rate by 7.7 points at threshold 0.2, with a 95% confidence interval of [+3.8, +11.5].
+- The fitted `complexity_router` improved win rate by 2.3 points, with a 95% confidence interval of [-0.2, +4.8].
+- The default `complexity_router` improved win rate by 0.7 points, with a 95% confidence interval of [-2.5, +3.8].
 
-This is a statement about same-family cost ladders, where every rung can attempt every request and the only question is whether the cheap one is good enough. It is not a claim about routing across heterogeneous models, which is a different problem
+Both semantic-router confidence intervals exclude zero. Both `complexity_router` intervals include zero. On this evaluation, semantic routing added measurable value; rule-based complexity routing did not.
 
-## Check the rungs before blaming the router
+## Why the complexity score underperformed
 
-The middle rung, `gemini-3-flash-preview`, lists at a quarter of the flagship's output price and looked like an obvious intermediate. Measured end to end it cost 14.1x what `gemini-3.1-flash-lite` cost, won fewer pairings (37.5% against 43.7%), and answered 63 of 90 verifiable problems correctly against Flash-Lite's 81. Among prompts where exactly one was right, Flash-Lite won 20 to 2. There is no budget at which selecting it was correct
+The training prompts were labeled by comparing the flagship and cheap responses and identifying cases where the cheap response was worse. The complexity score was then evaluated as a predictor of those labels.
 
-Thinking tokens explain the cost half. That rung emitted 981,308 thinking tokens against the flagship's 581,883, so it thought 69% more than the model above it, and thinking bills as output. A list-price advantage of 4x realized as 2.7x. Flash-Lite emitted none at all, which is most of why it came in 37x cheaper than the flagship rather than the 8x list prices imply
+Its area under the ROC curve (AUC) was:
 
-Both complexity arms routed most traffic into that rung, which is the mechanical reason they landed where they did. Before concluding a router is broken, price each rung on your own traffic with thinking tokens counted
+- 0.524 across the full training set, which is close to random.
+- 0.420 on chat prompts, which indicates mildly inverted predictions.
 
-## Choosing a strategy
+Mean complexity scores were identical to three decimal places for prompts where the cheap model was sufficient and prompts where it was not. No tested threshold outperformed always predicting that the cheap model would be sufficient.
 
-For a cost ladder over one model family, reach for the semantic [Auto Router](./auto_routing_semantic.md) and build its routes from examples of requests you have already checked the cheap model on. What predicts "the cheap model suffices" in this setting is what kind of task it is, and matching against labelled examples captures that directly
+The default scoring weights emphasize features such as code and explicit reasoning markers. These features describe the type of prompt, but they did not predict whether the cheap model could answer it successfully. In this evaluation:
 
-`score_threshold` deserves fitting rather than defaulting. Below it the router falls back to `auto_router_default_model`, so an untuned threshold quietly converts a routing config into an expensive-by-default one. At 0.3 the router sent 52% of traffic to the flagship and saved 47.5%; at 0.2 it sent 38% and saved 58.2%, trading roughly a point and a half of quality. Neither setting cleared both halves of a 45% quality floor and 50% savings target at once, so pick the corner of that frontier your workload actually needs. Deliberately not reported here is a threshold swept until it cleared both, because tuning on the evaluation set produces a number that means nothing
+- 97% of chat prompts were assigned to the cheapest tier.
+- 97% of code prompts were assigned to the middle tier.
+- The cheap model was sufficient for 90% of verifiable reasoning prompts but only 50% of chat prompts.
 
-## Scope
+These results apply to a same-family cost ladder, where every model can attempt every request and the routing decision is primarily whether the cheap model is sufficient. Routing across models with different capabilities is a separate use case.
 
-One provider family, one ladder, one 300-prompt corpus, one judge model. The judge disagreed with itself on 32% of pairs when response order was swapped; those resolve to ties, which pulls every arm toward 50% and makes the reported gaps conservative rather than inflated. Judge verdicts agreed with mechanical ground truth 90% of the time. Code was judged rather than executed. Treat the direction of these results as portable and the magnitudes as specific to this setup
+## Validate the model tiers before tuning the router
 
-The methodology is the part worth copying: pair your arms on one response matrix, include a cost-matched shuffled control, label a held-out train slice before fitting anything, count thinking tokens, and pre-register what would count as a pass
+The middle tier, `gemini-3-flash-preview`, appeared to offer a useful price and quality trade-off based on list prices. Its measured performance did not support that assumption:
+
+| Metric | `gemini-3-flash-preview` | `gemini-3.1-flash-lite` |
+|---|---:|---:|
+| Relative cost | 14.1x the Flash-Lite cost | Baseline |
+| Win rate vs. flagship | 37.5% | 43.7% |
+| Exact match | 63/90 | 81/90 |
+
+Among prompts where exactly one of these models answered correctly, Flash-Lite won 20 to 2. The middle tier did not provide a useful cost-quality trade-off on this dataset.
+
+Thinking tokens explain much of the unexpected cost. `gemini-3-flash-preview` generated 981,308 thinking tokens, compared with 581,883 from the flagship. As a result, its 4x list-price output advantage produced only a 2.7x measured cost advantage. Flash-Lite generated no thinking tokens and cost 37 times less than the flagship, compared with the 8x difference suggested by list prices.
+
+Both `complexity_router` configurations sent most prompts to the underperforming middle tier. Before tuning a router, measure each candidate model on representative traffic and include thinking-token charges in the cost calculation.
+
+## Choosing a routing strategy
+
+For a cost ladder within one model family:
+
+1. Start with the semantic [Auto Router](./auto_routing_semantic.md).
+2. Build routes from labeled examples that show when the cheap model is sufficient.
+3. Fit `score_threshold` on a held-out training set that represents production traffic.
+4. Select a threshold based on an explicit quality and savings target.
+
+`score_threshold` controls when the router falls back to `auto_router_default_model`:
+
+- At 0.3, the router sent 52% of prompts to the flagship, saved 47.5%, and achieved a 48.2% win rate.
+- At 0.2, it sent 38% of prompts to the flagship, saved 58.2%, and achieved a 46.8% win rate.
+
+The lower threshold increased savings by 10.7 percentage points and reduced win rate by 1.4 points. Neither setting met both a 45% win-rate floor and 50% savings target with 95% confidence: threshold 0.3 missed the savings target, while the lower bound for threshold 0.2's win rate was 44.0%.
+
+Do not tune a threshold on the evaluation set. Doing so would overfit the reported result and would not provide a valid estimate of production performance.
+
+## Limitations
+
+This benchmark covers one provider family, one three-model ladder, one 300-prompt evaluation set, and one judge model. Additional limitations include:
+
+- The judge disagreed with itself on 32% of pairs when response order was reversed. These disagreements were recorded as ties, which moves results toward 50%.
+- Judge decisions agreed with mechanical ground truth 90% of the time on the verifiable subset.
+- Code responses were judged but not executed.
+- The results measure this specific model ladder and dataset. Other models and production workloads may produce different cost-quality trade-offs.
+
+Use the methodology, rather than the exact percentages, when evaluating another deployment: generate one paired response matrix, reserve a separate training set, include a cost-matched shuffled control, count thinking tokens, and define quality and savings requirements before evaluating the routers.
