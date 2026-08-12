@@ -33,11 +33,35 @@ general_settings:
   # Optional: set exact time for cleanup (Cron syntax)
   maximum_spend_logs_cleanup_cron: "0 4 * * *" # Run at 04:00 AM daily
 
+  # Optional: bound how much work a single run may do
+  maximum_spend_logs_cleanup_batch_size: 1000   # Rows per DELETE statement
+  maximum_spend_logs_cleanup_max_batches: 500   # DELETE statements per table per run
+  maximum_spend_logs_cleanup_run_budget: "5m"   # Wall clock for the whole run
+  maximum_spend_logs_cleanup_batch_timeout: "30s" # statement_timeout and lock_timeout per batch
+
 litellm_settings:
   cache: true
   cache_params:
     type: redis
 ```
+
+### When the job runs
+
+The cleanup job exists only if you ask for it. It is registered at proxy startup when `maximum_spend_logs_retention_period` or `maximum_autorouter_session_retention_period` is set, and not otherwise. With neither set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
+
+When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
+
+### What gets deleted
+
+A run prunes three tables, each on the cutoff implied by its retention setting:
+
+| Table | Time column | Retention setting |
+| --- | --- | --- |
+| `LiteLLM_SpendLogs` | `startTime` | `maximum_spend_logs_retention_period` |
+| `LiteLLM_SpendLogToolIndex` | `start_time` | `maximum_spend_logs_retention_period` |
+| `LiteLLM_AutoRouterSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+
+`LiteLLM_SpendLogToolIndex` rows are derived from spend logs, so they expire on the same cutoff as the log rows they point at. Auto-router session rollups carry their own retention setting and their own cutoff. Setting only `maximum_autorouter_session_retention_period` is enough to register the job, in which case spend logs are left untouched and only session rollups are pruned
 
 ### Configuration Options
 
@@ -69,6 +93,22 @@ Use day names (`sun`, `mon`, ...) instead of numbers in the weekday field. LiteL
 
 :::
 
+#### `maximum_spend_logs_cleanup_batch_size` (optional)
+
+How many rows each `DELETE` statement removes. Default is `1000`. Environment equivalent: `SPEND_LOG_CLEANUP_BATCH_SIZE`
+
+#### `maximum_spend_logs_cleanup_max_batches` (optional)
+
+How many `DELETE` statements the job issues per table per run. Default is `500`, so at the default batch size a run removes at most 500,000 rows from each table it prunes. Environment equivalent: `SPEND_LOG_RUN_LOOPS`
+
+#### `maximum_spend_logs_cleanup_run_budget` (optional)
+
+Wall-clock budget for the whole run, in the same duration format as the retention period. Default is `5m`. The budget covers every table the run touches rather than each table separately, so spend logs draw on it first and whatever is left over goes to the tool index and the session rollups. When the budget is spent the run stops where it is and the remaining backlog waits for the next tick. Environment equivalent: `SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS`, expressed in seconds
+
+#### `maximum_spend_logs_cleanup_batch_timeout` (optional)
+
+Postgres `statement_timeout` and `lock_timeout` applied to each batch. Default is `30s`. A batch that cannot finish, or cannot take its lock, inside this window is cancelled by the database instead of holding a lock while user traffic queues behind it. A cancelled batch counts as a batch failure, so `SPEND_LOG_CLEANUP_MAX_CONSECUTIVE_BATCH_FAILURES` timeouts in a row abort the run. Environment equivalent: `SPEND_LOG_CLEANUP_BATCH_TIMEOUT_SECONDS`, expressed in seconds
+
 ## How it works
 
 ### Step 1. Lock Acquisition (Optional with Redis)
@@ -92,23 +132,52 @@ Once cleanup starts:
 - Deletes logs older than the cutoff in batches (default size `1000`)
 - Adds a short delay between batches to avoid overloading the database
 
-### Default settings:
-- **Batch size**: 1000 logs (configurable via `SPEND_LOG_CLEANUP_BATCH_SIZE`)
-- **Max batches per run**: 500
-- **Max deletions per run**: 500,000 logs
-
-You can change the cleanup parameters using environment variables:
-
-```bash
-SPEND_LOG_RUN_LOOPS=200
-# optional: change batch size from the default 1000
-SPEND_LOG_CLEANUP_BATCH_SIZE=2000
-```
-
-This would allow up to 200,000 logs to be deleted in one run.
-
 ![Batch deletion of old logs](../../img/spend_log_deletion_multi_pod.jpg)  
 *Batch deletion of old logs*
+
+### Step 3. Bounds
+
+Left unbounded, a single run against a large table is a long stream of heavy write transactions that can saturate the database it is cleaning. Every run is bounded three ways at once and stops at whichever bound it reaches first: `maximum_spend_logs_cleanup_batch_size` rows per `DELETE` (default 1000), `maximum_spend_logs_cleanup_max_batches` statements per table (default 500), and `maximum_spend_logs_cleanup_run_budget` of wall clock for the run as a whole (default `5m`). At the defaults that comes to at most 500,000 rows per table and at most five minutes of work
+
+The budget is checked between batches, so it decides when the job stops issuing new work. What bounds a statement already in flight is `maximum_spend_logs_cleanup_batch_timeout`, applied as the Postgres `statement_timeout` and `lock_timeout` for each batch. Stopping early is expected. The run resumes from the same cutoff on the next tick, so a backlog drains across several runs
+
+The job also reports how much work is left, so you can tell a healthy steady state from a backlog that keeps growing. The probe behind that number is bounded by `SPEND_LOG_CLEANUP_REMAINING_COUNT_CAP` (default 100000), which stops counting once it reaches the cap so the metric itself never scans a huge table. A table with more expired rows than the cap reports the cap
+
+| Environment variable | Default | Description |
+| --- | --- | --- |
+| `SPEND_LOG_CLEANUP_BATCH_SIZE` | `1000` | Rows deleted per `DELETE` statement |
+| `SPEND_LOG_RUN_LOOPS` | `500` | Maximum `DELETE` statements per table per run |
+| `SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS` | `300` | Wall-clock budget in seconds for the whole run, shared across every table it cleans |
+| `SPEND_LOG_CLEANUP_BATCH_TIMEOUT_SECONDS` | `30` | Postgres `statement_timeout` and `lock_timeout` in seconds for each batch |
+| `SPEND_LOG_CLEANUP_REMAINING_COUNT_CAP` | `100000` | Upper bound on the remaining-rows probe, so reporting the backlog cannot itself become an expensive scan |
+| `SPEND_LOG_CLEANUP_MAX_CONSECUTIVE_BATCH_FAILURES` | `3` | Consecutive batch failures tolerated before the run aborts |
+| `SPEND_LOG_CLEANUP_BATCH_FAILURE_BACKOFF_SECONDS` | `0.5` | Pause after a failed batch before retrying |
+
+## Large tables
+
+### Indexing
+
+`LiteLLM_SpendLogs` ships with indexes on `startTime` and on `(startTime, request_id)`, which is what the delete batch needs, so there is nothing to add for retention on a default schema. On a seeded 2,000,000-row table the per-batch plan is an index scan on `LiteLLM_SpendLogs_startTime_idx` feeding a nested loop, about 1.8 ms for a 1000-row batch
+
+So the batch itself is cheap, and a slow run is rarely a sign of a bad plan. What a large backlog actually costs you is WAL volume and the autovacuum load created by the dead tuples the deletes leave behind. On that same table, a run that removed roughly 500,000 rows in 111 seconds left around 1,000,000 dead tuples across the spend log and tool index tables, which is enough to keep autovacuum busy on both of them well after the run finished. Tune for that, not for the delete plan
+
+### Sizing the knobs
+
+Batch size trades lock duration and WAL record size against throughput. Bigger batches delete more rows per statement and spend proportionally less time in the fixed pause between batches, at the cost of holding row locks longer and giving `maximum_spend_logs_cleanup_batch_timeout` less headroom. Max batches caps how much a single run can ever delete from one table, and the run budget caps how long the whole run may hold the database's attention regardless of how the other two are set
+
+The pause between batches, a fixed 0.1s, dominates the per-batch cost at the default batch size, which puts throughput near 10,000 rows per second and makes the 500-batch cap, not the five-minute budget, the binding limit at defaults
+
+Take a deployment ingesting 5,000,000 spend log rows a day with 30 day retention. In steady state each daily run has to delete about a day of rows, so the default cap of 500,000 leaves retention permanently behind and the table grows without bound. Raising `maximum_spend_logs_cleanup_batch_size` to `5000` and `maximum_spend_logs_cleanup_max_batches` to `2000` lifts the ceiling to 10,000,000 rows and takes the run to roughly 110 seconds for 5,000,000 rows, comfortably inside the default `5m` budget, with each statement still finishing far inside the 30s batch timeout. Check the remaining-rows metric after a few days: if it trends flat you are keeping up, and if it climbs run the cleanup more often with `maximum_spend_logs_retention_interval` rather than making batches larger still
+
+### Draining a large backlog
+
+Turning retention on for the first time against a table that already holds months of history is the case worth planning. A run stops at its budget and picks up from the same cutoff on the next tick, so the backlog does drain on its own, just over many runs. Left at the defaults with a daily interval, a 100,000,000-row backlog would take months
+
+To drain it faster, raise `maximum_spend_logs_cleanup_run_budget` and `maximum_spend_logs_cleanup_max_batches` during a maintenance window, watch replication lag and autovacuum on the spend log tables while it runs, then put both back to their defaults. Draining in a window you control is much easier to reason about than discovering the same work in the middle of a peak hour
+
+If the table is large because volume is genuinely high, rather than because retention was off, converting it to a partitioned table is the better answer. Retention then drops whole partitions instead of deleting rows, which frees disk immediately and leaves no dead tuples to vacuum, and none of the batch or budget knobs matter for the data that a partition drop reclaims. See below
+
+
 
 ## Partitioning for high-volume deployments
 

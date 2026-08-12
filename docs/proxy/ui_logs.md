@@ -107,13 +107,9 @@ general_settings:
   maximum_spend_logs_retention_interval: "1d"  # Run once per day
 ```
 
-You can control how many logs are deleted per run using this environment variable:
+Cleanup only runs when a retention period is set, and each run is bounded by how many rows it deletes per statement, how many statements it issues per table, and a wall-clock budget for the run as a whole. Defaults are 1000 rows per statement, 500 statements per table, and 5 minutes. A run that hits a bound stops there and resumes from the same cutoff on the next tick, so a large backlog drains over several runs
 
-`SPEND_LOG_RUN_LOOPS=200  # Deletes up to 200,000 logs in one run`
-
-Set `SPEND_LOG_CLEANUP_BATCH_SIZE` to control how many logs are deleted per batch (default `1000`).
-
-For detailed architecture and how it works, see [Spend Logs Deletion](../proxy/spend_logs_deletion).
+For the full set of knobs, the default schedule, and guidance for large tables, see [Spend Logs Deletion](../proxy/spend_logs_deletion)
 
 
 ## What gets logged? 
