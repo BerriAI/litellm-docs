@@ -479,6 +479,8 @@ const sidebars = {
             "proxy/deploy",
             "proxy/prod",
             "proxy/redis_requirements",
+            "proxy/db_sizing",
+            "proxy/redis_sizing",
             "proxy/security_best_practices",
             "proxy/rust_gateway",
             "proxy/server_tuning",
@@ -751,6 +753,7 @@ const sidebars = {
           items: [
             "proxy/auto_routing",
             "proxy/auto_routing_semantic",
+            "proxy/auto_routing_benchmark",
             "adaptive_router",
             {
               type: "link",
@@ -1243,6 +1246,7 @@ const sidebars = {
         "scheduler",
         "proxy/auto_routing",
         "proxy/auto_routing_semantic",
+        "proxy/auto_routing_benchmark",
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",
