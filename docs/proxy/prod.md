@@ -167,6 +167,116 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
+### Run background jobs on a dedicated worker
+
+At startup the proxy registers a scheduler of background jobs, and it does that once per Uvicorn worker process rather than once per pod. A pod started with `--num_workers 4` runs four copies of every job, so a deployment of ten such replicas runs forty, and the amount of work multiplies by replicas times processes even though most of these jobs exist to happen once.
+
+Jobs whose effect is shared, resetting budgets or pruning spend logs or pushing a usage export, elect a single owner through Redis before doing anything. Where Redis is not configured there is nothing to elect through, so each of them runs unguarded on every process that registered it. `LITELLM_JOB_ROLE` lets you register those jobs on one deployment instead of on every replica serving traffic, and for a multi-pod deployment without Redis it is the only way to get single execution.
+
+| `LITELLM_JOB_ROLE` | What the process registers |
+| --- | --- |
+| unset, or `all` | Every job. This is the default and the behavior you already have |
+| `worker` | Every job, including the single-owner ones |
+| `serving` | No single-owner job |
+
+Parsing is case insensitive and ignores surrounding whitespace. An unrecognized value falls back to `all` and logs a warning, so a typo cannot silently stop a deployment's budget resets.
+
+A pod set to `serving` stops registering the budget reset job, spend log cleanup, key rotation, expired Admin UI session key cleanup, the PTU flat-cost rollup, the weekly and monthly spend reports, the Prometheus fallback stats, the batch and responses cost polls, and the CloudZero, Focus, Vantage, and Mavvrik usage exports.
+
+It keeps registering the spend flush, the daily tag spend flush, the gateway request counter flush, the periodic config reload, and the database model and credential reloads, because each of those drains that pod's own in-memory queues or refreshes that pod's own model registry rather than acting on state another pod could act on. A `serving` pod therefore keeps writing its own spend to the database and keeps picking up models added at runtime; the role changes which shared work it schedules, not whether it tracks what it served.
+
+Ownership is observable at runtime. The elected pod logs `<job name>: pod <id> owns this run` at INFO, and the `litellm_pod_lock_manager_size` Prometheus gauge carries a `<job>:<pod>` label naming the job and the pod holding its lock.
+
+#### Kubernetes reference topology
+
+Scale the serving Deployment as usual and keep the worker at one replica. Both point at the same database and the same Redis, which is what lets the worker take over the jobs the serving pods no longer register.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-serving
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: litellm-serving
+  template:
+    metadata:
+      labels:
+        app: litellm-serving
+    spec:
+      containers:
+        - name: litellm
+          image: docker.litellm.ai/berriai/litellm:v1.98.0 # pin a version, do not use :latest
+          args: ["--config", "/app/proxy_server_config.yaml", "--num_workers", "1"]
+          ports:
+            - containerPort: 4000
+          env:
+            - name: LITELLM_JOB_ROLE
+              value: serving
+          envFrom:
+            - secretRef:
+                name: litellm-secrets # DATABASE_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, LITELLM_MASTER_KEY
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/proxy_server_config.yaml
+              subPath: config.yaml
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+            initialDelaySeconds: 120
+            periodSeconds: 15
+      volumes:
+        - name: config-volume
+          configMap:
+            name: litellm-config-file
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-jobs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm-jobs
+  template:
+    metadata:
+      labels:
+        app: litellm-jobs
+    spec:
+      containers:
+        - name: litellm
+          image: docker.litellm.ai/berriai/litellm:v1.98.0 # keep in lockstep with the serving image
+          args: ["--config", "/app/proxy_server_config.yaml", "--num_workers", "1"]
+          ports:
+            - containerPort: 4000
+          env:
+            - name: LITELLM_JOB_ROLE
+              value: worker
+          envFrom:
+            - secretRef:
+                name: litellm-secrets # the same secret, so both reach the same database and Redis
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/proxy_server_config.yaml
+              subPath: config.yaml
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+            initialDelaySeconds: 120
+            periodSeconds: 15
+      volumes:
+        - name: config-volume
+          configMap:
+            name: litellm-config-file
+```
+
+Point your Service and Ingress at `app: litellm-serving` only, so the worker takes no request traffic. Give the worker one Uvicorn worker for the same reason the serving pods get one, since a second process would register a second copy of every job on the one deployment meant to run them once.
+
 ## Redis
 
 Run Redis (7.0 or newer) as soon as you run more than one proxy instance. It shares rate limit counters, router state, and the response cache across instances; without it, each instance enforces limits independently and cache hits stay local to the instance that served the request.
