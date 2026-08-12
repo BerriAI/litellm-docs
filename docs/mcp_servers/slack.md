@@ -1,25 +1,28 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Slack MCP server
 
-Connect Slack's hosted MCP server through the LiteLLM MCP Gateway for search, channels, messaging, and workspace context.
+> Connect Slack's hosted MCP server through the LiteLLM MCP Gateway for workspace search, channel reads, and messaging.
 
-Slack hosts and manages the server, so there is nothing to deploy or keep running. LiteLLM puts centralized auth, access control, and observability in front of it.
+Slack hosts and maintains the server, so there is nothing to deploy or run yourself. LiteLLM adds centralized auth, access control by key and team, cost tracking per tool call, and one audit trail across every MCP server you expose.
 
 ## When should you use this server
 
-- Give an agent workspace context: what was decided in a channel, what a thread concluded, who owns something
-- Let an agent post updates, draft replies, or schedule messages without a custom Slack integration
-- Expose Slack to a team under one gateway key instead of handing out Slack tokens
+- Give an agent workspace context: what was decided in a channel, who said it, and when
+- Let an agent post updates, summaries, or alerts into Slack instead of only reporting back in chat
+- Search across messages, files, and canvases as a retrieval step before answering
 
 ## Key features
 
-- Tool surface depends on the OAuth scopes you grant, so a read-only rollout is a scope choice rather than a different setup
-- Hosted by Slack, so no local process, container, or token rotation to run yourself
-- Per-user auth: every tool call runs as the signed-in user and sees only what that person can already see in Slack
+- Tool surface depends on the OAuth scopes you grant, so a read-only rollout and a full read/write rollout use the same server with different consent
+- Hosted by Slack over Streamable HTTP; no local process, no bot token to rotate
+- Per-user auth, so every tool call runs as the signed-in person and only sees what they can already see in Slack
 
 ## Authentication
 
-- **Method:** OAuth 2.1 with user tokens. Slack does not support dynamic client registration, so LiteLLM needs explicit client credentials from a Slack app you create
-- **Slack app:** create one at [api.slack.com/apps](https://api.slack.com/apps), add the LiteLLM callback as a redirect URL, grant user token scopes, and enable Model Context Protocol under **Agents & AI Apps**
+- **Method:** OAuth 2.1 with user tokens. Slack does not support dynamic client registration, so you create a Slack app and give LiteLLM its client credentials.
+- **Slack app:** Create one at [api.slack.com/apps](https://api.slack.com/apps). You will set a redirect URL, add user token scopes, and enable the Model Context Protocol toggle.
 
 ## Endpoint
 
@@ -29,12 +32,12 @@ Slack hosts and manages the server, so there is nothing to deploy or keep runnin
 https://mcp.slack.com/mcp
 ```
 
----
+***
 
 ## Connect via LiteLLM MCP Gateway
 
 :::info
-Slack needs `client_id` and `client_secret` supplied to LiteLLM because it has no dynamic client registration. Servers that do support it, such as [Atlassian](./atlassian.md) and [Linear](./linear.md), skip Steps 1 and 2 entirely.
+Slack is one of the servers that needs explicit client credentials. LiteLLM normally handles OAuth client setup for you through dynamic registration, as on the [Atlassian](./atlassian.md) and [Linear](./linear.md) servers, but Slack requires your own app.
 :::
 
 ### Step 1: Create a Slack OAuth app
@@ -47,14 +50,14 @@ Slack needs `client_id` and `client_secret` supplied to LiteLLM because it has n
    https://llm.example.com/ui/mcp/oauth/callback
    ```
 
-   Replace the origin with the one users see in their address bar. It must match `PROXY_BASE_URL`; see [Reverse proxy and ingress configuration](../mcp_oauth.md#reverse-proxy-and-ingress-configuration) if LiteLLM sits behind an ingress.
-4. Under **User Token Scopes**, add scopes for the capabilities you want, for example `search:read`, `channels:read`, and `chat:write`. Match these to the table in [Tools provided](#tools-provided).
-5. From **Basic Information**, copy the **Client ID** and **Client Secret**.
+4. Replace `https://llm.example.com` with the origin users see in their address bar. It must match `PROXY_BASE_URL`; see [Reverse proxy and ingress configuration](../mcp_oauth.md#reverse-proxy-and-ingress-configuration) if LiteLLM sits behind an ingress.
+5. Under **User Token Scopes**, add the scopes for the capabilities you want, matching the table in [Tools provided](#oauth-scopes-by-capability). Start read-only for a broad rollout and add write scopes for teams you trust.
+6. From **Basic Information**, copy the **Client ID** and **Client Secret**.
 
 ### Step 2: Enable MCP (Agents & AI Apps)
 
 :::warning
-The MCP endpoint sits behind a per-app toggle. Leave it off and the OAuth flow still succeeds while the tool list comes back empty, which reads like a LiteLLM permissions problem when it is not.
+The MCP endpoint sits behind a per-app toggle under **Agents & AI Apps**. If you leave it off, OAuth still succeeds and the tool list comes back empty or 403, which reads like a LiteLLM permissions problem when it is not.
 :::
 
 1. In the app settings, open **Agents & AI Apps**.
@@ -63,21 +66,24 @@ The MCP endpoint sits behind a per-app toggle. Leave it off and the OAuth flow s
 
 ### Step 3: Register the server in LiteLLM
 
-1. In the LiteLLM UI, navigate to **MCP Servers** and click **+ Add New MCP Server**.
-2. Set:
+<Tabs>
+<TabItem value="ui" label="LiteLLM UI">
 
-   | Field | Value |
-   |---|---|
-   | **Name** | `slack_mcp` |
-   | **Server URL** | `https://mcp.slack.com/mcp` |
-   | **Transport** | HTTP |
-   | **Authentication** | OAuth |
-   | **OAuth flow type** | Interactive (PKCE) |
-   | **Client ID / Client Secret** | From Step 1 |
+Navigate to **MCP Servers**, click **+ Add New MCP Server**, and set:
 
-3. Click **Create MCP Server**, then open the **MCP Tools** tab to confirm LiteLLM can list Slack's tools. The first listing triggers the browser sign-in.
+| Field | Value |
+|---|---|
+| **Server Name** | `slack_mcp` |
+| **Transport** | HTTP |
+| **Server URL** | `https://mcp.slack.com/mcp` |
+| **Authentication** | OAuth |
+| **OAuth flow type** | Interactive (PKCE) |
+| **Client ID / Client Secret** | From Step 1 |
 
-Or declare it in config instead of the UI:
+Click **Create MCP Server**, then open the server's **MCP Tools** tab to confirm LiteLLM can list Slack's tools. The first listing triggers the browser sign-in.
+
+</TabItem>
+<TabItem value="config" label="config.yaml">
 
 ```yaml title="config.yaml" showLineNumbers
 mcp_servers:
@@ -91,11 +97,17 @@ mcp_servers:
     client_secret: os.environ/SLACK_OAUTH_CLIENT_SECRET
 ```
 
-`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it.
+`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it. Storing MCP servers also needs `store_model_in_db: true`, covered in [Prerequisites](../mcp.md#prerequisites).
+
+</TabItem>
+</Tabs>
 
 ### Step 4: Connect from an agent
 
-The gateway serves each server at `{proxy_base_url}/{server_name}/mcp`, so `slack_mcp` is reachable at `http://localhost:4000/slack_mcp/mcp`.
+The gateway serves each server at `http://localhost:4000/{server_name}/mcp`, so `slack_mcp` is reachable at `http://localhost:4000/slack_mcp/mcp`.
+
+<Tabs>
+<TabItem value="cursor" label="Claude Desktop / Cursor">
 
 ```json title="Claude Desktop / Cursor" showLineNumbers
 {
@@ -110,19 +122,35 @@ The gateway serves each server at `{proxy_base_url}/{server_name}/mcp`, so `slac
 }
 ```
 
-For Claude Code, `claude mcp add --transport http slack http://localhost:4000/slack_mcp/mcp --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"`.
+</TabItem>
+<TabItem value="claude-code" label="Claude Code">
 
-The first call opens a browser for Slack sign-in. LiteLLM stores and refreshes that user's token afterwards, so the authorization is a one-time step per user.
+```bash showLineNumbers
+claude mcp add --transport http slack http://localhost:4000/slack_mcp/mcp \
+  --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"
+```
 
----
+</TabItem>
+</Tabs>
+
+The first call opens a browser for Slack sign-in. LiteLLM stores that user's token and refreshes it afterwards, so subsequent sessions connect without prompting.
+
+***
 
 ## Tools provided
 
 :::info
-Slack publishes its tool definitions at runtime through `tools/list`, so names and fields can change without notice. The **MCP Tools** tab in the LiteLLM UI lists exactly what your workspace exposes and is the source of truth. See Slack's [MCP documentation](https://docs.slack.dev/) for upstream details.
+Slack publishes its tool definitions at runtime through `tools/list`, so names and fields can change without notice. The **MCP Tools** tab in the LiteLLM UI is the source of truth for what your workspace exposes; it lists the live tools and lets you call one with test arguments. See Slack's [MCP documentation](https://docs.slack.dev/) for upstream detail.
 :::
 
-Coverage spans search across messages, files, channels, and users; reads of channels, threads, and user profiles; sending, drafting, and scheduling messages; and creating, reading, and updating canvases. Canvas tools require a paid Slack plan.
+| Area | Tools |
+|---|---|
+| Search | `search_public`, `search_public_and_private`, `search_channels`, `search_users` |
+| Read | `read_channel`, `read_thread`, `read_user_profile` |
+| Messaging | `send_message`, `send_message_draft`, `schedule_message` |
+| Canvases | `create_canvas`, `read_canvas`, `update_canvas` |
+
+Canvas tools require a paid Slack plan. LiteLLM prefixes tool names with the server name, so `search_public` is exposed to models as `slack_mcp-search_public`; see [Tool naming](../mcp_rest_api.md#tool-naming).
 
 ### OAuth scopes by capability
 
@@ -134,17 +162,16 @@ Coverage spans search across messages, files, channels, and users; reads of chan
 | Read direct messages | `im:history` |
 | Post messages | `chat:write` |
 | Resolve user profiles | `users:read` |
+| Read files | `files:read` |
 
-Slack documents the full list in [OAuth scopes](https://api.slack.com/scopes). Start read-only for a broad rollout and add write scopes for teams you trust.
+Slack documents the full list in [OAuth scopes](https://api.slack.com/scopes), and applies its own per-workspace rate limits on top of anything you configure in LiteLLM.
 
-LiteLLM prefixes tool names with the server name, so `search_public` is exposed as `slack_mcp-search_public`; see [Tool naming](../mcp_rest_api.md#tool-naming).
+***
 
----
+:::info Restrict who can use it
+Grant the server per key or per team with `object_permission`, and cap call volume per server with `mcp_rpm_limit`, both covered in [MCP Permission Management](../mcp_control.md). Grant the narrowest scope set that works for the audience; a key that only needs to summarize channels does not need `chat:write`.
+:::
 
-## Notes
-
-Access is granted per key and per team through `object_permission`, and call volume is capped per server with `mcp_rpm_limit`; both are covered in [MCP Permission Management](../mcp_control.md).
-
-Pass the LiteLLM API key as `x-litellm-api-key`, never as `Authorization`. Interactive OAuth needs the `Authorization` header free for Slack's token, and a client that occupies it blocks the flow and forwards your LiteLLM key upstream. Adding `x-litellm-mcp-debug: true` to a request returns masked diagnostics that name the exact failure; see [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
-
-Grant the narrowest scopes that do the job. Tools inherit the user's Slack permissions, so a broad scope grant widens what every agent connected through this server can read.
+:::warning Put the LiteLLM key in `x-litellm-api-key`
+Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and LiteLLM forwards your LiteLLM key to Slack, which rejects it. To diagnose, add `x-litellm-mcp-debug: true` and read the response headers: `SAME_AS_LITELLM_KEY` confirms this case, and `m2m-client-credentials` means a `token_url` is set and every caller shares one identity. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
+:::
