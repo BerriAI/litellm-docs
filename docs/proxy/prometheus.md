@@ -667,6 +667,108 @@ litellm_settings:
 
 Both lists are validated at startup; an unknown metric or label name raises a configuration error so typos surface immediately. Exclusion always wins, so a metric named in `prometheus_exclude_metrics` is dropped even if a `prometheus_metrics_config` group enables it, and a label in `prometheus_exclude_labels` is removed even when a group's `include_labels` lists it.
 
+## Saturation Metrics
+
+Use these to answer why the proxy is slow rather than only that it is. They carry no api-key, team or user labels, so they stay cheap to scrape from every pod.
+
+### Database connection pool
+
+The Prisma query engine tracks pool occupancy, and separately how long a query spent waiting for a connection versus executing against the database. That split is what separates "the database is slow" from "we ran out of connections".
+
+| Metric Name | Type | Description |
+|---|---|---|
+| `litellm_db_pool_connections_max` | Gauge | Configured pool size, summed across live workers |
+| `litellm_db_pool_connections_busy` | Gauge | Connections currently checked out by a query |
+| `litellm_db_pool_connections_idle` | Gauge | Pool capacity not currently checked out |
+| `litellm_db_pool_connections_open` | Gauge | Connections actually opened to the database |
+| `litellm_db_pool_pending_acquirers` | Gauge | Queries queued waiting for a free connection |
+| `litellm_db_pool_acquire_wait_seconds_total` | Counter | Cumulative seconds spent waiting for a connection, excluding query execution |
+| `litellm_db_pool_acquire_total` | Counter | Connection acquisitions, for the mean-wait ratio |
+| `litellm_db_query_duration_seconds_total` | Counter | Cumulative seconds executing against the database, excluding pool wait |
+| `litellm_db_query_total` | Counter | Queries executed |
+| `litellm_db_pool_timeouts_total` | Counter | Queries that gave up waiting for a connection (prisma `P2024`) |
+
+Pool size is set with `general_settings.database_connection_pool_limit` and the acquire timeout with `general_settings.database_connection_timeout`.
+
+These are sampled alongside real database work rather than by a timer, so they keep reporting during the event-loop saturation that would silence a periodic exporter. A proxy doing no database work samples less often, and one with no prometheus callback configured does not sample at all.
+
+### Scheduled background jobs
+
+Every job registered on the proxy scheduler is covered, including ones added by integrations.
+
+| Metric Name | Type | Description |
+|---|---|---|
+| `litellm_scheduled_job_runs_total` | Counter | Runs by outcome. Labels: `"job_name"`, `"result"` where result is `success`, `error`, `missed` or `max_instances` |
+| `litellm_scheduled_job_duration_seconds` | Histogram | Wall-clock duration of a run. Labels: `"job_name"` |
+| `litellm_scheduled_job_last_run_timestamp` | Gauge | Unix timestamp of the last completed run. Labels: `"job_name"` |
+| `litellm_scheduled_job_items_processed_total` | Counter | Items a job reported processing. Labels: `"job_name"` |
+| `litellm_cronjob_lock_acquisitions_total` | Counter | Single-owner lock attempts. Labels: `"cronjob_id"`, `"result"` where result is `acquired`, `not_acquired` or `no_redis` |
+
+`result="max_instances"` means the previous run of that job had not finished when the next was due, which is how a job falling behind its schedule surfaces. `result="no_redis"` on the lock metric means no pod can be elected at all, which is a different state from losing the election.
+
+Each completed run also emits a structured log line at INFO:
+
+```
+scheduled_job_completed job=update_spend_job result=success duration_seconds=0.090 items_processed=25
+```
+
+### Per-pod request pressure
+
+| Metric Name | Type | Description |
+|---|---|---|
+| `litellm_in_flight_requests` | Gauge | HTTP requests currently in flight, summed across live workers |
+| `litellm_requests_shed_total` | Counter | Responses where the proxy declined to serve. Labels: `"status"`, either `429` for a limit or `503` for the database being unavailable |
+| `litellm_global_max_parallel_requests_limit` | Gauge | Concurrency ceiling actually applied. `+Inf` means nothing bounds concurrency |
+
+A 500 is not counted as shed: that is the proxy failing rather than declining.
+
+`litellm_global_max_parallel_requests_limit` reports `+Inf` when `general_settings.global_max_parallel_requests` is unset, and also when it is set but the active rate limiter does not read it. Only the legacy limiter enforces that setting, enabled with `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true`; the default limiter applies per-key, per-team and per-user limits instead. The proxy logs a warning at startup when the setting is configured but inert.
+
+### Reference queries
+
+Mean time waiting for a database connection, and mean time actually executing, side by side. A gap that opens on the first without the second is pool exhaustion rather than a slow database:
+
+```promql
+rate(litellm_db_pool_acquire_wait_seconds_total[5m]) / rate(litellm_db_pool_acquire_total[5m])
+rate(litellm_db_query_duration_seconds_total[5m]) / rate(litellm_db_query_total[5m])
+```
+
+Pool utilisation, and the alert that matters:
+
+```promql
+litellm_db_pool_connections_busy / litellm_db_pool_connections_max
+rate(litellm_db_pool_timeouts_total[5m]) > 0
+```
+
+A background job that has stopped running, or one that is falling behind:
+
+```promql
+time() - litellm_scheduled_job_last_run_timestamp > 900
+rate(litellm_scheduled_job_runs_total{result="max_instances"}[15m]) > 0
+rate(litellm_scheduled_job_runs_total{result="error"}[15m]) > 0
+```
+
+Job throughput and the p95 of how long each takes:
+
+```promql
+rate(litellm_scheduled_job_items_processed_total[5m])
+histogram_quantile(0.95, sum by (job_name, le) (rate(litellm_scheduled_job_duration_seconds_bucket[5m])))
+```
+
+A pod that never wins the single-owner lock, so its share of the work is never running:
+
+```promql
+rate(litellm_cronjob_lock_acquisitions_total{result="acquired"}[15m]) == 0
+```
+
+Whether to throttle upstream or add pods. Requests piling up against a real ceiling says throttle; piling up with no ceiling at all says the pod is unprotected:
+
+```promql
+litellm_in_flight_requests / litellm_global_max_parallel_requests_limit
+rate(litellm_requests_shed_total{status="429"}[5m])
+rate(litellm_requests_shed_total{status="503"}[5m])
+```
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
