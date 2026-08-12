@@ -412,6 +412,33 @@ const sidebars = {
       items: [
         {
           type: "category",
+          label: "Setup & Deployment",
+          items: [
+            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+            "proxy/deploy",
+            "proxy/prod",
+            "proxy/redis_requirements",
+            "proxy/db_sizing",
+            "proxy/redis_sizing",
+            "proxy/security_best_practices",
+            "proxy/rust_gateway",
+            "proxy/server_tuning",
+            "proxy/multi_region",
+            "proxy/db_read_replica",
+            "proxy/high_availability_control_plane",
+            "proxy/health",
+            "proxy/model_management",
+            "proxy/master_key_rotations",
+            "proxy/billing_metrics",
+          ],
+        },
+        {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
+        },
+        {
+          type: "category",
           label: "Agent & MCP Gateway",
           items: [
             {
@@ -464,33 +491,6 @@ const sidebars = {
               ],
             },
             { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
-          ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
-        },
-        {
-          type: "category",
-          label: "Setup & Deployment",
-          items: [
-            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
-            "proxy/deploy",
-            "proxy/prod",
-            "proxy/redis_requirements",
-            "proxy/db_sizing",
-            "proxy/redis_sizing",
-            "proxy/security_best_practices",
-            "proxy/rust_gateway",
-            "proxy/server_tuning",
-            "proxy/multi_region",
-            "proxy/db_read_replica",
-            "proxy/high_availability_control_plane",
-            "proxy/health",
-            "proxy/model_management",
-            "proxy/master_key_rotations",
-            "proxy/billing_metrics",
           ],
         },
         {
