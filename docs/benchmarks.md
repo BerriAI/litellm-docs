@@ -17,8 +17,8 @@ Each machine deploying LiteLLM had the following specs:
 
 ## Configuration
 
-- Database: PostgreSQL
-- Redis: Not used
+- Database: PostgreSQL. See [Database and Redis Sizing](./proxy/db_sizing.md) for how to size yours
+- Redis: Not used. Recommended in production; see [Database and Redis Sizing](./proxy/db_sizing.md)
 - Load generator: Locust, 1000 users, each with 0.5s to 1s of think time between requests. See [Locust Settings](#locust-settings) before comparing these numbers against your own run.
 
 
@@ -138,51 +138,7 @@ End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake
 
 ## Infrastructure Recommendations
 
-Recommended specifications based on benchmark results and industry standards for API gateway deployments.
-
-### PostgreSQL
-
-Required for authentication, key management, and usage tracking.
-
-| Workload | CPU | RAM | Storage | Connections |
-|----------|-----|-----|---------|-------------|
-| 1-2K RPS | 4-8 cores | 16GB | 200GB SSD (3000+ IOPS) | 100-200 |
-| 2-5K RPS | 8 cores | 16-32GB | 500GB SSD (5000+ IOPS) | 200-500 |
-| 5K+ RPS | 16+ cores | 32-64GB | 1TB+ SSD (10000+ IOPS) | 500+ |
-
-**Configuration:** Set `proxy_batch_write_at: 60` to batch writes and reduce DB load. Total connections = pool limit × instances.
-
-### Redis (Recommended)
-
-Redis was not used in these benchmarks but provides significant production benefits: 60-80% reduced DB load.
-
-| Workload | CPU | RAM |
-|----------|-----|-----|
-| 1-2K RPS | 2-4 cores | 8GB |
-| 2-5K RPS | 4 cores | 16GB |
-| 5K+ RPS | 8+ cores | 32GB+ |
-
-**Requirements:** Redis 7.0+, AOF persistence enabled, `allkeys-lru` eviction policy.
-
-**Configuration:**
-```yaml
-router_settings:
-  redis_host: os.environ/REDIS_HOST
-  redis_port: os.environ/REDIS_PORT
-  redis_password: os.environ/REDIS_PASSWORD
-
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
-    host: os.environ/REDIS_HOST
-    port: os.environ/REDIS_PORT
-    password: os.environ/REDIS_PASSWORD
-```
-
-**Scaling:** DB connections scale linearly with instances. Consider PostgreSQL read replicas beyond 5K RPS.
-
-See [Production Configuration](./proxy/prod) for detailed best practices.
+The runs above used a single PostgreSQL instance and no Redis, which is a benchmark configuration rather than a production one. For the instance sizes to run at each request rate, the connection math that decides whether a deployment survives a scale-out, and concrete PostgreSQL and Redis picks on AWS, Azure, and GCP, see [Database and Redis Sizing](./proxy/db_sizing.md). For the gateway-side configuration that goes with it, see [Production Best Practices](./proxy/prod.md).
 
 ## Locust Settings
 

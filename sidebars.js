@@ -478,6 +478,7 @@ const sidebars = {
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
             "proxy/prod",
+            "proxy/db_sizing",
             "proxy/security_best_practices",
             "proxy/rust_gateway",
             "proxy/server_tuning",
