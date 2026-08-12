@@ -225,6 +225,34 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 
 [More information about what the Database is used for here](db_info)
 
+### Stagger scheduled background jobs
+
+LiteLLM runs a set of scheduled background jobs against the database: spend flushes, daily tag spend, budget resets, config-in-DB reloads, credential reloads, spend log retention cleanup, and any cost export integrations you enable. Every one of those is registered when the proxy starts, and an interval job's first run is one interval after that instant, so without staggering they all fire at the same moment, on every replica a rollout brought up together, for the life of the process. On a large deployment that shows up as a periodic database CPU spike that competes with request-path auth and budget queries.
+
+LiteLLM spreads them out by default. Each job is shifted by a deterministic offset derived from its scheduler job id and the identity of the process running it, so two jobs on one pod land at different instants, the same job lands at a different instant on each replica, and a simultaneous restart does not put everything back on one timestamp. Nothing is delayed by more than one of its own periods.
+
+The defaults suit most deployments. For a large multi-pod cluster, widen the window so the same number of jobs spreads over more time:
+
+```yaml showLineNumbers title="litellm config.yaml"
+general_settings:
+  scheduled_job_stagger:
+    window_seconds: 600
+```
+
+The applied offsets are logged once at startup, at INFO, as a single line naming the identity, the window, and every job's offset, so a schedule you are debugging can be reproduced from the log rather than guessed. Set the log level to DEBUG to also get each fire's scheduled time against the time it actually started.
+
+Offsets never touch a cron schedule you supplied yourself, such as `maximum_spend_logs_cleanup_cron`, since that names an instant you chose. To pin one of LiteLLM's own jobs to its unshifted schedule, or to place it exactly where you want it, set its offset explicitly:
+
+```yaml showLineNumbers title="litellm config.yaml"
+general_settings:
+  scheduled_job_stagger:
+    offsets:
+      update_spend_job: 0
+      ptu_flat_cost_rollup_job: 900
+```
+
+Replicas are placed in the window using `POD_NAME`, falling back to `HOSTNAME` and then the system hostname, plus the worker process id. If your replicas share a hostname, give each one a distinct `identity` so they do not land on the same offset. Set `enabled: false` to turn the whole thing off and restore the previous behavior.
+
 ### Run migrations from the Helm PreSync hook
 
 :::info
