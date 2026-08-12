@@ -58,6 +58,44 @@ Toggle plugins on or off to control what appears in the public marketplace. Only
 
 <Image img={require('../../img/claude_code_marketplace/step11_enable_plugin.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
+## Self-Service Submission with Admin Review
+
+Any authenticated user can propose a skill without holding admin rights. A submission from a non-admin lands in a pending state: it is disabled, absent from `/claude-code/marketplace.json` and the public Skill Hub, and visible only to its submitter and to admins until an admin approves it. Skills registered by an admin are active immediately, so nothing changes for existing setups
+
+### Step 1: Submit a Skill as a User
+
+On the **Skills** page, a non-admin sees **+ Submit Skill** and fills in the same form an admin uses
+
+<Image img={require('../../img/claude_code_skill_review/submit_form.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+After submitting, the skill shows up in the list with a **Pending Review** badge, along with a confirmation that it went to an administrator
+
+<Image img={require('../../img/claude_code_skill_review/pending_submission.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+### Step 2: Review the Queue as an Admin
+
+Admins get an **Awaiting review** button that filters the table down to pending submissions, and each pending row carries **Approve** and **Reject** actions
+
+<Image img={require('../../img/claude_code_skill_review/admin_pending_queue.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+### Step 3: Approve or Reject
+
+Approving marks the skill active, enables it, and publishes it to `marketplace.json` and the public Skill Hub
+
+<Image img={require('../../img/claude_code_skill_review/approved_active.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+Rejecting keeps the skill private and lets you leave an optional note explaining what needs to change
+
+<Image img={require('../../img/claude_code_skill_review/reject_dialog.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+The submitter then sees the rejected state along with your note, so they can fix the skill and edit it. An edit by a non-admin sends the skill back to pending review, since the approved content changed
+
+<Image img={require('../../img/claude_code_skill_review/submitter_rejected.jpeg')} style={{ width: '800px', height: 'auto' }} />
+
+### Review States
+
+A skill is `pending_review` while it waits on an admin, `active` once approved, and `rejected` if turned down. Only skills that are both `active` and enabled are served to users, and enabling a skill that has not been approved fails with a 409 pointing at the approve endpoint. Skills registered before this workflow existed read back as `active`, so upgrading does not hide anything that used to be published
+
 ## Engineer Guide: Installing Plugins
 
 ### Step 1: Add the LiteLLM Marketplace
@@ -130,11 +168,13 @@ curl http://localhost:4000/claude-code/marketplace.json
 }
 ```
 
-### Admin Endpoints (Auth Required)
+Only approved, enabled skills appear here, so pending and rejected submissions are never served to Claude Code
+
+### Authenticated Endpoints
 
 #### POST `/claude-code/plugins`
 
-Register a new plugin.
+Register a plugin. An admin key creates it active and enabled; any other key submits it for review, which returns `action: submitted_for_review` with `approval_status: pending_review` and `enabled: false`
 
 ```bash
 curl -X POST http://localhost:4000/claude-code/plugins \
@@ -152,11 +192,31 @@ curl -X POST http://localhost:4000/claude-code/plugins \
 
 #### GET `/claude-code/plugins`
 
-List all registered plugins.
+List registered plugins. Admins see everything and can filter by state with `?approval_status=pending_review`; other users see active skills plus their own submissions
 
 ```bash
-curl http://localhost:4000/claude-code/plugins \
-  -H "Authorization: Bearer sk-..."
+curl "http://localhost:4000/claude-code/plugins?approval_status=pending_review" \
+  -H "Authorization: Bearer sk-admin-..."
+```
+
+#### POST `/claude-code/plugins/{name}/approve`
+
+Approve a submitted skill (admin only). Sets `approval_status=active`, enables the skill, and records the reviewer and timestamp
+
+```bash
+curl -X POST http://localhost:4000/claude-code/plugins/my-plugin/approve \
+  -H "Authorization: Bearer sk-admin-..."
+```
+
+#### POST `/claude-code/plugins/{name}/reject`
+
+Reject a submitted skill (admin only) with optional feedback shown to the submitter
+
+```bash
+curl -X POST http://localhost:4000/claude-code/plugins/my-plugin/reject \
+  -H "Authorization: Bearer sk-admin-..." \
+  -H "Content-Type: application/json" \
+  -d '{"review_notes": "Point the source at the reviewed internal fork"}'
 ```
 
 #### POST `/claude-code/plugins/{name}/enable`
@@ -284,6 +344,7 @@ claude plugin install internal-tools@litellm
 
 **Plugin not appearing in marketplace:**
 - Verify the plugin is **enabled** in the admin UI
+- Check that the review state is **Active**; a submission still pending review or rejected is not served
 - Check that the plugin has a valid `source` field
 
 **Installation fails:**
