@@ -22,7 +22,7 @@ Slack hosts and maintains the server, so there is nothing to deploy or run yours
 ## Authentication
 
 - **Method:** OAuth 2.1 with user tokens. Slack does not support dynamic client registration, so you create a Slack app and give LiteLLM its client credentials.
-- **Slack app:** Create one at [api.slack.com/apps](https://api.slack.com/apps). You will set a redirect URL, add user token scopes, and enable the Model Context Protocol toggle.
+- **Slack app:** Create one at [api.slack.com/apps](https://api.slack.com/apps). You will set a redirect URL, add user token scopes, and enable the Model Context Protocol toggle. Slack only permits MCP on internal apps and directory-published apps, so an app built in your own workspace qualifies.
 
 ## Endpoint
 
@@ -140,7 +140,7 @@ The first call opens a browser for Slack sign-in. LiteLLM stores that user's tok
 ## Tools provided
 
 :::info
-Slack publishes its tool definitions at runtime through `tools/list`, so names and fields can change without notice. The **MCP Tools** tab in the LiteLLM UI is the source of truth for what your workspace exposes; it lists the live tools and lets you call one with test arguments. See Slack's [MCP documentation](https://docs.slack.dev/) for upstream detail.
+Slack publishes its tool definitions at runtime through `tools/list`, so names and fields can change without notice. The **MCP Tools** tab in the LiteLLM UI is the source of truth for what your workspace exposes; it lists the live tools and lets you call one with test arguments. See Slack's [Slack MCP server overview](https://docs.slack.dev/ai/slack-mcp-server) for upstream detail.
 :::
 
 | Area | Tools |
@@ -164,7 +164,7 @@ Canvas tools require a paid Slack plan. LiteLLM prefixes tool names with the ser
 | Resolve user profiles | `users:read` |
 | Read files | `files:read` |
 
-Slack documents the full list in [OAuth scopes](https://api.slack.com/scopes), and applies its own per-workspace rate limits on top of anything you configure in LiteLLM.
+Slack documents the full list in [OAuth scopes](https://api.slack.com/scopes). Rate limits are applied per tool, matching the tier of the equivalent Web API method, and stack on top of anything you configure in LiteLLM.
 
 ***
 

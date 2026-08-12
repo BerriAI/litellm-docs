@@ -166,7 +166,7 @@ Writes are limited to issues, projects, and comments; documents, cycles, teams, 
 
 ### Reads without writes
 
-The read-only endpoint is the cleanest way to grant reads only. On the standard endpoint you can get the same result by declining the write scope at consent time, or by excluding the write tools in config:
+The read-only endpoint is the cleanest way to grant reads only, and the one to reach for by default. On the standard endpoint you can get the same result by declining the write scope at consent time, or by excluding the write tools in config. Confirm the names against your live tool list first, because a `disallowed_tools` entry that no longer matches a real tool fails silently and leaves that tool callable:
 
 ```yaml title="config.yaml" showLineNumbers
 mcp_servers:

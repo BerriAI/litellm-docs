@@ -9,7 +9,7 @@ Each guide covers the server's endpoint, the auth LiteLLM needs, how to register
 | Server | Endpoint | Auth | Covers |
 |---|---|---|---|
 | [Slack](./slack.md) | `https://mcp.slack.com/mcp` | OAuth 2.1, your own Slack app | Search, channel and thread reads, messaging, canvases |
-| [Atlassian](./atlassian.md) | `https://mcp.atlassian.com/v1/mcp` | OAuth 2.1, dynamic registration | Jira issues, Confluence pages, Compass components |
+| [Atlassian](./atlassian.md) | `https://mcp.atlassian.com/v1/mcp/authv2` | OAuth 2.1, dynamic registration | Jira, Confluence, Compass, Jira Service Management, Bitbucket |
 | [Linear](./linear.md) | `https://mcp.linear.app/mcp` | OAuth 2.1, dynamic registration | Issues, projects, cycles, documents, comments |
 
 Any other remote MCP server follows the same shape: point `url` at its endpoint and pick the matching `auth_type` from the auth table in [MCP Overview](../mcp.md).
