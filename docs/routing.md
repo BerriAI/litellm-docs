@@ -846,9 +846,19 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
-## Routing Groups - Per-Model Strategies
+## Routing Groups - Per-Model Strategies and Callable Virtual Models
 
 Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
+
+A group is also **callable as a model**: request `model: <group_name>` and LiteLLM picks among the union of every member's deployments using the group's strategy. Group names appear in `/v1/models`, so clients that discover models from the gateway (Claude Code with `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Codex) surface them in their pickers.
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{"model": "anthropic-latency", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Access control treats a group as its own model name: grant `<group_name>` on a key or team to let it list and call the group. Membership is not expanded in either direction, so a key granted only the group cannot call members directly and a key granted a member cannot call the group. A group name must not collide with an existing `model_name` or `model_group_alias`; config load rejects it. Requests keep the group name as `model_group` in spend logs, with each row recording the member deployment that actually served it. Fallbacks and `model_group_retry_policy` are keyed by name, so give the group its own entries if you need them. Claude Desktop's model picker only accepts Anthropic-shaped names, so name groups like `claude-quality` if Desktop matters.
 
 :::tip
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
