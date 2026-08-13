@@ -1,12 +1,12 @@
 ---
 slug: gemini_3_7_flash
-title: "Day 0 Support: Gemini 3.7 Flash"
+title: "day 0 support: Gemini 3.7 Flash"
 date: 2026-08-13T10:00:00
 authors:
   - mateo
   - krrish
   - ishaan-alt
-description: "Day 0 support for Gemini 3.7 Flash on LiteLLM, with launch pricing tracked across Google AI Studio and Vertex AI."
+description: "day 0 support for Gemini 3.7 Flash on LiteLLM, with launch pricing tracked across Google AI Studio and Vertex AI."
 image: ./hero.png
 tags: [gemini, gemini-3.7-flash, day 0 support, llms]
 hide_table_of_contents: false
@@ -17,14 +17,14 @@ import TabItem from '@theme/TabItem';
 
 ![LiteLLM x Gemini 3.7 Flash](./hero.png)
 
-# Gemini 3.7 Flash Day 0 Support
+# Gemini 3.7 Flash day 0 support
 
-LiteLLM now supports `gemini-3.7-flash` on Day 0, on both Google AI Studio (`gemini/`) and Vertex AI (`vertex_ai/`). Google's newest Flash model delivers faster responses with meaningfully better quality than 3.6 Flash and scores higher on complex multi-step agentic, coding, and reasoning benchmarks.
+LiteLLM now supports `gemini-3.7-flash` on day 0, on both Google AI Studio (`gemini/`) and Vertex AI (`vertex_ai/`). Google's newest Flash model delivers faster responses with meaningfully better quality than 3.6 Flash and scores higher on complex multi-step agentic, coding, and reasoning benchmarks.
 
 {/* truncate */}
 
 :::note
-**No Docker image upgrade needed.** Gemini 3.7 Flash routes through the existing Gemini configs, so any recent LiteLLM version works out of the box for inference. For cost tracking, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`) to pull the latest pricing from GitHub; this is available on `v1.76.0` and above. The `gemini-3.7-flash` pricing and metadata are also bundled starting in `v1.98.0` for anyone running with `LITELLM_LOCAL_MODEL_COST_MAP=true`.
+**No Docker image upgrade needed.** Gemini 3.7 Flash routes through the existing Gemini configs, so any recent LiteLLM version works out of the box for inference. For cost tracking, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`) to pull the latest pricing from GitHub. This is available on `v1.76.0` and above. The `gemini-3.7-flash` pricing and metadata are also bundled starting in `v1.98.0` for anyone running with `LITELLM_LOCAL_MODEL_COST_MAP=true`.
 :::
 
 ## Launch pricing
@@ -113,7 +113,7 @@ print(response.choices[0].message.content)
 ```
 
 :::warning Known limitation at launch
-The `minimal` thinking level is not yet supported on `gemini-3.7-flash`; the Gemini API returns a 400 (`Thinking level MINIMAL is not supported for this model`). Google plans minimal thinking support as a fast follow. All other thinking levels work as expected.
+The `minimal` thinking level is not yet supported on `gemini-3.7-flash`. The Gemini API returns a 400 (`Thinking level MINIMAL is not supported for this model`). Google plans minimal thinking support as a fast follow. All other thinking levels work as expected.
 :::
 
 ## Supported Endpoints
