@@ -279,7 +279,7 @@ Point your Service and Ingress at `app: litellm-serving` only, so the worker tak
 
 ## Redis
 
-Run Redis (7.0 or newer) as soon as you run more than one proxy instance. It shares rate limit counters, router state, and the response cache across instances; without it, each instance enforces limits independently and cache hits stay local to the instance that served the request.
+Run Redis (7.0 or newer) as soon as you run more than one proxy instance. It shares rate limit counters, router state, and the response cache across instances; without it, each instance enforces limits independently and cache hits stay local to the instance that served the request. For the full list of what degrades or stops working without it, see [What Needs Redis](./redis_requirements.md).
 
 ```yaml
 router_settings:
