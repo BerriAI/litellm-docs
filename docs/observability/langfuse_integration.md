@@ -194,6 +194,14 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 * `trace_user_id`  - User identifier for the trace, defaults to completion argument `user`
 * `tags`           - Tags for the trace, defaults to `None`
 
+:::note
+
+On the `langfuse_otel` callback, `trace_version` and `version` share a single Langfuse attribute, `langfuse.version`, because Langfuse exposes one version per observation. `trace_version` wins when both are set, matching the behaviour above. The `langfuse` callback keeps them separate
+
+That attribute was previously emitted under names Langfuse does not read, so version and release stayed empty on traces exported through `langfuse_otel`. If you were filtering on the raw span attributes rather than the Version and Release fields, the names changed: `langfuse.trace.version` and `langfuse.generation.version` are now `langfuse.version`, and `langfuse.trace.release` is now `langfuse.release`
+
+:::
+
 ##### Updatable Parameters on Continuation
 
 The following parameters can be updated on a continuation of a trace by passing in the following values into the `update_trace_keys` in the metadata of the completion.
