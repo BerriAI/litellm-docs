@@ -26,6 +26,14 @@ os.environ['PARALLEL_AI_API_KEY']
 
 The single `parallel_ai/parallel` model runs live web research per request. `reasoning.effort` selects the research tier: `low` (~5-10s), `medium` (~15-20s, default), or `high` (~30-60s). Web grounding is automatic, so `tools` is not supported; structured output via `text.format`, `instructions`, `stream`, and `previous_response_id` are.
 
+The tier aliases pin the effort and bill at their own per-request rate, so spend tracking matches the tier you use:
+
+| Model | Effort | Price per request |
+|-------|--------|-------------------|
+| `parallel_ai/parallel-low` | low | $0.01 |
+| `parallel_ai/parallel` or `parallel_ai/parallel-medium` | medium | $0.05 |
+| `parallel_ai/parallel-high` | high | $0.25 |
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
