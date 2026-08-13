@@ -1,6 +1,6 @@
 ---
 slug: gemini_3_7_flash
-title: "day 0 support: Gemini 3.7 Flash"
+title: "Day 0 support: Gemini 3.7 Flash"
 date: 2026-08-13T10:00:00
 authors:
   - mateo
