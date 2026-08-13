@@ -126,3 +126,7 @@ LiteLLM provides full end-to-end support for Gemini 3.7 Flash on:
 - `/v1/generateContent` - [Google Gemini API](../../docs/generateContent) compatible endpoint
 
 All endpoints support streaming and non-streaming responses, function calling with thought signatures, multi-turn conversations, and full multimodal input (text, image, audio, video).
+
+## Feedback
+
+Running Gemini 3.7 Flash through LiteLLM and hitting something unexpected? Share it on [GitHub discussion #36799](https://github.com/BerriAI/litellm/discussions/36799).
