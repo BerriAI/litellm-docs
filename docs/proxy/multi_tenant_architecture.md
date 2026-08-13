@@ -4,7 +4,7 @@ import { TenancyDiagram } from '@site/src/components/CloudArchitecture';
 
 ## Overview
 
-Multi-tenancy in LiteLLM means running a single proxy that serves many distinct tenants (organizations, teams, departments, or customers) while keeping their access, spend, and usage isolated from one another. One gateway acts as the shared entry point to every LLM provider, and every request carries the tenant context that determines which models it can reach, which budget it draws from, and where its cost lands.
+Multi-tenancy in LiteLLM means running a single proxy that serves many distinct tenants inside your own company (organizations, teams, departments) while keeping their access, spend, and usage isolated from one another. One gateway acts as the shared entry point to every LLM provider, and every request carries the tenant context that determines which models it can reach, which budget it draws from, and where its cost lands.
 
 The design solves a few problems that show up whenever more than one group shares an LLM gateway. Cost has to be attributed to the right business unit rather than pooled. Access has to differ per tenant, since teams need different models, budgets, and rate limits. Administration has to be delegated, so a team lead can manage their own team without platform-wide admin rights. And the same architecture has to hold from a handful of users to tens of thousands without a redesign.
 
@@ -25,7 +25,7 @@ LiteLLM models tenancy as four nested levels: Organizations contain Teams, Teams
 
 ### Organizations
 
-An Organization is the highest level of isolation, typically mapped to a business unit, a customer, or a region. Organizations cannot see each other's data or keys, each carries its own budget and allowed-model list, and each is administered by its own org admins who manage only the teams inside it. Organizations are an enterprise feature.
+An Organization is the highest level of isolation, typically mapped to a business unit or a region. Organizations cannot see each other's data or keys, each carries its own budget and allowed-model list, and each is administered by its own org admins who manage only the teams inside it. Organizations are an enterprise feature.
 
 ### Teams
 
@@ -54,10 +54,6 @@ The same four levels express several real-world shapes. These are illustrations 
 ### Enterprise Departments
 
 A large enterprise gives each department its own tenant. With Organizations, Engineering, Marketing, and Sales are separate organizations, each holding several teams (Backend, Frontend, ML, and so on) that manage their own budgets under a department-wide cap. In open source the same separation is expressed with teams alone (an Engineering Backend team, a Marketing Content team, and so on), trading the department-level rollup for a flatter structure. Either way each group owns its budget, department or team leads act as admins, and finance keeps cross-department cost visibility.
-
-### Multi-Customer SaaS
-
-A SaaS provider that embeds LLM features gives each customer a tenant so that usage, billing, and data stay isolated. With Organizations, each customer is an organization holding Production, Development, and QA teams, where production runs on service account keys that survive employee turnover. In open source each customer's teams live side by side without the organization wrapper. The isolation guarantee is the same: one customer can never see another's data or spend, and each is billed on its own usage.
 
 ### Environment Separation
 
