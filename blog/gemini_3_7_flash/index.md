@@ -1,6 +1,6 @@
 ---
 slug: gemini_3_7_flash
-title: "day 0 support: Gemini 3.7 Flash"
+title: "Day 0 support: Gemini 3.7 Flash"
 date: 2026-08-13T10:00:00
 authors:
   - mateo
@@ -24,7 +24,7 @@ LiteLLM now supports `gemini-3.7-flash` on day 0, on both Google AI Studio (`gem
 {/* truncate */}
 
 :::note
-**No Docker image upgrade needed.** Gemini 3.7 Flash routes through the existing Gemini configs, so any recent LiteLLM version works out of the box for inference. For cost tracking, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`) to pull the latest pricing from GitHub. This is available on `v1.76.0` and above. The `gemini-3.7-flash` pricing and metadata are also bundled starting in `v1.98.0` for anyone running with `LITELLM_LOCAL_MODEL_COST_MAP=true`.
+**No Docker image upgrade needed.** Gemini 3.7 Flash routes through the existing Gemini configs, so any recent LiteLLM version works out of the box for inference. For cost tracking, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`) to pull the latest pricing from GitHub. This is available on `v1.76.0` and above. The `gemini-3.7-flash` pricing and metadata are also bundled starting in `v1.98.0-dev.2` for anyone running with `LITELLM_LOCAL_MODEL_COST_MAP=true`.
 :::
 
 ## Launch pricing
