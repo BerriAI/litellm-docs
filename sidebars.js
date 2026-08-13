@@ -417,6 +417,7 @@ const sidebars = {
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
             "proxy/prod",
+            "proxy/redis_requirements",
             "proxy/redis_setup",
             "proxy/db_sizing",
             "proxy/redis_sizing",
@@ -460,6 +461,16 @@ const sidebars = {
               items: [
                 "mcp",
                 "mcp_usage",
+                {
+                  type: "category",
+                  label: "MCP Server Usage",
+                  items: [
+                    "mcp_servers/index",
+                    "mcp_servers/slack",
+                    "mcp_servers/atlassian",
+                    "mcp_servers/linear",
+                  ],
+                },
                 "mcp_rest_api",
                 "mcp_openapi",
                 "mcp_oauth",
@@ -860,6 +871,16 @@ const sidebars = {
           items: [
             "mcp",
             "mcp_usage",
+            {
+              type: "category",
+              label: "MCP Server Usage",
+              items: [
+                "mcp_servers/index",
+                "mcp_servers/slack",
+                "mcp_servers/atlassian",
+                "mcp_servers/linear",
+              ],
+            },
             "mcp_rest_api",
             "mcp_openapi",
             "mcp_oauth",
