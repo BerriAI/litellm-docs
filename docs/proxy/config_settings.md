@@ -729,7 +729,7 @@ router_settings:
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
-| PARALLEL_AI_API_BASE | Base URL for the Parallel AI provider (search, chat, and Responses API)
+| PARALLEL_AI_API_BASE | Base URL for the Parallel AI provider (search and Responses API)
 | PARALLEL_AI_API_KEY | API key for Parallel AI
 | PARALLEL_API_KEY | API key for Parallel AI, read when `PARALLEL_AI_API_KEY` is unset
 | PERPLEXITY_API_BASE | Base URL for Perplexity. Default is https://api.perplexity.ai
