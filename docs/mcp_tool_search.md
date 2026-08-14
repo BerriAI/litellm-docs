@@ -121,7 +121,7 @@ Requires LiteLLM v1.92.x or later.
 
 ## Access control
 
-Tool search does not widen the access surface. `mcp_tool_search` walks the same filtered catalog the normal `tools/list` handler uses, so a tool the key cannot reach is invisible to search. `mcp_tool_call` resolves the caller's allowed servers, applies the request-IP-based `filter_server_ids_by_ip` pass, and dispatches through `execute_mcp_tool`, which enforces the server allowlist and per-key `mcp_tool_permissions`. Attempting to route a `mcp_tool_call` at a server outside the key's scope returns a `403` from the same guard that protects direct calls:
+Tool search does not widen the access surface. `mcp_tool_search` walks the same filtered catalog the normal `tools/list` handler uses, so a tool the key cannot reach is invisible to search. `mcp_tool_call` resolves the caller's allowed servers, applies the request-IP-based `filter_server_ids_by_ip` pass, and dispatches through `execute_mcp_tool`, which enforces the server allowlist and the caller's `mcp_tool_permissions`. Attempting to route a `mcp_tool_call` at a server outside the key's scope returns a `403` from the same guard that protects direct calls:
 
 ```console
 $ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
