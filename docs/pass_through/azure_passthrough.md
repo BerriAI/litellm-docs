@@ -6,7 +6,7 @@ Pass-through endpoints for `/azure`
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ❌ | Not supported |
+| Cost Tracking | ✅ | v1 API paths only: `/v1/chat/completions`, `/v1/embeddings`, `/v1/images/generations`, `/v1/images/edits`, `/v1/responses`. Deployments-style paths (`/openai/deployments/...`) are logged without cost |
 | Logging | ✅ | Works across all integrations |
 | Streaming | ✅ | Fully supported |
 

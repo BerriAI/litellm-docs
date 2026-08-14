@@ -62,7 +62,6 @@ const sidebars = {
             "observability/literalai_integration",
             "observability/logfire_integration",
             "observability/lunary_integration",
-            "observability/mavvrik",
             "observability/mlflow",
             "observability/promptlayer_integration",
             "observability/qualifire_integration",
@@ -95,6 +94,7 @@ const sidebars = {
             "observability/focus",
             "observability/greenscale_integration",
             "observability/lago",
+            "observability/mavvrik",
             "observability/openmeter",
             "observability/ramp_integration",
             "observability/vantage",
@@ -241,6 +241,7 @@ const sidebars = {
             "tutorials/claude_code_cut_costs",
             "tutorials/claude_code_autorouter",
             "tutorials/claude_responses_api",
+            "tutorials/claude_code_okta_sso",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
             "tutorials/claude_code_customer_tracking",
@@ -411,6 +412,33 @@ const sidebars = {
       items: [
         {
           type: "category",
+          label: "Setup & Deployment",
+          items: [
+            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+            "proxy/deploy",
+            "proxy/prod",
+            "proxy/redis_requirements",
+            "proxy/db_sizing",
+            "proxy/redis_sizing",
+            "proxy/security_best_practices",
+            "proxy/rust_gateway",
+            "proxy/server_tuning",
+            "proxy/multi_region",
+            "proxy/db_read_replica",
+            "proxy/high_availability_control_plane",
+            "proxy/health",
+            "proxy/model_management",
+            "proxy/master_key_rotations",
+            "proxy/billing_metrics",
+          ],
+        },
+        {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
+        },
+        {
+          type: "category",
           label: "Agent & MCP Gateway",
           items: [
             {
@@ -432,6 +460,16 @@ const sidebars = {
               items: [
                 "mcp",
                 "mcp_usage",
+                {
+                  type: "category",
+                  label: "MCP Server Usage",
+                  items: [
+                    "mcp_servers/index",
+                    "mcp_servers/slack",
+                    "mcp_servers/atlassian",
+                    "mcp_servers/linear",
+                  ],
+                },
                 "mcp_rest_api",
                 "mcp_openapi",
                 "mcp_oauth",
@@ -463,30 +501,6 @@ const sidebars = {
               ],
             },
             { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
-          ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
-        },
-        {
-          type: "category",
-          label: "Setup & Deployment",
-          items: [
-            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
-            "proxy/deploy",
-            "proxy/prod",
-            "proxy/security_best_practices",
-            "proxy/rust_gateway",
-            "proxy/server_tuning",
-            "proxy/multi_region",
-            "proxy/db_read_replica",
-            "proxy/high_availability_control_plane",
-            "proxy/health",
-            "proxy/model_management",
-            "proxy/master_key_rotations",
-            "proxy/billing_metrics",
           ],
         },
         {
@@ -749,6 +763,7 @@ const sidebars = {
           items: [
             "proxy/auto_routing",
             "proxy/auto_routing_semantic",
+            "proxy/auto_routing_benchmark",
             "adaptive_router",
             {
               type: "link",
@@ -855,6 +870,16 @@ const sidebars = {
           items: [
             "mcp",
             "mcp_usage",
+            {
+              type: "category",
+              label: "MCP Server Usage",
+              items: [
+                "mcp_servers/index",
+                "mcp_servers/slack",
+                "mcp_servers/atlassian",
+                "mcp_servers/linear",
+              ],
+            },
             "mcp_rest_api",
             "mcp_openapi",
             "mcp_oauth",
@@ -941,6 +966,7 @@ const sidebars = {
             "search/serper",
             "search/you_com",
             "search/apiserpent",
+            "search/agentcore",
           ]
         },
         "skills",
@@ -1241,6 +1267,7 @@ const sidebars = {
         "scheduler",
         "proxy/auto_routing",
         "proxy/auto_routing_semantic",
+        "proxy/auto_routing_benchmark",
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",

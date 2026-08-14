@@ -53,6 +53,12 @@ Once a user's personal spend crossed their own budget, their team keys returned 
 
 :::
 
+:::danger Breaking Changes
+
+**`timeout`, `stream_timeout`, and `request_timeout` in `litellm_params` are now enforced on `/v1/messages` traffic.** Earlier versions silently ignored these values for Anthropic Messages API calls, which always ran with the 600s client default. They now apply, and for streaming requests `stream_timeout` caps the wait between any two chunks of the stream, not only the first token. A low value that previously had no effect, such as `stream_timeout: 30`, will now fail long-running Claude streams mid-response with `ReadTimeout: Timeout on reading data from socket`. Review these values on your Anthropic and Bedrock Claude deployments before upgrading. See [PR #33418](https://github.com/BerriAI/litellm/pull/33418).
+
+:::
+
 ## Key Highlights
 
 - **Router plugin pipeline and Auto-Router v2** - a new `Router(plugins=[...])` extension point, resolvable from proxy YAML config, plus soft-floor adaptive mode, opt-in (now default) session affinity, multi-model tier random-pick, and user-triggered escalation keywords for the complexity router.

@@ -87,7 +87,7 @@ See [MCP Overview — Forwarding Custom Headers](./mcp#forwarding-custom-headers
 
 ## 4. Authorization — RBAC and access groups
 
-Both surfaces use the `object_permission` model with intersection-style resolution, but at different depths today. MCP resolves across five levels; A2A across two. The detailed flowcharts and tables live on the dedicated pages:
+Both surfaces use the `object_permission` model with intersection-style resolution, but at different depths today. MCP resolves across six levels; A2A across two. The detailed flowcharts and tables live on the dedicated pages:
 
 - [MCP Permission Hierarchy](./mcp_control#permission-hierarchy)
 - [A2A Agent Permission Management — How It Works](./a2a_agent_permissions#how-it-works)
@@ -98,6 +98,7 @@ Both surfaces use the `object_permission` model with intersection-style resoluti
 | **Team** | Same | Same (inheritance-first: if the key has no list, it inherits the team's) |
 | **End user** | Same (via `x-litellm-end-user-id`) | — not resolved today |
 | **Agent** | Same (via `x-litellm-agent-id`) | — not applicable (the agent is the target) |
+| **Internal user** | Same (the human the request authenticated as); intersected with the running result, so it can only narrow | — not resolved today |
 | **Org** | Same — acts as a **ceiling** | — not resolved today |
 
 | Concern | MCP | A2A |

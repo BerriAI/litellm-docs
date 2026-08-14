@@ -6,7 +6,7 @@ Pass-through endpoints for direct OpenAI API access
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Cost Tracking | ❌ | Not supported |
+| Cost Tracking | ✅ | Chat completions, embeddings, image generations, image edits, and the Responses API. Other endpoints are logged without cost |
 | Logging | ✅ | Works across all integrations |
 | Streaming | ✅ | Fully supported |
 
@@ -37,12 +37,26 @@ Simply replace `https://api.openai.com` with `LITELLM_PROXY_BASE_URL/openai_pass
 Requirements:
 Set `OPENAI_API_KEY` in your environment variables.
 
+### Embeddings
+
+Spend from passthrough embeddings calls is tracked and attributed to the calling key, just like the native `/embeddings` route
+
+```bash
+curl http://0.0.0.0:4000/openai_passthrough/v1/embeddings \
+  -H "Authorization: Bearer sk-anything" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "text-embedding-3-small",
+    "input": "hello world"
+  }'
+```
+
 ### Assistants API
 
 #### Create OpenAI Client
 
 Make sure you do the following:
-- Point `base_url` to your `LITELLM_PROXY_BASE_URL/openai`
+- Point `base_url` to your `LITELLM_PROXY_BASE_URL/openai_passthrough`
 - Use your `LITELLM_API_KEY` as the `api_key`
 
 ```python
