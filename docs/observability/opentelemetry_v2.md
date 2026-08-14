@@ -299,6 +299,8 @@ See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob
 
 Open Phoenix; the project comes from `PHOENIX_PROJECT_NAME` (default `default`), stamped as the `openinference.project.name` resource attribute. Phoenix uses the same OpenInference vocabulary as Arize AX.
 
+On the proxy you can send a team's or key's LLM spans to a different Phoenix project on the same collector. Set `phoenix_project_name` on the team or key; see [Route traces to a Phoenix project per team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key).
+
 #### Attributes added by the `openinference` mapper
 
 Same as the Arize tab above.
@@ -665,6 +667,8 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 ## Per-key / per-team destinations (multi-tenant)
 
 One proxy can serve many tenants and send each tenant's traces only to that tenant's own backend, so a team never sees another team's traces. The proxy admin owns the routing; a team or key just points at a destination by name and never handles another tenant's secrets.
+
+To keep one Phoenix collector and only split *projects* by team or key, use [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key) instead of a destination. Destinations are for a different Langfuse, Arize, Weave, or OTLP backend per tenant.
 
 ```
 Proxy admin                          Team admin
