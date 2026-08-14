@@ -131,6 +131,8 @@ class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observabilit
 proxy_handler_instance = MyCustomHandler()
 ```
 
+The last line matters: `callbacks` takes the dotted path of an **instance**, so the file has to create one
+
 2. Add this file to your proxy config
 
 ```yaml
@@ -142,6 +144,10 @@ model_list:
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
 ```
+
+:::warning
+Point `callbacks` at the class (`custom_callbacks.MyCustomHandler`) rather than the instance and the proxy fails config load with an error naming the entry and what it resolved to. The proxy only dispatches `CustomLogger` instances, so on versions before that check it started clean, served traffic and never ran your hooks, with no error and no log line
+:::
 
 3. Start the server + test the request
 
