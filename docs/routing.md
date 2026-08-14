@@ -1444,6 +1444,26 @@ response = router.completion(model="gpt-3.5-turbo", messages=messages)
 print(f"response: {response}")
 ```
 
+#### Where `num_retries` can be set, and which one wins
+
+`num_retries` can come from four places. They are ranked, highest first:
+
+1. the `x-litellm-num-retries` request header (proxy only)
+2. `num_retries` in the request body
+3. `num_retries` in a deployment's `litellm_params` in `model_list`
+4. `num_retries` in `litellm_settings` (the router-wide default)
+
+So a caller can always raise or lower the retry count for one request, including setting it to `0` to
+disable retries, no matter what the deployment or the global setting says. A deployment value applies
+whenever the request carries none, and it overrides the global default.
+
+`num_retries` is not the same knob as `max_retries`. `num_retries` is LiteLLM's own retry loop, while
+`max_retries` is the provider SDK's internal retry count. For a call that goes through the router,
+LiteLLM owns retries and pins the provider client to `max_retries: 0`, so a `max_retries` in the
+request body or in `litellm_params` has no effect on a proxy request. That is deliberate: it is what
+stops a deployment `num_retries: N` from being applied twice and turning one request into
+`(1 + N) ** 2` upstream calls. Use `num_retries` to control how many attempts a request gets.
+
 ### [Advanced]: Custom Retries, Cooldowns based on Error Type
 
 - Use `RetryPolicy` if you want to set a `num_retries` based on the Exception received

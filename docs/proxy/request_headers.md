@@ -16,7 +16,7 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-tags`: Optional[str]: A comma separated list (e.g. `tag1,tag2,tag3`) of tags to use for [tag-based routing](./tag_routing) **OR** [spend-tracking](./enterprise.md#tracking-spend-for-custom-tags).
 
-`x-litellm-num-retries`: Optional[int]: The number of retries for the request.
+`x-litellm-num-retries`: Optional[int]: The number of retries for the request. This outranks a `num_retries` in the request body, in a deployment's `litellm_params`, and in `litellm_settings`. [Learn More](../routing#where-num_retries-can-be-set-and-which-one-wins)
 
 `x-litellm-keepalive-seconds`: Optional[float]: Emit an SSE `: ping` comment frame after this many seconds of stream silence, to keep idle-looking connections alive through load balancer timeouts. Subject to the deployment's `allow_client_keepalive_override` setting; has no effect if the deployment hasn't opted in. [Learn More](./timeout#keepalive-pings-for-idle-streaming-connections)
 
