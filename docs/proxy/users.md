@@ -775,6 +775,66 @@ general_settings:
 
 This setting applies globally to all TPM rate limit checks (keys, users, teams, etc.).
 
+### Estimated Output Tokens (requests without `max_tokens`)
+
+TPM limits are enforced by reserving tokens before the call and reconciling against real usage after it. When a request omits `max_tokens` / `max_completion_tokens`, LiteLLM has to guess how many output tokens to reserve, and the built-in guess is a single static estimate shared by every key, team and model.
+
+That guess is wrong in both directions. If your model really emits more than the estimate, concurrent requests are all admitted against an under-reservation and the window overruns the limit once they finish. If it emits far less, the over-reservation blocks requests the budget could have served.
+
+Declare what your models actually emit with `default_estimated_output_tokens` (one value) and `default_estimated_output_tokens_per_model` (a map of model name to value). Both are settable on a key and on a team.
+
+```shell
+curl --location 'http://0.0.0.0:4000/key/generate' \
+--header 'Authorization: Bearer sk-1234' \
+--header 'Content-Type: application/json' \
+--data '{
+  "team_id": "my-prod-team",
+  "tpm_limit": 1000000,
+  "default_estimated_output_tokens": 2048,
+  "default_estimated_output_tokens_per_model": {
+    "gpt-4": 4096,
+    "gpt-3.5-turbo": 1024
+  }
+}'
+```
+
+The same two fields work on `/team/new` and `/team/update`, and both are editable from the Admin UI on the key and team settings pages.
+
+```shell
+curl --location 'http://0.0.0.0:4000/team/update' \
+--header 'Authorization: Bearer sk-1234' \
+--header 'Content-Type: application/json' \
+--data '{
+  "team_id": "my-prod-team",
+  "default_estimated_output_tokens": 4096,
+  "default_estimated_output_tokens_per_model": {"gpt-4": 8192}
+}'
+```
+
+**Resolution order** for the reserved output budget, first match wins:
+
+| Priority | Source |
+| --- | --- |
+| 1 | Request `max_tokens` or `max_completion_tokens` |
+| 2 | Key `default_estimated_output_tokens_per_model[model]` |
+| 3 | Key `default_estimated_output_tokens` |
+| 4 | Team `default_estimated_output_tokens_per_model[model]` |
+| 5 | Team `default_estimated_output_tokens` |
+| 6 | Built-in static estimate |
+
+Values must be positive integers, and the management endpoints reject anything else with a `422` naming the offending field. A value that is missing, or malformed because it was written straight into `metadata` rather than through these fields, falls through to the next tier, so a key that declares nothing behaves exactly as it does today. Embedding requests are unaffected since they produce no output tokens.
+
+:::tip
+Size the estimate from your observed output distribution for that model, around the p95, not from its maximum context. Both directions cost you something:
+
+- Declaring **more** than the model emits throttles traffic the budget could have served. If the declared value plus the input estimate exceeds the limit the request is charged against, every such request is refused, and the proxy logs the reservation and the limit at debug level so you can see why.
+- Declaring **less** than the model emits is worse than declaring nothing, because the reservation is then smaller than the built-in estimate and more concurrent requests are admitted before the real usage lands.
+:::
+
+:::note
+The proxy already hard-caps generation for tenants whose smallest applicable TPM limit is under 4096, by injecting a `max_tokens` of a quarter of that limit. A declaration larger than that cap raises it, so you are never truncated below what you said your model emits. A declaration smaller than it is ignored, because an estimate describes the typical response and must not silently truncate the long tail.
+:::
+
 
 <Tabs>
 <TabItem value="per-team" label="Per Team">
