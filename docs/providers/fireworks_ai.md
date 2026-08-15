@@ -38,13 +38,15 @@ import os
 
 os.environ['FIREWORKS_AI_API_KEY'] = ""
 response = completion(
-    model="fireworks_ai/accounts/fireworks/models/llama-v3-70b-instruct", 
+    model="fireworks_ai/glm-5p2", 
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
 )
 print(response)
 ```
+
+A bare serverless slug like `glm-5p2` is expanded to `accounts/fireworks/models/glm-5p2` for you, so you can pass either the short slug or the full resource id.
 
 ## Sample Usage - Serverless Models - Streaming
 ```python
@@ -53,7 +55,7 @@ import os
 
 os.environ['FIREWORKS_AI_API_KEY'] = ""
 response = completion(
-    model="fireworks_ai/accounts/fireworks/models/llama-v3-70b-instruct", 
+    model="fireworks_ai/glm-5p2", 
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -98,15 +100,35 @@ print(response)
 > **Note:** The above is for the chat interface, if you want to use the text completion interface it's model="text-completion-openai/accounts/fireworks/models/qwen2p5-coder-7b#accounts/gitlab/deployments/2fb7764c"
 
 
+## Sample Usage - Routers
+
+Fireworks routers are served at `accounts/fireworks/routers/<router-id>` rather than `accounts/fireworks/models/<model-id>`, so a bare slug alone cannot tell LiteLLM which one you mean. Prefix the slug with `routers/` to target a router; LiteLLM expands `routers/<id>` to `accounts/fireworks/routers/<id>`. See the [Fireworks routers docs](https://docs.fireworks.ai/deployments/routers) for the routers available on your account.
+
+```python
+from litellm import completion
+import os
+
+os.environ['FIREWORKS_AI_API_KEY'] = ""
+response = completion(
+    model="fireworks_ai/routers/glm-latest",
+    messages=[
+       {"role": "user", "content": "hello from litellm"}
+   ],
+)
+print(response)
+```
+
+The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
+
 ## Usage with LiteLLM Proxy 
 
 ### 1. Set Fireworks AI Models on config.yaml
 
 ```yaml
 model_list:
-  - model_name: fireworks-llama-v3-70b-instruct
+  - model_name: fireworks-glm-5p2
     litellm_params:
-      model: fireworks_ai/accounts/fireworks/models/llama-v3-70b-instruct
+      model: fireworks_ai/glm-5p2
       api_key: "os.environ/FIREWORKS_AI_API_KEY"
 ```
 
@@ -126,7 +148,7 @@ litellm --config config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "fireworks-llama-v3-70b-instruct",
+      "model": "fireworks-glm-5p2",
       "messages": [
         {
           "role": "user",
@@ -147,7 +169,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="fireworks-llama-v3-70b-instruct", messages = [
+response = client.chat.completions.create(model="fireworks-glm-5p2", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -171,7 +193,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "fireworks-llama-v3-70b-instruct",
+    model = "fireworks-glm-5p2",
     temperature=0.1
 )
 
@@ -280,7 +302,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ### Disable Auto-add
 
-If you want to disable the auto-add of `#transform=inline` to the url of the image_url, you can set the `auto_add_transform_inline` to `False` in the `FireworksAIConfig` class.
+If you want to disable the auto-add of `#transform=inline` to the url of the image_url, set `disable_add_transform_inline_image_block` to `True`
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -353,13 +375,14 @@ We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when se
 
 | Model Name               | Function Call                                                                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| llama-v3p2-1b-instruct | `completion(model="fireworks_ai/llama-v3p2-1b-instruct", messages)` |
-| llama-v3p2-3b-instruct | `completion(model="fireworks_ai/llama-v3p2-3b-instruct", messages)` |
-| llama-v3p2-11b-vision-instruct | `completion(model="fireworks_ai/llama-v3p2-11b-vision-instruct", messages)` |
-| llama-v3p2-90b-vision-instruct | `completion(model="fireworks_ai/llama-v3p2-90b-vision-instruct", messages)` |
-| mixtral-8x7b-instruct | `completion(model="fireworks_ai/mixtral-8x7b-instruct", messages)` | 
-| firefunction-v1 | `completion(model="fireworks_ai/firefunction-v1", messages)` |
-| llama-v2-70b-chat | `completion(model="fireworks_ai/llama-v2-70b-chat", messages)` |  
+| glm-5p2 | `completion(model="fireworks_ai/glm-5p2", messages)` |
+| deepseek-v4-pro | `completion(model="fireworks_ai/deepseek-v4-pro", messages)` |
+| kimi-k3 | `completion(model="fireworks_ai/kimi-k3", messages)` |
+| qwen3p8-max | `completion(model="fireworks_ai/qwen3p8-max", messages)` |
+| minimax-m3 | `completion(model="fireworks_ai/minimax-m3", messages)` |
+| gpt-oss-120b | `completion(model="fireworks_ai/gpt-oss-120b", messages)` |
+
+The table above is a small selection of popular models. For the full, current list of models and routers, see the [Fireworks model library](https://fireworks.ai/models).
 
 ## Supported Embedding Models
 
