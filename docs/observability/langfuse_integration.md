@@ -151,8 +151,8 @@ response = completion(
       ### OR enforce that certain fields are trace overwritten in the trace during the continuation ###
       "existing_trace_id": "trace-id22",
       "trace_metadata": {"key": "updated_trace_value"},            # The new value to use for the langfuse Trace Metadata
-      "update_trace_keys": ["input", "output", "trace_metadata"],  # Updates the trace input & output to be this generations input & output also updates the Trace Metadata to match the passed in value
-      "debug_langfuse": True,                                      # Will log the exact metadata sent to litellm for the trace/generation as `metadata_passed_to_litellm` 
+      "update_trace_keys": ["input", "output", "trace_metadata"],  # Updates the trace input & output to be this generations input & output also updates the Trace Metadata to match the passed in value. Requires `langfuse_enable_update_trace_keys: true`
+      "debug_langfuse": True,                                      # Will log the scalar metadata sent to litellm for the trace/generation as `metadata_passed_to_litellm` 
   },
 )
 
@@ -202,7 +202,15 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 * `prompt`                - Langfuse prompt object used for the generation, defaults to `None`
 
 
-Any other key value pairs passed into the metadata not listed in the above spec for a `litellm` completion will be added as a metadata key value pair for the generation.
+Any other key value pairs passed into the metadata are logged on the generation under `requester_metadata`. On the proxy this happens automatically for whatever you send in the request body. From the SDK, nest them so they are picked up:
+
+```python
+response = litellm.completion(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hi"}],
+    metadata={"metadata": {"my_key": "my_value"}},   # arrives as requester_metadata
+)
+```
 
 #### Multiple Langfuse Projects (Per-Request Credentials)
 
@@ -320,7 +328,7 @@ Setting `mask_input` to `True` will mask the input from being logged for this ca
 
 Setting `mask_output` to `True` will make the output from being logged for this call.
 
-Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message.
+Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message. This applies only when `langfuse_enable_update_trace_keys` is on.
 
 ## Troubleshooting & Errors
 ### Data not getting logged to Langfuse ? 
