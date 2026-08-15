@@ -425,7 +425,7 @@ const sidebars = {
             "proxy/server_tuning",
             "proxy/multi_region",
             "proxy/db_read_replica",
-            "proxy/high_availability_control_plane",
+            "proxy/global_control_plane",
             "proxy/health",
             "proxy/model_management",
             "proxy/master_key_rotations",

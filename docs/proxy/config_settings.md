@@ -162,6 +162,11 @@ general_settings:
   alerting_threshold: 0
   use_client_credentials_pass_through_routes: boolean  # use client credentials for all pass through routes like "/vertex-ai", /bedrock/. When this is True Virtual Key auth will not be applied on these endpoints
 
+worker_registry:                    # top-level key, not nested under general_settings
+  - worker_id: string               # unique id for the worker
+    name: string                    # display name shown in the UI
+    url: string                     # full URL of the worker, must start with http:// or https://
+
 router_settings:
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle" - RECOMMENDED for best performance
   redis_host: <your-redis-host>           # string
@@ -340,7 +345,7 @@ router_settings:
 | alert_type_config | dict | Configuration mapping alert types to their handler settings |
 | always_include_stream_usage | boolean | If true, includes usage metrics in every streaming response chunk |
 | auto_redirect_ui_login_to_sso | boolean | If true, automatically redirects UI login page to SSO provider |
-| control_plane_url | string | URL of the control plane for cross-instance state sharing |
+| control_plane_url | string | URL of the Global Control Plane that administers this instance. Enables the `/v3/login` and `/v3/login/exchange` endpoints so the control plane UI can authenticate against this instance cross-origin. No state is shared with the control plane. [Docs](./global_control_plane.md) |
 | custom_auth_run_common_checks | boolean | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](./custom_auth#enforce-model-access-budgets-and-teamproject-checks) |
 | custom_ui_sso_sign_in_handler | string | Custom handler for SSO sign-in logic in the UI |
 | database_connection_pool_timeout | integer | Database connection pool timeout in seconds |
@@ -371,6 +376,16 @@ router_settings:
 | use_shared_health_check | boolean | If true, uses Redis-backed shared health check state across multiple proxy instances |
 | user_header_mappings | dict | Map custom request headers to user IDs using lookup rules |
 | user_header_name | string | HTTP header name to extract user identity from requests |
+
+### worker_registry - Reference
+
+Top-level key. Set it on a [Global Control Plane](./global_control_plane.md) to list the independent proxies its UI administers.
+
+| Name | Type | Description |
+|------|------|-------------|
+| worker_id | string | Unique identifier for the worker. Required |
+| name | string | Display name shown in the worker selector. Required |
+| url | string | Full URL of the worker instance, must start with `http://` or `https://`. Required |
 
 ### router_settings - Reference
 
