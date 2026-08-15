@@ -118,7 +118,7 @@ response = completion(
 print(response)
 ```
 
-The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit.
+The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
 
 ## Usage with LiteLLM Proxy 
 
@@ -376,11 +376,11 @@ We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when se
 | Model Name               | Function Call                                                                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | glm-5p2 | `completion(model="fireworks_ai/glm-5p2", messages)` |
-| kimi-k2-instruct-0905 | `completion(model="fireworks_ai/kimi-k2-instruct-0905", messages)` |
-| deepseek-v3p1 | `completion(model="fireworks_ai/deepseek-v3p1", messages)` |
-| qwen3-coder-480b-a35b-instruct | `completion(model="fireworks_ai/qwen3-coder-480b-a35b-instruct", messages)` |
+| deepseek-v4-pro | `completion(model="fireworks_ai/deepseek-v4-pro", messages)` |
+| kimi-k3 | `completion(model="fireworks_ai/kimi-k3", messages)` |
+| qwen3p8-max | `completion(model="fireworks_ai/qwen3p8-max", messages)` |
+| minimax-m3 | `completion(model="fireworks_ai/minimax-m3", messages)` |
 | gpt-oss-120b | `completion(model="fireworks_ai/gpt-oss-120b", messages)` |
-| llama-v3p3-70b-instruct | `completion(model="fireworks_ai/llama-v3p3-70b-instruct", messages)` |
 
 The table above is a small selection of popular models. For the full, current list of models and routers, see the [Fireworks model library](https://fireworks.ai/models).
 
