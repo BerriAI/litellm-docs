@@ -178,7 +178,7 @@ general_settings:
   pass_through_endpoints:
     - path: string                    # Route on LiteLLM Proxy Server
       target: string                  # Target URL for forwarding
-      auth: boolean                   # Enable LiteLLM authentication (Enterprise)
+      auth: boolean                   # Enable LiteLLM authentication (OSS since v1.84.0)
       forward_headers: boolean        # Forward all incoming headers
       include_subpath: boolean        # If true, forwards requests to sub-paths (default: false)
       timeout: float                  # Optional: per-endpoint upstream timeout (seconds). Overrides pass_through_request_timeout
