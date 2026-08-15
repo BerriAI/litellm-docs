@@ -1776,6 +1776,10 @@ litellm_settings:
 
 ```
 
+:::warning
+The dotted path has to name the instance created in Step 1 (`proxy_handler_instance = MyCustomHandler()`), not the class. Name the class and the proxy fails config load with an error naming the entry and what it resolved to, since only `CustomLogger` instances are dispatched. On versions before that check, a class-valued entry started clean and never ran, with no error and no log line
+:::
+
 #### Step 2b - Loading Custom Callbacks from S3/GCS (Alternative)
 
 Instead of using local Python files, you can load custom callbacks directly from S3 or GCS buckets. This is useful for centralized callback management or when deploying in containerized environments.
