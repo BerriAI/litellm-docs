@@ -93,7 +93,7 @@ With the control plane and at least one worker running, open `http://localhost:4
 
 ### Login Flow
 
-On load, the UI reads the control plane's `/.well-known/litellm-ui-config` endpoint, which reports `is_control_plane: true` along with the registered workers (their IDs, names, and URLs). Because it is a control plane, the login page shows a worker selector dropdown
+On load, the UI reads the control plane's `/.well-known/litellm-ui-config` endpoint, which reports `is_control_plane: true` whenever `worker_registry` is set, along with the registered workers (their IDs, names, and URLs). Because it is a control plane, the login page shows a worker selector dropdown
 
 The user picks a worker and logs in with username/password or SSO. The UI authenticates against the selected worker by calling its `/v3/login` endpoint, which returns a single-use code, then redeems that code at the worker's `/v3/login/exchange` for a JWT. From then on it points all subsequent API calls at that worker, so keys, teams, models, and budgets are managed on the selected worker from the control plane UI
 
