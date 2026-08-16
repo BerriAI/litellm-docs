@@ -208,7 +208,7 @@ The two families support different subsets of `/responses`:
 | `background` | Rejected with a 400 | Supported |
 | `max_output_tokens` | Supported, maps to `max_tokens` | Supported |
 
-LiteLLM applies these rules per model, so a core-model request never carries a field the endpoint would reject. Asking a core model for `store=True`, `background=True`, or `previous_response_id` raises an `UnsupportedParamsError` locally instead of returning a 400 from Apodex; set `litellm.drop_params = True` to have them stripped instead.
+LiteLLM applies these rules to top-level parameters per model. Asking a core model for `store=True`, `background=True`, or `previous_response_id` raises an `UnsupportedParamsError` locally instead of returning a 400 from Apodex; set `litellm.drop_params = True` to have them stripped instead. Values placed in `extra_body` are forwarded as raw provider parameters and bypass this validation.
 
 ### Background responses
 
