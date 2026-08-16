@@ -45,11 +45,8 @@ One request launches an agent that plans, searches and iterates, typically for m
 | `apodex/apodex-1-1-deep-research` | 131,072 | 65,536 | $5.00 | $20.00 |
 | `apodex/apodex-1-1-deep-solve` | 131,072 | 65,536 | $5.00 | $25.00 |
 | `apodex/apodex-1-1-deep-discover` | 131,072 | 262,144 | $10.00 | $100.00 |
-| `apodex/apodex-1-0-deep-research` | 262,144 | 16,384 | $10.00 | $40.00 |
-| `apodex/apodex-1-0-deep-solve` | 262,144 | 16,384 | $10.00 | $50.00 |
-| `apodex/apodex-1-0-deep-discover` | 131,072 | 262,144 | $10.00 | $100.00 |
 
-The Deep Discover tiers are in preview and require access through the Apodex Frontier Program. Hosted tool calls on the Deep Research tiers are billed per use on top of tokens.
+The Deep Discover tier is in preview and requires access through the Apodex Frontier Program. Hosted tool calls on the Deep Research tiers are billed per use on top of tokens.
 
 ### Choosing between them
 
