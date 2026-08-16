@@ -310,7 +310,7 @@ curl http://localhost:4000/v1/messages \
   }'
 ```
 
-The Deep Research tiers are not served on the native `/v1/messages` path. LiteLLM still accepts Anthropic-shaped requests for them and translates to chat completions, so the same route works for every Apodex model.
+The Deep Research tiers are not served on the native `/v1/messages` path. LiteLLM still accepts Anthropic-shaped requests for them and translates through the Responses API, so the same route works for every Apodex model in streaming and non-streaming mode.
 
 ## Cost Tracking
 
