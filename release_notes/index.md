@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.96.0 — MCP Entitlements, Redis Config Sync & Auto-Router Context](/release_notes/v1.96.0/v1-96-0)
+### [v1.97.0 — Tool-Result Guardrails, Deployment Affinity & Viewer Parity](/release_notes/v1.97.0/v1-97-0)
 
-_August 9, 2026_
+_August 15, 2026_
 
-An internal user's `object_permission` becomes a real MCP entitlement level that intersects the key, team, agent, and org scopes and is enforced at both `tools/list` and `tools/call`; a new `post_mcp_call` guardrail mode that finally lets a guardrail mask or reject the contents of an MCP tool result; config changes propagating to every pod through a coordination-Redis invalidation event instead of the 30s poll; OpenAI's GPT-5.6 price cut of 20% on terra and 80% on luna, mirrored onto Bedrock Mantle with new flex long-context rates; a complexity classifier that now sees prior and assistant turns and records its tier decision in spend logs; a generic `/management/v1` list contract with `GET /management/v1/budgets` on top of it; and operational hardening for large deployments covering DB statement and lock timeouts, `REPLICA IDENTITY FULL`, and an unreachable Redis that no longer blocks every request. Note that mock testing request params are now gated behind a config flag that is off by default.
+A per-guardrail `scan_only_tool_results` flag that scans and masks tool output while system, user, and assistant content passes through untouched, so an agent platform can keep injection detection on untrusted tool results without its own harness prompts tripping the filter; auto-router `deployment_affinity` on by default, pinning a session to the deployment it used before so the provider prompt cache stays warm while every turn is still classified on its own merits; a new `LiteLLM_DailyGatewayRequests` table written by the ASGI request-metrics middleware, so successful and failed request counts survive spend logging being off and come with a by-endpoint breakdown; read parity for `proxy_admin_viewer` across roughly fifteen endpoints that previously compared against `PROXY_ADMIN` exactly; four caller-scoped `spend/report` endpoints for keys, users, teams, and organizations; a correctness sweep over managed files and batches covering deterministic unified output file ids and unparseable rows; and an admin-published, dismissible markdown banner rendered on every dashboard page. Note that request-parameter checks now apply to path and form inputs as well as the body.
 
 ---
 
@@ -22,6 +22,7 @@ An internal user's `object_permission` becomes a real MCP entitlement level that
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
 | [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
 | [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
