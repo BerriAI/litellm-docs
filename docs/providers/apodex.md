@@ -19,6 +19,7 @@ import TabItem from '@theme/TabItem';
 import os
 
 os.environ["APODEX_API_KEY"] = "your-api-key"
+os.environ["APODEX_API_BASE"] = "https://api.apodex.ai/v1"  # optional
 ```
 
 ## Models
@@ -52,12 +53,12 @@ The Deep Discover tier is in preview and requires access through the Apodex Fron
 
 | Aspect | Core models | Deep Research tiers |
 |--------|-------------|---------------------|
-| Sampling parameters | `max_tokens`, `temperature`, `top_p` passed through natively | Ignored; the agent controls its own budget |
+| Sampling parameters | `max_tokens`, `temperature`, `top_p` passed through natively | Not exposed on Chat Completions; accepted Responses fields do not control the agent's internal budget |
 | Tools | Your own function tools | Built-in web search, URL fetch, code sandbox, MCP servers |
 | Latency | Single forward pass | Minutes |
 | `stream` default | `false`, as on OpenAI | `true` |
 | `/chat/completions` | Served | Served, except the Deep Discover tier |
-| `/v1/messages` | Served natively | Not available |
+| `/v1/messages` | Served natively | Not served upstream; LiteLLM translates through `/responses` |
 
 ## Usage - LiteLLM Python SDK
 
