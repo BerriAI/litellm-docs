@@ -23,18 +23,18 @@ os.environ["APODEX_API_KEY"] = "your-api-key"
 
 ## Models
 
-Apodex exposes two families on the same `/chat/completions` path. The model id selects which contract applies, and the two behave deliberately differently.
+Apodex exposes two families behind one base URL. The model id selects which contract applies, and the two behave deliberately differently.
 
 ### Core models
 
 Direct single-pass inference with native sampling parameters. Both are text-only with a 262,144-token context window.
 
-| Model | Context | Input / 1M | Cached input / 1M | Output / 1M |
-|-------|---------|-----------|-------------------|-------------|
-| `apodex/apodex-1.1` | 262,144 | $0.30 | $0.03 | $3.00 |
-| `apodex/apodex-1.1-mini` | 262,144 | $0.10 | $0.01 | $1.00 |
+| Model | Context | Max output | Input / 1M | Cached input / 1M | Output / 1M |
+|-------|---------|-----------|-----------|-------------------|-------------|
+| `apodex/apodex-1.1` | 262,144 | 65,536 | $0.30 | $0.03 | $3.00 |
+| `apodex/apodex-1.1-mini` | 262,144 | 65,536 | $0.10 | $0.01 | $1.00 |
 
-Requests with more than 200K input tokens are billed at 2x the listed rates across every tier.
+Core-model requests with more than 200K input tokens are billed at 2x, and the multiplier applies to input, cached input and output alike.
 
 ### Deep Research tiers
 
@@ -46,7 +46,7 @@ One request launches an agent that plans, searches and iterates, typically for m
 | `apodex/apodex-1-1-deep-solve` | 131,072 | 65,536 | $5.00 | $25.00 |
 | `apodex/apodex-1-1-deep-discover` | 131,072 | 262,144 | $10.00 | $100.00 |
 
-The Deep Discover tier is in preview and requires access through the Apodex Frontier Program. Hosted tool calls on the Deep Research tiers are billed per use on top of tokens.
+The Deep Discover tier is in preview and requires access through the Apodex Frontier Program. It is served on `/responses` only; calling it on `/chat/completions` returns a 400. Hosted tool calls on the Deep Research tiers are billed per use on top of tokens.
 
 ### Choosing between them
 
@@ -55,6 +55,8 @@ The Deep Discover tier is in preview and requires access through the Apodex Fron
 | Sampling parameters | `max_tokens`, `temperature`, `top_p` passed through natively | Ignored; the agent controls its own budget |
 | Tools | Your own function tools | Built-in web search, URL fetch, code sandbox, MCP servers |
 | Latency | Single forward pass | Minutes |
+| `stream` default | `false`, as on OpenAI | `true` |
+| `/chat/completions` | Served | Served, except the Deep Discover tier |
 | `/v1/messages` | Served natively | Not available |
 
 ## Usage - LiteLLM Python SDK
@@ -76,7 +78,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-Apodex defaults `stream` to `true`, which differs from OpenAI. LiteLLM always sends the field explicitly, so a normal non-streaming call returns a single JSON completion as expected.
+The Deep Research tiers default `stream` to `true`, which differs from OpenAI; the core models default it to `false` as usual. LiteLLM always sends the field explicitly, so a normal non-streaming call returns a single JSON completion on either family.
 
 ### Streaming
 
@@ -314,7 +316,9 @@ The Deep Research tiers are not served on the native `/v1/messages` path. LiteLL
 
 ## Cost Tracking
 
-Every Apodex model is registered in LiteLLM's model cost map, so LiteLLM computes per-request spend automatically. On the proxy, the cost is returned in the `x-litellm-response-cost` response header and recorded in spend logs. Core-model prompt tokens served from the prefix cache are billed at the lower cached-input rate, and requests over 200K input tokens are billed at 2x.
+The Apodex 1.1 models are registered in LiteLLM's model cost map, so LiteLLM computes per-request spend automatically. On the proxy, the cost is returned in the `x-litellm-response-cost` response header and recorded in spend logs. Core-model prompt tokens served from the prefix cache are billed at the lower cached-input rate, and core-model requests over 200K input tokens are billed at 2x.
+
+Two things sit outside that calculation. Apodex bills the Deep Research hosted tool calls per invocation on top of tokens, so a run that searches or fetches heavily reports less than it costs. The 1.0 Deep Research tiers are not in the cost map, so they log as zero.
 
 ## Common Parameters
 
