@@ -1195,6 +1195,7 @@ const sidebars = {
         "providers/ragflow_vector_store",
         "providers/recraft",
         "providers/replicate",
+        "providers/runinfra",
         {
           type: "category",
           label: "RunwayML",
