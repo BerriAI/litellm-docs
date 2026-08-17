@@ -5,18 +5,18 @@ import TabItem from '@theme/TabItem';
 
 Search documents you have already indexed in [Valkey](https://valkey.io/) through LiteLLM's unified vector store API, so that any virtual key can run retrieval against your datastore without ever holding your Valkey credentials.
 
-LiteLLM only reads from Valkey. It never creates an index, chunks a file, or writes an embedding, so the ingestion pipeline stays yours. When a search comes in, LiteLLM embeds the query with the embedding model you registered, runs a KNN `FT.SEARCH` against your index over the Valkey protocol, turns each hit's cosine distance into a similarity score (`score = 1 - distance`, so higher is more similar), and returns the same OpenAI-shaped `vector_store.search_results.page` payload every other provider returns.
+LiteLLM only reads from Valkey. It never creates an index, chunks a file, or writes an embedding, so the ingestion pipeline stays yours. When a search comes in, LiteLLM embeds the query with the embedding model you registered, runs a KNN [`FT.SEARCH`](https://valkey.io/commands/ft.search/) against your index over the Valkey protocol, turns each hit's cosine distance into a similarity score (`score = 1 - distance`, so higher is more similar), and returns the same OpenAI-shaped `vector_store.search_results.page` payload every other provider returns.
 
 ## Quick Start
 
 You need three things:
-1. A Valkey server with the valkey-search module loaded
+1. A Valkey server with the [valkey-search](https://valkey.io/topics/search/) module loaded
 2. An embedding model (the one that embedded your documents)
-3. An `FT` index over your documents
+3. An [`FT` index](https://valkey.io/commands/ft.create/) over your documents
 
 ## 1. Turn on vector search in Valkey
 
-Valkey by itself is a key-value store and knows nothing about vectors. Vector search comes from [valkey-search](https://github.com/valkey-io/valkey-search), a module that adds the `FT.*` command family, and it has to be loaded on your server. LiteLLM adds no Python dependency for this: it talks to the module with the Redis client the gateway already ships.
+Valkey by itself is a key-value store and knows nothing about vectors. Vector search comes from [valkey-search](https://github.com/valkey-io/valkey-search), a module that adds the `FT.*` command family ([Valkey docs](https://valkey.io/topics/search/)), and it has to be loaded on your server. LiteLLM adds no Python dependency for this: it talks to the module with the Redis client the gateway already ships.
 
 The quickest way to get a server locally is the [valkey-bundle](https://hub.docker.com/r/valkey/valkey-bundle) image, which has the module preloaded:
 
@@ -35,7 +35,7 @@ litellm.APIConnectionError: unknown command 'FT.SEARCH', with args beginning wit
 
 ## 2. Store your documents the way LiteLLM reads them
 
-Each document is a Valkey HASH under a shared key prefix. One field holds the readable text (LiteLLM looks for `text` by default) and one holds the embedding as packed little-endian FLOAT32 bytes (`embedding` by default). An `FT` index over that prefix declares the vector field, its dimension, and the distance metric.
+Each document is a Valkey [HASH](https://valkey.io/topics/hashes/) under a shared key prefix. One field holds the readable text (LiteLLM looks for `text` by default) and one holds the embedding as packed little-endian FLOAT32 bytes (`embedding` by default). An `FT` index over that prefix, created with [`FT.CREATE`](https://valkey.io/commands/ft.create/), declares the vector field, its dimension, and the distance metric; Valkey's `FT.SEARCH` takes that index name as its first argument, which is why the index has to exist before LiteLLM can search anything.
 
 Field names matter because Valkey hashes have no schema. To Valkey your documents are just bags of bytes, so LiteLLM cannot work out on its own which field is prose and which one is the vector; it uses the names you give it and returns whatever it finds under the text field. Point it at a field that does not exist and searches still succeed, but every result comes back with `"text": ""`.
 
