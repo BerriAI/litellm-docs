@@ -7,6 +7,15 @@ Search documents you have already indexed in [Valkey](https://valkey.io/) throug
 
 LiteLLM only reads from Valkey. It never creates an index, chunks a file, or writes an embedding, so the ingestion pipeline stays yours. When a search comes in, LiteLLM embeds the query with the embedding model you registered, runs a KNN `FT.SEARCH` against your index over the Valkey protocol, turns each hit's cosine distance into a similarity score (`score = 1 - distance`, so higher is more similar), and returns the same OpenAI-shaped `vector_store.search_results.page` payload every other provider returns.
 
+## Quick Start
+
+You need three things:
+1. A Valkey server with the valkey-search module loaded (valkey-bundle, ElastiCache or MemoryDB for Valkey, or `--loadmodule`)
+2. An embedding model registered on the proxy (to convert your queries to vectors, the same model that embedded your documents)
+3. An `FT` index over HASH documents that each hold a text field and a vector field
+
+The rest of this page walks through each one, then how to register the index with LiteLLM and test it.
+
 ## 1. Turn on vector search in Valkey
 
 Valkey by itself is a key-value store and knows nothing about vectors. Vector search comes from [valkey-search](https://github.com/valkey-io/valkey-search), a module that adds the `FT.*` command family, and it has to be loaded on your server. LiteLLM adds no Python dependency for this: it talks to the module with the Redis client the gateway already ships.
