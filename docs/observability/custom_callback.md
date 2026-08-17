@@ -67,17 +67,17 @@ asyncio.run(completion())
 - `async_post_call_success_hook` - Access user data + modify responses
 - `async_pre_call_hook` - Modify requests before sending
 
-### Deployment-Level Hooks
+### Per-Attempt Deployment Hooks
 
-`async_log_success_event` and `async_log_failure_event` fire once per logical client request. When a request retries or falls back across multiple deployments, `async_log_failure_event` only fires for the first failing deployment; the dedup gate that prevents double-logging a single request also hides every attempt after the first.
+`async_log_success_event` and `async_log_failure_event` are documented as request-level hooks: each is meant to fire once per logical client request. The per-attempt deployment hooks below are a different contract entirely: each one is guaranteed to fire once for every real deployment call, including the original attempt, every retry, and every fallback step, with no dedup logic involved. Reach for these, not the request-level hooks, whenever you need a signal per deployment attempt rather than per logical request; a Prometheus-style per-deployment counter or a circuit breaker keyed on individual attempt failures is exactly what these are for.
 
-For a signal that fires once per real deployment attempt, including every retry and every fallback step, use the deployment-level hooks instead. These work in both the SDK and the proxy:
+These work in both the SDK and the proxy:
 
 - `async_pre_call_deployment_hook(kwargs, call_type)` - runs before each deployment call, can modify the request
 - `async_post_call_success_deployment_hook(request_data, response, call_type)` - runs after each successful deployment call
-- `async_post_call_failure_deployment_hook(request_data, exception, call_type)` - runs after each failed deployment call
+- `async_post_call_failure_deployment_hook(request_data, exception, call_type, fallback_depth=None)` - runs after each failed deployment call
 
-Each fires exactly once per real attempt, so a fallback chain where the first two deployments fail and the third succeeds calls the failure hook twice and the success hook once, in that order. `request_data` is that attempt's own request kwargs, not shared state carried over from an earlier attempt.
+A fallback chain where the first two deployments fail and the third succeeds calls the failure hook twice and the success hook once, in that order. `request_data` is that attempt's own request kwargs, not shared state carried over from an earlier attempt. `fallback_depth` is a best-effort field on the failure hook: `None` on the original attempt, `1` on the first fallback hop, `2` on the second, and so on.
 
 ```python
 from litellm.integrations.custom_logger import CustomLogger
@@ -87,10 +87,10 @@ class DeploymentFailureCounter(CustomLogger):
         super().__init__()
         self.failures_by_model = {}
 
-    async def async_post_call_failure_deployment_hook(self, request_data, exception, call_type):
+    async def async_post_call_failure_deployment_hook(self, request_data, exception, call_type, fallback_depth=None):
         model = request_data.get("model", "unknown")
         self.failures_by_model[model] = self.failures_by_model.get(model, 0) + 1
-        print(f"deployment failure: model={model} exception={type(exception).__name__} total={self.failures_by_model[model]}")
+        print(f"deployment failure: model={model} exception={type(exception).__name__} fallback_depth={fallback_depth} total={self.failures_by_model[model]}")
 
 counter = DeploymentFailureCounter()
 litellm.callbacks = [counter]
