@@ -3,14 +3,14 @@ import TabItem from '@theme/TabItem';
 
 # LiteLLM Managed Vector Stores
 
-Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
+Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, Valkey search index, ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
 
 A managed vector store is a mapping, stored in `config.yaml` or in the LiteLLM database, of:
 
 | Field | Required | Description |
 |---|---|---|
 | `vector_store_id` | Yes | The id clients will reference, typically the provider's own store id (Knowledge Base id, datastore id, index name) |
-| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `gemini`, `openai`, `pg_vector` |
+| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `valkey`, `gemini`, `openai`, `pg_vector` |
 | `vector_store_name` | No | Human readable name shown in the UI |
 | `vector_store_description` | No | Description shown in the UI |
 | `vector_store_metadata` | No | Free-form metadata object |
