@@ -9,7 +9,7 @@ You.com offers two tiers:
 | **Keyless free tier** (default) | `https://api.you.com/v1/agents/search` | none | IP-throttled, ~100 queries/day |
 | **Keyed tier** | `https://ydc-index.io/v1/search` | `X-API-Key` | higher rate limits |
 
-If `YOUCOM_API_KEY` is not set, the adapter automatically uses the keyless endpoint — no signup required to start.
+If `YDC_API_KEY` is not set, the adapter automatically uses the keyless endpoint — no signup required to start. (The legacy `YOUCOM_API_KEY` is also accepted as a fallback.)
 
 ## LiteLLM Python SDK
 
@@ -35,7 +35,7 @@ for result in response.results:
 import os
 from litellm import search
 
-os.environ["YOUCOM_API_KEY"] = "sk-..."
+os.environ["YDC_API_KEY"] = "sk-..."  # legacy YOUCOM_API_KEY also accepted
 
 response = search(
     query="latest AI developments",
@@ -60,7 +60,7 @@ search_tools:
     litellm_params:
       search_provider: you_com
       # api_key optional - omit to use the keyless free tier
-      api_key: os.environ/YOUCOM_API_KEY
+      api_key: os.environ/YDC_API_KEY
 ```
 
 ### 2. Start the proxy
