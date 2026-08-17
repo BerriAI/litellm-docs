@@ -766,6 +766,8 @@ router_settings:
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
 | OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OPENINFER_API_BASE | Base URL for OpenInfer. Default is https://api.openinfer.ai/v1
+| OPENINFER_API_KEY | API key for OpenInfer
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
