@@ -35,18 +35,14 @@ litellm.APIConnectionError: unknown command 'FT.SEARCH', with args beginning wit
 
 ## 2. Store your documents the way LiteLLM reads them
 
-Each document is a Valkey [HASH](https://valkey.io/topics/hashes/) under a shared key prefix. One field holds the readable text (LiteLLM looks for `text` by default) and one holds the embedding as packed little-endian FLOAT32 bytes (`embedding` by default). An `FT` index over that prefix, created with [`FT.CREATE`](https://valkey.io/commands/ft.create/), declares the vector field, its dimension, and the distance metric; Valkey's `FT.SEARCH` takes that index name as its first argument, which is why the index has to exist before LiteLLM can search anything.
-
-Field names matter because Valkey hashes have no schema. To Valkey your documents are just bags of bytes, so LiteLLM cannot work out on its own which field is prose and which one is the vector; it uses the names you give it and returns whatever it finds under the text field. Point it at a field that does not exist and searches still succeed, but every result comes back with `"text": ""`.
-
-This example creates an index named `my-search-index` over documents whose keys start with `kb:`:
+Each document is a Valkey [HASH](https://valkey.io/topics/hashes/) with a text field (`text` by default) and a FLOAT32 vector field (`embedding` by default), and an [`FT.CREATE`](https://valkey.io/commands/ft.create/) index over those keys is what `FT.SEARCH` queries. Valkey hashes have no schema, so LiteLLM cannot guess which field is which; the names you register must match your data.
 
 ```bash showLineNumbers title="Create the index"
 FT.CREATE my-search-index ON HASH PREFIX 1 kb: \
   SCHEMA embedding VECTOR HNSW 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE
 ```
 
-`DIM` has to equal the number of dimensions your embedding model returns: 1536 for `text-embedding-3-small`, 3072 for `text-embedding-3-large`, and so on. Then write the documents, embedding each one with the model you plan to register:
+`DIM` must equal your embedding model's dimensions (1536 for `text-embedding-3-small`). Embed and write the documents with the same model you will register in LiteLLM:
 
 ```python showLineNumbers title="Load documents into the index"
 import struct
@@ -68,18 +64,11 @@ for (key, text), item in zip(docs.items(), response.data):
     client.hset(key, mapping={"text": text, "embedding": struct.pack(f"<{len(embedding)}f", *embedding)})
 ```
 
-Use the same embedding model here and in LiteLLM. Embeddings from two different models are coordinates in two unrelated spaces, so a mismatch does not raise an error; it quietly returns confidently ranked nonsense. A mismatch in dimension is at least loud, because the server compares byte lengths and refuses the query:
-
-```
-litellm.APIConnectionError: Error parsing vector similarity parameters:
-query vector blob size (1024) does not match index's expected size (512).
-```
+A different model returns wrong results silently; a different dimension fails with `query vector blob size (N) does not match index's expected size (M)`.
 
 ## 3. Register the index with LiteLLM
 
-Registering a vector store tells the gateway where the index lives and how to embed queries against it; it creates nothing in Valkey.
-
-Whichever surface you use, add the embedding model to the proxy under **Models** first. The Admin UI populates its Embedding Model dropdown from the proxy's own models, and at search time LiteLLM looks up that model to reuse its stored `api_key` and `api_base`, so the credentials never have to be repeated on the vector store. Name that deployment after the provider's model (`text-embedding-3-small`, or `openai/text-embedding-3-small`): LiteLLM borrows the credentials from your deployment but sends the name itself to the embedding provider, so a decorative alias like `our-embeddings` fails with `LLM Provider NOT provided`.
+Registering tells LiteLLM where the index is and which model embeds queries; it creates nothing in Valkey. Add the embedding model under **Models** first, named after the provider's model (`text-embedding-3-small`), since LiteLLM reuses that model's credentials but sends its name to the provider.
 
 <Tabs>
 <TabItem value="ui" label="Admin UI">
