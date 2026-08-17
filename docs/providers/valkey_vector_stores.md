@@ -10,11 +10,9 @@ LiteLLM only reads from Valkey. It never creates an index, chunks a file, or wri
 ## Quick Start
 
 You need three things:
-1. A Valkey server with the valkey-search module loaded (valkey-bundle, ElastiCache or MemoryDB for Valkey, or `--loadmodule`)
-2. An embedding model registered on the proxy (to convert your queries to vectors, the same model that embedded your documents)
-3. An `FT` index over HASH documents that each hold a text field and a vector field
-
-The rest of this page walks through each one, then how to register the index with LiteLLM and test it.
+1. A Valkey server with the valkey-search module loaded
+2. An embedding model (the one that embedded your documents)
+3. An `FT` index over your documents
 
 ## 1. Turn on vector search in Valkey
 
