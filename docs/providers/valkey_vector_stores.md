@@ -24,7 +24,7 @@ The quickest way to get a server locally is the [valkey-bundle](https://hub.dock
 docker run -d -p 6379:6379 valkey/valkey-bundle:latest
 ```
 
-Managed [ElastiCache for Valkey](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-elasticache-vector-search/) (Valkey 8.2 on node-based clusters) and [MemoryDB](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search.html) already ship the module. LiteLLM connects with a single-node client, so give it a standalone or primary endpoint rather than a cluster-mode multi-shard endpoint. On a server you run yourself, start it with [`valkey-server --loadmodule /path/to/libsearch.so`](https://github.com/valkey-io/valkey-search#load-the-module).
+Managed [ElastiCache for Valkey](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-elasticache-vector-search/) (Valkey 8.2 on node-based clusters) and [MemoryDB](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search.html) already ship the module. Cluster mode is fine: LiteLLM sends `FT.SEARCH` to whichever node the endpoint resolves to, and valkey-search itself [fans the query out across shards and merges the results](https://valkey.io/topics/search/). On a server you run yourself, start it with [`valkey-server --loadmodule /path/to/libsearch.so`](https://github.com/valkey-io/valkey-search#load-the-module).
 
 If the module is missing, LiteLLM connects fine and then every search fails, because the server rejects the command it has never heard of:
 
