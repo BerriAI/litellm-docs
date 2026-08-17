@@ -205,6 +205,14 @@ litellm_settings:
 
 Works without any cache configured. Counters are process-local, so this is only accurate for a single-instance deployment.
 
+The in-memory counter store caps at 200 entries and evicts the oldest when full. If `tag_id` is high-cardinality (for example, one bucket per end user), that cap can evict an active counter before its period elapses, resetting it early. Raise the cap with `litellm_settings.tag_rate_limiter_max_in_memory_cache_size`, or use Redis instead, which has no such limit:
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["tag_rate_limiter"]
+  tag_rate_limiter_max_in_memory_cache_size: 5000
+```
+
 </TabItem>
 <TabItem value="redis" label="Redis (multi-instance)">
 
