@@ -1100,6 +1100,7 @@ const sidebars = {
         "providers/baseten",
         "providers/black_forest_labs",
         "providers/black_forest_labs_img_edit",
+        "providers/black_forest_labs_video",
         "providers/bytez",
         "providers/cerebras",
         "providers/chutes",
