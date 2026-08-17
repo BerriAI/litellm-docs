@@ -24,7 +24,7 @@ The quickest way to get a server locally is the [valkey-bundle](https://hub.dock
 docker run -d -p 6379:6379 valkey/valkey-bundle:latest
 ```
 
-On AWS there is nothing to install, with one sizeable caveat. [ElastiCache for Valkey](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/vector-search-overview.html) has vector search from Valkey 8.2 on node-based clusters and [MemoryDB](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search.html) has had it since 7.1, but ElastiCache Serverless does not support vector search at all. Prefer a cluster-mode-disabled node group: a primary with read replicas is fine, while a multi-shard endpoint is not, because LiteLLM connects with a plain client that cannot route `FT.*` commands across shards. On a server you manage yourself, load the module at startup with `valkey-server --loadmodule /path/to/libsearch.so`.
+Managed [ElastiCache for Valkey](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/vector-search-overview.html) and [MemoryDB](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search.html) already ship the module (ElastiCache Serverless and multi-shard cluster endpoints are not supported); on a server you run yourself, start it with `valkey-server --loadmodule /path/to/libsearch.so`.
 
 If the module is missing, LiteLLM connects fine and then every search fails, because the server rejects the command it has never heard of:
 
