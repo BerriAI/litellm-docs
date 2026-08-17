@@ -49,5 +49,5 @@ graph LR
 
 - **Unified Authentication**: One API key for all providers
 - **Centralized Logging**: All requests logged through LiteLLM
-- **Cost Tracking**: Tracked where the provider page's overview table says so; other passthrough requests are logged without cost
+- **Cost Tracking**: Tracked where the provider page's overview table says so. A custom pass-through target that LiteLLM cannot price can report its own totals, see [Pass-Through Cost & Usage Tracking](../proxy/pass_through_cost_tracking.md). Anything else is logged without cost
 - **Access Control**: Same permissions apply to passthrough endpoints
