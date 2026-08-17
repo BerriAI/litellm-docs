@@ -904,6 +904,7 @@ const sidebars = {
           label: "/v1/messages",
           items: [
             "anthropic_unified/index",
+            "anthropic_unified/native_passthrough",
             "anthropic_unified/structured_output",
             "anthropic_unified/messages_to_responses_mapping",
           ]
