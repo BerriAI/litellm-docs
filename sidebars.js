@@ -749,6 +749,7 @@ const sidebars = {
             "proxy/request_tags",
             "proxy/custom_pricing",
             "proxy/custom_model_cost_map",
+            "proxy/ptu_flat_cost",
             "proxy/pricing_calculator",
             "proxy/provider_margins",
             "proxy/provider_discounts",
