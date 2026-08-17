@@ -227,16 +227,19 @@ Team member permissions allow you to control what regular team members (with rol
 
 | Permission | Method | Description |
 |-----------|--------|-------------|
-| `/key/info` | GET | View information about virtual keys in the team |
-| `/key/health` | GET | Check health status of virtual keys in the team |
+| `/key/info` | GET | View information about virtual keys in the team (always granted) |
+| `/key/health` | GET | Check health status of virtual keys in the team (always granted) |
 | `/key/list` | GET | List all virtual keys belonging to the team |
 | `/key/generate` | POST | Create new virtual keys for the team |
 | `/key/service-account/generate` | POST | Create service account keys (not tied to a specific user) for the team |
 | `/key/update` | POST | Modify existing virtual keys in the team |
 | `/key/delete` | POST | Delete virtual keys belonging to the team |
 | `/key/regenerate` | POST | Regenerate virtual keys in the team |
-| `/key/block` | POST | Block virtual keys in the team |
-| `/key/unblock` | POST | Unblock virtual keys in the team |
+| `/key/access_group_assignment` | - | Let members set `access_group_ids` on keys they create or update |
+| `/spend/logs` | GET | View the team's spend logs |
+| `/team/daily/activity` | GET | View the team's daily activity |
+
+These are the only values the API accepts for `team_member_permissions`; any other string is rejected with a 422. Older releases also accepted values such as `/key/block` and `/key/unblock`, but those endpoints are admin-only and never consulted member grants, so granting them had no effect
 
 ### Default Permissions
 
