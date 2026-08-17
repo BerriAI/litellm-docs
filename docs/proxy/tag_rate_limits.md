@@ -124,6 +124,7 @@ Each entry takes:
 | `tag_id` | string | No (default `end_user_id`) | Which tag identifies the caller for this entry, e.g. `end_user_id` in a tag like `end_user_id:user-123`. Different entries on the same chain can use different `tag_id`s. |
 | `limit` | number | Yes | The cap for this entry's unit. |
 | `period_seconds` | integer | Yes | The window length in raw seconds. For `concurrency_limits`, this isn't a window; it's a safety TTL a reserved slot self-heals after, in case a worker crashes before releasing it. |
+| `key_ttl_seconds` | integer | No (default `period_seconds + 3600`) | How long this entry's Redis (or in-memory, if Redis isn't configured) key lives before expiring. Lower it to shed high-cardinality keys sooner without shortening `period_seconds` itself. For `concurrency_limits`, the effective TTL is never allowed below a fixed safety floor, regardless of this value, so a reservation can't expire while the request is still genuinely in flight. |
 
 `period_seconds` is raw seconds, not a day/week/month enum, so the same mechanism covers both a genuine RPM-style cap and a long-window budget: `period_seconds: 86400` resets at UTC midnight, and `period_seconds: 60` resets on real clock-minute boundaries (bucketed by `epoch_second // period_seconds`, so any value that evenly divides a day lands on a natural clock boundary).
 
@@ -205,13 +206,15 @@ litellm_settings:
 
 Works without any cache configured. Counters are process-local, so this is only accurate for a single-instance deployment.
 
-The in-memory counter store caps at 200 entries and evicts the oldest when full. If `tag_id` is high-cardinality (for example, one bucket per end user), that cap can evict an active counter before its period elapses, resetting it early. Raise the cap with `litellm_settings.tag_rate_limiter_max_in_memory_cache_size`, or use Redis instead, which has no such limit:
+The in-memory counter store caps at 200 entries and evicts the oldest when full. If `tag_id` is high-cardinality (for example, one bucket per end user), that cap can evict an active counter before its period elapses, resetting it early. Raise the cap with `litellm_settings.tag_rate_limiter_max_in_memory_cache_size`, or use Redis instead, which has no such limit. This setting must be a positive integer and applies to every `tag_rate_limits` entry on the proxy; it isn't configurable per entry, since all of them already share this one process-local cache:
 
 ```yaml showLineNumbers title="config.yaml"
 litellm_settings:
   callbacks: ["tag_rate_limiter"]
   tag_rate_limiter_max_in_memory_cache_size: 5000
 ```
+
+`key_ttl_seconds` (see [Limit Types](#limit-types)) is a separate, per-entry setting: it controls how long that entry's own key lives once written, in either backend, rather than how many total keys the in-memory store can hold at once.
 
 </TabItem>
 <TabItem value="redis" label="Redis (multi-instance)">
