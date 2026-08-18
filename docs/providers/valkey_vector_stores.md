@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Search documents you have already indexed in [Valkey](https://valkey.io/) through LiteLLM's unified vector store API, so that any virtual key can run retrieval against your datastore without ever holding your Valkey credentials.
 
-LiteLLM only reads from Valkey. It never creates an index, chunks a file, or writes an embedding, so the ingestion pipeline stays yours. When a search comes in, LiteLLM embeds the query with the embedding model you registered, runs a KNN [`FT.SEARCH`](https://valkey.io/commands/ft.search/) against your index over the Valkey protocol, turns each hit's cosine distance into a similarity score (`score = 1 - distance`, so higher is more similar), and returns the same OpenAI-shaped `vector_store.search_results.page` payload every other provider returns.
+When a search comes in, LiteLLM embeds the query with the embedding model you registered, runs a KNN [`FT.SEARCH`](https://valkey.io/commands/ft.search/) against your index over the Valkey protocol, turns each hit's cosine distance into a similarity score (`score = 1 - distance`, so higher is more similar), and returns the same OpenAI-shaped `vector_store.search_results.page` payload every other provider returns.
 
 ## Quick Start
 
