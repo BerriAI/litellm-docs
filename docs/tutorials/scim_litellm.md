@@ -72,53 +72,52 @@ On the LiteLLM UI, Navigate to `Teams`, You should see the new team `Production 
 
 <Image img={require('../../img/msft_auto_team.png')}  style={{ width: '900px', height: 'auto' }} />
 
-> **Note:** When a user is removed from your organization via SCIM, every virtual key that user owns is blocked and evicted from the auth cache, so they lose all access immediately. See [Deactivation and deprovisioning](#deactivation-and-deprovisioning) below.
+> **Note:** When a user is deprovisioned through SCIM, LiteLLM blocks all virtual keys owned by that user and removes them from the authentication cache, revoking access immediately. The keys remain in the database to preserve spend history. See [Deactivation and deprovisioning](#deactivation-and-deprovisioning).
 
 ## User attribute mapping
 
-LiteLLM reads a fixed set of attributes off the SCIM user your IDP sends to `POST /scim/v2/Users` and `PUT /scim/v2/Users/{id}`. Anything not listed here is ignored.
+LiteLLM processes the following attributes from SCIM user resources submitted to `POST /scim/v2/Users` and `PUT /scim/v2/Users/{id}`. Attributes not listed in this table are ignored.
 
 | SCIM attribute | Stored as | Notes |
 |---|---|---|
-| `userName` | `user_id` | Used verbatim as the LiteLLM user id. A random UUID is generated when absent. |
-| `emails[0].value` | `user_email` | Positional, so the first entry wins whether or not it is marked `primary`. |
-| `name.givenName` | `user_alias`, and `metadata.scim_metadata.givenName` | LiteLLM derives the alias from the given name, not from `displayName`. |
-| `name.familyName` | `metadata.scim_metadata.familyName` | |
-| `groups[].value` | `teams` | Each group value is treated as an existing LiteLLM `team_id`. |
-| `externalId` | `sso_user_id` | Persisted on `PUT` and `PATCH` only. `POST` does not store it, so a newly provisioned user has no `sso_user_id` until the first update. |
-| `active` | `metadata.scim_active` | Honored on `PUT` and `PATCH` only. A `POST` carrying `active: false` creates an active user. |
-| `entitlements`, `roles` | `metadata.scim_entitlements`, `metadata.scim_roles` | Recorded so they round-trip on reads. LiteLLM grants nothing from them. |
-| `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User` | `metadata.scim_enterprise` | Recorded so it round-trips on reads. |
+| `userName` | `user_id` | Stored unchanged. If omitted, LiteLLM generates a random UUID. |
+| `emails[0].value` | `user_email` | Only the first email entry is processed, regardless of its `primary` value. |
+| `name.givenName` | `user_alias` and `metadata.scim_metadata.givenName` | Used to derive the user alias; `displayName` is not used during `POST` or `PUT`. |
+| `name.familyName` | `metadata.scim_metadata.familyName` | Stored as SCIM metadata. |
+| `groups[].value` | `teams` | Each value is treated as an existing LiteLLM `team_id`. |
+| `externalId` | `sso_user_id` | Stored only for `PUT` and `PATCH`. It remains unset after initial `POST` provisioning until the first update. |
+| `active` | `metadata.scim_active` | Applied only for `PUT` and `PATCH`. A `POST` request with `active: false` still creates an active user. |
+| `entitlements`, `roles` | `metadata.scim_entitlements`, `metadata.scim_roles` | Preserved for subsequent read responses; these values do not grant LiteLLM permissions. |
+| `urn:ietf:params:scim:schemas:extension:enterprise:2.0:User` | `metadata.scim_enterprise` | Preserved for subsequent read responses. |
 
-`displayName` is ignored on `POST` and `PUT`, but a `PATCH` targeting `displayName` does write `user_alias`, so the alias reflects whichever verb ran last.
+`displayName` is not processed by `POST` or `PUT`. A `PATCH` operation that targets `displayName` updates `user_alias`, so the final alias depends on the most recent applicable request.
 
-Reads are not symmetric with writes. `GET /scim/v2/Users` returns `userName` and `displayName` built from `user_email`, while writes take `userName` as the `user_id`, and `externalId` is never echoed back. The `GET` filter compensates by matching `userName eq` against both `user_email` and `user_id`, which is how Okta finds a user it created before a lifecycle change.
+SCIM read and write representations differ. `GET /scim/v2/Users` constructs `userName` and `displayName` from `user_email`, while write operations store `userName` as `user_id`. The `externalId` value is not included in read responses. To support identity provider lookup workflows, a `userName eq` filter matches against both `user_email` and `user_id`, allowing providers such as Okta to locate a previously provisioned user before applying a lifecycle update.
 
 ## Provisioning a user who already exists
 
-Two different collisions are handled two different ways, checked in this order.
+LiteLLM evaluates potential conflicts in the following order:
 
-A `POST` whose `userName` matches an existing LiteLLM `user_id` is rejected with `409 Conflict`. This is the ordinary case, and IDPs treat it as "already provisioned" then follow with a `PUT` or `PATCH`.
+1. If `userName` matches an existing LiteLLM `user_id`, `POST /scim/v2/Users` returns `409 Conflict`. The identity provider can then update the existing user with `PUT` or `PATCH`.
+2. If `userName` is new but `emails[0].value` matches an existing user, LiteLLM updates the existing record instead of creating a duplicate. It replaces `user_id` with the incoming `userName`, reconciles team membership with the supplied `groups`, and replaces `user_email`, `user_alias`, `teams`, and `metadata`. The endpoint returns `201`. Existing keys, memberships, and spend history remain associated with the updated record. To prevent this email-based reassignment, configure a stable `userName` in the identity provider.
 
-A `POST` whose `userName` is new but whose `emails[0].value` matches an existing user is upserted rather than rejected. LiteLLM rewrites the existing row's `user_id` to the incoming `userName`, reconciles team membership against the incoming `groups`, then overwrites `user_email`, `user_alias`, `teams`, and the whole `metadata` object. The response is `201` even though nothing was created. Because the row is renamed rather than duplicated, keys, memberships, and spend history follow the user through a `userName` change instead of splitting across two records. If you would rather that fail loudly, keep `userName` stable in your IDP profile mapping.
-
-`litellm_settings.scim_upsert_user` does not govern this. That setting controls group member resolution only: with the default `true`, a `PUT` or `PATCH` on a group creates users for member ids LiteLLM has never seen, and with `false` those requests fail with `400` asking you to create the user first. It has no effect on the email match in `POST /Users`.
+This behavior is independent of `litellm_settings.scim_upsert_user`. That setting applies only when resolving group members. With the default value of `true`, a `PUT` or `PATCH` request for a group creates users for member IDs that LiteLLM has not encountered. When set to `false`, the request returns `400` and requires the user to be created first. The setting does not affect email-based matching in `POST /Users`.
 
 ## Assigning the proxy admin role
 
-By default a SCIM-provisioned user gets the role in `litellm_settings.default_internal_user_params.user_role`, falling back to `internal_user_view_only`, and LiteLLM never changes an existing user's role.
+By default, newly provisioned SCIM users receive the role configured in `litellm_settings.default_internal_user_params.user_role`. If no role is configured, LiteLLM assigns `internal_user_view_only`. Existing users retain their current role.
 
-Set `scim_admin_group` to have group membership drive the global role instead:
+Configure `scim_admin_group` to manage global roles through SCIM group membership:
 
 ```yaml title="config.yaml"
 litellm_settings:
   scim_admin_group: "litellm-admins"
 ```
 
-The value is matched against each group's `value` or its `display` name. A user in that group becomes `proxy_admin`, and everyone else falls back to the default role above. Because that fallback is applied on every write, removing someone from the admin group demotes them on the next sync. Leaving `scim_admin_group` unset is the default-safe choice, since roles you set in the UI or over the management API are then never touched by SCIM.
+LiteLLM compares this setting with each group's `value` and `display` name. Members of the matching group receive the `proxy_admin` role; all other users receive the default role described above. LiteLLM evaluates this mapping on every SCIM write, so removing a user from the configured admin group changes the user's role during the next synchronization. If `scim_admin_group` is not configured, SCIM does not modify roles assigned through the Admin UI or management API.
 
 ## Deactivation and deprovisioning
 
-Setting `active: false` over `PUT` or `PATCH` blocks every virtual key the user owns and invalidates them in the auth cache, so access stops immediately. Each key blocked this way is tagged in its metadata, and reactivating the user unblocks only those, leaving a key an admin blocked by hand alone. A `PUT` that omits `active` entirely preserves the prior state rather than reactivating the user.
+When a `PUT` or `PATCH` request sets `active` to `false`, LiteLLM blocks every virtual key owned by the user and removes the corresponding credentials from the authentication cache, revoking access immediately. LiteLLM records which keys were blocked by this operation. If the user is reactivated, only those keys are unblocked; keys independently blocked by an administrator remain blocked. A `PUT` request that omits `active` preserves the user's current activation state.
 
-`DELETE /scim/v2/Users/{id}` removes the user from every team, blocks their keys, drops their invitation links, organization memberships, and team memberships, then deletes the user row. The keys are blocked rather than deleted, so they stop working immediately and stay in the database for spend history.
+`DELETE /scim/v2/Users/{id}` removes the user's team and organization memberships, deletes associated invitation links, blocks the user's virtual keys, and deletes the user record. The keys remain in the database to preserve historical spend data.
