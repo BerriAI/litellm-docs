@@ -14,6 +14,8 @@ This is a beta feature and the surface it covers is still growing. The Rust core
 
 The per-model `rust: true` flag for the Anthropic `/v1/messages` route is available in `v1.94.0` and above; it first shipped in `v1.94.0-rc.1`.
 
+Coverage for `/chat/completions` on `anthropic` and `bedrock` is newer and ships in an upcoming release
+
 :::
 
 LiteLLM is porting its request/response translation to a Rust core (the `litellm-rust` workspace, shipped inside the LiteLLM wheel). The goal is lower per-request CPU and latency while Python keeps owning auth, configuration, routing, logging, callbacks, and spend tracking until each Rust path has parity coverage.
@@ -63,11 +65,26 @@ The Rust core covers a growing subset of routes. When a route or provider is not
 
 | Route | Providers on the Rust path |
 | --- | --- |
+| `/chat/completions` | `anthropic`, `bedrock` (Converse) |
 | Anthropic `/v1/messages` | `anthropic`, `azure_ai` |
 | Audio transcription | `bedrock` |
 | Responses API WebSockets | `openai` |
 
 Streaming is supported on the Anthropic `/v1/messages` route; requests that need an agentic completion hook stay on the Python path so the hook still runs.
+
+On `/chat/completions` the Rust core takes non-streaming text conversations. A request runs on Rust when every message is a `system`, `user` or `assistant` message whose content is a string or a list of `{"type": "text", "text": ...}` parts, the conversation opens on a user turn, and the only sampling parameters set are `max_tokens`, `temperature`, `top_p`, `stop` and, on `anthropic`, `top_k`. Bedrock is served through Converse, the default route for Claude models on Bedrock, and additionally needs the conversation to end on a user turn because Converse has no assistant prefill
+
+Anything outside that subset falls back to the Python path automatically, with no config change and no error:
+
+- streaming, meaning any request with `stream: true`
+- tool calls and tool results
+- `response_format` and JSON mode
+- images and other non-text content parts
+- extended thinking and prompt caching
+- `top_k` on `bedrock`
+- `n` above 1, and any other parameter the Rust path does not recognize
+
+The response body is the same on either path, token counts included, so the header is the only way to tell them apart: a Rust-served response carries `x-litellm-rust: true` and a fallback response carries no such header
 
 ## Mode 2: Run the standalone Axum server
 
