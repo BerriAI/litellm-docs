@@ -74,17 +74,9 @@ Streaming is supported on the Anthropic `/v1/messages` route; requests that need
 
 On `/chat/completions` the Rust core takes non-streaming text conversations. A request runs on Rust when every message is a `system`, `user` or `assistant` message whose content is a string or a list of `{"type": "text", "text": ...}` parts, the conversation opens on a user turn, and the only sampling parameters set are `max_tokens`, `temperature`, `top_p`, `stop` and, on `anthropic`, `top_k`. Bedrock is served through Converse, the default route for Claude models on Bedrock, and additionally needs the conversation to end on a user turn because Converse has no assistant prefill
 
-Anything outside that subset falls back to the Python path automatically, with no config change and no error:
+Which path serves the request is decided before the provider is called, so anything outside that subset is served by Python with no config change and no error. That covers any request with `stream: true`, tool calls and tool results, images and other non-text content parts, `response_format` and JSON mode, extended thinking, prompt caching, `top_k` on `bedrock`, `n` above 1, and any other parameter the Rust path does not recognize. On this route the choice is final once the provider call has gone out: a failure after that point comes back as an error rather than being retried on Python, since retrying would issue the same provider call a second time and bill for it twice
 
-- streaming, meaning any request with `stream: true`
-- tool calls and tool results
-- `response_format` and JSON mode
-- images and other non-text content parts
-- extended thinking and prompt caching
-- `top_k` on `bedrock`
-- `n` above 1, and any other parameter the Rust path does not recognize
-
-The response body is the same on either path, token counts included, so the header is the only way to tell them apart: a Rust-served response carries `x-litellm-rust: true` and a fallback response carries no such header
+The response body is the same on either path, token counts included, so the header is the only way to tell them apart: a Rust-served response carries `x-litellm-rust: true` and a Python-served one carries no such header
 
 ## Mode 2: Run the standalone Axum server
 
