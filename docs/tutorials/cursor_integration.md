@@ -66,6 +66,17 @@ Paste the name in Cursor and enable the toggle.
 
 ![](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-13/5ab35f93-d417-423f-a359-9811ce18e2c3/ascreenshot.jpeg?tl_px=352,26&br_px=1728,795&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=786,277)
 
+:::warning Built-in model names
+Cursor rejects a custom model whose name matches one of its built-in models with `The model "X" is already available as "Y"`. Cursor runs this check locally, before any request reaches LiteLLM. Add a `model_list` entry with a distinct public model name for the same deployment and use that name in Cursor:
+
+```yaml
+model_list:
+  - model_name: litellm-claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+```
+:::
+
 :::tip Model variants
 Cursor's model picker can emit thinking and fast variants of a model name, e.g. `claude-opus-5-thinking`. LiteLLM v1.97.0+ resolves these suffixes to the underlying model automatically, so key scopes and per-model budgets apply to the resolved model and you don't need separate `model_list` entries for the variants.
 :::
@@ -121,3 +132,5 @@ LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api
 | Model not responding | Check base URL ends with `/cursor` and key has model access |
 | Auth errors | Regenerate key; ensure it starts with `sk-` |
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
+| Cursor does not list your LiteLLM models | Upgrade to LiteLLM v1.97.0+, which serves `GET /cursor/models`. Earlier versions do not serve that route and answer 401 or 404. Verify with `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"` |
+| `The model "X" is already available as "Y"` | Cursor blocks names that match its built-in models. Add the model under a distinct public model name (see the warning in step 3) |
