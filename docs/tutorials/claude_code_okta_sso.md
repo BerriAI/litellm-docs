@@ -18,41 +18,20 @@ The developer keeps running plain `claude`. Nothing about their workflow changes
 
 ```mermaid
 flowchart TD
-  subgraph machine["Developer workstation or shared lab server"]
-    direction LR
-    cc["Claude Code"]
-    helper["apiKeyHelper script"]
-    cache[("Token cache<br/>access + refresh token")]
-    cc -->|"needs a credential"| helper
-    helper <--> cache
-  end
+  cc["Claude Code<br/><i>developer machine</i>"]
+  helper["apiKeyHelper script<br/><i>token cache, mode 0600</i>"]
+  okta["Okta authorization server<br/><i>device authorize, token, JWKS</i>"]
+  proxy["LiteLLM proxy<br/><i>JWT validation, routing, budgets</i>"]
+  db[("PostgreSQL<br/><i>users, teams, spend</i>")]
+  prov["Amazon Bedrock<br/>Anthropic, Vertex, Azure"]
 
-  subgraph okta["Okta custom authorization server"]
-    direction LR
-    dev_ep["/v1/device/authorize"]
-    tok_ep["/v1/token"]
-    jwks_ep["/v1/keys (JWKS)"]
-  end
-
-  subgraph proxy["LiteLLM Proxy"]
-    direction LR
-    jwtauth["JWT auth<br/>signature, issuer, audience, expiry"]
-    router["Routing, budgets, rate limits, logging"]
-    jwtauth --> router
-  end
-
-  db[("PostgreSQL<br/>users, teams, spend")]
-  bedrock["Amazon Bedrock"]
-  others["Anthropic, Vertex, Azure, ..."]
-
-  helper --> dev_ep
-  helper --> tok_ep
-  cc -->|"/v1/messages<br/>Authorization: Bearer JWT"| jwtauth
-  jwtauth -->|"public keys, cached"| jwks_ep
-  jwtauth --> router
-  jwtauth --> db
-  router --> bedrock
-  router --> others
+  cc -->|"1. needs a credential"| helper
+  helper -->|"2. sign in once, then silent refresh"| okta
+  okta -->|"3. access token (JWT)"| cc
+  cc -->|"4. /v1/messages, Bearer JWT"| proxy
+  okta -.->|"5. public keys, cached by the proxy"| proxy
+  proxy -->|"6. upsert user, log spend"| db
+  proxy -->|"7. provider call"| prov
 ```
 
 Only the helper talks to Okta, and only the proxy holds provider credentials, so a developer's machine never sees an AWS or Anthropic key. The full exchange looks like this:
