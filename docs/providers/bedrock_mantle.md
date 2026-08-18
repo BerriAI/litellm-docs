@@ -228,6 +228,25 @@ print(response)
 </TabItem>
 </Tabs>
 
+### Web search
+
+The GPT-5.4 / GPT-5.5 / GPT-5.6 models on Mantle run web search server side, so pass the tool through `/v1/responses` and Bedrock does the searching
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "gpt-5.5-mantle",
+    "input": "What changed in the newest LiteLLM release?",
+    "tools": [{"type": "web_search"}]
+  }'
+```
+
+The response carries `web_search_call` items showing the queries the model ran, alongside the assistant message
+
+Mantle accepts `function`, `mcp`, `custom`, `namespace`, `tool_search`, and the web search family. Anything else, `image_generation` and `code_interpreter` for instance, is dropped from the request with a warning in the gateway logs rather than failing the call. Web search is a Responses API feature only: `/chat/completions` on Mantle takes function and custom tools alone
+
 ## API Key
 
 ```python
