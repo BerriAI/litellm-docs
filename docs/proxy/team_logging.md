@@ -210,25 +210,6 @@ To deregister one integration while the team's other callbacks keep running, use
 
 Every entry registered under that `callback_name` is removed, across callback types, so an integration registered for both `success` and `failure` is deregistered by one call. The response lists the callbacks that survive, and a `callback_name` the team has not registered returns `404` without changing anything
 
-```shell
-curl -X DELETE 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback/langsmith' \
-        -H 'Authorization: Bearer sk-1234'
-```
-
-Expected response
-
-```json
-{
-    "status": "success",
-    "message": "Callback langsmith removed for team dbe2f686-a686-4896-864a-4c3924458709",
-    "data": {
-        "team_id": "dbe2f686-a686-4896-864a-4c3924458709",
-        "success_callbacks": ["langfuse"],
-        "failure_callbacks": []
-    }
-}
-```
-
 ### Team Logging Endpoints
 
 - [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
