@@ -12,7 +12,7 @@ LiteLLM supports several OAuth 2.0 patterns for MCP servers. Every `auth_type: o
 
 ## Interactive OAuth (PKCE)
 
-For user-facing MCP clients (Claude Code, Cursor), LiteLLM supports the full OAuth 2.0 authorization code flow with PKCE.
+For user-facing MCP clients (Claude Code, Cursor), LiteLLM supports the full OAuth 2.0 authorization code flow with PKCE. If your own application handles the OAuth login instead, you can deposit the tokens it obtains directly into LiteLLM; see [Storing Externally-Obtained User Tokens](#storing-externally-obtained-user-tokens-token-vault).
 
 ### Setup
 
@@ -150,6 +150,51 @@ This is for first-party OAuth clients you control. For the standard ingress case
 The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates that the caller's `redirect_uri` shares scheme + host + port with the proxy's own public origin (or with one of the loopback / allowlisted entries above). The check exists to stop an attacker from phishing a logged-in admin into a link that bounces an authorization code — for an upstream OAuth-protected MCP server such as GitHub or Slack — through an attacker-controlled host. Same-origin (plus an explicit ops allowlist) is the threat-model-safe equivalent of the loopback-only rule used for native MCP clients.
 
 `PROXY_BASE_URL` is the right escape hatch for ingressed deployments because the operator is declaring the proxy's true public origin out of band, rather than asking the proxy to infer it from headers an attacker might be able to set. The check itself is not relaxed.
+
+## Storing Externally-Obtained User Tokens (Token Vault)
+
+If your application runs the OAuth login itself (for example, users connect Notion or Slack through your web UI), you can deposit the resulting tokens into LiteLLM instead of going through the interactive PKCE flow above. LiteLLM then acts as a token vault: it stores the tokens encrypted, forwards the right user's access token on MCP tool calls, and refreshes it with the stored `refresh_token` when it expires.
+
+This works for any server configured with `oauth2_flow: authorization_code` (the **Interactive (PKCE)** option in the UI).
+
+### Store a user's token
+
+```bash
+curl -X POST "http://localhost:4000/v1/mcp/server/{server_id}/oauth-user-credential" \
+  -H "Authorization: Bearer sk-user-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "access_token": "upstream-access-token",
+    "refresh_token": "upstream-refresh-token",
+    "expires_in": 3600,
+    "scopes": ["read", "write"]
+  }'
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `access_token` | Yes | The upstream access token obtained by your app. |
+| `refresh_token` | No | If provided, LiteLLM refreshes the access token automatically via the `refresh_token` grant against the server's token endpoint. |
+| `expires_in` | No | Seconds until the access token expires. |
+| `scopes` | No | Scopes granted to the token. |
+
+The response reports the stored credential's status:
+
+```json
+{"server_id": "...", "has_credential": true, "expires_at": "2026-01-01T00:00:00+00:00", "is_expired": false}
+```
+
+### How LiteLLM picks the token on tool calls
+
+The credential is stored against the **LiteLLM user** behind the API key that called the endpoint, not against the literal key. When an MCP tool call arrives for the server, LiteLLM resolves the stored token by the `user_id` of the key making the call. Any key belonging to the same user resolves the same token; a shared service key used across end users will not, so each end user needs their own LiteLLM user (and a virtual key tied to it).
+
+### Companion endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /v1/mcp/server/{server_id}/oauth-user-credential/status` | Whether the calling user has a stored credential, with `expires_at` / `is_expired`. Never returns the token itself. |
+| `DELETE /v1/mcp/server/{server_id}/oauth-user-credential` | Revoke the calling user's stored token for the server. |
+| `GET /v1/mcp/user-credentials` | List all servers the calling user has a stored OAuth credential for. |
 
 ## Machine-to-Machine (M2M) Auth
 
