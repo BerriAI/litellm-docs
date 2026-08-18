@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # Azure PTU Flat Cost Attribution
 
 Azure provisioned throughput is billed by the hour for reserved capacity, not per token. A team with its own PTU deployment pays that hourly rate whether it sends one request or a million, so LiteLLM's per-token cost tracking reports nothing that matches the invoice. PTU flat cost attribution fixes the mismatch: you tell LiteLLM how much capacity a deployment reserves and what it costs per hour, and a daily job attributes that cost to the owning team.
@@ -16,7 +18,11 @@ With the variable unset the daily job is not scheduled, the model endpoints reje
 
 ## Configure a deployment
 
-PTU configuration lives on the deployment's `model_info` and is set from the Admin UI model form, or through `POST /model/new`:
+PTU configuration lives on the deployment's `model_info`. In the Admin UI, open Models + Endpoints, pick the deployment, and edit its settings. The PTU inputs sit directly under the per-token costs, which LiteLLM holds at zero for you:
+
+<Image img={require('../../img/ptu_configure_model.png')} />
+
+The same thing through `POST /model/new`:
 
 ```bash
 curl -X POST http://localhost:4000/model/new \
@@ -74,7 +80,9 @@ curl -s "http://localhost:4000/team/daily/activity?team_ids=<team-id>&start_date
   }'
 ```
 
-The Usage page in the Admin UI shows the same figures, and CSV export carries them.
+The Usage page in the Admin UI shows the same figures under Team Usage, charting flat cost separately from request cost, and CSV export carries them:
+
+<Image img={require('../../img/ptu_usage_flat_cost.png')} />
 
 ## Rates you must not set
 
