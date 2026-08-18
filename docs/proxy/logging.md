@@ -2238,8 +2238,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     }
 '
 ```
-Expect to see your log on Langfuse
-<Image img={require('../../img/langsmith_new.png')} />
+Expect to see your logs in Arize.
 
 
 ## Langtrace

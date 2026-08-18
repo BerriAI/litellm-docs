@@ -254,7 +254,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 
 Notes:
 
-- **Arize AX vs Arize Phoenix** are different backends from the same company. AX (`arize`) is the hosted platform; Phoenix (`arize_phoenix`) is the open-source tracer you self-host or run on Phoenix Cloud. They use different credentials and endpoints, so pick the callback for the backend you actually run. You can also enable both at once to send to each.
+- **Arize AX vs Arize Phoenix**: use `arize` for the full-featured AX platform and `arize_phoenix` for Phoenix local or self-hosted workflows. They use different credentials and endpoints, so pick the callback for the backend you actually run. For product-specific setup, see the dedicated [Arize AX](./arize_integration) and [Arize Phoenix](./phoenix_integration) guides.
 - **Langtrace** ingests JSON-only OTLP at a custom path, so litellm v2 (which sends protobuf to `/v1/traces`) cannot export to it directly. Route through an OpenTelemetry Collector that re-encodes to JSON; the `langtrace` preset only adds the Langtrace attribute schema to your spans. See the Langtrace tab above for the collector config.
 - Vocabulary is additive: every preset's spans always carry the canonical OpenTelemetry `gen_ai.*` attributes; the listed vocabulary is layered on top so the destination tool reads its native schema.
 
