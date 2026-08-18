@@ -5,14 +5,14 @@ date: 2026-08-10T12:00:00
 authors:
   - krrish
   - ishaan-alt
-description: "Join the LiteLLM August townhall on Thursday, 20 August at 7:30 AM PT to learn about LiteLLM's product updates and roadmap."
+description: "Join the LiteLLM August townhall on Thursday, 27 August at 7:30 AM PT to learn about LiteLLM's product updates and roadmap."
 tags: [announcement, townhall]
 hide_table_of_contents: true
 ---
 
 import Image from '@theme/IdealImage';
 
-We are hosting our August townhall on **Thursday, 20 August at 7:30 AM PT**.
+We are hosting our August townhall on **Thursday, 27 August at 7:30 AM PT**.
 
 <Image
   img={require('../../img/august_townhall_banner.png')}
