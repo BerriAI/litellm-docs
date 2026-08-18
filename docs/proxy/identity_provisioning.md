@@ -43,7 +43,7 @@ sequenceDiagram
 
 ## Prerequisites
 
-You need a LiteLLM proxy backed by a database (both SCIM and `auto_register` write to it), an enterprise license (SCIM and JWT auth are both enterprise features), your proxy `master_key`, and an identity provider that supports OIDC for the JWTs and SCIM 2.0 for provisioning (Okta, Entra ID, OneLogin, Keycloak, Auth0, Google Workspace).
+You need a LiteLLM proxy backed by a database (both SCIM and `auto_register` write to it), an enterprise license (SCIM and JWT auth are both enterprise features), your proxy `master_key`, and an identity provider that supports OIDC for the JWTs and can provision to a custom SCIM 2.0 endpoint (Okta, Entra ID, OneLogin). Google Workspace, Auth0, and Keycloak cannot push SCIM to LiteLLM; see [supported SCIM providers](../tutorials/scim_litellm.md#supported-sso-providers-for-scim) for why, and for the alternatives if Google Workspace is your source of truth.
 
 ---
 
