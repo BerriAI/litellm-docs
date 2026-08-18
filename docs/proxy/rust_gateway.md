@@ -16,6 +16,8 @@ The per-model `rust: true` flag for the Anthropic `/v1/messages` route is availa
 
 Coverage for `/chat/completions` on `anthropic` and `bedrock` is newer and ships in an upcoming release
 
+On `/chat/completions` that automatic fallback covers the requests the Rust path does not accept, which is decided before the provider is called; a call that has already reached the provider and then fails returns its error instead of being retried on the Python path
+
 :::
 
 LiteLLM is porting its request/response translation to a Rust core (the `litellm-rust` workspace, shipped inside the LiteLLM wheel). The goal is lower per-request CPU and latency while Python keeps owning auth, configuration, routing, logging, callbacks, and spend tracking until each Rust path has parity coverage.
