@@ -85,7 +85,7 @@ Click **Create** and the store appears in the table, ready to search:
 
 <img src="/img/valkey_vs_created_row.png" alt="Manage Vector Stores table listing the new Valkey store" />
 
-Creating a store does not test the connection. A wrong host, port, or index name is only reported on the first search, so run one from the [Test Vector Store tab](#5-test-the-store) straight away.
+Creating a store does not test the connection. A wrong host, port, or index name is only reported on the first search, so run one from the [Test Vector Store tab](#4-test-the-store) straight away.
 
 </TabItem>
 <TabItem value="config" label="config.yaml">
@@ -137,23 +137,7 @@ The store is written to the LiteLLM database and is searchable immediately, with
 </TabItem>
 </Tabs>
 
-## 4. Settings worth double checking
-
-Defaults cover most of this table. What actually decides whether a search finds anything is the index name, the host, the embedding model, and the two field names.
-
-| Setting | UI label | Required | What to put in it |
-|---|---|---|---|
-| `vector_store_id` | Vector Store ID | Yes | The name of the `FT` index, exactly as you passed it to `FT.CREATE`. This is not a free-form label; an unknown name fails with `Index with name '...' not found in database 0` |
-| `valkey_host` | Valkey Host | Yes | The bare hostname or IP, with no scheme and no port, so `my-valkey.example.com` rather than `redis://my-valkey.example.com:6379` |
-| `valkey_port` | Valkey Port | No | Defaults to `6379`. Change it only if your server listens somewhere else |
-| `valkey_password` | Valkey Password | No | Only if the server requires AUTH. Leave empty otherwise |
-| `valkey_ssl` | Use TLS | No | Defaults to `false`. Set it to `true` for ElastiCache or MemoryDB clusters with in-transit encryption, which is what makes LiteLLM connect with `rediss://` |
-| `litellm_embedding_model` | Embedding Model | Yes | The exact model that produced the vectors in the index. A different model returns plausible but wrong results, and a different dimension errors |
-| `valkey_text_field` | Text Field | No | Defaults to `text`. Must match the hash field holding the readable text, or every result comes back with empty content |
-| `valkey_embedding_field` | Vector Field Name | No | Defaults to `embedding`. Must match the field your index was created on |
-| `litellm_embedding_config` | n/a | No | Extra arguments for the embedding call such as `api_key` or `api_base`. On the proxy you can normally omit it, because LiteLLM resolves those from the registered model |
-
-## 5. Test the store
+## 4. Test the store
 
 In the Admin UI, the **Test Vector Store** tab runs a real search against the registered store and shows each hit with its score, which is the fastest way to confirm the connection, the index name, and the embedding model all line up:
 
@@ -219,6 +203,22 @@ response = litellm.vector_stores.search(
 `litellm.vector_stores.asearch` is the async equivalent. Both need the `redis` package, which the proxy already installs; in a bare SDK environment run `pip install redis`.
 
 Once a store is registered, any LiteLLM feature that takes a vector store id can use it, including [RAG in `/chat/completions`](../completion/knowledgebase.md) through `tools: [{"type": "file_search", "vector_store_ids": ["my-search-index"]}]`.
+
+## Settings reference
+
+Defaults cover most of this table. What decides whether a search finds anything is the index name, the host, the embedding model, and the two field names.
+
+| Setting | UI label | Required | What to put in it |
+|---|---|---|---|
+| `vector_store_id` | Vector Store ID | Yes | The name of the `FT` index, exactly as you passed it to `FT.CREATE`. This is not a free-form label; an unknown name fails with `Index with name '...' not found in database 0` |
+| `valkey_host` | Valkey Host | Yes | The bare hostname or IP, with no scheme and no port, so `my-valkey.example.com` rather than `redis://my-valkey.example.com:6379` |
+| `valkey_port` | Valkey Port | No | Defaults to `6379`. Change it only if your server listens somewhere else |
+| `valkey_password` | Valkey Password | No | Only if the server requires AUTH. Leave empty otherwise |
+| `valkey_ssl` | Use TLS | No | Defaults to `false`. Set it to `true` for ElastiCache or MemoryDB clusters with in-transit encryption, which is what makes LiteLLM connect with `rediss://` |
+| `litellm_embedding_model` | Embedding Model | Yes | The exact model that produced the vectors in the index. A different model returns plausible but wrong results, and a different dimension errors |
+| `valkey_text_field` | Text Field | No | Defaults to `text`. Must match the hash field holding the readable text, or every result comes back with empty content |
+| `valkey_embedding_field` | Vector Field Name | No | Defaults to `embedding`. Must match the field your index was created on |
+| `litellm_embedding_config` | n/a | No | Extra arguments for the embedding call such as `api_key` or `api_base`. On the proxy you can normally omit it, because LiteLLM resolves those from the registered model |
 
 ## Troubleshooting
 
