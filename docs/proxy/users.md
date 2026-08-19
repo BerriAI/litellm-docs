@@ -735,24 +735,41 @@ model_list:
 
 ## Budget reservation
 
-Budgets are checked against spend that has already been recorded. On its own that check is racy: a burst of concurrent requests on one key can all read the same under-budget spend figure and all be admitted, and the budget is only found to be blown once their costs land. To close that window LiteLLM reserves an estimated maximum cost against the spend counter before dispatching the request, then reconciles the reservation down to the real cost once the response is priced. A request that would push the counter past the budget is rejected up front rather than after the fact.
+Budget reservation is enabled by default. It helps enforce budgets during concurrent traffic by accounting for a request before the provider processes it.
 
-This is on by default and there is nothing to enable. The reservation is estimated from the request body, using the requested `max_tokens` / `max_completion_tokens` where present and the model's limits where not, priced with the model's cost entry. When the model has no token pricing (image and audio routes, for example) no reservation is taken and enforcement falls back to read time.
+### How it works
 
-Turn it off only to work around leaked reservations showing up as phantom `BudgetExceededError` responses:
+1. LiteLLM estimates the request's maximum cost from the request body and the model's pricing.
+2. It temporarily reserves that amount against the applicable budget.
+3. If the reservation would exceed the budget, LiteLLM rejects the request before sending it to the provider.
+4. After the response is priced, LiteLLM replaces the reservation with the actual cost.
+
+When `max_tokens` or `max_completion_tokens` is present, LiteLLM uses that value in the estimate. Otherwise, it uses the model's configured limits. For routes without token pricing, such as some image and audio routes, LiteLLM cannot reserve a cost and instead enforces the budget using recorded spend.
+
+### Disable budget reservation
+
+Disable reservation only as a temporary mitigation if unreconciled reservations cause unexpected `BudgetExceededError` responses after the affected requests have completed:
 
 ```yaml
 general_settings:
   disable_budget_reservation: true
 ```
 
-With it off, budgets are enforced from recorded spend alone, so a configured budget can be exceeded under concurrency. An already-exhausted budget is still rejected, and the proxy logs a warning on every request as a reminder that hard enforcement is relaxed. Pair the default (reservation on) with [`fail_closed_budget_enforcement`](#hard-budget-enforcement-fail-closed) when a budget has to hold even while Redis is degraded.
+:::warning
 
-:::info
-
-Budget reservation does not meaningfully bound batch jobs. A `POST /batches` body carries an `input_file_id` rather than the prompts themselves, so there is nothing in it to price, and the reservation falls back to the model's context window regardless of how many rows the JSONL holds. The submission response costs nothing, so the reservation is released immediately and the real cost is recorded later when the batch completes. Batches are still rate limited from the input file; see [how batch rate limiting works](../batches#how-rate-limiting-for-batches-api-works).
+Disabling reservation can allow concurrent requests to exceed a configured budget because each request is evaluated only against spend already recorded.
 
 :::
+
+Requests are still rejected when the budget is already exhausted. LiteLLM also logs a warning for each request while reservation is disabled.
+
+If a budget must remain a hard ceiling when Redis is unavailable or contains stale data, keep reservation enabled and also configure [`fail_closed_budget_enforcement`](#hard-budget-enforcement-fail-closed).
+
+### Batch requests
+
+Budget reservation cannot estimate the full cost of a batch job. A `POST /batches` request contains an `input_file_id` rather than the prompts in the file, so LiteLLM cannot price the complete workload at submission. The submission reservation is released after the submission response, and LiteLLM records the final cost when the batch completes.
+
+Use [batch rate limiting](../batches#how-rate-limiting-for-batches-api-works) to control batch throughput, and monitor completed batch costs for budget reporting.
 
 ## Hard budget enforcement (fail closed)
 
