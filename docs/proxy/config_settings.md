@@ -1161,6 +1161,7 @@ router_settings:
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
+| LITELLM_PARALLEL_REQUEST_SLOT_TTL_SECONDS | TTL in seconds after which an occupied max_parallel_requests slot is considered leaked and pruned. Also the longest request duration the concurrency gauge can track. Default is 3600 (1 hour)
 | LITELLM_STORE_AUDIT_LOGS | Flag to record an audit log entry for every create, update and delete performed on management objects such as keys, teams and users. Environment equivalent of `litellm_settings.store_audit_logs`; either source enabling it is enough, and writing the entries requires an enterprise license. **Default is False**
 | LITELLM_STREAM_INACTIVITY_TIMEOUT_SECONDS | Maximum seconds to wait for the next chunk from an async streaming provider before raising a Timeout. Guards against a provider that keeps the connection warm with keepalive bytes but stops sending content. Default is None (disabled)
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
