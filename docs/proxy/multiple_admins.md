@@ -26,11 +26,19 @@ Requires Enterprise License, Get in touch with us [here](https://enterprise.lite
 
 ## Usage
 
-### 1. Switch on audit Logs 
-Add `store_audit_logs` to your litellm config.yaml and then start the proxy
+### 1. Audit logs are on by default
+
+LiteLLM records an audit log entry for every create, update and delete on a management object such as a key, team or user, with no configuration needed
+
+To turn them off, set `store_audit_logs` to `false` in your litellm config.yaml
 ```shell
 litellm_settings:
-  store_audit_logs: true
+  store_audit_logs: false
+```
+
+or set the environment variable, which takes precedence over the config file
+```shell
+export LITELLM_STORE_AUDIT_LOGS="false"
 ```
 
 ### 2. Make a change to an entity
@@ -66,7 +74,6 @@ Add `audit_log_callbacks` and `s3_callback_params` to your `litellm_settings`:
 
 ```yaml
 litellm_settings:
-  store_audit_logs: true
   audit_log_callbacks: ["s3_v2"]
   s3_callback_params:
     s3_bucket_name: my-audit-logs-bucket     # AWS Bucket Name
@@ -86,7 +93,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 :::info
 
-Both `store_audit_logs: true` and `audit_log_callbacks` must be set. If `store_audit_logs` is not enabled, the callbacks will not fire.
+`audit_log_callbacks` only fires while audit logging is enabled, which is the default. If you set `store_audit_logs: false` or `LITELLM_STORE_AUDIT_LOGS=false`, the callbacks will not fire
 
 :::
 
@@ -96,7 +103,6 @@ If you also send normal request/response logs to S3 via `callbacks: ["s3_v2"]`, 
 
 ```yaml
 litellm_settings:
-  store_audit_logs: true
   callbacks: ["s3_v2"]                       # normal request logs
   audit_log_callbacks: ["s3_v2"]             # audit logs
 

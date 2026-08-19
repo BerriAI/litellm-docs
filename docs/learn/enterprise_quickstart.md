@@ -587,7 +587,7 @@ Layer security and compliance on top of working gateways and budgets.
 
 ### Audit logs
 
-Enable via `store_audit_logs: true` under litellm_settings of your `config.yml`. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
+On by default, no config needed. Delete a virtual key via API or UI, then check the **Audit Logs** tab. To turn it off, set `store_audit_logs: false` under litellm_settings of your `config.yml`
 
 → [Audit Logs](/docs/proxy/multiple_admins)
 

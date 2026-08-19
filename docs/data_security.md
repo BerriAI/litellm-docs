@@ -74,7 +74,7 @@ Has an information security management system been implemented?
 - Yes - [CodeQL](https://codeql.github.com/) and a comprehensive ISMS covering multiple security domains.
 
 Is logging of key events - auth, creation, update changes occurring? 
-- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/multiple_admins#1-switch-on-audit-logs)
+- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/multiple_admins#1-audit-logs-are-on-by-default)
 
 Does the Vendor have an established Cybersecurity incident management program? 
 - Yes, Incident Response Policy available upon request.
