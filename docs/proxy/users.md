@@ -732,6 +732,45 @@ model_list:
 ```
 
 **Note:** The cost fields must be explicitly set to `0`. If they are unset (`null`/missing), the model is not treated as free and budget checks still apply.
+
+## Budget reservation
+
+Budget reservation is enabled by default. It helps enforce budgets during concurrent traffic by accounting for a request before the provider processes it.
+
+### How it works
+
+1. LiteLLM estimates the request's maximum cost from the request body and the model's pricing.
+2. It temporarily reserves that amount against the applicable budget.
+3. If the reservation would exceed the budget, LiteLLM rejects the request before sending it to the provider.
+4. After the response is priced, LiteLLM replaces the reservation with the actual cost.
+
+When `max_tokens` or `max_completion_tokens` is present, LiteLLM uses that value in the estimate. Otherwise, it uses the model's configured limits. For routes without token pricing, such as some image and audio routes, LiteLLM cannot reserve a cost and instead enforces the budget using recorded spend.
+
+### Disable budget reservation
+
+Disable reservation only as a temporary mitigation if unreconciled reservations cause unexpected `BudgetExceededError` responses after the affected requests have completed:
+
+```yaml
+general_settings:
+  disable_budget_reservation: true
+```
+
+:::warning
+
+Disabling reservation can allow concurrent requests to exceed a configured budget because each request is evaluated only against spend already recorded.
+
+:::
+
+Requests are still rejected when the budget is already exhausted. LiteLLM also logs a warning for each request while reservation is disabled.
+
+If a budget must remain a hard ceiling when Redis is unavailable or contains stale data, keep reservation enabled and also configure [`fail_closed_budget_enforcement`](#hard-budget-enforcement-fail-closed).
+
+### Batch requests
+
+Budget reservation cannot estimate the full cost of a batch job. A `POST /batches` request contains an `input_file_id` rather than the prompts in the file, so LiteLLM cannot price the complete workload at submission. The submission reservation is released after the submission response, and LiteLLM records the final cost when the batch completes.
+
+Use [batch rate limiting](../batches#how-rate-limiting-for-batches-api-works) to control batch throughput, and monitor completed batch costs for budget reporting.
+
 ## Hard budget enforcement (fail closed)
 
 Budget checks read current spend from a cross-pod counter in Redis, which keeps enforcement fast and consistent across workers and replicas. The counter is the source of truth on the hot path, and the database is reconciled in the background. If Redis restarts and reloads an older snapshot, the counter can come back lower than the spend already recorded in the database; on the hot path that stale value is trusted, which can let a key keep spending past its `max_budget` until the counter is corrected.
