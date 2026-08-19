@@ -9,6 +9,7 @@ Found under `kwargs["standard_logging_object"]`. This is a standard payload, log
 |-------|------|-------------|
 | `id` | `str` | Unique identifier |
 | `trace_id` | `str` | Trace multiple LLM calls belonging to same overall request |
+| `session_id` | `str` | End-user/conversation session id, from `litellm_session_id`. Independent of `trace_id`; only populated when `litellm_settings.request_correlation_in_logs` is enabled. [Further docs](./debugging#request-correlation-ids) |
 | `call_type` | `str` | Type of call |
 | `response_cost` | `float` | Cost of the response in USD ($) |
 | `cost_breakdown` | `Optional[CostBreakdown]` | Detailed cost breakdown object |

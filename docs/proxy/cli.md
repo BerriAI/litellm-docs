@@ -325,8 +325,9 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --iam_token_db_auth
    - **Default:** `False`
    - **Type:** `bool` (Flag)
-   - Connects to an RDS database using IAM token authentication instead of a password. This is useful for AWS RDS instances that are configured to use IAM database authentication.
-   - When enabled, LiteLLM will generate an IAM authentication token to connect to the database.
+   - Authenticates to PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token instead of a stored password.
+   - LiteLLM generates the token with boto3 and refreshes it before it expires.
+   - This option supports AWS only. For Google Cloud SQL, run the Cloud SQL Auth Proxy with `--auto-iam-authn`, then configure `DATABASE_URL` to use the local proxy connection. Do not enable this flag for Cloud SQL.
    - **Required Environment Variables:**
      - `DATABASE_HOST` - The RDS database host
      - `DATABASE_PORT` - The database port
@@ -346,6 +347,19 @@ This page documents all command-line interface (CLI) arguments available for the
      export DATABASE_NAME=mydb
      litellm
      ```
+
+#### Amazon ECS setup
+
+For LiteLLM running on Amazon ECS:
+
+1. Enable IAM database authentication on the Amazon RDS or Aurora PostgreSQL instance.
+2. Configure the PostgreSQL user for IAM authentication.
+3. Grant the ECS task role permission to connect to the database as that user.
+4. Set `IAM_TOKEN_DB_AUTH=True` and the required `DATABASE_*` variables in the ECS task definition.
+
+LiteLLM uses the task role's AWS credentials to generate and refresh the database token. A static database password is not required.
+
+These settings are read from the task environment when LiteLLM starts. To change the flag or connection parameters, deploy a new task definition or restart the proxy tasks. Token refreshes do not require a restart.
 
 ### --use_prisma_db_push
    - **Default:** `False`

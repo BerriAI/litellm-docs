@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Auto Routing
 
-One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, or lexical/semantic keyword rules, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier.
+One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier.
 
 :::info Availability
 
@@ -16,11 +16,11 @@ Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Sug
 
 | Feature      | Semantic Auto Router (deprecated) | Auto Routing (this page)                                                   |
 | ------------ | --------------------------------- | -------------------------------------------------------------------------- |
-| Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, or lexical/semantic keyword rules               |
+| Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, lexical/semantic keyword rules, or your own plugin |
 | Tier value   | One model                         | One model, random pool, or adaptive (Thompson-sampled) pool                |
 | Latency      | ~100-500ms (embedding call)       | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
 | Session pin  | No                                | Opt-in `session_affinity` (off by default), keyed by `session_id` metadata |
-| Log          | No routing-cause signal           | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM) |
+| Log          | No routing-cause signal           | `cause=` marker per decision (scorer, literal, semantic, session_pin, LLM, plugin) |
 | Best for     | Intent-based routing              | Cost/quality tiering, hybrid rule + classifier setups, prompt-cache pinning |
 
 The [semantic auto router](./auto_routing_semantic.md) is deprecated but still works for existing configs.
@@ -100,6 +100,11 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       classifier_context_per_turn_chars: 200     # default 200
       classifier_context_include_assistant_turns: false   # default false
 
+      # Or hand the tier decision to your own code (config file only)
+      # classifier_type: custom
+      # classifier_plugin: classifiers.tier_by_team   # dotted path to an async classify(context)
+      # classifier_plugin_timeout_ms: 3000            # default
+
       # Keyword rules, run before the scorer, escalate to the highest matched tier
       keyword_tier_rules:
         - keywords: ["hi", "hello", "thanks"]
@@ -145,7 +150,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
 ## Classification
 
-Three ways to pick a tier. Pick one; the router falls back to the heuristic scorer if no keyword rule matches, and, unless `classifier_fallback` says otherwise, if the LLM classifier errors.
+Four ways to pick a tier. Pick one; the router falls back to the heuristic scorer if no keyword rule matches, and, unless `classifier_fallback` says otherwise, if the LLM classifier or a custom classifier plugin fails.
 
 **Heuristic scorer (default).** Zero API calls, sub-millisecond. Scores each request across seven dimensions and maps the score to a tier.
 
@@ -185,11 +190,60 @@ embedding_model: voyage-3-5
 match_threshold: 0.5
 ```
 
+**Custom classifier plugin.** Your own code picks the tier. Set `classifier_type: custom` and point `classifier_plugin` at a dotted path to an object with an async `classify(context)`, resolved the same way routing [`plugins`](../routing_plugins.md) are. Reach for it when the tier is not a judgment about the prompt at all: route by team or tenant plan, by a flag in a service you own, by any rule you can express in Python.
+
+:::info
+
+Custom classifier plugins ship in **v1.99.x** ([PR #37249](https://github.com/BerriAI/litellm/pull/37249)). Config file only: like `plugins`, `classifier_plugin` cannot be set through the model-management API or the UI, because a live object does not travel over HTTP.
+
+:::
+
+```yaml title="config.yaml"
+- model_name: smart-router
+  litellm_params:
+    model: auto_router/complexity_router
+    complexity_router_config:
+      classifier_type: custom
+      classifier_plugin: classifiers.tier_by_team   # dotted path, resolved next to this config file
+      classifier_plugin_timeout_ms: 3000            # default
+      tiers:
+        SIMPLE:    gpt-4o-mini
+        REASONING: gpt-5.5
+    complexity_router_default_model: gpt-4o-mini
+```
+
+```python title="classifiers.py"
+from litellm.types.router import RoutingContext
+
+
+class TierByTeam:
+    async def classify(self, context: RoutingContext) -> str | None:
+        team = context.metadata.get("user_api_key_team_alias")
+        if team == "research":
+            return "REASONING"
+        if team == "support":
+            return "SIMPLE"
+        return None   # decline, and let classifier_fallback decide
+
+
+tier_by_team = TierByTeam()
+```
+
+`context` is the same `RoutingContext` a routing plugin receives: `raw_messages`, `structured_messages` (normalized to OpenAI chat format), `metadata`, and `candidate_models`. Caller identity rides along on `metadata`, so `user_api_key_team_id`, `user_api_key_team_alias`, and `user_api_key_user_id` are readable with no plumbing of your own. `candidate_models` here is an informational snapshot of every tier's models rather than the narrowing surface a routing plugin filters: the tier you return picks the pool, so mutating the list is a no-op.
+
+Return the name of a tier: a built-in tier (`SIMPLE`, `MEDIUM`, `COMPLEX`, `REASONING`), or its `tier_labels` display name. Return `None` to decline.
+
+Anything else is treated as availability rather than policy and falls back exactly the way the LLM classifier does. `None`, a raised exception, a call slower than `classifier_plugin_timeout_ms`, a tier name the router does not recognize, and a tier with no models configured all hand the request to `classifier_fallback`: the heuristic scorer by default, or `default_model`. A plugin that is down degrades routing; it never fails the request.
+
+Config mistakes surface at startup instead of on the first classified request. A `classifier_plugin` whose `classify` is missing or not `async` is rejected with the config key named, `classifier_type: custom` without a plugin raises, and a plugin set under any other `classifier_type` raises too, since it would never run.
+
+Everything else on the router still applies. `keyword_tier_rules` short-circuit ahead of the plugin, escalation keywords still escalate the tier it returns, `adaptive: true` still Thompson-samples inside that tier's pool, and `session_affinity: true` still pins a session to its first-turn model. The `classifier_context_*` settings are LLM-classifier only; a plugin gets the messages directly and decides for itself how much of them to read.
+
 ### What gets classified
 
 A request is not classified as a blob. The router extracts the **last real human ask** and the **latest system prompt** from the message list, and the current-request scoring paths read those strings rather than the raw payload. The classifier context window can also add prior turns and a trajectory estimate, described below. This matters most under an agent harness, where a single turn arrives as a huge shared system prefix, a pile of tool results, and a one-line ask
 
-Extraction walks the message list newest-first and returns the first user turn that still carries human text. Content is flattened by keeping `type == "text"` blocks only, so a turn whose content is entirely tool output flattens to the empty string and is skipped rather than accepted as the ask; on the Messages surface tool results ride non-text `tool_result` blocks on a user turn, and on chat completions they sit on the `tool` role, which is never read. Complete `<system-reminder>` ... `</system-reminder>` blocks are removed before the text is used, and the ask written around them survives. Marker matching is literal and case-insensitive, an unclosed opening tag is not a block and is left alone, and `reminder_markers` swaps in a different pair for a harness that brands its reminders differently. When every user turn holds nothing but plumbing there is no ask at all, and the request goes to `complexity_router_default_model` rather than letting harness-injected text pick the tier
+Extraction walks the message list newest-first and returns the first user turn that still carries human text. Content is flattened by keeping `type == "text"` blocks only, so a turn whose content is entirely tool output flattens to the empty string and is skipped rather than accepted as the ask; on the Messages surface tool results ride non-text `tool_result` blocks on a user turn, and on chat completions they sit on the `tool` role, which is never read. Complete `<system-reminder>` ... `</system-reminder>` blocks are removed before the text is used, and the ask written around them survives. Marker matching is literal and case-insensitive, an unclosed opening tag is not a block and is left alone, and `reminder_markers` swaps in a different pair for a harness that brands its reminders differently. When every user turn holds nothing but plumbing there is no ask at all, and the request goes to `complexity_router_default_model` rather than letting harness-injected text pick the tier. On a router with `plugins` configured it goes through the `MEDIUM` pool instead, so a default model can never bypass the plugin pipeline
 
 The consequence is the one an expert reader usually assumes is missing: "fix this typo" and "refactor the auth subsystem" are each scored on their own ask rather than being forced onto the same tier by the 40k-token system prefix and reminder blocks they share
 
@@ -271,7 +325,7 @@ session_affinity: true          # default false; set true to pin a session to it
 session_affinity_ttl_seconds: 3600
 ```
 
-`session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual, whatever this is set to. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working. `session_affinity` is ignored when `plugins` are configured, so a mid-session policy change still applies on later turns rather than being skipped by a cached pin.
+`session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual, whatever this is set to. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working. `session_affinity` is ignored when routing `plugins` are configured, so a mid-session policy change still applies on later turns rather than being skipped by a cached pin. That is routing `plugins` specifically; a `classifier_plugin` picks the tier on the turns that are classified and leaves the pin in place.
 
 :::info Changed default
 
@@ -355,6 +409,7 @@ ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,   
 ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model=claude-sonnet-5
+ComplexityRouter: routing decision cause=classifier_plugin,      tier=REASONING,  score=n/a,   signals=['classifier-plugin:REASONING'],             routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=session_affinity_pin,                                                                                      routed_model=gpt-5.5
 ```
 

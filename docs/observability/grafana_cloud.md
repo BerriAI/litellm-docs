@@ -1,6 +1,6 @@
 # Grafana Cloud
 
-Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP. One endpoint carries both signals, so there is no collector or agent to run
+Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP
 
 ## Prerequisites
 

@@ -33,9 +33,9 @@ The corollary: separate databases per region are separate deployments, and each 
 |---|---|---|
 | Multi-region, shared database (this page) | 1 | 1 |
 | Independent deployment per region | 1 per region | 1 per region |
-| [High Availability Control Plane](./high_availability_control_plane.md) (BETA) | 1 per worker | 1 per worker |
+| [Global Control Plane](./global_control_plane.md) | 1 per worker | 1 per worker |
 
-If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [High Availability Control Plane](./high_availability_control_plane.md) (BETA, Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
+If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [Global Control Plane](./global_control_plane.md) (Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
 
 ## Requirements
 
@@ -178,7 +178,7 @@ Often not. A single-region deployment with a multi-AZ database and Redis already
 The shared-database topology itself runs on the open source proxy. Enterprise features are covered by one license across regions, as described in [Licensing across regions](#licensing-across-regions).
 
 **What happens if the primary region's database goes down?**
-All regions lose database access: key validation falls back to caches, and management operations fail until the database returns. The database is the single point of coupling in this architecture. Set `general_settings.allow_requests_on_db_unavailable: true` so proxies keep serving traffic for already-cached keys during the outage (see [graceful DB unavailability](./prod.md#gracefully-handle-db-unavailability)), run the database multi-AZ with automated failover, and if that is still not enough isolation, consider the [High Availability Control Plane](./high_availability_control_plane.md) instead.
+All regions lose database access: key validation falls back to caches, and management operations fail until the database returns. The database is the single point of coupling in this architecture. Set `general_settings.allow_requests_on_db_unavailable: true` so proxies keep serving traffic for already-cached keys during the outage (see [graceful DB unavailability](./prod.md#gracefully-handle-db-unavailability)), run the database multi-AZ with automated failover, and if that is still not enough isolation, consider the [Global Control Plane](./global_control_plane.md) instead.
 
 **Can I run different LiteLLM versions in different regions?**
 Briefly, during a rolling upgrade. Do not run mixed versions steady-state; the shared database schema follows the newest version, and migrations should run exactly once per upgrade.

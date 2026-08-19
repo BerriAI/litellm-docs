@@ -1,7 +1,7 @@
 ---
-title: "v1.96.0rc1 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
-slug: "v1-96-0-rc-1"
-date: 2026-08-03T12:53:08
+title: "v1.96.0 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
+slug: "v1-96-0"
+date: 2026-08-09T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,22 +30,28 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.96.0-rc.1
+docker.litellm.ai/berriai/litellm:1.96.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.96.0rc1
+pip install litellm==1.96.0
 ```
 
 </TabItem>
 </Tabs>
 
-## Key Highlights
+:::danger Breaking Changes
 
-`v1.96.0rc1` is the current release candidate for 1.96.0.
+**Mock testing request params are gated behind one config flag.** Six `mock_*` request params previously had three different behaviors, and a dropped param returned a normal success, so a fallback drill could pass without ever running. All six now reject with a 400 naming the params and the key unless an admin sets `general_settings.dangerously_allow_mock_testing_request_params: true` in `config.yaml`; the flag cannot be changed from the Admin UI or the API. See [PR #35423](https://github.com/BerriAI/litellm/pull/35423).
+
+**Keyless gateway OAuth now admits session bearers at any MCP scope.** Session-bearer admission and RFC 9728 `WWW-Authenticate` challenges fire on per-server MCP URL paths, not only the aggregate `/mcp/` scope, so a per-server path that previously fell through to a plain rejection now issues a challenge. See [PR #34856](https://github.com/BerriAI/litellm/pull/34856).
+
+:::
+
+## Key Highlights
 
 - **MCP entitlements reach the person, not just the key** - an internal user's `object_permission` now acts as an MCP entitlement level that intersects the key, team, agent, and org scopes, is read at both `tools/list` and `tools/call` time, is persisted by `/user/new` and `/user/update`, returned by `/v2/user/info`, and editable from the internal user page.
 - **Guardrails can finally see MCP tool results** - a new `post_mcp_call` mode routes tool result text through the unified `apply_guardrail` seam, so a guardrail can mask values inside a result or reject it outright; previously a tool returning sensitive data bypassed every guardrail.
@@ -54,12 +60,6 @@ pip install litellm==1.96.0rc1
 - **The auto-router learns what it is actually routing** - the complexity classifier now sees prior turns and assistant turns, rates what a short reply approves, closes its rubric on the window it was given, and records its tier decision, request body, and its own classifier calls in spend logs and the log drawer.
 - **Budgets become a first-class management surface** - a generic `/management/v1` list contract lands with `GET /management/v1/budgets` on top of it, and the budgets page gains sorting, filtering, and search.
 - **Operational hardening for large deployments** - opt-in `database_statement_timeout` and `database_lock_timeout`, opt-in `REPLICA IDENTITY FULL` re-asserted after every migration, pod-hardening and migration-Job knobs on the componentized Helm chart, and an unreachable Redis that no longer blocks every request.
-
-### Breaking changes
-
-- **Mock testing params are gated behind one config flag** - six mock testing request params previously had three different behaviors, and a dropped param returned a normal success, so a fallback drill could pass without ever running. All six are now gated by a single config flag that is unset by default and rejects with a 400 naming the params and the key - [PR #35423](https://github.com/BerriAI/litellm/pull/35423)
-- **User budgets are no longer enforced on team keys** - reverts [PR #32005](https://github.com/BerriAI/litellm/pull/32005), which caused team keys to reject on the key owner's personal budget; team keys use team budgets only and the `skip_user_budget_on_team_key` opt-out flag is removed - [PR #35271](https://github.com/BerriAI/litellm/pull/35271)
-- **Keyless gateway OAuth admits session bearers at any MCP scope** - session-bearer admission and RFC 9728 `WWW-Authenticate` challenges now fire on per-server MCP URL paths, not only the aggregate `/mcp/` scope - [PR #34856](https://github.com/BerriAI/litellm/pull/34856)
 
 ## New Models / Updated Models
 
@@ -297,4 +297,4 @@ This window added 18 test-only PRs, 10 of them against the live e2e suite. New a
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.95.0-rc.1...v1.96.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.95.0...v1.96.0

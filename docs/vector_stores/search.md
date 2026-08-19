@@ -12,7 +12,7 @@ Search a vector store for relevant chunks based on a query and file attributes f
 | Cost Tracking | ✅ | Tracked per search operation |
 | Logging | ✅ | Works across all integrations |
 | End-user Tracking | ✅ | |
-| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Gemini** | Full vector stores API support across providers |
+| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Valkey, Gemini** | Full vector stores API support across providers |
 
 For **retrieve, list, update, and delete** over HTTP (including `custom_llm_provider` / `model` routing), see [Create vector store](./create.md#vector-store-management-and-routing-on-the-proxy).
 
@@ -165,6 +165,28 @@ print(response)
 ```
 
 [See full Milvus vector store documentation](../providers/milvus_vector_stores.md)
+
+</TabItem>
+
+<TabItem value="valkey-provider" label="Valkey Provider">
+
+#### Using Valkey
+```python showLineNumbers title="Search Vector Store - Valkey Provider"
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="my-search-index",  # name of the FT index in Valkey
+    query="What is the capital of France?",
+    custom_llm_provider="valkey",
+    valkey_host="my-valkey.example.com",
+    valkey_port=6379,
+    litellm_embedding_model="openai/text-embedding-3-small",
+    max_num_results=3,
+)
+print(response)
+```
+
+[See full Valkey vector store documentation](../providers/valkey_vector_stores.md)
 
 </TabItem>
 

@@ -40,7 +40,7 @@ model_list:
       s3_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       s3_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_batch_role_arn: arn:aws:iam::888602223428:role/service-role/AmazonBedrockExecutionRoleForAgents_BB9HNW6V4CV
-      # Optional: Custom KMS encryption key for S3 output
+      # Optional: Custom KMS encryption key for the S3 input upload and the batch output
       # s3_encryption_key_id: arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012
     model_info: 
       mode: batch # 👈 SPECIFY MODE AS BATCH, to tell user this is a batch model
@@ -61,7 +61,7 @@ model_list:
 
 | Parameter | Description |
 |-----------|-------------|
-| `s3_encryption_key_id` | Custom KMS encryption key ID for S3 output data. If not specified, Bedrock uses AWS managed encryption keys. |
+| `s3_encryption_key_id` | Custom KMS encryption key ID for the batch input file LiteLLM uploads to S3 and for the batch output data. Requires `kms:GenerateDataKey` on that key for the credentials LiteLLM signs the upload with. If not specified, Bedrock uses AWS managed encryption keys. |
 
 ### 2. Create Virtual Key
 
@@ -276,6 +276,8 @@ LiteLLM only supports Bedrock Anthropic Models for Batch API. If you want other 
 ### How do I use a custom KMS encryption key?
 
 If your S3 bucket requires a custom KMS encryption key, you can specify it in your configuration using `s3_encryption_key_id`. This is useful for enterprise customers with specific encryption requirements.
+
+The key covers both objects LiteLLM touches: the batch input file it uploads to your bucket, and the batch output Bedrock writes back. The input upload is signed with `x-amz-server-side-encryption: aws:kms` and this key ARN, so the AWS identity LiteLLM uploads with needs `kms:GenerateDataKey` on the key. Grant that before setting the key, otherwise `POST /v1/files` fails with an S3 `AccessDenied`
 
 You can set the encryption key in 2 ways:
 
