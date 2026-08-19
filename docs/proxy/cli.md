@@ -326,7 +326,8 @@ This page documents all command-line interface (CLI) arguments available for the
    - **Default:** `False`
    - **Type:** `bool` (Flag)
    - Connects to an RDS database using IAM token authentication instead of a password. This is useful for AWS RDS instances that are configured to use IAM database authentication.
-   - When enabled, LiteLLM will generate an IAM authentication token to connect to the database.
+   - When enabled, LiteLLM will generate an IAM authentication token to connect to the database, and refresh it in the background before it expires.
+   - AWS RDS and Aurora only. The token is minted through boto3, so this flag does not work against GCP Cloud SQL. To use Cloud SQL IAM database authentication, run the Cloud SQL Auth Proxy with `--auto-iam-authn` alongside the proxy and point `DATABASE_URL` at it; LiteLLM then connects as if to a local Postgres and needs neither this flag nor the variables below.
    - **Required Environment Variables:**
      - `DATABASE_HOST` - The RDS database host
      - `DATABASE_PORT` - The database port

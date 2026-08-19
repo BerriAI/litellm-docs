@@ -732,6 +732,28 @@ model_list:
 ```
 
 **Note:** The cost fields must be explicitly set to `0`. If they are unset (`null`/missing), the model is not treated as free and budget checks still apply.
+
+## Budget reservation
+
+Budgets are checked against spend that has already been recorded. On its own that check is racy: a burst of concurrent requests on one key can all read the same under-budget spend figure and all be admitted, and the budget is only found to be blown once their costs land. To close that window LiteLLM reserves an estimated maximum cost against the spend counter before dispatching the request, then reconciles the reservation down to the real cost once the response is priced. A request that would push the counter past the budget is rejected up front rather than after the fact.
+
+This is on by default and there is nothing to enable. The reservation is estimated from the request body, using the requested `max_tokens` / `max_completion_tokens` where present and the model's limits where not, priced with the model's cost entry. When the model has no token pricing (image and audio routes, for example) no reservation is taken and enforcement falls back to read time.
+
+Turn it off only to work around leaked reservations showing up as phantom `BudgetExceededError` responses:
+
+```yaml
+general_settings:
+  disable_budget_reservation: true
+```
+
+With it off, budgets are enforced from recorded spend alone, so a configured budget can be exceeded under concurrency. An already-exhausted budget is still rejected, and the proxy logs a warning on every request as a reminder that hard enforcement is relaxed. Pair the default (reservation on) with [`fail_closed_budget_enforcement`](#hard-budget-enforcement-fail-closed) when a budget has to hold even while Redis is degraded.
+
+:::info
+
+Budget reservation does not meaningfully bound batch jobs. A `POST /batches` body carries an `input_file_id` rather than the prompts themselves, so there is nothing in it to price, and the reservation falls back to the model's context window regardless of how many rows the JSONL holds. The submission response costs nothing, so the reservation is released immediately and the real cost is recorded later when the batch completes. Batches are still rate limited from the input file; see [how batch rate limiting works](../batches#how-rate-limiting-for-batches-api-works).
+
+:::
+
 ## Hard budget enforcement (fail closed)
 
 Budget checks read current spend from a cross-pod counter in Redis, which keeps enforcement fast and consistent across workers and replicas. The counter is the source of truth on the hot path, and the database is reconciled in the background. If Redis restarts and reloads an older snapshot, the counter can come back lower than the spend already recorded in the database; on the hot path that stale value is trusted, which can let a key keep spending past its `max_budget` until the counter is corrected.

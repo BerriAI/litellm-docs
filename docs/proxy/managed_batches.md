@@ -58,15 +58,13 @@ general_settings:
   skip_batch_input_file_rate_limiting_for_providers:
     - hosted_vllm
 
-  # Optional: skip only for selected model names / prefixes
-  # skip_batch_input_file_rate_limiting_for_models:
-  #   - my-vllm-batch-model
-
 litellm_settings:
   # Optional: require target_model_names on POST /v1/files (blocks classic file uploads)
   # require_managed_files: true
 
 ```
+
+LiteLLM reads the batch input file before dispatching and charges its tokens and line count against the caller's TPM/RPM limits. The two `skip_` settings above opt out of that pre-read; see [how rate limiting for the batches API works](../batches#how-rate-limiting-for-batches-api-works) for what the skips do and do not cover.
 
 ### 2. Create Virtual Key
 
@@ -146,17 +144,6 @@ batch_response = client.batches.retrieve(
     batch_id
 )
 status = batch_response.status
-```
-
-You can also skip input-file pre-read per request:
-
-```python showLineNumbers title="create_batch.py"
-batch = client.batches.create(
-    input_file_id=batch_input_file.id,
-    endpoint="/v1/chat/completions",
-    completion_window="24h",
-    metadata={"skip_batch_input_file_rate_limiting": True},
-)
 ```
 
 ### 4. Retrieve Batch Content 

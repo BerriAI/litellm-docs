@@ -131,7 +131,7 @@ general_settings:
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
   disable_batch_input_file_rate_limiting: boolean  # if true, skip pre-reading batch input files for rate-limit/model checks
   skip_batch_input_file_rate_limiting_for_providers: ["hosted_vllm"]  # provider allowlist for skipping batch input-file pre-read
-  skip_batch_input_file_rate_limiting_for_models: ["my-batch-model-prefix"]  # model/prefix allowlist for skipping batch input-file pre-read
+  disable_budget_reservation: boolean  # if true, turn off the optimistic per-request budget reservation (weakens hard budget enforcement)
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
   key_management_system: google_kms  # either google_kms or azure_kms
   master_key: string
@@ -263,9 +263,10 @@ router_settings:
 | enable_jwt_auth | boolean | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
 | enforce_user_param | boolean | If true, requires all OpenAI endpoint requests to have a 'user' param. [Doc on call hooks](call_hooks)|
 | reject_clientside_metadata_tags | boolean | If true, rejects requests that contain client-side 'metadata.tags' to prevent users from influencing budgets by sending different tags. Tags can only be inherited from the API key metadata. |
-| disable_batch_input_file_rate_limiting | boolean | If true, skips pre-reading batch input files during `POST /batches` pre-checks. |
-| skip_batch_input_file_rate_limiting_for_providers | array of strings | Skip batch input-file pre-read for specific providers (for example `["hosted_vllm"]`). |
-| skip_batch_input_file_rate_limiting_for_models | array of strings | Skip batch input-file pre-read for specific model names or prefixes. |
+| disable_batch_input_file_rate_limiting | boolean | If true, skips pre-reading batch input files during `POST /batches` pre-checks, so a batch is admitted without its tokens or its request count being charged against TPM/RPM. The skip is ignored for keys that have a model allowlist, because the JSONL must still be read to validate every `body.model` entry against that allowlist. See [batch rate limiting](../batches#how-rate-limiting-for-batches-api-works). |
+| skip_batch_input_file_rate_limiting_for_providers | array of strings | Skip the batch input-file pre-read only for batches routed to these providers (for example `["hosted_vllm"]`). The provider is resolved from the routing deployment's configured credentials, not from the caller's `custom_llm_provider`, so it cannot be spoofed. As with `disable_batch_input_file_rate_limiting`, the skip is ignored for keys that have a model allowlist. |
+| skip_batch_input_file_rate_limiting_for_models | array of strings | Accepted but has no effect, and the proxy logs a warning once at startup when it is set. A per-model skip is deliberately unsupported because the model a batch runs on is caller-influenced: both the top-level `model` and the model embedded in a `file-...` id can name a skip-listed deployment while the JSONL routes rate-limited models. Use `skip_batch_input_file_rate_limiting_for_providers` or `disable_batch_input_file_rate_limiting` instead. |
+| disable_budget_reservation | boolean | Default `false`. When `true`, turns off the optimistic per-request budget reservation, so budgets are enforced only from spend already recorded at read time. This weakens hard budget enforcement: a burst of concurrent requests on one key can each pass the spend check before any of them is charged, letting a configured budget be exceeded. An already-exhausted budget is still rejected. A warning is logged on every request while this is on. See [budget reservation](./users#budget-reservation). |
 | allowed_routes | array of strings | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](enterprise#control-available-public-private-routes)|
 | key_management_system | string | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | The master key for the proxy [Set up Virtual Keys](virtual_keys) |
@@ -1044,7 +1045,7 @@ router_settings:
 | HUGGINGFACE_API_BASE | Base URL for Hugging Face API
 | HUGGINGFACE_API_KEY | API key for Hugging Face API
 | HUMANLOOP_PROMPT_CACHE_TTL_SECONDS | Time-to-live in seconds for cached prompts in Humanloop. Default is 60
-| IAM_TOKEN_DB_AUTH | IAM token for database authentication
+| IAM_TOKEN_DB_AUTH | When `True`, authenticate to Postgres with a short-lived **AWS RDS** IAM token minted through boto3 instead of a password, refreshed automatically before it expires. AWS RDS and Aurora only; GCP Cloud SQL IAM auth is not supported, run the Cloud SQL Auth Proxy with `--auto-iam-authn` and point `DATABASE_URL` at it instead. Requires `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER` and `DATABASE_NAME`
 | IBM_GUARDRAILS_API_BASE | Base URL for IBM Guardrails API
 | IBM_GUARDRAILS_AUTH_TOKEN | Authorization bearer token for IBM Guardrails API
 | INITIAL_RETRY_DELAY | Initial delay in seconds for retrying requests. Default is 0.5
@@ -1172,7 +1173,7 @@ router_settings:
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
 | LITELLM_TOKEN | Access token for LiteLLM integration
-| LITELLM_TPM_TOKEN_RESERVATION_ENABLED | When false, the v3 rate limiter skips the upfront TPM token reservation and enforces TPM post-call from actual usage. Default is true
+| LITELLM_TPM_TOKEN_RESERVATION_ENABLED | When false, the v3 rate limiter skips the upfront TPM token reservation and enforces TPM post-call from actual usage (pre-v1.82 behavior). This sheds a Redis round-trip per request at the cost of letting concurrent requests all pass the TPM check before any of their usage lands. Default is true. Does not apply to `POST /batches`, which uses its own limiter. See [estimated output tokens](./users#estimated-output-tokens-requests-without-max_tokens)
 | LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES | When set to "true", routes OpenAI /v1/messages requests through chat/completions instead of the Responses API for Anthropic models. Can also be set via `litellm_settings.use_chat_completions_url_for_anthropic_messages`
 | LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES | When set to "true", routes all OpenAI /chat/completions requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via `litellm_settings.route_all_chat_openai_to_responses`
 | LITELLM_GEMINI_LIVE_DEFER_SETUP | When set to "true", defers Gemini/Vertex Live setup until the client sends `session.update` (required for runtime tool injection). Default is "false" for backwards compatibility, which auto-sends setup on connect. Can also be set via `litellm.gemini_live_defer_setup`
