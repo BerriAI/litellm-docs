@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 Phoenix is separate from [Arize AX](https://arize.com/products/ax/), the full-featured platform for production teams, AI-native companies, and enterprises, available as managed cloud or enterprise self-hosted deployment. LiteLLM supports both backends, but they use different callbacks, credentials, and endpoints. Use `arize_phoenix` for Phoenix, use `arize` for AX, or enable both when you need to send the same traces to each.
 
-For teams building evaluation loops around LiteLLM traces, Arize's [agent evaluation guide](https://arize.com/ai-agents/agent-evaluation) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) cover production workflows for tracing failures, evaluating model behavior, and improving agent reliability.
+For teams building evaluation loops around LiteLLM traces, Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) cover production workflows for tracing failures, evaluating model behavior, and improving agent reliability.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
