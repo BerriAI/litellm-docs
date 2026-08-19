@@ -435,35 +435,47 @@ All batch and file endpoints support model-based routing:
 
 ## How Rate Limiting for Batches API Works
 
-`POST /v1/batches` does not go through the same TPM/RPM path as `/chat/completions`. A chat request is rate limited from an estimate of the prompt it carries; a batch request carries only an `input_file_id`, so LiteLLM downloads the input JSONL before dispatching, counts the tokens in every line, and charges the whole file against the caller's TPM limit and its line count against the RPM limit in one atomic check. A batch that would push either counter past its limit is rejected with a `429` at submission, so a single large file cannot slip through a per-minute limit the way it would if the submission counted as one request.
+Batch rate limiting is enabled by default for `POST /v1/batches`. Because a batch submission references an input file instead of including prompts directly, LiteLLM evaluates the JSONL file before sending the request to the provider:
 
-This is on by default and needs no configuration. Three things about it are worth knowing before you rely on it:
+1. Counts the tokens across all JSONL records and applies the total to the caller's TPM limit.
+2. Counts the JSONL records and applies the total to the caller's RPM limit.
+3. Returns a `429` response if the batch would exceed either limit.
 
-The reservation is never reconciled. Unlike the chat path, which replaces its pre-call estimate with real usage once the response lands, the batch counters keep the count taken from the input file. Tokens estimated from the JSONL are the final charge against TPM, whatever the batch actually consumes.
+The check is atomic, so LiteLLM evaluates the full batch against the limits available at submission time.
 
-Rate limiting fails open. If the input file cannot be read or counted, the error is logged and the batch is admitted uncounted rather than rejected. A batch submitted with no `input_file_id`, or by a key with no applicable TPM/RPM limit, is likewise not counted.
+### What to expect
 
-Costs are still tracked separately, through the events described below, and land when the batch completes. Budget enforcement at submission time is read-time only; see [budget reservation](./proxy/users#budget-reservation).
+| Behavior | Operational impact |
+| --- | --- |
+| File-based accounting | TPM and RPM usage is based on the submitted JSONL file. The counters are not adjusted after the provider completes the batch. |
+| File cannot be read or counted | LiteLLM logs the error and submits the batch without charging it to TPM or RPM. Monitor these errors if your deployment requires strict rate-limit enforcement. |
+| No applicable TPM or RPM limit | LiteLLM submits the batch without counting the input file. |
+| Cost and budget tracking | LiteLLM records the final cost separately when the batch completes. Budget reservation at submission does not provide a hard spending limit for the full batch. See [Budget reservation](./proxy/users#budget-reservation). |
 
 ### Skipping the input-file pre-read
 
-Downloading and counting a large JSONL adds latency to every submission. Two `general_settings` keys opt out of it:
+Reading a large JSONL file can add latency to batch submission. If you do not need the batch to be charged against TPM or RPM at submission, configure one of these options:
 
 ```yaml
 general_settings:
-  # skip for every batch
+  # Apply to all batch submissions
   disable_batch_input_file_rate_limiting: true
 
-  # or skip only for batches routed to these providers
+  # Or apply only to batches routed to selected providers
   skip_batch_input_file_rate_limiting_for_providers:
     - hosted_vllm
 ```
 
-The provider is resolved from the routing deployment's configured credentials rather than from the caller's `custom_llm_provider`, so a caller cannot name a skip-listed provider to get out of being counted.
+The provider-specific option uses the provider configured on the selected route. It does not use a `custom_llm_provider` value supplied by the client.
 
-Neither skip is honored for a key that has a model allowlist. Those keys always have their JSONL read, because every `body.model` entry in the file has to be validated against the allowlist; the skip only avoids the counter update, not the download.
+For API keys with a model allowlist, LiteLLM must still read the file to validate each `body.model` value. In this case, the settings above skip the TPM and RPM counter update, but not the file download or model validation.
 
-There is no per-model skip and no per-request escape hatch. `skip_batch_input_file_rate_limiting_for_models` is accepted for backwards compatibility but has no effect and logs a warning, and a `skip_batch_input_file_rate_limiting` flag in request metadata is ignored. Both are refused for the same reason: the model a batch runs on is caller-influenced, since the top-level `model` and the model embedded in a `file-...` id can both name a skip-listed deployment while the JSONL routes rate-limited models.
+The following options are not supported:
+
+- `skip_batch_input_file_rate_limiting_for_models` is retained for compatibility but has no effect. LiteLLM logs a warning at startup when it is configured.
+- A `skip_batch_input_file_rate_limiting` flag in request metadata is ignored.
+
+Use the global or provider-specific settings above to manage this behavior at the server level.
 
 ## How Cost Tracking for Batches API Works
 
