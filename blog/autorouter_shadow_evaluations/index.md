@@ -13,8 +13,6 @@ hide_table_of_contents: false
 
 We have shown the Auto-Router [saving 51% in production](/blog/auto-router-production-savings) and [69% stacked on prompt caching](/blog/auto-router-prompt-caching-benchmark). The question we hear next is always the same: **"would it hold quality on my traffic?"**
 
-Shadow evaluations answer that on your own production traffic, and boil it down to one number. On our own traffic below: **the router matched or beat the current model on 88.1% of judged responses**. Nothing your users see changes while it runs.
-
 ![Shadow Evaluations: test the Auto-Router on your own production traffic](./hero.png)
 
 {/* truncate */}
@@ -26,6 +24,8 @@ Get early access, work directly with the LiteLLM team, and influence the roadmap
 <a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
 
 :::
+
+Shadow evaluations answer that on your own production traffic, and boil it down to one number. On our own traffic below: **the router matched or beat the current model on 88.1% of judged responses**. Nothing your users see changes while it runs.
 
 ## What a shadow eval does
 
