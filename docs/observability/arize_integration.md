@@ -3,9 +3,11 @@ import TabItem from '@theme/TabItem';
 
 # Arize AX
 
-AI observability and evaluation for LLM applications, at [arize.com](https://arize.com/).
+Use Arize AX when you want the full-featured [Arize AI](https://arize.com/?utm_source=litellm-docs&utm_medium=partner&utm_campaign=partner-docs&utm_content=arize-ax-integration) platform for production LLM observability and evaluation, available as managed cloud or enterprise self-hosted deployment.
 
-Arize AX is the hosted platform. If you self-host the open-source tracer, or run it on Phoenix Cloud, see [Arize Phoenix](./phoenix_integration) instead; the two use different credentials and endpoints.
+Arize AX is separate from [Arize Phoenix](https://arize.com/phoenix/), the open-source tracing and evaluation project for local development, experimentation, and self-hosted workflows. LiteLLM supports both backends, but they use different callbacks, credentials, and endpoints. If you are sending traces to Phoenix, use the [Arize Phoenix setup guide](./phoenix_integration) instead.
+
+For production evaluation workflows, see Arize's [agent evaluation guide](https://arize.com/ai-agents/agent-evaluation) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) for examples of using traces to debug failures, compare model behavior, and improve agent reliability.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
