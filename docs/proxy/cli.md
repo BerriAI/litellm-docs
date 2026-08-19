@@ -348,6 +348,19 @@ This page documents all command-line interface (CLI) arguments available for the
      litellm
      ```
 
+#### Amazon ECS setup
+
+For LiteLLM running on Amazon ECS:
+
+1. Enable IAM database authentication on the Amazon RDS or Aurora PostgreSQL instance.
+2. Configure the PostgreSQL user for IAM authentication.
+3. Grant the ECS task role permission to connect to the database as that user.
+4. Set `IAM_TOKEN_DB_AUTH=True` and the required `DATABASE_*` variables in the ECS task definition.
+
+LiteLLM uses the task role's AWS credentials to generate and refresh the database token. A static database password is not required.
+
+These settings are read from the task environment when LiteLLM starts. To change the flag or connection parameters, deploy a new task definition or restart the proxy tasks. Token refreshes do not require a restart.
+
 ### --use_prisma_db_push
    - **Default:** `False`
    - **Type:** `bool` (Flag)
