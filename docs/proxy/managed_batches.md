@@ -64,7 +64,7 @@ litellm_settings:
 
 ```
 
-By default, LiteLLM reads each batch input file before submission and charges its tokens and record count against the caller's TPM and RPM limits. This can add latency for large files. Use the settings above only when batch submissions do not need to be included in TPM or RPM accounting. For details and limitations, see [How rate limiting works for the Batches API](../batches#how-rate-limiting-for-batches-api-works).
+By default, LiteLLM reads each batch input file before submission and charges its tokens and record count against the caller's TPM and RPM limits. This can add latency for large files. Use the settings above only when batch submissions do not need to be included in TPM or RPM accounting. To govern batch submissions by outstanding batch work instead of per-minute windows, see [Enqueued-token limits](../batches#enqueued-token-limits). For details and limitations, see [How rate limiting works for the Batches API](../batches#how-rate-limiting-for-batches-api-works).
 
 ### 2. Create Virtual Key
 

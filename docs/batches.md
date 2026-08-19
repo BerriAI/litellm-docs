@@ -517,6 +517,33 @@ If LiteLLM cannot tokenize an individual record, it uses a conservative estimate
 
 :::
 
+### Enqueued-token limits
+
+Per-minute windows fit batches poorly: a batch runs for hours, but its whole input file is charged to a single minute at submission. To govern batch submissions by outstanding batch work instead, set an enqueued-token allowance in the key or team metadata:
+
+```bash
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
+```
+
+`batch_enqueued_token_limit` also works in team metadata. When both the key and its team set one, the batch must fit both allowances.
+
+When a key or team has an enqueued-token limit, batch submission is governed only by that allowance:
+
+1. When the client creates a batch, LiteLLM reserves the file's estimated tokens (the input tokens plus each record's output cap) against the allowance.
+2. If the batch does not fit, LiteLLM returns `429` naming the enqueued token limit and does not submit the batch to the provider.
+3. When LiteLLM serves a response showing the batch in a terminal state (completed, failed, expired, or cancelled), it refunds the reservation. Polling `GET /v1/batches/{batch_id}` and cancelling with `POST /v1/batches/{batch_id}/cancel` both qualify.
+4. Batch submissions are not charged to the per-minute TPM and RPM windows, so a batch whose record count exceeds the key's RPM is accepted when it fits the allowance.
+
+Real-time traffic such as chat completions is unaffected: it consumes the key's TPM and RPM limits exactly as before.
+
+Two details to plan around:
+
+- `disable_batch_input_file_rate_limiting` and `skip_batch_input_file_rate_limiting_for_providers` take precedence. When they apply, LiteLLM performs no enqueued-token accounting.
+- Reservations for batches whose terminal state LiteLLM never observes (for example, a batch only ever polled directly against the provider) expire after 8 days.
+
 ### Operational behavior
 
 | Behavior | Operational impact |
