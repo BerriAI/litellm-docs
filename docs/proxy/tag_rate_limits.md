@@ -129,7 +129,7 @@ Each entry takes:
 
 `period_seconds` is raw seconds, not a day/week/month enum, so the same mechanism covers both a genuine RPM-style cap and a long-window budget: `period_seconds: 86400` resets at UTC midnight, and `period_seconds: 60` resets on real clock-minute boundaries (bucketed by `epoch_second // period_seconds`, so any value that evenly divides a day lands on a natural clock boundary).
 
-`token_limits` and `dollar_limits` are accounted from real usage once a request succeeds, since the actual token count or cost is only known after the response. `request_limits` and `concurrency_limits` are enforced atomically at admission, before the request is dispatched: `request_limits` increments its counter immediately, and `concurrency_limits` reserves a slot that's released once the request finishes (whether it succeeds or fails).
+`token_limits` and `dollar_limits` are accounted from real usage once a request succeeds, since the actual token count or cost is only known after the response. `request_limits` and `concurrency_limits` are enforced atomically at admission, before the request is dispatched: `request_limits` increments its counter immediately, and `concurrency_limits` reserves a slot that's released once the request finishes, whether it succeeds, fails, or the client disconnects before a response arrives. `period_seconds` remains the outer safety net for a release that's missed some other way, such as a worker crashing before it runs.
 
 ## How Enforcement Works
 
