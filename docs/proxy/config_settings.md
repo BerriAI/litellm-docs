@@ -1045,7 +1045,7 @@ router_settings:
 | HUGGINGFACE_API_BASE | Base URL for Hugging Face API
 | HUGGINGFACE_API_KEY | API key for Hugging Face API
 | HUMANLOOP_PROMPT_CACHE_TTL_SECONDS | Time-to-live in seconds for cached prompts in Humanloop. Default is 60
-| IAM_TOKEN_DB_AUTH | Set to `True` to authenticate PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token. LiteLLM generates and refreshes the token with boto3. This option does not support Google Cloud SQL; use the Cloud SQL Auth Proxy with `--auto-iam-authn` instead. Requires `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, and `DATABASE_NAME`. |
+| IAM_TOKEN_DB_AUTH | Set to `True` to authenticate PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token. LiteLLM generates and refreshes the token with boto3. This option does not support Google Cloud SQL; use the Cloud SQL Auth Proxy with `--auto-iam-authn` instead. Requires `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, and `DATABASE_NAME`. For ECS task-role setup and restart behavior, see [`--iam_token_db_auth`](./cli#--iam_token_db_auth). |
 | IBM_GUARDRAILS_API_BASE | Base URL for IBM Guardrails API
 | IBM_GUARDRAILS_AUTH_TOKEN | Authorization bearer token for IBM Guardrails API
 | INITIAL_RETRY_DELAY | Initial delay in seconds for retrying requests. Default is 0.5
@@ -1173,7 +1173,7 @@ router_settings:
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
 | LITELLM_TOKEN | Access token for LiteLLM integration
-| LITELLM_TPM_TOKEN_RESERVATION_ENABLED | Default `true`. Set to `false` to disable pre-request TPM reservation in the v3 rate limiter and apply actual usage after each request completes. This removes one Redis operation per request, but concurrent requests may temporarily exceed the TPM limit. This setting does not apply to `POST /batches`. See [Estimated output tokens](./users#estimated-output-tokens-requests-without-max_tokens). |
+| LITELLM_TPM_TOKEN_RESERVATION_ENABLED | Default `true`. Set to `false` to disable pre-request TPM reservation in the v3 rate limiter and apply actual usage after each real-time request completes. This removes one Redis operation per request, but concurrent requests may temporarily exceed the TPM limit. This setting does not apply to `POST /v1/batches`, which uses a [separate input-file limiter](../batches#how-rate-limiting-for-batches-api-works). See [Estimated output tokens](./users#estimated-output-tokens-requests-without-max_tokens). |
 | LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES | When set to "true", routes OpenAI /v1/messages requests through chat/completions instead of the Responses API for Anthropic models. Can also be set via `litellm_settings.use_chat_completions_url_for_anthropic_messages`
 | LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES | When set to "true", routes all OpenAI /chat/completions requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via `litellm_settings.route_all_chat_openai_to_responses`
 | LITELLM_GEMINI_LIVE_DEFER_SETUP | When set to "true", defers Gemini/Vertex Live setup until the client sends `session.update` (required for runtime tool injection). Default is "false" for backwards compatibility, which auto-sends setup on connect. Can also be set via `litellm.gemini_live_defer_setup`
