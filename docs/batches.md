@@ -439,6 +439,56 @@ LiteLLM supports the following provider-native batch APIs:
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
+## Batch Input File Validation
+
+LiteLLM validates batch input files at upload time. When a client uploads a file to `POST /v1/files` with `purpose="batch"`, LiteLLM checks the file locally and rejects invalid files before anything is forwarded to the provider. Validation runs on every `/v1/files` routing path, including provider-routed uploads configured through `files_settings` and [LiteLLM managed files](./proxy/managed_batches) uploads that use `target_model_names`
+
+Rejections use the OpenAI error format, an `error` object with `message`, `type`, `param`, and `code` fields, so existing OpenAI SDK error handling works unchanged
+
+### Limit the batch input file size
+
+Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch input files. The value is an integer in MB. When it is unset, no size cap applies
+
+```yaml
+general_settings:
+  master_key: sk-1234
+  max_batch_file_size_mb: 10
+```
+
+A `purpose="batch"` upload larger than the cap is rejected with HTTP `413`:
+
+```json
+{
+  "error": {
+    "message": "Batch input file is 12.0 MB, which exceeds the configured max_batch_file_size_mb of 10 MB. The file was not forwarded to the provider.",
+    "type": "invalid_request_error",
+    "param": "file",
+    "code": "413"
+  }
+}
+```
+
+`max_batch_file_size_mb` applies only to batch input file uploads. It is separate from `max_request_size_mb`, which applies to every proxy route
+
+### Content validation
+
+LiteLLM always validates the content of `purpose="batch"` uploads. There is no setting to configure. The filename must end in `.jsonl`, matched case-insensitively. The file must contain at least one non-blank line. Every non-blank line must be valid JSON. Every line must be a JSON object. Every object must contain the `custom_id`, `method`, `url`, and `body` keys
+
+A file that fails any of these checks is rejected with HTTP `400` and `"type": "invalid_request_error"`. The `param` field names the offending field: `file` for a wrong extension, an empty file, a line that is not valid JSON, or a line that is not a JSON object. For a line that is missing a required key, `param` is the missing key, such as `method`. The `message` includes the 1-based line number where relevant. Line numbers count every line in the file, including blank lines
+
+### Provider batch limits
+
+Each provider enforces its own limits on batch input files. Use them to pick a value for `max_batch_file_size_mb`
+
+| Provider | Max input file size | Max requests |
+|----------|---------------------|--------------|
+| [OpenAI](https://developers.openai.com/api/docs/guides/batch) | 200 MB | 50,000 per batch |
+| [Azure OpenAI](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/batch) | 200 MB | 100,000 per file |
+| [Vertex AI](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini) | 1 GB | 200,000 per job |
+| [Amazon Bedrock](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) | 1 GB per file | See AWS Service Quotas |
+
+Azure OpenAI raises its file cap to 1 GB with bring-your-own Blob Storage. The Vertex AI cap applies to Cloud Storage input. Amazon Bedrock also caps total job size, at 5 GB for most models. Set `max_batch_file_size_mb` at or below the smallest limit of the providers you route batch traffic to
+
 ## How Rate Limiting for Batches API Works
 
 Batch rate limits are enforced when the client calls `POST /v1/batches`, not when the input file is uploaded.
