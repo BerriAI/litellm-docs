@@ -11,6 +11,7 @@ Unlike the other search providers, there is no API key to sign up for. You creat
 | Auth (AWS_IAM gateway) | SigV4, from explicit keys or the standard AWS credential chain |
 | Auth (CUSTOM_JWT gateway) | `AGENTCORE_GATEWAY_TOKEN`, or `api_key` |
 | Tool name override | `AGENTCORE_SEARCH_TOOL_NAME`, or `tool_name` |
+| MCP protocol version override | `AGENTCORE_MCP_PROTOCOL_VERSION` |
 
 The gateway URL looks like `https://<gateway-id>.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp`
 
@@ -126,4 +127,6 @@ The gateway is billed by AWS directly, so LiteLLM tracks `agentcore/search` at z
 
 The SigV4 signing region comes from the gateway hostname. If you front the gateway with a custom hostname, set `aws_region_name` (or `AWS_REGION`, or a profile region) to the gateway's region
 
-`AGENTCORE_GATEWAY_TOKEN` is only sent when the request targets the gateway configured in `AGENTCORE_GATEWAY_URL`, so a caller-supplied `api_base` cannot exfiltrate it
+`AGENTCORE_GATEWAY_TOKEN` is only sent when the request targets the gateway configured in `AGENTCORE_GATEWAY_URL`, so a caller-supplied `api_base` cannot exfiltrate it. Credentials also only ride https: a plain `http://` gateway URL is refused unless the host is localhost
+
+LiteLLM sends `MCP-Protocol-Version: 2025-03-26` on every request, the version a gateway with a default `protocolConfiguration` accepts. If your gateway pins `supportedVersions` to something else, set `AGENTCORE_MCP_PROTOCOL_VERSION` to match, e.g. `2025-06-18`
