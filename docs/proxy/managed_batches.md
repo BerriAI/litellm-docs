@@ -51,10 +51,10 @@ model_list:
       mode: batch # 👈 SPECIFY MODE AS BATCH, to tell user this is a batch model
 
 general_settings:
-  # Optional: disable batch input-file pre-read globally
+  # Optional: do not charge batch input files against TPM/RPM
   # disable_batch_input_file_rate_limiting: true
 
-  # Optional: skip only for selected providers (example: custom vLLM)
+  # Optional: apply this behavior only to selected providers
   skip_batch_input_file_rate_limiting_for_providers:
     - hosted_vllm
 
@@ -64,7 +64,7 @@ litellm_settings:
 
 ```
 
-LiteLLM reads the batch input file before dispatching and charges its tokens and line count against the caller's TPM/RPM limits. The two `skip_` settings above opt out of that pre-read; see [how rate limiting for the batches API works](../batches#how-rate-limiting-for-batches-api-works) for what the skips do and do not cover.
+By default, LiteLLM reads each batch input file before submission and charges its tokens and record count against the caller's TPM and RPM limits. This can add latency for large files. Use the settings above only when batch submissions do not need to be included in TPM or RPM accounting. For details and limitations, see [How rate limiting works for the Batches API](../batches#how-rate-limiting-for-batches-api-works).
 
 ### 2. Create Virtual Key
 
