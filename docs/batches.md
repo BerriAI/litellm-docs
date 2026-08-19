@@ -515,10 +515,7 @@ For managed batches, LiteLLM monitors the provider job in the background. When t
 
 Failed output records are excluded from the aggregate. If the batch has no output file because every record failed, LiteLLM records zero usage and zero cost.
 
-| Event | Purpose |
-| --- | --- |
-| `acreate_batch` | Records the initial batch submission. |
-| `batch_success` | Records the aggregate usage and cost when processing completes. |
+The initial submission and the completed aggregate are recorded separately. The completed aggregate is emitted through standard spend tracking as an `aretrieve_batch` record, so it is available to the Admin UI and configured logging callbacks.
 
 Batch cost tracking does not change the TPM or RPM counters reserved at submission. Those counters remain based on the input-file calculation described above.
 
