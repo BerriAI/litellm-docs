@@ -4,7 +4,7 @@ title: "Shadow Evaluations: Test the Auto-Router on Your Own Production Traffic"
 date: 2026-08-18T10:00:00
 authors:
   - tin
-description: "Shadow evaluations duplicate a sampled slice of one key's live traffic through an auto-router and have an LLM judge blindly compare the answers. You measure router quality on your real workload before a single user-facing response changes."
+description: "Shadow evaluations duplicate a sampled slice of one key's live traffic through an auto-router and have an LLM judge blindly compare the answers. On our own traffic the router matched or beat the current model on 88.1% of judged responses, measured before a single user-facing response changed."
 image: ./hero.png
 keywords: [shadow evaluation, shadow testing, auto router, llm quality evaluation, llm as a judge, model routing, litellm auto routing, llm gateway]
 tags: [routing, complexity-router, evals, quality, engineering]
@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 We have shown the Auto-Router [saving 51% in production](/blog/auto-router-production-savings) and [69% stacked on prompt caching](/blog/auto-router-prompt-caching-benchmark). The question we hear next is always the same: **"would it hold quality on my traffic?"**
 
-Shadow evaluations answer that on your own production traffic. Nothing your users see changes.
+Shadow evaluations answer that on your own production traffic, and boil it down to one number. On our own traffic below: **the router matched or beat the current model on 88.1% of judged responses**. Nothing your users see changes while it runs.
 
 ![Shadow Evaluations: test the Auto-Router on your own production traffic](./hero.png)
 
@@ -82,12 +82,20 @@ The judge defaults to `anthropic/claude-sonnet-5`; a mid-tier judge is the sweet
 
 ## Reading the results
 
+One glance answers the question. A completed job on our own traffic, 143 judged turns for $1.55 of judge spend:
+
+![Shadow eval results: router matched or beat the current model on 88.1% of 143 judged responses](./results_card.png)
+
+Ties are the point. The router mostly picks a cheaper model, so every tie is the same quality at a lower price; here only 11.9% of turns preferred the current model, and per-tier slices show exactly where those live.
+
+The job also reports:
+
 - **Win rates**: real wins, shadow wins, and ties, as shares of judged turns
 - **Per complexity tier**, so you can see exactly which tier a quality gap lives in and fix that one tier's model instead of abandoning the router
 - **Average judge confidence** per slice
 - **Judge spend so far**, tracked on the job
 
-A common outcome on tuned tier maps: the shadow arm ties or wins around half the judged turns. At that point the remaining question is not quality, it is why you are still paying flagship prices for every request.
+At 88.1% matched-or-beat, the remaining question is not quality; it is why you are still paying flagship prices for every request.
 
 ## Try it
 
