@@ -974,7 +974,7 @@ router_settings:
 | GENERIC_CLIENT_USE_PKCE | Enable PKCE (Proof Key for Code Exchange) for generic OAuth providers. Set to "true" when your OAuth provider requires PKCE. **Default is false**
 | GENERIC_SSO_HEADERS | Comma-separated list of additional headers to add to the request - e.g. Authorization=Bearer `<token>`, Content-Type=application/json, etc.
 | GENERIC_INCLUDE_CLIENT_ID | Include client ID in requests for OAuth
-| GENERIC_INCLUDE_TOKEN_CLAIMS | When true, also source generic OIDC SSO user claims from the ID token and access token when UserInfo is incomplete; UserInfo claims take precedence
+| GENERIC_INCLUDE_TOKEN_CLAIMS | When true, also source generic OIDC SSO user claims from the ID token and access token when UserInfo is incomplete. UserInfo claims take precedence
 | GENERIC_SCOPE | Scope settings for generic OAuth providers
 | GENERIC_TOKEN_ENDPOINT | Token endpoint for generic OAuth providers
 | GENERIC_USER_DISPLAY_NAME_ATTRIBUTE | Attribute for user's display name in generic auth
