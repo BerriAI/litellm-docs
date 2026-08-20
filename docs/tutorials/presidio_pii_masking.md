@@ -686,8 +686,8 @@ Congratulations! 🎉 You've successfully set up PII masking with Presidio and L
 
 - **[View all supported PII entity types](https://microsoft.github.io/presidio/supported_entities/)**
 - **[Explore other LiteLLM guardrails](../proxy/guardrails/quick_start)**
-- **[Set up multiple guardrails](../proxy/guardrails/quick_start#combining-multiple-guardrails)**
-- **[Configure per-key guardrails](../proxy/virtual_keys#guardrails)**
+- **[Set up multiple guardrails](/docs/proxy/guardrails/quick_start)**
+- **[Configure per-key guardrails](/docs/proxy/guardrails/quick_start#-control-guardrails-per-api-key)**
 - **[Learn about custom guardrails](../proxy/guardrails/custom_guardrail)**
 
 ## Additional Resources

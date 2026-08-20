@@ -433,7 +433,7 @@ LiteLLM supports the following provider-native batch APIs:
 | --- | --- |
 | Azure OpenAI | [Azure OpenAI batches](./providers/azure#azure-batches-api) |
 | OpenAI | [Quick start](#quick-start) |
-| Google Vertex AI | [Vertex AI batch APIs](./providers/vertex#batch-apis) |
+| Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
 | vLLM | [vLLM batches](./providers/vllm_batches) |
 

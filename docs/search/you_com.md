@@ -125,7 +125,7 @@ response = search(
 
 ## Response Notes
 
-You.com's API returns results split into `web` and `news` arrays. The LiteLLM adapter flattens both into a single ordered `results` list (web first, then news) so the response matches the unified [`SearchResponse`](./index#response-format) shape.
+You.com's API returns results split into `web` and `news` arrays. The LiteLLM adapter flattens both into a single ordered `results` list (web first, then news) so the response matches the unified [`SearchResponse`](/docs/search#response-format) shape.
 
 For each result:
 - `snippet` prefers the first entry of the upstream `snippets` array; falls back to `description`.

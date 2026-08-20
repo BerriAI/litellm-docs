@@ -208,7 +208,7 @@ LiteLLM now provides an audit table for deleted API keys and teams directly in t
 - **[Ollama](../../docs/providers/ollama)**
   - Set finish_reason to tool_calls and remove broken capability check - [PR #18924](https://github.com/BerriAI/litellm/pull/18924)
 
-- **[Watsonx](../../docs/providers/watsonx/index)**
+- **[Watsonx](/docs/providers/watsonx)**
   - Allow passing scope ID for Watsonx inferencing - [PR #18959](https://github.com/BerriAI/litellm/pull/18959)
 
 - **[Replicate](../../docs/providers/replicate)**
@@ -356,7 +356,7 @@ LiteLLM now provides an audit table for deleted API keys and teams directly in t
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
   - Include Langfuse logger in JSON logging when Langfuse callback is used - [PR #19162](https://github.com/BerriAI/litellm/pull/19162)
 
-- **[Logfire](../../docs/observability/logfire)**
+- **[Logfire](/docs/observability/logfire_integration)**
   - Add ability to customize Logfire base URL through env var - [PR #19148](https://github.com/BerriAI/litellm/pull/19148)
 
 - **General Logging**

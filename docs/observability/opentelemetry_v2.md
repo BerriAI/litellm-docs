@@ -42,7 +42,7 @@ Set `LITELLM_OTEL_V2=true` in the proxy environment, then pick a destination bel
 
 ### 1. Send traces to any OTLP collector
 
-This path sends spans over OTLP (the OpenTelemetry Protocol) to a collector or backend you are already running at the endpoint below; if you do not have one yet, stay on the console exporter from the [Quickstart](#quickstart) until you do. Set the feature flag plus the standard `OTEL_*` environment variables in the proxy's environment. No config change is needed.
+This path sends spans over OTLP (the OpenTelemetry Protocol) to a collector or backend you are already running at the endpoint below; if you do not have one yet, stay on the console exporter from the Quickstart until you do. Set the feature flag plus the standard `OTEL_*` environment variables in the proxy's environment. No config change is needed.
 
 <Tabs>
 
@@ -833,7 +833,7 @@ The full set of keys on each span kind is in [Span attributes](#span-attributes)
 1. Confirm `LITELLM_OTEL_V2=true` is set in the proxy's environment.
 2. Try `OTEL_EXPORTER="console"` first. If spans print to stdout, the problem is your exporter endpoint/headers, not LiteLLM.
 3. Make sure you hit an LLM route (e.g. `/v1/chat/completions`). Health checks and UI routes are excluded by default.
-4. Check that `opentelemetry-instrumentation-fastapi` is installed (see [Requirements](#requirements)).
+4. Check that `opentelemetry-instrumentation-fastapi` is installed (see Requirements).
 
 **Only see the LLM call but no `auth`/`postgres`/server span?** Those server and DB spans require the FastAPI instrumentation package, so install `opentelemetry-instrumentation-fastapi`.
 

@@ -99,7 +99,7 @@ This release brings improvements to our Presidio PII Integration. As a Proxy Adm
     - `/realtime`
         - Gemini Multimodal Live API support
         - Audio input/output support, optional param mapping, accurate usage calculation - [PR](https://github.com/BerriAI/litellm/pull/10909)
-- **[VertexAI](../../docs/providers/vertex#metallama-api)**
+- **[VertexAI](/docs/providers/vertex)**
     - `/chat/completion`
         - Fix llama streaming error - where model response was nested in returned streaming chunk - [PR](https://github.com/BerriAI/litellm/pull/10878)
 - **[Ollama](../../docs/providers/ollama)**
@@ -127,7 +127,7 @@ This release brings improvements to our Presidio PII Integration. As a Proxy Adm
         - Migrate embedding to use `/v2/embed` - adds support for output_dimensions param - [PR](https://github.com/BerriAI/litellm/pull/10809)
 - **[Anthropic](../../docs/providers/anthropic)**
     - [`/chat/completion`](../../docs/providers/anthropic#usage-with-litellm-proxy)
-        - Web search tool support - native + openai format - [Get Started](../../docs/providers/anthropic#anthropic-hosted-tools-computer-text-editor-web-search)
+        - Web search tool support - native + openai format - [Get Started](/docs/providers/anthropic#anthropic-hosted-tools-computer-text-editor-web-search-memory)
 - **[VLLM](../../docs/providers/vllm)**
     - [`/embeddings`](../../docs/providers/vllm#embeddings)
         - Support embedding input as list of integers

@@ -218,7 +218,7 @@ These are separate controls:
 | `models` on `UserAPIKeyAuth` | Key-level allowlist | Value you return from custom auth |
 | `project_id` on `UserAPIKeyAuth` | Project-level allowlist | `models` on the **project record in LiteLLM's DB** |
 
-An empty `models` list (`[]`) means no restriction. Names must match the model group in your config (wildcards supported). See [Project Management](./project_management) and [Config Settings](./config_settings#all-settings).
+An empty `models` list (`[]`) means no restriction. Names must match the model group in your config (wildcards supported). See [Project Management](./project_management) and [Config Settings](/docs/proxy/config_settings#litellm_settings---reference).
 
 ## Key-level enforcement
 

@@ -65,9 +65,9 @@ pip install litellm==1.82.3
 | [Nebius AI](../../docs/providers/nebius) (`nebius/`) | `/chat/completions`, `/embeddings` | EU-based AI cloud with 30+ open models — DeepSeek, Qwen3, Llama 3.1/3.3, NVIDIA Nemotron, BAAI embeddings |
 | [ZAI](../../docs/providers/zai) (`zai/`) | `/chat/completions` | ZhipuAI GLM-5 models via ZAI cloud |
 | [Black Forest Labs](../../docs/providers/black_forest_labs) (`black_forest_labs/`) | `/images/generations`, `/images/edits` | FLUX image generation and editing — Kontext Pro/Max, Pro 1.0 Fill/Expand |
-| [Serper](../../docs/providers/serper) (`serper/`) | `/search` | Web search via Serper API |
+| [Serper](/docs/search/serper) (`serper/`) | `/search` | Web search via Serper API |
 | [SageMaker Nova](../../docs/providers/aws_sagemaker) (`sagemaker_nova/`) | `/chat/completions` | Amazon Nova models via SageMaker endpoint |
-| [Google Search API](../../docs/providers/google_search) (`google_search/`) | `/search` | Google Search API integration - [PR #22752](https://github.com/BerriAI/litellm/pull/22752) |
+| [Google Search API](/docs/search/google_pse) (`google_search/`) | `/search` | Google Search API integration - [PR #22752](https://github.com/BerriAI/litellm/pull/22752) |
 | [Bedrock Mantle](../../docs/providers/bedrock) (`bedrock_mantle/`) | `/chat/completions` | Amazon Bedrock via Mantle — alternative auth and routing path for Bedrock models - [PR #22866](https://github.com/BerriAI/litellm/pull/22866) |
 
 ---
@@ -430,7 +430,7 @@ No major prompt management changes in this release.
 
 ### Secret Managers
 
-- **[Hashicorp Vault](../../docs/secret_managers)**: Full Hashicorp Vault integration as a config override backend, where secrets defined in Vault are fetched at startup and override `config.yaml` values. UI support for managing vault-sourced credentials included - [PR #22939](https://github.com/BerriAI/litellm/pull/22939), [PR #23036](https://github.com/BerriAI/litellm/pull/23036)
+- **[Hashicorp Vault](/docs/secret)**: Full Hashicorp Vault integration as a config override backend, where secrets defined in Vault are fetched at startup and override `config.yaml` values. UI support for managing vault-sourced credentials included - [PR #22939](https://github.com/BerriAI/litellm/pull/22939), [PR #23036](https://github.com/BerriAI/litellm/pull/23036)
 
 ---
 

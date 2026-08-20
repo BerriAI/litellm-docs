@@ -4,7 +4,7 @@ Use this if you want to use an Oauth2.0 token to make `/chat`, `/embeddings` req
 
 :::info
 
-This is an Enterprise Feature - [get in touch with us if you want a free trial to test if this feature meets your needs]((https://enterprise.litellm.ai/demo))
+This is an Enterprise Feature - [get in touch with us if you want a free trial to test if this feature meets your needs](https://enterprise.litellm.ai/demo)
 
 :::
 
@@ -59,7 +59,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## Debugging 
 
-Start the LiteLLM Proxy with [`--detailed_debug` mode and you should see more verbose logs](cli.md#detailed_debug)
+Start the LiteLLM Proxy with [`--detailed_debug` mode and you should see more verbose logs](cli.md#--detailed_debug)
 
 ## Using OAuth2 + JWT Together
 

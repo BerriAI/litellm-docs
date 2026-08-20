@@ -305,7 +305,7 @@ pip install litellm==1.83.10
 
 ### Logging
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add 7m and 10m latency histogram buckets - [PR #25071](https://github.com/BerriAI/litellm/pull/25071)
     - Performance improvements for Prometheus exporter - [PR #25934](https://github.com/BerriAI/litellm/pull/25934)
     - Resolve `prometheus_helpers` file/package shadow breaking `/global/spend/logs` - [PR #26026](https://github.com/BerriAI/litellm/pull/26026)

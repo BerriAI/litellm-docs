@@ -267,7 +267,7 @@ Let's dive in.
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Fix Langfuse OTEL trace export failing when spans contain null attributes - [PR #20382](https://github.com/BerriAI/litellm/pull/20382)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Fix incorrect failure metrics labels causing miscounted error rates - [PR #20152](https://github.com/BerriAI/litellm/pull/20152)
 
 - **[Slack Alerts](../../docs/proxy/alerting)**

@@ -132,7 +132,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     **Type:** `Literal["azure", "openai", "vertex_ai"]`
 
     **Required:** Yes
-    The name of the model to fine-tune. You can select one of the [**supported providers**](#supported-providers)
+    The name of the model to fine-tune. You can select one of the [**supported providers**](/docs/fine_tuning#supported-hyperparameters)
 
 * `training_file`
 

@@ -132,7 +132,7 @@ Both surfaces use the `object_permission` model with intersection-style resoluti
 | Pre-call input guardrails (Presidio, Bedrock, Lakera, Aporia, etc.) | `mode: pre_mcp_call` | Standard chat-completion guardrails apply to the underlying LLM calls the agent makes |
 | During-call intervention | `mode: during_mcp_call` | — |
 | Zero-trust JWT signing | [`mcp_jwt_signer` guardrail](./mcp_zero_trust) | — (not applicable to A2A today) |
-| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](./proxy/guardrails) apply via the agent's underlying model calls |
+| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](/docs/proxy/guardrails/quick_start) apply via the agent's underlying model calls |
 
 ---
 

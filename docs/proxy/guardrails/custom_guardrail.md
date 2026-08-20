@@ -229,7 +229,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test it 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Blocked Request" value = "blocked">
@@ -508,7 +508,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 2. Pass parameters in your API requests:
 
-LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](quick_start#spec-guardrails-parameter).
+LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter).
 
 <Tabs>
 <TabItem value="openai" label="OpenAI Python">

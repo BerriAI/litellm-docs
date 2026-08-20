@@ -8,9 +8,9 @@ Setup LiteLLM Proxy quickly via CLI.
 
 LiteLLM Server (LLM Gateway) manages:
 
-* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](#other-supported-models) in the OpenAI `ChatCompletions` & `Completions` format
+* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](/docs/proxy/quick_start#supported-llms) in the OpenAI `ChatCompletions` & `Completions` format
 * **Cost tracking**: Authentication, Spend Tracking & Budgets [Virtual Keys](https://docs.litellm.ai/docs/proxy/virtual_keys)
-* **Load Balancing**: between [Multiple Models](#multiple-models---quick-start) + [Deployments of the same model](#multiple-instances-of-1-model) - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
+* **Load Balancing**: between Multiple Models + Deployments of the same model - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
 
 ```shell
 $ uv tool install 'litellm[proxy]'

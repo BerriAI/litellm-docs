@@ -175,7 +175,7 @@ Users can now filter usage statistics by customers, providing the same granular 
     - Add xhigh reasoning effort for gpt-5.1-codex-max - [PR #17585](https://github.com/BerriAI/litellm/pull/17585)
     - Add clear error message for empty LLM endpoint responses - [PR #17445](https://github.com/BerriAI/litellm/pull/17445)
 
-- **[Azure OpenAI](../../docs/providers/azure/azure)**
+- **[Azure OpenAI](/docs/providers/azure)**
     - Allow reasoning_effort='none' for Azure gpt-5.1 models - [PR #17311](https://github.com/BerriAI/litellm/pull/17311)
 
 - **[Anthropic](../../docs/providers/anthropic)**
@@ -231,7 +231,7 @@ Users can now filter usage statistics by customers, providing the same granular 
 - **[Together AI](../../docs/providers/togetherai)**
     - Add context window exception mapping for Together AI - [PR #17284](https://github.com/BerriAI/litellm/pull/17284)
 
-- **[WatsonX](../../docs/providers/watsonx/index)**
+- **[WatsonX](/docs/providers/watsonx)**
     - Allow passing zen_api_key dynamically - [PR #16655](https://github.com/BerriAI/litellm/pull/16655)
     - Fix Watsonx Audio Transcription API - [PR #17326](https://github.com/BerriAI/litellm/pull/17326)
     - Fix audio transcriptions, don't force content type in request headers - [PR #17546](https://github.com/BerriAI/litellm/pull/17546)
