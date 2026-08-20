@@ -63,23 +63,6 @@ In forward mode, a shadow arm at rough parity means the router matches your curr
 - Requests with logging redaction on are never sampled
 - Works across `/chat/completions`, `/v1/messages`, and `/v1/responses` traffic
 
-## Starting one
-
-In the UI: **Cost Optimization → Auto Router → Shadow Evals**, pick a key and a router, start. Or over the API:
-
-```bash
-curl -X POST 'http://localhost:4000/auto_router/shadow_eval/start' \
-  -H 'Authorization: Bearer sk-admin' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "api_key_id": "88dc28.." ,
-    "router_name": "claude-auto-latest",
-    "shadow_percentage": 10
-  }'
-```
-
-The judge defaults to `anthropic/claude-sonnet-5`; a mid-tier judge is the sweet spot, since it only has to compare two answers. Poll `GET /auto_router/shadow_eval/{job_id}` for live results while the job runs.
-
 ## Reading the results
 
 One glance answers the question. A completed job on our own traffic, 143 judged turns for $1.55 of judge spend:
@@ -96,6 +79,23 @@ The job also reports:
 - **Judge spend so far**, tracked on the job
 
 At 88.1% matched-or-beat, the remaining question is not quality; it is why you are still paying flagship prices for every request.
+
+## Start a shadow evaluation on your own production traffic
+
+In the UI: **Cost Optimization → Auto Router → Shadow Evals**, pick a key and a router, start. Or over the API:
+
+```bash
+curl -X POST 'http://localhost:4000/auto_router/shadow_eval/start' \
+  -H 'Authorization: Bearer sk-admin' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "api_key_id": "88dc28..",
+    "router_name": "claude-auto-latest",
+    "shadow_percentage": 10
+  }'
+```
+
+The judge defaults to `anthropic/claude-sonnet-5`; a mid-tier judge is the sweet spot, since it only has to compare two answers. Poll `GET /auto_router/shadow_eval/{job_id}` for live results while the job runs.
 
 ## Try it
 
