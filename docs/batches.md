@@ -11,6 +11,9 @@ Covers Batches, Files
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
+Guardrails configured on your proxy are applied to the records inside a batch input file when it is
+uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
+
 ## Quick Start 
 
 - Create File for Batch Completion
