@@ -31,7 +31,7 @@ Get your API key from the [WaveSpeed dashboard](https://wavespeed.ai/).
 | Variable | Description |
 |----------|-------------|
 | `WAVESPEED_API_KEY` | Your WaveSpeed API key. Required for every operation |
-| `WAVESPEED_API_BASE` | Overrides the base URL. Defaults to `https://api.wavespeed.ai` for image and video, and `https://llm.wavespeed.ai/v1` for chat. Because one variable covers both surfaces, prefer setting `api_base` per model in `config.yaml` when you use chat and media together |
+| `WAVESPEED_API_BASE` | Overrides the base URL, for a self-hosted or proxied deployment. Defaults to `https://api.wavespeed.ai` for image and video, and `https://llm.wavespeed.ai/v1` for chat. Setting it to the chat base leaves image and video on the prediction host, so pointing it at chat does not break media |
 
 ### How predictions work
 
