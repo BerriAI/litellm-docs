@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models (selection)
 
-The live catalog with pricing is at [tokens.flex.ai/models](https://tokens.flex.ai/models). Popular chat models:
+The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models). Popular chat models:
 
 | Model | Capabilities | Context Window |
 |-------|-------------|----------------|
@@ -40,7 +40,7 @@ The live catalog with pricing is at [tokens.flex.ai/models](https://tokens.flex.
 os.environ["FLEXAI_API_KEY"] = ""  # your FlexAI API key
 ```
 
-Get an API key from the [FlexAI Token Service dashboard](https://tokens.flex.ai).
+Get an API key from the [FlexAI platform dashboard](https://platform.flex.ai).
 
 ## Usage - LiteLLM Python SDK
 
