@@ -119,7 +119,7 @@ export LITELLM_PROXY_URL=https://your-litellm-proxy:4000
 lite claude          # or: lite codex / lite opencode
 ```
 
-On first run this triggers `lite login` (browser SSO), stores a short-lived session token at `~/.litellm/token.json` (`0600`), then starts the agent. The wrapper sets the right variables per agent: Claude Code gets `ANTHROPIC_BASE_URL` (the proxy root) and `ANTHROPIC_AUTH_TOKEN`, and it clears any stray `ANTHROPIC_API_KEY` so the proxy token wins; Codex and OpenCode get `OPENAI_BASE_URL` (proxy plus `/v1`) and `OPENAI_API_KEY`, with Codex additionally pointed at a custom provider since it ignores `OPENAI_BASE_URL`. Forward the agent's own flags through the wrapper, for example `lite claude --model my-proxy-model`, and whatever model it requests must exist on the proxy. This path uses the session token from `lite login`, tied to the SSO'd (and SCIM-provisioned) user, so it does not go through the Step 3 `auto_register` path; the login flow issues the credential and spend still tracks against that user. To use a long-lived virtual key instead of the SSO session token, pass `--api-key` or set `LITELLM_PROXY_API_KEY`. See [CLI authentication](./cli_sso.md) for deployment prerequisites.
+On first run this triggers `lite login` (browser SSO), stores a short-lived session token in the developer's OS keychain, then starts the agent. The wrapper sets the right variables per agent: Claude Code gets `ANTHROPIC_BASE_URL` (the proxy root) and `ANTHROPIC_AUTH_TOKEN`, and it clears any stray `ANTHROPIC_API_KEY` so the proxy token wins; Codex and OpenCode get `OPENAI_BASE_URL` (proxy plus `/v1`) and `OPENAI_API_KEY`, with Codex additionally pointed at a custom provider since it ignores `OPENAI_BASE_URL`. Forward the agent's own flags through the wrapper, for example `lite claude --model my-proxy-model`, and whatever model it requests must exist on the proxy. This path uses the session token from `lite login`, tied to the SSO'd (and SCIM-provisioned) user, so it does not go through the Step 3 `auto_register` path; the login flow issues the credential and spend still tracks against that user. To use a long-lived virtual key instead of the SSO session token, pass `--api-key` or set `LITELLM_PROXY_API_KEY`. See [CLI authentication](./cli_sso.md) for deployment prerequisites.
 
 **Clients that already carry an IdP JWT.** Services, or agents already wired to your IdP, send the IdP-minted JWT straight to the proxy as the bearer token; LiteLLM never stores it. This is the path that triggers Step 3's `auto_register`, minting a per-user virtual key on the first request. For an Anthropic-style client, point it at the proxy root and pass the JWT as the auth token:
 
@@ -128,7 +128,7 @@ export ANTHROPIC_BASE_URL="https://your-litellm-proxy:4000"
 export ANTHROPIC_AUTH_TOKEN="<user-sso-jwt-token>"
 ```
 
-Two clarifications that trip people up. LiteLLM has no OS keychain or credential-helper integration; the on-device store for the CLI flow is that `0600` JSON file, not the macOS Keychain, Windows Credential Manager, or a git-style credential helper, so if you want it in an OS keychain you wrap `lite login` with your own tooling. And the session token the CLI stores is a LiteLLM-issued token scoped to the gateway, not the raw IdP JWT and not a persisted virtual key that appears in the Keys UI.
+Two clarifications that trip people up. The credential from `lite login` lives in the OS keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service) under the service `litellm-cli`, and `~/.litellm/token.json` keeps only non-secret metadata: the gateway URL, the user's id, email, and role, the auth header name, and the sign-in timestamp. Reaching the keychain needs the `keyring` package, which comes with the `cli` extra, so install the CLI as `litellm[cli]`. Where no keychain is available, on a headless Linux box for instance, or where you set `LITELLM_CLI_DISABLE_KEYRING` to turn keychain storage off, the credential falls back into that same `0600` file and `lite login` says which of the two it used. There is still no git-style credential-helper integration. And the session token the CLI stores is a LiteLLM-issued token scoped to the gateway, not the raw IdP JWT and not a persisted virtual key that appears in the Keys UI
 
 ---
 
@@ -159,7 +159,9 @@ In the Admin UI, the auto-registered key appears under the user with `auto_regis
 
 ## Making the key bind to the right user
 
-The one thing to get right is the identity join between SCIM and the JWT, otherwise `auto_register` mints a key that is not attached to the user SCIM provisioned. SCIM stores the user's id from the SCIM `userName` (so the LiteLLM `user_id` equals the `userName` your IdP sends), keeps `externalId` as `sso_user_id`, and stores the address from `emails[0]`. The auto-registered key binds to the user resolved from `user_id_jwt_field`, so map that to the JWT claim carrying the same value your IdP sends as the SCIM `userName`. Email is a reliable secondary join: LiteLLM also matches a JWT user to an existing user by email, so as long as your IdP sends the same email in both SCIM (`emails[0]`) and the JWT (`user_email_jwt_field`), the key attaches to the provisioned user even if the primary ids differ. Use a globally unique claim for `virtual_key_claim_field` (email or a stable subject id) so two different users never collide on the same mapping.
+To associate an auto-registered key with the correct SCIM-provisioned user, configure a consistent identity value across SCIM and JWT claims. LiteLLM stores SCIM `userName` as `user_id` and `emails[0].value` as `user_email`. The `externalId` attribute is stored as `sso_user_id` for `PUT` and `PATCH` requests, but not during the initial `POST`; therefore, `sso_user_id` may remain empty until the user is updated. See the [attribute mapping table](../tutorials/scim_litellm.md#user-attribute-mapping).
+
+Configure `user_id_jwt_field` to reference the JWT claim that contains the same value provided as the SCIM `userName`. LiteLLM can also match an existing user by email when `emails[0].value` matches the JWT claim configured by `user_email_jwt_field`. Set `virtual_key_claim_field` to a globally unique value, such as an email address or stable subject identifier, to prevent multiple users from sharing the same key mapping.
 
 ---
 
@@ -173,9 +175,9 @@ The one thing to get right is the identity join between SCIM and the JWT, otherw
 | JWT auth authenticates requests with IdP tokens | Yes |
 | JWT auth auto-registers a per-client virtual key | Yes, with `virtual_key_claim_field` + `auto_register` |
 | SCIM provisioning event directly triggers key creation | No (the first request does, lazily) |
-| `lite login` stores a gateway credential on the device | Yes (`~/.litellm/token.json`, `0600`) |
+| `lite login` stores a gateway credential on the device | Yes (OS keychain, or `~/.litellm/token.json` at `0600` when there is none) |
 | `lite claude` / `lite codex` / `lite opencode` set the agent's env vars for you | Yes (base URL and bearer token wired per agent) |
-| Credential stored in an OS keychain / credential helper | No (plain file with owner-only permissions) |
+| Credential stored in an OS keychain | Yes (service `litellm-cli`; no git-style credential-helper integration) |
 | Device-stored credential is the raw IdP JWT | No (it is a LiteLLM-issued session token) |
 
 ---

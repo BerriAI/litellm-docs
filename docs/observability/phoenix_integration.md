@@ -3,9 +3,11 @@ import TabItem from '@theme/TabItem';
 
 # Arize Phoenix
 
-Open-source LLM tracing and evaluation, at [phoenix.arize.com](https://phoenix.arize.com/). Run it self-hosted or on Phoenix Cloud.
+[Arize Phoenix](https://arize.com/phoenix/) is the open-source LLM tracing and evaluation project from [Arize AI](https://arize.com/?utm_source=litellm-docs&utm_medium=partner&utm_campaign=partner-docs&utm_content=phoenix-integration). Use it for local development, experimentation, and self-hosted workflows.
 
-Phoenix and [Arize AX](./arize_integration) are different backends from the same company. AX is the hosted platform; Phoenix is the open-source tracer. They take different credentials and endpoints, so pick the callback for the backend you actually run. You can also enable both at once to send to each.
+Phoenix is separate from [Arize AX](https://arize.com/products/ax/), the full-featured platform for production teams, AI-native companies, and enterprises, available as managed cloud or enterprise self-hosted deployment. LiteLLM supports both backends, but they use different callbacks, credentials, and endpoints. Use `arize_phoenix` for Phoenix, use `arize` for AX, or enable both when you need to send the same traces to each.
+
+For teams building evaluation loops around LiteLLM traces, Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) cover production workflows for tracing failures, evaluating model behavior, and improving agent reliability.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
