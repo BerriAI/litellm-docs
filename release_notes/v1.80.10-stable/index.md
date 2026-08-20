@@ -50,7 +50,7 @@ pip install litellm==1.80.10
 - **New Provider: SAP Gen AI Hub** - [Full support for SAP Generative AI Hub with chat completions](../../docs/providers/sap)
 - **New Bedrock Writer Models** - Add Palmyra-X4 and Palmyra-X5 models on Bedrock
 - **OpenAI GPT-5.2 Models** - Full support for GPT-5.2, GPT-5.2-pro, and Azure GPT-5.2 models with reasoning support
-- **227 New Fireworks AI Models** - Comprehensive model coverage for Fireworks AI platform
+- **227 New Fireworks AI Models** - Full model coverage for Fireworks AI platform
 - **MCP Support on /chat/completions** - [Use MCP servers directly via chat completions endpoint](../../docs/mcp)
 - **Performance Improvements** - Reduced memory leaks by 50%
 

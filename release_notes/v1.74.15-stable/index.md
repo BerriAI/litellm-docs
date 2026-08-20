@@ -204,7 +204,7 @@ This is great to central AI Platform teams looking to track how they are helping
 - **[MLFlow](../../docs/proxy/logging#mlflow)**
     - Allow adding tags for MLFlow logging requests - [PR #13108](https://github.com/BerriAI/litellm/pull/13108)
 - **[Langfuse OTEL](../../docs/proxy/logging#langfuse)**
-    - Add comprehensive metadata support to Langfuse OpenTelemetry integration - [PR #12956](https://github.com/BerriAI/litellm/pull/12956)
+    - Add full metadata support to Langfuse OpenTelemetry integration - [PR #12956](https://github.com/BerriAI/litellm/pull/12956)
 - **[Datadog LLM Observability](../../docs/proxy/logging#datadog)**
     - Allow redacting message/response content for specific logging integrations - [PR #13158](https://github.com/BerriAI/litellm/pull/13158)
 

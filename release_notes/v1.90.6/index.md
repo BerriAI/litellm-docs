@@ -43,7 +43,7 @@ pip install litellm==1.90.6
 </TabItem>
 </Tabs>
 
-`v1.90.6` is a patch release on top of [`v1.90.5`](/release_notes/v1.90.5/v1-90-5). Where `v1.90.5` restored the `litellm-proxy-extras` source folder to the runtime images, this release makes those migration assets usable from any account: the prisma CLI and its engines are now baked at `/opt/prisma`, a fixed path every runtime uid can read. Deployments that run as a non-root user — kubernetes `runAsUser`, `docker --user`, and similar — previously had prisma fall back to downloading its engines into a home directory it could not write, so a fresh-database migration failed on hosts with no outbound network access. Migrations now run offline under any uid. The release also carries routine dependency maintenance updates to mcp, pypdf, pydantic-settings, python-multipart, and starlette in the image lockfile.
+`v1.90.6` is a patch release on top of [`v1.90.5`](/release_notes/v1.90.5/v1-90-5). Where `v1.90.5` restored the `litellm-proxy-extras` source folder to the runtime images, this release makes those migration assets usable from any account: the prisma CLI and its engines are now baked at `/opt/prisma`, a fixed path every runtime uid can read. Deployments that run as a non-root user, such as kubernetes `runAsUser` and `docker --user`, previously had prisma fall back to downloading its engines into a home directory it could not write, so a fresh-database migration failed on hosts with no outbound network access. Migrations now run offline under any uid. The release also carries routine dependency maintenance updates to mcp, pypdf, pydantic-settings, python-multipart, and starlette in the image lockfile.
 
 ### What's Changed
 

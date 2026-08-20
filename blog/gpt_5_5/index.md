@@ -134,12 +134,12 @@ response = completion(
 )
 ```
 
-LiteLLM enforces these caps locally — passing an unsupported value (e.g. `minimal`) raises an `UnsupportedParamsError` instead of round-tripping to OpenAI for a 400.
+LiteLLM enforces these caps locally, so passing an unsupported value (e.g. `minimal`) raises an `UnsupportedParamsError` instead of round-tripping to OpenAI for a 400.
 
 ## Notes
 
-- For cost tracking on `gpt-5.5` and `gpt-5.5-pro`, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`). Works on any LiteLLM version `v1.76.0` or newer — no container restart or image upgrade required.
+- For cost tracking on `gpt-5.5` and `gpt-5.5-pro`, hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`). Works on any LiteLLM version `v1.76.0` or newer, with no container restart or image upgrade required.
 - `gpt-5.5-pro` is a Responses API-only model (`mode: "responses"`). LiteLLM's Responses API bridge transparently translates `completion()` calls to `/v1/responses`, so the SDK example above works without code changes.
-- GPT-5.5 supports reasoning, function calling, parallel tool calls, vision (image input), PDF input, prompt caching, web search, and structured output — see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
+- GPT-5.5 supports reasoning, function calling, parallel tool calls, vision (image input), PDF input, prompt caching, web search, and structured output; see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
 - Context window: 1.05M input tokens / 128K output tokens. Long-context tier pricing kicks in above 272K tokens.
-- Azure availability: not yet — this post covers OpenAI direct only.
+- Azure availability: not yet. This post covers OpenAI direct only.

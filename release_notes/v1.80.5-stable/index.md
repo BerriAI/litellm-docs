@@ -67,7 +67,7 @@ pip install litellm==1.80.5
 <br/>
 <br/>
 
-This release introduces **LiteLLM Prompt Studio** - a comprehensive prompt management solution built directly into the LiteLLM UI. Create, test, and version your prompts without leaving your browser.
+This release introduces **LiteLLM Prompt Studio** - a prompt management solution built directly into the LiteLLM UI. Create, test, and version your prompts without leaving your browser.
 
 You can now do the following on LiteLLM Prompt Studio:
 
