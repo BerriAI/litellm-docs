@@ -133,6 +133,8 @@ Each entry takes:
 
 ## How Enforcement Works
 
+`router_settings.routing_strategy: usage-based-routing` (the legacy, deprecated strategy predating `usage-based-routing-v2`) resolves deployments through a synchronous code path that never runs deployment-filter callbacks, so tag rate limits (and tag-based routing generally) are silently never enforced under that strategy. This is a limitation of that legacy routing path itself, not specific to this callback. Use `usage-based-routing-v2` or another supported strategy if tag rate limits need to be enforced.
+
 Limits are checked on every routing attempt, not just once before the primary model is tried. If a chain has fallbacks configured, a limit breach on the primary rejects that specific hop and the router moves on to try the fallback, whose own `tag_rate_limits` (if any) are checked independently:
 
 ```yaml showLineNumbers title="config.yaml"
