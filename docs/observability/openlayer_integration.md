@@ -96,7 +96,9 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ## What Openlayer renders
 
-Open the Data view of your inference pipeline. Each traced call arrives as a row carrying the provider, the model, prompt and completion token counts, cost, and latency, with the prompt and the response on the row itself. Openlayer reads the canonical `gen_ai.*` schema, so the integration adds no vendor mapper; see [Span attributes](./opentelemetry_v2#span-attributes) for the full list of keys.
+Open the Data view of your inference pipeline. Each traced call arrives as a row carrying the provider, the model, prompt and completion token counts, cost, and latency. Openlayer reads the canonical `gen_ai.*` schema, so the integration adds no vendor mapper; see [Span attributes](./opentelemetry_v2#span-attributes) for the full list of keys.
+
+Where the prompt and the response sit depends on how you run LiteLLM. Openlayer builds a row's input and output from the root span of the trace. From the SDK the model call is the root, so they sit on the row. Through the proxy the model call is nested under the gateway request, so the row summarises the request and the prompt and response sit on that nested step.
 
 Cost is computed by Openlayer from the provider and model on the span rather than from a self-reported figure, so it is filled in for every provider Openlayer prices. Embedding calls report their prompt tokens but are not priced.
 
