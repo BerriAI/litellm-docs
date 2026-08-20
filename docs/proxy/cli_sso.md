@@ -228,6 +228,12 @@ lite logout
 
 Signing in again, with `lite login --pkce` or the classic `lite login`, does the same to the record it replaces: the new credential is saved first, then the previous login's refresh token is revoked, so an older copy of `token.json` cannot be renewed once you have signed in again. If the proxy cannot be reached for that revocation, the login still succeeds and says so
 
+An admin cannot revoke a `--pkce` login from the dashboard; only the holder's `lite logout` cuts the refresh token short. Every renewal re-reads the user on the proxy, so deactivating the user or removing them from the team makes the next renewal fail, and the key runs out within `LITELLM_CLI_JWT_EXPIRATION_HOURS`. When a renewal is refused, `lite auth print-token` and every other `lite` command print the reason the proxy gave on stderr, and once the key has run out they tell you to run `lite login --pkce` again
+
+### Several workers or replicas
+
+Refresh-token single use, replay detection, and `POST /revoke` are enforced through the proxy's Redis cache when one is configured, either `litellm_settings.cache` with Redis `cache_params` or `general_settings.coordination_redis`, and they fail closed while Redis is unreachable. Without Redis each worker keeps its own record, so on a proxy with more than one worker or replica a revoked or already-used refresh token can still be accepted by a worker that never saw it. Run a single worker or configure Redis
+
 ## Native client contract
 
 A CLI written in any language can run the same sign-in from one discovery document, without reading LiteLLM source. A typical case is a Go launcher that signs the user in and then starts OpenCode with the key. The contract is versioned: check `contract_version` before you trust the rest of the document. Adding fields never bumps the version; only a field that changes meaning or goes away does
