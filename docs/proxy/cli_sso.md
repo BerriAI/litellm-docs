@@ -226,6 +226,8 @@ lite logout
 
 `lite logout` sends the refresh token to the proxy's `POST /revoke` endpoint and then deletes `~/.litellm/token.json`. The refresh token is dead from that point on. The key itself is not revocable; it expires on its own within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
 
+Signing in again, with `lite login --pkce` or the classic `lite login`, does the same to the record it replaces: the new credential is saved first, then the previous login's refresh token is revoked, so an older copy of `token.json` cannot be renewed once you have signed in again. If the proxy cannot be reached for that revocation, the login still succeeds and says so
+
 ## Native client contract
 
 A CLI written in any language can run the same sign-in from one discovery document, without reading LiteLLM source. A typical case is a Go launcher that signs the user in and then starts OpenCode with the key. The contract is versioned: check `contract_version` before you trust the rest of the document. Adding fields never bumps the version; only a field that changes meaning or goes away does
@@ -344,7 +346,7 @@ The URLs are built from the request's base URL. Behind a load balancer or revers
      -d resource=https://litellm.example.com
    ```
 
-8. Revoke the refresh token on logout ([RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)). Only refresh tokens are revocable; access tokens expire on their own. The endpoint answers `200` with `{}` even for a token it no longer recognizes, so it is safe to call more than once
+8. Revoke the refresh token on logout ([RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)), and revoke the refresh token of any credential you replace when the user signs in again. Only refresh tokens are revocable; access tokens expire on their own. The endpoint answers `200` with `{}` even for a token it no longer recognizes, so it is safe to call more than once
 
    ```shell
    curl -X POST https://litellm.example.com/revoke \
