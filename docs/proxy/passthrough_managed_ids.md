@@ -12,7 +12,7 @@ When you use LiteLLM's passthrough endpoints (e.g. `/openai/v1/files`, `/azure/o
 2. **Stores** the `managed_id → raw_id` mapping in the proxy database, tagged with the creating user/team.
 3. **Resolves** a managed ID back to the raw provider ID just before forwarding any request upstream, after running an ownership/permission check.
 
-Your clients never see raw provider IDs and can never access resources they do not own — even if they guess or forge a managed ID string.
+Your clients never see raw provider IDs and can never access resources they do not own, even if they guess or forge a managed ID string.
 
 ## How to enable
 
@@ -77,9 +77,9 @@ This is **not route-specific**. For every OpenAI or Azure passthrough request, L
 | **Query params** | Every string-valued parameter |
 | **Request body** | All string values, recursively (works in nested objects and arrays) |
 
-This means any endpoint that accepts a file ID, batch ID, or response ID in path, query, or body will automatically resolve managed IDs — including endpoints not listed in the output table above, such as fine-tuning jobs (`/v1/fine_tuning/jobs`), assistants, or any custom endpoint.
+This means any endpoint that accepts a file ID, batch ID, or response ID in path, query, or body will automatically resolve managed IDs, including endpoints not listed in the output table above, such as fine-tuning jobs (`/v1/fine_tuning/jobs`), assistants, or any custom endpoint.
 
-**Example — fine-tuning job:**
+**Example, fine-tuning job:**
 
 ```python
 # Client sends managed IDs for training_file and validation_file
@@ -96,7 +96,7 @@ response = client.post("/azure/openai/v1/fine_tuning/jobs", json={
 
 ## Request flow - any endpoint
 
-This applies to **any** OpenAI or Azure passthrough endpoint — not just fine-tuning. The same path/query/body scan runs on every request; the example below uses a fine-tuning job with a managed file ID in the body.
+This applies to **any** OpenAI or Azure passthrough endpoint, not just fine-tuning. The same path/query/body scan runs on every request; the example below uses a fine-tuning job with a managed file ID in the body.
 
 ```mermaid
 sequenceDiagram
@@ -119,7 +119,7 @@ sequenceDiagram
     Passthrough->>Azure: POST { training_file: file-2dbc7561... }
 ```
 
-On the **response** path, `rewrite_response_ids()` mints managed IDs for raw provider IDs — but only on routes listed in the output map (files, batches, responses). Other endpoints (e.g. fine-tuning) return upstream IDs as-is unless they appear in that map.
+On the **response** path, `rewrite_response_ids()` mints managed IDs for raw provider IDs, but only on routes listed in the output map (files, batches, responses). Other endpoints (e.g. fine-tuning) return upstream IDs as-is unless they appear in that map.
 
 ## Permission checks
 
@@ -180,7 +180,7 @@ GET /openai/v1/files
 
 Pagination parameters `limit`, `after`, and `before` are supported and map directly to a cursor on `created_at`.
 
-A caller with no `user_id` and no `team_id` always receives an empty list — the proxy never falls back to an unscoped query.
+A caller with no `user_id` and no `team_id` always receives an empty list; the proxy never falls back to an unscoped query.
 
 ## Limitations
 

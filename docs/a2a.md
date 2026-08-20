@@ -314,7 +314,7 @@ See [Supported A2A methods](./a2a_agent_card#supported-a2a-methods) for examples
 
 ### Authentication
 
-Include your LiteLLM Virtual Key in either of two headers — `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3--convention-based-forwarding) to forward the caller's identity).
+Include your LiteLLM Virtual Key in either of two headers. `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3-convention-based-forwarding) to forward the caller's identity).
 
 ```
 Authorization: Bearer sk-your-litellm-key
@@ -343,7 +343,7 @@ curl -X POST http://localhost:4000/v1/agents \
   }'
 ```
 
-The reverse direction — enforcing trace ID on **outbound** calls made by a key owned by an agent — is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
+Enforcing a trace ID on **outbound** calls made by a key owned by an agent is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
 
 #### Sub-agent identity propagation
 

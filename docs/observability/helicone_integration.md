@@ -344,4 +344,4 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
 </Tabs>
 
 > **Supported Headers** - For a full list of supported Helicone headers and their descriptions, please refer to the [Helicone documentation](https://docs.helicone.ai/features/advanced-usage/custom-properties).
-> By utilizing these headers and metadata options, you can gain deeper insights into your LLM usage, optimize performance, and better manage your AI workflows with Helicone and LiteLLM.
+> With these headers and metadata options, you can see more detail in your LLM usage, optimize performance, and better manage your AI workflows with Helicone and LiteLLM.

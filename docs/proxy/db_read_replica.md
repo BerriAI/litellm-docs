@@ -20,7 +20,7 @@ export DATABASE_URL_READ_REPLICA=postgresql://user:pass@reader.db.example.com:54
 The proxy automatically detects the env var on startup and switches the
 internal Prisma client into a routing mode that splits traffic between the two
 endpoints. If `DATABASE_URL_READ_REPLICA` is unset, the proxy continues to use
-single-database behavior — no other configuration is required.
+single-database behavior; no other configuration is required.
 
 ## What gets routed
 
@@ -34,7 +34,7 @@ single-database behavior — no other configuration is required.
 | Transactions (`tx`, `batch_`) | Writer |
 
 Reads originating in code (e.g. virtual key lookup, team membership, spend
-queries) are dispatched to the reader without changes to call sites — the
+queries) are dispatched to the reader without changes to call sites. The
 routing wrapper intercepts the per-model action accessor and chooses the
 backend per method.
 
@@ -52,7 +52,7 @@ The same fallback applies if the reader fails during a reconnect cycle. The
 next successful reader recreate clears the degraded flag and reads start
 hitting the reader again.
 
-This means: enabling read-replica routing **never reduces availability** — at
+This means: enabling read-replica routing **never reduces availability**. At
 worst it degrades to single-database performance.
 
 ## RDS IAM authentication
@@ -102,7 +102,7 @@ db:
   readReplicaUrl: "postgresql://litellm@reader.aurora.local:5432/litellm"
 ```
 
-Avoid this form if the URL embeds a password — the value renders into the
+Avoid this form if the URL embeds a password, since the value renders into the
 pod spec and the Helm release secret.
 
 </TabItem>
@@ -134,7 +134,7 @@ It is **not** useful when:
 
 - Your primary and replica are the same physical endpoint.
 - You're running a single-node Postgres without replicas.
-- Replication lag would invalidate consistency assumptions in your app — note
+- Replication lag would invalidate consistency assumptions in your app. Note
   that all reads route to the reader, including reads that immediately follow
   a write.
 

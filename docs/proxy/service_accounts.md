@@ -23,7 +23,7 @@ Why use a service account key?
 
 ## Budgets & Limits
 
-Service account keys apply budgets and rate limits at the **team level** — not per user or per key member.
+Service account keys apply budgets and rate limits at the **team level**, not per user or per key member.
 
 - Set `max_budget`, `tpm_limit`, `rpm_limit` on the key itself, or inherit them from the team.
 - `team_member_key_duration` (an enterprise feature that controls how long team-member keys last) does **not** apply to service account keys.
@@ -58,7 +58,7 @@ curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
 }'
 ```
 
-**Immutability rules** — once `service_account_id` is set, it cannot be changed:
+**Immutability rules.** Once `service_account_id` is set, it cannot be changed:
 
 | Operation | Result |
 |-----------|--------|

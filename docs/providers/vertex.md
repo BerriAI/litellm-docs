@@ -1773,7 +1773,7 @@ LiteLLM automatically tracks spend for Vertex AI Gemini models using the correct
 | `ON_DEMAND` | standard | Default on-demand pricing |
 | `FLEX` / `BATCH` | `flex` | Batch/flex pricing |
 
-When you use [Vertex AI PayGo](https://cloud.google.com/vertex-ai/generative-ai/pricing) (on-demand priority) or batch workloads, LiteLLM reads `trafficType` from the response and applies the matching cost per token from the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). No configuration is required — spend tracking works out of the box for both standard and PayGo requests.
+When you use [Vertex AI PayGo](https://cloud.google.com/vertex-ai/generative-ai/pricing) (on-demand priority) or batch workloads, LiteLLM reads `trafficType` from the response and applies the matching cost per token from the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). No configuration is required; spend tracking works for both standard and PayGo requests.
 
 See [Spend Tracking](../proxy/cost_tracking.md) for general cost tracking setup.
 

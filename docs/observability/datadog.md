@@ -82,7 +82,7 @@ DD_SOURCE="litellm_dev"                   # [OPTIONAL] your datadog source
 When `LITELLM_DD_AGENT_HOST` is set, logs are sent to the agent instead of directly to DataDog API. This is useful for:
 - Centralized log shipping in containerized environments
 - Reducing direct API calls from multiple services
-- Leveraging agent-side processing and filtering
+- Using agent-side processing and filtering
 
 **Note:** We use `LITELLM_DD_AGENT_HOST` instead of `DD_AGENT_HOST` to avoid conflicts with `ddtrace` which automatically sets `DD_AGENT_HOST` for APM tracing.
 

@@ -95,7 +95,7 @@ Inside your Retool dashboard, configure LiteLLM as a custom AI resource:
    - **Name:** `LiteLLM`
    - **Description:** (optional) e.g. `LiteLLM Proxy - 100+ LLMs`
    - **Provider Schema:** `OpenAI`
-   - **Base URL:** Your ngrok-generated URL (e.g. `https://abc123.ngrok-free.app`) or deployed proxy URL—do not add `/v1` unless Retool requires it
+   - **Base URL:** Your ngrok-generated URL (e.g. `https://abc123.ngrok-free.app`) or deployed proxy URL. Do not add `/v1` unless Retool requires it
    - **API Key:** Your LiteLLM virtual key from Step 3
 4. **Add model names** from your LiteLLM proxy (e.g. `openai/gpt-4o-mini`, `openai/gpt-5.2-2025-12-11`).
 5. Click **Create Resource**

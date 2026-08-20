@@ -36,7 +36,7 @@ Templates are fetched from [GitHub](https://raw.githubusercontent.com/BerriAI/li
 
 #### 1. Advanced PII Protection (Australia)
 - **Complexity:** High
-- **Use Case:** Comprehensive PII detection for Australian organizations
+- **Use Case:** Full PII detection for Australian organizations
 - **Guardrails:**
   - Australian tax identifiers (TFN, ABN, Medicare)
   - Australian passports
@@ -217,7 +217,7 @@ To contribute a policy template for everyone to use:
 
 **DO:**
 - ✅ Use clear, descriptive names
-- ✅ Include comprehensive descriptions
+- ✅ Include detailed descriptions
 - ✅ Test all guardrails thoroughly
 - ✅ Document pattern sources (e.g., "Based on NIST guidelines")
 - ✅ Group related guardrails logically

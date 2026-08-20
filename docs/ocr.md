@@ -63,7 +63,7 @@ asyncio.run(test_async_ocr())
 
 ### Using Local Files
 
-LiteLLM can read local files directly — no manual base64 encoding needed:
+LiteLLM can read local files directly, with no manual base64 encoding:
 
 ```python
 from litellm import ocr
@@ -101,11 +101,11 @@ response = ocr(
 ```
 
 The `file` field accepts:
-- **File path** (`str` or `pathlib.Path`) — LiteLLM reads the file and detects the MIME type from the extension
-- **File object** (binary file-like object) — e.g. `open("doc.pdf", "rb")`
-- **Raw bytes** (`bytes`) — use `mime_type` to specify the content type
+- **File path** (`str` or `pathlib.Path`): LiteLLM reads the file and detects the MIME type from the extension
+- **File object** (binary file-like object): e.g. `open("doc.pdf", "rb")`
+- **Raw bytes** (`bytes`): use `mime_type` to specify the content type
 
-LiteLLM automatically converts file inputs to base64 data URIs internally, so all providers work seamlessly.
+LiteLLM automatically converts file inputs to base64 data URIs internally, so all providers work without extra handling.
 
 ### Using Base64 Encoded Documents
 
@@ -167,7 +167,7 @@ litellm --config /path/to/config.yaml
 # RUNNING on http://0.0.0.0:4000
 ```
 
-**Test request — JSON body**
+**Test request: JSON body**
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
@@ -182,7 +182,7 @@ curl http://0.0.0.0:4000/v1/ocr \
   }'
 ```
 
-**Test request — multipart file upload**
+**Test request: multipart file upload**
 
 Upload a file directly using multipart form data. No need to base64-encode the file yourself.
 
@@ -279,7 +279,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 {"type": "file", "file": pdf_bytes, "mime_type": "application/pdf"}
 ```
 
-**For file uploads (Proxy — multipart form):**
+**For file uploads (Proxy, multipart form):**
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
   -H "Authorization: Bearer sk-1234" \

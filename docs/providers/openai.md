@@ -441,9 +441,9 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 You can opt in globally or per request:
 
-**Option A — per-request prefix:** Use the `openai/responses/` model prefix.
+**Option A, per-request prefix:** Use the `openai/responses/` model prefix.
 
-**Option B — global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
+**Option B, global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
 
 <Tabs>
 <TabItem value="sdk-global" label="SDK - Global Flag">
@@ -469,7 +469,7 @@ litellm_settings:
   route_all_chat_openai_to_responses: true
 ```
 
-Then call normally — no model prefix needed:
+Then call normally, with no model prefix:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
@@ -488,7 +488,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 `route_all_chat_openai_to_responses` only applies to the `openai` provider. Azure OpenAI is unaffected. You can also set it via env var: `LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true`.
 :::
 
-**Option A — per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
+**Option A, per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -555,7 +555,7 @@ Expected Response:
 
 ### Advanced: Using `reasoning_effort` with `summary` field
 
-By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`—`"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
+By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
 
 To opt-in to the `summary` feature, you can pass `reasoning_effort` as a dictionary. **Note:** The `summary` field requires your OpenAI organization to have verification status. Using `summary` without verification will result in a 400 error from OpenAI.
 
@@ -607,7 +607,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 **Summary field options:**
 - `"auto"`: System automatically determines the appropriate summary level based on the model
 - `"concise"`: Provides a shorter summary (not supported by GPT-5 series models)
-- `"detailed"`: Offers a comprehensive reasoning summary
+- `"detailed"`: Offers a fuller reasoning summary
 
 **Note:** GPT-5 series models support `"auto"` and `"detailed"`, but do not support `"concise"`. O-series models (o3-pro, o4-mini, o3) support all three options. Some models like o3-mini and o1 do not support reasoning summaries at all.
 

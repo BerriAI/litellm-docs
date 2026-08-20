@@ -3,13 +3,13 @@ import TabItem from '@theme/TabItem';
 
 # OpenTelemetry v2
 
-OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives you **one clean trace per request** that shows the whole story of a request — the incoming HTTP call, authentication, guardrails, the LLM call itself, and the internal database/cache work — all nested in a single tree.
+OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives you **one clean trace per request** covering the incoming HTTP call, authentication, guardrails, the LLM call itself, and the internal database/cache work, all nested in a single tree.
 
 It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps).
 
 :::info Opt-in feature
 
-OTel v2 is **off by default**. Nothing in it runs until you set `LITELLM_OTEL_V2=true`. It is separate from the existing [OpenTelemetry integration](./opentelemetry_integration) — pick one. If you are moving from v1, see [Migrating to OpenTelemetry v2](./opentelemetry_v2_migration).
+OTel v2 is **off by default**. Nothing in it runs until you set `LITELLM_OTEL_V2=true`. It is separate from the existing [OpenTelemetry integration](./opentelemetry_integration), so pick one. If you are moving from v1, see [Migrating to OpenTelemetry v2](./opentelemetry_v2_migration).
 
 :::
 
@@ -460,7 +460,7 @@ Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Obse
 
 ## Capturing prompts & responses
 
-By default, OTel v2 records **metadata only** (model, tokens, cost, timing) and **never** writes prompt or response text to your traces. This is intentional — it keeps sensitive content out of your observability backend.
+By default, OTel v2 records **metadata only** (model, tokens, cost, timing) and **never** writes prompt or response text to your traces. This is intentional, and it keeps sensitive content out of your observability backend.
 
 To capture message content, opt in explicitly:
 
@@ -478,7 +478,7 @@ OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT="event_only"
 OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT="span_and_event"
 ```
 
-The gate is enforced centrally, so it applies to **every** backend at once — a user request can never force its prompt into your backend while capture is disabled.
+The gate is enforced centrally, so it applies to **every** backend at once. A user request can never force its prompt into your backend while capture is disabled.
 
 ## Span attributes
 
@@ -533,15 +533,15 @@ Status and errors:
 
 ### Other span kinds
 
-**Guardrail span** — uses the `litellm.guardrail.*` namespace: `name`, `mode`, `status`, `provider`, `action`, `response`, `violation_categories`, `confidence_score`, `risk_score`, `masked_entity_count`, `duration`, `id`, `policy_template`, `detection_method`. `status` is one of `success`, `guardrail_intervened`, `guardrail_failed_to_respond`, or `not_run`; a blocking `guardrail_intervened` or `guardrail_failed_to_respond` also sets span status to `ERROR`.
+**Guardrail span**, which uses the `litellm.guardrail.*` namespace: `name`, `mode`, `status`, `provider`, `action`, `response`, `violation_categories`, `confidence_score`, `risk_score`, `masked_entity_count`, `duration`, `id`, `policy_template`, `detection_method`. `status` is one of `success`, `guardrail_intervened`, `guardrail_failed_to_respond`, or `not_run`; a blocking `guardrail_intervened` or `guardrail_failed_to_respond` also sets span status to `ERROR`.
 
-**Datastore span** (redis, postgres) — `db.system.name`, `db.operation.name`, `litellm.service.name`, `litellm.service.call_type`.
+**Datastore span** (redis, postgres): `db.system.name`, `db.operation.name`, `litellm.service.name`, `litellm.service.call_type`.
 
-**Internal service span** — the `litellm.service.*` keys only (no `db.*`).
+**Internal service span**: the `litellm.service.*` keys only (no `db.*`).
 
-**MCP tool-call span** — `gen_ai.operation.name=execute_tool`, `mcp.method.name`, `mcp.session.id`, `gen_ai.tool.name`, `litellm.mcp.server.name`, `litellm.call_id`, `litellm.cost.total`. `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` are gated by the same content-capture setting as prompt content.
+**MCP tool-call span**: `gen_ai.operation.name=execute_tool`, `mcp.method.name`, `mcp.session.id`, `gen_ai.tool.name`, `litellm.mcp.server.name`, `litellm.call_id`, `litellm.cost.total`. `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` are gated by the same content-capture setting as prompt content.
 
-**Root HTTP server span** — the HTTP semconv keys `http.request.method`, `http.route`, `http.response.status_code`, `url.path`, stamped by the FastAPI instrumentation (not by any of LiteLLM's mappers).
+**Root HTTP server span**: the HTTP semconv keys `http.request.method`, `http.route`, `http.response.status_code`, `url.path`, stamped by the FastAPI instrumentation (not by any of LiteLLM's mappers).
 
 Each vendor preset also composes one vendor-specific mapper on top of these canonical keys, so the destination reads the trace in its native schema. Those per-vendor tables live under the matching [Seeing your traces](#seeing-your-traces) tab.
 
@@ -805,7 +805,7 @@ This routing applies to **traces only**. The GenAI client metrics (see [Metrics]
 
 ## Distributed tracing
 
-If the incoming request has a W3C `traceparent` header, LiteLLM continues that trace instead of starting a new one. Your LiteLLM spans then appear inline inside whatever distributed trace your application already has — so you can follow a request from your app, through the proxy, to the LLM provider, in one view.
+If the incoming request has a W3C `traceparent` header, LiteLLM continues that trace instead of starting a new one. Your LiteLLM spans then appear inline inside whatever distributed trace your application already has, so you can follow a request from your app, through the proxy, to the LLM provider, in one view.
 
 ## Configuration reference
 
@@ -831,11 +831,11 @@ The full set of keys on each span kind is in [Span attributes](#span-attributes)
 **No traces showing up?**
 
 1. Confirm `LITELLM_OTEL_V2=true` is set in the proxy's environment.
-2. Try `OTEL_EXPORTER="console"` first — if spans print to stdout, the problem is your exporter endpoint/headers, not LiteLLM.
+2. Try `OTEL_EXPORTER="console"` first. If spans print to stdout, the problem is your exporter endpoint/headers, not LiteLLM.
 3. Make sure you hit an LLM route (e.g. `/v1/chat/completions`). Health checks and UI routes are excluded by default.
 4. Check that `opentelemetry-instrumentation-fastapi` is installed (see [Requirements](#requirements)).
 
-**Only see the LLM call but no `auth`/`postgres`/server span?** Those server and DB spans require the FastAPI instrumentation package — install `opentelemetry-instrumentation-fastapi`.
+**Only see the LLM call but no `auth`/`postgres`/server span?** Those server and DB spans require the FastAPI instrumentation package, so install `opentelemetry-instrumentation-fastapi`.
 
 **I see metadata but no prompts/responses.** That's the default. Set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only` to capture content.
 

@@ -15,7 +15,7 @@ When `litellm.modify_params = True` is enabled, LiteLLM automatically sanitizes 
 2. **Orphaned Tool Results** - Tool messages that reference non-existent tool_call_ids
 3. **Empty Message Content** - Messages with empty or whitespace-only text content
 
-This ensures your tool calling workflows work seamlessly across different LLM providers without manual message validation.
+Your tool calling workflows then work across different LLM providers without manual message validation.
 
 ## Why Message Sanitization?
 

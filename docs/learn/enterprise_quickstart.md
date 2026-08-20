@@ -245,7 +245,7 @@ proxy_config:
 
 `db.deployStandalone: true` provisions a single-node Postgres with the Bitnami chart and a default password. Fine for a trial; for anything longer-lived, override it with `--set postgresql.auth.password=<pw>,postgresql.auth.postgres-password=<pw>` or bring your own database below.
 
-**Bring your own database** — to point at an existing Postgres instead of letting the chart provision one, replace the `db` block. Create a Secret (default name `postgres`) holding `username` and `password` keys; the chart builds the connection URL from `endpoint`, `database`, and those credentials.
+**Bring your own database.** To point at an existing Postgres instead of letting the chart provision one, replace the `db` block. Create a Secret (default name `postgres`) holding `username` and `password` keys; the chart builds the connection URL from `endpoint`, `database`, and those credentials.
 
 ```yaml title="values-enterprise.yaml" showLineNumbers
 db:
@@ -282,7 +282,7 @@ Your LiteLLM Gateway is now running on `http://127.0.0.1:4000`.
 
 ### Verify Enterprise Edition
 
-Open `http://localhost:4000/` — Swagger should show **"Enterprise Edition"** in the description. See the [Enterprise license FAQ](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
+Open `http://localhost:4000/`. Swagger should show **"Enterprise Edition"** in the description. See the [Enterprise license FAQ](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
 
 Open the Admin UI at `http://localhost:4000/ui` and sign in with your master key.
 
@@ -486,7 +486,7 @@ asyncio.run(main())
 
 ## 4. Budgets & Spend
 
-Budget enforcement runs on **all three gateways** through the same virtual key — one control plane governs LLM, MCP, and Agent spend.
+Budget enforcement runs on **all three gateways** through the same virtual key, so one control plane governs LLM, MCP, and Agent spend.
 
 ```mermaid
 flowchart TD
@@ -527,7 +527,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 3. **Second request within the same minute** → rate limit error (RPM exceeded).
 4. Confirm key spend in Admin UI under **Virtual Keys**.
 
-→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart — RPM test](/docs/proxy/docker_quick_start)
+→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart: RPM test](/docs/proxy/docker_quick_start)
 
 ### 4b. Team budget
 
@@ -602,7 +602,7 @@ On by default with an enterprise license; set `store_audit_logs: false` under li
 
 ### SSO for Admin UI
 
-SSO controls **Admin UI login** — separate from API auth (virtual keys or JWT). Register this redirect URI in your IdP:
+SSO controls **Admin UI login**, which is separate from API auth (virtual keys or JWT). Register this redirect URI in your IdP:
 
 ```
 https://<your-proxy-base-url>/sso/callback

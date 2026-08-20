@@ -7,7 +7,7 @@ Route the same model to different LLM provider endpoints (e.g. different Azure i
 
 ## Overview
 
-In multi-tenant deployments, different teams often need the same model name (e.g., `gpt-4`) to hit different provider endpoints — for example, separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
+In multi-tenant deployments, different teams often need the same model name (e.g., `gpt-4`) to hit different provider endpoints, for example separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
 
 **Credential routing** lets you configure this in team/project metadata using the existing [credentials table](./model_management.md#reusable-provider-credentials), without duplicating model definitions or creating separate model groups per team.
 
@@ -185,7 +185,7 @@ curl -X PATCH 'http://0.0.0.0:4000/project/update' \
 **Setup:**
 - **Hotel Team**: default `hotel-azure-eastus`, GPT-4 override to `hotel-azure-westus`
 - **Hotel Rec App** (project): default `hotel-rec-azure`, GPT-4-Vision override to `hotel-rec-vision`
-- **Hotel Review App** (project): no overrides — inherits team config
+- **Hotel Review App** (project): no overrides, inherits team config
 
 **Resolution:**
 
@@ -262,7 +262,7 @@ export LITELLM_ENABLE_MODEL_CONFIG_CREDENTIAL_OVERRIDES=true
 </Tabs>
 
 :::info
-The feature flag must be enabled before `model_config` entries in team/project metadata take effect. Without it, credential routing is completely inert — no metadata is read, no credentials are resolved.
+The feature flag must be enabled before `model_config` entries in team/project metadata take effect. Without it, credential routing is completely inert: no metadata is read and no credentials are resolved.
 :::
 
 ## Related Documentation

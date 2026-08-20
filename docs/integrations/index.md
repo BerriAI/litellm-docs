@@ -321,7 +321,7 @@ items={[
 
 ## Manage with AI Agents
 
-Use AI agents to manage your LiteLLM deployment — create users, teams, keys, models, and more via natural language.
+Use AI agents to manage your LiteLLM deployment: create users, teams, keys, models, and more via natural language.
 
 <NavigationCards
 columns={1}
@@ -329,7 +329,7 @@ items={[
   {
     icon: "🤖",
     title: "LiteLLM Skills",
-    description: "Manage LiteLLM via Claude Code — create keys, teams, models, and more using natural language commands.",
+    description: "Manage LiteLLM via Claude Code: create keys, teams, models, and more using natural language commands.",
     to: "../tutorials/claude_code_skills",
   },
 ]}

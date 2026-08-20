@@ -2,7 +2,7 @@
 
 <iframe width="840" height="500" src="https://www.loom.com/embed/cb74eb79df3e4c2b83a6efae54a589f9" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
-LiteLLM acts as a **Skills Registry** — a central place to register, manage, and discover Claude Code skills across your organization. Teams can publish skills once and have agents and developers find them through a single hub.
+LiteLLM acts as a **Skills Registry**, a central place to register, manage, and discover Claude Code skills across your organization. Teams can publish skills once and have agents and developers find them through a single hub.
 
 ## How it works
 
@@ -27,7 +27,7 @@ graph TD
 
 ### 1. Register a skill
 
-Paste any GitHub URL into the Skills UI — LiteLLM auto-detects the source type and skill name.
+Paste any GitHub URL into the Skills UI and LiteLLM auto-detects the source type and skill name.
 
 ```bash
 curl -X POST https://your-proxy/claude-code/plugins \
@@ -46,7 +46,7 @@ curl -X POST https://your-proxy/claude-code/plugins \
   }'
 ```
 
-Skills nested in subdirectories (e.g. `github.com/org/repo/tree/main/skill-name`) are supported — LiteLLM parses the URL automatically in the UI.
+Skills nested in subdirectories (e.g. `github.com/org/repo/tree/main/skill-name`) are supported, and LiteLLM parses the URL automatically in the UI.
 
 ### 2. Publish to hub
 

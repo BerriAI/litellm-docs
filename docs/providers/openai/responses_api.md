@@ -695,7 +695,7 @@ Set `parallel_tool_calls=False` to ensure zero or one tool is called per turn. [
 
 ## Tool Search & Namespaces
 
-Tool search lets models dynamically load tools at runtime instead of sending every tool definition in the prompt. Group functions into **namespaces** and mark them with `defer_loading: true` — the model only loads the schemas it actually needs, saving tokens.
+Tool search lets models dynamically load tools at runtime instead of sending every tool definition in the prompt. Group functions into **namespaces** and mark them with `defer_loading: true`, and the model only loads the schemas it actually needs, saving tokens.
 
 Requires `gpt-5.4` or later. See [OpenAI Tool Search docs](https://developers.openai.com/api/docs/guides/tools-tool-search) for full details.
 

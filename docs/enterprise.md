@@ -15,11 +15,11 @@ import TabItem from '@theme/TabItem';
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale — 100+ users or 10+ production AI use-cases — that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
+For teams running LiteLLM at scale (100+ users or 10+ production AI use-cases) that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
 
 ## Why Enterprise?
 
-LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
+LiteLLM OSS already covers the fundamentals: an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
 
 | | **OSS** | **Enterprise** |
 |---|---|---|
@@ -74,7 +74,7 @@ LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, vi
 
 ### Projects
 
-[Projects](./proxy/project_management.md) let you group virtual keys by application or use-case. Each project has its own budget, owners, rate limits, and isolated spend view — useful when a single team runs multiple apps and needs separate reporting per app.
+[Projects](./proxy/project_management.md) let you group virtual keys by application or use-case. Each project has its own budget, owners, rate limits, and isolated spend view, which helps when a single team runs multiple apps and needs separate reporting per app.
 
 - Group keys by application, environment, or customer
 - Per-project budgets, rate limits, and model allowlists
@@ -90,7 +90,7 @@ See [Project Management](./proxy/project_management.md) and the [UI walkthrough]
 
 ### Self-Hosted
 
-Deploy our Docker image (or build from the pip package) on your own infrastructure. We provide a license key that unlocks the enterprise features above, plus a dedicated support channel.
+Deploy our Docker image (or build from the pip package) on your own infrastructure. We provide a license key that enables the enterprise features above, plus a dedicated support channel.
 
 ```env
 LITELLM_LICENSE="eyJ..."
@@ -98,7 +98,7 @@ LITELLM_LICENSE="eyJ..."
 
 **No data leaves your environment.** [Procurement available via AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
 
-Pricing depends on your deployment size — [get in touch](https://enterprise.litellm.ai/demo) to scope it.
+Pricing depends on your deployment size. [Get in touch](https://enterprise.litellm.ai/demo) to scope it.
 
 ---
 
@@ -170,7 +170,7 @@ See the [Secret Managers overview](./secret_managers/overview.md) for setup.
 
 2. Restart LiteLLM Proxy.
 
-3. Open `http://<your-proxy-host>:<port>/` — the Swagger page should show **"Enterprise Edition"** in the description. If it doesn't, confirm the key is correct, unexpired, and that the proxy was fully restarted.
+3. Open `http://<your-proxy-host>:<port>/`. The Swagger page should show **"Enterprise Edition"** in the description. If it doesn't, confirm the key is correct, unexpired, and that the proxy was fully restarted.
 
 ### Where can I read more about data security and compliance?
 
@@ -182,4 +182,4 @@ Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for 
 
 ### How do I get day-0 support for new models without restarting?
 
-Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule — no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.
+Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule, with no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.

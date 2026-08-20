@@ -175,7 +175,7 @@ async def process_input_messages(
     return data
 ```
 
-`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model` — populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
+`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model`. Populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
 
 Send everything in one call rather than one call per message. The guardrail provider gets to see the whole conversation, and you pay one round trip instead of many.
 
@@ -362,7 +362,7 @@ Override these methods to customize behavior:
 
 ### Step 6: Add Unit Tests
 
-Create comprehensive tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
+Create thorough tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
 
 ```python
 """

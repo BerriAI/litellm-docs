@@ -45,6 +45,14 @@ npm run build
 
 This catches broken links, invalid MDX, and other Docusaurus build issues.
 
+Also run the writing style check, which CI enforces on every PR:
+
+```bash
+npm run lint:writing
+```
+
+It fails on em dashes used as prose punctuation (see CLAUDE.md) and, with `--warnings`, lists inflated wording such as "utilize", "leverage", or "seamless".
+
 ## 6. Submit a PR
 
 Create a branch:

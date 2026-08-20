@@ -329,7 +329,7 @@ print("file content=", content.text)
 ### [Anthropic](./providers/anthropic#files-api)
 
 :::note
-Anthropic Files API has a different purpose than OpenAI's. It's **not** for Batches or Fine-tuning—it's for uploading files once and referencing them by `file_id` in multiple messages, avoiding re-uploads. File API operations are free — file content used in Messages requests is priced as input tokens.
+Anthropic Files API has a different purpose than OpenAI's. Rather than serving Batches or Fine-tuning, it lets you upload a file once and reference it by `file_id` in multiple messages, avoiding re-uploads. File API operations are free; file content used in Messages requests is priced as input tokens.
 :::
 
 ## [Swagger API Reference](https://litellm-api.up.railway.app/#/files)

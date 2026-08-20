@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 :::info **Budget Setup Options**
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
-**Team budgets**: Add team_id to virtual keys to utilize a team's shared budget
+**Team budgets**: Add team_id to virtual keys to draw on a team's shared budget
 
 **Team member budgets**: Set individual spending limits within the team's shared budget
 
@@ -341,7 +341,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 #### **Set multiple budget windows on a key**
 
-Apply multiple concurrent budget limits at different time scales on the same key — for example, cap a key at **$10/day** AND **$100/month**.
+Apply multiple concurrent budget limits at different time scales on the same key, for example capping a key at **$10/day** AND **$100/month**.
 
 **When is this useful?**
 

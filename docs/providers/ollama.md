@@ -264,7 +264,7 @@ print(response)
 </Tabs>
 
 ## Using ollama `api/chat` 
-In order to send ollama requests to `POST /api/chat` on your ollama server, set the model prefix to `ollama_chat`
+To send ollama requests to `POST /api/chat` on your ollama server, set the model prefix to `ollama_chat`
 
 ```python
 from litellm import completion
