@@ -970,6 +970,7 @@ const sidebars = {
             "search/you_com",
             "search/apiserpent",
             "search/agentcore",
+            "search/nimble",
           ]
         },
         "skills",

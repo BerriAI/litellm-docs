@@ -108,6 +108,8 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you can login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
 
+   To sign in through your system browser with OAuth authorization code and PKCE instead, run `lite login --pkce`. That credential renews itself with a refresh token, and `lite auth print-token` hands it to Claude Code, OpenCode, or any OpenAI-compatible client. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 3. **Test your authentication**
 
    ```bash
@@ -155,11 +157,14 @@ The credential is short-lived by design (default 24h, configurable via `LITELLM_
 
 A machine with no keychain, a headless Linux box for example, keeps the credential in that same owner-only file instead, and so do installs missing `keyring` and shells that set `LITELLM_CLI_DISABLE_KEYRING` to `1`, `true`, `yes`, or `on`, which turns keychain storage off entirely. `lite login` prints where the credential ended up either way. A credential written into `token.json` in plaintext by an older `lite` still authenticates: the next command that reads it moves it into the keychain and takes it out of the file
 
+A credential from `lite login --pkce` also comes with a refresh token: the CLI renews the key on its next use, `lite auth print-token` hands the current key to other tools, and `lite logout` revokes the refresh token on the proxy. Each renewed key goes to the keychain like the one before it, while the refresh token itself stays in `~/.litellm/token.json`. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
 
 ```bash
-lite whoami   # show the authenticated user and the token age
-lite logout   # clear the keychain entry and the token file
+lite whoami             # show the authenticated user and the token age
+lite auth print-token   # print the current key, renewing a --pkce credential first when needed
+lite logout             # clear the keychain entry and the token file, and revoke a --pkce refresh token
 ```
 
 `lite logout` clears both stores. When the keychain refuses to release the entry, or cannot be reached to check, it warns you and tells you what to do rather than reporting a clean logout
