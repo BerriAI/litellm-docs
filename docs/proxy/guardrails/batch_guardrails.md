@@ -93,7 +93,7 @@ The same outcome is written to the proxy logs and to the request metadata that l
 
 ## When the upload is refused
 
-Three cases still fail the whole upload rather than dropping a record.
+Four cases still fail the whole upload rather than dropping a record.
 
 If every record is blocked there is nothing left to submit, so the upload returns 400 rather than creating an empty job.
 
