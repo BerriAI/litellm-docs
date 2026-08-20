@@ -530,6 +530,8 @@ curl -X POST 'http://localhost:4000/key/generate' \
 
 `batch_enqueued_token_limit` also works in team metadata. When both the key and its team set one, the batch must fit both allowances.
 
+Only a proxy admin can set or change `batch_enqueued_token_limit`. Key and team requests from other roles that try to write it are rejected with a `403`.
+
 When a key or team has an enqueued-token limit, batch submission is governed only by that allowance:
 
 1. When the client creates a batch, LiteLLM reserves the file's estimated tokens (the input tokens plus each record's output cap) against the allowance.
