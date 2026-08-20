@@ -44,6 +44,27 @@ curl -X POST http://localhost:4000/model/new \
   }'
 ```
 
+Or in `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: gpt-4o-ptu
+    litellm_params:
+      model: azure/<your-deployment-name>
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+    model_info:
+      id: gpt-4o-ptu-team-a
+      team_id: <the owning team id>
+      ptu_count: 100
+      cost_per_ptu_per_hour: 0.02
+      ptu_effective_from: "2026-01-01T00:00:00Z"
+```
+
+Pin `model_info.id` on a deployment declared this way. Left unset, the id is derived from the model name and the resolved `litellm_params`, so rotating the credential mints a new identity and the reservation is charged a second time under it. Any stable string works, and it only has to be unique across your deployments
+
+`team_id` is what the capacity is billed to, so a declaration without one accrues nothing
+
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `team_id` | yes | The team the capacity belongs to. One deployment maps to one team |
@@ -65,6 +86,8 @@ flat cost = ptu_count x cost_per_ptu_per_hour x hours active that day
 ```
 
 Active hours are the overlap between the day and the reservation window, so a reservation starting at noon accrues 12 hours on its first day and 24 thereafter. The rows are written into `LiteLLM_DailyTeamSpend` under the reserved key `__ptu_flat_cost__`, which keeps flat cost separate from the per-request spend recorded against real API keys.
+
+A reservation that starts before the job first sees it is filled in as well: the catch-up pass prices each elapsed day back to `ptu_effective_from`, up to 91 days. A deployment configured today with a backdated start therefore accrues its whole window on the first run
 
 Flat cost does not count against team or key budgets. Reserved capacity is already paid for, so a team cannot exhaust a budget by using the capacity it reserved.
 
@@ -99,4 +122,6 @@ Web search rates are handled the same way. Note that xAI models bill their list 
 
 ## Limitations
 
-Configuration set through `config.yaml`, the Python `Router`, or the legacy `POST /model/update` is not covered. Those paths do not run the rules above, so a PTU deployment defined there keeps billing per token and never accrues flat cost. Use `POST /model/new`, `PATCH /model/{model_id}/update`, or the Admin UI.
+The legacy `POST /model/update` does not run the rules above, so a PTU deployment configured through it keeps billing per token and never accrues flat cost. Use `POST /model/new`, `PATCH /model/{model_id}/update`, the Admin UI, or `config.yaml`
+
+The Python `Router` used on its own zeroes per-token pricing at registration, but nothing schedules the daily job outside the proxy, so flat cost is not accrued there
