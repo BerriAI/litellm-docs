@@ -55,17 +55,19 @@ hitting the reader again.
 This means: enabling read-replica routing **never reduces availability** — at
 worst it degrades to single-database performance.
 
-## RDS IAM authentication
+## Token-based database authentication
 
-When `IAM_TOKEN_DB_AUTH=True`, both the writer and the reader refresh their
-IAM tokens independently on the same ~12-minute cadence. You can supply the
-reader either as a single `DATABASE_URL_READ_REPLICA` or assembled from the
-component vars (`DATABASE_HOST_READ_REPLICA`, `DATABASE_USER_READ_REPLICA`,
-and friends); the token-refresh path re-parses the resulting reader URL,
-so only the IAM token rotates after startup.
+When `IAM_TOKEN_DB_AUTH=True` (AWS RDS IAM) or `AZURE_POSTGRESQL_AUTH=True`
+(Microsoft Entra ID), both the writer and the reader refresh their tokens
+independently, each ahead of its own expiry. You can supply the reader either
+as a single `DATABASE_URL_READ_REPLICA` or assembled from the component vars
+(`DATABASE_HOST_READ_REPLICA`, `DATABASE_USER_READ_REPLICA`, and friends); the
+token-refresh path re-parses the resulting reader URL, so only the token
+rotates after startup.
 
-This pairs naturally with Aurora's reader endpoint, which resolves to the
-reader instances in the cluster.
+On AWS this pairs naturally with Aurora's reader endpoint, which resolves to
+the reader instances in the cluster. On Azure it pairs with the read replicas
+of an Azure Database for PostgreSQL Flexible Server.
 
 ## Kubernetes / Helm
 
@@ -94,8 +96,9 @@ db:
 
 <TabItem value="plain" label="Plaintext value">
 
-For credential-less URLs (for example, when `IAM_TOKEN_DB_AUTH` supplies
-the password at runtime), `db.readReplicaUrl` works:
+For credential-less URLs (for example, when `IAM_TOKEN_DB_AUTH` or
+`AZURE_POSTGRESQL_AUTH` supplies the password at runtime),
+`db.readReplicaUrl` works:
 
 ```yaml
 db:
@@ -152,7 +155,8 @@ through the writer or rely on transaction-scoped reads.
 | --- | --- |
 | `DATABASE_URL` | Writer connection URL (required). |
 | `DATABASE_URL_READ_REPLICA` | Reader connection URL (optional). When unset, all reads go to the writer. |
-| `IAM_TOKEN_DB_AUTH` | When `True`, both writer and reader refresh RDS IAM tokens automatically. |
+| `IAM_TOKEN_DB_AUTH` | When `True`, both writer and reader refresh AWS RDS IAM tokens automatically. |
+| `AZURE_POSTGRESQL_AUTH` | When `True`, both writer and reader refresh Microsoft Entra ID tokens automatically. |
 
 See [environment variables - Reference](./config_settings#environment-variables---reference)
 for the full list.

@@ -327,7 +327,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - **Type:** `bool` (Flag)
    - Authenticates to PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token instead of a stored password.
    - LiteLLM generates the token with boto3 and refreshes it before it expires.
-   - This option supports AWS only. For Google Cloud SQL, run the Cloud SQL Auth Proxy with `--auto-iam-authn`, then configure `DATABASE_URL` to use the local proxy connection. Do not enable this flag for Cloud SQL.
+   - This option supports AWS only. For Azure Database for PostgreSQL, use [`--azure_postgresql_auth`](#--azure_postgresql_auth) instead. For Google Cloud SQL, run the Cloud SQL Auth Proxy with `--auto-iam-authn`, then configure `DATABASE_URL` to use the local proxy connection. Do not enable this flag for Cloud SQL.
    - **Required Environment Variables:**
      - `DATABASE_HOST` - The RDS database host
      - `DATABASE_PORT` - The database port
@@ -360,6 +360,57 @@ For LiteLLM running on Amazon ECS:
 LiteLLM uses the task role's AWS credentials to generate and refresh the database token. A static database password is not required.
 
 These settings are read from the task environment when LiteLLM starts. To change the flag or connection parameters, deploy a new task definition or restart the proxy tasks. Token refreshes do not require a restart.
+
+### --azure_postgresql_auth
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Authenticates to Azure Database for PostgreSQL Flexible Server with a short-lived Microsoft Entra ID access token instead of a stored password.
+   - LiteLLM requests the token for the `https://ossrdbms-aad.database.windows.net/.default` scope through the Azure Identity library and refreshes it before it expires.
+   - This option supports Azure only, and it cannot be combined with `--iam_token_db_auth`. The proxy exits at startup when both are enabled.
+   - **Required Environment Variables:**
+     - `DATABASE_HOST` - The server host, such as `myserver.postgres.database.azure.com`
+     - `DATABASE_USER` - The Microsoft Entra principal that exists as a PostgreSQL role, such as a managed identity name or a user principal name
+     - `DATABASE_NAME` - The database name
+     - `DATABASE_PORT` (optional) - The database port, `5432` by default
+     - `DATABASE_SCHEMA` (optional) - The database schema
+   - **Usage:**
+     ```shell
+     litellm --azure_postgresql_auth
+     ```
+   - **Usage - set Environment Variable:** `AZURE_POSTGRESQL_AUTH`
+     ```shell
+     export AZURE_POSTGRESQL_AUTH=True
+     export DATABASE_HOST=myserver.postgres.database.azure.com
+     export DATABASE_USER=litellm-proxy
+     export DATABASE_NAME=litellm
+     litellm
+     ```
+
+#### Choosing the Azure identity
+
+LiteLLM reads the credential from the environment, so one flag covers every hosting model.
+
+| Identity | How to select it |
+| --- | --- |
+| User-assigned managed identity | Set `AZURE_CLIENT_ID` to the identity's client ID. |
+| System-assigned managed identity | Set nothing extra when the host has one attached. |
+| Workload identity on AKS | Let the workload identity webhook inject `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_AUTHORITY_HOST`, and `AZURE_FEDERATED_TOKEN_FILE` into the pod. |
+| Service principal | Set `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_CLIENT_SECRET`. |
+| Local development | Run `az login` and LiteLLM uses that session. |
+
+#### Azure Kubernetes Service setup
+
+For LiteLLM running on AKS with workload identity:
+
+1. Enable Microsoft Entra authentication on the Azure Database for PostgreSQL Flexible Server.
+2. Create the PostgreSQL role for the workload identity, either by adding it as a Microsoft Entra administrator or by having an existing administrator run `pgaadauth_create_principal`.
+3. Grant that role the privileges LiteLLM needs on the database.
+4. Annotate the LiteLLM service account with the identity's client ID and label the pod for workload identity.
+5. Set `AZURE_POSTGRESQL_AUTH=True` and the required `DATABASE_*` variables on the deployment.
+
+LiteLLM uses the pod's federated token to request and refresh the database token. A static database password is not required, so the server can keep password authentication disabled.
+
+These settings are read from the environment when LiteLLM starts. To change the flag or the connection parameters, restart the proxy. Token refreshes do not require a restart.
 
 ### --use_prisma_db_push
    - **Default:** `False`
