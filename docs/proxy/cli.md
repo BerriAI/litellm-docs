@@ -398,6 +398,10 @@ LiteLLM reads the credential from the environment, so one flag covers every host
 | Service principal | Set `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_CLIENT_SECRET`. |
 | Local development | Run `az login` and LiteLLM uses that session. |
 
+#### Setting DATABASE_USER
+
+Put the principal in `DATABASE_USER` exactly as PostgreSQL knows it, including any `@`. A user principal name such as `litellm@contoso.onmicrosoft.com` goes in as it is, and LiteLLM percent-encodes it while assembling the connection URL. A value that is already percent-encoded, such as `litellm%40contoso.onmicrosoft.com`, is passed through unchanged, so a deployment carried over from RDS IAM authentication keeps working.
+
 #### Azure Kubernetes Service setup
 
 For LiteLLM running on AKS with workload identity:
@@ -411,6 +415,23 @@ For LiteLLM running on AKS with workload identity:
 LiteLLM uses the pod's federated token to request and refresh the database token. A static database password is not required, so the server can keep password authentication disabled.
 
 These settings are read from the environment when LiteLLM starts. To change the flag or the connection parameters, restart the proxy. Token refreshes do not require a restart.
+
+#### Deploying with the Helm chart
+
+The chart turns the flag on per database endpoint. Setting `database.writer.useAzureEntraAuth` emits `AZURE_POSTGRESQL_AUTH=true` and omits `DATABASE_PASSWORD`, so the writer needs no password in its Secret. The username still comes from `passwordSecret.usernameKey`.
+
+```yaml
+database:
+  writer:
+    host: myserver.postgres.database.azure.com
+    dbname: litellm
+    useAzureEntraAuth: true
+    passwordSecret:
+      name: litellm-writer-secret
+      usernameKey: username
+```
+
+A read replica takes the same key under `database.reader`, and it requires the writer to use Entra authentication as well because the proxy reads one global toggle. Setting `useIAMAuth` and `useAzureEntraAuth` on the same endpoint fails the render with a message naming both.
 
 ### --use_prisma_db_push
    - **Default:** `False`
