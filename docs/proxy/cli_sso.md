@@ -232,7 +232,7 @@ An admin cannot revoke a `--pkce` login from the dashboard; only the holder's `l
 
 ### Several workers or replicas
 
-Refresh-token single use, replay detection, and `POST /revoke` are enforced through the proxy's Redis cache when one is configured, either `litellm_settings.cache` with Redis `cache_params` or `general_settings.coordination_redis`, and they fail closed while Redis is unreachable: a refresh or a `POST /revoke` that arrives then answers `503 temporarily_unavailable`, the CLI keeps the key it already has and tries again on its next command, and `lite logout` tells you the proxy could not record the revocation, so the refresh token is still live until you run it again. Without Redis each worker keeps its own record, so on a proxy with more than one worker or replica a revoked or already-used refresh token can still be accepted by a worker that never saw it. Run a single worker or configure Redis
+Refresh-token single use, replay detection, and `POST /revoke` are enforced through the proxy's Redis cache when one is configured, either `litellm_settings.cache` with Redis `cache_params` or `general_settings.coordination_redis`, and they fail closed while Redis is unreachable: a refresh or a `POST /revoke` that arrives then answers `503 temporarily_unavailable`, the CLI keeps the key it already has and tries again on its next command, and `lite logout` keeps your login record, exits 1, and asks you to run it again shortly, so the refresh token still gets revoked. Without Redis each worker keeps its own record, so on a proxy with more than one worker or replica a revoked or already-used refresh token can still be accepted by a worker that never saw it. Run a single worker or configure Redis
 
 ## Native client contract
 
