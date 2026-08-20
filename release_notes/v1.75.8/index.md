@@ -63,7 +63,7 @@ pip install litellm==1.75.8
 </p>
 
 
-This release adds support for setting rate limits on individual members (including machine users) within a team. Teams can now give each agent its own rate limits—so that heavy-traffic agents don’t impact other agents or human users. 
+This release adds support for setting rate limits on individual members (including machine users) within a team. Teams can now give each agent its own rate limits, so that heavy-traffic agents don’t impact other agents or human users. 
 
 Agents can authenticate with LiteLLM using JWT and the same team role as human users, while still enforcing per-agent rate limits.
 

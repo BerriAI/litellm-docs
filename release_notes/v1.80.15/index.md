@@ -65,7 +65,7 @@ LiteLLM now sends 2.5× more requests to LLM providers by replacing sequential i
 
 ### Before
 
-> **Note:** Worse-looking provider metrics are a good sign here—they indicate requests spend less time inside LiteLLM.
+> **Note:** Worse-looking provider metrics are a good sign here; they indicate requests spend less time inside LiteLLM.
 
 ```
 ============================================================

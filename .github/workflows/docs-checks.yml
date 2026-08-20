@@ -13,4 +13,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node scripts/check-writing-style.js docs
+      - run: node scripts/check-writing-style.js docs blog release_notes

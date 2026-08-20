@@ -89,7 +89,7 @@ We've achieved a +500 RPS boost by fixing cache type inconsistencies that were c
 #### Features
 
 - **[OVHCloud AI Endpoints](../../docs/providers/ovhcloud)**
-    - New provider support with comprehensive model catalog - [PR #14494](https://github.com/BerriAI/litellm/pull/14494)
+    - New provider support with a full model catalog - [PR #14494](https://github.com/BerriAI/litellm/pull/14494)
 - **[CompactifAI](../../docs/providers/compactifai)**
     - New provider integration - [PR #14532](https://github.com/BerriAI/litellm/pull/14532)
 - **[SambaNova](../../docs/providers/sambanova)**

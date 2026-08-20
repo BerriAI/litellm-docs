@@ -56,7 +56,7 @@ Let's dive in.
 
 ### Logs View v2 with Tool Call Tracing
 
-This release introduces comprehensive tool call tracing through LiteLLM's redesigned Logs View v2, enabling developers to debug and monitor AI agent workflows in production environments seamlessly.
+This release introduces full tool call tracing through LiteLLM's redesigned Logs View v2, so developers can debug and monitor AI agent workflows in production environments.
 
 This means you can now onboard use cases like tracing complex multi-step agent interactions, debugging tool execution failures, and monitoring MCP server calls while maintaining full visibility into request/response payloads with syntax highlighting.
 

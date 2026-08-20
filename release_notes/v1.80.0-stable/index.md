@@ -124,7 +124,7 @@ curl --location 'http://localhost:4000/v1/videos' \
 
 ### Prometheus Metrics - Open Source
 
-Prometheus metrics are now available in the open-source version of LiteLLM, providing comprehensive observability for your AI Gateway without requiring an enterprise license.
+Prometheus metrics are now available in the open-source version of LiteLLM, providing full observability for your AI Gateway without requiring an enterprise license.
 
 **Quick Start:**
 

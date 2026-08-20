@@ -103,7 +103,7 @@ pip install litellm==1.77.2.post1
 
 #### Features
 
-- **[Qwen API Tiered Pricing](../../docs/providers/dashscope)** - Added comprehensive tiered cost tracking for Dashscope/Qwen models - [PR #14471](https://github.com/BerriAI/litellm/pull/14471), [PR #14479](https://github.com/BerriAI/litellm/pull/14479)
+- **[Qwen API Tiered Pricing](../../docs/providers/dashscope)** - Added full tiered cost tracking for Dashscope/Qwen models - [PR #14471](https://github.com/BerriAI/litellm/pull/14471), [PR #14479](https://github.com/BerriAI/litellm/pull/14479)
 
 #### Bug Fixes
 
