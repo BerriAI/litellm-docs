@@ -14,7 +14,7 @@
 
 ## What is Poe?
 
-Poe is Quora's comprehensive AI platform that offers:
+Poe is Quora's AI platform that offers:
 - **100+ Models**: Access to a wide variety of AI models
 - **Multiple Modalities**: Text, image, video, and voice AI
 - **Popular Models**: Including OpenAI's GPT series and Anthropic's Claude

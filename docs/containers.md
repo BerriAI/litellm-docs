@@ -252,7 +252,7 @@ curl -X DELETE "http://localhost:4000/v1/containers/cntr_123..." \
 
 ## **Using OpenAI Client with LiteLLM Proxy**
 
-You can use the standard OpenAI Python client to interact with LiteLLM's container endpoints. This provides a familiar interface while leveraging LiteLLM's proxy features.
+You can use the standard OpenAI Python client to interact with LiteLLM's container endpoints. This provides a familiar interface while keeping LiteLLM's proxy features.
 
 ### Setup
 

@@ -121,7 +121,7 @@ guardrails:
 
 ### Orchestrator
 
-If you're using the IBM FMS Guardrails Orchestrator, you can use [FMS Orchestrator API](https://foundation-model-stack.github.io/fms-guardrails-orchestrator/?urls.primaryName=Orchestrator+API), specifically by leveraging the `api/v2/text/detection/content` to potentially run multiple detectors in a single request; however, this endpoint can only accept one text input per request.
+If you're using the IBM FMS Guardrails Orchestrator, you can use [FMS Orchestrator API](https://foundation-model-stack.github.io/fms-guardrails-orchestrator/?urls.primaryName=Orchestrator+API), specifically `api/v2/text/detection/content` to run multiple detectors in a single request; however, this endpoint can only accept one text input per request.
 
 ```yaml
 guardrails:

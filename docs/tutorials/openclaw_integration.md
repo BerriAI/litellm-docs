@@ -4,7 +4,7 @@ sidebar_label: "OpenClaw"
 
 # OpenClaw + LiteLLM Integration
 
-[OpenClaw](https://openclaw.ai) is a self-hosted AI assistant that connects chat apps (WhatsApp, Telegram, Discord, and more) to LLM providers. By routing OpenClaw through LiteLLM Proxy, you get access to 100+ providers, cost tracking, spend limits, and automatic failover — all from a single gateway.
+[OpenClaw](https://openclaw.ai) is a self-hosted AI assistant that connects chat apps (WhatsApp, Telegram, Discord, and more) to LLM providers. By routing OpenClaw through LiteLLM Proxy, you get access to 100+ providers, cost tracking, spend limits, and automatic failover, all from a single gateway.
 
 ## What you'll set up
 
@@ -20,13 +20,13 @@ Chat apps → OpenClaw Gateway → LiteLLM Proxy → LLM Providers (OpenAI, Anth
 | **Python 3.8+** | `python --version` |
 | **At least one LLM API key** | OpenAI, Anthropic, Gemini, etc. |
 
-## Step 1 — Install LiteLLM Proxy
+## Step 1: Install LiteLLM Proxy
 
 ```bash
 uv tool install 'litellm[proxy]'
 ```
 
-## Step 2 — Create a LiteLLM config file
+## Step 2: Create a LiteLLM config file
 
 Create a config file  `litellm_config.yaml` with the models you want to use. Here's an example with OpenAI:
 
@@ -68,7 +68,7 @@ general_settings:
 See [LiteLLM proxy config docs](https://docs.litellm.ai/docs/proxy/configs) for all options.
 :::
 
-## Step 3 — Start the proxy
+## Step 3: Start the proxy
 
 Make sure your API key(s) are available as environment variables (via `export`, `.env` file, or however you manage secrets), then start the proxy:
 
@@ -76,7 +76,7 @@ Make sure your API key(s) are available as environment variables (via `export`, 
 litellm --config litellm_config.yaml --port 4000
 ```
 
-## Step 4 — Install OpenClaw
+## Step 4: Install OpenClaw
 
 ```bash
 # macOS / Linux
@@ -89,7 +89,7 @@ On Windows, use PowerShell: `iwr -useb https://openclaw.ai/install.ps1 | iex`
 WSL2 is recommended over native Windows.
 :::
 
-## Step 5 — Connect OpenClaw to LiteLLM
+## Step 5: Connect OpenClaw to LiteLLM
 
 Run the onboarding wizard:
 
@@ -99,7 +99,7 @@ openclaw onboard --install-daemon
 
 When prompted:
 
-1. Choose **QuickStart** or **Manual** as the onboarding mode (both work — Manual gives you more options for gateway settings)
+1. Choose **QuickStart** or **Manual** as the onboarding mode (both work; Manual gives you more options for gateway settings)
 2. Select **LiteLLM** as the model/auth provider
 3. Enter your LiteLLM `master_key` from Step 2 and set the base URL to your proxy address (e.g., `http://localhost:4000`)
 4. When asked for the default model, choose **Enter model manually** and type the model name from your `litellm_config.yaml` (e.g., `litellm/gpt-4o`)
@@ -120,7 +120,7 @@ openclaw onboard --non-interactive --accept-risk \
   --install-daemon --skip-channels --skip-skills
 ```
 
-## Step 6 — Verify
+## Step 6: Verify
 
 Check the gateway is healthy:
 

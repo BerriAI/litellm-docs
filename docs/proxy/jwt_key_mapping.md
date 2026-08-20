@@ -8,9 +8,9 @@ JWT → Virtual Key Mapping is an Enterprise feature.
 
 :::
 
-Map JWT tokens to LiteLLM virtual keys — so every JWT client gets the same granular controls as a virtual key: model restrictions, spend limits, rate limits, guardrails, and full spend tracking.
+Map JWT tokens to LiteLLM virtual keys, so every JWT client gets the same granular controls as a virtual key: model restrictions, spend limits, rate limits, guardrails, and full spend tracking.
 
-**Why this matters:** Standard JWT auth maps a JWT to a *team*. That's a shared boundary — all clients under a team share the same limits. With JWT → Virtual Key Mapping, each individual JWT client (identified by a claim like `client_id`, `azp`, or `sub`) maps to its own virtual key. You get per-client accountability without issuing API keys to your users.
+**Why this matters:** Standard JWT auth maps a JWT to a *team*. That's a shared boundary, so all clients under a team share the same limits. With JWT → Virtual Key Mapping, each individual JWT client (identified by a claim like `client_id`, `azp`, or `sub`) maps to its own virtual key. You get per-client accountability without issuing API keys to your users.
 
 **Common use case:** Your company uses SSO/OIDC. Developers use Claude Code with their identity tokens. You want to enforce per-developer model access and spend limits without giving each person a LiteLLM API key.
 
@@ -54,7 +54,7 @@ sequenceDiagram
 
 ### Prerequisites
 
-Complete [OIDC JWT Auth setup](./token_auth.md) first — you need `JWT_PUBLIC_KEY_URL` configured and `enable_jwt_auth: True` in your proxy config.
+Complete [OIDC JWT Auth setup](./token_auth.md) first; you need `JWT_PUBLIC_KEY_URL` configured and `enable_jwt_auth: True` in your proxy config.
 
 ### Step 1. Configure the JWT claim to map on
 
@@ -131,7 +131,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
   }'
 ```
 
-The request is now tracked against `dev-alice`'s virtual key — spend, rate limits, and model access enforced per-client.
+The request is now tracked against `dev-alice`'s virtual key, with spend, rate limits, and model access enforced per-client.
 
 ---
 
@@ -205,9 +205,9 @@ Or in `~/.claude/settings.json`:
 
 **4. Developers authenticate with SSO as usual**
 
-When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits — her $200/month budget, 200 RPM cap, and access to Sonnet and Haiku only.
+When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits: her $200/month budget, 200 RPM cap, and access to Sonnet and Haiku only.
 
-Bob's token maps to his own key — $20/month, Haiku only, 30 RPM.
+Bob's token maps to his own key: $20/month, Haiku only, 30 RPM.
 
 No API keys distributed. No shared limits. Full per-developer spend visibility in the LiteLLM dashboard.
 

@@ -864,7 +864,7 @@ Access control treats a group as its own model name: grant `<group_name>` on a k
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
 :::
 
-**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models — without spinning up a second router.
+**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models, without spinning up a second router.
 
 #### Rules
 
@@ -1094,7 +1094,7 @@ This is useful when you have multiple regional copies of the same model (e.g. Az
 - On a retryable failure, the failing deployment ID is excluded and a new deployment is picked from the remaining peers in the same model group, respecting `weight` / `rpm` / `tpm`.
 - Exclusions accumulate across hops: each retry adds the previous failure to the exclusion set, so a deployment that just failed is never picked again in the same request chain.
 - Capped by `max_fallbacks` (default `5`).
-- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError` — those keep their dedicated fallback paths.
+- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError`, which keep their dedicated fallback paths.
 - Async-only: honored by `router.acompletion()` and other async entrypoints. The sync `router.completion()` path falls through to regular fallbacks.
 - Cooldowns still apply: a deployment that crosses `allowed_fails` is cooled down independently of weighted failover.
 

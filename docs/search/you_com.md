@@ -9,7 +9,7 @@ You.com offers two tiers:
 | **Keyless free tier** (default) | `https://api.you.com/v1/agents/search` | none | IP-throttled, ~100 queries/day |
 | **Keyed tier** | `https://ydc-index.io/v1/search` | `X-API-Key` | higher rate limits |
 
-If `YOUCOM_API_KEY` is not set, the adapter automatically uses the keyless endpoint — no signup required to start.
+If `YOUCOM_API_KEY` is not set, the adapter automatically uses the keyless endpoint, so no signup is required to start.
 
 ## LiteLLM Python SDK
 

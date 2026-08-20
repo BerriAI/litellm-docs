@@ -199,7 +199,7 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 
 **What they cannot do:**
 - Create new teams
-- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`) — only a proxy admin can do this
+- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`); only a proxy admin can do this
 - Add/remove global proxy models to their team
 
 :::info Team budget raises
@@ -480,7 +480,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
     -d '{"team_id": "01044ee8-441b-45f4-be7d-c70e002722d8", "member": {"role": "admin", "user_id": "john@company.com"}}'
 ```
 
-Now `john@company.com` is a team admin. They can manage the `engineering_team` — add members, update rate limits, keep or lower the team budget, create keys — but they can't touch other teams or raise the team budget above its current cap.
+Now `john@company.com` is a team admin. They can manage the `engineering_team` (add members, update rate limits, keep or lower the team budget, create keys) but they can't touch other teams or raise the team budget above its current cap.
 
 Create a Virtual Key for the team admin:
 

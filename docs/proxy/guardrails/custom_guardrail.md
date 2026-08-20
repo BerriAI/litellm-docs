@@ -89,7 +89,7 @@ class myCustomGuardrail(CustomGuardrail):
 | `input_type` | `"request"` on the way in, `"response"` on the way out. Lets one class handle both directions. |
 | `logging_obj` | LiteLLM's logging object for the call, if you want to attach your own metadata. |
 
-Every key in `inputs` is optional — you only get the ones this call actually had:
+Every key in `inputs` is optional, so you only get the ones this call actually had:
 
 | Key | What's in it |
 |-----|--------------|
@@ -100,11 +100,11 @@ Every key in `inputs` is optional — you only get the ones this call actually h
 | `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
 | `model` | The model this call is routed to. |
 
-**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place — LiteLLM maps them back onto the original request or response.
+**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place; LiteLLM maps them back onto the original request or response.
 
 `structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
 
-While streaming, you can also set `stream_holdback_chars` — a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
+While streaming, you can also set `stream_holdback_chars`, a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
 :::tip Advanced: Using Individual Event Hooks
 
@@ -162,7 +162,7 @@ If you implement the individual event hooks instead, the same three modes call `
 
 :::note Streaming and post_call guardrails
 
-For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This means `post_call` guardrails on streaming are **audit-only** — they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
+For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This makes `post_call` guardrails on streaming **audit-only**: they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
 
 To filter or block streaming content in real-time, use `async_post_call_streaming_iterator_hook` instead, which processes chunks as they arrive.
 

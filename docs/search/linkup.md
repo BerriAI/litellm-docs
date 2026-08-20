@@ -87,7 +87,7 @@ Linkup provides powerful web search with context retrieval capabilities:
 ### Search Depth
 Control the precision and speed of your search:
 - `standard` - Returns results faster
-- `deep` - Takes longer but yields more comprehensive results
+- `deep` - Takes longer but returns more thorough results
 
 ### Output Types
 Choose how results are formatted:

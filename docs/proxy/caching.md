@@ -25,7 +25,7 @@ calling the LLM API again.
 
 ## Virtual Key Authentication Cache (Redis)
 
-When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**—so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
+When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
 Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
 
@@ -1092,7 +1092,7 @@ litellm_settings:
 
 ### Deleting Cache Keys - `/cache/delete`
 
-In order to delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
+To delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
 
 Example
 

@@ -120,7 +120,7 @@ LiteLLM converts upstream agent responses to the `protocolVersion` pinned on eac
 
 Set this in the agent card UI or in `agent_card_params` at registration. Unsupported values are rejected with HTTP 400.
 
-Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config — pin `protocolVersion` only if your client expects a specific wire format.
+Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config. Pin `protocolVersion` only if your client expects a specific wire format.
 
 See [Protocol versioning](./a2a#protocol-versioning) for client negotiation when `protocolVersion` is not pinned.
 

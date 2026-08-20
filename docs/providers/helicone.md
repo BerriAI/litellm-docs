@@ -159,7 +159,7 @@ Helicone supports all standard OpenAI-compatible parameters:
 
 ## Helicone-Specific Headers
 
-Pass these as metadata to leverage Helicone features:
+Pass these as metadata to use Helicone features:
 
 | Header | Description |
 |--------|-------------|

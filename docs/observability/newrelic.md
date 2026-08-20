@@ -3,7 +3,7 @@ import Image from '@theme/IdealImage';
 # New Relic
 
 ## Prerequisite
-In order to use LiteLLM with New Relic, you will need to have a New Relic account and [license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). If you do not have a New Relic account yet, you can create a [free tier account](https://newrelic.com/pricing/free-tier).
+To use LiteLLM with New Relic, you will need to have a New Relic account and [license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). If you do not have a New Relic account yet, you can create a [free tier account](https://newrelic.com/pricing/free-tier).
 
 This page covers using New Relic with LiteLLM in proxy mode. You can also use New Relic with the LiteLLM SDK by including the New Relic Python Agent in your application. Please refer to the New Relic AI Monitoring [documentation](https://docs.newrelic.com/docs/ai-monitoring/intro-to-ai-monitoring/).
 
@@ -40,7 +40,7 @@ The [New Relic Python Agent](https://docs.newrelic.com/docs/apm/agents/python-ag
 
 The official LiteLLM containers include the New Relic callback, but do not include the New Relic Python Agent. The easiest way to include the New Relic Python Agent is to create a new container image that layers the agent on top of an existing LiteLLM image. By doing this, you will be able to define the official LiteLLM image version to use as a base.
 
-In order to build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add new entrypoint and supervisord configuration files. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
+To build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add new entrypoint and supervisord configuration files. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
 
 To build the container image, copy the `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files to a directory. From this directory, you can build an image from the CLI using the following command.
 
@@ -208,7 +208,7 @@ litellm_settings:
     turn_off_message_logging: true
 ```
 
-The New Relic callback also utilizes an environment variable option to disable recording content. This environment variable defaults to `true`. You can turn off recording content messages by setting the following environment variable to `false`.
+The New Relic callback also reads an environment variable option to disable recording content. This environment variable defaults to `true`. You can turn off recording content messages by setting the following environment variable to `false`.
 
 ```shell
 NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED=false

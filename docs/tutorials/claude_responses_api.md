@@ -235,7 +235,7 @@ Expand your configuration to support multiple providers and models:
 
 :::tip Check live compatibility before you wire up a provider
 
-Compatibility between Claude Code features and each provider (Anthropic, Bedrock, Vertex AI, Azure) changes as Claude Code and LiteLLM ship updates. The [Claude Code × LiteLLM compatibility matrix](https://docs.litellm.ai/docs/claude_code_compatibility) is regenerated daily against the latest stable LiteLLM proxy across Haiku 4.5, Sonnet 4.6, and Opus 4.7 — check it first to see which `(feature, provider)` cells are currently green.
+Compatibility between Claude Code features and each provider (Anthropic, Bedrock, Vertex AI, Azure) changes as Claude Code and LiteLLM ship updates. The [Claude Code × LiteLLM compatibility matrix](https://docs.litellm.ai/docs/claude_code_compatibility) is regenerated daily against the latest stable LiteLLM proxy across Haiku 4.5, Sonnet 4.6, and Opus 4.7. Check it first to see which `(feature, provider)` cells are currently green.
 
 :::
 
@@ -296,7 +296,7 @@ litellm_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-Switch between models seamlessly:
+Switch between models without code changes:
 
 ```bash
 # Use Anthropic API directly (newest Claude Code model)
@@ -327,7 +327,7 @@ The Invoke preference and the beta-header flag below are temporary. LiteLLM alre
 
 #### 1. Prefer Bedrock Invoke
 
-In the config above, Bedrock models use the `bedrock/invoke/<model-id>` prefix — currently the smoother path for Claude Code traffic. If you'd like to try Converse, swap the prefix from `bedrock/invoke/` to `bedrock/converse/` and check the matrix for the feature you need.
+In the config above, Bedrock models use the `bedrock/invoke/<model-id>` prefix, currently the smoother path for Claude Code traffic. If you'd like to try Converse, swap the prefix from `bedrock/invoke/` to `bedrock/converse/` and check the matrix for the feature you need.
 
 #### 2. Disable Claude Code's experimental beta headers for Bedrock
 

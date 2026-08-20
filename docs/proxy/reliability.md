@@ -686,7 +686,7 @@ You can override the default context limit for a deployment by setting `max_inpu
 **Both** of the following are required:
 
 1. **`router_settings.enable_pre_call_checks: true`** — enables pre-call checks
-2. **`model_info.max_input_tokens`** on the deployment — overrides the limit for that model
+2. **`model_info.max_input_tokens`** on the deployment, which overrides the limit for that model
 
 ```yaml
 router_settings:

@@ -83,7 +83,7 @@ The CLI will now use LiteLLM Proxy as the backend, giving you access to LiteLLM'
 
 ### Use Anthropic, OpenAI, Bedrock, etc. models on qwen-code
 
-In order to use non-qwen models on qwen-code, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `qwen-code` should be routed to your desired model from any provider.
+To use non-qwen models on qwen-code, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `qwen-code` should be routed to your desired model from any provider.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

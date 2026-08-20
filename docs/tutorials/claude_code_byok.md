@@ -1,6 +1,6 @@
 # Claude Code with Bring Your Own Key (BYOK)
 
-Use Claude Code with your own Anthropic API key through the LiteLLM proxy. When you use Claude's `/login` with your Anthropic account, your API key is sent as `x-api-key`. With BYOK enabled, LiteLLM forwards your key to Anthropic instead of using proxy-configured keys — so you pay Anthropic directly while still benefiting from LiteLLM's routing, logging, and guardrails.
+Use Claude Code with your own Anthropic API key through the LiteLLM proxy. When you use Claude's `/login` with your Anthropic account, your API key is sent as `x-api-key`. With BYOK enabled, LiteLLM forwards your key to Anthropic instead of using proxy-configured keys, so you pay Anthropic directly while still benefiting from LiteLLM's routing, logging, and guardrails.
 
 ## How It Works
 

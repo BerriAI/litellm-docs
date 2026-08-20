@@ -18,7 +18,7 @@ LiteLLM supports all models on VLLM.
 ## Usage - litellm.completion (calling OpenAI compatible endpoint)
 vLLM Provides an OpenAI compatible endpoints - here's how to call it with LiteLLM 
 
-In order to use litellm to call a hosted vllm server add the following to your completion call
+To use litellm to call a hosted vllm server add the following to your completion call
 
 * `model="hosted_vllm/<your-vllm-model-name>"` 
 * `api_base = "your-hosted-vllm-server"`

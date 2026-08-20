@@ -261,7 +261,7 @@ Specifically triggered when content policy violations occur.
 1. **Safety**: Only modifies fallback configuration, won't accidentally change other settings
 2. **Simplicity**: Focused API with clear validation messages
 3. **Granularity**: Manage fallbacks per model and per type
-4. **Validation**: Comprehensive checks ensure configuration is valid before applying
+4. **Validation**: Checks that the configuration is valid before applying
 5. **Clarity**: Clear error messages with available models listed
 
 ## Notes

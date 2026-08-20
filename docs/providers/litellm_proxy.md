@@ -174,7 +174,7 @@ response = litellm.rerank(
 
 ## Integration with Other Libraries
 
-LiteLLM Proxy works seamlessly with Langchain, LlamaIndex, OpenAI JS, Anthropic SDK, Instructor, and more.
+LiteLLM Proxy works with Langchain, LlamaIndex, OpenAI JS, Anthropic SDK, Instructor, and more.
 
 [Learn how to use LiteLLM proxy with these libraries →](../proxy/user_keys)
 

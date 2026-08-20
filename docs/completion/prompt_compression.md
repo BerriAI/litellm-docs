@@ -107,7 +107,7 @@ With this enabled, LiteLLM runs the following server-side flow:
 
 Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite_bm25_27K) (real GitHub issues with ~27k tokens of BM25-retrieved repo context per problem).
 
-### Claude Opus — 5 problems, trigger=10k
+### Claude Opus: 5 problems, trigger=10k
 
 | Metric | Baseline | Compressed | Delta |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SW
 
 - **File-level targeting is fully preserved** — the model edits the same files with or without compression.
 - **Content similarity matches baseline** — the actual lines changed are comparable.
-- **Hunk overlap drops modestly** (-0.221) — the model targets the right files but may edit slightly different line ranges with less surrounding context.
+- **Hunk overlap drops modestly** (-0.221). The model targets the right files but may edit slightly different line ranges with less surrounding context.
 - **72% cost savings** with 78% token reduction.
 
 ### Metrics explained

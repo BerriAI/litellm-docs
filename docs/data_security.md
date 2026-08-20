@@ -71,7 +71,7 @@ Has the Vendor been audited / certified?
 - ISO 27001. Certified. Report available upon request on Enterprise plan.
 
 Has an information security management system been implemented? 
-- Yes - [CodeQL](https://codeql.github.com/) and a comprehensive ISMS covering multiple security domains.
+- Yes - [CodeQL](https://codeql.github.com/) and an ISMS covering multiple security domains.
 
 Is logging of key events - auth, creation, update changes occurring? 
 - Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/multiple_admins#1-switch-on-audit-logs)

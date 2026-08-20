@@ -100,7 +100,7 @@ See [Okta's Access Policy documentation](https://help.okta.com/en-us/content/top
 GENERIC_CLIENT_STATE="random-string"
 ```
 
-**PKCE (Proof Key for Code Exchange)** — If your Okta application is configured to require PKCE, enable it by setting:
+**PKCE (Proof Key for Code Exchange).** If your Okta application is configured to require PKCE, enable it by setting:
 
 ```bash
 GENERIC_CLIENT_USE_PKCE="true"
@@ -278,7 +278,7 @@ Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm
 
 Use `GENERIC_USER_EXTRA_ATTRIBUTES` to extract additional fields from the SSO provider response beyond the standard user attributes (id, email, name, etc.). This is useful when you need to access custom organization-specific data (e.g., department, employee ID, groups) in your [custom SSO handler](./custom_sso.md).
 
-For **CLI SSO**, you can map the same (or other) claims into user `metadata` and return scalars to the CLI via `CLI_SSO_CLAIM_MAP` — see [CLI Authentication](./cli_sso.md#attribution-metadata-oidc-claims).
+For **CLI SSO**, you can map the same (or other) claims into user `metadata` and return scalars to the CLI via `CLI_SSO_CLAIM_MAP`. See [CLI Authentication](./cli_sso.md#attribution-metadata-oidc-claims).
 
 ```shell
 # Comma-separated list of field names to extract
@@ -354,7 +354,7 @@ This will check if the user email we receive from SSO contains this domain, befo
 
 ### Set Proxy Admin
 
-Set a Proxy Admin when SSO is enabled. Once SSO is enabled, the `user_id` for users is retrieved from the SSO provider. In order to set a Proxy Admin, you need to copy the `user_id` from the UI and set it in your `.env` as `PROXY_ADMIN_ID`.
+Set a Proxy Admin when SSO is enabled. Once SSO is enabled, the `user_id` for users is retrieved from the SSO provider. To set a Proxy Admin, you need to copy the `user_id` from the UI and set it in your `.env` as `PROXY_ADMIN_ID`.
 
 #### Step 1: Copy your ID from the UI 
 
@@ -548,7 +548,7 @@ PROXY_BASE_URL=litellm.platform.com
 
 **2. For Okta specifically, ensure `GENERIC_CLIENT_STATE` is set and PKCE is configured if required**
 
-See [Okta SSO — Step 4: Configure Okta Security Settings](#step-4-configure-okta-security-settings) for details on `GENERIC_CLIENT_STATE` and PKCE configuration.
+See [Okta SSO, Step 4: Configure Okta Security Settings](#step-4-configure-okta-security-settings) for details on `GENERIC_CLIENT_STATE` and PKCE configuration.
 
 ### Common Configuration Issues
 
@@ -605,7 +605,7 @@ Once redirected, you should see a page called "SSO Debug Information". This page
 
 ### Manage User Roles via Azure App Roles
 
-Centralize role management by defining user permissions in Azure Entra ID. LiteLLM will automatically assign roles based on your Azure configuration when users sign in—no need to manually manage roles in LiteLLM.
+Centralize role management by defining user permissions in Azure Entra ID. LiteLLM will automatically assign roles based on your Azure configuration when users sign in, with no need to manually manage roles in LiteLLM.
 
 #### Step 1: Create App Roles on Azure App Registration
 
