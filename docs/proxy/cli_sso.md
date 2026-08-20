@@ -255,11 +255,11 @@ curl https://litellm.example.com/.well-known/litellm-cli-auth
 
 `resource` is the proxy origin. Send it as the RFC 8707 `resource` parameter on the authorize and token requests. That parameter is what asks for a proxy API credential instead of an MCP session; without it the same authorize request takes the MCP connect path, and the token it mints is rejected on `/v1/*`
 
-The URLs are built from the request's base URL. Behind a load balancer or reverse proxy, set `PROXY_BASE_URL` on the proxy to its public origin so `issuer`, the endpoints, and `resource` name the address your users reach
+The URLs are built from the request's base URL. Behind a load balancer or reverse proxy, set `PROXY_BASE_URL` on the proxy to its public origin so `issuer`, the endpoints, and `resource` name the address your users reach. `lite login --pkce` checks this the way [RFC 8414 section 3.3](https://www.rfc-editor.org/rfc/rfc8414#section-3.3) asks: it stops with a message that names the issuer to pass as `--base-url` when `issuer` differs from the `--base-url` the user typed, so the two must agree
 
 ### Steps
 
-1. Fetch the discovery document above and check that `contract_version` is `1` and that `code_challenge_methods_supported` includes `S256`
+1. Fetch the discovery document above and check that `contract_version` is `1` and that `code_challenge_methods_supported` includes `S256`. Before you post anything to the endpoints, also check that `issuer` matches the address you fetched the document from (same scheme, host, port, and path, ignoring case and a trailing slash) and that every endpoint and `resource` sit on that same origin
 
 2. Register a public client. Start a listener on `127.0.0.1` on a port the OS assigns and register that address as the redirect URI. Keep the returned `client_id`; there is no secret
 
