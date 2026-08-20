@@ -29,7 +29,7 @@ The transformation lives in `litellm/llms/anthropic/experimental_pass_through/re
 | `top_k` | ❌ Not mapped | Dropped silently |
 | `speed` | ❌ Not mapped | Only used to set Anthropic beta headers on the native path |
 
-The chat-completions path (`litellm_settings.use_chat_completions_url_for_anthropic_messages: true`, and every non-OpenAI provider) derives the same two parameters from `metadata.user_id`, with two differences: `user` is passed through untruncated, and `prompt_cache_key` is only set when the target provider's supported params include it. OpenAI, Azure OpenAI and other OpenAI-compatible providers do; Gemini, Vertex AI, Bedrock and Anthropic do not.
+The chat-completions path (`litellm_settings.use_chat_completions_url_for_anthropic_messages: true`, and every non-OpenAI provider) derives the same two parameters from `metadata.user_id`, with two differences: `user` is passed through untruncated, and `prompt_cache_key` is only set when the target provider's supported params include it. OpenAI, Azure OpenAI and other OpenAI-compatible providers do; Gemini, Vertex AI, Bedrock and Anthropic do not. `litellm_proxy/` deployments (one LiteLLM proxy in front of another) never get the derived key, because the downstream proxy's real provider is unknown and would reject it unless `drop_params` is set there.
 
 
 ### How messages get converted
