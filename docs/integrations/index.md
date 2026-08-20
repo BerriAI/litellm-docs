@@ -121,6 +121,12 @@ Add safety and content filtering to LLM calls.
 columns={3}
 items={[
   {
+    icon: "🔍",
+    title: "RepelloAI Argus",
+    description: "Policy-driven Prompt, PII, and content protection",
+    to: "/docs/proxy/guardrails/repelloai",
+  },
+  {
     icon: "🛡️",
     title: "Lakera AI",
     description: "Prompt injection detection.",

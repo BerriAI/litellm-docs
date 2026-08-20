@@ -10,6 +10,7 @@ Use this endpoint to directly call a guardrail configured on your LiteLLM instan
 This endpoint supports various guardrail types including:
 - **Presidio** - PII detection and masking
 - **Bedrock** - AWS Bedrock guardrails for content moderation
+- **RepelloAI Argus** - AI guardrail covering jailbreak and prompt injection, PII detection, secrets and key leakage, system prompt leakage, banned topics, bias and competitor mention detection.
 - **Lakera** - AI safety guardrails
 - **PANW Prisma AIRS** - Threat detection, DLP, and policy enforcement
 - **Custom guardrails** - User-defined guardrails
