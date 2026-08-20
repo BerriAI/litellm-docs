@@ -193,6 +193,8 @@ A tag value is whatever the caller's tags resolve to, the same identity [Request
 
 If callers are untrusted, either provision tags on the key instead of accepting them from the request, or set `general_settings.reject_clientside_metadata_tags: true` to block client-supplied tags outright. That flag currently covers the common chat/embeddings routes; it does not yet cover Bedrock-invoke, `/v1/messages`, Responses, batches, or files routes, which resolve tags from a separate `litellm_metadata` field the check doesn't inspect.
 
+Token and dollar accounting on a successful call read `model_group`, `metadata`, `total_tokens`, and `response_cost` off the same `StandardLoggingPayload` every other logging integration sees. If `litellm.standard_logging_payload_excluded_fields` is configured to strip any of those fields, this callback loses the same data it needs to record usage, silently under-counting (or entirely skipping) the tag's token or dollar bucket for calls made through that configuration. Don't combine tag-scoped token or dollar limits with an exclusion list that removes these fields.
+
 ## Enable the Callback
 
 `tag_rate_limiter` is opt-in, not a default proxy hook. Add it to `litellm_settings.callbacks`:
