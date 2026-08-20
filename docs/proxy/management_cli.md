@@ -151,12 +151,18 @@ The token minted by `lite login` is a short-lived, per-session agent credential,
 
 The credential is short-lived by design (default 24h, configurable via `LITELLM_CLI_JWT_EXPIRATION_HOURS`); run `lite login` again to refresh it, which also re-reads your latest team and user settings. It does not appear in the Keys UI and cannot be rotated or revoked mid-session, and `lite claude`, `lite codex`, and `lite opencode` work with it on a default deployment. If you need a long-lived, rotatable key that shows up in the Keys UI, create a dedicated virtual key in the dashboard and pass it via `--api-key` or `LITELLM_PROXY_API_KEY` instead.
 
+`lite login` keeps the credential in your OS keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service) under the service `litellm-cli` and the account `credential`. Only the non-secret half lands in `~/.litellm/token.json`: the gateway URL, your user id, email, and role, the auth header name, and the sign-in timestamp. That file is created `0600` inside a `0700` directory. Reaching the keychain needs the `keyring` package, which ships with the `cli` extra, so install with `pip install 'litellm[cli]'` rather than a bare `pip install litellm` if you want keychain storage
+
+A machine with no keychain, a headless Linux box for example, keeps the credential in that same owner-only file instead, and so do installs missing `keyring` and shells that set `LITELLM_CLI_DISABLE_KEYRING` to `1`, `true`, `yes`, or `on`, which turns keychain storage off entirely. `lite login` prints where the credential ended up either way. A credential written into `token.json` in plaintext by an older `lite` still authenticates: the next command that reads it moves it into the keychain and takes it out of the file
+
 When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
 
 ```bash
 lite whoami   # show the authenticated user and the token age
-lite logout   # clear the stored token
+lite logout   # clear the keychain entry and the token file
 ```
+
+`lite logout` clears both stores. When the keychain refuses to release the entry, or cannot be reached to check, it warns you and tells you what to do rather than reporting a clean logout
 
 ## Main Commands
 
