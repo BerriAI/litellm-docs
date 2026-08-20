@@ -62,6 +62,14 @@ Click **Save Changes** to apply your new logo.
 
 Your custom logo will now appear in the LiteLLM dashboard sidebar and login page.
 
+## Dark Mode Logo
+
+A logo drawn for a light background rarely reads well on a dark one, so you can set a second logo that LiteLLM uses whenever the dashboard is in dark mode. Fill in **Custom Logo URL (dark mode)** on the same UI Theme page, or set `UI_LOGO_PATH_DARK`
+
+Leaving it empty is a valid choice. Dark mode then reuses whatever you set for the light logo, so your branding still shows rather than reverting to LiteLLM's. The same thing happens if the dark logo is set but cannot be loaded, which means a broken or deleted image never costs you your branding
+
+Setting only the dark logo leaves light mode on the default LiteLLM logo, so set both if you want your own artwork in each theme
+
 ## Via the API
 
 ### Set a Custom Logo
@@ -71,9 +79,12 @@ curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "logo_url": "https://example.com/your-company-logo.png"
+    "logo_url": "https://example.com/your-company-logo.png",
+    "logo_url_dark": "https://example.com/your-company-logo-dark.png"
   }'
 ```
+
+`logo_url_dark` is optional. Omit it and dark mode reuses `logo_url`
 
 ### Set a Custom Favicon
 
@@ -116,14 +127,16 @@ You can also set the logo URL in your proxy configuration file:
 litellm_settings:
   ui_theme_config:
     logo_url: "https://example.com/your-company-logo.png"
+    logo_url_dark: "https://example.com/your-company-logo-dark.png"  # optional
     favicon_url: "https://example.com/your-favicon.ico"  # optional
 ```
 
-Or set it as an environment variable:
+Or set them as environment variables:
 
 ```yaml
 environment_variables:
   UI_LOGO_PATH: "https://example.com/your-company-logo.png"
+  UI_LOGO_PATH_DARK: "https://example.com/your-company-logo-dark.png"
 ```
 
 ## Supported Logo Formats
