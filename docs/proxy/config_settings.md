@@ -1404,6 +1404,7 @@ router_settings:
 | TOOL_CHOICE_OBJECT_TOKEN_COUNT | Token count for tool choice objects. Default is 4
 | TOOL_POLICY_CACHE_TTL_SECONDS | TTL in seconds for caching tool policy guardrail results. Default is 60
 | UI_LOGO_PATH | Path to the logo image used in the UI
+| UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for accessing the UI
 | UI_USERNAME | Username for accessing the UI
 | UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse
