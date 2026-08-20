@@ -412,6 +412,33 @@ const sidebars = {
       items: [
         {
           type: "category",
+          label: "Setup & Deployment",
+          items: [
+            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+            "proxy/deploy",
+            "proxy/prod",
+            "proxy/redis_requirements",
+            "proxy/db_sizing",
+            "proxy/redis_sizing",
+            "proxy/security_best_practices",
+            "proxy/rust_gateway",
+            "proxy/server_tuning",
+            "proxy/multi_region",
+            "proxy/db_read_replica",
+            "proxy/global_control_plane",
+            "proxy/health",
+            "proxy/model_management",
+            "proxy/master_key_rotations",
+            "proxy/billing_metrics",
+          ],
+        },
+        {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
+        },
+        {
+          type: "category",
           label: "Agent & MCP Gateway",
           items: [
             {
@@ -433,6 +460,16 @@ const sidebars = {
               items: [
                 "mcp",
                 "mcp_usage",
+                {
+                  type: "category",
+                  label: "MCP Server Usage",
+                  items: [
+                    "mcp_servers/index",
+                    "mcp_servers/slack",
+                    "mcp_servers/atlassian",
+                    "mcp_servers/linear",
+                  ],
+                },
                 "mcp_rest_api",
                 "mcp_openapi",
                 "mcp_oauth",
@@ -464,30 +501,6 @@ const sidebars = {
               ],
             },
             { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
-          ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
-        },
-        {
-          type: "category",
-          label: "Setup & Deployment",
-          items: [
-            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
-            "proxy/deploy",
-            "proxy/prod",
-            "proxy/security_best_practices",
-            "proxy/rust_gateway",
-            "proxy/server_tuning",
-            "proxy/multi_region",
-            "proxy/db_read_replica",
-            "proxy/high_availability_control_plane",
-            "proxy/health",
-            "proxy/model_management",
-            "proxy/master_key_rotations",
-            "proxy/billing_metrics",
           ],
         },
         {
@@ -736,6 +749,7 @@ const sidebars = {
             "proxy/request_tags",
             "proxy/custom_pricing",
             "proxy/custom_model_cost_map",
+            "proxy/ptu_flat_cost",
             "proxy/pricing_calculator",
             "proxy/provider_margins",
             "proxy/provider_discounts",
@@ -750,6 +764,7 @@ const sidebars = {
           items: [
             "proxy/auto_routing",
             "proxy/auto_routing_semantic",
+            "proxy/auto_routing_benchmark",
             "adaptive_router",
             {
               type: "link",
@@ -856,6 +871,16 @@ const sidebars = {
           items: [
             "mcp",
             "mcp_usage",
+            {
+              type: "category",
+              label: "MCP Server Usage",
+              items: [
+                "mcp_servers/index",
+                "mcp_servers/slack",
+                "mcp_servers/atlassian",
+                "mcp_servers/linear",
+              ],
+            },
             "mcp_rest_api",
             "mcp_openapi",
             "mcp_oauth",
@@ -898,6 +923,7 @@ const sidebars = {
             "pass_through/bedrock",
             "pass_through/azure_passthrough",
             "pass_through/cohere",
+            "pass_through/comprehend_medical",
             "pass_through/cursor",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
@@ -915,6 +941,7 @@ const sidebars = {
             },
             "pass_through/vllm",
             "proxy/pass_through",
+            "proxy/pass_through_cost_tracking",
             "proxy/pass_through_guardrails"
           ]
         },
@@ -943,6 +970,7 @@ const sidebars = {
             "search/you_com",
             "search/apiserpent",
             "search/agentcore",
+            "search/nimble",
           ]
         },
         "skills",
@@ -1191,6 +1219,7 @@ const sidebars = {
         "providers/topaz",
         "providers/triton-inference-server",
         "providers/v0",
+        "providers/valkey_vector_stores",
         "providers/vercel_ai_gateway",
         {
           type: "category",
@@ -1242,6 +1271,7 @@ const sidebars = {
         "scheduler",
         "proxy/auto_routing",
         "proxy/auto_routing_semantic",
+        "proxy/auto_routing_benchmark",
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",

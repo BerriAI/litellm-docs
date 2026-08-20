@@ -48,6 +48,7 @@ You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/ma
 |------------|-------------|---------------------|
 | LiteLLM_SpendLogs | Detailed logs of all API requests. Records token usage, spend, and timing information. Tracks which models and keys were used. | **Medium - this is a batch process that runs on an interval.** |
 | LiteLLM_DailyUserSpend and siblings (DailyTeamSpend, DailyOrgSpend, DailyTagSpend, DailyEndUserSpend, DailyAgentSpend) | Pre-aggregated daily spend rollups per user, team, org, tag, end user, and agent; the Admin UI Usage views read these aggregates rather than scanning SpendLogs. | Low - one row per entity per day, updated in batches |
+| LiteLLM_DailyGatewayRequests | Successful and failed request counts recorded at the ASGI edge by the request-metrics middleware, keyed by date, category and route. Backs the Successful Requests and Failed Requests tiles and the Gateway Requests by Endpoint chart on the Usage page; see [gateway request counts](./endpoint_activity.md#gateway-request-counts). | Low - one row per route per day, updated in batches |
 | LiteLLM_AuditLog | Tracks changes to system configuration. Records who made changes and what was modified. Maintains history of updates to teams, users, and models. | **Off by default**, **High - Runs on every change to an entity** |
 
 ## Disable `LiteLLM_SpendLogs`

@@ -40,7 +40,7 @@ Code optimizations were necessary to address the example incident. But, as long 
 
 ## The componentized deployment
 
-LiteLLM now offers an experimental Helm chart that runs LiteLLM as three independent microservices plus a one-shot migrations Job.
+LiteLLM now offers a Helm chart that runs LiteLLM as three independent microservices plus a one-shot migrations Job.
 
 | Component | Port | Surface |
 |---|---|---|
@@ -78,15 +78,9 @@ This isolates expensive read queries from the connection pool that the spend-tra
 
 ![Read/write split: analytics reads served by the Postgres replica while spend writes stay on the primary](/img/blog/componentized_deployment/read_replica.png)
 
-## Using the experimental Helm chart
+## Using the Helm chart
 
 The componentized deployment ships as an OCI Helm chart published to GitHub Container Registry: [`ghcr.io/berriai/litellm/chart/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm%2Fchart%2Flitellm).
-
-:::warning Experimental
-
-This chart is experimental and the values schema may change between releases. Pin `--version` and review the diff before upgrading. The single-image deployment remains the supported default.
-
-:::
 
 Sensitive values are passed by Secret reference only — create them first:
 

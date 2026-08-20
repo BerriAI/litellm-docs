@@ -2,7 +2,7 @@
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -282,6 +282,7 @@ The response follows Perplexity's search format with the following structure:
 | You.com | `YOUCOM_API_KEY` *(optional — omit for keyless free tier)* | `you_com` |
 | APISerpent | `APISERPENT_API_KEY` | `apiserpent` |
 | Bedrock AgentCore | `AGENTCORE_GATEWAY_URL` (required), AWS credentials or `AGENTCORE_GATEWAY_TOKEN` | `agentcore` |
+| Nimble | `NIMBLE_API_KEY` | `nimble` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
 

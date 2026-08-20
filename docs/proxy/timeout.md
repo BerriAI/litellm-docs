@@ -184,6 +184,29 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 The header goes through the same `allow_client_keepalive_override` gate as the body field, so it has no effect on a deployment that hasn't opted in either.
 
+#### A proxy-wide default
+
+`keepalive_seconds` is per deployment. To apply one interval across every deployment, and to every pass-through route, set `sse_keepalive_ping_interval_seconds` under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  sse_keepalive_ping_interval_seconds: 15
+```
+
+A deployment's own `keepalive_seconds` still wins where it is set, and a deployment-level `0` still hard-disables. The global value only applies where nothing more specific does.
+
+One nuance applies before the upstream has answered, since no deployment has served the request yet: a per-deployment value is only used when every deployment behind the requested model name carries the same one. Where they disagree, the global value applies until the serving deployment is known, after which its own setting takes over for the rest of the stream.
+
+#### Silence before the upstream answers at all
+
+Some providers withhold their response headers until the first token, so on those the model's whole thinking time passes before the proxy has anything to relay. `sse_keepalive_ping_interval_seconds` covers that window too: when the upstream call has not come back within one interval, the proxy opens the SSE response and starts sending `: ping` comments, then replays the real response onto the same connection once it arrives.
+
+Two things follow from opening the response that early, and both are why this stays off until you set an interval:
+
+- The status line is committed before the outcome is known, so a request that fails after the first ping arrives as an SSE error frame under a `200` rather than as an HTTP error status. Any error transformation your callbacks apply still applies to that frame
+- LiteLLM's `x-litellm-*` response headers are not known yet, so they are absent on a stream that pinged
+
+
 ### Setting Dynamic Timeouts - Per Request
 
 LiteLLM supports setting a `timeout` per request 

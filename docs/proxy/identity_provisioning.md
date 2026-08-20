@@ -159,7 +159,9 @@ In the Admin UI, the auto-registered key appears under the user with `auto_regis
 
 ## Making the key bind to the right user
 
-The one thing to get right is the identity join between SCIM and the JWT, otherwise `auto_register` mints a key that is not attached to the user SCIM provisioned. SCIM stores the user's id from the SCIM `userName` (so the LiteLLM `user_id` equals the `userName` your IdP sends), keeps `externalId` as `sso_user_id`, and stores the address from `emails[0]`. The auto-registered key binds to the user resolved from `user_id_jwt_field`, so map that to the JWT claim carrying the same value your IdP sends as the SCIM `userName`. Email is a reliable secondary join: LiteLLM also matches a JWT user to an existing user by email, so as long as your IdP sends the same email in both SCIM (`emails[0]`) and the JWT (`user_email_jwt_field`), the key attaches to the provisioned user even if the primary ids differ. Use a globally unique claim for `virtual_key_claim_field` (email or a stable subject id) so two different users never collide on the same mapping.
+To associate an auto-registered key with the correct SCIM-provisioned user, configure a consistent identity value across SCIM and JWT claims. LiteLLM stores SCIM `userName` as `user_id` and `emails[0].value` as `user_email`. The `externalId` attribute is stored as `sso_user_id` for `PUT` and `PATCH` requests, but not during the initial `POST`; therefore, `sso_user_id` may remain empty until the user is updated. See the [attribute mapping table](../tutorials/scim_litellm.md#user-attribute-mapping).
+
+Configure `user_id_jwt_field` to reference the JWT claim that contains the same value provided as the SCIM `userName`. LiteLLM can also match an existing user by email when `emails[0].value` matches the JWT claim configured by `user_email_jwt_field`. Set `virtual_key_claim_field` to a globally unique value, such as an email address or stable subject identifier, to prevent multiple users from sharing the same key mapping.
 
 ---
 

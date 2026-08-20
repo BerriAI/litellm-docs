@@ -120,6 +120,50 @@ When a limit is exceeded before the upstream call:
 
 The response includes a `retry-after` header (seconds until the current minute window resets).
 
+## Project-Level Limits
+
+Enforce per-model ITPM / OTPM quotas for a [project](./project_management) on the proxy. Set `model_itpm_limit` and `model_otpm_limit` when creating or updating a project: each maps a model name (the `model_name` clients request) to a token-per-minute limit.
+
+```bash showLineNumbers
+curl -X POST 'http://localhost:4000/project/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "project_alias": "my-project",
+    "team_id": "<team-id>",
+    "models": ["claude-fable-5"],
+    "model_itpm_limit": {"claude-fable-5": 300000},
+    "model_otpm_limit": {"claude-fable-5": 100000}
+  }'
+```
+
+Requests made with the project's keys count against these limits. Enforcement follows the same reservation model as deployment limits: LiteLLM reserves the input estimate plus the effective output cap before the upstream call, then reconciles to actual usage after the response. No router settings are needed. The proxy's rate limiter enforces the project metadata automatically. This requires a database, since projects live in the proxy DB.
+
+### Project response headers
+
+Successful responses on models with a project limit include:
+
+| Header | Description |
+| --- | --- |
+| `x-ratelimit-model_per_project_itpm-limit-tokens` | Project ITPM limit for the model |
+| `x-ratelimit-model_per_project_itpm-remaining-tokens` | Remaining project ITPM this minute |
+| `x-ratelimit-model_per_project_otpm-limit-tokens` | Project OTPM limit for the model |
+| `x-ratelimit-model_per_project_otpm-remaining-tokens` | Remaining project OTPM this minute |
+
+### Project error response
+
+A request that would exceed a project limit is blocked with `429` before the upstream call:
+
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded for model_per_project_itpm: <project-id>:claude-fable-5. Limit type: tokens. Current limit: 300000, Remaining: 300000. Limit resets at: 2026-08-18 14:48:49 UTC",
+    "type": "throttling_error",
+    "code": "429"
+  }
+}
+```
+
 ## ITPM vs TPM
 
 | Setting | What it limits | When to use |

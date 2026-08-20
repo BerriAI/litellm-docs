@@ -65,12 +65,21 @@ import litellm
 litellm.callbacks = [MyToolCallback()]
 ```
 
-Or in `config.yaml`:
+Or in `config.yaml`, pointing at an instance the module creates:
+
+```python
+# my_module.py, after the class definition above
+my_tool_callback = MyToolCallback()
+```
 
 ```yaml
 litellm_settings:
-  callbacks: ["my_module.MyToolCallback"]
+  callbacks: ["my_module.my_tool_callback"]
 ```
+
+:::warning
+The dotted path must name the instance, not the class. `callbacks: ["my_module.MyToolCallback"]` fails config load, and on versions before that check it started clean and never ran the hook
+:::
 
 ## `AgenticLoopPlan` fields
 

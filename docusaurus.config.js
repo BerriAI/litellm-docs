@@ -96,6 +96,10 @@ const config = {
             to: '/docs/proxy/multi_region',
           },
           {
+            from: '/docs/proxy/high_availability_control_plane',
+            to: '/docs/proxy/global_control_plane',
+          },
+          {
             from: '/docs/proxy/deploy_cloud',
             to: '/docs/proxy/deploy',
           },
