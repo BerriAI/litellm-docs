@@ -37,7 +37,7 @@ When Creating a Key, Team, or Organization, you can select the allowed MCP Serve
 
 ## Permission Hierarchy
 
-Permissions can be set at five distinct levels. When more than one level applies to a request, LiteLLM **intersects** the lists (most-restrictive wins) — except for the organization level, which acts as a **ceiling**.
+Permissions can be set at six distinct levels. When more than one level applies to a request, LiteLLM **intersects** the lists (most-restrictive wins), except for the organization level, which acts as a **ceiling**.
 
 | Level | Source | How it composes |
 |---|---|---|
@@ -45,7 +45,8 @@ Permissions can be set at five distinct levels. When more than one level applies
 | **Team** | Same fields on the team | If both key and team have lists, the result is the **intersection** (only servers in both). If only the team has a list, the key inherits it. |
 | **End user** | Same fields on the `LiteLLM_EndUserTable` row matching `x-litellm-end-user-id` | Intersected with the running result. Skipped if no end-user-id is present on the request. |
 | **Agent** | Same fields on the agent identified by `x-litellm-agent-id` | Intersected with the running result. Skipped if no agent-id is present. |
-| **Organization** | Same fields on the org owning the key/team | Acts as a **ceiling** — the final allowed-server set is intersected with the org's list. If the org has no list, no additional restriction. |
+| **Internal user** | Same fields on the internal user (the human) the request authenticated as | Intersected with the running result, so it can only narrow. Skipped if that user carries no entitlement. |
+| **Organization** | Same fields on the org owning the key/team | Acts as a **ceiling**; the final allowed-server set is intersected with the org's list. If the org has no list, no additional restriction. |
 
 If no level has a list, the request can access **every** MCP server (open by default).
 
@@ -70,8 +71,13 @@ flowchart TD
     M{agent-id present and agent has list?}
     M -->|Yes| N[Intersect with agent list]
     M -->|No| O[Keep current]
-    N --> P
-    O --> P
+    N --> S
+    O --> S
+    S{Internal user has an entitlement?}
+    S -->|Yes| T[Intersect with user's entitlement]
+    S -->|No| U[Keep current]
+    T --> P
+    U --> P
     P{Org has list?}
     P -->|Yes| Q[Cap final set to org's list]
     P -->|No| R[Final set]
@@ -712,7 +718,7 @@ This video shows how to set allowed tools for a Key, Team, or Organization.
 
 ### `mcp_tool_permissions` API
 
-`object_permission.mcp_tool_permissions` is a `Dict[server_id, List[tool_name]]` on the key, team, end-user, agent, or organization. It's evaluated **after** server-level access has been resolved (see [Permission Hierarchy](#permission-hierarchy) above) and applies the same five-level intersection — most-restrictive wins, organization acts as a ceiling.
+`object_permission.mcp_tool_permissions` is a `Dict[server_id, List[tool_name]]` on the key, team, end-user, agent, internal user, or organization. It's evaluated **after** server-level access has been resolved (see [Permission Hierarchy](#permission-hierarchy) above) and applies the same six-level intersection: most-restrictive wins, organization acts as a ceiling.
 
 This is distinct from the server-registration-level `allowed_tools` / `disallowed_tools` (which apply to **every** caller of the server). `mcp_tool_permissions` lets you carve out per-team subsets without changing the server config.
 
@@ -787,7 +793,74 @@ curl -X PATCH "http://localhost:4000/v1/agents/{agent_id}" \
 ```
 
 </TabItem>
+<TabItem value="user" label="On an Internal User">
+
+An entitlement on the internal user says which tools that *person* may run, whatever key they happen to be holding. It only ever narrows: the tools they get on a server are the intersection of their entitlement with what the key, team, agent and organization already allow.
+
+```bash title="Grant one person a single tool on one server" showLineNumbers
+curl -X POST "http://localhost:4000/user/update" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "alice",
+    "object_permission": {
+      "mcp_servers": ["github_mcp"],
+      "mcp_tool_permissions": {"github_mcp": ["list_issues"]}
+    }
+  }'
+```
+
+`/user/new` takes the same `object_permission` block at creation time. See [Entitling a person rather than a credential](#per-user-tool-permissions) below for the read-back and the resolution details.
+
+</TabItem>
 </Tabs>
+
+### Entitling a person rather than a credential {#per-user-tool-permissions}
+
+Every other level describes a credential or a group: the key's scope, the team's scope, the organization's ceiling. The internal user level describes the human, so an admin can say which people may perform which MCP tool calls without chasing down every key those people hold
+
+The grant lives on the internal user's `object_permission` and uses the same fields as everywhere else, `mcp_servers`, `mcp_access_groups` and `mcp_tool_permissions`. It resolves as a ceiling on both axes: the servers the person reaches are intersected with what their key, team, agent and organization allow, and so are the tools they may run on each of those servers. Someone entitled to a server their key does not grant still cannot reach it. In resolution order the key and team come first, then the end user, then the agent, then the internal user, then the organization ceiling
+
+A user carrying no entitlement places no ceiling, so nothing changes for an existing deployment until an admin grants someone one. Servers named only as keys of `mcp_tool_permissions` count as entitled, so granting one tool never means naming its server twice
+
+Read the grant back with `GET /v2/user/info`, which now returns the linked `object_permission`:
+
+```bash showLineNumbers
+curl -X GET "http://localhost:4000/v2/user/info?user_id=alice" \
+  -H "Authorization: Bearer sk-master-key" \
+  | jq '.object_permission | {mcp_servers, mcp_tool_permissions}'
+```
+
+```json
+{
+  "mcp_servers": ["github_mcp"],
+  "mcp_tool_permissions": {"github_mcp": ["list_issues"]}
+}
+```
+
+The full block also carries `object_permission_id`, `mcp_access_groups` and the remaining object-permission fields
+
+The entitlement is applied at `tools/list` time and again at `tools/call` time, so a tool outside it is never advertised and a client that hardcodes the name is still refused. The refusal arrives inside the MCP result with `isError: true`:
+
+```text
+Tool 'delete_repo' is not allowed for your key/team on server 'issue_tracker'. Contact proxy admin for access.
+```
+
+The same grant is editable from the Admin UI on the internal user's detail page under **Internal Users**.
+
+<Image 
+  img={require('../img/mcp_user_entitlements.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+  alt="MCP entitlements section on the internal user detail page"
+/>
+
+:::info Only a proxy admin can set this
+`/user/new` and `/user/update` accept `object_permission` from a proxy admin only. A non-admin editing their own record is rejected, since an empty grant list means "no restriction" and a self-write would otherwise lift a ceiling an admin placed on them.
+:::
+
+:::note An admin role is not a waiver
+A caller with an admin role and no explicit key-level `mcp_servers` list normally sees the whole MCP server registry. Once that human carries an entitlement of their own, that shortcut no longer applies and the entitlement binds them; the admin role widens what the credential reaches, and leaves the scope attached to the person in place.
+:::
 
 
 ## Rate Limiting per MCP Server

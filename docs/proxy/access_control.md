@@ -57,6 +57,19 @@ LiteLLM has two types of roles:
 | `org_admin` | Admin over a specific organization. Can create teams and users within their organization ✨ **Premium Feature** |
 | `team_admin` | Admin over a specific team. Can manage team members, update team member permissions, and create keys for their team. ✨ **Premium Feature** |
 
+## Usage dashboard visibility
+
+The Usage page shows different data depending on the selected view and the signed-in user's role:
+
+| View | What it shows |
+| --- | --- |
+| Personal usage | The signed-in user's aggregate usage. If the user belongs to multiple teams, this view does not split their personal usage by team. |
+| Team usage | The complete usage for the selected team, not only the signed-in user's contribution to that team. |
+| Organization usage | Aggregate usage for an organization, when the user's organization role permits access. |
+| Global usage | Platform-wide usage for proxy admins and proxy admin viewers. |
+
+The LiteLLM Admin UI does not host custom dashboards. For a custom view such as per-user usage within each team, query the spend data through the management API or export telemetry to an external system. See [Prometheus metrics](./prometheus.md) and [OpenTelemetry](../observability/opentelemetry_v2.md) for Grafana-compatible exports.
+
 ## What Can Each Role Do?
 
 Here's what each role can actually do. Think of it like levels of access.

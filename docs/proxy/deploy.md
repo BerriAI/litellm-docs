@@ -44,7 +44,7 @@ STORE_MODEL_IN_DB="True"      # manage models from the Admin UI instead of confi
 
 `LITELLM_SALT_KEY` cannot be rotated after you add models: it encrypts the provider credentials stored in your database, and changing it makes them unreadable. Generate a strong random value and store both keys in your cloud's secret manager.
 
-Official images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`. Use `ghcr.io/berriai/litellm-database` for monolithic deployments with Postgres (it bundles the Prisma toolchain), and pin a version tag rather than `latest` or a moving tag, so rollbacks are deterministic. All images are signed; see the [Docker Image Security Guide](./docker_image_security.md) for verification and the non-root variant.
+Official images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`. Use `ghcr.io/berriai/litellm` for monolithic deployments, including those with Postgres, since it bundles the Prisma toolchain, and pin a version tag rather than `latest` or a moving tag, so rollbacks are deterministic. All images are signed; see the [Docker Image Security Guide](./docker_image_security.md) for verification and the non-root variant.
 
 ## Provision the data stores
 
@@ -109,7 +109,7 @@ Then pick a deployment mode:
 replicaCount: 3
 
 image:
-  repository: ghcr.io/berriai/litellm-database
+  repository: ghcr.io/berriai/litellm
   tag: "v1.90.2"          # pin your version
 
 masterkeySecretName: litellm-masterkey
@@ -177,6 +177,14 @@ ingress:
   enabled: true
   className: "<alb | gce | azure-application-gateway>"
   host: llm.example.com
+  # optional: routes the chart does not ship a rule for, e.g. a passthrough
+  # prefix added after this chart version or a custom
+  # general_settings.pass_through_endpoints path. Additive: every built-in
+  # UI, gateway, and backend path is still rendered
+  extraPaths:
+    - path: /watsonx
+      pathType: Prefix     # default; Exact and ImplementationSpecific also work
+      service: gateway     # default; backend and ui also work
 ```
 
 ```bash
@@ -314,7 +322,7 @@ spec:
 
 </details>
 
-To connect the database, switch the image to `docker.litellm.ai/berriai/litellm-database` and add `DATABASE_URL` and `LITELLM_MASTER_KEY` to the Secret; nothing else in the manifest changes.
+To connect the database, add `DATABASE_URL` and `LITELLM_MASTER_KEY` to the Secret; nothing else in the manifest changes, because the image already carries the Prisma toolchain.
 
 ## Deploy with Terraform (AWS and GCP)
 
@@ -326,7 +334,7 @@ The official modules deploy the full microservices stack (network, database, Red
 <Tabs>
 <TabItem value="aws" label="AWS (ECS Fargate)">
 
-Provisions a VPC with public and private subnets, an Aurora PostgreSQL cluster (writer plus reader, IAM database auth), ElastiCache Redis (multi-AZ, encrypted), an S3 bucket, Secrets Manager entries, an Application Load Balancer, and ECS Fargate services.
+By default, provisions a VPC with public and private subnets, an Aurora PostgreSQL cluster (writer plus reader, IAM database auth), ElastiCache Redis (multi-AZ, encrypted), an S3 bucket, Secrets Manager entries, an Application Load Balancer, and ECS Fargate services. The networking and both data stores are optional, so you can reuse what your account already runs; see below.
 
 ```hcl title="main.tf"
 module "litellm" {
@@ -360,6 +368,43 @@ module "litellm" {
 Before you apply: provision the TLS certificate in [AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (the module refuses a plaintext ALB unless you explicitly set `allow_plaintext_alb = true`), and create any provider-key secrets in [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_secret.html) first, since `gateway_extra_secrets` takes their ARNs. After apply, point your DNS record at the ALB hostname.
 
 The module auto-generates the master key into Secrets Manager if you do not supply one. The application connects to Aurora with short-lived IAM tokens, so its `DATABASE_URL` carries no password (the database master password itself is generated into Secrets Manager and never touches the application). Every resource is named `<tenant>-litellm-<env>`, and the module declares no provider, so you can `for_each` it to run one stack per tenant.
+
+**Bringing your own VPC, database, or Redis.** The networking and both data stores are each optional, so you can deploy into infrastructure your account already has. This is the path to take when your guardrails only allow workloads inside a pre-approved VPC, or when a separate team owns the Postgres and Redis you are expected to use. Set only the pieces you want to reuse; anything you leave at its default is still created for you.
+
+```hcl title="main.tf"
+module "litellm" {
+  source  = "BerriAI/litellm/aws"
+  version = "~> 1.90"
+
+  region = "us-east-1"
+  tenant = "acme"
+  env    = "prod"
+
+  # Existing networking. Drop `azs` when you set these: no VPC, subnets,
+  # route tables, internet gateway, or NAT gateway are created.
+  vpc_id             = "vpc-0123456789abcdef0"
+  public_subnet_ids  = ["subnet-aaa", "subnet-bbb"]  # ALB, 2+ AZs
+  private_subnet_ids = ["subnet-ccc", "subnet-ddd"]  # tasks and data stores, 2+ AZs
+
+  # Existing data stores. Each URL is stored in Secrets Manager and reaches
+  # the containers as DATABASE_URL / REDIS_URL.
+  create_database = false
+  database_url    = var.database_url
+  create_redis    = false
+  redis_url       = var.redis_url
+
+  # Attach a group your database already allows, alongside the module's own.
+  additional_task_security_group_ids = ["sg-0123456789abcdef0"]
+}
+```
+
+Your existing stores have to accept traffic from the tasks. The module always creates its own tasks security group and reports it as the `task_security_group_id` output, so either allow that group inbound on the database and Redis, or pass a group they already allow through `additional_task_security_group_ids`. Private subnets you supply also need their own egress, through a NAT gateway or VPC endpoints, since the module creates no routing of its own in this mode. It reaches Secrets Manager, pulls container images, and calls LLM providers from those subnets.
+
+Supply private subnets in at least two availability zones whenever the module still creates Aurora or ElastiCache, since both of their subnet groups require it. One private subnet is accepted only when you have turned both stores off.
+
+Leaving a `create_*` at `false` with an empty URL runs the stack without that component entirely. With no database there is no key management, spend tracking, or UI persistence, so authentication falls back to the master key alone. Without Redis, rate limits, budgets, and router cooldowns are counted per gateway process rather than across the cluster, and the module runs two gateway tasks by default and autoscales to ten, so a caller spread across them receives each process's full allowance. The plan warns when you configure that combination. Hold the gateway to a single process with `gateway_autoscaling_enabled = false`, `gateway_desired_count = 1`, and `gateway_num_workers = 1` if you need per-key limits to mean anything without Redis.
+
+Missing or inconsistent inputs fail during `terraform plan` rather than halfway through an apply, so setting `vpc_id` without the subnet ids, or dropping `azs` without setting `vpc_id`, tells you so before anything is created.
 
 </TabItem>
 <TabItem value="gcp" label="Google Cloud (Cloud Run)">

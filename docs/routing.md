@@ -846,9 +846,19 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
-## Routing Groups - Per-Model Strategies
+## Routing Groups - Per-Model Strategies and Callable Virtual Models
 
 Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
+
+A group is also **callable as a model**: request `model: <group_name>` and LiteLLM picks among the union of every member's deployments using the group's strategy. Group names appear in `/v1/models`, so clients that discover models from the gateway (Claude Code with `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Codex) surface them in their pickers.
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{"model": "anthropic-latency", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Access control treats a group as its own model name: grant `<group_name>` on a key or team to let it list and call the group. Membership is not expanded in either direction, so a key granted only the group cannot call members directly and a key granted a member cannot call the group. A group name must not collide with an existing `model_name` or `model_group_alias`; config load rejects it. Requests keep the group name as `model_group` in spend logs, with each row recording the member deployment that actually served it. Fallbacks and `model_group_retry_policy` are keyed by name, so give the group its own entries if you need them. Claude Desktop's model picker only accepts Anthropic-shaped names, so name groups like `claude-quality` if Desktop matters.
 
 :::tip
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
@@ -1433,6 +1443,26 @@ response = router.completion(model="gpt-3.5-turbo", messages=messages)
 
 print(f"response: {response}")
 ```
+
+#### Where `num_retries` can be set, and which one wins
+
+`num_retries` can come from four places. They are ranked, highest first:
+
+1. the `x-litellm-num-retries` request header (proxy only)
+2. `num_retries` in the request body
+3. `num_retries` in a deployment's `litellm_params` in `model_list`
+4. `num_retries` in `litellm_settings` (the router-wide default)
+
+So a caller can always raise or lower the retry count for one request, including setting it to `0` to
+disable retries, no matter what the deployment or the global setting says. A deployment value applies
+whenever the request carries none, and it overrides the global default.
+
+`num_retries` is not the same knob as `max_retries`. `num_retries` is LiteLLM's own retry loop, while
+`max_retries` is the provider SDK's internal retry count. For a call that goes through the router,
+LiteLLM owns retries and pins the provider client to `max_retries: 0`, so a `max_retries` in the
+request body or in `litellm_params` has no effect on a proxy request. That is deliberate: it is what
+stops a deployment `num_retries: N` from being applied twice and turning one request into
+`(1 + N) ** 2` upstream calls. Use `num_retries` to control how many attempts a request gets.
 
 ### [Advanced]: Custom Retries, Cooldowns based on Error Type
 

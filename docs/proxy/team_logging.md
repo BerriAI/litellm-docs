@@ -151,7 +151,7 @@ To disable logging for a specific team, you can use the following endpoint:
 
 `POST /team/{team_id}/disable_logging`
 
-This endpoint removes all success and failure callbacks for the specified team, effectively disabling logging.
+This endpoint removes all success and failure callbacks for the specified team, effectively disabling logging. To remove a single integration and leave the team's other callbacks running, use `DELETE /team/{team_id}/callback/{callback_name}` instead, documented below
 
 #### Step 1. Disable logging for team
 
@@ -202,10 +202,20 @@ curl -X GET 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/cal
         -H 'Authorization: Bearer sk-1234'
 ```
 
+### Remove a Single Callback from a Team
+
+To deregister one integration while the team's other callbacks keep running, use:
+
+`DELETE /team/{team_id}/callback/{callback_name}`
+
+Every entry registered under that `callback_name` is removed, across callback types, so an integration registered for both `success` and `failure` is deregistered by one call. The response lists the callbacks that survive, and a `callback_name` the team has not registered returns `404` without changing anything
+
 ### Team Logging Endpoints
 
 - [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
 - [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://litellm-api.up.railway.app/#/team%20management/get_team_callbacks_team__team_id__callback_get)
+- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://litellm-api.up.railway.app/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
+- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://litellm-api.up.railway.app/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
 
 
 

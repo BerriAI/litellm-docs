@@ -46,7 +46,15 @@ These headers are useful for clients to understand the current rate limit status
 | Header | Type | Description | Available on Pass-Through Endpoints |
 |--------|------|-------------|-------------|
 | `x-litellm-response-cost` | float | Cost of the API call | |
+| `x-litellm-response-cost-input` | float | Uncached input cost component | |
+| `x-litellm-response-cost-output` | float | Output cost component, reasoning included | |
+| `x-litellm-response-cost-cache-read` | float | Prompt cache read cost component | |
+| `x-litellm-response-cost-cache-creation` | float | Prompt cache write cost component | |
+| `x-litellm-response-cost-reasoning` | float | Reasoning cost, a subset of the output component | |
+| `x-litellm-response-cost-tool-usage` | float | Built-in tool cost component | |
 | `x-litellm-key-spend` | float | Total spend for the API key | ✅ |
+
+The component headers sum to the total: input + cache read + cache creation + output + tool usage = `x-litellm-response-cost`. Reasoning is already inside output, so exclude it from the sum. The cache and reasoning headers appear only when those costs are nonzero, and component headers appear on non-streaming responses only
 
 ## LiteLLM Specific Headers
 | Header | Type | Description | Available on Pass-Through Endpoints |

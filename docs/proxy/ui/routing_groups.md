@@ -66,7 +66,19 @@ After configuring a group, confirm that requests to a grouped model are actually
 
 ### 1. Send a request
 
-Send a request to a `model_name` that's claimed by a routing group:
+Call the group itself; the group name is a model, appears in `/v1/models`, and routes across all member deployments by the group's strategy:
+
+```bash
+curl -X POST 'http://localhost:4000/v1/chat/completions' \
+  -H 'Authorization: Bearer <your-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "anthropic-latency",
+    "messages": [{"role": "user", "content": "ping"}]
+  }'
+```
+
+Or send a request to a `model_name` that's claimed by a routing group:
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
