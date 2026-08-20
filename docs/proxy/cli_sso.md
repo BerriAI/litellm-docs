@@ -115,7 +115,7 @@ Example poll response (after SSO completes):
    uv tool install 'litellm[cli]'
    ```
 
-   Any of these gives you the `lite` command; if you already run a proxy server from `litellm[proxy]`, it ships there too. Start by typing it in your terminal:
+   Any of these gives you the `lite` command. A proxy server installed from `litellm[proxy]` ships it too, but that extra leaves out `keyring`, so its credential stays in a file instead of your OS keychain. Start by typing it in your terminal:
 
    ```shell
    lite
