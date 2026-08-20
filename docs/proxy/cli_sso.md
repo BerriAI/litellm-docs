@@ -115,7 +115,7 @@ Example poll response (after SSO completes):
    uv tool install 'litellm[cli]'
    ```
 
-   Any of these gives you the `lite` command; if you already run a proxy server from `litellm[proxy]`, it ships there too. Start by typing it in your terminal:
+   Any of these gives you the `lite` command. A proxy server installed from `litellm[proxy]` ships it too, but that extra leaves out `keyring`, so its credential stays in a file instead of your OS keychain. Start by typing it in your terminal:
 
    ```shell
    lite
@@ -138,6 +138,8 @@ Example poll response (after SSO completes):
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you should be able to login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
+
+   The credential goes into your OS keychain, and `lite login` prints where it landed. On a machine with no keychain it falls back to `~/.litellm/token.json` with owner-only permissions. See [the `lite login` credential](./management_cli.md#the-lite-login-credential) for the details and for how to turn keychain storage off
 
 4. **Make a test request to view models**
 
@@ -162,6 +164,7 @@ Approve the sign-in in your browser. Waiting...
 
 Login successful!
 JWT Token: R46gzIdke6PgQZUiGctb...
+Credential stored in your OS keychain.
 You can now use the CLI without specifying --api-key
 ```
 
@@ -171,7 +174,7 @@ The classic `lite login` flow and virtual API keys keep working unchanged. `--pk
 
 ### The stored credential
 
-The CLI stores the credential at `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `key`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `refresh_token`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`
+The key goes to your OS keychain, the same place `lite login` puts it, and the rest of the record goes to `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `refresh_token`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`. The refresh token is in that file rather than in the keychain, so treat `~/.litellm/token.json` as sensitive on a `--pkce` login: anyone who can read it can exchange the refresh token for a working key
 
 The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, see [JWT Token Expiration](#jwt-token-expiration)). You do not need to log in again when it does: the next `lite` command that needs the key renews it with the refresh token and saves the new pair. Each renewal rotates the refresh token, and a refresh token that was already used is refused
 
