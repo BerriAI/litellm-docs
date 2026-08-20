@@ -58,11 +58,11 @@ worst it degrades to single-database performance.
 ## RDS IAM authentication
 
 When `IAM_TOKEN_DB_AUTH=True`, both the writer and the reader refresh their
-IAM tokens independently on the same ~12-minute cadence. The reader does not
-need parallel `DATABASE_HOST_READ_REPLICA` / `DATABASE_USER_READ_REPLICA`
-env vars — host, port, user, and database name are parsed once from
-`DATABASE_URL_READ_REPLICA` at startup, and only the IAM token rotates after
-that.
+IAM tokens independently on the same ~12-minute cadence. You can supply the
+reader either as a single `DATABASE_URL_READ_REPLICA` or assembled from the
+component vars (`DATABASE_HOST_READ_REPLICA`, `DATABASE_USER_READ_REPLICA`,
+and friends); the token-refresh path re-parses the resulting reader URL,
+so only the IAM token rotates after startup.
 
 This pairs naturally with Aurora's reader endpoint, which resolves to the
 reader instances in the cluster.

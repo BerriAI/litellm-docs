@@ -121,7 +121,7 @@ Here's a Demo Instance to test changes:
 - Passthrough Endpoints - support returning api-base on pass-through endpoints Response Headers [Docs](../../docs/proxy/response_headers#litellm-specific-headers)
 - SSL - support reading ssl security level from env var - Allows user to specify lower security settings [Get Started](../../docs/guides/security_settings)
 - Credentials - only poll Credentials table when `STORE_MODEL_IN_DB` is True [PR](https://github.com/BerriAI/litellm/pull/9376)
-- Image URL Handling - new architecture doc on image url handling [Docs](../../docs/proxy/image_handling)
+- Image URL Handling - new architecture doc on image url handling [Docs](../../docs/proxy/architecture#image-url-handling)
 - OpenAI - bump to pip install "openai==1.68.2" [PR](https://github.com/BerriAI/litellm/commit/e85e3bc52a9de86ad85c3dbb12d87664ee567a5a)
 - Gunicorn - security fix - bump gunicorn==23.0.0 [PR](https://github.com/BerriAI/litellm/commit/7e9fc92f5c7fea1e7294171cd3859d55384166eb)
 

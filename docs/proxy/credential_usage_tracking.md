@@ -1,6 +1,6 @@
 # Credential Usage Tracking
 
-When a model is attached to a [reusable credential](./ui_credentials.md), LiteLLM automatically injects the credential name as a tag on every request that uses that model. This means credential-level spend and usage are tracked with zero extra configuration.
+When a model is attached to a [reusable credential](./model_management.md#reusable-provider-credentials), LiteLLM automatically injects the credential name as a tag on every request that uses that model. This means credential-level spend and usage are tracked with zero extra configuration.
 
 ## How It Works
 
@@ -14,6 +14,6 @@ In the Admin UI, go to **Usage → Tag** and look for tags with the `Credential:
 
 ## Related Documentation
 
-- [Adding LLM Credentials](./ui_credentials.md) - How to create and attach reusable credentials to models
+- [Adding LLM Credentials](./model_management.md#reusable-provider-credentials) - How to create and attach reusable credentials to models
 - [Tag Budgets](./tag_budgets.md) - Setting spend limits on tags
 - [Tag Routing](./tag_routing.md) - Routing requests based on tags

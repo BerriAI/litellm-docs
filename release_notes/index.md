@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.92.0 — Claude Sonnet 5, Production MCP OAuth & New Providers](/release_notes/v1.92.0/v1-92-0)
+### [v1.97.0 — Tool-Result Guardrails, Deployment Affinity & Viewer Parity](/release_notes/v1.97.0/v1-97-0)
 
-_July 11, 2026_
+_August 15, 2026_
 
-First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including regional inference profiles), Vertex AI, and Azure AI with a 1M-token context window, reasoning, computer use, and PDF input; a production-ready MCP OAuth 2.0 On-Behalf-Of arm on the v2 resolver with RFC 9728 to RFC 8414 endpoint discovery, persisted Dynamic Client Registration, per-server outbound concurrency limits, and an `mcp_tool_search` virtual tool for large tool catalogs; two new providers in Tencent (DeepSeek V4 flash and pro) and Google Distributed Cloud Gemini for on-prem and sovereign deployments; access-control hardening across the key, user, and team endpoints plus AES-256-GCM at-rest credential encryption; and faster spend and budget hot paths with Redis-cluster reconnect and read-replica boot resilience.
+A per-guardrail `scan_only_tool_results` flag that scans and masks tool output while system, user, and assistant content passes through untouched, so an agent platform can keep injection detection on untrusted tool results without its own harness prompts tripping the filter; auto-router `deployment_affinity` on by default, pinning a session to the deployment it used before so the provider prompt cache stays warm while every turn is still classified on its own merits; a new `LiteLLM_DailyGatewayRequests` table written by the ASGI request-metrics middleware, so successful and failed request counts survive spend logging being off and come with a by-endpoint breakdown; read parity for `proxy_admin_viewer` across roughly fifteen endpoints that previously compared against `PROXY_ADMIN` exactly; four caller-scoped `spend/report` endpoints for keys, users, teams, and organizations; a correctness sweep over managed files and batches covering deterministic unified output file ids and unparseable rows; and an admin-published, dismissible markdown banner rendered on every dashboard page. Note that request-parameter checks now apply to path and form inputs as well as the body.
 
 ---
 
@@ -22,6 +22,11 @@ First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including 
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
+| [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
 | [v1.90.0](/release_notes/v1.90.0/v1-90-0)   | Jun 26, 2026 | Six new providers, OpenTelemetry v2 metrics parity, streaming-reliability sweep |

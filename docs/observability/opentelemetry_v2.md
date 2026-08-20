@@ -101,7 +101,7 @@ litellm_settings:
 LITELLM_OTEL_V2=true
 ARIZE_SPACE_ID="your-space-id"
 ARIZE_API_KEY="your-api-key"
-ARIZE_PROJECT_NAME="your-project-name"   # required: Arize rejects spans with no project
+ARIZE_PROJECT_NAME="your-project-name"   # recommended: names the project traces land in
 ```
 
 </TabItem>
@@ -244,17 +244,17 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 
 | Preset | Callback | Required env vars | Optional env vars | Destination | Vocabulary | Per-request creds |
 |---|---|---|---|---|---|---|
-| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY`, `ARIZE_PROJECT_NAME` | `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
-| Arize Phoenix | `arize_phoenix` | `PHOENIX_API_KEY` | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` or `PHOENIX_COLLECTOR_ENDPOINT` (gRPC), `PHOENIX_PROJECT_NAME` | Phoenix (self-hosted or Phoenix Cloud) | OpenInference | No |
+| Arize AX | `arize` | `ARIZE_SPACE_ID` (`ARIZE_SPACE_KEY` deprecated), `ARIZE_API_KEY` | `ARIZE_PROJECT_NAME` (names the project traces land in), `ARIZE_ENDPOINT` (gRPC, default `https://otlp.arize.com/v1`), `ARIZE_HTTP_ENDPOINT` (HTTP) | Arize AX platform | OpenInference | Yes |
+| Arize Phoenix | `arize_phoenix` | `PHOENIX_API_KEY` (Phoenix Cloud only; self-hosted needs none) | `PHOENIX_COLLECTOR_HTTP_ENDPOINT` or `PHOENIX_COLLECTOR_ENDPOINT` (protocol inferred from the value), `PHOENIX_PROJECT_NAME` | Phoenix (self-hosted or Phoenix Cloud) | OpenInference | No |
 | Langfuse | `langfuse_otel` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | `LANGFUSE_HOST` (or `LANGFUSE_OTEL_HOST`; default `https://us.cloud.langfuse.com`, EU is `https://cloud.langfuse.com`), `OTEL_IGNORE_CONTEXT_PROPAGATION` (set `true` to drop inbound `traceparent`) | Langfuse Cloud or self-hosted | Langfuse | Yes |
 | Weave (W&B) | `weave_otel` | `WANDB_API_KEY`, `WANDB_PROJECT_ID` (`<entity>/<project>`) | `WANDB_HOST` (default `https://trace.wandb.ai`) | Weights & Biases Weave | OpenInference + Weave | Yes |
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
-| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | `LEVOAI_ENV_NAME` | Levo collector | canonical `gen_ai.*` only | No |
-| AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (default `production`) | AgentOps (`https://otlp.agentops.cloud`) | canonical `gen_ai.*` only | No |
+| Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
+| AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
 
 Notes:
 
-- **Arize AX vs Arize Phoenix** are different backends from the same company. AX (`arize`) is the hosted platform; Phoenix (`arize_phoenix`) is the open-source tracer you self-host or run on Phoenix Cloud. They use different credentials and endpoints, so pick the callback for the backend you actually run. You can also enable both at once to send to each.
+- **Arize AX vs Arize Phoenix**: use `arize` for the full-featured AX platform and `arize_phoenix` for Phoenix local or self-hosted workflows. They use different credentials and endpoints, so pick the callback for the backend you actually run. For product-specific setup, see the dedicated [Arize AX](./arize_integration) and [Arize Phoenix](./phoenix_integration) guides.
 - **Langtrace** ingests JSON-only OTLP at a custom path, so litellm v2 (which sends protobuf to `/v1/traces`) cannot export to it directly. Route through an OpenTelemetry Collector that re-encodes to JSON; the `langtrace` preset only adds the Langtrace attribute schema to your spans. See the Langtrace tab above for the collector config.
 - Vocabulary is additive: every preset's spans always carry the canonical OpenTelemetry `gen_ai.*` attributes; the listed vocabulary is layered on top so the destination tool reads its native schema.
 
@@ -281,7 +281,7 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on) |
 | `llm.output_messages.{idx}.message.role`, `content` | response (content capture on) |
 | `input.value`, `output.value` | JSON arrays of the same (content capture on) |
-| `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions |
+| `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
 
@@ -305,7 +305,7 @@ Same as the Arize tab above.
 
 #### Setup notes
 
-Phoenix has more than one collector endpoint shape, and picking the wrong one is the most common Phoenix setup mistake. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` (or `PHOENIX_COLLECTOR_ENDPOINT` for gRPC) at the shape that matches your deployment:
+Phoenix has more than one collector endpoint shape, and picking the wrong one is the most common Phoenix setup mistake. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` (or `PHOENIX_COLLECTOR_ENDPOINT`, which takes over when the first is unset) at the shape that matches your deployment. Neither variable is tied to a protocol: litellm infers it from the value, exporting over gRPC only for a `grpc://` endpoint or a `:4317` one without a `/v1/traces` path, and over HTTP otherwise.
 
 | Deployment | Endpoint |
 |---|---|
@@ -387,7 +387,7 @@ No vendor mapper is added, so the LLM-call span carries only the canonical keys 
 | Attribute | Purpose |
 |---|---|
 | `service.name` | From `AGENTOPS_SERVICE_NAME` (default `agentops`) |
-| `deployment.environment` | From `AGENTOPS_ENVIRONMENT` (default `production`) |
+| `deployment.environment` | From `AGENTOPS_ENVIRONMENT`; only stamped when set |
 
 #### Setup notes
 
@@ -436,7 +436,7 @@ No vendor mapper is added. Traces carry only the canonical keys from [Span attri
 #### Setup notes
 
 - The collector URL is used as-is, no path manipulation, so provide the exact URL Levo gave you.
-- `LEVOAI_ENV_NAME` is optional and tags spans with an environment label in the Levo UI.
+- To label spans with an environment, set `OTEL_ENVIRONMENT_NAME`; the Levo preset reads no environment variable of its own beyond the four required ones.
 
 </TabItem>
 
@@ -452,7 +452,7 @@ None beyond the canonical `gen_ai.*` and `litellm.*` keys listed in [Span attrib
 
 #### Setup notes
 
-Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use.
+Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
 
 </TabItem>
 
@@ -498,8 +498,17 @@ Request-side keys:
 | `gen_ai.request.temperature`, `top_p`, `top_k`, `max_tokens` | when set on the request |
 | `gen_ai.request.frequency_penalty`, `presence_penalty`, `seed` | when set |
 | `gen_ai.request.stop_sequences` | when set (string array) |
-| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition |
+| `gen_ai.tool.{idx}.name`, `description`, `parameters` | one set per tool definition, for the leading tools only ([why](#tool-definitions-are-capped)) |
+| `litellm.request.tools.declared` | when the request declares tools; the full count, capped or not |
 | `server.address`, `server.port` | when the provider endpoint is known |
+
+#### Tool definitions are capped
+
+Only the leading declared tools get `gen_ai.tool.{idx}.*` attributes. Tool definitions are an unbounded attribute family, one entry per tool per field per active vocabulary, and OpenTelemetry caps a span at 128 attributes by default. An agent that declares a hundred or more tools would otherwise blow past that ceiling, and because the limit evicts the oldest attributes first, the `gen_ai.*` attributes above would be the ones discarded, leaving a span carrying nothing but tool schemas. The cap keeps model, token usage, and cost on the span no matter how many tools a request declares.
+
+The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quarter of the span's attribute budget in total, and that allowance is split across the vocabularies that emit them, so the number of tools detailed depends on how many are active: 5 tools each under the default `genai` plus `legacy` pair, 3 tools each once a vendor vocabulary such as `openinference` is layered on. Splitting it this way is what stops three vocabularies spelling the same tools out from summing back past the limit.
+
+`litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring fewer tools than the allowance keep full detail.
 
 Response, usage, cost, identity:
 
@@ -594,10 +603,16 @@ Each successful LLM call records the standard OpenTelemetry GenAI client metrics
 |---|---|---|
 | `gen_ai.client.operation.duration` | `s` | Wall-clock time for the whole LLM call |
 | `gen_ai.client.token.usage` | `{token}` | Tokens consumed, split into input and output by the `gen_ai.token.type` attribute |
-| `gen_ai.client.token.cost` | `USD` | LiteLLM's computed cost for the call |
-| `gen_ai.client.response.time_to_first_token` | `s` | Time to the first streamed token (streaming calls) |
-| `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token |
+| `gen_ai.usage.cost` | `USD` | LiteLLM's computed cost for the call |
+| `gen_ai.server.time_to_first_token` | `s` | Time to the first streamed token (streaming calls) |
+| `gen_ai.server.time_per_output_token` | `s` | Average time per output token |
 | `gen_ai.client.response.duration` | `s` | Provider-side generation time |
+
+:::note Renamed in this release
+
+`gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
+
+:::
 
 Every sample carries the same identity attributes as the matching span (operation, provider/system, request model, framework, and selected `metadata.*` fields), so you can group the histograms by model, provider, key, or team. These are the same six metrics the [v1 OpenTelemetry integration](./opentelemetry_integration) emits, with identical names and units, so a dashboard built for one reads the other.
 
@@ -662,12 +677,12 @@ One proxy can serve many tenants and send each tenant's traces only to that tena
 
 ```
 Proxy admin                          Team admin
-  creates a destination  ───────►      picks it from a list
-  (backend + secrets + scope)          (only ones in their scope show up)
-        │                                      │
-        └──────────► at request time ◄─────────┘
-              the proxy matches caller to destination
-              and sends that request's trace there
+  creates a destination  ───────►      sees which ones reach their team
+  (backend + secrets + scope)          (read-only, on the team's info page)
+        │
+        └──────────► at request time
+              the proxy matches the caller against every
+              destination's scope and sends the trace there
 ```
 
 ### The idea in one minute
@@ -676,49 +691,52 @@ There are two pieces.
 
 A **destination** is a named place to send traces, created by the proxy admin. It reuses the same backends and credentials as the [presets](#2-send-traces-to-a-specific-tool-presets) above: it holds which backend it is (`langfuse_otel`, `arize`, `weave_otel`, or a `generic` OTLP endpoint, meaning any backend that speaks the OpenTelemetry Protocol), the connection details and secrets for that backend, and an **access scope** that says which teams or organizations are allowed to use it. An **organization** here is a group of teams; a team belongs to one org.
 
-A **team, key, or organization** turns a destination on by listing its name in a setting called `logging_exporters`. That is the only thing a team admin ever touches; the secrets stay with the proxy admin.
+The access scope is the whole of the routing decision. A team does not opt in and cannot turn a destination on or off; if the scope names the team, or the team's organization, or the destination is global, that team's traces go there. Teams see which destinations reach them as a read-only `resolved_logging_exporters` list on `/team/info` and `/organization/info`; the names are all they see, never the endpoints, the secrets, or the scope map itself.
 
-At request time the proxy looks at the key that made the call, the team that key belongs to, and that team's organization, collects every destination name those three list, keeps only the destinations whose access scope actually includes this caller, and sends the request's trace to each one. If nothing matches, the trace goes only to your normal global exporter from the sections above.
+At request time the proxy takes the team the calling key belongs to and that team's organization, keeps every destination whose scope includes one of them, builds each one from its stored values, and sends the request's trace to all of them. If nothing matches, the trace goes only to your normal global exporter from the sections above.
 
 ### Who can change what
 
-Three roles appear below. The **proxy admin** runs the whole proxy and holds every secret. An **org admin** runs one organization (a group of teams). A **team admin** runs a single team. The split exists so a team admin can opt their own team in without ever seeing or editing another tenant's secrets.
+Destinations are proxy-admin-owned end to end. Only a **proxy admin** can create one, edit its backend, host or secrets, or change its access scope; the `/credentials` endpoints answer 401 to anything else, so a team-scoped key cannot even list them. A **team admin** never handles another tenant's secrets because they never touch destinations at all.
 
-| Action | Proxy admin | Org admin (of the team's org) | Team admin (of the team) |
+| Action | Proxy admin | Org admin | Team admin |
 |---|:-:|:-:|:-:|
 | Create or delete a destination | Yes | No | No |
 | Edit a destination's backend, host, or secrets | Yes | No | No |
-| Make a destination global, or grant it to whole orgs | Yes | No | No |
-| Grant a destination to a team | Yes, any team | Yes, teams in their org | Yes, their own team |
-| Turn a destination on for a team or key (`logging_exporters`) | Yes | Yes | Yes (their team) |
+| Set the access scope: global, orgs, or teams | Yes | No | No |
+| See which destinations reach their own team or org | Yes | Yes, names only | Yes, names only |
 
 ### Set it up in the UI
 
-This is the common path, and it always takes two things to be true before a team's traces flow: the destination's access scope must include the team, and the team must list the destination in its **Logging Exporters**. The admin handles the first; the team admin handles the second. Note these are two different screens: the admin works in **Settings, Logging Callbacks** (where destinations are created), and the team admin works in a team's **Logging Exporters** picker (where a destination is switched on).
+This is the common path, and one thing has to be true before a team's traces flow: the destination's access scope must include that team, either directly, through its organization, or by being global. A proxy admin does all of it on one screen, **Logging & Alerts**, then **Logging Callbacks**.
 
 Proxy admin, create the destination:
 
-1. Open the proxy UI and go to **Settings**, then **Logging Callbacks**.
-2. Click to add a logging destination. Choose the **backend** (`langfuse_otel`, `arize`, `weave_otel`, or `generic`), fill in the **host** and the **secrets** for that backend, and set the **Access** scope: make it Global (every team), or pick specific Teams or Orgs. The secret values are the same ones you would set as that preset's env vars, copied from the backend's own dashboard (for example, your Langfuse project's API keys); see the [Preset reference](#preset-reference) for which fields each backend needs.
+1. Open the proxy UI and go to **Logging & Alerts**, then **Logging Callbacks**.
+2. Click **Add Callback** and pick the backend's **scoped destination** entry from the Callback dropdown, for example `Langfuse OTEL (scoped destination)`. The plain `Langfuse OTEL` entry above it is the proxy-wide callback from the sections above, not a destination. Give it a **Name**, fill in the **host** and the **secrets** for that backend, and set the access scope: turn on **Global** for every team, or pick specific **Teams** or **Organizations**. The secret values are the same ones you would set as that preset's env vars, copied from the backend's own dashboard (for example, your Langfuse project's API keys); see the [Preset reference](#preset-reference) for which fields each backend needs.
 3. Save. From now on the secrets and the Global/Org scope are admin-only; team admins can only attach the destination to teams already in its scope.
 
-![Adding a logging destination: choose the backend, set the host and secrets, then set the access scope with the Global, Teams, Organizations, and Auto-enable controls](/img/observability/otel_v2_destination_admin.png)
+![Adding a logging destination: the Callback dropdown set to Langfuse OTEL (scoped destination), with the name, host and secret fields above the Global, Teams and Organizations scope controls](/img/observability/otel_v2_destination_admin.png)
 
-The destinations you create appear in the Logging Callbacks list, each tagged with its access scope:
+The destinations you create appear in the Logging Callbacks list alongside your proxy-wide callbacks, each tagged with its access scope. `Mode` stays empty for a destination, since a destination has no success/failure mode of its own:
 
-![Active logging callbacks, each row showing its scope: one Global, one scoped to a single team](/img/observability/otel_v2_destinations_list.png)
+![Active logging callbacks: one Global destination, one scoped to a team, one scoped to an organization, and one showing the Not active badge](/img/observability/otel_v2_destinations_list.png)
 
-Team admin, switch it on for a team:
+A **Not active** badge means the destination cannot be built from the values it holds, usually because a required field is missing, so it receives no traces even where its scope would grant it. Fix the values and the badge clears.
 
-1. Go to **Teams**, pick your team, open **Settings** (or go to **Virtual Keys**, pick a key, and edit it).
-2. In the **Logging Exporters** multi-select, choose the destination. Only destinations in your scope appear here; other tenants' destinations are never listed.
-3. Save. Every request from that team or key now also sends its trace to the destination you picked.
+To change who a destination reaches after creating it, open the row's actions menu and choose **Edit scope**. This edits only the access scope; the host and secrets stay where they are.
+
+![The Edit scope dialog for a destination, with the Global toggle off and the Teams multi-select holding one team](/img/observability/otel_v2_destination_scope.png)
+
+That is the whole setup. Traces from every team in the scope start flowing on the next request, with no step on the team's side.
+
+To check a team is covered, open **Teams**, pick the team, and read its `resolved_logging_exporters`; it names every destination that will receive that team's traces. Other tenants' destinations never appear there.
 
 ### Set it up over the API
 
-The UI calls these endpoints; you can use them directly. The placeholders are: `$ADMIN_KEY` is a proxy-admin virtual key and `$TEAM_ADMIN_KEY` is the team admin's virtual key (mint either on the **Virtual Keys** page in the UI, or with `/key/generate`), `<team-id>` comes from the Teams page, and `pk-...` / `sk-...` are the backend's own keys from its dashboard. As in the UI, both the grant (step 1 or 2) and the turn-on (step 3) must be done before traces flow.
+The UI calls these endpoints; you can use them directly. `$ADMIN_KEY` is a proxy-admin virtual key (mint one on the **Virtual Keys** page in the UI, or with `/key/generate`), `<team-id>` comes from the Teams page, and `pk-...` / `sk-...` are the backend's own keys from its dashboard. Creating the destination is the only write; there is no second call to turn it on.
 
-Step 1, proxy admin creates a destination (here a Langfuse destination granted to one team):
+Proxy admin creates a destination, here a Langfuse destination granted to one team:
 
 ```shell
 curl -X POST http://localhost:4000/credentials \
@@ -739,23 +757,30 @@ curl -X POST http://localhost:4000/credentials \
   }'
 ```
 
-`credential_type` must be `logging`, and `description` names the backend. Step 2 (an alternative to the grant in step 1): a team admin grants their own team with a narrow patch, and cannot touch secrets, host, or the global/org scope:
+`credential_type` must be `logging`, and `description` names the backend. `access` accepts exactly `global`, `teams` and `orgs`; anything else is rejected with a 400, and per-key access is deliberately unsupported.
+
+To widen or narrow the scope later, patch the same credential. `credential_info` is replaced wholesale rather than merged, so send the fields you want to keep:
 
 ```shell
 curl -X PATCH http://localhost:4000/credentials/tenant-a-langfuse \
-  -H "Authorization: Bearer $TEAM_ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"credential_info": {"access": {"teams": ["<their-team-id>"]}}}'
+  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "credential_name": "tenant-a-langfuse",
+    "credential_info": {
+      "credential_type": "logging",
+      "description": "langfuse_otel",
+      "access": { "teams": ["<team-id>", "<other-team-id>"] }
+    },
+    "credential_values": {}
+  }'
 ```
 
-Step 3, turn the destination on for a team by adding its name to the team's `logging_exporters`:
+Confirm it landed by reading the team back; `resolved_logging_exporters` names every destination that will receive that team's traces:
 
 ```shell
-curl -X POST http://localhost:4000/team/update \
-  -H "Authorization: Bearer $TEAM_ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"team_id": "<team-id>", "metadata": {"logging_exporters": ["tenant-a-langfuse"]}}'
+curl "http://localhost:4000/team/info?team_id=<team-id>" \
+  -H "Authorization: Bearer $ADMIN_KEY"
 ```
-
-The same `metadata.logging_exporters` works on a key (`/key/update`) and on an organization, and the proxy unions all three at request time.
 
 ### Backends and the fields each one needs
 
@@ -770,15 +795,11 @@ The admin fills these into the destination's secret fields; the values come from
 
 ### Good to know
 
-Resolution is **default-deny**: a team only reaches a destination it both lists in `logging_exporters` and is in scope for. A misconfigured or misspelled name simply sends nothing, rather than leaking a trace to the wrong tenant.
+Resolution is **default-deny**. An `access` that grants nobody, whether it is absent, `{}`, or names only teams that do not exist, sends nothing rather than leaking a trace to the wrong tenant. The same holds for a destination whose values do not build; it is reported as **Not active** in the UI, is left out of `resolved_logging_exporters`, and receives nothing.
 
-Two shortcuts skip the per-team opt-in, and both are admin-only, set on the destination itself. A destination marked **global** is available to every team without an admin granting it team by team; a team admin still lists it to turn it on. A destination marked **auto-enable** goes further and applies to every request automatically, without any team listing it at all; use it when you want one backend to capture every request's trace across the whole proxy. In the UI both are toggles in the destination modal next to the Access scope; over the API they are `credential_info.access.global` and `credential_info.auto_enable`, for example:
+Set `access.global` to `true` to reach every team on the proxy without naming them. It is the one scope that does not need an org or team id, and it is still admin-only, so no team can grant itself global reach.
 
-```shell
-curl -X PATCH http://localhost:4000/credentials/tenant-a-langfuse \
-  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"credential_info": {"auto_enable": true}}'
-```
+Destinations are additive with the global exporter, not a replacement for it. A request whose team matches two destinations sends its trace to both of them and to your configured exporter; two destinations that resolve to the same endpoint and headers collapse to one send.
 
 This routing applies to **traces only**. The GenAI client metrics (see [Metrics](#metrics)) still go to your single globally-configured exporter, not to per-tenant destinations.
 

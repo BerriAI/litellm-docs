@@ -107,7 +107,11 @@ litellm --config /path/to/config.yaml
 
 ### 3. Test Fallbacks
 
-Pass `mock_testing_fallbacks=true` in request body, to trigger fallbacks.
+:::warning Deprecated for Proxy requests
+Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, and `mock_testing_content_policy_fallbacks` are stripped from incoming Proxy requests and have no effect. These flags remain supported only for direct `litellm.Router` calls in tests.
+:::
+
+For direct `Router` tests, pass `mock_testing_fallbacks=True` to trigger fallbacks.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -131,22 +135,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-```bash
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
--d '{
-  "model": "my-bad-model",
-  "messages": [
-    {
-      "role": "user",
-      "content": "ping"
-    }
-  ],
-  "mock_testing_fallbacks": true # 👈 KEY CHANGE
-}
-'
-```
+The mock-testing flags are deprecated for Proxy requests. To validate Proxy fallbacks, trigger an actual provider error in a non-production environment and send a normal request without a `mock_testing_*` flag.
 
 </TabItem>
 </Tabs>
@@ -383,8 +372,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     "fallbacks": [{
         "model": "claude-3-haiku",
         "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-    }],
-    "mock_testing_fallbacks": true
+    }]
 }'
 ```
 
@@ -640,7 +628,7 @@ litellm_settings:
   fallbacks: [{"gpt-4": ["my-specific-model-id"]}]
 ```
 
-3. Test it!
+3. Test it while the primary deployment is unavailable.
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
@@ -653,8 +641,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
       "role": "user",
       "content": "ping"
     }
-  ],
-  "mock_testing_fallbacks": true
+  ]
 }'
 ```
 
@@ -666,63 +653,20 @@ x-litellm-model-id: my-specific-model-id
 
 ### Test Fallbacks! 
 
-Check if your fallbacks are working as expected. 
+Check if your fallbacks are working as expected by triggering the relevant provider error in a non-production environment.
 
 #### **Regular Fallbacks**
-```bash
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
--d '{
-  "model": "my-bad-model",
-  "messages": [
-    {
-      "role": "user",
-      "content": "ping"
-    }
-  ],
-  "mock_testing_fallbacks": true # 👈 KEY CHANGE
-}
-'
-```
+
+Make the primary test deployment return a retryable provider error, such as a rate-limit or server error, then send a normal request.
 
 
 #### **Content Policy Fallbacks**
-```bash
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
--d '{
-  "model": "my-bad-model",
-  "messages": [
-    {
-      "role": "user",
-      "content": "ping"
-    }
-  ],
-  "mock_testing_content_policy_fallbacks": true # 👈 KEY CHANGE
-}
-'
-```
+
+Use a test request that the primary provider rejects with a content-policy error.
 
 #### **Context Window Fallbacks**
 
-```bash
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
--d '{
-  "model": "my-bad-model",
-  "messages": [
-    {
-      "role": "user",
-      "content": "ping"
-    }
-  ],
-  "mock_testing_context_window_fallbacks": true # 👈 KEY CHANGE
-}
-'
-```
+Enable pre-call checks and send a test request that exceeds the primary model's configured context window.
 
 
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
@@ -1029,7 +973,7 @@ litellm_settings:
 litellm --config /path/to/config.yaml
 ```
 
-3. Test it!
+3. Test it while the primary deployment is unavailable.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
@@ -1048,8 +992,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         ]
       }
     ],
-    "max_tokens": 300,
-    "mock_testing_fallbacks": true
+    "max_tokens": 300
 }'
 ```
 

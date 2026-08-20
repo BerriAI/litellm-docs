@@ -44,6 +44,12 @@ pip install litellm==1.90.0
 </TabItem>
 </Tabs>
 
+:::danger Breaking Changes
+
+**`/key/list` now matches `user_id` and `key_alias` exactly by default.** Earlier releases matched these filters as substrings, so integrations that relied on partial matching will return fewer or different keys after upgrading. The change closes a cross-user key disclosure path. See [PR #30593](https://github.com/BerriAI/litellm/pull/30593).
+
+:::
+
 ## Key Highlights
 
 - **Six new providers** - ModelScope, LibertAI, Parasail, Pinstripes, TinyFish (search), and FastCRW (search) - plus a new e2b code-execution sandbox primitive.

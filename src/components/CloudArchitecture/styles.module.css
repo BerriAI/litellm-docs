@@ -500,3 +500,17 @@
     gap: 0.6rem;
   }
 }
+
+.stepChip {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ca-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}

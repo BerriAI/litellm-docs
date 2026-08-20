@@ -125,8 +125,8 @@ Get a 7 day free trial for LiteLLM Enterprise [here](https://litellm.ai/#trial).
 
 1. Cleanup pricing-only model names from wildcard route list - prevent bad health checks 
 2. Allow specifying a health check model for wildcard routes - https://docs.litellm.ai/docs/proxy/health#wildcard-routes
-3. New ‘health_check_timeout ‘ param with default 1min upperbound to prevent bad model from health check to hang and cause pod restarts. [Start Here](../../docs/proxy/health#health-check-timeout)
-4. Datadog - add data dog service health check + expose new `/health/services` endpoint. [Start Here](../../docs/proxy/health#healthservices)
+3. New ‘health_check_timeout ‘ param with default 1min upperbound to prevent bad model from health check to hang and cause pod restarts. [Start Here](../../docs/proxy/health#health-check-tuning-reference)
+4. Datadog - add data dog service health check + expose new `/health/services` endpoint. [Start Here](../../docs/proxy/health#other-health-endpoints)
 
 ## Performance / Reliability improvements
 

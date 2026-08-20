@@ -8,7 +8,7 @@ Track Spend, and control model access via virtual keys for the proxy
 :::info
 
 - 🔑 [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
-- [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy#deploy-with-database)
+- [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy#provision-the-data-stores)
 - [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
 
 
@@ -66,6 +66,19 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Content-Type: application/json' \
 --data-raw '{"models": ["gpt-3.5-turbo", "gpt-4"], "metadata": {"user": "ishaan@berri.ai"}}'
 ```
+
+## What a key inherits from its owner
+
+A key's owner is whoever its `user_id` points at, and that is not always the person who created it. `/key/generate` stamps the caller's `user_id` on the new key automatically only when the caller is *not* a proxy admin; a proxy admin has to pass `user_id` explicitly, so an admin-created key with no `user_id` has no owner and inherits nothing from the admin. Keys minted from the Admin UI for a specific user, and [service account keys](./service_accounts.md) (whose `user_id` is always `null`), follow the same rule.
+
+Inheritance is not uniform across permission surfaces. Model access and MCP access are always evaluated against the key row itself, while management-route access is decided by the *role* of the owning user, which is why a key owned by a proxy admin can call admin endpoints.
+
+| Surface | What the key inherits from its owner | How to override it on the key |
+|---|---|---|
+| [Models](./key_auth_arch.md) | Nothing when the key belongs to a team. On a key with no `team_id`, the owner's `models` list applies on top of the key's own list, and `no-default-models` on the owner denies everything outside a team | Set `models` on the key (or `all-team-models` to defer to the team) |
+| [Management routes](./access_control.md) (`/key/*`, `/user/*`, `/team/*`) | The owner's role in full. If the owner is `proxy_admin`, every non-admin route restriction is skipped and the key can manage keys, users, and teams | Set `allowed_routes` on the key; it is enforced for every role, including admin-owned keys |
+| [MCP servers and tools](../mcp_control.md) | The owner's MCP entitlement as a ceiling, never as a grant, and an empty key list inherits the team's servers unless `require_key_mcp_access_defined` is on. Admin ownership grants no MCP access at all | Set `object_permission.mcp_servers` / `mcp_access_groups` / `mcp_tool_permissions`, or `no-mcp-servers` to opt out |
+| Budgets and rate limits | The owner's `tpm_limit` and `rpm_limit` whenever they are set, and the owner's `max_budget` for keys with no team | Set the same fields on the key, or use a service account key to apply team limits only |
 
 ## Spend Tracking 
 
@@ -356,6 +369,46 @@ client = openai.OpenAI(
 </TabItem>
 </Tabs>
 
+### Overwrite outgoing `user` with the key hash
+
+:::info
+
+Available in `v1.95.0` and later.
+
+:::
+
+Many providers use the request's end-user identifier (the `user` field) to monitor and detect abuse and to trace activity back to an individual end user, so that one user's misuse is less likely to disrupt access for your whole organization. Because that field is set by the caller, a client can change it to dissociate its activity from a given identity. Turn on `overwrite_user_with_key_hash` when you want the `user` the provider sees to be a stable, tamper-proof identifier tied to the LiteLLM key that made the call, so any provider-side handling keyed on `user` maps back to exactly one key no matter what the client sent.
+
+When enabled, the proxy force-sets the outgoing `user` on chat/completions requests to the calling key's identity, always overriding any `user` in the request body and setting it even when the client omits `user`. For a virtual key the value is the key's sha256 token hash, which is the same value stored as `user_api_key_hash` in spend logs, so you can map the provider-visible id back to a key and its owner without any extra plumbing. For requests authenticated with the master key the value is the fixed alias `litellm_proxy_master_key`, so neither the master key nor its hash is ever forwarded.
+
+The flag is off by default and only affects keys the proxy itself validated (virtual keys and the master key). It behaves the same regardless of whether a virtual key has a user or sits under a team; the stamp is always the key hash. Requests authenticated by a custom auth handler or a JWT are left untouched, and with the flag off the caller-supplied `user` is preserved, so existing behavior does not change.
+
+```yaml
+litellm_settings:
+  overwrite_user_with_key_hash: true
+```
+
+A request that supplies its own `user` has it replaced before the call is dispatched:
+
+```shell
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-your-virtual-key" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "hi"}],
+    "user": "anything-the-client-sends"
+  }'
+```
+
+The provider receives `user` set to the key's sha256 hash (e.g. `98e983...6401`) rather than `anything-the-client-sends`.
+
+:::info
+
+Whether the `user` value reaches the provider on the wire is each provider's existing behavior, which this setting does not change. Some providers forward `user` as-is, some map it onto their own end-user field, and some drop it; this flag only controls the value LiteLLM sets, not whether a given provider transmits it.
+
+:::
+
 ### Enable/Disable Virtual Keys
 
 **Disable Keys**
@@ -483,6 +536,53 @@ general_settings:
   custom_key_generate: custom_auth.custom_generate_key_fn
 ```
 
+:::warning
+
+`custom_key_generate` only runs on `/key/generate`. Key edits (`/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and editing a key in the Admin UI, which calls `/key/update`) skip it, so a user can create a compliant key and then edit it out of compliance, e.g. remove its expiration date. Set [`custom_key_update`](#custom-keyupdate) as well if your policy should also hold on edits.
+
+:::
+
+### Custom /key/update
+
+If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, and `/team/key/bulk_update`. The Admin UI edit key flow calls `/key/update`, so this also covers edits made from the UI.
+
+#### 1. Write a custom `custom_update_key_fn`
+
+The input to the `custom_update_key_fn` function is a single parameter: `data` [(Type: UpdateKeyRequest)](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/_types.py)
+
+The output contract is the same as `custom_generate_key_fn`: return `{"decision": True}` to allow the update, or `{"decision": False, "message": "..."}` to reject it. Rejected updates fail with a `403`.
+
+Update requests only contain the fields being changed, so an unset field means "leave as is", not "clear". Use `data.model_fields_set` to tell an omitted field apart from one explicitly set to `None`. For example, the Admin UI sends `duration: null` when a key is edited to "Never expires", which the function below rejects.
+
+```python
+from litellm.proxy._types import UpdateKeyRequest
+
+
+async def custom_update_key_fn(data: UpdateKeyRequest) -> dict:
+    """
+    Asynchronous function that decides if a key update should be allowed.
+
+    Args:
+        data (UpdateKeyRequest): The requested changes to the key.
+
+    Returns:
+        dict: A dictionary containing the decision and an optional message.
+    """
+    if "duration" in data.model_fields_set and data.duration is None:
+        return {
+            "decision": False,
+            "message": "This violates LiteLLM Proxy Rules. Keys must keep an expiration date.",
+        }
+    return {"decision": True}
+```
+
+#### 2. Pass the filepath (relative to the config.yaml)
+
+```yaml
+general_settings:
+  custom_key_generate: custom_auth.custom_generate_key_fn
+  custom_key_update: custom_auth.custom_update_key_fn
+```
 
 ### Upperbound /key/generate params
 Use this, if you need to set default upperbounds for `max_budget`, `budget_duration` or any `key/generate` param per key. 
@@ -503,11 +603,12 @@ litellm_settings:
 
 - Send a `/key/generate` request with `max_budget=200`
 - Key will be created with `max_budget=100` since 100 is the upper bound
+- Omit `budget_duration`, or send it as `null`: the key is created with `budget_duration="10d"`. Upperbounds also act as defaults and cannot be opted out of
 
 ### Default /key/generate params
 Use this, if you need to control the default `max_budget` or any `key/generate` param per key. 
 
-When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`
+When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies).
 
 Set `litellm_settings:default_key_generate_params`:
 ```yaml
@@ -528,7 +629,7 @@ This is an Enterprise feature.
 
 [Enterprise Pricing](https://www.litellm.ai/#pricing)
 
-[Get free 7-day trial key](https://www.litellm.ai/enterprise#trial)
+[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
 
 
 :::

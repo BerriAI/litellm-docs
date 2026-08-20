@@ -95,6 +95,46 @@ const config = {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
           },
+          {
+            from: '/docs/proxy/high_availability_control_plane',
+            to: '/docs/proxy/global_control_plane',
+          },
+          {
+            from: '/docs/proxy/deploy_cloud',
+            to: '/docs/proxy/deploy',
+          },
+          {
+            from: '/docs/proxy/microservices_helm',
+            to: '/docs/proxy/deploy#deploy-with-helm',
+          },
+          {
+            from: '/docs/proxy/db_deadlocks',
+            to: '/docs/proxy/prod#redis-transaction-buffer',
+          },
+          {
+            from: '/docs/proxy/ui_credentials',
+            to: '/docs/proxy/model_management#reusable-provider-credentials',
+          },
+          {
+            from: '/docs/proxy/ui_store_model_db_setting',
+            to: '/docs/proxy/model_management#database-vs-configyaml-models',
+          },
+          {
+            from: '/docs/router_architecture',
+            to: '/docs/proxy/architecture#the-router-fallbacks-and-retries',
+          },
+          {
+            from: '/docs/proxy/image_handling',
+            to: '/docs/proxy/architecture#image-url-handling',
+          },
+          {
+            from: '/docs/observability/langfuse_otel_integration',
+            to: '/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets',
+          },
+          {
+            from: '/docs/observability/telemetry',
+            to: '/docs/observability/opentelemetry_v2',
+          },
         ],
       },
     ],

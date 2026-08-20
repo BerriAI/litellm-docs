@@ -170,39 +170,8 @@ transcript = client.audio.transcriptions.create(
 
 ### Testing Fallbacks
 
-You can test your fallback configuration using `mock_testing_fallbacks=true` to simulate failures:
+:::warning Deprecated for Proxy requests
+Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
+:::
 
-<Tabs>
-<TabItem value="curl" label="Curl">
-
-```bash showLineNumbers title="Test Fallbacks with Mock Testing"
-curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
---form 'file=@"gettysburg.wav"' \
---form 'model="groq/whisper-large-v3"' \
---form 'fallbacks[]="openai/whisper-1"' \
---form 'mock_testing_fallbacks=true'
-```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI Python SDK">
-
-```python showLineNumbers title="Test Fallbacks with Mock Testing"
-from openai import OpenAI
-client = OpenAI(
-    api_key="sk-1234",
-    base_url="http://0.0.0.0:4000"
-)
-
-audio_file = open("gettysburg.wav", "rb")
-transcript = client.audio.transcriptions.create(
-    model="groq/whisper-large-v3",
-    file=audio_file,
-    extra_body={
-        "fallbacks": ["openai/whisper-1"],
-        "mock_testing_fallbacks": True
-    }
-)
-```
-</TabItem>
-</Tabs>
+To validate audio transcription fallbacks through the Proxy, trigger an actual provider error in a non-production environment and send a normal request with the fallback configuration.

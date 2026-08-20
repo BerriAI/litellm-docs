@@ -108,6 +108,8 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you can login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
 
+   To sign in through your system browser with OAuth authorization code and PKCE instead, run `lite login --pkce`. That credential renews itself with a refresh token, and `lite auth print-token` hands it to Claude Code, OpenCode, or any OpenAI-compatible client. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 3. **Test your authentication**
 
    ```bash
@@ -151,11 +153,14 @@ The token minted by `lite login` is a short-lived, per-session agent credential,
 
 The credential is short-lived by design (default 24h, configurable via `LITELLM_CLI_JWT_EXPIRATION_HOURS`); run `lite login` again to refresh it, which also re-reads your latest team and user settings. It does not appear in the Keys UI and cannot be rotated or revoked mid-session, and `lite claude`, `lite codex`, and `lite opencode` work with it on a default deployment. If you need a long-lived, rotatable key that shows up in the Keys UI, create a dedicated virtual key in the dashboard and pass it via `--api-key` or `LITELLM_PROXY_API_KEY` instead.
 
+A credential from `lite login --pkce` also comes with a refresh token: the CLI renews the key on its next use, `lite auth print-token` hands the current key to other tools, and `lite logout` revokes the refresh token on the proxy. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
 
 ```bash
-lite whoami   # show the authenticated user and the token age
-lite logout   # clear the stored token
+lite whoami             # show the authenticated user and the token age
+lite auth print-token   # print the current key, renewing a --pkce credential first when needed
+lite logout             # clear the stored token and revoke a --pkce refresh token
 ```
 
 ## Main Commands

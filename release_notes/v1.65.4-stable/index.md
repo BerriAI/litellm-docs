@@ -55,7 +55,7 @@ Let's dive in.
 
 This release fixes the DB deadlocking issue that users faced in high traffic (10K+ RPS). This is great because it enables user/key/team spend tracking works at that scale.
 
-Read more about the new architecture [here](https://docs.litellm.ai/docs/proxy/db_deadlocks)
+Read more about the new architecture [here](https://docs.litellm.ai/docs/proxy/prod#redis-transaction-buffer)
 
 
 ### New Usage Tab
@@ -151,7 +151,7 @@ To test this out, just go to Experimental > New Usage > Activity.
     - Use Redis for PodLock Manager instead of PG (ensures no deadlocks occur) [PR](https://github.com/BerriAI/litellm/pull/9715)
     - v2 DB Deadlock Reduction Architecture – Add Max Size for In-Memory Queue + Backpressure Mechanism [PR](https://github.com/BerriAI/litellm/pull/9759)
     
-2. Prisma Migrations [Get Started](../../docs/proxy/prod#9-use-prisma-migrate-deploy)
+2. Prisma Migrations [Get Started](../../docs/proxy/prod#use-prisma-migrate-deploy)
     - connects litellm proxy to litellm's prisma migration files
     - Handle db schema updates from new `litellm-proxy-extras` sdk
 3. Redis - support password for sync sentinel clients [PR](https://github.com/BerriAI/litellm/pull/9622)

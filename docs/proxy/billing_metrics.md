@@ -64,7 +64,7 @@ If this line is missing, look for a warning naming the misconfigured variable. M
 <Tabs>
 <TabItem value="helm" label="Helm">
 
-Both the [standard chart](https://github.com/BerriAI/litellm/tree/main/helm/litellm-helm) and the [microservices chart](./microservices_helm) have a `billingMetrics` block, off by default.
+Both the [standard chart](https://github.com/BerriAI/litellm/tree/main/helm/litellm-helm) and the [microservices chart](./deploy#deploy-with-helm) have a `billingMetrics` block, off by default.
 
 1. Create a TLS Secret from your issued certificate:
 

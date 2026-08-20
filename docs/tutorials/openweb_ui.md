@@ -12,7 +12,7 @@ This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM wit
 
 ## Quickstart
 
-- Make sure to setup LiteLLM with the [LiteLLM Getting Started Guide](https://docs.litellm.ai/docs/proxy/docker_quick_start)
+- Make sure to setup LiteLLM with the [LiteLLM Quickstart](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 
 
 ## 1. Start LiteLLM & Open WebUI

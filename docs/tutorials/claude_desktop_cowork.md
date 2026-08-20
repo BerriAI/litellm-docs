@@ -71,6 +71,7 @@ You can verify traffic is flowing by checking the LiteLLM Dashboard under **Usag
 
 ## Related
 
+- [Auto Router with Claude Code and Claude Desktop](claude_code_autorouter.md)
 - [LiteLLM Virtual Keys](../proxy/virtual_keys.md)
 - [Cursor Integration](cursor_integration.md)
 - [Claude Code Integration](claude_responses_api.md)

@@ -386,6 +386,10 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
 
 See our [Swagger API](https://litellm-api.up.railway.app/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
+:::info
+Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
+:::
+
 ## Custom Tags
 
 :::tip See Full Request Tags Documentation

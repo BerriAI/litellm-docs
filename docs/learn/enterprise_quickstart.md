@@ -34,7 +34,7 @@ All gateway and budget tests share one deployment and one org/team/key. Do this 
 <Tabs>
 <TabItem value="docker-compose" label="Docker Compose">
 
-Follow the [Docker Compose tab](/docs/proxy/docker_quick_start) in the Getting Started Tutorial. Condensed steps:
+Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
 docker pull ghcr.io/berriai/litellm-database:latest
@@ -205,7 +205,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 <TabItem value="helm" label="Helm">
 
-The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml).
+The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
 
 #### Step 1. Create a Secret for your license + provider keys
 
@@ -527,7 +527,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 3. **Second request within the same minute** → rate limit error (RPM exceeded).
 4. Confirm key spend in Admin UI under **Virtual Keys**.
 
-→ [Virtual Keys](/docs/proxy/virtual_keys) · [Docker Quick Start — RPM test](/docs/proxy/docker_quick_start)
+→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart — RPM test](/docs/proxy/docker_quick_start)
 
 ### 4b. Team budget
 
@@ -587,7 +587,7 @@ Layer security and compliance on top of working gateways and budgets.
 
 ### Audit logs
 
-Enable via `store_audit_logs: true` under litellm_settings of your `config.yml`. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
+On by default with an enterprise license; set `store_audit_logs: false` under litellm_settings of your `config.yml` to turn it off. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
 
 → [Audit Logs](/docs/proxy/multiple_admins)
 

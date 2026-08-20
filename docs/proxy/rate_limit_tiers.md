@@ -8,7 +8,7 @@ Use this to control access and budgets across a lot of keys.
 
 This is a LiteLLM Enterprise feature.
 
-Get a 7 day free trial + get in touch [here](https://litellm.ai/#trial).
+Get a 30 day free trial + get in touch [here](https://litellm.ai/#trial).
 
 See pricing [here](https://litellm.ai/#pricing).
 
