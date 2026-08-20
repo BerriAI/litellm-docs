@@ -788,6 +788,8 @@ router_settings:
 | WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
 | WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
 | WATSONX_SPACE_ID | Deployment space ID for watsonx.ai, read after `WATSONX_DEPLOYMENT_SPACE_ID`
+| WAVESPEED_API_BASE | Base URL for WaveSpeed AI. Default is https://api.wavespeed.ai for image and video predictions, and https://llm.wavespeed.ai/v1 for chat completions
+| WAVESPEED_API_KEY | API key for WaveSpeed AI image generation, video generation and chat completions
 | WML_URL | Last of the four accepted names for the watsonx base URL, after `WATSONX_API_BASE`, `WATSONX_URL` and `WX_URL`
 | WORKER_CONFIG | Serialized proxy configuration that the `litellm` CLI passes to the worker processes it starts. Set by the CLI itself; to point the proxy at a config file of your own use `CONFIG_FILE_PATH`
 | WX_API_KEY | Alias for the watsonx API key, read first when generating an IAM token and after `WATSONX_APIKEY` and `WATSONX_API_KEY` when authenticating a request
