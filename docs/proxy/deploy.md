@@ -44,7 +44,7 @@ STORE_MODEL_IN_DB="True"      # manage models from the Admin UI instead of confi
 
 `LITELLM_SALT_KEY` cannot be rotated after you add models: it encrypts the provider credentials stored in your database, and changing it makes them unreadable. Generate a strong random value and store both keys in your cloud's secret manager.
 
-Official images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`. Use `ghcr.io/berriai/litellm-database` for monolithic deployments with Postgres (it bundles the Prisma toolchain), and pin a version tag rather than `latest` or a moving tag, so rollbacks are deterministic. All images are signed; see the [Docker Image Security Guide](./docker_image_security.md) for verification and the non-root variant.
+Official images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`. Use `ghcr.io/berriai/litellm` for monolithic deployments, including those with Postgres, since it bundles the Prisma toolchain, and pin a version tag rather than `latest` or a moving tag, so rollbacks are deterministic. All images are signed; see the [Docker Image Security Guide](./docker_image_security.md) for verification and the non-root variant.
 
 ## Provision the data stores
 
@@ -109,7 +109,7 @@ Then pick a deployment mode:
 replicaCount: 3
 
 image:
-  repository: ghcr.io/berriai/litellm-database
+  repository: ghcr.io/berriai/litellm
   tag: "v1.90.2"          # pin your version
 
 masterkeySecretName: litellm-masterkey
@@ -322,7 +322,7 @@ spec:
 
 </details>
 
-To connect the database, switch the image to `docker.litellm.ai/berriai/litellm-database` and add `DATABASE_URL` and `LITELLM_MASTER_KEY` to the Secret; nothing else in the manifest changes.
+To connect the database, add `DATABASE_URL` and `LITELLM_MASTER_KEY` to the Secret; nothing else in the manifest changes, because the image already carries the Prisma toolchain.
 
 ## Deploy with Terraform (AWS and GCP)
 
