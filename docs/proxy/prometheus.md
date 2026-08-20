@@ -686,7 +686,7 @@ The Prisma query engine tracks pool occupancy, and separately how long a query s
 | `litellm_db_pool_acquire_total` | Counter | Connection acquisitions, for the mean-wait ratio |
 | `litellm_db_query_duration_seconds_total` | Counter | Cumulative seconds executing against the database, excluding pool wait |
 | `litellm_db_query_total` | Counter | Queries executed |
-| `litellm_db_pool_timeouts_total` | Counter | Queries that gave up waiting for a connection (prisma `P2024`) |
+| `litellm_db_pool_timeouts_total` | Counter | Queries that gave up waiting for a connection (prisma `P2024`), whether the pool was saturated or the database was unreachable |
 
 Pool size is set with `general_settings.database_connection_pool_limit` and the acquire timeout with `general_settings.database_connection_timeout`.
 
@@ -702,9 +702,11 @@ Every job registered on the proxy scheduler is covered, including ones added by 
 | `litellm_scheduled_job_duration_seconds` | Histogram | Wall-clock duration of a run. Labels: `"job_name"` |
 | `litellm_scheduled_job_last_run_timestamp` | Gauge | Unix timestamp of the last completed run. Labels: `"job_name"` |
 | `litellm_scheduled_job_items_processed_total` | Counter | Items a job reported processing. Labels: `"job_name"` |
-| `litellm_cronjob_lock_acquisitions_total` | Counter | Single-owner lock attempts. Labels: `"cronjob_id"`, `"result"` where result is `acquired`, `not_acquired` or `no_redis` |
+| `litellm_cronjob_lock_acquisitions_total` | Counter | Single-owner lock attempts. Labels: `"cronjob_id"`, `"result"` where result is `acquired`, `not_acquired`, `no_redis` or `error` |
 
-`result="max_instances"` means the previous run of that job had not finished when the next was due, which is how a job falling behind its schedule surfaces. `result="no_redis"` on the lock metric means no pod can be elected at all, which is a different state from losing the election.
+`result="max_instances"` means the previous run of that job had not finished when the next was due, which is how a job falling behind its schedule surfaces.
+
+The lock metric separates three states that all look like "did not run" from the outside. `no_redis` means no Redis is configured, so no pod can be elected at all. `error` means the attempt itself failed, which is what a Redis outage looks like. `not_acquired` means Redis answered and another pod simply won. Alert on `error`, not on `not_acquired`, since exactly one pod losing the election every cycle is the healthy case.
 
 Each completed run also emits a structured log line at INFO:
 
@@ -717,12 +719,15 @@ scheduled_job_completed job=update_spend_job result=success duration_seconds=0.0
 | Metric Name | Type | Description |
 |---|---|---|
 | `litellm_in_flight_requests` | Gauge | HTTP requests currently in flight, summed across live workers |
-| `litellm_requests_shed_total` | Counter | Responses where the proxy declined to serve. Labels: `"status"`, either `429` for a limit or `503` for the database being unavailable |
+| `litellm_requests_shed_total` | Counter | Responses where this proxy declined to serve. Labels: `"status"`, currently only `429` |
 | `litellm_global_max_parallel_requests_limit` | Gauge | Concurrency ceiling actually applied. `+Inf` means nothing bounds concurrency |
 
-A 500 is not counted as shed: that is the proxy failing rather than declining.
+A 500 is not counted as shed: that is the proxy failing rather than declining. Two other responses are deliberately excluded, because counting them would blur the throttle-or-scale decision this metric exists to inform:
 
-`litellm_global_max_parallel_requests_limit` reports `+Inf` when `general_settings.global_max_parallel_requests` is unset, and also when it is set but the active rate limiter does not read it. Only the legacy limiter enforces that setting, enabled with `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true`; the default limiter applies per-key, per-team and per-user limits instead. The proxy logs a warning at startup when the setting is configured but inert.
+- Upstream rate limits. LiteLLM forwards a provider's 429 with the same status the proxy uses for its own limits, so only rejections this proxy originated are counted. A provider throttling you is not a reason to add pods
+- The 503s raised when `fail_closed_budget_enforcement` is on and spend cannot be verified against Redis or the database. That means a dependency is unreachable, not that this pod is at capacity
+
+`litellm_global_max_parallel_requests_limit` reports `+Inf` when `general_settings.global_max_parallel_requests` is unset, and also when it is set but the active rate limiter does not read it. Only the legacy limiter enforces that setting, enabled with `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true`; the default limiter applies per-key, per-team and per-user limits instead. The proxy logs a warning at startup when the setting is configured but inert. The gauge reports the effective ceiling under either registration style, including `success_callback: ["prometheus"]`, where the logger is built on the first request rather than at startup.
 
 ### Reference queries
 
@@ -766,7 +771,6 @@ Whether to throttle upstream or add pods. Requests piling up against a real ceil
 ```promql
 litellm_in_flight_requests / litellm_global_max_parallel_requests_limit
 rate(litellm_requests_shed_total{status="429"}[5m])
-rate(litellm_requests_shed_total{status="503"}[5m])
 ```
 
 ## Monitor System Health
