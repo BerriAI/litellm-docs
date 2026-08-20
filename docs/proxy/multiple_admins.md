@@ -27,10 +27,17 @@ Requires Enterprise License, Get in touch with us [here](https://enterprise.lite
 ## Usage
 
 ### 1. Switch on audit Logs 
-Add `store_audit_logs` to your litellm config.yaml and then start the proxy
+With an enterprise license, audit logs are on by default, so there is nothing to configure. On other plans, or if you want to be explicit, add `store_audit_logs` to your litellm config.yaml and then start the proxy
 ```shell
 litellm_settings:
   store_audit_logs: true
+```
+
+To turn audit logs off on an enterprise license, set it explicitly to `false`, which takes precedence over the default. `LITELLM_STORE_AUDIT_LOGS` works the same way as the config setting and is read when the config leaves `store_audit_logs` unset
+
+```shell
+litellm_settings:
+  store_audit_logs: false
 ```
 
 ### 2. Make a change to an entity
@@ -86,7 +93,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 :::info
 
-Both `store_audit_logs: true` and `audit_log_callbacks` must be set. If `store_audit_logs` is not enabled, the callbacks will not fire.
+`audit_log_callbacks` only fires while audit logging is enabled, which is the default on an enterprise license and otherwise needs `store_audit_logs: true`.
 
 :::
 
