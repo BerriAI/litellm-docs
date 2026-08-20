@@ -26,11 +26,12 @@ os.environ["COGNITION_API_BASE"] = "https://api.cognition.ai/v1"  # optional ove
 
 ## Models
 
-| Model | Input cost / 1M tokens | Output cost / 1M tokens |
-|-------|------------------------|-------------------------|
-| `cognition/swe-1.7` | $2.50 | $12.50 |
-| `cognition/swe-1.6` | $0.30 | $1.50 |
-| `cognition/swe-1.5` | $0.30 | $1.50 |
+| Model | Input / 1M tokens | Output / 1M tokens | Cache read / 1M tokens |
+|-------|-------------------|--------------------|------------------------|
+| `cognition/swe-1.7` | $2.50 | $12.50 | $1.00 |
+| `cognition/swe-1.6` | $0.50 | $2.50 | $0.20 |
+
+Pricing follows the [Cognition model pricing table](https://docs.devin.ai/windsurf/plugins/cascade/models). API-served `swe-1.7` is the Cerebras-served SWE-1.7 Lightning tier. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
 
 ## Usage - LiteLLM Python SDK
 
@@ -186,7 +187,7 @@ The `cognition/` models are registered in LiteLLM's model cost map, so per-reque
 
 ## Custom Endpoints
 
-If your Cognition endpoint is hosted elsewhere, set `COGNITION_API_BASE` or pass `api_base` per deployment; the `cognition/` route keeps the provider identity and pricing either way
+Cognition provisions API endpoints per customer today, so most deployments should set `COGNITION_API_BASE` or pass `api_base` explicitly with the base URL from your Cognition onboarding. `https://api.cognition.ai/v1` is the conventional default used when neither is set. The `cognition/` route keeps the provider identity and pricing either way
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
