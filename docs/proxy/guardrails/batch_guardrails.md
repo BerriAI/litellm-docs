@@ -97,13 +97,17 @@ Three cases still fail the whole upload rather than dropping a record.
 
 If every record is blocked there is nothing left to submit, so the upload returns 400 rather than creating an empty job.
 
-If a guardrail cannot be reached, or fails in a way that is not a decision about the content, the upload returns 400 carrying that guardrail's own status. Dropping a record that was never actually inspected would silently cost you data, so the file is refused instead.
+If a guardrail cannot be reached, or fails in a way that is not a decision about the content, the upload returns 400 carrying that guardrail's own status. Dropping a record that was never actually inspected would silently cost you data, so the file is refused instead. This covers a guardrail configured to fail closed whose backend is down, which is otherwise easy to mistake for a policy block, since many integrations report both the same way.
+
+If a guardrail is configured to route sensitive content to a different model, a record that trips it returns 400 naming the line. Every record of a batch file is submitted to one provider, so there is no way to send that one record elsewhere. Send it outside the batch.
 
 If a record's `body` is not an object, or carries no `messages`, `prompt` or `input`, there is nothing for a guardrail to read and the upload returns 400 naming the line. Records are also checked before this for the usual batch file requirements, so a line that does not parse or is missing `custom_id`, `method`, `url` or `body` is rejected earlier with its own message.
 
 ## Limits
 
 Only guardrails that run on `pre_call` see batch records. A guardrail configured for `post_call` alone does not participate, since there is no response to inspect at upload time.
+
+A `guardrails` key inside a record's own body is ignored when choosing what to run, so a record cannot opt out of what your key or team selected. It is preserved in the record that reaches the provider.
 
 Guardrails attached to a specific deployment through `litellm_params` are applied after routing, which batch uploads do not go through, so those are not applied to batch records.
 
