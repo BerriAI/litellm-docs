@@ -109,7 +109,7 @@ The Usage page in the Admin UI shows the same figures under Team Usage, charting
 
 ## Rates you must not set
 
-LiteLLM refuses a per-token, per-second, or cache rate on a PTU deployment, and answers `400` naming the field. Sending `0`, an all-zero table, or no value at all is accepted:
+LiteLLM refuses a per-token, per-second, or cache rate on a PTU deployment, and names the field it rejected. Sending `0`, an all-zero table, or no value at all is accepted:
 
 ```
 A PTU deployment bills by reserved capacity, so input_cost_per_token cannot be charged on top
