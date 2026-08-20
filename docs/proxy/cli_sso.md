@@ -174,7 +174,7 @@ The classic `lite login` flow and virtual API keys keep working unchanged. `--pk
 
 ### The stored credential
 
-The key goes to your OS keychain, the same place `lite login` puts it, and the rest of the record goes to `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `refresh_token`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`. The refresh token is in that file rather than in the keychain, so treat `~/.litellm/token.json` as sensitive on a `--pkce` login: anyone who can read it can exchange the refresh token for a working key
+The key and the refresh token both go to your OS keychain, the same place `lite login` puts the key, and the rest of the record goes to `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`, none of which gets anyone a key on its own. On a machine with no usable keychain the key and the refresh token fall back into that same file and `lite login` says so; treat `~/.litellm/token.json` as sensitive whenever it does, because anyone who can read it can exchange the refresh token for a working key. A `--pkce` login made with an earlier `lite` leaves its refresh token in the file until the next `lite` command reads it and moves it into the keychain
 
 The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, see [JWT Token Expiration](#jwt-token-expiration)). You do not need to log in again when it does: the next `lite` command that needs the key renews it with the refresh token and saves the new pair. Each renewal rotates the refresh token, and a refresh token that was already used is refused
 
@@ -227,7 +227,7 @@ Requests made with the key are attributed to your user and the team you picked, 
 lite logout
 ```
 
-`lite logout` sends the refresh token to the proxy's `POST /revoke` endpoint and then deletes `~/.litellm/token.json`. The refresh token is dead from that point on. The key itself is not revocable; it expires on its own within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
+`lite logout` sends the refresh token to the proxy's `POST /revoke` endpoint and then clears both stores, the keychain entry and `~/.litellm/token.json`. The refresh token is dead from that point on. The key itself is not revocable; it expires on its own within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
 
 Signing in again, with `lite login --pkce` or the classic `lite login`, does the same to the record it replaces: the new credential is saved first, then the previous login's refresh token is revoked, so an older copy of `token.json` cannot be renewed once you have signed in again. If the proxy cannot be reached for that revocation, the login still succeeds and says so
 
