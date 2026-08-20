@@ -63,6 +63,7 @@ const sidebars = {
             "observability/logfire_integration",
             "observability/lunary_integration",
             "observability/mlflow",
+            "observability/openlayer_integration",
             "observability/promptlayer_integration",
             "observability/qualifire_integration",
             "observability/wandb_integration",
