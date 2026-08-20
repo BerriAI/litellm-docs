@@ -178,6 +178,8 @@ Unlike most other guardrails that run via a direct hook on the raw request, Lake
 
 When either flag excludes a message that Lakera would otherwise have masked in place for a PII-only violation, Lakera v2 blocks instead of masking: masking rewrites the request's `messages` from the (now-shorter) inspected list, which would silently drop the excluded message from what's actually sent to the LLM.
 
+This block-instead-of-mask behavior isn't limited to the skip flags. Lakera v2 degrades to blocking any time masking in place would corrupt the outgoing request: when a message carries non-string (multimodal) content, when a message has fields beyond `role`/`content` such as a tool message's `tool_call_id`, or when the request combines chat completions `messages` with a Responses API `input` field, since masking would splice `input`-derived text into `messages`.
+
 ## Advisory mode
 
 `on_flagged: "inject_system_message"` is for detectors prone to false positives, for example a prompt-injection heuristic tripping on legitimate instructional language, where the operator wants the LLM itself to weigh whether a flag is real rather than hard-blocking every flagged request or allowing it with no signal at all.
