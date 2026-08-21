@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `scx-ai/` |
 | Link to Provider Doc | [SCX.ai Documentation ↗](https://scx.ai) |
 | Base URL | `https://api.scx.ai/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk) |
 
 <br />
 <br />
