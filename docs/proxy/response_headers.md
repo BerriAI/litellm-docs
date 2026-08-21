@@ -82,6 +82,10 @@ model_list:
 | `x-litellm-model-id` | `7c9f2a1b3d8e4f0a2c6b5d9e1f3a7b8c` | Which deployment row; use with `/v1/model/info?litellm_model_id=...`. |
 | Response body `model` | often `my-chat-model` | Often restamped to match the client; upstream id stays in config. |
 
+### Auto-routed requests
+
+For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can read the picked tier from the `router_model_name` body field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
+
 ### More examples (illustrative)
 
 | Header | Example | Meaning |
