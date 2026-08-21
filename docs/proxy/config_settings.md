@@ -640,6 +640,8 @@ router_settings:
 | CLOUDZERO_MAX_FETCHED_DATA_RECORDS | Maximum number of data records to fetch from CloudZero
 | CLOUDZERO_TIMEZONE | Timezone for date handling (default: UTC)
 | CODESTRAL_API_BASE | Base URL for Codestral. Default is https://codestral.mistral.ai/v1
+| COGNITION_API_BASE | Base URL for Cognition. Default is https://api.cognition.ai/v1
+| COGNITION_API_KEY | API key for Cognition
 | COMETAPI_API_BASE | Base URL for CometAPI, read after `COMETAPI_BASE_URL`. Default is https://api.cometapi.com/v1
 | COMETAPI_API_KEY | API key for CometAPI, read after `COMETAPI_KEY`
 | COMETAPI_BASE_URL | Base URL for CometAPI image generation, read before `COMETAPI_API_BASE`
