@@ -998,6 +998,24 @@ Caching only runs on the call types listed in `supported_call_types` (OpenAI-com
 
 :::
 
+## Semantic Caching and a Slow Embedding Endpoint
+
+A semantic cache embeds the prompt before every request, and that embedding call runs inline, so the request cannot reach the LLM until it finishes. LiteLLM caps it at 5 seconds. Past the deadline the lookup is abandoned, the response carries `x-litellm-semantic-similarity: 0.0`, and the request proceeds to the model as a cache miss. An embedding endpoint that is unreachable or hanging therefore costs a few seconds instead of stalling the request.
+
+Raise the deadline if your embedding endpoint is legitimately slower than that, either per cache with `semantic_cache_embedding_timeout` under `cache_params` or globally with the `SEMANTIC_CACHE_EMBEDDING_TIMEOUT_SECONDS` environment variable.
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: my-embedding-model
+    semantic_cache_embedding_timeout: 10.0
+```
+
+Bear in mind that a higher deadline is how long every request waits when the embedding endpoint stops answering, so keep it close to the endpoint's real latency.
+
 ## Set cache for proxy, but not on the actual llm api call
 
 Use this if you just want to enable features like rate limiting, and loadbalancing across multiple
@@ -1277,6 +1295,10 @@ cache_params:
   gcs_bucket_name: your_gcs_bucket_name # Name of the GCS bucket
   gcs_path_service_account: /path/to/service-account.json # Path to GCS service account JSON file
   gcs_path: cache/ # [OPTIONAL] GCS path prefix for cache objects
+
+  # Semantic cache parameters (redis-semantic, valkey-semantic, qdrant-semantic)
+  similarity_threshold: 0.8 # Minimum cosine similarity for a cached response to be served
+  semantic_cache_embedding_timeout: 5.0 # Seconds the prompt embedding may take before the lookup gives up
 ```
 
 ## Provider-Specific Optional Parameters Caching
