@@ -11,9 +11,11 @@ Example trace in Langfuse using multiple models via LiteLLM:
 <Image img={require('../../img/langfuse-example-trace-multiple-models-min.png')} />
 
 
-:::info
+:::tip Recommended: Use OpenTelemetry v2
 
-For Langfuse v3, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets).
+For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
+
+The SDK callback below (`langfuse`) is the legacy v2 SDK integration and is maintained for backward compatibility.
 
 :::
 
@@ -25,6 +27,12 @@ For Langfuse v3, we recommend using the `langfuse_otel` preset in the [OpenTelem
 
 ## Usage with LiteLLM Python SDK
 
+:::note Legacy SDK Integration
+
+This section covers the legacy Langfuse v2 SDK integration. For Langfuse v3+, prefer the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets) for better performance and compatibility.
+
+:::
+
 ### Pre-Requisites
 Ensure you have run `uv add langfuse` for this integration
 ```shell
@@ -32,7 +40,7 @@ uv add langfuse==2.59.7 litellm
 ```
 
 ### Quick Start
-Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse:
+Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse (legacy v2 SDK):
 
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
