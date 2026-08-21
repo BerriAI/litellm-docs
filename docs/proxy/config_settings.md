@@ -762,6 +762,8 @@ router_settings:
 | RUNWAYML_API_BASE | Base URL for RunwayML
 | RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
 | SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
+| SCX_API_BASE | Base URL for SCX.ai. Default is https://api.scx.ai/v1
+| SCX_API_KEY | API key for SCX.ai
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
 | SERPER_API_BASE | Base URL for the Serper search provider
 | SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
