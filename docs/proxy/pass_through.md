@@ -423,6 +423,16 @@ general_settings:
     team_allowed_routes: ["openai_routes","info_routes","mapped_pass_through_routes"]
 ```
 
+For your own pass-through endpoints, `mapped_pass_through_routes` only covers the provider prefixes LiteLLM ships with. If your endpoints share a custom prefix, grant that prefix once with a trailing `*` and every endpoint you register under it later is allowed without another config change.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes","info_routes","/internal-models/*"]
+```
+
 ### Getting Help
 
 [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
