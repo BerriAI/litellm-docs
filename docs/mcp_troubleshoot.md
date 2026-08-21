@@ -90,7 +90,7 @@ LiteLLM performs metadata discovery per the MCP spec ([section 2.3](https://mode
 
 ## Debugging OAuth
 
-For detailed OAuth2 debugging — including debug header reference, common misconfigurations, and example output — see [Debugging OAuth](./mcp_oauth#debugging-oauth).
+For detailed OAuth2 debugging, including debug header reference, common misconfigurations, and example output, see [Debugging OAuth](./mcp_oauth#debugging-oauth).
 
 ### MCP OAuth: Connect returns `{"detail":"invalid_request"}` {#mcp-oauth-invalid-request}
 
@@ -132,9 +132,9 @@ The `issuer` value should equal the origin the user types into their browser (`h
        - "10.0.0.0/8"      # your ingress / load-balancer CIDR(s)
    ```
 
-   `use_x_forwarded_for` alone is not enough — without `mcp_trusted_proxy_ranges`, the proxy refuses to honor `X-Forwarded-*` because it cannot tell a trusted reverse proxy from a direct attacker. Verify that your ingress sends `X-Forwarded-Proto`, `X-Forwarded-Host`, and (when running on a non-default port) `X-Forwarded-Port`.
+   `use_x_forwarded_for` alone is not enough. Without `mcp_trusted_proxy_ranges`, the proxy refuses to honor `X-Forwarded-*` because it cannot tell a trusted reverse proxy from a direct attacker. Verify that your ingress sends `X-Forwarded-Proto`, `X-Forwarded-Host`, and (when running on a non-default port) `X-Forwarded-Port`.
 
-3. **Fix the ingress.** If the ingress is stripping or rewriting `X-Forwarded-*`, no proxy setting will help — restore the headers at the ingress layer.
+3. **Fix the ingress.** If the ingress is stripping or rewriting `X-Forwarded-*`, no proxy setting will help; restore the headers at the ingress layer.
 
 If the `redirect_uri` legitimately lives on a sister domain you control (e.g. an internal web app registering as an OAuth client of the MCP proxy), allowlist its origin via `MCP_TRUSTED_REDIRECT_ORIGINS`. See [Allowing additional first-party redirect_uri origins](./mcp_oauth#allowing-additional-first-party-redirect_uri-origins).
 
@@ -153,7 +153,7 @@ Use the MCP Inspector when you need to test both `Client → LiteLLM` and `Clien
 3. Open the **Tools** tab and click **List Tools** to verify the MCP alias responds.
 
 ### `curl` Smoke Test
-`curl` is ideal on servers where installing the Inspector is impractical. It replicates the MCP tool call LiteLLM would make—swap in the domain of the system under test (LiteLLM or the MCP server).
+`curl` is ideal on servers where installing the Inspector is impractical. It replicates the MCP tool call LiteLLM would make; swap in the domain of the system under test (LiteLLM or the MCP server).
 
 ```bash
 curl -X POST https://your-target-domain.example.com/mcp \

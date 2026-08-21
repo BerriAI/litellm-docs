@@ -12,7 +12,7 @@ Use OpenAI's Code Interpreter tool to execute Python code in a secure, sandboxed
 
 :::tip Route code interpreter to your own sandbox
 
-The proxy can intercept `code_interpreter` on `/v1/responses` and run the code in a configured sandbox (e2b today) instead of OpenAI's container, with no change to the client request. The response shape stays identical (`code_interpreter_call` next to `message`). See [Code Interpreter Sandbox Interception](/docs/sandbox#litellm-proxy-responses-api-code-interpreter-interceptor).
+The proxy can intercept `code_interpreter` on `/v1/responses` and run the code in a configured sandbox (e2b today) instead of OpenAI's container, with no change to the client request. The response shape stays identical (`code_interpreter_call` next to `message`). See [Code Interpreter Sandbox Interception](/docs/sandbox#code-interpreter-interceptor).
 
 :::
 

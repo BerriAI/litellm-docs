@@ -16,7 +16,7 @@ hide_table_of_contents: false
 
 :::danger Known Issue - CPU Usage
 
-This release had known issues with CPU usage. This has been fixed in [v1.81.9-stable](./v1-81-9).
+This release had known issues with CPU usage. This has been fixed in [v1.81.9-stable](/release_notes/v1.81.9/v1-81-9).
 
 **We recommend using v1.81.9-stable instead.**
 
@@ -56,7 +56,7 @@ Let's dive in.
 
 ### Logs View v2 with Tool Call Tracing
 
-This release introduces comprehensive tool call tracing through LiteLLM's redesigned Logs View v2, enabling developers to debug and monitor AI agent workflows in production environments seamlessly.
+This release introduces full tool call tracing through LiteLLM's redesigned Logs View v2, so developers can debug and monitor AI agent workflows in production environments.
 
 This means you can now onboard use cases like tracing complex multi-step agent interactions, debugging tool execution failures, and monitoring MCP server calls while maintaining full visibility into request/response payloads with syntax highlighting.
 
@@ -280,7 +280,7 @@ Developers can access the new Logs View through LiteLLM's UI to inspect tool cal
     - Propagate JWT auth metadata to OTEL spans - [PR #19627](https://github.com/BerriAI/litellm/pull/19627)
     - Fix thread leak in dynamic header path - [PR #19946](https://github.com/BerriAI/litellm/pull/19946)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add callbacks and labels - [PR #19708](https://github.com/BerriAI/litellm/pull/19708)
     - Add clientip and user agent in metrics - [PR #19717](https://github.com/BerriAI/litellm/pull/19717)
     - Add tpm-rpm limit metrics - [PR #19725](https://github.com/BerriAI/litellm/pull/19725)

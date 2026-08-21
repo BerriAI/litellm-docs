@@ -204,15 +204,15 @@ curl -X POST http://localhost:4000/v1/messages \
 
 ### How it works (3 phases)
 
-**Phase A — slice existing compaction block**
+**Phase A: slice existing compaction block**
 
 If the message history already contains a `compaction` block (from a previous compaction round), everything before that block is dropped and its summary text is prepended to the system prompt. This ensures prior context is carried forward.
 
-**Phase B — threshold check**
+**Phase B: threshold check**
 
-LiteLLM counts the effective input tokens of the (sliced) message history. If at or below the trigger threshold, the request is forwarded immediately — no summary call is made.
+LiteLLM counts the effective input tokens of the (sliced) message history. If at or below the trigger threshold, the request is forwarded immediately, with no summary call.
 
-**Phase C — summarize (only when over threshold)**
+**Phase C: summarize (only when over threshold)**
 
 LiteLLM calls the configured `context_management_summary_model` with the full conversation history and a summarization prompt. The summary is:
 - Injected as a `"Previous conversation summary: ..."` prefix in the system message on the downstream model call

@@ -16,7 +16,7 @@ Control which MCP servers are visible to external callers (e.g., ChatGPT, Claude
 
 :::warning Interaction with `delegate_auth_to_upstream`
 
-If an MCP server is **`available_on_public_internet: false`** (internal for IP-based discovery) **and** has **`delegate_auth_to_upstream: true`** with **`auth_type: oauth2`** (interactive PKCE, not M2M), anonymous callers can still use the upstream OAuth **`/authorize`** path without a LiteLLM session. See [MCP OAuth Passthrough — Delegate Auth to Upstream](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough) for details and mitigations.
+If an MCP server is **`available_on_public_internet: false`** (internal for IP-based discovery) **and** has **`delegate_auth_to_upstream: true`** with **`auth_type: oauth2`** (interactive PKCE, not M2M), anonymous callers can still use the upstream OAuth **`/authorize`** path without a LiteLLM session. See [MCP OAuth Passthrough: Delegate Auth to Upstream](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough) for details and mitigations.
 
 :::
 
@@ -48,7 +48,7 @@ This walkthrough covers two flows:
 
 ### Flow 1: Add a Public MCP Server (DeepWiki)
 
-DeepWiki is a free MCP server — a good candidate to expose publicly so AI gateway users can access it from ChatGPT.
+DeepWiki is a free MCP server, a good candidate to expose publicly so AI gateway users can access it from ChatGPT.
 
 #### Step 1: Create the MCP Server
 
@@ -82,7 +82,7 @@ Before creating, scroll down and expand the **Permission Management / Access Con
 
 ![Expand Permission Management](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/cc10dea2-6028-4a27-a33b-1b1b7212efb5/ascreenshot_0fdd152b862a4bf39973bc805ce64c57_text_export.jpeg)
 
-Toggle **"Available on Public Internet"** on. This is the key setting — it tells LiteLLM that external callers (like ChatGPT connecting from the public internet) should be able to discover and use this server.
+Toggle **"Available on Public Internet"** on. This is the key setting: it tells LiteLLM that external callers (like ChatGPT connecting from the public internet) should be able to discover and use this server.
 
 ![Toggle Available on Public Internet](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/39c14543-c5ae-4189-8f85-9efc87135820/ascreenshot_9991f54910c24e21bba5c05ea4fa8e28_text_export.jpeg)
 
@@ -104,7 +104,7 @@ ChatGPT asks for a server label. Give it a recognizable name like "LiteLLM".
 
 ![Enter server label](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/88505afe-07c1-4674-a89c-8035a5d05eb6/ascreenshot_143aefc38ddd4d3f9f5823ca2cc09bc2_text_export.jpeg)
 
-Next, enter the Server URL. This should be your LiteLLM proxy's MCP endpoint — `<your-litellm-url>/mcp`.
+Next, enter the Server URL. This should be your LiteLLM proxy's MCP endpoint, `<your-litellm-url>/mcp`.
 
 ![Enter LiteLLM MCP URL](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/9048be4a-7e40-43e7-9789-059fed2741a6/ascreenshot_e81232c17fd148f48f0ae552e9dc2a10_text_export.jpeg)
 
@@ -128,7 +128,7 @@ ChatGPT connects and shows the available tools. Since both DeepWiki and Exa are 
 
 ### Flow 2: Make an Existing Server Private (Exa)
 
-Now let's do the reverse — take an existing MCP server (Exa) that's currently public and restrict it to internal access only. After this change, ChatGPT should no longer see Exa's tools.
+Now let's do the reverse: take an existing MCP server (Exa) that's currently public and restrict it to internal access only. After this change, ChatGPT should no longer see Exa's tools.
 
 #### Step 1: Edit the Server
 
@@ -154,7 +154,7 @@ Toggle **"Available on Public Internet"** off. This will hide Exa from any calle
 
 ![Toggle off public internet](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/f36af5ad-028f-4bb1-aed1-43e38ff9b733/ascreenshot_9128364a049f489bb8483e18e5c88015_text_export.jpeg)
 
-Click **"Save Changes"** to apply. The change takes effect immediately — no proxy restart needed.
+Click **"Save Changes"** to apply. The change takes effect immediately, with no proxy restart needed.
 
 ![Save changes](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/126a71b3-02e1-4d61-a208-942b92e9ef25/ascreenshot_f349ef69e08044dd8e4903f4286b7b97_text_export.jpeg)
 
@@ -184,7 +184,7 @@ Click **"Connect"** to re-establish the connection.
 
 ![Click Connect](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/686f6307-b4ae-448b-ac6c-2c9d7b4f6b57/ascreenshot_3f499d0812af42ab89fed103cc21c249_text_export.jpeg)
 
-This time, only DeepWiki's tools appear — Exa is gone. LiteLLM detected that ChatGPT is calling from a public IP and filtered out Exa since it's no longer marked as public. Internal users on your private network would still see both servers.
+This time, only DeepWiki's tools appear; Exa is gone. LiteLLM detected that ChatGPT is calling from a public IP and filtered out Exa since it's no longer marked as public. Internal users on your private network would still see both servers.
 
 ![Only DeepWiki tools visible](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/667d79b6-75f9-4799-9315-0c176e7a5e34/ascreenshot_efa43050ac0b4445a09e542fa8f270ff_text_export.jpeg)
 
@@ -281,4 +281,4 @@ mcp_servers:
     # available_on_public_internet defaults to true
 ```
 
-If you set `litellm.public_mcp_hub_strict_whitelist: false`, the hub falls back to advertising every server that has `available_on_public_internet: true` — but the IP-based access filter on this page still applies independently to the actual tool endpoints.
+If you set `litellm.public_mcp_hub_strict_whitelist: false`, the hub falls back to advertising every server that has `available_on_public_internet: true`. The IP-based access filter on this page still applies independently to the actual tool endpoints.

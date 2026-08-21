@@ -27,7 +27,7 @@ View Spend, Token Usage, Key, Team Name for Each Request to LiteLLM
 
 If you want to view request and response content on LiteLLM Logs, you can enable it in either place:
 
-- **From the UI (no restart):** Use [UI Spend Log Settings](./ui_spend_log_settings.md) — open Logs → Settings → enable "Store Prompts in Spend Logs" → Save. Takes effect immediately and overrides config.
+- **From the UI (no restart):** Use [UI Spend Log Settings](./ui_spend_log_settings.md), then open Logs → Settings → enable "Store Prompts in Spend Logs" → Save. Takes effect immediately and overrides config.
 - **From config:** Add this to your `proxy_config.yaml` (requires restart):
 
 ```yaml
@@ -96,7 +96,7 @@ If you're storing spend logs, it might be a good idea to delete them regularly t
 
 You can set the retention period in either place:
 
-- **From the UI (no restart):** [UI Spend Log Settings](./ui_spend_log_settings.md) — Logs → Settings → set Retention Period → Save.
+- **From the UI (no restart):** [UI Spend Log Settings](./ui_spend_log_settings.md), then Logs → Settings → set Retention Period → Save.
 - **From config:** Add the following to your `proxy_config.yaml` (requires restart):
 
 ```yaml

@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use Google's official GenAI SDK (JavaScript/TypeScript and Python) with any LLM provider through LiteLLM Proxy.
 
-The Google GenAI SDK (`@google/genai` for JS, `google-genai` for Python) provides a native interface for calling Gemini models. By pointing it to LiteLLM, you can use the same SDK with OpenAI, Anthropic, Bedrock, Azure, Vertex AI, or any other provider — while keeping the native Gemini request/response format.
+The Google GenAI SDK (`@google/genai` for JS, `google-genai` for Python) provides a native interface for calling Gemini models. By pointing it to LiteLLM, you can use the same SDK with OpenAI, Anthropic, Bedrock, Azure, Vertex AI, or any other provider while keeping the native Gemini request/response format.
 
 ## Why Use LiteLLM with Google GenAI SDK?
 
@@ -231,7 +231,7 @@ print(response2.text)
 
 ## Advanced: Use Any Model with the GenAI SDK
 
-By default, the GenAI SDK talks to Gemini models. But with LiteLLM's router, you can route GenAI SDK requests to **any provider** — Anthropic, OpenAI, Bedrock, etc.
+By default, the GenAI SDK talks to Gemini models. But with LiteLLM's router, you can route GenAI SDK requests to **any provider**: Anthropic, OpenAI, Bedrock, etc.
 
 This works by using `model_group_alias` to map Gemini model names to your desired provider models. LiteLLM handles the format translation internally.
 

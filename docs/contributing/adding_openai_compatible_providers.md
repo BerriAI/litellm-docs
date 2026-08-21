@@ -108,7 +108,7 @@ print(response.output)
 
 If `supported_endpoints` is omitted, it defaults to `[]`. Chat completions is always enabled for JSON providers regardless of this field.
 
-The provider inherits all request/response handling from OpenAI's Responses API — streaming, tools, and all standard parameters work out of the box.
+The provider inherits all request/response handling from OpenAI's Responses API, so streaming, tools, and every standard parameter work without extra code.
 
 ## Usage
 

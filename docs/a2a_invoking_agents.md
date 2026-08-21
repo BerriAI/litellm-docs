@@ -21,7 +21,7 @@ Use the [A2A Python SDK](https://pypi.org/project/a2a-sdk) (**>= 1.1.0**) to inv
 pip install "a2a-sdk>=1.1.0,<2.0" httpx
 ```
 
-Pin `protocolVersion: "1.0"` on the agent (recommended) so responses match the 1.x SDK. For legacy `0.3` wire format, pin `"0.3"` instead — see [Protocol versioning](./a2a#protocol-versioning).
+Pin `protocolVersion: "1.0"` on the agent (recommended) so responses match the 1.x SDK. For legacy `0.3` wire format, pin `"0.3"` instead. See [Protocol versioning](./a2a#protocol-versioning).
 
 :::info Migration from a2a-sdk 0.3.x
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
 ### Streaming
 
-In a2a-sdk 1.x, set `streaming=True` on `ClientConfig` and iterate `send_message` — the same API handles streaming and non-streaming:
+In a2a-sdk 1.x, set `streaming=True` on `ClientConfig` and iterate `send_message`. The same API handles streaming and non-streaming:
 
 ```python showLineNumbers title="invoke_a2a_agent_streaming.py"
 import asyncio

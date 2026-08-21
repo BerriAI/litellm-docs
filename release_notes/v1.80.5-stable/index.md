@@ -67,7 +67,7 @@ pip install litellm==1.80.5
 <br/>
 <br/>
 
-This release introduces **LiteLLM Prompt Studio** - a comprehensive prompt management solution built directly into the LiteLLM UI. Create, test, and version your prompts without leaving your browser.
+This release introduces **LiteLLM Prompt Studio** - a prompt management solution built directly into the LiteLLM UI. Create, test, and version your prompts without leaving your browser.
 
 You can now do the following on LiteLLM Prompt Studio:
 
@@ -283,7 +283,7 @@ New interactive playground UI enables side-by-side comparison of multiple LLM mo
     - Fix audio transcription cost tracking - [PR #16478](https://github.com/BerriAI/litellm/pull/16478)
     - Add missing shared_sessions to audio/transcriptions - [PR #16858](https://github.com/BerriAI/litellm/pull/16858)
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Fix videos tagging - [PR #16770](https://github.com/BerriAI/litellm/pull/16770)
 
 #### Bugs
@@ -365,7 +365,7 @@ New interactive playground UI enables side-by-side comparison of multiple LLM mo
 
 ### Logging
 
-- **[Arize Phoenix](../../docs/observability/arize_phoenix)**
+- **[Arize Phoenix](/docs/observability/phoenix_integration)**
     - Fix arize phoenix logging - [PR #16301](https://github.com/BerriAI/litellm/pull/16301)
     - Arize Phoenix - root span logging - [PR #16949](https://github.com/BerriAI/litellm/pull/16949)
 
@@ -378,14 +378,14 @@ New interactive playground UI enables side-by-side comparison of multiple LLM mo
 
 ### Guardrails
 
-- **[IBM Guardrails](../../docs/proxy/guardrails)**
+- **[IBM Guardrails](/docs/proxy/guardrails/quick_start)**
     - Fix IBM Guardrails optional params, add extra_headers field - [PR #16771](https://github.com/BerriAI/litellm/pull/16771)
 
-- **[Noma Guardrail](../../docs/proxy/guardrails)**
+- **[Noma Guardrail](/docs/proxy/guardrails/quick_start)**
     - Use LiteLLM key alias as fallback Noma applicationId in NomaGuardrail - [PR #16832](https://github.com/BerriAI/litellm/pull/16832)
     - Allow custom violation message for tool-permission guardrail - [PR #16916](https://github.com/BerriAI/litellm/pull/16916)
 
-- **[Grayswan Guardrail](../../docs/proxy/guardrails)**
+- **[Grayswan Guardrail](/docs/proxy/guardrails/quick_start)**
     - Grayswan guardrail passthrough on flagged - [PR #16891](https://github.com/BerriAI/litellm/pull/16891)
 
 - **General Guardrails**
@@ -406,7 +406,7 @@ New interactive playground UI enables side-by-side comparison of multiple LLM mo
 
 ### Secret Managers
 
-- **[AWS Secrets Manager](../../docs/secret_managers)**
+- **[AWS Secrets Manager](/docs/secret)**
     - Adds IAM role assumption support for AWS Secret Manager - [PR #16887](https://github.com/BerriAI/litellm/pull/16887)
 
 ---

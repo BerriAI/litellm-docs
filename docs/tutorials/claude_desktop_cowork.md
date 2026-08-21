@@ -65,7 +65,7 @@ Restart Claude Desktop. Open a new conversation and send a message. All requests
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-04-22/9e72faf1-0b5e-49d5-8ac4-b64dcd2b2f94/ascreenshot_813a1b584a1f4523ab7f7702f5985be0_text_export.jpeg)
 
-You can verify traffic is flowing by checking the LiteLLM Dashboard under **Usage** — you should see requests attributed to your virtual key.
+You can verify traffic is flowing by checking the LiteLLM Dashboard under **Usage**, where you should see requests attributed to your virtual key.
 
 ---
 

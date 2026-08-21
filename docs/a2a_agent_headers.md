@@ -19,7 +19,7 @@ All three methods can be combined. **Static headers always win** on key conflict
 
 ---
 
-## Method 1 — Static Headers
+## Method 1: Static Headers
 
 Admin-configured headers that are always sent to the backend agent. Use this for server-to-server tokens or internal credentials that clients should never see or override.
 
@@ -64,7 +64,7 @@ curl -X PATCH http://localhost:4000/v1/agents/{agent_id} \
 </TabItem>
 </Tabs>
 
-**Client call — no special headers needed:**
+**Client call (no special headers needed):**
 
 ```bash
 curl -X POST http://localhost:4000/a2a/my-agent \
@@ -80,7 +80,7 @@ The backend agent receives `Authorization: Bearer internal-server-token` without
 
 ---
 
-## Method 2 — Forward Client Headers
+## Method 2: Forward Client Headers
 
 Admin specifies a list of header **names**. When the client sends a request that includes those headers, LiteLLM extracts their values and forwards them to the backend agent. The client controls the values; the admin controls which headers are eligible to be forwarded.
 
@@ -109,7 +109,7 @@ curl -X POST http://localhost:4000/v1/agents \
 </TabItem>
 </Tabs>
 
-**Client call — include the forwarded headers:**
+**Client call (include the forwarded headers):**
 
 ```bash
 curl -X POST http://localhost:4000/a2a/my-agent \
@@ -127,7 +127,7 @@ Header name matching is **case-insensitive**. If the client sends `X-API-Key` an
 
 ---
 
-## Method 3 — Convention-Based Forwarding
+## Method 3: Convention-Based Forwarding
 
 Clients can forward headers to a specific agent without any admin pre-configuration by using the naming convention:
 
@@ -153,7 +153,7 @@ curl -X POST http://localhost:4000/a2a/my-agent \
   -d '{ ... }'
 ```
 
-The `x-a2a-other-agent-authorization` header sent in the same request is **not** forwarded to `my-agent` — it is silently ignored.
+The `x-a2a-other-agent-authorization` header sent in the same request is **not** forwarded to `my-agent`; it is silently ignored.
 
 :::tip Matches both agent name and agent ID
 Both the human-readable name (e.g. `my-agent`) and the UUID (e.g. `abc123-...`) are valid. Use whichever is convenient for the client.
@@ -248,5 +248,5 @@ Both fields are returned in `GET /v1/agents` and `GET /v1/agents/{agent_id}`:
 ```
 
 :::caution
-`static_headers` values are stored in the database and returned by the API. Treat them as you would any credential — do not store sensitive long-lived tokens here if your API is publicly accessible. Consider using short-lived tokens or environment-injected secrets instead.
+`static_headers` values are stored in the database and returned by the API. Treat them as you would any credential: do not store sensitive long-lived tokens here if your API is publicly accessible. Consider using short-lived tokens or environment-injected secrets instead.
 :::

@@ -1,6 +1,6 @@
 # Cursor Cloud Agents
 
-Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api) — launch and manage cloud agents that work on your repositories, in native format (no translation).
+Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api). Launch and manage cloud agents that work on your repositories, in native format (no translation).
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|

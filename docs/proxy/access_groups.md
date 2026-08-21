@@ -8,7 +8,7 @@ Access Groups simplify how you define and manage resource access across your org
 
 ## Overview
 
-**Access Groups** let you define a reusable set of allowed resources—models, MCP servers, and agents—in a single place. One group can grant access to all three resource types. Simply attach the group to a key or team, and they get access to everything defined in that group.
+**Access Groups** let you define a reusable set of allowed resources (models, MCP servers, and agents) in a single place. One group can grant access to all three resource types. Attach the group to a key or team, and they get access to everything defined in that group.
 
 - **Unified resource control** – One group controls access to models, MCP servers, and agents together
 - **Reusable** – Define once, attach to many keys or teams
@@ -84,7 +84,7 @@ You can also attach an Access Group to a team when creating or editing the team.
 
 ### Team-based Access
 
-Create groups like "Engineering", "Data Science", or "Product" with the models, MCP servers, and agents each team needs. Attach the group to the team—no need to configure each resource on every key.
+Create groups like "Engineering", "Data Science", or "Product" with the models, MCP servers, and agents each team needs. Attach the group to the team, with no need to configure each resource on every key.
 
 ### Environment Separation
 

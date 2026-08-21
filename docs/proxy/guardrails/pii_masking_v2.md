@@ -125,9 +125,9 @@ My credit card is 4111-1111-1111-1111 and my email is test@example.com.
 
 #### 3.2 Test in code
 
-In order to apply a guardrail for a request send `guardrails=["presidio-pii"]` in the request body. 
+To apply a guardrail for a request send `guardrails=["presidio-pii"]` in the request body. 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Masked PII call" value = "not-allowed">

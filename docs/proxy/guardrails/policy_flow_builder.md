@@ -2,7 +2,7 @@
 
 The Policy Flow Builder lets you design guardrail pipelines with **conditional execution**. Instead of running guardrails independently, you chain them into ordered steps and control what happens when each guardrail **passes**, **fails a policy check** (content intervention), or hits a **technical error** (e.g. timeout, unreachable provider, missing guardrail).
 
-Two powerful patterns it enables: **guardrail fallbacks** (try a different guardrail when one fails) and **retrying the same guardrail** (run the same guardrail again if it fails, e.g. to handle transient errors). With **`on_error`**, you can treat **technical** failures differently from **policy** failures—for example, fall back to another provider when the primary API errors, while still blocking on flagged content.
+Two patterns it enables: **guardrail fallbacks** (try a different guardrail when one fails) and **retrying the same guardrail** (run the same guardrail again if it fails, e.g. to handle transient errors). With **`on_error`**, you can treat **technical** failures differently from **policy** failures, for example falling back to another provider when the primary API errors while still blocking on flagged content.
 
 ## When to use the Flow Builder
 
@@ -97,7 +97,7 @@ For each step you choose an action for **pass**, **fail**, and optionally **erro
 
 5. Click the **guardrail search** field on the first step
 
-![Select first guardrail — search field](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/640f699b-bdde-4e6d-a226-1fede9477b22/ascreenshot_27f14445b78b4e61872f3f95c1c9bacd_text_export.jpeg)
+![Select first guardrail, search field](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/640f699b-bdde-4e6d-a226-1fede9477b22/ascreenshot_27f14445b78b4e61872f3f95c1c9bacd_text_export.jpeg)
 
 6. Choose **Test Moderation** (or your primary guardrail)
 
@@ -113,19 +113,19 @@ For each step you choose an action for **pass**, **fail**, and optionally **erro
 
 9. Open the next outcome’s search/dropdown (e.g. **ON FAIL**)
 
-![Configure another branch — search field](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/715fc3ad-f245-4ee8-bb36-cc13400d635d/ascreenshot_395fece82c124d4d826fb5d84c9c0529_text_export.jpeg)
+![Configure another branch, search field](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/715fc3ad-f245-4ee8-bb36-cc13400d635d/ascreenshot_395fece82c124d4d826fb5d84c9c0529_text_export.jpeg)
 
 10. Set that branch to **Next Step** if failed checks should continue to your backup guardrail
 
-![ON FAIL or branch — Next Step](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/83156e9b-fc3f-4cc2-a6cb-2a13a5e77b06/ascreenshot_c61429bf7b354063afc57c40a6b45c7a_text_export.jpeg)
+![ON FAIL or branch, Next Step](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/83156e9b-fc3f-4cc2-a6cb-2a13a5e77b06/ascreenshot_c61429bf7b354063afc57c40a6b45c7a_text_export.jpeg)
 
 11. Click **+** between steps to add a second guardrail
 
-![Add step — plus control](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/e76cff13-af73-4775-90f6-4d29cb97d401/ascreenshot_52c478e7afd5410f9f63b616c753c851_text_export.jpeg)
+![Add step, plus control](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/e76cff13-af73-4775-90f6-4d29cb97d401/ascreenshot_52c478e7afd5410f9f63b616c753c851_text_export.jpeg)
 
 12. Open the guardrail search field on the new step
 
-![Second step — guardrail search](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/5c1c4eea-d7da-41e5-bebd-945e97562aa5/ascreenshot_cef70e9146b148b1936e721638de0783_text_export.jpeg)
+![Second step, guardrail search](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/5c1c4eea-d7da-41e5-bebd-945e97562aa5/ascreenshot_cef70e9146b148b1936e721638de0783_text_export.jpeg)
 
 13. Select **Insults & Personal Attacks** (or your fallback / stricter guardrail)
 
@@ -133,15 +133,15 @@ For each step you choose an action for **pass**, **fail**, and optionally **erro
 
 14. Set **Next Step** or **Block** on the branches as needed for this step
 
-![Second step branch — Next Step](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/c5fad953-4f4b-47ec-ab6d-81d21b2fb7b8/ascreenshot_b515fadec0534c6a9b9d66091398d82d_text_export.jpeg)
+![Second step branch, Next Step](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/c5fad953-4f4b-47ec-ab6d-81d21b2fb7b8/ascreenshot_b515fadec0534c6a9b9d66091398d82d_text_export.jpeg)
 
 15. Set **ON PASS** to **Allow** when this guardrail should complete the pipeline successfully
 
-![Second step — Allow on pass](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/8210f32a-8704-41b1-97cc-7d183682a2a4/ascreenshot_23361af2b7da482a8d89025ab285a72e_text_export.jpeg)
+![Second step, Allow on pass](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/8210f32a-8704-41b1-97cc-7d183682a2a4/ascreenshot_23361af2b7da482a8d89025ab285a72e_text_export.jpeg)
 
 16. Open the branch where you want a **Custom Response** (e.g. **ON FAIL** on the last step)
 
-![Custom response — open branch selector](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/98ab3a2c-f22f-4478-a146-d5d26cae9b10/ascreenshot_6a3b673654e64ce29c8c93fbf30c52ed_text_export.jpeg)
+![Custom response, open branch selector](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/98ab3a2c-f22f-4478-a146-d5d26cae9b10/ascreenshot_6a3b673654e64ce29c8c93fbf30c52ed_text_export.jpeg)
 
 17. Choose **Custom Response**
 
@@ -153,7 +153,7 @@ For each step you choose an action for **pass**, **fail**, and optionally **erro
 
 19. Confirm or edit the message in **Enter custom response...** as needed
 
-![Custom response — confirm message](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/f9a4711d-655c-4f15-b0ea-6b7d33fe6e60/ascreenshot_5df4b465bc484d8f86a4af5a45e9ab42_text_export.jpeg)
+![Custom response, confirm message](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/f9a4711d-655c-4f15-b0ea-6b7d33fe6e60/ascreenshot_5df4b465bc484d8f86a4af5a45e9ab42_text_export.jpeg)
 
 20. Open **Test Pipeline**
 
@@ -169,7 +169,7 @@ For each step you choose an action for **pass**, **fail**, and optionally **erro
 
 23. Expand **Step 2** (e.g. **Insults & Personal Attacks**) to confirm **PASS** and **Allow** after the fallback
 
-![Expand Step 2 — second guardrail outcome](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/cac5273c-dd4f-48a0-af58-12c428d0f0d0/ascreenshot_f74da58e280a47319a7d2fa41519f4fb_text_export.jpeg)
+![Expand Step 2, second guardrail outcome](https://colony-recorder.s3.amazonaws.com/files/2026-04-15/cac5273c-dd4f-48a0-af58-12c428d0f0d0/ascreenshot_f74da58e280a47319a7d2fa41519f4fb_text_export.jpeg)
 
 ## Config (YAML)
 

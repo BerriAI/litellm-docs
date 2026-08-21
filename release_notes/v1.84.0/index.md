@@ -45,7 +45,7 @@ pip install litellm==1.84.0
 
 ## Version naming change
 
-> **Starting with `v1.84.0`, LiteLLM versions follow [PEP 440](https://peps.python.org/pep-0440/).** Stable releases drop the `-stable` suffix — the Docker tag for this release is `litellm:1.84.0`, not `litellm:1.84.0-stable`. Every Docker tag is published in both bare and `v`-prefixed form (`litellm:1.84.0` and `litellm:v1.84.0` resolve to the same image), so existing pins that include the `v` prefix keep working. PyPI versions remain the bare PEP 440 form: `pip install litellm==1.84.0`. If you pin LiteLLM in deployment tooling (Helm values, `requirements.txt`, Renovate rules, etc.), update those pins to the PEP 440 form.
+> **Starting with `v1.84.0`, LiteLLM versions follow [PEP 440](https://peps.python.org/pep-0440/).** Stable releases drop the `-stable` suffix, so the Docker tag for this release is `litellm:1.84.0`, not `litellm:1.84.0-stable`. Every Docker tag is published in both bare and `v`-prefixed form (`litellm:1.84.0` and `litellm:v1.84.0` resolve to the same image), so existing pins that include the `v` prefix keep working. PyPI versions remain the bare PEP 440 form: `pip install litellm==1.84.0`. If you pin LiteLLM in deployment tooling (Helm values, `requirements.txt`, Renovate rules, etc.), update those pins to the PEP 440 form.
 
 Mapping from the legacy suffix scheme to the new PEP 440 scheme:
 
@@ -56,15 +56,15 @@ Mapping from the legacy suffix scheme to the new PEP 440 scheme:
 | Release candidate | `vX.Y.Z.rc.N` / `vX.Y.Z-rc.N` | `vX.Y.ZrcN` |
 | Dev / nightly | `vX.Y.Z-nightly` / `vX.Y.Z.dev.N` | `vX.Y.Z.devN` |
 
-This is a naming change only — release cadence, stability guarantees, and image contents are unchanged. The `v1.84.0-rc.1` tag (cut before the switch) keeps the legacy form for historical continuity; every tag from `v1.84.0` onward uses the PEP 440 form.
+This is a naming change only; release cadence, stability guarantees, and image contents are unchanged. The `v1.84.0-rc.1` tag (cut before the switch) keeps the legacy form for historical continuity; every tag from `v1.84.0` onward uses the PEP 440 form.
 
 ---
 
-> **Heads up — large bundle of behavioral changes.** This release consolidates a lot of reliability and hardening work that shipped in tight sequence. The **Important Behavior Changes** section below covers everything that changes a default, removes a configuration shortcut, or alters a request/response shape, with the opt-out you need to keep prior behavior. Read that section before upgrading a production deployment. If you already validated against `v1.84.0-rc.1`, see the **Changes since v1.84.0-rc.1** section for the post-rc delta.
+> **Heads up: large bundle of behavioral changes.** This release consolidates a lot of reliability and hardening work that shipped in tight sequence. The **Important Behavior Changes** section below covers everything that changes a default, removes a configuration shortcut, or alters a request/response shape, with the opt-out you need to keep prior behavior. Read that section before upgrading a production deployment. If you already validated against `v1.84.0-rc.1`, see the **Changes since v1.84.0-rc.1** section for the post-rc delta.
 
 ## Key Highlights
 
-- **Pass-through endpoints are authenticated by default.** The `auth` field on entries under `general_settings.pass_through_endpoints` now defaults to `true`. The previous "OSS gets unauthenticated forwarders by default; `auth: true` is enterprise-only" combination is gone — `auth: true` works on OSS, and operators who want an unauthenticated forwarder must set `auth: false` explicitly.
+- **Pass-through endpoints are authenticated by default.** The `auth` field on entries under `general_settings.pass_through_endpoints` now defaults to `true`. The previous "OSS gets unauthenticated forwarders by default; `auth: true` is enterprise-only" combination is gone: `auth: true` works on OSS, and operators who want an unauthenticated forwarder must set `auth: false` explicitly.
 - **Multi-pod budget enforcement is materially more accurate.** `RedisCache.async_increment` gains a `refresh_ttl` opt-in, spend counters opt into it, and stale in-memory counters are skipped on a clean Redis miss. `ResetBudgetJob` invalidates Redis counters alongside DB resets so refreshed counters get reset too.
 - **Prisma DB reconnects no longer freeze the event loop.** The reconnect path replaced `await self.db.disconnect()` (which called `subprocess.Popen.wait()` synchronously) with a SIGTERM→SIGKILL → fresh `Prisma()`+`connect()` sequence. Liveness probes stop failing during database flaps. Companion fix restores reconnect-and-retry on `PrismaClient.get_generic_data`.
 - **Memory footprint down ~700 MB** on a two-worker Docker deployment via lazy-loaded feature routers and lazy-loaded front page. First request to a lazy route incurs the import cost; subsequent requests are unchanged.
@@ -81,34 +81,34 @@ Everything below landed on top of `v1.84.0-rc.1` and is included in `v1.84.0`. I
 ### Hardening
 - **`/key/update` authorization checks** — [PR #27878](https://github.com/BerriAI/litellm/pull/27878)
 - **`/key/regenerate` ownership-rebind + premium-gate guards** — [PR #27793](https://github.com/BerriAI/litellm/pull/27793)
-- **Reject bare strings at file-input sinks** to prevent local-file reads via crafted request bodies — [PR #27762](https://github.com/BerriAI/litellm/pull/27762)
-- **Refuse remote-URL instance-fn loads** outside the config-file path — [PR #27801](https://github.com/BerriAI/litellm/pull/27801)
+- **Reject bare strings at file-input sinks** to prevent local-file reads via crafted request bodies. See [PR #27762](https://github.com/BerriAI/litellm/pull/27762)
+- **Refuse remote-URL instance-fn loads** outside the config-file path. See [PR #27801](https://github.com/BerriAI/litellm/pull/27801)
 - **Cover `extra_body` + `azure_ad_token` in banned-params check** — [PR #27898](https://github.com/BerriAI/litellm/pull/27898)
 - **MCP BYOK / OAuth: block SSRF fields in RAG ingest `vector_store` config; block client-side pricing injection via request body** — [PR #27892](https://github.com/BerriAI/litellm/pull/27892)
 
 ### Budget reservation
-- **Bound budget reservation per request** instead of pinning to the entire remaining team/key/user headroom on requests without `max_tokens` — [PR #27509](https://github.com/BerriAI/litellm/pull/27509)
+- **Bound budget reservation per request** instead of pinning to the entire remaining team/key/user headroom on requests without `max_tokens`. See [PR #27509](https://github.com/BerriAI/litellm/pull/27509)
 - **Image generation: reserve per-image cost** rather than max-tokens cost; gate strictly on model mode
 
 ### Health probes
-- **Re-expose `db` status on the unauthenticated `/health/readiness` payload** so external probes can distinguish DB-unreachable workers without auth — [PR #27866](https://github.com/BerriAI/litellm/pull/27866)
-- **UI fetches `litellm_version` + `is_detailed_debug` from `/health/readiness/details`** (auth-gated) since those fields were moved off the public payload — [PR #27896](https://github.com/BerriAI/litellm/pull/27896)
+- **Re-expose `db` status on the unauthenticated `/health/readiness` payload** so external probes can distinguish DB-unreachable workers without auth. See [PR #27866](https://github.com/BerriAI/litellm/pull/27866)
+- **UI fetches `litellm_version` + `is_detailed_debug` from `/health/readiness/details`** (auth-gated) since those fields were moved off the public payload. See [PR #27896](https://github.com/BerriAI/litellm/pull/27896)
 - **UI: disable retries on `/health/readiness/details` + cover token forwarding**
 
 ### MCP
-- **Forward configured `extra_headers` from the MCP client to upstream OpenAPI HTTP calls** (closes [#26794](https://github.com/BerriAI/litellm/issues/26794)) — [PR #27383](https://github.com/BerriAI/litellm/pull/27383)
+- **Forward configured `extra_headers` from the MCP client to upstream OpenAPI HTTP calls** (closes [#26794](https://github.com/BerriAI/litellm/issues/26794)). See [PR #27383](https://github.com/BerriAI/litellm/pull/27383)
 - **On the same forwarding path, `static_headers` now win over caller-forwarded `extra_headers` on name conflict** (case-insensitive). See [Important Behavior Changes → MCP](#openapi-mcp-static_headers-now-win-over-caller-forwarded-extra_headers) below.
 
 ### Routing under `SERVER_ROOT_PATH`
-- **Lazy-feature loading under a non-empty `SERVER_ROOT_PATH`** no longer 404s on routes such as `/api/v1/policies/attachments/list`; strip the prefix before lazy-feature match and cache the normalized path at middleware init — [PR #27812](https://github.com/BerriAI/litellm/pull/27812)
+- **Lazy-feature loading under a non-empty `SERVER_ROOT_PATH`** no longer 404s on routes such as `/api/v1/policies/attachments/list`; strip the prefix before lazy-feature match and cache the normalized path at middleware init. See [PR #27812](https://github.com/BerriAI/litellm/pull/27812)
 
 ### Tagging & metrics
-- **⚠️ Reverted the v1.83.10 caller-tag strip / `allow_client_tags` opt-in** — caller-supplied tags merge into request metadata again; the strip is no longer enforced. **See the new entry under Important Behavior Changes → Tags below for the full impact.** — [PR #27789](https://github.com/BerriAI/litellm/pull/27789)
+- **⚠️ Reverted the v1.83.10 caller-tag strip / `allow_client_tags` opt-in.** Caller-supplied tags merge into request metadata again; the strip is no longer enforced. **See the new entry under Important Behavior Changes → Tags below for the full impact.** See [PR #27789](https://github.com/BerriAI/litellm/pull/27789)
 - **Point the `/metrics` 401 hint at the actual opt-out flag** — [PR #27505](https://github.com/BerriAI/litellm/pull/27505)
 
 ### Packaging
-- **Relax core runtime pins to ranges** so downstream packages can resolve a single shared `openai`/etc. version — [PR #27241](https://github.com/BerriAI/litellm/pull/27241)
-- **Raise `jinja2` floor in `[project.dependencies]` to `>=3.1.6`** to match the lockfile — [PR #27552](https://github.com/BerriAI/litellm/pull/27552)
+- **Relax core runtime pins to ranges** so downstream packages can resolve a single shared `openai`/etc. version. See [PR #27241](https://github.com/BerriAI/litellm/pull/27241)
+- **Raise `jinja2` floor in `[project.dependencies]` to `>=3.1.6`** to match the lockfile. See [PR #27552](https://github.com/BerriAI/litellm/pull/27552)
 
 ---
 
@@ -119,7 +119,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 ### Auth & request ingress
 
 #### Pass-through endpoints default to `auth: true`
-- **What changed:** `PassThroughGenericEndpoint.auth` now defaults to `True`. The runtime dispatch in `user_api_key_auth.py` reads endpoints as raw dicts, so `endpoint.get("auth", True)` applies even when the dict has no explicit key. The `premium_user` gate on `auth: true` was also removed — OSS deployments can now use `auth: true`.
+- **What changed:** `PassThroughGenericEndpoint.auth` now defaults to `True`. The runtime dispatch in `user_api_key_auth.py` reads endpoints as raw dicts, so `endpoint.get("auth", True)` applies even when the dict has no explicit key. The `premium_user` gate on `auth: true` was also removed, so OSS deployments can now use `auth: true`.
 - **Who is affected:** Any pass-through entry in `general_settings.pass_through_endpoints` that omitted `auth:`. Prior to this rc that meant unauthenticated; it now means LiteLLM-key-authenticated.
 - **Restore prior behavior:** Set `auth: false` explicitly on every pass-through entry that is meant to be public (e.g. webhook receivers).
   ```yaml
@@ -134,7 +134,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 - **What changed:**
   1. Clientside `api_base` / `base_url` are validated against `validate_url` when `litellm.user_url_validation` is enabled.
   2. When a request redirects `api_base` / `base_url`, admin-configured provider credentials and per-deployment metadata (OCI signing keys, AWS / Azure / Vertex tokens, observability vars, every field on `CredentialLiteLLMParams`) are dropped before the call is forwarded.
-  3. The provider-inference matcher in `get_llm_provider_logic.py` no longer does an unanchored substring match — it now compares parsed URL hostname + segment-bounded path prefix.
+  3. The provider-inference matcher in `get_llm_provider_logic.py` no longer does an unanchored substring match; it now compares parsed URL hostname + segment-bounded path prefix.
   4. The blocklist for clientside-overridable params adds `aws_bedrock_runtime_endpoint`, `langsmith_base_url`, `langfuse_host`, `posthog_host`, `braintrust_host`, `slack_webhook_url`, `s3_endpoint_url`, `sagemaker_base_url`, `deployment_url`. The old "blocklist is a no-op when `api_key` is non-empty" clause is removed.
 - **Who is affected:** Anyone passing `api_base` (or any of the newly-blocked fields) at request time and relying on the implicit-`api_key` bypass to thread it through.
 - **Restore prior behavior:** Use the documented BYOK paths instead of the bypass:
@@ -144,30 +144,30 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
   The 400 returned by the proxy on a blocked request names the offending field and points at the same two settings.
 
 #### Master-key requests now propagate an alias instead of the master-key hash
-- **What changed:** When a request authenticates with the master key, the `UserAPIKeyAuth.api_key` / `token` value handed to downstream code is now the constant `LITELLM_PROXY_MASTER_KEY_ALIAS = "litellm_proxy_master_key"`. The cache lookup is unchanged (still keyed on `hash_token(master_key)`). `_is_master_key` no longer accepts the SHA-256 hash form — only the raw master key.
+- **What changed:** When a request authenticates with the master key, the `UserAPIKeyAuth.api_key` / `token` value handed to downstream code is now the constant `LITELLM_PROXY_MASTER_KEY_ALIAS = "litellm_proxy_master_key"`. The cache lookup is unchanged (still keyed on `hash_token(master_key)`). `_is_master_key` no longer accepts the SHA-256 hash form, only the raw master key.
 - **Who is affected:** Anything joining or filtering on the prior master-key hash value, including custom dashboards over spend logs and Prometheus `/metrics` queries pinned to the hash literal.
-- **Restore prior behavior:** None — operators querying spend logs or metrics for master-key activity should switch their filter to the alias `"litellm_proxy_master_key"`.
+- **Restore prior behavior:** None. Operators querying spend logs or metrics for master-key activity should switch their filter to the alias `"litellm_proxy_master_key"`.
 
 #### Invite-link onboarding no longer mints a key from `GET`
 - **What changed:** `GET /onboarding/get_token` returns a 15-minute signed onboarding JWT bound to invite + user id; it does **not** mint a `sk-...` virtual key. `POST /onboarding/claim_token` requires that JWT and atomically reserves the invite via `update_many(... is_accepted=False, ... → True)`.
 - **Who is affected:** Any tooling that consumed `GET /onboarding/get_token` for an embedded `sk-...` and treated it as a usable session key before completing the password claim.
-- **Restore prior behavior:** None — clients must call `POST /onboarding/claim_token` to obtain the live key.
+- **Restore prior behavior:** None. Clients must call `POST /onboarding/claim_token` to obtain the live key.
 
 #### CLI SSO login flow uses a server-side session
 - **What changed:** `litellm-proxy login` now starts a CLI SSO flow that returns a login id + polling secret + terminal verification code. The browser callback must confirm the terminal code before the polling endpoint returns the JWT.
-- **Who is affected:** Anyone running an older `litellm-proxy` CLI against an upgraded proxy — the old caller-supplied-handle handoff is gone.
-- **Restore prior behavior:** None — upgrade the CLI alongside the proxy.
+- **Who is affected:** Anyone running an older `litellm-proxy` CLI against an upgraded proxy, since the old caller-supplied-handle handoff is gone.
+- **Restore prior behavior:** None. Upgrade the CLI alongside the proxy.
 
 #### Team self-join (`_is_available_team`) only allows self-add as `role=user`
 - **What changed:**
   - `/team/member_add`: when the caller is not an admin and the team is "available," the request must add **only the caller themselves** with **`role="user"`**. Bulk shapes are checked the same way; lists mixing a valid self-entry with a `role="admin"` entry are rejected. Email-only members on the self-join path are rejected.
-  - `/team/permissions_update`: the `_is_available_team` clause is removed entirely — only proxy/team/org admins can update `team_member_permissions`.
+  - `/team/permissions_update`: the `_is_available_team` clause is removed entirely, so only proxy/team/org admins can update `team_member_permissions`.
 - **Who is affected:** Any flow that relied on the blanket bypass to either add an admin to an available team without admin privileges, or to mutate `team_member_permissions` from a non-admin context.
-- **Restore prior behavior:** None — perform admin-scoped operations with an admin key.
+- **Restore prior behavior:** None. Perform admin-scoped operations with an admin key.
 
 #### Guardrail modification permission gates on key presence
 - **What changed:** The guardrail-modification authz check in `auth_checks.py` now gates on intent (whether the key is present in the request) rather than payload truthiness. Some previously-accepted shapes will now 403.
-- **Restore prior behavior:** None — flow updates required for non-admin callers that previously slipped past on falsy payloads.
+- **Restore prior behavior:** None. Flow updates are required for non-admin callers that previously slipped past on falsy payloads.
 
 #### Untrusted root control fields are stripped from client requests
 - **What changed:** `_UNTRUSTED_ROOT_CONTROL_FIELDS` in `litellm_pre_call_utils.py` includes `mock_response`, `mock_tool_calls`, redaction-bypass controls, and a few others. They are stripped from client requests unless the calling key/team carries `allow_client_mock_response: true` (for `mock_response` / `mock_tool_calls`) or the corresponding admin-opt-in metadata for the redaction bypass. Pillar guardrail caching headers and Bedrock dynamic evaluation overrides are also filtered when not explicitly allowed.
@@ -190,7 +190,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 #### Credentials redacted; `/vector_store/update` is per-store gated
 - **What changed:**
   - `/vector_store/list`, `/vector_store/info`, `/vector_store/update` redact credential-bearing values inside the persisted `litellm_params` (handles dicts, JSON-string-serialized params, and nested-dict shapes like `litellm_embedding_config`).
-  - `/vector_store/update` is now gated by `_fetch_and_authorize_vector_store` — same per-store access check `/vector_store/info` already had.
+  - `/vector_store/update` is now gated by `_fetch_and_authorize_vector_store`, the same per-store access check `/vector_store/info` already had.
   - `SensitiveDataMasker` adds plural `"credentials"` to its default sensitive-pattern set, so segment-exact matching catches `vertex_credentials`, `aws_credentials`, etc. (Latent fix that affects every default-instantiated masker, not just vector stores.)
   - `get_vector_store_info` and `update_vector_store` re-raise `HTTPException` instead of letting the catch-all downgrade `403` / `404` to `500`.
 - **Who is affected:** Anything reading `litellm_params` off these responses to recover provider keys, or any non-store-admin caller mutating arbitrary vector stores via `/vector_store/update`.
@@ -212,7 +212,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 #### Encrypted user-scoped MCP credentials at rest
 - **What changed:** Writes to `LiteLLM_MCPUserCredentials.credential_b64` go through `encrypt_value_helper` (nacl SecretBox) instead of plain `urlsafe_b64encode`. The read path tries nacl decryption first and falls back to plain `urlsafe_b64decode` for legacy rows; existing rows stay readable.
 - **Who is affected:** Operators reading the table directly; the column contents change shape on first re-write.
-- **Restore prior behavior:** None — backward-compat read path keeps legacy rows working until they are next written.
+- **Restore prior behavior:** None. The backward-compat read path keeps legacy rows working until they are next written.
 
 #### OAuth metadata discovery follows SSRF guard
 - **What changed:** The two URLs MCP discovery follows (`resource_metadata` from `WWW-Authenticate`, and `authorization_servers[0]` from protected-resource-metadata) are now subject to `async_safe_get`. Same-authority metadata fetches stay direct (with `follow_redirects=False`); cross-origin fetches are validated via the existing user URL validation policy. Public federated providers (Azure Entra, Google, Okta, GitHub) remain supported.
@@ -227,7 +227,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 #### MCP OAuth root endpoint resolves with request visibility rules
 - **What changed:** Root-endpoint fallback resolves the single OAuth2 server using the same visibility rules as explicit server-name lookup; non-visible servers are no longer selected via the fallback path. The callback redirect path validates the full client redirect URI carried in state and appends parameters without dropping an existing query string.
-- **Restore prior behavior:** None — adjust server visibility rather than relying on the fallback.
+- **Restore prior behavior:** None. Adjust server visibility rather than relying on the fallback.
 
 #### OpenAPI MCP: `static_headers` now win over caller-forwarded `extra_headers`
 - **What changed:** v1.84.0 introduced header forwarding for OpenAPI-backed MCP servers (`spec_path:` configs) via [PR #27383](https://github.com/BerriAI/litellm/pull/27383), letting you allowlist caller request headers into upstream OpenAPI HTTP calls. When the same header name appears in both your YAML `static_headers` and the request-time `extra_headers` allowlist, the **`static_headers` value now wins**, with case-insensitive name comparison so `X-Tenant-Id` and `x-tenant-id` are treated as the same header. This matches how the managed MCP path has always behaved. `Authorization` is still overridden last by a BYOK `x-mcp-auth` token, if present.
@@ -242,14 +242,14 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
         - X-Tenant-Id
   ```
   a caller sending `X-Tenant-Id: evil-corp` will now have `X-Tenant-Id: acme-corp` sent upstream. Any header in `extra_headers` that does **not** collide with `static_headers` is still forwarded unchanged.
-- **Who is affected:** Operators who set the same header name in both `static_headers` and `extra_headers` on an OpenAPI MCP server, and who were relying on the caller's value taking effect. (Note: this only ever shipped in the v1.84.0 release-candidate cycle — no prior stable release forwarded `extra_headers` for OpenAPI MCPs at all.)
-- **Restore prior behavior:** None — if you actually want the caller to control a header, remove it from `static_headers` and keep it only in `extra_headers`, or use distinct names for the operator-pinned value and the caller-supplied value.
+- **Who is affected:** Operators who set the same header name in both `static_headers` and `extra_headers` on an OpenAPI MCP server, and who were relying on the caller's value taking effect. (Note: this only ever shipped in the v1.84.0 release-candidate cycle; no prior stable release forwarded `extra_headers` for OpenAPI MCPs at all.)
+- **Restore prior behavior:** None. If you actually want the caller to control a header, remove it from `static_headers` and keep it only in `extra_headers`, or use distinct names for the operator-pinned value and the caller-supplied value.
 
 ### UI / static assets
 
 #### `/get_image`, `/get_favicon`, `/get_logo_url`
 - **What changed:**
-  - Remote HTTP(S) `UI_LOGO_PATH` / `LITELLM_FAVICON_URL` are now browser-loaded via redirect — the proxy no longer fetches them server-side from these unauthenticated endpoints.
+  - Remote HTTP(S) `UI_LOGO_PATH` / `LITELLM_FAVICON_URL` are now browser-loaded via redirect; the proxy no longer fetches them server-side from these unauthenticated endpoints.
   - Local file paths still work in place, but the resolved file must have a supported image signature (`jpeg`, `png`, `gif`, `webp`, `ico`); non-image paths fall back to the bundled default.
   - `/get_logo_url` only returns HTTP(S) values; local filesystem paths are not disclosed.
   - Stale `cached_logo.jpg` files are no longer served by `/get_image`.
@@ -262,16 +262,16 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 #### "Store Prompts in Spend Logs" toggle moved to Admin Settings
 - **What changed:** Both "Store Prompts in Spend Logs" and "Maximum Spend Logs Retention Period" moved from a gear-icon modal on the Logs page to **Admin Settings → Logging Settings**. The gear was visible to non-admins and surfaced 403s on save.
-- **Restore prior behavior:** None — controls are admin-only as `/config/update` and `/config/list` already required.
+- **Restore prior behavior:** None. Controls are admin-only, as `/config/update` and `/config/list` already required.
 
 ### Tags
 
 #### ⚠️ Reverted: v1.83.10 caller-tag strip / `allow_client_tags` opt-in
-- **What changed:** **This release reverts the [v1.83.10 breaking change](/release_notes/v1.83.10/v1-83-10) that stripped caller-supplied tags unless the key/team metadata had `allow_client_tags: true`.** Caller-supplied tags from `x-litellm-tags`, body-level `tags`, and `metadata.tags` now flow into `metadata.tags` again and union with admin-configured static tags from key/team/project metadata — the proxy's behavior is back to what it was before v1.83.10. The pre-call strip block in `litellm_pre_call_utils.py` is removed, and the flag has no schema or endpoint footprint, so leftover `allow_client_tags: true` values on existing keys/teams are inert.
+- **What changed:** **This release reverts the [v1.83.10 breaking change](/release_notes/v1.83.10/v1-83-10) that stripped caller-supplied tags unless the key/team metadata had `allow_client_tags: true`.** Caller-supplied tags from `x-litellm-tags`, body-level `tags`, and `metadata.tags` now flow into `metadata.tags` again and union with admin-configured static tags from key/team/project metadata, so the proxy's behavior is back to what it was before v1.83.10. The pre-call strip block in `litellm_pre_call_utils.py` is removed, and the flag has no schema or endpoint footprint, so leftover `allow_client_tags: true` values on existing keys/teams are inert.
 - **Who is affected:**
   - Operators who set `metadata.allow_client_tags: true` on keys/teams to opt into client tags: the flag is now a no-op and can be cleaned up at leisure.
   - **Operators who relied on the v1.83.10 strip to block client-supplied tags reaching tag-based routing or tag-based spend attribution: the strip is no longer enforced.** Re-evaluate your tag-based routing and cost-attribution exposure before upgrading.
-- **Restore prior behavior:** None — the strip path is gone from the proxy. If caller-supplied tags must be blocked, filter them upstream (gateway / ingress) or in a custom pre-call hook.
+- **Restore prior behavior:** None. The strip path is gone from the proxy. If caller-supplied tags must be blocked, filter them upstream (gateway / ingress) or in a custom pre-call hook.
 
 ---
 
@@ -305,8 +305,8 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 #### Pricing updates
 
-- **OpenAI [`gpt-5.5-pro`](../../docs/providers/openai)** — corrected: was 2× OpenAI's published rate. Cost-tracking output for `gpt-5.5-pro` will drop to half what it reported under previous releases — operators reconciling spend reports across the upgrade boundary should expect the discontinuity. - [PR #26651](https://github.com/BerriAI/litellm/pull/26651)
-- **AWS Bedrock Anthropic Claude 4.5 / 4.6 / 4.7** (Global + US) — added `cache_creation_input_token_cost_above_1hr` (and the `_above_200k_tokens` LC variant for Sonnet 4.5). 1-hour-TTL prompt-cache writes on Bedrock now bill at the published 1.6× rate instead of falling back to the 5-minute rate (was undercounting by ~60%). - [PR #26800](https://github.com/BerriAI/litellm/pull/26800)
+- **OpenAI [`gpt-5.5-pro`](../../docs/providers/openai)**: corrected, since it was 2× OpenAI's published rate. Cost-tracking output for `gpt-5.5-pro` will drop to half what it reported under previous releases, so operators reconciling spend reports across the upgrade boundary should expect the discontinuity. - [PR #26651](https://github.com/BerriAI/litellm/pull/26651)
+- **AWS Bedrock Anthropic Claude 4.5 / 4.6 / 4.7** (Global + US): added `cache_creation_input_token_cost_above_1hr` (and the `_above_200k_tokens` LC variant for Sonnet 4.5). 1-hour-TTL prompt-cache writes on Bedrock now bill at the published 1.6× rate instead of falling back to the 5-minute rate (was undercounting by ~60%). - [PR #26800](https://github.com/BerriAI/litellm/pull/26800)
 
 #### Features
 
@@ -323,10 +323,10 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 - **[Anthropic](../../docs/providers/anthropic)**
     - JSON `response_format` + user tools on non-streaming: filtered tool calls + structured JSON merged into `content`; internal `json_tool_call` no longer surfaces - [PR #26222](https://github.com/BerriAI/litellm/pull/26222)
 - **[Ollama](../../docs/providers/ollama)**
-    - Forward `tool_calls` on assistant messages and `tool_call_id` on `role: tool` messages — fixes the infinite tool-call loop on multi-turn agents - [PR #26122](https://github.com/BerriAI/litellm/pull/26122)
+    - Forward `tool_calls` on assistant messages and `tool_call_id` on `role: tool` messages, fixing the infinite tool-call loop on multi-turn agents - [PR #26122](https://github.com/BerriAI/litellm/pull/26122)
 - **[Predibase](../../docs/providers/predibase)**
     - Migrate `transform_request` / `transform_response` into `transformation.py` (refactor, no behavior change) - [PR #25249](https://github.com/BerriAI/litellm/pull/25249)
-- **[AIHubMix](../../docs/providers/aihubmix) (new)**
+- **AIHubMix (new)**
     - First-class OpenAI-compatible provider entry - [PR #24294](https://github.com/BerriAI/litellm/pull/24294)
 
 ### Bug Fixes
@@ -335,7 +335,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
     - Preserve `items` on the array branch of `anyOf` schemas with `null` (Vertex was rejecting `INVALID_ARGUMENT`) - [PR #26675](https://github.com/BerriAI/litellm/pull/26675)
 - **[Bedrock](../../docs/providers/bedrock)**
     - `GET /v1/batches/{batch_id}` forwards `model` from the encoded id (was returning `LiteLLM doesn't support bedrock for 'create_batch'`) - [PR #26814](https://github.com/BerriAI/litellm/pull/26814)
-    - Pass-through stream interruption now flushes spend tracking — `GeneratorExit` from client disconnect was dropping per-chunk usage values - [PR #26719](https://github.com/BerriAI/litellm/pull/26719)
+    - Pass-through stream interruption now flushes spend tracking; `GeneratorExit` from client disconnect was dropping per-chunk usage values - [PR #26719](https://github.com/BerriAI/litellm/pull/26719)
     - Replace deprecated Claude 3.7 Sonnet test references with `claude-sonnet-4-5-20250929-v1:0` across 16 test files - [PR #26721](https://github.com/BerriAI/litellm/pull/26721)
 - **[Router custom pricing](../../docs/proxy/custom_pricing)**
     - Propagate custom `cost_per_token` from DB `model_info` through the fallback path - [PR #25888](https://github.com/BerriAI/litellm/pull/25888)
@@ -354,7 +354,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 #### Bugs
 
 - **[Responses API](../../docs/response_api)**
-    - `DELETE /openai/responses/{id}` no longer sends `json={}` — Azure now rejects the empty `{}` body with `unexpected_body` - [PR #26949](https://github.com/BerriAI/litellm/pull/26949)
+    - `DELETE /openai/responses/{id}` no longer sends `json={}`, since Azure now rejects the empty `{}` body with `unexpected_body` - [PR #26949](https://github.com/BerriAI/litellm/pull/26949)
 - **Pass-through endpoints**
     - Invoke post-call guardrails on non-streaming pass-through responses (`/vertex_ai/*`, `/openai/*`, `/bedrock/*`); opt-in only when guardrails are configured for the route - [PR #26262](https://github.com/BerriAI/litellm/pull/26262)
     - Inherit caller identity from `litellm_params` metadata when fabricating `UserAPIKeyAuth` for managed-files passthrough batch creation (Anthropic + Vertex AI) - [PR #26831](https://github.com/BerriAI/litellm/pull/26831)
@@ -378,7 +378,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 - **Model Health**
     - Pagination controls on the model health status page - [PR #26826](https://github.com/BerriAI/litellm/pull/26826)
 - **CLI / Workers**
-    - `--timeout_worker_healthcheck` CLI flag (env `TIMEOUT_WORKER_HEALTHCHECK`) — forwards to uvicorn 0.37.0+ Config kwarg; older uvicorn = warning + no-op; gunicorn / hypercorn paths untouched - [PR #26622](https://github.com/BerriAI/litellm/pull/26622)
+    - `--timeout_worker_healthcheck` CLI flag (env `TIMEOUT_WORKER_HEALTHCHECK`): forwards to uvicorn 0.37.0+ Config kwarg; older uvicorn = warning + no-op; gunicorn / hypercorn paths untouched - [PR #26622](https://github.com/BerriAI/litellm/pull/26622)
 - **Memory / lazy loading**
     - Lazy-load optional feature routers on first request (~700 MB lower memory on a two-worker Docker deployment) - [PR #26534](https://github.com/BerriAI/litellm/pull/26534)
     - Lazy-loaded openapi.json front page; spec generation moved to CI with a runtime stub fallback - [PR #26802](https://github.com/BerriAI/litellm/pull/26802)
@@ -390,7 +390,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 #### Bugs
 
 - **MCP UI**
-    - Tool Configuration panel on the MCP server edit page switched from `POST /mcp-rest/test/tools/list` (temp-session preview, requires inline creds) to `GET /mcp-rest/tools/list?server_id=...` (stored credentials). Saved servers with `auth_type` of `api_key` / `bearer_token` / `basic` / `authorization` now load tools without "Unable to load tools — Failed to connect to MCP server." - [PR #26002](https://github.com/BerriAI/litellm/pull/26002)
+    - Tool Configuration panel on the MCP server edit page switched from `POST /mcp-rest/test/tools/list` (temp-session preview, requires inline creds) to `GET /mcp-rest/tools/list?server_id=...` (stored credentials). Saved servers with `auth_type` of `api_key` / `bearer_token` / `basic` / `authorization` now load tools without "Unable to load tools. Failed to connect to MCP server." - [PR #26002](https://github.com/BerriAI/litellm/pull/26002)
 - **Teams**
     - Per-member rows with `max_budget=NULL` now fall through to team-level enforcement instead of silently disabling it - [PR #26809](https://github.com/BerriAI/litellm/pull/26809)
 - **Spend logs**
@@ -405,7 +405,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 ### Logging
 
 - **General**
-    - Opt-in retry settings for the Generic API logger batch send — transient `litellm.Timeout` / `httpx.ConnectTimeout` failures retry instead of dropping the batch - [PR #26645](https://github.com/BerriAI/litellm/pull/26645)
+    - Opt-in retry settings for the Generic API logger batch send, so transient `litellm.Timeout` / `httpx.ConnectTimeout` failures retry instead of dropping the batch - [PR #26645](https://github.com/BerriAI/litellm/pull/26645)
     - Cache GCP IAM token used for Redis (was being regenerated per-connection; synchronous `google-auth` + `google-cloud-iam` calls were freezing the asyncio event loop, causing ~25 s `INCRBYFLOAT` Redis spans in production) - [PR #26441](https://github.com/BerriAI/litellm/pull/26441)
     - Backfill streaming hidden response cost - [PR #26606](https://github.com/BerriAI/litellm/pull/26606)
 
@@ -449,8 +449,8 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 ## Performance / Loadbalancing / Reliability improvements
 
-- **[Routing Groups (per-model strategies)](../../docs/routing#routing-groups---per-model-strategies)**
-    - New `router_settings.routing_groups` schema binds a list of `model_name`s to its own `routing_strategy` and optional `routing_strategy_args`; ungrouped models fall back to the top-level `routing_strategy` (the implicit `default` group, name reserved). Each `model_name` may belong to at most one group — overlap raises `ValueError` at init. Updatable at runtime via `Router.update_settings(routing_groups=[...])` or `/config/update`; per-group state is rebuilt on update - [PR #27022](https://github.com/BerriAI/litellm/pull/27022)
+- **[Routing Groups (per-model strategies)](/docs/routing#routing-groups---per-model-strategies-and-callable-virtual-models)**
+    - New `router_settings.routing_groups` schema binds a list of `model_name`s to its own `routing_strategy` and optional `routing_strategy_args`; ungrouped models fall back to the top-level `routing_strategy` (the implicit `default` group, name reserved). Each `model_name` may belong to at most one group; overlap raises `ValueError` at init. Updatable at runtime via `Router.update_settings(routing_groups=[...])` or `/config/update`; per-group state is rebuilt on update - [PR #27022](https://github.com/BerriAI/litellm/pull/27022)
 - **Database reconnect**
     - Prisma reconnect no longer blocks the asyncio event loop. Replaces `await self.db.disconnect()` (which calls `subprocess.Popen.wait()` synchronously and freezes the loop for 30–120 s+ in production, failing K8s liveness probes) with SIGTERM → 0.5 s sleep → SIGKILL → fresh `Prisma()` + `connect()`. Direct-reconnect path delegates to `recreate_prisma_client` - [PR #26225](https://github.com/BerriAI/litellm/pull/26225)
     - `call_with_db_reconnect_retry` helper centralizes the reconnect-and-retry-once pattern. Restores the self-heal that 1.83.x lost on `PrismaClient.get_generic_data` (issue [#25143](https://github.com/BerriAI/litellm/issues/25143)) and harden the reconnect state machine - [PR #26756](https://github.com/BerriAI/litellm/pull/26756)
@@ -517,7 +517,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 Subtotal: 78 PRs
 
-## 05/14/2026 (`v1.84.0` — delta on top of rc.1)
+## 05/14/2026 (`v1.84.0`, delta on top of rc.1)
 
 * Hardening: 6
 * Budget reservation: 2

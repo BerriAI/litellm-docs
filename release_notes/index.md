@@ -10,7 +10,7 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.97.0 — Tool-Result Guardrails, Deployment Affinity & Viewer Parity](/release_notes/v1.97.0/v1-97-0)
+### [v1.97.0: Tool-Result Guardrails, Deployment Affinity & Viewer Parity](/release_notes/v1.97.0/v1-97-0)
 
 _August 15, 2026_
 

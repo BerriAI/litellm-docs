@@ -6,7 +6,7 @@ This page documents which A2A agent card fields LiteLLM supports today, how invo
 
 For provider-specific setup, see:
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 
 ## Agent card support
 
@@ -120,7 +120,7 @@ LiteLLM converts upstream agent responses to the `protocolVersion` pinned on eac
 
 Set this in the agent card UI or in `agent_card_params` at registration. Unsupported values are rejected with HTTP 400.
 
-Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config — pin `protocolVersion` only if your client expects a specific wire format.
+Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config. Pin `protocolVersion` only if your client expects a specific wire format.
 
 See [Protocol versioning](./a2a#protocol-versioning) for client negotiation when `protocolVersion` is not pinned.
 
@@ -229,5 +229,5 @@ You can edit supported fields from the agent detail page in the LiteLLM UI. Use 
 
 ## Related documentation
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 - [A2A Protocol Specification (v1.0)](https://a2a-protocol.org/latest/specification/)

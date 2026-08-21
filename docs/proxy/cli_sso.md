@@ -115,7 +115,7 @@ Example poll response (after SSO completes):
    uv tool install 'litellm[cli]'
    ```
 
-   Any of these gives you the `lite` command; if you already run a proxy server from `litellm[proxy]`, it ships there too. Start by typing it in your terminal:
+   Any of these gives you the `lite` command. A proxy server installed from `litellm[proxy]` ships it too, but that extra leaves out `keyring`, so its credential stays in a file instead of your OS keychain. Start by typing it in your terminal:
 
    ```shell
    lite
@@ -138,6 +138,8 @@ Example poll response (after SSO completes):
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you should be able to login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
+
+   The credential goes into your OS keychain, and `lite login` prints where it landed. On a machine with no keychain it falls back to `~/.litellm/token.json` with owner-only permissions. See [the `lite login` credential](./management_cli.md#the-lite-login-credential) for the details and for how to turn keychain storage off
 
 4. **Make a test request to view models**
 
@@ -162,6 +164,7 @@ Approve the sign-in in your browser. Waiting...
 
 Login successful!
 JWT Token: R46gzIdke6PgQZUiGctb...
+Credential stored in your OS keychain.
 You can now use the CLI without specifying --api-key
 ```
 
@@ -171,7 +174,7 @@ The classic `lite login` flow and virtual API keys keep working unchanged. `--pk
 
 ### The stored credential
 
-The CLI stores the credential at `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `key`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `refresh_token`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`
+The key and the refresh token both go to your OS keychain, the same place `lite login` puts the key, and the rest of the record goes to `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`, none of which gets anyone a key on its own. On a machine with no usable keychain the key and the refresh token fall back into that same file and `lite login` says so; treat `~/.litellm/token.json` as sensitive whenever it does, because anyone who can read it can exchange the refresh token for a working key. A `--pkce` login made with an earlier `lite` leaves its refresh token in the file until the next `lite` command reads it and moves it into the keychain
 
 The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, see [JWT Token Expiration](#jwt-token-expiration)). You do not need to log in again when it does: the next `lite` command that needs the key renews it with the refresh token and saves the new pair. Each renewal rotates the refresh token, and a refresh token that was already used is refused
 
@@ -224,7 +227,7 @@ Requests made with the key are attributed to your user and the team you picked, 
 lite logout
 ```
 
-`lite logout` sends the refresh token to the proxy's `POST /revoke` endpoint and then deletes `~/.litellm/token.json`. The refresh token is dead from that point on. The key itself is not revocable; it expires on its own within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
+`lite logout` sends the refresh token to the proxy's `POST /revoke` endpoint and then clears both stores, the keychain entry and `~/.litellm/token.json`. The refresh token is dead from that point on. The key itself is not revocable; it expires on its own within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
 
 Signing in again, with `lite login --pkce` or the classic `lite login`, does the same to the record it replaces: the new credential is saved first, then the previous login's refresh token is revoked, so an older copy of `token.json` cannot be renewed once you have signed in again. If the proxy cannot be reached for that revocation, the login still succeeds and says so
 

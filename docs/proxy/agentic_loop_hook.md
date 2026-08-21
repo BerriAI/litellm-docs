@@ -1,6 +1,6 @@
 # Agentic Loop Hook
 
-Build a `CustomLogger` callback that intercepts a model response, fulfills tool calls server-side, and reruns the model — transparently to the caller.
+Build a `CustomLogger` callback that intercepts a model response, fulfills tool calls server-side, and reruns the model, all transparently to the caller.
 
 :::info Supported call types
 - `async` only (sync calls do not trigger the hook)
@@ -56,7 +56,7 @@ class MyToolCallback(CustomLogger):
         )
 ```
 
-For `/v1/chat/completions`, override `async_build_chat_completion_agentic_loop_plan` instead — same idea, `optional_params` replaces `anthropic_messages_optional_request_params`.
+For `/v1/chat/completions`, override `async_build_chat_completion_agentic_loop_plan` instead. Same idea, with `optional_params` replacing `anthropic_messages_optional_request_params`.
 
 ## Register it
 
@@ -94,7 +94,7 @@ The dotted path must name the instance, not the class. `callbacks: ["my_module.M
 
 ## Loop safety
 
-- Default max reruns: `3` — override per-request with `kwargs["max_agentic_loops"]`
+- Default max reruns: `3`, override per-request with `kwargs["max_agentic_loops"]`
 - Identical tool-call fingerprints abort the loop automatically
 - Current depth is in `kwargs["_agentic_loop_depth"]`
 

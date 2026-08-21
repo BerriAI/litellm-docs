@@ -70,7 +70,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test Request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Successful Call" value="allowed">

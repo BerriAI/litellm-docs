@@ -79,7 +79,7 @@ Request with no `max_tokens` against `bedrock_mantle/openai.gpt-oss-120b` (`max_
 | Response | `prompt_tokens=10`, `completion_tokens=150`, no cache | — |
 | Post-call reconcile | `10 + 150` | `160` final |
 
-Without an explicit `max_tokens`, the pre-call hold is much larger than the final charge — same behavior Mantle documents for quota reservation.
+Without an explicit `max_tokens`, the pre-call hold is much larger than the final charge, the same behavior Mantle documents for quota reservation.
 
 ## How It Works
 

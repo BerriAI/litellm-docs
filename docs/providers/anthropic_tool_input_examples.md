@@ -9,7 +9,7 @@ Tool input examples is a beta feature. LiteLLM automatically detects tools with 
 - **Amazon Bedrock**: `advanced-tool-use-2025-11-20` (Claude Opus 4.5 only)
 - **Google Cloud Vertex AI**: Not supported
 
-You don't need to manually specify beta headers—LiteLLM handles this automatically.
+You don't need to manually specify beta headers; LiteLLM handles this automatically.
 :::
 
 ## When to Use Input Examples
@@ -328,7 +328,7 @@ Provide 2-5 examples per tool:
 
 ## Integration with Other Features
 
-Input examples work seamlessly with other Anthropic tool features:
+Input examples work together with other Anthropic tool features:
 
 ### With Tool Search
 

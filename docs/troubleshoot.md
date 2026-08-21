@@ -1,6 +1,6 @@
 # Issue Reporting
 
-When reporting issues, please include as much of the following as possible. It's okay if you can't provide everything—especially in production scenarios where the trigger might be unknown. Sharing most of this information will help us assist you more effectively.
+When reporting issues, please include as much of the following as possible. It's okay if you can't provide everything, especially in production scenarios where the trigger might be unknown. Sharing most of this information will help us assist you more effectively.
 
 ## 1. LiteLLM Configuration File
 

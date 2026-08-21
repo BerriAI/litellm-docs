@@ -393,7 +393,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 ## Custom Tags
 
 :::tip See Full Request Tags Documentation
-For comprehensive documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
 :::
 
 Requirements:

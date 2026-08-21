@@ -1207,6 +1207,7 @@ const sidebars = {
             "providers/runwayml/videos",
           ]
         },
+        "providers/s3_vectors",
         "providers/sambanova",
         "providers/sap",
         "providers/scaleway",

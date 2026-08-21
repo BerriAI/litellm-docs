@@ -630,7 +630,7 @@ LiteLLM tracks web search costs automatically based on provider-specific billing
 Web search costs are defined in `model_prices_and_context_window.json` using two fields:
 
 - **`search_context_cost_per_query`**: the cost per billable unit (per search context size tier).
-- **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default — flat fee per API call that uses search).
+- **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default; flat fee per API call that uses search).
 
 ```json
 {
@@ -653,7 +653,7 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
 ```
 
 :::info
-Models without `web_search_billing_unit` default to `"per_prompt"` — one flat charge per API call that uses web search, regardless of how many internal queries the model executes.
+Models without `web_search_billing_unit` default to `"per_prompt"`: one flat charge per API call that uses web search, regardless of how many internal queries the model executes.
 :::
 
 You can override these in your proxy config using `model_info`:

@@ -134,7 +134,7 @@ Navigate to **Virtual Keys** → **Create Key** (or edit an existing key) and se
 
 ### 3. Use the tag in your requests (optional)
 
-If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header — see [Request Tags](request_tags.md)):
+If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header, see [Request Tags](request_tags.md)):
 
 <Tabs>
 

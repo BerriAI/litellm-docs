@@ -74,7 +74,7 @@ Today's coverage sits at 76% across Anthropic, Bedrock Invoke, Bedrock Converse,
 | Azure AI | `azure_ai/gpt-5.4-mini` | 400,000 | $0.75 | $4.50 | Reasoning, vision, web search, function calling, prompt caching |
 | Azure AI | `azure_ai/gpt-5.4-nano` | 400,000 | $0.20 | $1.25 | Reasoning, vision, web search, function calling, prompt caching |
 
-Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-05`, `gpt-5.4-pro-2026-03-05`, `gpt-5.4-mini-2026-03-17`, `gpt-5.4-nano-2026-03-17`) — 9 catalog entries total. All GPT-5.4 entries include tiered (`>272k`) and priority pricing.
+Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-05`, `gpt-5.4-pro-2026-03-05`, `gpt-5.4-mini-2026-03-17`, `gpt-5.4-nano-2026-03-17`), for 9 catalog entries total. All GPT-5.4 entries include tiered (`>272k`) and priority pricing.
 
 #### Features
 
@@ -86,7 +86,7 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 #### Bug Fixes
 
 - **[Bedrock](https://docs.litellm.ai/docs/providers/bedrock)**
-    - bedrock-mantle: use `/anthropic/v1/messages` path for Mantle (Claude Mythos Preview) endpoint — `/v1/messages` was 404ing every Mantle request - [PR #27976](https://github.com/BerriAI/litellm/pull/27976)
+        - bedrock-mantle: use `/anthropic/v1/messages` path for Mantle (Claude Mythos Preview) endpoint; `/v1/messages` was 404ing every Mantle request - [PR #27976](https://github.com/BerriAI/litellm/pull/27976)
 
 ## LLM API Endpoints
 
@@ -142,7 +142,7 @@ Each Azure AI GPT-5.4 model also ships a dated snapshot alias (`gpt-5.4-2026-03-
 
 ## MCP Gateway
 
-- Delegate-auth PKCE bypass for **internal** (`available_on_public_internet: false`) oauth2 interactive MCP servers — same anonymous PKCE path as public servers; `client_credentials` exclusion unchanged - [PR #27977](https://github.com/BerriAI/litellm/pull/27977)
+    - Delegate-auth PKCE bypass for **internal** (`available_on_public_internet: false`) oauth2 interactive MCP servers, using the same anonymous PKCE path as public servers; `client_credentials` exclusion unchanged - [PR #27977](https://github.com/BerriAI/litellm/pull/27977)
 - Expose `delegate_auth_to_upstream` in the `GET /v1/mcp/server` list API (`_build_mcp_server_table` was dropping it, so the dashboard always showed `false`) - [PR #27936](https://github.com/BerriAI/litellm/pull/27936)
 
 ## Performance / Loadbalancing / Reliability improvements
