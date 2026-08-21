@@ -151,5 +151,5 @@ Understand how different customers use your service:
 ## Related Features
 
 - [Customers / End-User Budgets](./customers.md) - Set budgets and rate limits for customers
-- [Cost Tracking](./cost_tracking.md) - Comprehensive cost tracking and analytics
+- [Cost Tracking](./cost_tracking.md) - Cost tracking and analytics
 - [Billing](./billing.md) - Bill customers based on their usage

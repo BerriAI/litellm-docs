@@ -15,7 +15,7 @@ This walks through how to set the maximum retention period for spend logs. This 
 ### Requirements
 
 - **Postgres** (for log storage)
-- **Redis** *(optional)* — required only if you're running multiple proxy instances and want to enable distributed locking
+- **Redis** *(optional)*: required only if you're running multiple proxy instances and want to enable distributed locking
 
 ## Usage
 

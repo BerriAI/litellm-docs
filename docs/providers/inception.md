@@ -183,7 +183,7 @@ model_list:
 These are passed through to the Inception chat API:
 
 - `reasoning_effort` (`instant` | `low` | `medium` | `high`)
-- `reasoning_summary` (bool) — return a summary of the model's reasoning
-- `reasoning_summary_wait` (bool) — wait for the summary to complete before returning
-- `diffusing` (bool) — stream intermediate denoising steps
-- `realtime` (bool) — optimize for lowest latency
+- `reasoning_summary` (bool): return a summary of the model's reasoning
+- `reasoning_summary_wait` (bool): wait for the summary to complete before returning
+- `diffusing` (bool): stream intermediate denoising steps
+- `realtime` (bool): optimize for lowest latency

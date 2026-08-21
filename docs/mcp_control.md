@@ -180,7 +180,7 @@ mcp_servers:
 
 ## Public MCP Servers (allow_all_keys)
 
-Some MCP servers are meant to be shared broadly—think internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
+Some MCP servers are meant to be shared broadly: internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
 
 <Tabs>
 <TabItem value="ui" label="UI">
@@ -218,7 +218,7 @@ mcp_servers:
 - You want a “default enabled” experience for internal users, while still being able to layer tool-level restrictions.
 - You’re onboarding new teams and want the safest MCPs available out of the box.
 
-Once enabled, LiteLLM automatically includes the server for every key during tool discovery/calls—no extra virtual-key or team configuration is required.
+Once enabled, LiteLLM automatically includes the server for every key during tool discovery/calls, with no extra virtual-key or team configuration required.
 
 ---
 
@@ -418,7 +418,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 }'
 ```
 
-This example uses the `x-mcp-servers` header to access all servers in the "dev_group" access group. Use `server_url: "litellm_proxy"` when calling the proxy's `/v1/responses` endpoint—do not use the full proxy URL.
+This example uses the `x-mcp-servers` header to access all servers in the "dev_group" access group. Use `server_url: "litellm_proxy"` when calling the proxy's `/v1/responses` endpoint; do not use the full proxy URL.
 
 </TabItem>
 
@@ -919,7 +919,7 @@ This is useful when you want discoverability for MCP offerings without granting 
 
 ## Publish MCP Registry
 
-If you want other systems—for example external agent frameworks such as MCP-capable IDEs running outside your network—to automatically discover the MCP servers hosted on LiteLLM, you can expose a Model Context Protocol Registry endpoint. This registry lists the built-in LiteLLM MCP server and every server you have configured, using the [official MCP Registry spec](https://github.com/modelcontextprotocol/registry).
+If you want other systems (for example external agent frameworks such as MCP-capable IDEs running outside your network) to automatically discover the MCP servers hosted on LiteLLM, you can expose a Model Context Protocol Registry endpoint. This registry lists the built-in LiteLLM MCP server and every server you have configured, using the [official MCP Registry spec](https://github.com/modelcontextprotocol/registry).
 
 1. Set `enable_mcp_registry: true` under `general_settings` in your proxy config (or DB settings) and restart the proxy.
 2. LiteLLM will serve the registry at `GET /v1/mcp/registry.json`.

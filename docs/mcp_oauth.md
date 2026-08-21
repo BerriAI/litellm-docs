@@ -26,7 +26,7 @@ mcp_servers:
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
 
-[**See Claude Code Tutorial**](./tutorials/claude_responses_api#connecting-mcp-servers)
+[**See Claude Code Tutorial**](/docs/tutorials/claude_responses_api)
 
 ### How It Works
 
@@ -147,7 +147,7 @@ This is for first-party OAuth clients you control. For the standard ingress case
 
 #### Why the same-origin check exists
 
-The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates that the caller's `redirect_uri` shares scheme + host + port with the proxy's own public origin (or with one of the loopback / allowlisted entries above). The check exists to stop an attacker from phishing a logged-in admin into a link that bounces an authorization code — for an upstream OAuth-protected MCP server such as GitHub or Slack — through an attacker-controlled host. Same-origin (plus an explicit ops allowlist) is the threat-model-safe equivalent of the loopback-only rule used for native MCP clients.
+The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates that the caller's `redirect_uri` shares scheme + host + port with the proxy's own public origin (or with one of the loopback / allowlisted entries above). The check exists to stop an attacker from phishing a logged-in admin into a link that bounces an authorization code, for an upstream OAuth-protected MCP server such as GitHub or Slack, through an attacker-controlled host. Same-origin (plus an explicit ops allowlist) is the threat-model-safe equivalent of the loopback-only rule used for native MCP clients.
 
 `PROXY_BASE_URL` is the right escape hatch for ingressed deployments because the operator is declaring the proxy's true public origin out of band, rather than asking the proxy to infer it from headers an attacker might be able to set. The check itself is not relaxed.
 
@@ -179,7 +179,7 @@ Under **Authentication**, select **OAuth**.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/f6ea5694-f28a-4bc3-9c9a-bb79f199bd65/ascreenshot_9be839f55b1b4f96bfe24030ba2c7f8d_text_export.jpeg)
 
-Choose **Machine-to-Machine (M2M)** as the OAuth flow type. This is for server-to-server authentication using the `client_credentials` grant — no browser interaction required.
+Choose **Machine-to-Machine (M2M)** as the OAuth flow type. This is for server-to-server authentication using the `client_credentials` grant, with no browser interaction.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/9853310c-1d86-4628-bad1-7a391eca0e4d/ascreenshot_f302a286fa264fdd8d56db53b8f9395c_text_export.jpeg)
 
@@ -189,7 +189,7 @@ Fill in the **Client ID** and **Client Secret** provided by your OAuth provider.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/0de5a7bd-9898-4fc7-8843-b23dd5aac47f/ascreenshot_b9087aaa81a14b5b9c199929efc4a563_text_export.jpeg)
 
-Enter the **Token URL** — this is the endpoint LiteLLM will call to fetch access tokens using `client_credentials`.
+Enter the **Token URL**, the endpoint LiteLLM will call to fetch access tokens using `client_credentials`.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/0aea70f1-558c-4dca-91bc-1175fe1ddc89/ascreenshot_b3fcf8a1287e4e2d9a3d67c4a29f7bff_text_export.jpeg)
 
@@ -355,7 +355,7 @@ The response includes these headers (all sensitive values are masked):
 | `x-mcp-debug-outbound-url` | The upstream MCP server URL. |
 | `x-mcp-debug-server-auth-type` | The `auth_type` configured on the server. |
 
-**Example — healthy OAuth2 passthrough:**
+**Example, healthy OAuth2 passthrough:**
 
 ```
 x-mcp-debug-inbound-auth: x-litellm-api-key=Bearer****1234; authorization=Bearer****ef01
@@ -365,7 +365,7 @@ x-mcp-debug-outbound-url: https://mcp.atlassian.com/v1/mcp
 x-mcp-debug-server-auth-type: oauth2
 ```
 
-**Example — LiteLLM key leaking (misconfigured):**
+**Example, LiteLLM key leaking (misconfigured):**
 
 ```
 x-mcp-debug-inbound-auth: authorization=Bearer****1234

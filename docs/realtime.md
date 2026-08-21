@@ -116,7 +116,7 @@ You can apply [LiteLLM guardrails](https://docs.litellm.ai/docs/proxy/guardrails
 
 ### Set guardrails on a key or team
 
-The easiest production setup — attach guardrails to a virtual key or team so they always apply automatically, without any client-side changes.
+The easiest production setup: attach guardrails to a virtual key or team so they always apply automatically, without any client-side changes.
 
 See [Virtual Keys → Guardrails](https://docs.litellm.ai/docs/proxy/virtual_keys#guardrails) and [Teams → Guardrails](https://docs.litellm.ai/docs/proxy/team_budgets).
 

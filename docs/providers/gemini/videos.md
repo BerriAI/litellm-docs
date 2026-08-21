@@ -101,7 +101,7 @@ LiteLLM automatically maps OpenAI-style parameters to Veo's format:
 
 When you pass a **standard `size`** string, LiteLLM sets both:
 
-- **Aspect ratio** (`16:9` or `9:16`) — same as before.
+- **Aspect ratio** (`16:9` or `9:16`): same as before.
 - **Output resolution** (`720p` or `1080p`) when the height is clear from the preset, so the correct Veo tier is requested without extra fields.
 
 | `size` | Aspect ratio | Resolution sent to Veo |

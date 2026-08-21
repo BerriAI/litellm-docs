@@ -9,7 +9,7 @@ You.com offers two tiers:
 | **Keyless free tier** (default) | `https://api.you.com/v1/agents/search` | none | IP-throttled, ~100 queries/day |
 | **Keyed tier** | `https://ydc-index.io/v1/search` | `X-API-Key` | higher rate limits |
 
-If `YOUCOM_API_KEY` is not set, the adapter automatically uses the keyless endpoint — no signup required to start.
+If `YOUCOM_API_KEY` is not set, the adapter automatically uses the keyless endpoint, so no signup is required to start.
 
 ## LiteLLM Python SDK
 
@@ -125,7 +125,7 @@ response = search(
 
 ## Response Notes
 
-You.com's API returns results split into `web` and `news` arrays. The LiteLLM adapter flattens both into a single ordered `results` list (web first, then news) so the response matches the unified [`SearchResponse`](./index#response-format) shape.
+You.com's API returns results split into `web` and `news` arrays. The LiteLLM adapter flattens both into a single ordered `results` list (web first, then news) so the response matches the unified [`SearchResponse`](/docs/search#response-format) shape.
 
 For each result:
 - `snippet` prefers the first entry of the upstream `snippets` array; falls back to `description`.

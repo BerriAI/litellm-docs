@@ -864,7 +864,7 @@ Access control treats a group as its own model name: grant `<group_name>` on a k
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
 :::
 
-**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models — without spinning up a second router.
+**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models, without spinning up a second router.
 
 #### Rules
 
@@ -972,7 +972,7 @@ Traffic mirroring allows you to "mimic" production traffic to a secondary (silen
 
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
-When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured [fallbacks](#fallbacks).
+When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1094,7 +1094,7 @@ This is useful when you have multiple regional copies of the same model (e.g. Az
 - On a retryable failure, the failing deployment ID is excluded and a new deployment is picked from the remaining peers in the same model group, respecting `weight` / `rpm` / `tpm`.
 - Exclusions accumulate across hops: each retry adds the previous failure to the exclusion set, so a deployment that just failed is never picked again in the same request chain.
 - Capped by `max_fallbacks` (default `5`).
-- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError` — those keep their dedicated fallback paths.
+- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError`, which keep their dedicated fallback paths.
 - Async-only: honored by `router.acompletion()` and other async entrypoints. The sync `router.completion()` path falls through to regular fallbacks.
 - Cooldowns still apply: a deployment that crosses `allowed_fails` is cooled down independently of weighted failover.
 
@@ -1782,7 +1782,7 @@ print(f"response id: {response._hidden_params['model_id']}")
 <TabItem value="proxy" label="Proxy">
 
 :::info
-Go [here](./proxy/reliability.md#advanced---context-window-fallbacks) for how to do this on the proxy
+Go [here](./proxy/reliability.md#context-window-fallbacks) for how to do this on the proxy
 :::
 </TabItem>
 </Tabs>
@@ -2029,7 +2029,7 @@ response = router.completion(
 
 ## Deploy Router 
 
-If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](./simple_proxy#load-balancing---multiple-instances-of-1-model)
+If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](/docs/simple_proxy)
 
 
 

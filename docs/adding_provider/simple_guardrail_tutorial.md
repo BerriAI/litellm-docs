@@ -37,7 +37,7 @@ Two files: `my_guardrail.py` (main class) and `__init__.py` (initialization).
 
 `my_guardrail.py`:
 
-Follow from [Custom Guardrail](../proxy/guardrails/custom_guardrail#custom-guardrail) tutorial.
+Follow from [Custom Guardrail](/docs/proxy/guardrails/custom_guardrail#1-write-a-customguardrail-class) tutorial.
 
 ### Create the Init File
 

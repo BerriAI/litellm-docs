@@ -14,7 +14,7 @@ import Image from '@theme/IdealImage';
 
 Thank you to everyone who joined our May town hall.
 
-We covered security hardening, release versioning changes, new product launches (MCP toolsets, on-behalf-of OAuth), performance wins, and our biggest bet yet — the LiteLLM Agent Platform.
+We covered security hardening, release versioning changes, new product launches (MCP toolsets, on-behalf-of OAuth), performance wins, and our biggest bet yet, the LiteLLM Agent Platform.
 
 {/* truncate */}
 
@@ -22,7 +22,7 @@ We covered security hardening, release versioning changes, new product launches 
 
 ### v1.84.1 ships the security hardening
 
-All security fixes from the last 4 weeks are bundled in [v1.84.1](/release_notes/v1.84.1/v1-84-1) — a patch on top of v1.84.0. Upgrade when you can.
+All security fixes from the last 4 weeks are bundled in [v1.84.1](/release_notes/v1.84.1/v1-84-1), a patch on top of v1.84.0. Upgrade when you can.
 
 ```
 pip install --upgrade litellm
@@ -31,7 +31,7 @@ pip install --upgrade litellm
 - Backwards-compatible with v1.83.x configs.
 - New release versioning scheme (see below).
 
-### Bug bounty — now live
+### Bug bounty: now live
 
 We now pay for security reports.
 
@@ -41,7 +41,7 @@ We now pay for security reports.
 
 ### Automated security review on every PR
 
-Every PR now gets an automated security pass via Veria AI + zizmor + semgrep. Look for the **Veria scan** — it's a required check. False positives are flagged, never blocking.
+Every PR now gets an automated security pass via Veria AI + zizmor + semgrep. Look for the **Veria scan**; it's a required check. False positives are flagged, never blocking.
 
 ### Last 4 weeks: by the numbers
 
@@ -63,7 +63,7 @@ All fixes ship in [v1.84.1](/release_notes/v1.84.1/v1-84-1).
 
 ## Stability updates
 
-### Release versioning — the problem
+### Release versioning: the problem
 
 Too many version suffixes: `-nightly`, `-dev`, `-stable`, `-stable-patch`. Weekly stable bumps left no room for hotfixes, and users filtering `-stable` in search still had to wade through releases.
 
@@ -79,7 +79,7 @@ Release versions are now consistent across PyPI and Docker.
 
 - EKS multi-pod internal deployment.
 - Catch deployment regressions and Claude Code changes.
-- Higher code coverage — 70% on 5 hotspot regression files.
+- Higher code coverage: 70% on 5 hotspot regression files.
 - Goal: minimal regressions per stable release.
 
 ## Product updates
@@ -105,7 +105,7 @@ MCP Toolsets let you combine tools across multiple MCP servers into a single fla
 
 Tools are name-scoped, so collisions across servers are safe.
 
-**Example:** A "deploy-flow" toolset might combine `create_issue` from GitHub MCP, `post_message` from Slack MCP, and `create_ticket` from Jira MCP — all surfaced to the agent as one tool list.
+**Example:** A "deploy-flow" toolset might combine `create_issue` from GitHub MCP, `post_message` from Slack MCP, and `create_ticket` from Jira MCP, all surfaced to the agent as one tool list.
 
 <Image
   img={require('../../img/may_townhall_mcp_toolsets.png')}
@@ -114,7 +114,7 @@ Tools are name-scoped, so collisions across servers are safe.
 
 ### MCP on-behalf-of OAuth
 
-OAuth tokens are vaulted at the proxy — never returned to the client.
+OAuth tokens are vaulted at the proxy and never returned to the client.
 
 - The client sends requests without a token.
 - LiteLLM adds the token when calling the downstream MCP server.
@@ -127,8 +127,8 @@ OAuth tokens are vaulted at the proxy — never returned to the client.
 
 ### What's next for product
 
-- MCP — store static user credentials.
-- Claude Code — auto-update header compatibility chart.
+- MCP: store static user credentials.
+- Claude Code: auto-update header compatibility chart.
 - Reasoning level support across models and providers.
 - Full Bedrock Converse support in Claude Code.
 
@@ -147,7 +147,7 @@ Streaming `/chat/completions` now handles 20% more requests per second and token
 
 ### What's next for performance
 
-- Rust migration in flight — stable 1K+ RPS at 10k concurrency.
+- Rust migration in flight: stable 1K+ RPS at 10k concurrency.
 - Focus on reducing gateway overhead under high load.
 - Tracking: TTFT, TPM (streaming); RPS, overhead % of E2E (non-streaming).
 
@@ -162,7 +162,7 @@ Signals we're seeing:
 - Enterprise asks shifting from chat to agents
 - Claude Code adoption tracking up
 
-### LiteLLM Agent Platform — run agents you can actually govern
+### LiteLLM Agent Platform: run agents you can actually govern
 
 Four pillars. One control plane.
 
@@ -171,9 +171,9 @@ Four pillars. One control plane.
   style={{width: '900px', height: 'auto', display: 'block'}}
 />
 
-- Agent Templates — pre-built configs for common tasks.
-- Skills — upload and reuse skills across agents.
-- Projects — repos + env vars, packaged for reuse.
+- Agent Templates: pre-built configs for common tasks.
+- Skills: upload and reuse skills across agents.
+- Projects: repos + env vars, packaged for reuse.
 
 ## What's next
 
@@ -181,4 +181,4 @@ Thank you again for all the questions and feedback. We'll keep sharing concrete 
 
 ## Hiring
 
-We are actively hiring across several roles — apply [here](https://jobs.ashbyhq.com/litellm) if you're interested!
+We are actively hiring across several roles. Apply [here](https://jobs.ashbyhq.com/litellm) if you're interested!

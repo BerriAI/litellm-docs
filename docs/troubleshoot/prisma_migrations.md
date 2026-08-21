@@ -26,7 +26,7 @@ Migration: 20260116142756_update_deleted_keys_teams_table_routing_settings
 
 **How to fix:**
 
-#### Step 1 — Delete the failed migration entry and restart
+#### Step 1: Delete the failed migration entry and restart
 
 Remove the problematic migration from the history so it can be re-applied:
 
@@ -42,9 +42,9 @@ DELETE FROM "_prisma_migrations"
 WHERE migration_name = '<failed_migration_name>';
 ```
 
-After deleting the entry, restart LiteLLM — it will re-apply the migration on startup.
+After deleting the entry, restart LiteLLM and it will re-apply the migration on startup.
 
-#### Step 2 — If that doesn't work, use `prisma db push`
+#### Step 2: If that doesn't work, use `prisma db push`
 
 If deleting the migration entry and restarting doesn't resolve the issue, sync the schema directly:
 
@@ -80,7 +80,7 @@ DELETE FROM "_prisma_migrations"
 WHERE migration_name = '<failed_migration_name>';
 ```
 
-3. If that doesn't work, use `prisma db push` (see [warning above](#step-2--if-that-doesnt-work-use-prisma-db-push) — back up your database first):
+3. If that doesn't work, use `prisma db push` (see [warning above](#step-2-if-that-doesnt-work-use-prisma-db-push), and back up your database first):
 
 ```bash
 DATABASE_URL="<your_database_url>" prisma db push
@@ -110,7 +110,7 @@ LIMIT 20;
 
 3. Restart LiteLLM to re-run migrations.
 
-4. If that doesn't work, use `prisma db push` (see [warning above](#step-2--if-that-doesnt-work-use-prisma-db-push) — back up your database first):
+4. If that doesn't work, use `prisma db push` (see [warning above](#step-2-if-that-doesnt-work-use-prisma-db-push), and back up your database first):
 
 ```bash
 DATABASE_URL="<your_database_url>" prisma db push

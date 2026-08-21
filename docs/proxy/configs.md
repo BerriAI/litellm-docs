@@ -628,7 +628,7 @@ general_settings:
 **Notes:**
 - `database_socket_timeout` is the main knob for capping idle DB connections from LiteLLM.
 - `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
-- `database_extra_connection_params` is an untyped passthrough — any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- `database_extra_connection_params` is an untyped passthrough: any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
 
 ### Bounding Statement and Lock Time
 

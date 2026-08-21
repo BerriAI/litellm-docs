@@ -87,16 +87,16 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 
 You can stop **unified** guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
-**Global** — in `litellm_settings`:
+**Global**, in `litellm_settings`:
 
 ```yaml
 litellm_settings:
   skip_system_message_in_guardrail: true
 ```
 
-**Per guardrail** — under that guardrail’s `litellm_params`: set `skip_system_message_in_guardrail: true` or `false`. If omitted, the global `litellm_settings` value is used; per-guardrail `false` forces system messages to be included even when the global flag is `true`.
+**Per guardrail**, under that guardrail’s `litellm_params`: set `skip_system_message_in_guardrail: true` or `false`. If omitted, the global `litellm_settings` value is used; per-guardrail `false` forces system messages to be included even when the global flag is `true`.
 
-**Via LiteLLM UI** — when **creating** or **editing** a guardrail in the LiteLLM Admin Dashboard, set **Skip system messages in guardrail** (under Basic Info on create, or in the edit / guardrail settings flows):
+**Via LiteLLM UI**, when **creating** or **editing** a guardrail in the LiteLLM Admin Dashboard, set **Skip system messages in guardrail** (under Basic Info on create, or in the edit / guardrail settings flows):
 
 
 | UI option                             | Effect                                                                                 |
@@ -132,7 +132,7 @@ litellm --config config.yaml --detailed_debug
 
 ## 3. Test request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 
 
@@ -362,7 +362,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::
 
-Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](#spec-guardrails-parameter)**
+Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](/docs/proxy/guardrails/quick_start#guardrails-request-parameter)**
 
 
 

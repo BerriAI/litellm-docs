@@ -15,29 +15,30 @@ import TabItem from '@theme/TabItem';
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale — 100+ users or 10+ production AI use-cases — that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
+For teams running LiteLLM at scale (100+ users or 10+ production AI use-cases) that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
 
 ## Why Enterprise?
 
-LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
+LiteLLM OSS already covers the fundamentals: an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
 
 | | **OSS** | **Enterprise** |
 |---|---|---|
 | **Auth** | API keys | SSO + SCIM, OIDC/JWT |
 | **Key Management** | Virtual keys, users, teams across LLM APIs, MCPs, and Agents | Organizations, org/team admins, delegated admin roles |
 | **Security** | — | Key rotations, read/write to secret manager |
-| **Guardrails** | Always-on / request-based<sup>[1](#guardrails-oss-vs-enterprise)</sup> | Key and team scoped guardrails |
+| **Guardrails** | Always-on / request-based<sup>[1](/docs/enterprise#guardrails-oss-vs-enterprise)</sup> | Key and team scoped guardrails |
 | **Logging** | Request/response logging, Prometheus metrics | Per-key / per-team routing to Langfuse, Langsmith, Arize and more. Management-op logs |
 | **Deployment** | Single-region proxy | [Multi-region deployment](./proxy/multi_region) under one license, admin/worker split |
 
-<a id="guardrails-oss-vs-enterprise"></a>
-<sup>1</sup> The OSS guardrail framework supports custom guardrails plus Presidio (PII masking). Several built-in callback integrations &mdash; including `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection` &mdash; require a LiteLLM Enterprise license.
+###### 1 {#guardrails-oss-vs-enterprise}
+
+The OSS guardrail framework supports custom guardrails plus Presidio (PII masking). Several built-in callback integrations require a LiteLLM Enterprise license: `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection`.
 
 ## Core Enterprise Features
 
 ### Security & Access Control
 
-- **[SSO for the Admin UI](./proxy/ui.md#-enterprise-features)** – Okta, Azure AD, Google Workspace, and any OIDC/SAML provider
+- **[SSO for the Admin UI](./proxy/admin_ui_sso.md)** – Okta, Azure AD, Google Workspace, and any OIDC/SAML provider
 - **[JWT-based Authentication](./proxy/token_auth.md)** – Authenticate requests with your identity provider's tokens
 - **[Audit Logs with retention policies](./proxy/multiple_admins.md)** – Track every admin action and key-level change
 - **[Role-Based Access Control](./proxy/access_control.md)** – Organizations, teams, and user roles
@@ -62,19 +63,19 @@ LiteLLM OSS already covers the fundamentals — an OpenAI-compatible gateway, vi
 - **[Team-Based Logging](./proxy/team_logging.md)** – Route each team's logs to their own Langfuse project or callback
 - **[Disable logging per team](./proxy/team_logging.md#disable-logging-for-a-team)** – GDPR-friendly opt-out at the team level
 - **[Log export to GCS / Azure Blob](./observability/gcs_bucket_integration.md)** – Durable storage for compliance
-- **[Guardrails per key/team](#guardrails---secret-detectionredaction)** – Secret redaction, content moderation, banned keywords
-- **[Enforced required params](#required-params-for-llm-requests)** – Reject requests missing required metadata
+- **[Guardrails per key/team](/docs/enterprise#guardrails-oss-vs-enterprise)** – Secret redaction, content moderation, banned keywords
+- **Enforced required params** – Reject requests missing required metadata
 
 ### Operations & Branding
 
-- **[Custom Swagger branding](#swagger-docs---custom-routes--branding)** – Your title, description, and filtered routes
-- **[Custom email branding](./proxy/email.md#customizing-email-branding)** – Your logo and colors on system emails
-- **[Max request/response size limits](#set-max-request--response-size-on-litellm-proxy)** – Protect the proxy from runaway payloads
+- **[Custom Swagger branding](/docs/enterprise#operations--branding)** – Your title, description, and filtered routes
+- **[Custom email branding](./proxy/email.md#email-customization)** – Your logo and colors on system emails
+- **Max request/response size limits** – Protect the proxy from runaway payloads
 - **[Team-managed models](./proxy/team_model_add.md)** – Let teams bring their own keys and fine-tunes
 
 ### Projects
 
-[Projects](./proxy/project_management.md) let you group virtual keys by application or use-case. Each project has its own budget, owners, rate limits, and isolated spend view — useful when a single team runs multiple apps and needs separate reporting per app.
+[Projects](./proxy/project_management.md) let you group virtual keys by application or use-case. Each project has its own budget, owners, rate limits, and isolated spend view, which helps when a single team runs multiple apps and needs separate reporting per app.
 
 - Group keys by application, environment, or customer
 - Per-project budgets, rate limits, and model allowlists
@@ -90,7 +91,7 @@ See [Project Management](./proxy/project_management.md) and the [UI walkthrough]
 
 ### Self-Hosted
 
-Deploy our Docker image (or build from the pip package) on your own infrastructure. We provide a license key that unlocks the enterprise features above, plus a dedicated support channel.
+Deploy our Docker image (or build from the pip package) on your own infrastructure. We provide a license key that enables the enterprise features above, plus a dedicated support channel.
 
 ```env
 LITELLM_LICENSE="eyJ..."
@@ -98,7 +99,7 @@ LITELLM_LICENSE="eyJ..."
 
 **No data leaves your environment.** [Procurement available via AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
 
-Pricing depends on your deployment size — [get in touch](https://enterprise.litellm.ai/demo) to scope it.
+Pricing depends on your deployment size. [Get in touch](https://enterprise.litellm.ai/demo) to scope it.
 
 ---
 
@@ -170,7 +171,7 @@ See the [Secret Managers overview](./secret_managers/overview.md) for setup.
 
 2. Restart LiteLLM Proxy.
 
-3. Open `http://<your-proxy-host>:<port>/` — the Swagger page should show **"Enterprise Edition"** in the description. If it doesn't, confirm the key is correct, unexpired, and that the proxy was fully restarted.
+3. Open `http://<your-proxy-host>:<port>/`. The Swagger page should show **"Enterprise Edition"** in the description. If it doesn't, confirm the key is correct, unexpired, and that the proxy was fully restarted.
 
 ### Where can I read more about data security and compliance?
 
@@ -182,4 +183,4 @@ Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for 
 
 ### How do I get day-0 support for new models without restarting?
 
-Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule — no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.
+Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule, with no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.

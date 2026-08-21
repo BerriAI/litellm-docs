@@ -23,7 +23,7 @@ hide_table_of_contents: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM now supports GPT-5.4-mini and GPT-5.4-nano — cost-effective models for simple completions and high-throughput workloads.
+LiteLLM now supports GPT-5.4-mini and GPT-5.4-nano, cost-effective models for simple completions and high-throughput workloads.
 
 :::note
 If you're on **v1.82.3-stable** or above, you don't need any update to use these models.
@@ -102,5 +102,5 @@ print(response.choices[0].message.content)
 
 ## Notes
 
-- Both models support function calling, vision, and tool-use — see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
+- Both models support function calling, vision, and tool-use; see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
 - GPT-5.4-nano is the most cost-effective option for simple tasks; GPT-5.4-mini offers a balance of speed and capability.

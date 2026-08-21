@@ -250,7 +250,7 @@ class MyUser(HttpUser):
 
 **Pros**
 
-* Fully utilizes available CPU capacity
+* Fully uses available CPU capacity
 * Strong connection handling and low latency after initial warm-up spikes
 
 **Cons**

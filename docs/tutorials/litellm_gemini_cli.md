@@ -81,7 +81,7 @@ The CLI will now use LiteLLM Proxy as the backend, giving you access to LiteLLM'
 
 ### Use Anthropic, OpenAI, Bedrock, etc. models on gemini-cli
 
-In order to use non-gemini models on gemini-cli, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `gemini-2.5-pro` should be routed to your desired model from any provider.
+To use non-gemini models on gemini-cli, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `gemini-2.5-pro` should be routed to your desired model from any provider.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

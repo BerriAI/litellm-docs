@@ -382,7 +382,7 @@ curl http://localhost:4000/v1/videos \
 
 ## **Using OpenAI Client with LiteLLM Proxy**
 
-You can use the standard OpenAI Python client to interact with LiteLLM's video endpoints. This provides a familiar interface while leveraging LiteLLM's provider abstraction and proxy features.
+You can use the standard OpenAI Python client to interact with LiteLLM's video endpoints. This provides a familiar interface while keeping LiteLLM's provider abstraction and proxy features.
 
 ### Setup
 

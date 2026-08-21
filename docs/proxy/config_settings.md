@@ -215,7 +215,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_stop_sequence_limit | boolean | `false` | If true, disables truncation of the `stop` parameter to the 4 sequences allowed by the OpenAI spec. |
 | redact_user_api_key_info | boolean | `false` | If true, redacts information about the user api key from logs [Proxy Logging](logging#redacting-userapikeyinfo) |
 | mcp_aliases | object | `{}` | Maps friendly aliases to MCP server names for easier tool access. Only the first alias for each server is used. [MCP Aliases](../mcp#mcp-aliases) |
-| langfuse_default_tags | array of strings | `[]` | Default tags for Langfuse Logging. Use this if you want to control which LiteLLM-specific fields are logged as tags by the LiteLLM proxy. By default LiteLLM Proxy logs no LiteLLM-specific fields as tags. [Further docs](./logging#litellm-specific-tags-on-langfuse---cache_hit-cache_key) |
+| langfuse_default_tags | array of strings | `[]` | Default tags for Langfuse Logging. Use this if you want to control which LiteLLM-specific fields are logged as tags by the LiteLLM proxy. By default LiteLLM Proxy logs no LiteLLM-specific fields as tags. [Further docs](/docs/proxy/logging#litellm-tags---cache_hit-cache_key) |
 | set_verbose | boolean | `false` | [DEPRECATED - see debugging docs](./debugging) Use `--debug` or `--detailed_debug` CLI flags, or set `LITELLM_LOG` env var to "INFO", "DEBUG", or "ERROR" instead. |
 | json_logs | boolean | `false` | If true, logs will be in json format. If you need to store the logs as JSON, just set the `litellm.json_logs = True`. We currently just log the raw POST request from litellm as a JSON [Further docs](./debugging) |
 | request_correlation_in_logs | boolean | `false` | If true, stamps every log line (plaintext or JSON) with the request's `trace_id` and `session_id`, and adds a `session_id` field to `StandardLoggingPayload`. [Further docs](./debugging#request-correlation-ids) |
@@ -283,12 +283,12 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | skip_batch_input_file_rate_limiting_for_providers | array of strings | Skips batch input-file TPM and RPM accounting for the listed providers, for example `["hosted_vllm"]`. LiteLLM determines the provider from the selected route. Files are still read when an API key has a model allowlist. |
 | skip_batch_input_file_rate_limiting_for_models | array of strings | Deprecated. This setting has no effect and produces a startup warning. Use `skip_batch_input_file_rate_limiting_for_providers` or `disable_batch_input_file_rate_limiting` instead. |
 | disable_budget_reservation | boolean | Default `false`. Set to `true` to disable pre-request cost reservation. This can allow concurrent requests to exceed a configured budget; requests are still rejected when the budget is already exhausted. LiteLLM logs a warning while this option is enabled. See [Budget reservation](./users#budget-reservation). |
-| allowed_routes | array of strings | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](enterprise#control-available-public-private-routes)|
+| allowed_routes | array of strings | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | The master key for the proxy [Set up Virtual Keys](virtual_keys) |
 | database_url | string | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
-| database_connection_pool_limit | integer | The limit for database connection pool [Setting DB Connection Pool limit](#configure-db-pool-limits--connection-timeouts) |
-| database_connection_timeout | integer | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](#configure-db-pool-limits--connection-timeouts) |
+| database_connection_pool_limit | integer | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
+| database_connection_timeout | integer | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](./configs.md#configure-db-pool-limits--connection-timeouts) |
 | database_connect_timeout | float | Maps to the Prisma [`connect_timeout`](https://www.prisma.io/docs/orm/overview/databases/postgresql) URL param (seconds). Bounds how long the engine waits to establish a new connection before failing. Defaults to Prisma's built-in value when unset. |
 | database_socket_timeout | float | Maps to the Prisma [`socket_timeout`](https://www.prisma.io/docs/orm/overview/databases/postgresql) URL param (seconds). When set, an idle or slow connection that has not produced data within this window is closed. **Use this to cap idle Prisma connections from LiteLLM.** |
 | database_statement_timeout | float | Postgres [`statement_timeout`](https://www.postgresql.org/docs/current/runtime-config-client.html) in seconds, delivered on `DATABASE_URL` as `options=-c statement_timeout=<ms>`. Caps how long any single statement may run, and therefore how long it can hold its row locks. Without it a batch write that outlives the Prisma client's HTTP read timeout keeps running server side after the client has given up, and later writes queue behind those locks. Not applied to `DIRECT_URL`, so migrations are never cancelled. Unset means no bound. [Bounding statement and lock time](configs#bounding-statement-and-lock-time) |
@@ -336,22 +336,22 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allowed_ips | List[str] | List of IPs allowed to access the proxy. If not set, all IPs are allowed. |
 | embedding_model | str | The default model to use for embeddings - ignores model set in request |
 | default_team_disabled | boolean | If true, users cannot create 'personal' keys (keys with no team_id). |
-| alert_to_webhook_url | Dict[str] | [Specify a webhook url for each alert type.](./alerting.md#set-specific-slack-channels-per-alert-type) |
+| alert_to_webhook_url | Dict[str] | [Specify a webhook url for each alert type.](./alerting.md#map-slack-channels-to-alert-type) |
 | key_management_settings | List[Dict[str, Any]] | Settings for key management system (e.g. AWS KMS, Azure Key Vault) [Doc on key management](../secret.md) |
 | allow_user_auth | boolean | (Deprecated) old approach for user authentication. |
 | user_api_key_cache_ttl | int | The time (in seconds) to cache user api keys in memory. |
 | disable_prisma_schema_update | boolean | If true, turns off automatic schema updates to DB |
-| litellm_key_header_name | str | If set, allows passing LiteLLM keys as a custom header. [Doc on custom headers](./virtual_keys.md#custom-headers) |
+| litellm_key_header_name | str | If set, allows passing LiteLLM keys as a custom header. [Doc on custom headers](./virtual_keys.md#pass-litellm-key-in-custom-header) |
 | moderation_model | str | The default model to use for moderation. |
 | custom_sso | str | Path to a python file that implements custom SSO logic. [Doc on custom SSO](./custom_sso.md) |
-| allow_client_side_credentials | boolean | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md#client-side-credentials) |
-| admin_only_routes | List[str] | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](./enterprise#control-available-public-private-routes) |
+| allow_client_side_credentials | boolean | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md) |
+| admin_only_routes | List[str] | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes) |
 | use_azure_key_vault | boolean | If true, load keys from azure key vault | 
 | use_google_kms | boolean | If true, load keys from google kms |
-| spend_report_frequency | str | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md#spend-report-frequency) |
-| ui_access_mode | Literal["admin_only"] | If set, restricts access to the UI to admin users only. [Docs](./ui.md#restrict-ui-access) |
+| spend_report_frequency | str | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md) |
+| ui_access_mode | Literal["admin_only"] | If set, restricts access to the UI to admin users only. [Docs](./ui.md#disable-admin-ui) |
 | litellm_jwtauth | Dict[str, Any] | Settings for JWT authentication. [Docs](./token_auth.md) |
-| litellm_license | str | The license key for the proxy. [Docs](../enterprise.md#how-does-deployment-with-enterprise-license-work) |
+| litellm_license | str | The license key for the proxy. [Docs](../enterprise.md#how-do-i-set-up-and-verify-an-enterprise-license) |
 | oauth2_config_mappings | Dict[str, str] | Define the OAuth2 config mappings | 
 | pass_through_endpoints | List[Dict[str, Any]] | Define the pass through endpoints. [Docs](./pass_through) |
 | pass_through_request_timeout | float | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this. [Docs](./pass_through#request-timeouts) |
@@ -365,7 +365,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | sse_keepalive_ping_interval_seconds | Optional[float] | Proxy-wide default for the streaming keepalive described in [Timeouts](./timeout#keepalive-pings-for-idle-streaming-connections). Applies to every deployment that doesn't set its own `keepalive_seconds`, and to pass-through routes, which have no deployment of their own. Also covers the window before the upstream has answered at all, which per-deployment `keepalive_seconds` cannot reach. Defaults to None (off). |
 | auto_redirect_ui_login_to_sso | boolean | If true, automatically redirects UI login page to SSO provider |
 | control_plane_url | string | URL of the Global Control Plane that administers this instance. Enables the `/v3/login` and `/v3/login/exchange` endpoints so the control plane UI can authenticate against this instance cross-origin. No state is shared with the control plane. [Docs](./global_control_plane.md) |
-| custom_auth_run_common_checks | boolean | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](./custom_auth#enforce-model-access-budgets-and-teamproject-checks) |
+| custom_auth_run_common_checks | boolean | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](/docs/proxy/custom_auth#enforce-budgets-and-model-access) |
 | custom_ui_sso_sign_in_handler | string | Custom handler for SSO sign-in logic in the UI |
 | database_connection_pool_timeout | integer | Database connection pool timeout in seconds |
 | disable_error_logs | boolean | If true, suppresses error tracking and storage in the database |
@@ -599,6 +599,7 @@ router_settings:
 | AZURE_PASSWORD | Password for Azure services, use in conjunction with AZURE_USERNAME for azure ad token with basic username/password workflow
 | AZURE_FEDERATED_TOKEN_FILE | File path to Azure federated token
 | AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY | Cost per GB per day for Azure File Search service
+| AZURE_POSTGRESQL_AUTH | Set to `True` to authenticate Azure Database for PostgreSQL Flexible Server with a short-lived Microsoft Entra ID access token. LiteLLM requests the token for the `https://ossrdbms-aad.database.windows.net/.default` scope through the Azure Identity library and refreshes it before it expires. Cannot be combined with `IAM_TOKEN_DB_AUTH`. Requires `DATABASE_HOST`, `DATABASE_USER`, and `DATABASE_NAME`. For identity options and AKS workload identity setup, see [`--azure_postgresql_auth`](./cli#--azure_postgresql_auth). |
 | AZURE_SCOPE | For EntraID Auth, Scope for Azure services, defaults to "https://cognitiveservices.azure.com/.default"
 | AZURE_SENTINEL_DCR_IMMUTABLE_ID | Immutable ID of the Data Collection Rule for Azure Sentinel logging
 | AZURE_SENTINEL_STREAM_NAME | Stream name for Azure Sentinel logging
@@ -676,18 +677,18 @@ router_settings:
 | DASHSCOPE_API_BASE_IMAGE | Base URL for DashScope image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
 | DATABASE_HOST | Hostname for the database server
-| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from RDS IAM env vars
+| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from the discrete database env vars
 | DATABASE_NAME | Name of the database
-| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_PASSWORD | Password for the database user
 | DATABASE_PORT | Port number for database connection
-| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_SCHEMA | Schema name used in the database
-| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_URL | Connection URL for the database
-| DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Useful for Aurora-style clusters with separate reader/writer endpoints. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True`, the reader IAM token is auto-refreshed alongside the writer
+| DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`, the reader token is auto-refreshed alongside the writer
 | DATABASE_USER | Username for database connection
-| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True`
+| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
 | DATABASE_USERNAME | Alias for database user
 | DATABRICKS_API_BASE | Base URL for Databricks API
 | DATABRICKS_API_KEY | API key (Personal Access Token) for Databricks API authentication
@@ -932,6 +933,7 @@ router_settings:
 | EMAIL_SUBJECT_KEY_CREATED | Custom subject template for key creation emails. 
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%). Default is 0.8
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
+| ENFORCE_PRISMA_MIGRATION_CHECK | When a database migration fails, exit nonzero instead of continuing. The standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) enforces this by default, so a failed migration fails the Job rather than letting a deploy proceed against a stale schema; set it to `false` there to get the old log-and-continue behavior. Proxy startup itself still defaults to log-and-continue and only exits when this is set to `true` or `--enforce_prisma_migration_check` is passed
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
 | EXPERIMENTAL_OPENAI_BASE_LLM_HTTP_HANDLER | Flag to send `openai` chat completion requests through LiteLLM's shared HTTP handler instead of the OpenAI Python SDK client. **Default is False**
@@ -990,6 +992,7 @@ router_settings:
 | GENERIC_CLIENT_USE_PKCE | Enable PKCE (Proof Key for Code Exchange) for generic OAuth providers. Set to "true" when your OAuth provider requires PKCE. **Default is false**
 | GENERIC_SSO_HEADERS | Comma-separated list of additional headers to add to the request - e.g. Authorization=Bearer `<token>`, Content-Type=application/json, etc.
 | GENERIC_INCLUDE_CLIENT_ID | Include client ID in requests for OAuth
+| GENERIC_INCLUDE_TOKEN_CLAIMS | When true, also source generic OIDC SSO user claims from the ID token and access token when UserInfo is incomplete. UserInfo claims take precedence
 | GENERIC_SCOPE | Scope settings for generic OAuth providers
 | GENERIC_TOKEN_ENDPOINT | Token endpoint for generic OAuth providers
 | GENERIC_USER_DISPLAY_NAME_ATTRIBUTE | Attribute for user's display name in generic auth
@@ -1038,17 +1041,17 @@ router_settings:
 | HEROKU_API_BASE | Base URL for Heroku API
 | HEROKU_API_KEY | API key for Heroku services
 | HF_API_BASE | Base URL for Hugging Face API
-| HCP_VAULT_ADDR | Address for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_APPROLE_MOUNT_PATH | Mount path for AppRole authentication in [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault). Default is "approle"
-| HCP_VAULT_APPROLE_ROLE_ID | Role ID for AppRole authentication in [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_APPROLE_SECRET_ID | Secret ID for AppRole authentication in [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_CLIENT_CERT | Path to client certificate for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_CLIENT_KEY | Path to client key for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_MOUNT_NAME | Mount name for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_NAMESPACE | Namespace for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_PATH_PREFIX | Path prefix for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_TOKEN | Token for [Hashicorp Vault Secret Manager](../secret.md#hashicorp-vault)
-| HCP_VAULT_CERT_ROLE | Role for [Hashicorp Vault Secret Manager Auth](../secret.md#hashicorp-vault)
+| HCP_VAULT_ADDR | Address for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_APPROLE_MOUNT_PATH | Mount path for AppRole authentication in [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md). Default is "approle"
+| HCP_VAULT_APPROLE_ROLE_ID | Role ID for AppRole authentication in [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_APPROLE_SECRET_ID | Secret ID for AppRole authentication in [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_CLIENT_CERT | Path to client certificate for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_CLIENT_KEY | Path to client key for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_MOUNT_NAME | Mount name for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_NAMESPACE | Namespace for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_PATH_PREFIX | Path prefix for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_TOKEN | Token for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_CERT_ROLE | Role for [Hashicorp Vault Secret Manager Auth](../secret_managers/hashicorp_vault.md)
 | HELICONE_API_KEY | API key for Helicone service
 | HELICONE_API_BASE | Base URL for Helicone service, defaults to `https://api.helicone.ai`
 | HELICONE_MOCK | Enable mock mode for Helicone integration testing. When set to true, intercepts Helicone API calls and returns mock responses without making actual network calls. Default is false
@@ -1062,7 +1065,7 @@ router_settings:
 | HUGGINGFACE_API_BASE | Base URL for Hugging Face API
 | HUGGINGFACE_API_KEY | API key for Hugging Face API
 | HUMANLOOP_PROMPT_CACHE_TTL_SECONDS | Time-to-live in seconds for cached prompts in Humanloop. Default is 60
-| IAM_TOKEN_DB_AUTH | Set to `True` to authenticate PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token. LiteLLM generates and refreshes the token with boto3. This option does not support Google Cloud SQL; use the Cloud SQL Auth Proxy with `--auto-iam-authn` instead. Requires `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, and `DATABASE_NAME`. For ECS task-role setup and restart behavior, see [`--iam_token_db_auth`](./cli#--iam_token_db_auth). |
+| IAM_TOKEN_DB_AUTH | Set to `True` to authenticate PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token. LiteLLM generates and refreshes the token with boto3. This option does not support Google Cloud SQL; use the Cloud SQL Auth Proxy with `--auto-iam-authn` instead. Cannot be combined with `AZURE_POSTGRESQL_AUTH`. Requires `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, and `DATABASE_NAME`. For ECS task-role setup and restart behavior, see [`--iam_token_db_auth`](./cli#--iam_token_db_auth). |
 | IBM_GUARDRAILS_API_BASE | Base URL for IBM Guardrails API
 | IBM_GUARDRAILS_AUTH_TOKEN | Authorization bearer token for IBM Guardrails API
 | INITIAL_RETRY_DELAY | Initial delay in seconds for retrying requests. Default is 0.5
@@ -1116,6 +1119,7 @@ router_settings:
 | LITELLM_BILLING_METRICS_CA_CERT | CA bundle for verifying the metering collector. Only for private or test collectors; unset uses the system trust store
 | LITELLM_BILLING_METRICS_EXPORT_INTERVAL_MS | Push cadence for billable-request metering in milliseconds. Default is 60000
 | LITELLM_BLOG_POSTS_URL | Custom URL for fetching LiteLLM blog posts JSON. Default is the GitHub main branch URL
+| LITELLM_CLI_DISABLE_KEYRING | Set on the machine running the `lite` CLI to `1`, `true`, `yes`, or `on` to keep the CLI away from the OS keychain, so the credential from `lite login` stays in `~/.litellm/token.json` (`0600`) instead. Unset by default, which stores the credential in the keychain whenever one is reachable
 | LITELLM_CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
 | LITELLM_CORS_ALLOW_CREDENTIALS | Set to `true` to explicitly allow credentials in CORS responses. When not set, credentials are disabled automatically if `LITELLM_CORS_ORIGINS` is `*` (wildcard) to prevent the browser security misconfiguration of reflecting any origin with credentials
@@ -1167,7 +1171,7 @@ router_settings:
 | LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS | Optionally enable semantic logs (`gen_ai.content.prompt`/`gen_ai.content.completion`, or `gen_ai.client.inference.operation.details` in semconv mode) for OTEL. Default `false`. See [OpenTelemetry](/docs/observability/opentelemetry_integration#configuration-reference)
 | LITELLM_OTEL_INTEGRATION_ENABLE_METRICS | Optionally enable semantic metrics (TTFT, TPOT, response duration, cost, token usage) for OTEL. Default `false`. See [OpenTelemetry](/docs/observability/opentelemetry_integration#metrics-reference)
 | LITELLM_OTEL_BAGGAGE_TEAM_METADATA_KEYS | Comma-separated allowlist of team-metadata sub-keys promoted onto OTEL spans under `litellm.team.metadata`. Empty by default, so none of a team's free-form metadata is sent to your tracing backend until each sub-key is explicitly allowlisted. Also settable as `baggage_team_metadata_keys` under `callback_settings.otel` in config.yaml. See [OpenTelemetry](/docs/observability/opentelemetry_integration).
-| LITELLM_ENABLE_PYROSCOPE | If true, enables Pyroscope CPU profiling. Profiles are sent to PYROSCOPE_SERVER_ADDRESS. Off by default. See [Pyroscope profiling](/proxy/pyroscope_profiling).
+| LITELLM_ENABLE_PYROSCOPE | If true, enables Pyroscope CPU profiling. Profiles are sent to PYROSCOPE_SERVER_ADDRESS. Off by default. See [Pyroscope profiling](/docs/proxy/pyroscope_profiling).
 | LITELLM_ENABLE_TEAM_STALE_ALIAS_BYPASS | When `true`, if a team's legacy `model_aliases` entry maps a public model name to an internal `model_name_<team_id>_<uuid>` deployment, pre-call handling can skip that rewrite when team-scoped sibling deployments exist for the public name—so load balancing / `order` apply across siblings. Default is `false` for backwards compatibility. See [Team-scoped models and legacy aliases](./load_balancing#team-scoped-models-and-legacy-model_aliases). When stale aliases are detected and this flag is off, the proxy may log a one-time warning.
 | PYROSCOPE_APP_NAME | Application name reported to Pyroscope. Required when LITELLM_ENABLE_PYROSCOPE is true. No default.
 | PYROSCOPE_SERVER_ADDRESS | Pyroscope server URL to send profiles to. Required when LITELLM_ENABLE_PYROSCOPE is true. No default.
@@ -1196,7 +1200,7 @@ router_settings:
 | LITELLM_GEMINI_LIVE_DEFER_SETUP | When set to "true", defers Gemini/Vertex Live setup until the client sends `session.update` (required for runtime tool injection). Default is "false" for backwards compatibility, which auto-sends setup on connect. Can also be set via `litellm.gemini_live_defer_setup`
 | LITELLM_USE_LEGACY_INTERACTIONS_SCHEMA | When set to "true", uses the legacy Google Interactions API schema (`outputs` array, `2026-05-07` revision) instead of the new schema (`steps` array, `2026-05-20` revision). The legacy schema will be sunset on June 8, 2026. Can also be set via `litellm_settings.use_legacy_interactions_schema`
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
-| LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/proxy/worker_startup_hooks) for details
+| LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/docs/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
 | LITELLM_PRISMA_BOOTSTRAP_TIMEOUT | Seconds allowed for the one-time install of the Node toolchain the Prisma CLI runs on, performed once per container before any migration. Raise it on slow or bandwidth-constrained nodes where the install takes longer than ten minutes. A non-positive or non-numeric value is ignored with a warning and the default applies. **Default is 600**
 | LITELLM_PRISMA_COMMAND_TIMEOUT | Seconds any single Prisma migration command may run before it is killed and retried. Raise it when migrations against a large or heavily loaded database legitimately take longer than a minute. A value that is not a positive number is ignored with a warning and the default applies, so a typo cannot accidentally disable the timeout. **Default is 60**
@@ -1375,6 +1379,7 @@ router_settings:
 | S3_VECTORS_DEFAULT_DIMENSION | Default vector dimension for S3 Vectors RAG ingestion. Default is 1024
 | S3_VECTORS_DEFAULT_DISTANCE_METRIC | Default distance metric for S3 Vectors RAG ingestion. Options: "cosine", "euclidean". Default is "cosine"
 | SECRET_MANAGER_REFRESH_INTERVAL | Refresh interval in seconds for secret manager. Default is 86400 (24 hours)
+| SEMANTIC_CACHE_EMBEDDING_TIMEOUT_SECONDS | Deadline in seconds for the embedding call a semantic cache makes before each request. Exceeding it skips the cache instead of holding the request. Default is 5.0
 | SERVER_ROOT_PATH | Root path for the server application
 | SEND_USER_API_KEY_ALIAS | Flag to send user API key alias to Zscaler AI Guard. Default is False
 | SEND_USER_API_KEY_TEAM_ID | Flag to send user API key team ID to Zscaler AI Guard. Default is False
@@ -1419,6 +1424,7 @@ router_settings:
 | TOOL_CHOICE_OBJECT_TOKEN_COUNT | Token count for tool choice objects. Default is 4
 | TOOL_POLICY_CACHE_TTL_SECONDS | TTL in seconds for caching tool policy guardrail results. Default is 60
 | UI_LOGO_PATH | Path to the logo image used in the UI
+| UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for accessing the UI
 | UI_USERNAME | Username for accessing the UI
 | UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse

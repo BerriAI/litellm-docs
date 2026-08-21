@@ -23,7 +23,7 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 | 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
 | 8 | `safety_identifier` field | Request body | Responses API |
 
-**Option 1: Standard headers** (recommended — no request body modification needed)
+**Option 1: Standard headers** (recommended, no request body modification needed)
 
 ```bash showLineNumbers title="Make request with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \

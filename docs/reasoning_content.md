@@ -668,7 +668,7 @@ Expected Response
 
 :::tip gpt-5.4: reasoning_effort + function tools
 
-When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers — no extra configuration needed.
+When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 
 You can also route explicitly via `openai/responses/gpt-5.4` or `azure/responses/gpt-5.4`. See [Responses API Bridge](/docs/providers/openai#openai-chat-completion-to-responses-api-bridge) for details.
 

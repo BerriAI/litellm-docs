@@ -83,7 +83,7 @@ Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
 :::tip Gemini 3 Models
-For **Gemini 3+ models** (e.g., `gemini-3-pro-preview`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level` — the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
+For **Gemini 3+ models** (e.g., `gemini-3-pro-preview`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
 :::warning Image Models
@@ -888,7 +888,7 @@ When enabled, Gemini can execute Google Search server-side, use those results to
 1. You pass `include_server_side_tool_invocations=True` along with both Google Search and your function tools
 2. Gemini executes server-side tools internally and returns `toolCall`/`toolResponse` parts alongside any `functionCall` parts
 3. LiteLLM extracts the server-side invocations into `provider_specific_fields["server_side_tool_invocations"]`
-4. On subsequent turns, include the full assistant message in your conversation history — LiteLLM re-injects the server-side parts automatically
+4. On subsequent turns, include the full assistant message in your conversation history; LiteLLM re-injects the server-side parts automatically
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -978,7 +978,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 :::info
 
 - Context circulation requires **Gemini 3+** models
-- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls` — they are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
+- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls`. They are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
 - `thought_signatures` are automatically preserved alongside server-side invocations for multi-turn coherence
 
 :::
