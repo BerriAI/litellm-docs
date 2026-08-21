@@ -403,18 +403,18 @@ Each window shows the reset schedule below the input so it's always clear when s
 
 ### ✨ Virtual Key (Model Specific)
 
-Apply model specific budgets on a key. Example: 
-- Budget for `gpt-4o` is $0.0000001, for time period `1d` for `key = "sk-12345"`
-- Budget for `gpt-4o-mini` is $10, for time period `30d` for `key = "sk-12345"`
+Set a separate budget for each model available to a virtual key. For example, one key can have:
+
+- A $0.0000001 daily budget for `gpt-4o`
+- A $10 budget every 30 days for `gpt-4o-mini`
 
 :::info
 
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://www.litellm.ai/#pricing)
+✨ This feature is available with LiteLLM Enterprise. [Get started with Enterprise](https://www.litellm.ai/#pricing).
 
 :::
 
-
-The spec for `model_max_budget` is **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)**
+`model_max_budget` uses the **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema.
 
 ```bash
 curl 'http://0.0.0.0:4000/key/generate' \
@@ -427,21 +427,28 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **Via Dashboard**
 
-Open **Virtual Keys → Create Key → Optional Settings → Per-Model Budgets**, or the same section on an existing key's edit form.
+To add a per-model budget to a new key, go to **Virtual Keys → Create Key → Optional Settings → Per-Model Budgets**. To update an existing key, open the key's edit page and use the same section.
 
 ![Per-Model Budgets on the key form](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-empty.png)
 
-Click **+ Add Model Budget**, pick the model, enter the cap and choose the window. Each model is tracked and reset on its own schedule, so a monthly cap on one model is unaffected by a daily cap on another. Budgets can be smaller than a cent.
+Select **+ Add Model Budget**, choose a model, set the spending limit, and select the budget period. Each model has its own tracking and reset schedule. For example, a daily limit on one model does not affect a monthly limit on another. Limits can be less than $0.01.
 
 ![A per-model budget filled in](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-filled.png)
 
-#### Which model names a budget matches
+#### How LiteLLM matches model names
 
-A budget matches the model name the caller requests, and also the same model spelled with its provider prefix. A budget on `claude-opus-4-8` therefore covers requests for `claude-opus-4-8`, `anthropic/claude-opus-4-8`, and the Bedrock spellings `bedrock/anthropic.claude-opus-4-8` and `us.anthropic.claude-opus-4-8`. Key the budget on whichever name you configure in `model_list`; if you route to a model under several names, budget the bare family name to cover all of them.
+LiteLLM matches a budget against the model name in the request and its provider-prefixed form. For example, a budget for `claude-opus-4-8` applies to requests that use any of these names:
 
-#### Reading current usage
+- `claude-opus-4-8`
+- `anthropic/claude-opus-4-8`
+- `bedrock/anthropic.claude-opus-4-8`
+- `us.anthropic.claude-opus-4-8`
 
-`/key/info` returns `model_max_budget_usage` alongside `model_max_budget`, reporting the spend in the current window for each budgeted model. This is the same counter enforcement reads, so a key that is being refused always reports non-zero usage.
+Set the budget using the name configured in `model_list`. If you route the same model under multiple names, use the unprefixed model family name so that one budget applies to all supported variants.
+
+#### View current usage
+
+`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement.
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
@@ -459,17 +466,16 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
 }
 ```
 
-A model whose `time_period` is missing or unparseable is omitted from `model_max_budget_usage` rather than reported as zero.
+If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
+#### Test the budget
 
-#### Make a test request
+With the small `gpt-4o` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
 
-We expect the first request to succeed, and the second request to fail since we cross the budget for `gpt-4o` on the Virtual Key
-
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[LangChain and OpenAI SDK usage examples](../proxy/user_keys#request-format)**
 
 <Tabs>
-<TabItem label="Successful Call " value = "allowed">
+<TabItem label="Successful call" value="allowed">
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -488,9 +494,9 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 </TabItem>
-<TabItem label="Unsuccessful call" value = "not-allowed">
+<TabItem label="Rejected call" value="not-allowed">
 
-Expect this to fail since since we cross the budget `model=gpt-4o` on the Virtual Key
+Send the same request again. LiteLLM rejects it after the key exceeds its `gpt-4o` budget.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -508,7 +514,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-Expected response on failure
+Expected response:
 
 ```json
 {
@@ -524,20 +530,19 @@ Expected response on failure
 </TabItem>
 </Tabs>
 
-To reroute requests to another model once a per-model budget is exceeded instead of returning `budget_exceeded`, see [Budget Fallbacks](./budget_fallbacks).
-
+By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is exceeded. To route the request to another model instead, see [Budget Fallbacks](./budget_fallbacks).
 
 ### ✨ Internal User (Model Specific)
 
-Set per-model budgets on an internal user rather than on one key. The cap applies across every key that user owns, so a user cannot escape it by minting another key. This is the right scope for "each engineer gets $200 of Opus a month" where engineers hold several keys.
+Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
 
 :::info
 
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://www.litellm.ai/#pricing)
+✨ This feature is available with LiteLLM Enterprise. [Get started with Enterprise](https://www.litellm.ai/#pricing).
 
 :::
 
-`model_max_budget` takes the same **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** spec as the key-level setting, on both `/user/new` and `/user/update`.
+`model_max_budget` uses the same **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema as the key-level setting. You can configure it with either `/user/new` or `/user/update`.
 
 ```bash
 curl 'http://0.0.0.0:4000/user/new' \
@@ -549,7 +554,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 }'
 ```
 
-Use `1mo` for a calendar month, which resets on the 1st. Requests from any key belonging to that user are refused once the cap is crossed:
+Use `1mo` for a calendar-month budget that resets on the first day of each month. After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
 
 ```json
 {
@@ -562,15 +567,15 @@ Use `1mo` for a calendar month, which resets on the 1st. Requests from any key b
 }
 ```
 
-`/user/info` reports the current window's spend per model in `model_max_budget_usage`, the same shape `/key/info` returns.
+`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`.
 
 **Via Dashboard**
 
-Open **Internal Users → select a user → Details → Edit → Per-Model Budgets**. Existing budgets are shown with the spend so far in the current window.
+Go to **Internal Users**, select the user, and then open **Details → Edit → Per-Model Budgets**. For each existing budget, the dashboard shows the amount spent during the current period.
 
 ![Per-Model Budgets on an internal user](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/user-per-model-budget.png)
 
-User budgets and key budgets are independent counters. A request against a key that has its own per-model budget is charged to both, and either one can refuse it.
+User-level and key-level budgets are tracked independently. If a key has its own per-model budget, each request counts toward both the key budget and the owner's user budget. LiteLLM rejects the request when either limit is exceeded.
 
 
 ### Agents
