@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Cap tokens, requests, dollars, or concurrent in-flight requests per tag identity, independent of which virtual key sent the request.
 
-This is a config-only mechanism, not a database-registered one: any tag value a caller sends is usable immediately, with no `/tag/new` call needed first. [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/hooks/tag_rate_limiter.py)
+This is a config-only mechanism, not a database-registered one: any tag value a caller sends is usable immediately, with no `/tag/new` call needed first. [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/hooks/model_based_tag_rate_limits_hook.py)
 
 **See Also:**
 - [Setting Tag Budgets](tag_budgets.md) for a database-registered, dollars-only tag budget with a scheduled reset, rather than a rolling window.
@@ -31,7 +31,7 @@ model_list:
               period_seconds: 60
 
 litellm_settings:
-  callbacks: ["tag_rate_limiter"]
+  callbacks: ["model_based_tag_rate_limits_hook"]
 
 general_settings:
   master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
@@ -131,6 +131,59 @@ Each entry takes:
 
 `token_limits` and `dollar_limits` are accounted from real usage once a request succeeds, since the actual token count or cost is only known after the response. `request_limits` and `concurrency_limits` are enforced atomically at admission, before the request is dispatched: `request_limits` increments its counter immediately, and `concurrency_limits` reserves a slot that's released once the request finishes, whether it succeeds, fails, or the client disconnects before a response arrives. `period_seconds` remains the outer safety net for a release that's missed some other way, such as a worker crashing before it runs.
 
+## Scoped and Conditional Entries
+
+An entry can be limited to only a subset of identities, so a tiered override (stricter or looser than a chain's default) can be expressed directly in config rather than pushing that membership decision into whatever attaches tags to the request. Four optional fields, each independently opt-in:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `included_values` | list of strings | Allowlist against the entry's own resolved identity (the value its own `tag_id` extracts). If set, the entry only resolves when that value is in the list. |
+| `excluded_values` | list of strings | Denylist against the same identity value. If set, the entry is skipped whenever the value is in the list. |
+| `enabled_for` | `{tag_id, values}` | Gates the entry on a second, independent tag, not the entry's own identity tag. The entry only resolves when that second tag is present on the request and its value is in `values`. |
+| `disabled_for` | `{tag_id, values}` | The inverse gate: the entry is skipped whenever that second tag is present and its value is in `values`. Absence of the tag never triggers this. |
+
+`excluded_values` is the cheaper choice when hand-picking a handful of specific identities; `enabled_for` is cheaper when a natural higher-level grouping tag already exists (e.g. `company_id`) rather than enumerating every identity in that group. They compose: a company-wide override that still carves out a few named exceptions, falling through to the chain's plain default entry:
+
+```yaml showLineNumbers title="config.yaml"
+model_info:
+  tag_rate_limits:
+    request_limits:
+      limits:
+        # Platform default -- every identity not caught by the override below.
+        - name: default_daily
+          tag_id: end_user_id
+          limit: 2500
+          period_seconds: 86400
+
+        # Company-wide override: only applies to requests tagged company_id:1032,
+        # and even then not to 2 named users, who fall through to default_daily above.
+        - name: company_1032_daily
+          tag_id: end_user_id
+          limit: 1000
+          period_seconds: 86400
+          enabled_for:
+            tag_id: company_id
+            values: ["1032"]
+          excluded_values:
+            - user_a1
+            - user_b2
+```
+
+Both entries key on the same `tag_id` (`end_user_id`), which is what makes them layer as default-vs-override rather than two independent, summed buckets.
+
+Precedence, evaluated in order, deny overriding allow, before the entry's normal admit/check path:
+
+1. Resolve the entry's own identity via its `tag_id`. If absent, skip the entry (unchanged fail-open behavior).
+2. If `excluded_values` is set and the resolved identity is in it, skip the entry, checked before `included_values` regardless of whether both are set.
+3. Else if `included_values` is set and the resolved identity is not in it, skip the entry.
+4. If `disabled_for` is set and its tag's value is in `disabled_for.values`, skip the entry. If that tag is absent, this check never fires.
+5. Else if `enabled_for` is set and its tag is absent, or its value is not in `enabled_for.values`, skip the entry. Absence does skip here, unlike `disabled_for`, since `enabled_for` is an allowlist gate.
+6. Otherwise the entry resolves normally.
+
+A skip at any step is the same fail-open, per-entry outcome as a missing `tag_id`; sibling entries on the same chain are unaffected.
+
+These four fields are folded into the same [load-balanced-group](#load-balanced-deployments) equality check as `limit`/`period_seconds`: two deployments agreeing on everything else but disagreeing on `excluded_values` are genuinely different policies, not a shared bucket. All four raise `ValidationError` at config load time on malformed input (not a list of strings, or an `enabled_for`/`disabled_for` missing `tag_id`/`values`), the same as every other field on an entry.
+
 ## How Enforcement Works
 
 `router_settings.routing_strategy: usage-based-routing` (the legacy, deprecated strategy predating `usage-based-routing-v2`) resolves deployments through a synchronous code path that never runs deployment-filter callbacks, so tag rate limits (and tag-based routing generally) are silently never enforced under that strategy. This is a limitation of that legacy routing path itself, not specific to this callback. Use `usage-based-routing-v2` or another supported strategy if tag rate limits need to be enforced.
@@ -199,11 +252,11 @@ Token and dollar accounting on a successful call read `model_group`, `metadata`,
 
 ## Enable the Callback
 
-`tag_rate_limiter` is opt-in, not a default proxy hook. Add it to `litellm_settings.callbacks`:
+`model_based_tag_rate_limits_hook` is opt-in, not a default proxy hook. Add it to `litellm_settings.callbacks`:
 
 ```yaml showLineNumbers title="config.yaml"
 litellm_settings:
-  callbacks: ["tag_rate_limiter"]
+  callbacks: ["model_based_tag_rate_limits_hook"]
 ```
 
 <Tabs>
@@ -211,12 +264,12 @@ litellm_settings:
 
 Works without any cache configured. Counters are process-local, so this is only accurate for a single-instance deployment.
 
-Every entry that doesn't set its own `max_in_memory_cache_size` (see [Limit Types](#limit-types)) shares one default in-memory counter store, which caps at 200 entries and evicts the oldest when full. If `tag_id` is high-cardinality (for example, one bucket per end user), that cap can evict an active counter before its period elapses, resetting it early. Raise the default cap with `litellm_settings.tag_rate_limiter_max_in_memory_cache_size` (a positive integer, applies to every entry that doesn't set its own override), give one specific high-cardinality entry its own dedicated cache with that entry's `max_in_memory_cache_size`, or use Redis instead, which has no such limit:
+Every entry that doesn't set its own `max_in_memory_cache_size` (see [Limit Types](#limit-types)) shares one default in-memory counter store, which caps at 200 entries and evicts the oldest when full. If `tag_id` is high-cardinality (for example, one bucket per end user), that cap can evict an active counter before its period elapses, resetting it early. Raise the default cap with `litellm_settings.model_based_tag_rate_limits_max_in_memory_cache_size` (a positive integer, applies to every entry that doesn't set its own override), give one specific high-cardinality entry its own dedicated cache with that entry's `max_in_memory_cache_size`, or use Redis instead, which has no such limit:
 
 ```yaml showLineNumbers title="config.yaml"
 litellm_settings:
-  callbacks: ["tag_rate_limiter"]
-  tag_rate_limiter_max_in_memory_cache_size: 5000
+  callbacks: ["model_based_tag_rate_limits_hook"]
+  model_based_tag_rate_limits_max_in_memory_cache_size: 5000
 ```
 
 `key_ttl_seconds` (see [Limit Types](#limit-types)) is a different, unrelated per-entry setting: it controls how long that entry's own key lives once written, in either backend, rather than how many total keys an in-memory partition can hold at once.
@@ -228,7 +281,7 @@ Set up a [Redis cache](caching.md) so counters are shared across every proxy ins
 
 ```yaml showLineNumbers title="config.yaml"
 litellm_settings:
-  callbacks: ["tag_rate_limiter"]
+  callbacks: ["model_based_tag_rate_limits_hook"]
   cache: true
   cache_params:
     type: redis
