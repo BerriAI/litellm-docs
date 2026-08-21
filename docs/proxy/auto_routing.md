@@ -413,6 +413,54 @@ ComplexityRouter: routing decision cause=classifier_plugin,      tier=REASONING,
 ComplexityRouter: routing decision cause=session_affinity_pin,                                                                                      routed_model=gpt-5.5
 ```
 
+## Reading the picked model from the response
+
+The response body `model` field always stays the alias you called (`smart-router`), matching OpenAI semantics: a client should get back the model name it asked for. The tier an auto-routing strategy actually picked is a separate field, `router_model_name`, present on every response an auto router produced.
+
+:::info Availability
+
+`router_model_name` ships in **v1.99.x** ([PR #37725](https://github.com/BerriAI/litellm/pull/37725)). Before this, the picked tier was only reachable through the [`x-litellm-model-id` response header](./response_headers.md#litellm-specific-headers), which SDKs and frameworks that do not expose response headers, or that consume the response as a stream of body chunks, could not read.
+
+:::
+
+Non-streaming:
+
+```json
+{
+  "id": "chatcmpl-abc123",
+  "model": "smart-router",
+  "router_model_name": "gpt-5.5",
+  "choices": [{"...": "..."}]
+}
+```
+
+Streaming: the field is written on every SSE chunk, not only the first or the last, so a consumer that reads one chunk in isolation still sees it.
+
+```
+data: {"id":"chatcmpl-abc123","model":"smart-router","router_model_name":"gpt-5.5","choices":[{"delta":{"content":"The"},"...":"..."}]}
+
+data: {"id":"chatcmpl-abc123","model":"smart-router","router_model_name":"gpt-5.5","choices":[{"delta":{"content":" sum"},"...":"..."}]}
+```
+
+`router_model_name` is the `model_name` of the `model_list` entry the router picked (`gpt-5.5`, `claude-sonnet-5`), the same value logged as `routed_model=` in the [decision log](#decision-log) above, never the alias and never the upstream `litellm_params.model`.
+
+The field is present only when an auto-routing strategy actually selected the deployment for that request. It is absent on a request to a plain, non-auto-routed `model_name`, and it is also absent after a mid-stream fallback moves the request off the tier the router picked. The counterfactual `router_model_name` claimed is no longer the model that answered, so the field is dropped rather than continuing to name the original tier; use `x-litellm-attempted-fallbacks` to detect that a fallback occurred.
+
+**LangChain callers:** `@langchain/openai`'s `ChatOpenAI` drops response fields it does not recognize, both at the top level of a chunk and inside `delta`, so `router_model_name` does not reach `response_metadata` or `additional_kwargs` by default. Pass `__includeRawResponse: true` to the constructor (requires `@langchain/openai` >= 0.2.11; the option is marked experimental in LangChain's own types) and read `additional_kwargs.__raw_response.router_model_name` instead:
+
+```js
+const llm = new ChatOpenAI({
+  model: "smart-router",
+  __includeRawResponse: true,
+  configuration: { baseURL: "<proxy base>/v1" },
+});
+for await (const chunk of await llm.stream(prompt)) {
+  const routedModel = chunk.additional_kwargs?.__raw_response?.router_model_name;
+}
+```
+
+The raw `openai` SDK and plain HTTP/SSE clients need no such workaround; `router_model_name` is a normal top-level field on every chunk and on the non-streaming response.
+
 ## Reported savings
 
 Every auto-routed request records what routing saved against a counterfactual: the one model the traffic would have run on without a router
