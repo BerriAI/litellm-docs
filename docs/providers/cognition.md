@@ -28,10 +28,11 @@ os.environ["COGNITION_API_BASE"] = "https://api.cognition.ai/v1"  # optional ove
 
 | Model | Input / 1M tokens | Output / 1M tokens | Cache read / 1M tokens |
 |-------|-------------------|--------------------|------------------------|
-| `cognition/swe-1.7` | $2.50 | $12.50 | $1.00 |
+| `cognition/swe-1.7` | $0.50 | $2.50 | $0.20 |
+| `cognition/swe-1.7-lightning` | $2.50 | $12.50 | $1.00 |
 | `cognition/swe-1.6` | $0.50 | $2.50 | $0.20 |
 
-Pricing follows the [Cognition model pricing table](https://docs.devin.ai/windsurf/plugins/cascade/models). API-served `swe-1.7` is the Cerebras-served SWE-1.7 Lightning tier. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
+Pricing follows the [Cognition model list](https://docs.devin.ai/desktop/models). `swe-1.7` is the standard tier; `swe-1.7-lightning` is the Cerebras-served tier that answers at about 1000 tokens a second and costs 5x. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
 
 ## Usage - LiteLLM Python SDK
 
