@@ -204,7 +204,7 @@ FROM python:3.12-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
-    && pip install --no-cache-dir "headroom-ai[proxy]==0.27.0" \
+    && pip install --no-cache-dir "headroom-ai[proxy]>=0.32.0" \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
@@ -214,12 +214,15 @@ ENV HEADROOM_TELEMETRY=off
 CMD ["headroom", "proxy", "--host", "0.0.0.0", "--port", "8787"]
 ```
 
+`0.32.0` is a hard floor, not just the latest tested version: versions before `0.31.0` raise `AttributeError: 'HeadroomCallback' object has no attribute 'async_post_call_success_hook'` on real requests ([headroom#1114](https://github.com/headroomlabs-ai/headroom/issues/1114)), and versions before `0.32.0` still hit the `protect_recent_code` gap described below ([headroom#2457](https://github.com/headroomlabs-ai/headroom/issues/2457)).
+
 ### Why `requests_compressed` can be 0
 
-Headroom protects two message types by default, set on the Headroom container itself, not in LiteLLM's `config.yaml`:
+Headroom protects message content by default, through rules set on the Headroom container itself, not in LiteLLM's `config.yaml`. Two rules commonly combine to leave everything uncompressed:
 
-- `user`/`system` messages, unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it.
-- Messages with an Anthropic `cache_control` marker, always. Compressing them would break prompt-cache byte matching. No override exists.
+- `user`/`system` messages are protected by `skip_user_messages` (default `true`), unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it.
+- Once that rule is disabled, tool-output/RAG/JSON-shaped payloads typically get classified as `ContentType.SOURCE_CODE` by Headroom's content-type detector, and a second, independent rule takes over: `protect_recent_code` (default depth `4`) blocks any of the last 4 messages in a conversation if they're classified as code. A short conversation always satisfies that. Disabling `skip_user_messages` alone is not enough; both rules have to be defeated for realistic tool-output/DB-result/RAG payloads to compress.
+- Messages with an Anthropic `cache_control` marker are always protected. Compressing them would break prompt-cache byte matching. No override exists.
 
 ## Configuration reference
 
