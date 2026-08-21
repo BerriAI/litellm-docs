@@ -321,14 +321,14 @@ The effort parameter is supported by Claude Opus 4.6, Sonnet 4.6, and Opus 4.5. 
 
 ## Related Features
 
-- [Extended Thinking](/docs/providers/anthropic_extended_thinking) - Control Claude's reasoning process
-- [Tool Use](/docs/providers/anthropic_tools) - Enable Claude to use tools and functions
+- [Extended Thinking](/docs/reasoning_content) - Control Claude's reasoning process
+- [Tool Use](/docs/providers/anthropic) - Enable Claude to use tools and functions
 - [Programmatic Tool Calling](/docs/providers/anthropic_programmatic_tool_calling) - Let Claude write code that calls tools
-- [Prompt Caching](/docs/providers/anthropic_prompt_caching) - Cache prompts to reduce costs
+- [Prompt Caching](/docs/completion/prompt_caching) - Cache prompts to reduce costs
 
 ## Additional Resources
 
 - [Anthropic Effort Documentation](https://docs.anthropic.com/en/docs/build-with-claude/effort)
 - [LiteLLM Anthropic Provider Guide](/docs/providers/anthropic)
-- [Cost Optimization Best Practices](/docs/guides/cost_optimization)
+- [Cost Optimization Best Practices](/docs/proxy/cost_tracking)
 

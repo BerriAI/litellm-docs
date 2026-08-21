@@ -180,4 +180,4 @@ litellm_remaining_team_budget_metric{team_alias="QA Prod Bot",team_id="de35b29e-
 
 ## See Also
 
-- [Per-model TPM/RPM for teams](./users.md#per-team-model) - Set rate limits per model for all keys in a team
+- [Per-model TPM/RPM for teams](./users.md#set-rate-limits) - Set rate limits per model for all keys in a team

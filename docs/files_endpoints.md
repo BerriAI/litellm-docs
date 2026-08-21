@@ -322,7 +322,7 @@ print("file content=", content.text)
 
 ### [Azure OpenAI](./providers/azure#azure-batches-api)
 
-### [Vertex AI](./providers/vertex#batch-apis)
+### [Vertex AI](/docs/providers/vertex_batch)
 
 ### [Bedrock](./providers/bedrock_batches#4-retrieve-batch-results)
 

@@ -132,7 +132,7 @@ litellm --config config.yaml --detailed_debug
 
 ## 3. Test request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 
 
@@ -362,7 +362,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::
 
-Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](#spec-guardrails-parameter)**
+Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](/docs/proxy/guardrails/quick_start#guardrails-request-parameter)**
 
 
 

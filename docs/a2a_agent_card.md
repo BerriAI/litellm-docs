@@ -6,7 +6,7 @@ This page documents which A2A agent card fields LiteLLM supports today, how invo
 
 For provider-specific setup, see:
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 
 ## Agent card support
 
@@ -229,5 +229,5 @@ You can edit supported fields from the agent detail page in the LiteLLM UI. Use 
 
 ## Related documentation
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 - [A2A Protocol Specification (v1.0)](https://a2a-protocol.org/latest/specification/)

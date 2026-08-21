@@ -577,7 +577,7 @@ curl -X GET 'http://localhost:4000/spend/tags' \
 
 
 
-**Explore next:** [Projects](/docs/proxy/project_management) · [Temporary budget increases](/docs/proxy/temporary_budget_increase) · [Soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts) · [Spend reports](/docs/proxy/cost_tracking) · [Budget Routing](/docs/proxy/provider_budget_routing) · [Enterprise Spend Tracking](/docs/enterprise#-spend-tracking)
+**Explore next:** [Projects](/docs/proxy/project_management) · [Temporary budget increases](/docs/proxy/temporary_budget_increase) · [Soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts) · [Spend reports](/docs/proxy/cost_tracking) · [Budget Routing](/docs/proxy/provider_budget_routing) · [Enterprise Spend Tracking](/docs/enterprise)
 
 ---
 

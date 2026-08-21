@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `moonshot/` |
 | Link to Provider Doc | [Moonshot AI ↗](https://platform.moonshot.ai/) |
 | Base URL | `https://api.moonshot.ai/` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/moonshot#usage---litellm-python-sdk) |
 
 <br />
 <br />

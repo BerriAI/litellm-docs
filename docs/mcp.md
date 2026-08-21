@@ -407,7 +407,7 @@ mcp_servers:
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
 
-[**See Claude Code Tutorial**](./tutorials/claude_responses_api#connecting-mcp-servers)
+[**See Claude Code Tutorial**](/docs/tutorials/claude_responses_api)
 
 ### How It Works
 
@@ -500,7 +500,7 @@ mcp_servers:
 </TabItem>
 <TabItem value="clientside" label="Dynamically on Client Side">
 
-Use this when giving users access to a [group of MCP servers](#grouping-mcps-access-groups).
+Use this when giving users access to a [group of MCP servers](/docs/mcp#control-mcp-access-for-end-users).
 
 **Format:** `x-mcp-{server_alias}-{header_name}: value`
 

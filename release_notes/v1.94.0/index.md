@@ -133,7 +133,7 @@ Beyond the new entries, this release records `prompt_cache_min_tokens` on the An
     - Continue MCP gateway tool turns from the final response and surface failures - [PR #33025](https://github.com/BerriAI/litellm/pull/33025)
     - Clamp `max_output_tokens` below the API minimum - [PR #33098](https://github.com/BerriAI/litellm/pull/33098)
     - Intercept web search on the Responses API - [PR #33129](https://github.com/BerriAI/litellm/pull/33129)
-- **[Pass-through](../../docs/pass_through)**
+- **[Pass-through](/docs/pass_through/intro)**
     - Stop classifying plain `predict` / `search` paths as Vertex - [PR #33658](https://github.com/BerriAI/litellm/pull/33658)
     - Stop treating an upstream `model` body field as a LiteLLM model on auth-enforced pass-through routes - [PR #33710](https://github.com/BerriAI/litellm/pull/33710)
 - **General**
@@ -232,18 +232,18 @@ Beyond the new entries, this release records `prompt_cache_min_tokens` on the An
 
 ### Guardrails
 
-- **[Straiker](../../docs/proxy/guardrails)**
+- **[Straiker](/docs/proxy/guardrails/quick_start)**
     - Add the Straiker guardrail integration - [PR #33781](https://github.com/BerriAI/litellm/pull/33781)
-- **[Compresr](../../docs/proxy/guardrails)**
+- **[Compresr](/docs/proxy/guardrails/quick_start)**
     - Add the Compresr guardrail for query-aware context compression - [PR #33295](https://github.com/BerriAI/litellm/pull/33295)
 - **[Bedrock Guardrails](../../docs/proxy/guardrails/bedrock)**
     - Add a resource-less `InvokeGuardrailChecks` detect-only mode - [PR #33299](https://github.com/BerriAI/litellm/pull/33299)
 - **[Model Armor](../../docs/proxy/guardrails/model_armor)**
     - Restore reference attachments via `skip_unscannable_attachments` and remove the attachment count cap - [PR #33554](https://github.com/BerriAI/litellm/pull/33554)
     - Handle `None` metadata in `post_call` response processing - [PR #34405](https://github.com/BerriAI/litellm/pull/34405)
-- **[Lasso](../../docs/proxy/guardrails)**
+- **[Lasso](/docs/proxy/guardrails/quick_start)**
     - Send `source.type` for Used By attribution - [PR #33090](https://github.com/BerriAI/litellm/pull/33090)
-- **[LLM Guard](../../docs/proxy/guardrails)**
+- **[LLM Guard](/docs/proxy/guardrails/quick_start)**
     - Apply the sanitized prompt returned by the moderation API to the request - [PR #33331](https://github.com/BerriAI/litellm/pull/33331)
 - **General**
     - Streaming text transformation in `generic_guardrail_api` - [PR #33110](https://github.com/BerriAI/litellm/pull/33110)

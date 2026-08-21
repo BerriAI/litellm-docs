@@ -326,7 +326,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
     - Forward `tool_calls` on assistant messages and `tool_call_id` on `role: tool` messages, fixing the infinite tool-call loop on multi-turn agents - [PR #26122](https://github.com/BerriAI/litellm/pull/26122)
 - **[Predibase](../../docs/providers/predibase)**
     - Migrate `transform_request` / `transform_response` into `transformation.py` (refactor, no behavior change) - [PR #25249](https://github.com/BerriAI/litellm/pull/25249)
-- **[AIHubMix](../../docs/providers/aihubmix) (new)**
+- **AIHubMix (new)**
     - First-class OpenAI-compatible provider entry - [PR #24294](https://github.com/BerriAI/litellm/pull/24294)
 
 ### Bug Fixes
@@ -449,7 +449,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 
 ## Performance / Loadbalancing / Reliability improvements
 
-- **[Routing Groups (per-model strategies)](../../docs/routing#routing-groups---per-model-strategies)**
+- **[Routing Groups (per-model strategies)](/docs/routing#routing-groups---per-model-strategies-and-callable-virtual-models)**
     - New `router_settings.routing_groups` schema binds a list of `model_name`s to its own `routing_strategy` and optional `routing_strategy_args`; ungrouped models fall back to the top-level `routing_strategy` (the implicit `default` group, name reserved). Each `model_name` may belong to at most one group; overlap raises `ValueError` at init. Updatable at runtime via `Router.update_settings(routing_groups=[...])` or `/config/update`; per-group state is rebuilt on update - [PR #27022](https://github.com/BerriAI/litellm/pull/27022)
 - **Database reconnect**
     - Prisma reconnect no longer blocks the asyncio event loop. Replaces `await self.db.disconnect()` (which calls `subprocess.Popen.wait()` synchronously and freezes the loop for 30–120 s+ in production, failing K8s liveness probes) with SIGTERM → 0.5 s sleep → SIGKILL → fresh `Prisma()` + `connect()`. Direct-reconnect path delegates to `recreate_prisma_client` - [PR #26225](https://github.com/BerriAI/litellm/pull/26225)

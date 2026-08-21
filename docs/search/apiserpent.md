@@ -143,4 +143,4 @@ response = search(
 
 ## Response Notes
 
-APISerpent's full-format response nests results under `results.organic`. The LiteLLM adapter maps each organic result's `title`, `url`, and `snippet` into the unified [`SearchResponse`](./index#response-format) shape.
+APISerpent's full-format response nests results under `results.organic`. The LiteLLM adapter maps each organic result's `title`, `url`, and `snippet` into the unified [`SearchResponse`](/docs/search#response-format) shape.

@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `helicone/` |
 | Link to Provider Doc | [Helicone Documentation ↗](https://docs.helicone.ai) |
 | Base URL | `https://ai-gateway.helicone.ai/` |
-| Supported Operations | [`/chat/completions`](#sample-usage), [`/completions`](#text-completion), [`/embeddings`](#embeddings) |
+| Supported Operations | [`/chat/completions`](/docs/providers/helicone#usage---litellm-python-sdk), [`/completions`](#text-completion), `/embeddings` |
 
 <br />
 
