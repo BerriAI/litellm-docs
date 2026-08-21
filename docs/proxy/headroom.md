@@ -218,10 +218,10 @@ CMD ["headroom", "proxy", "--host", "0.0.0.0", "--port", "8787"]
 
 ### Why `requests_compressed` can be 0
 
-Headroom protects message content by default, through rules set on the Headroom container itself, not in LiteLLM's `config.yaml`. Two rules commonly combine to leave everything uncompressed:
+Headroom protects message content by default, through rules set on the Headroom container itself, not in LiteLLM's `config.yaml`:
 
-- `user`/`system` messages are protected by `skip_user_messages` (default `true`), unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it.
-- Once that rule is disabled, tool-output/RAG/JSON-shaped payloads typically get classified as `ContentType.SOURCE_CODE` by Headroom's content-type detector, and a second, independent rule takes over: `protect_recent_code` (default depth `4`) blocks any of the last 4 messages in a conversation if they're classified as code. A short conversation always satisfies that. Disabling `skip_user_messages` alone is not enough; both rules have to be defeated for realistic tool-output/DB-result/RAG payloads to compress.
+- `user`/`system` messages are protected by `skip_user_messages` (default `true`), unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it. `tool`-role messages, the shape most RAG/DB-result/tool-output traffic actually uses, are not subject to this rule at all.
+- `protect_recent_code` (default depth `4`) skips compression on any message within the last 4 messages of the conversation if the content is confidently classified as source code. On `0.27.0` this could misclassify plain JSON tool output as code and block it even after `skip_user_messages` was disabled; `0.32.0` fixed that classification, so realistic tool-output/DB-result/RAG payloads compress under the default config on current versions. The setting still exists and still matters for a genuine code paste sitting in the last few messages.
 - Messages with an Anthropic `cache_control` marker are always protected. Compressing them would break prompt-cache byte matching. No override exists.
 
 ## Configuration reference
