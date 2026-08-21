@@ -116,16 +116,16 @@ litellm_settings:
 
 Same idea, for `role: tool` content: stop guardrails from scanning tool call results while still sending the full `messages` list to the model.
 
-**Global** — in `litellm_settings`:
+**Global** (in `litellm_settings`):
 
 ```yaml
 litellm_settings:
   skip_tool_message_in_guardrail: true
 ```
 
-**Per guardrail** — under that guardrail’s `litellm_params`: set `skip_tool_message_in_guardrail: true` or `false`, with the same global/per-guardrail precedence as the system-message flag above.
+**Per guardrail**: under that guardrail's `litellm_params`, set `skip_tool_message_in_guardrail: true` or `false`, with the same global/per-guardrail precedence as the system-message flag above.
 
-**Via LiteLLM UI** — set **Skip tool messages in guardrail** the same way, right below the system-message dropdown described above, with the same three options (**Use global default** / **Yes — exclude from guardrail scan** / **No — always include in scan**).
+**Via LiteLLM UI**: set **Skip tool messages in guardrail** the same way, right below the system-message dropdown described above, with the same three options (**Use global default**, **Yes, exclude from guardrail scan**, **No, always include in scan**).
 
 ### Where the skip flags apply
 
