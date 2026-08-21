@@ -425,6 +425,42 @@ curl 'http://0.0.0.0:4000/key/generate' \
 }'
 ```
 
+**Via Dashboard**
+
+Open **Virtual Keys → Create Key → Optional Settings → Per-Model Budgets**, or the same section on an existing key's edit form.
+
+![Per-Model Budgets on the key form](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-empty.png)
+
+Click **+ Add Model Budget**, pick the model, enter the cap and choose the window. Each model is tracked and reset on its own schedule, so a monthly cap on one model is unaffected by a daily cap on another. Budgets can be smaller than a cent.
+
+![A per-model budget filled in](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-filled.png)
+
+#### Which model names a budget matches
+
+A budget matches the model name the caller requests, and also the same model spelled with its provider prefix. A budget on `claude-opus-4-8` therefore covers requests for `claude-opus-4-8`, `anthropic/claude-opus-4-8`, and the Bedrock spellings `bedrock/anthropic.claude-opus-4-8` and `us.anthropic.claude-opus-4-8`. Key the budget on whichever name you configure in `model_list`; if you route to a model under several names, budget the bare family name to cover all of them.
+
+#### Reading current usage
+
+`/key/info` returns `model_max_budget_usage` alongside `model_max_budget`, reporting the spend in the current window for each budgeted model. This is the same counter enforcement reads, so a key that is being refused always reports non-zero usage.
+
+```bash
+curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
+--header 'Authorization: Bearer <your-master-key>'
+```
+
+```json
+{
+  "info": {
+    "model_max_budget": {"gpt-4o": {"budget_limit": 0.0001, "time_period": "30d"}},
+    "model_max_budget_usage": {
+      "gpt-4o": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+    }
+  }
+}
+```
+
+A model whose `time_period` is missing or unparseable is omitted from `model_max_budget_usage` rather than reported as zero.
+
 
 #### Make a test request
 
@@ -489,6 +525,52 @@ Expected response on failure
 </Tabs>
 
 To reroute requests to another model once a per-model budget is exceeded instead of returning `budget_exceeded`, see [Budget Fallbacks](./budget_fallbacks).
+
+
+### ✨ Internal User (Model Specific)
+
+Set per-model budgets on an internal user rather than on one key. The cap applies across every key that user owns, so a user cannot escape it by minting another key. This is the right scope for "each engineer gets $200 of Opus a month" where engineers hold several keys.
+
+:::info
+
+✨ This is an Enterprise only feature [Get Started with Enterprise here](https://www.litellm.ai/#pricing)
+
+:::
+
+`model_max_budget` takes the same **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** spec as the key-level setting, on both `/user/new` and `/user/update`.
+
+```bash
+curl 'http://0.0.0.0:4000/user/new' \
+--header 'Authorization: Bearer <your-master-key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "user_id": "engineer-1",
+  "model_max_budget": {"claude-opus-4-8": {"budget_limit": 200, "time_period": "1mo"}}
+}'
+```
+
+Use `1mo` for a calendar month, which resets on the 1st. Requests from any key belonging to that user are refused once the cap is crossed:
+
+```json
+{
+    "error": {
+        "message": "LiteLLM User: engineer-1, exceeded budget for model=claude-opus-4-8",
+        "type": "budget_exceeded",
+        "param": null,
+        "code": "429"
+    }
+}
+```
+
+`/user/info` reports the current window's spend per model in `model_max_budget_usage`, the same shape `/key/info` returns.
+
+**Via Dashboard**
+
+Open **Internal Users → select a user → Details → Edit → Per-Model Budgets**. Existing budgets are shown with the spend so far in the current window.
+
+![Per-Model Budgets on an internal user](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/user-per-model-budget.png)
+
+User budgets and key budgets are independent counters. A request against a key that has its own per-model budget is charged to both, and either one can refuse it.
 
 
 ### Agents
