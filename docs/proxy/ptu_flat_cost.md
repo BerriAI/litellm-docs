@@ -61,12 +61,15 @@ model_list:
       ptu_effective_from: "2026-01-01T00:00:00Z"
 ```
 
-Pin `model_info.id` on a deployment declared this way. Left unset, the id is derived from the model name and the resolved `litellm_params`, so rotating the credential mints a new identity and the reservation is charged a second time under it. Any stable string works, and it only has to be unique across your deployments
+`model_info.id` is required on a deployment declared this way, and the proxy refuses to load one without it, naming the deployment in the startup log. Left to itself the id is derived from the model name and the resolved `litellm_params`, so rotating the credential mints a new identity and the reservation is charged a second time under it, which nothing later retracts. Any stable string works, and it has to be unique across your deployments
+
+Upgrading an existing reservation that has already accrued cost, set `id` to the id it uses today rather than a fresh name, or the charges already written stay under the old identity and the new one starts beside them. The startup refusal quotes that current id so you can copy it
 
 `team_id` is what the capacity is billed to, so a declaration without one accrues nothing
 
 | Field | Required | Meaning |
 | --- | --- | --- |
+| `id` | in `config.yaml` | The deployment's stable identity. Not needed through the API or the UI, where one is stored for you |
 | `team_id` | yes | The team the capacity belongs to. One deployment maps to one team |
 | `ptu_count` | yes | Provisioned throughput units reserved |
 | `cost_per_ptu_per_hour` | yes | Your contracted hourly rate per unit |
@@ -109,7 +112,7 @@ The Usage page in the Admin UI shows the same figures under Team Usage, charting
 
 ## Rates you must not set
 
-LiteLLM refuses a per-token, per-second, or cache rate on a PTU deployment, and answers `400` naming the field. Sending `0`, an all-zero table, or no value at all is accepted:
+LiteLLM refuses a per-token, per-second, or cache rate on a PTU deployment, and names the field it rejected. Sending `0`, an all-zero table, or no value at all is accepted:
 
 ```
 A PTU deployment bills by reserved capacity, so input_cost_per_token cannot be charged on top
