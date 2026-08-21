@@ -645,6 +645,7 @@ const sidebars = {
             "proxy/guardrails/test_playground",
             "proxy/guardrails/litellm_content_filter",
             "proxy/guardrails/realtime_guardrails",
+            "proxy/guardrails/batch_guardrails",
             {
               type: "link",
               label: "Providers →",
