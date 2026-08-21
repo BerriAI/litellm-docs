@@ -178,7 +178,7 @@ Unlike most other guardrails that run via a direct hook on the raw request, Lake
 
 When either flag excludes a message that Lakera would otherwise have masked in place for a PII-only violation, Lakera v2 blocks instead of masking: masking rewrites the request's `messages` from the (now-shorter) inspected list, which would silently drop the excluded message from what's actually sent to the LLM.
 
-This block-instead-of-mask behavior isn't limited to the skip flags. Lakera v2 degrades to blocking any time masking in place would corrupt the outgoing request: when a message carries non-string (multimodal) content, when a message has fields beyond `role`/`content` such as a tool message's `tool_call_id`, or when the request combines chat completions `messages` with a Responses API `input` field, since masking would splice `input`-derived text into `messages`.
+This block-instead-of-mask behavior isn't limited to the skip flags. Lakera v2 degrades to blocking any time masking in place would corrupt the outgoing request: when a message carries non-string (multimodal) content, when a message has fields beyond `role`/`content` such as a tool message's `tool_call_id`, when the request combines chat completions `messages` with a Responses API `input` field, since masking would splice `input`-derived text into `messages`, or when the request carries a Responses API `instructions` field at all, since there's no field this guardrail can safely rewrite a redacted version into.
 
 ## Advisory mode
 
@@ -203,6 +203,8 @@ The user's latest message was flagged for {reason} by a content safety guardrail
 ```
 
 `{reason}` is filled in from Lakera's own detector breakdown, for example "a potential prompt injection attempt", "personally identifiable information", or "policy-violating content". Set `advisory_system_message` to override the wording, keeping a real `{reason}` placeholder in the template.
+
+For a Responses API request, the advisory is appended to `instructions` when that field is present, not to `input`: `instructions` is the developer-set, privileged system-level field, while `input` is caller-controlled and a caller could otherwise include text telling the model to disregard a trailing warning appended there. `instructions` is inspected the same way, so a flag originating there still triggers the advisory correctly.
 
 Advisory mode skips PII masking: a PII-only flag still gets the advisory message instead of redaction, rather than showing the model already-masked text alongside a note about a flag it can no longer see.
 
