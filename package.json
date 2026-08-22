@@ -85,6 +85,7 @@
     },
     "url-loader": {
       "ajv": "6.14.0"
-    }
+    },
+    "@babel/plugin-transform-modules-systemjs": "7.29.4"
   }
 }
