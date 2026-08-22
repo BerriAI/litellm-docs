@@ -325,46 +325,37 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 
 ## Request Latency Metrics
 
-A request moves through the proxy in order: it **arrives**, runs **auth + pre-call hooks** (budget checks, rate limits, pre-call guardrails), makes the **LLM API call**, then runs **post-call processing** (post-call guardrails, logging) before the response is sent. Each metric below covers a different span of that timeline:
+Use `litellm_request_total_latency_metric` for latency SLOs and alerts. It measures the full request from arrival at the proxy through the end of processing. If total latency increases, use the other metrics to identify whether the delay comes from authentication, the LLM provider, or LiteLLM processing.
 
+All request latency metrics are Prometheus histograms measured in seconds.
+
+| What you want to measure | Metric | Measurement window |
+|---|---|---|
+| End-to-end latency | `litellm_request_total_latency_metric` | Request arrival to the end of processing. Includes authentication, pre-call hooks, the LLM API call, and post-call processing. |
+| Authentication and request wait time | `litellm_request_queue_time_seconds` | Request arrival to the start of pre-call processing. Includes authentication and ASGI-level queueing. Compare this with [`litellm_in_flight_requests`](#pod-health-metrics) when diagnosing overloaded proxy pods. |
+| LLM provider latency | `litellm_llm_api_latency_metric` | LLM API call start to finish. |
+| Time to first token | `litellm_llm_api_time_to_first_token_metric` | LLM API call start to the first token. Emitted only for streaming requests. |
+| LiteLLM processing overhead | `litellm_overhead_latency_metric` | LiteLLM processing time, excluding the LLM API call and guardrails. |
+| LiteLLM processing and guardrail overhead | `litellm_overhead_with_guardrails_latency_metric` | LiteLLM processing time plus pre-call and post-call guardrails, excluding the LLM API call. During-call guardrails run concurrently with the LLM API call and are not included. |
+
+For example, this query returns end-to-end p95 latency over the last five minutes:
+
+```promql
+histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket[5m])))
 ```
- arrival                                    LLM API call                response sent
-    │                                            │                            │
-    │◀──── litellm_request_queue_time_seconds ───▶│                          │
-    │        (auth + pre-call hook setup)         │                          │
-    │                                             │◀── llm_api_latency_metric ──▶│
-    │◀───────────── litellm_request_total_latency_metric ─────────────────────▶│
-```
 
-`litellm_overhead_latency_metric` and `litellm_overhead_with_guardrails_latency_metric` aren't on this timeline directly: they measure LiteLLM's own processing time with the LLM API call subtracted out, so they tell you how much of the total latency is LiteLLM's overhead versus the provider's.
+<details>
+<summary>Labels for request latency metrics</summary>
 
-### Which metric should I alert on?
-
-- **Real end-to-end latency, what your users experience:** `litellm_request_total_latency_metric`. This is the only metric here that includes authentication.
-- **Isolating the LLM provider's own latency:** `litellm_llm_api_latency_metric`.
-- **Catching a slow auth backend (Redis/Postgres) before it shows up in end-to-end latency:** `litellm_request_queue_time_seconds`, which covers only arrival through the start of pre-call processing.
-- **LiteLLM's own processing overhead, separate from the provider:** `litellm_overhead_latency_metric` (add guardrails into that number with `litellm_overhead_with_guardrails_latency_metric`).
-
-### Metrics
-
-| Metric Name | What it measures |
+| Metrics | Labels |
 |---|---|
-| `litellm_request_total_latency_metric` | **True end-to-end latency**: request arrival through the end of processing. Includes authentication, pre-call hooks, the LLM API call, and post-call processing. |
-| `litellm_request_queue_time_seconds` | Request arrival through the start of pre-call processing. Includes authentication. Pairs well with [`litellm_in_flight_requests`](#pod-health-metrics) for diagnosing pod overload. |
-| `litellm_llm_api_latency_metric` | Just the LLM API call itself. |
-| `litellm_llm_api_time_to_first_token_metric` | Time to the first streamed token. Only emitted for streaming requests. |
-| `litellm_overhead_latency_metric` | LiteLLM's own processing time, with the LLM API call subtracted out. Excludes guardrails. |
-| `litellm_overhead_with_guardrails_latency_metric` | Same as above, but pre-call and post-call guardrails count as LiteLLM overhead too. During-call (moderation) guardrails run concurrently with the LLM API call, so they're excluded from this one as well. |
+| `litellm_request_total_latency_metric`<br />`litellm_llm_api_latency_metric`<br />`litellm_llm_api_time_to_first_token_metric` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider`, `service_tier` |
+| `litellm_request_queue_time_seconds` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider` |
+| `litellm_overhead_latency_metric`<br />`litellm_overhead_with_guardrails_latency_metric` | `model_group`, `api_provider`, `api_base`, `litellm_model_name`, `hashed_api_key`, `api_key_alias`, `model_id` |
 
-All are Prometheus Histograms.
+`litellm_request_queue_time_seconds` does not include `service_tier` because the provider has not selected a service tier when this metric is recorded.
 
-### Labels
-
-`litellm_request_total_latency_metric`, `litellm_llm_api_latency_metric`, and `litellm_llm_api_time_to_first_token_metric` carry: `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model", "model_id", "api_provider", "service_tier"`.
-
-`litellm_request_queue_time_seconds` carries the same labels, minus `"service_tier"` (a request's tier isn't known yet at queue time).
-
-`litellm_overhead_latency_metric` and `litellm_overhead_with_guardrails_latency_metric` carry a different set: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id"`.
+</details>
 
 ### Segmenting latency and spend by service tier
 
