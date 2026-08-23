@@ -1,5 +1,9 @@
 # Release Cycle
 
+:::warning
+Only the latest patch of the 4 most recent minor versions is supported (e.g. v1.90.x, v1.89.x, v1.88.x, v1.87.x). Older versions are deprecated and do not receive fixes or support. See [GitHub Releases](https://github.com/BerriAI/litellm/releases) for the current supported set.
+:::
+
 Litellm Proxy has the following release cycle:
 
 - `1.x.x-dev.N` (nightly): Releases which pass ci/cd (no manual review). Published on PyPI as `1.x.x.devN`.
