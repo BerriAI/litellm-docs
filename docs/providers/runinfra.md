@@ -116,7 +116,8 @@ print(response.choices[0].message.content)
 | DeepSeek V4 Flash | `runinfra/deepseek-ai/DeepSeek-V4-Flash-0731` | 1,048,576 | 32,768 |
 | DeepSeek V4 Pro | `runinfra/deepseek-ai/DeepSeek-V4-Pro-0813` | 1,048,576 | 32,768 |
 | NVIDIA Nemotron 3.5 Lightning 30B | `runinfra/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16` | 262,144 | 32,768 |
+| Ornith 1.5 35B | `runinfra/ornith-ai/Ornith-1.5-35B-A3B` | 262,144 | 32,768 |
 | Qwen3.8 2.4T A95B | `runinfra/Inferact/Qwen3.8-2.4T-A95B-NVFP4` | 262,144 | 32,768 |
 | Qwen3.8 27B | `runinfra/Qwen/Qwen3.8-27B` | 262,144 | 32,768 |
 
-All models support tool calling and streaming. Current per-model pricing is listed on the [RunInfra model pages](https://runinfra.ai/docs).
+All models support tool calling and streaming. Qwen3.8 27B and Ornith 1.5 35B also accept image input. Current per-model pricing is listed on the [RunInfra model pages](https://runinfra.ai/docs).
