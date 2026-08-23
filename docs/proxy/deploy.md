@@ -432,8 +432,11 @@ module "litellm" {
 
   proxy_config = {
     model_list = [{
-      model_name = "gemini-2.5-pro"
-      litellm_params = { model = "vertex_ai/gemini-2.5-pro" }
+      model_name = "gemini-3.7-flash"
+      litellm_params = {
+        model           = "vertex_ai/gemini-3.7-flash"
+        vertex_location = "global"
+      }
     }]
   }
 }
