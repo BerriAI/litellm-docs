@@ -209,7 +209,7 @@ Beyond the new entries, this release is another large cost-map maintenance pass 
     - Convert messages to contents in Gemini `count_tokens` - [PR #36981](https://github.com/BerriAI/litellm/pull/36981)
 - **[Google Gemini](../../docs/providers/gemini)**
     - Price Gemini 3.6 Flash at Google's introductory rates on every service tier, and correct `gemini-3.1-flash-lite-image` capabilities while deduping its entries - [PR #37197](https://github.com/BerriAI/litellm/pull/37197), [PR #36849](https://github.com/BerriAI/litellm/pull/36849)
-- **[Azure](../../docs/providers/azure/azure)**
+- **[Azure](../../docs/providers/azure)**
     - Rename `max_tokens` to `max_completion_tokens` for `gpt-5-chat` deployments - [PR #36857](https://github.com/BerriAI/litellm/pull/36857)
     - Strip non-OpenAI-spec message fields before the request on Azure AI - [PR #34445](https://github.com/BerriAI/litellm/pull/34445)
 - **[Fireworks AI](../../docs/providers/fireworks_ai)**
