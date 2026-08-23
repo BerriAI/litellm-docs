@@ -227,6 +227,127 @@ print(response)
 **Finding your Azure endpoint:** Go to Azure AI Foundry → Your deployment → Overview. Your base URL will be `https://<resource-name>.services.ai.azure.com/anthropic`
 :::
 
+## Workload Identity Federation
+
+Anthropic supports workload identity federation, so a proxy can exchange an OIDC identity token it already holds for a short-lived `sk-ant-oat01` access token instead of storing a long-lived `sk-ant-` key. This is the Anthropic equivalent of what Vertex AI and Azure already do, and it suits deployments with a no-static-secrets policy.
+
+LiteLLM mints and caches the access token for you. Configure the federation identifiers plus one identity source, and every route that reaches Anthropic (chat completions, `/v1/messages`, files, batches, passthrough) uses the minted token.
+
+### Federation identifiers
+
+These come from the federation rule you create in the Anthropic Console, and they are the same whichever identity source you pick:
+
+| Field | Description |
+| --- | --- |
+| `anthropic_federation_rule_id` | The `fdrl_...` id of the federation rule |
+| `anthropic_organization_id` | Your Anthropic organization UUID |
+| `anthropic_service_account_id` | The `svac_...` service account the rule maps to |
+| `anthropic_workspace_id` | Optional. Scopes the minted token to one workspace |
+
+### Identity sources
+
+There are four ways to supply the OIDC assertion. Two need no `anthropic_identity_source` at all, and two are selected with it.
+
+#### Token file (default)
+
+Reads an assertion a platform already projects onto disk, which is how Kubernetes service account tokens and most CI runners work. Set `anthropic_identity_token_file` and leave `anthropic_identity_source` unset. The path must sit under LiteLLM's OIDC file allowlist, which you extend with `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS`. The file is re-read on each mint, so a rotated token is picked up without a restart.
+
+```yaml
+model_list:
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      anthropic_identity_token_file: /var/run/secrets/anthropic.com/token
+      anthropic_federation_rule_id: os.environ/ANTHROPIC_FEDERATION_RULE_ID
+      anthropic_organization_id: os.environ/ANTHROPIC_ORGANIZATION_ID
+      anthropic_service_account_id: os.environ/ANTHROPIC_SERVICE_ACCOUNT_ID
+```
+
+#### Secret reference (default)
+
+`anthropic_identity_token` takes an `oidc/` reference, not a raw token. Accepted forms are `oidc/env/VAR_NAME`, `oidc/file//absolute/path`, `oidc/github/<audience>`, and `oidc/google/<audience>`. Pasting a bare JWT is rejected, so export it and reference the variable instead.
+
+```yaml
+      anthropic_identity_token: oidc/env/MY_WORKLOAD_TOKEN
+```
+
+#### LiteLLM as the issuer
+
+For deployments with no external IdP, LiteLLM signs the assertion itself with an ES256 (P-256) key. Set `anthropic_identity_source: internal_issuer` and point `anthropic_issuer_signing_key_ref` at the key rather than pasting it inline, so custody stays with your secret manager. `anthropic_issuer_ttl_seconds` defaults to 300 and cannot exceed 3600.
+
+```yaml
+credential_list:
+  - credential_name: anthropic_wif
+    credential_values:
+      anthropic_identity_source: internal_issuer
+      anthropic_issuer_url: https://litellm.example.com
+      anthropic_issuer_subject: litellm-proxy
+      anthropic_issuer_audience: https://api.anthropic.com
+      anthropic_issuer_signing_key_ref: os.environ/ANTHROPIC_WIF_SIGNING_KEY
+      anthropic_issuer_ttl_seconds: 300
+      anthropic_federation_rule_id: os.environ/ANTHROPIC_FEDERATION_RULE_ID
+      anthropic_organization_id: os.environ/ANTHROPIC_ORGANIZATION_ID
+      anthropic_service_account_id: os.environ/ANTHROPIC_SERVICE_ACCOUNT_ID
+    credential_info:
+      custom_llm_provider: anthropic
+
+model_list:
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      litellm_credential_name: anthropic_wif
+```
+
+Anthropic needs the matching public key to verify what LiteLLM signs. Export it from the proxy and register it as the **inline** issuer JWKS on your federation rule:
+
+```shell
+curl -s http://localhost:4000/credentials/anthropic_wif/jwks \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+The endpoint is proxy-admin only and never exposes the private key, so paste the JSON it returns into the Anthropic Console rather than pointing Anthropic at the URL. A freshly registered JWKS takes about a minute before Anthropic accepts assertions signed by it.
+
+#### Keycloak
+
+For shops that already run Keycloak as the workload IdP, LiteLLM fetches the assertion with an OAuth client credentials grant. Set `anthropic_identity_source: keycloak` plus:
+
+```yaml
+      anthropic_keycloak_token_url: https://keycloak.example.com/realms/prod/protocol/openid-connect/token
+      anthropic_keycloak_client_id: litellm-proxy
+      anthropic_keycloak_auth_method: client_secret_basic  # or client_secret_post
+      anthropic_keycloak_client_secret_ref: os.environ/KEYCLOAK_CLIENT_SECRET
+      anthropic_keycloak_scope: anthropic-federation
+```
+
+Mixing fields across variants is rejected rather than silently ignored, so a config that names `internal_issuer` while carrying Keycloak fields fails at startup instead of quietly falling back.
+
+### Setting it up in the UI
+
+The Admin UI covers the whole flow under **Models + Endpoints -> Add Provider**. Pick Anthropic, choose a workload identity variant instead of an API key, and fill in the federation identifiers. With LiteLLM as the issuer the credential saves before you have a rule id, since you need the JWKS it publishes in order to create the rule in the first place; register that JWKS with Anthropic, then paste the rule id back into the wizard.
+
+### Token lifetime and refresh
+
+LiteLLM caches the minted access token per deployment and refreshes it in the background before it expires, so a request rarely waits on an exchange. Refresh is two-tier: an advisory refresh at half the token's lifetime that happens in the background while the old token keeps serving, and a mandatory one at an eighth of the lifetime that blocks. Concurrent requests for the same deployment share a single in-flight exchange rather than each minting their own, so the number of exchanges does not scale with traffic.
+
+The cache is per process, so each replica mints its own token.
+
+### Restricting where assertions are sent
+
+The exchange only talks to `api.anthropic.com`. If you front Anthropic with a gateway, list its hostname in `LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS` (comma separated) so the signed assertion is allowed to reach it.
+
+```shell
+export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal"
+```
+
+### Monitoring
+
+Token health is emitted through the standard service-logging path, so it lands on both Prometheus and OpenTelemetry with no extra wiring. The services are `anthropic_wif` for the exchange itself and `anthropic_wif_cache` for cache hits and misses, giving you mint counts, mint latency, and failures broken out by cause. Enable them with:
+
+```yaml
+litellm_settings:
+  service_callback: ["prometheus_system"]
+```
+
 ## Usage
 
 ```python
