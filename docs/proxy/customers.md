@@ -25,7 +25,7 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 
 :::info JWT auth takes precedence
 
-If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc. This behavior shipped in v1.87.0 ([PR #27758](https://github.com/BerriAI/litellm/pull/27758)).
+If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
 
 :::
 
