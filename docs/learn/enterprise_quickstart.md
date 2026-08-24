@@ -695,7 +695,7 @@ items={[
   {
     icon: "🔒",
     title: "Data Security",
-    description: "SOC 2, ISO 27001, data regions, and compliance FAQs.",
+    description: "Self-hosted data handling, vulnerability reporting, and compliance FAQs.",
     to: "/docs/data_security",
   },
   {
