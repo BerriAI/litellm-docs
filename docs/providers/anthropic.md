@@ -231,7 +231,7 @@ print(response)
 
 Anthropic supports workload identity federation, so a proxy can exchange an OIDC identity token it already holds for a short-lived `sk-ant-oat01` access token instead of storing a long-lived `sk-ant-` key. This is the Anthropic equivalent of what Vertex AI and Azure already do, and it suits deployments with a no-static-secrets policy.
 
-LiteLLM mints and caches the access token for you. Configure the federation identifiers plus one identity source, and every route that reaches Anthropic (chat completions, `/v1/messages`, files, batches, passthrough) uses the minted token.
+LiteLLM mints and caches the access token for you. Configure the federation identifiers plus one identity source, and every route that reaches Anthropic uses the minted token: chat completions, `/v1/messages`, files, batches, skills, passthrough, token counting and model discovery.
 
 ### Federation identifiers
 
