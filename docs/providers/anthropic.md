@@ -331,6 +331,14 @@ LiteLLM caches the minted access token per deployment and refreshes it in the ba
 
 The cache is per process, so each replica mints its own token.
 
+### Who can configure it
+
+Only a proxy admin can create or change a deployment that uses workload identity federation. A team admin who otherwise manages a team-scoped deployment gets a 403, and that holds however the change is expressed: setting a federation field directly, attaching a credential that carries one by name, or changing `api_base` on a deployment that is already federated. The last one matters because `api_base` decides where the signed assertion is sent and where the minted token is presented, so it is part of the federation configuration even though it is not a federation field.
+
+The same rule covers the stored fallback lists on a key or team. A fallback target cannot carry a federation field, since those are merged over the deployment's own configuration when a failover happens.
+
+Teams keep normal access to a federated deployment. Only editing it moves to the proxy admin.
+
 ### Restricting where assertions are sent
 
 The exchange only talks to `api.anthropic.com`. If you front Anthropic with a gateway, list its hostname in `LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS` (comma separated) so the signed assertion is allowed to reach it.
