@@ -212,9 +212,10 @@ that cannot accept it moves the failure from the client to the provider.
 
 :::warning
 Setting `supports_vision: true` under `model_info` in your LiteLLM `config.yaml` does **not** fix
-this. That flag drives LiteLLM's own routing and cost logic and is not exposed on `/v1/models`, and
-OpenCode would not read it if it were. `modalities` in the OpenCode config is the only place this
-can be declared.
+this. That flag records the capability in LiteLLM's own model metadata, where it feeds the dashboard
+and provider-specific request handling; it is useful for a model LiteLLM's catalog does not already
+know, but it is not exposed on `/v1/models`, and OpenCode would not read it if it were. `modalities`
+in the OpenCode config is the only place this can be declared.
 :::
 
 #### Auto Router and other model groups
