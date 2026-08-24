@@ -1,6 +1,6 @@
 # Web Search Integration
 
-Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Perplexity, Tavily, etc.).
+Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Parallel, Perplexity, Tavily, and others).
 
 ## Quick Start
 
@@ -236,7 +236,14 @@ search_tools:
     litellm_params:
       search_provider: tavily
       api_key: os.environ/TAVILY_API_KEY
+
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
 ```
+
+To use Parallel Search, set `search_tool_name: parallel-search` in `websearch_interception_params`.
 
 ## Usage Examples
 
