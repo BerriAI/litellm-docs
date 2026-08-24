@@ -244,6 +244,21 @@ These come from the federation rule you create in the Anthropic Console, and the
 | `anthropic_service_account_id` | The `svac_...` service account the rule maps to |
 | `anthropic_workspace_id` | Optional. Scopes the minted token to one workspace |
 
+### Configuring by environment instead
+
+Every field below can come from the environment rather than the deployment, which is what you want
+when the same values apply proxy-wide. A value set on the deployment wins over the environment.
+
+| Field | Environment variable |
+| --- | --- |
+| `anthropic_federation_rule_id` | `ANTHROPIC_FEDERATION_RULE_ID` |
+| `anthropic_organization_id` | `ANTHROPIC_ORGANIZATION_ID` |
+| `anthropic_service_account_id` | `ANTHROPIC_SERVICE_ACCOUNT_ID` |
+| `anthropic_workspace_id` | `ANTHROPIC_WORKSPACE_ID` |
+| `anthropic_identity_source` | `ANTHROPIC_IDENTITY_SOURCE` |
+| `anthropic_identity_token_file` | `ANTHROPIC_IDENTITY_TOKEN_FILE` |
+| `anthropic_identity_token` | `ANTHROPIC_IDENTITY_TOKEN` |
+
 ### Identity sources
 
 There are four ways to supply the OIDC assertion. Two need no `anthropic_identity_source` at all, and two are selected with it.
