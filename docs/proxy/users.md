@@ -201,6 +201,36 @@ curl --location 'http://localhost:4000/chat/completions' \
 }'
 ```
 
+#### Update a team member's budget
+
+Update `max_budget_in_team` for an existing team member with `/team/member_update`. The new budget takes effect on the member's next request
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H 'Authorization: Bearer sk-1234' \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
+```
+
+#### Reset a team member's spend
+
+Reset the spend tracked against a member's in-team budget without changing the budget itself. Callable by a proxy admin or the team's admin, but a team admin cannot reset their own spend
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
+-H 'Authorization: Bearer sk-1234' \
+-H 'Content-Type: application/json' \
+-d '{"reset_to": 0}'
+```
+
+`reset_to` must be a number no greater than the member's current spend or their budget. The reset takes effect on the member's next request
+
+Response:
+
+```shell
+{"team_id":"e8d1460f-846c-45d7-9b43-55f3cc52ac32","user_id":"ishaan","spend":0.0,"previous_spend":3.495e-05,"max_budget":10.0}
+```
+
 
 ### Internal User
 
