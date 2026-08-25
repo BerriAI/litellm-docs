@@ -2,7 +2,7 @@
 
 [backstage-plugin-litellm-govai](https://github.com/acarmisc/backstage-plugin-litellm-govai) is a Backstage plugin that puts LiteLLM governance inside your developer portal. Developers generate and manage their own virtual keys and track model usage from Backstage, while platform teams keep budgets, rate limits, and model access under central control.
 
-It ships a frontend package built on the Backstage New Frontend System and a backend router built on the New Backend System; the LiteLLM master key stays server-side and is never exposed to the browser.
+The plugin comes in two parts you install into your Backstage monorepo: a React frontend that renders the key management and usage pages, and a backend router that talks to the LiteLLM proxy on the frontend's behalf. Only the backend holds your LiteLLM master key, so it never reaches the browser.
 
 Key features:
 - Self-service virtual key generation and management, scoped to the signed-in Backstage user
