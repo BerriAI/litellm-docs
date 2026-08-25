@@ -669,6 +669,26 @@ Use a test request that the primary provider rejects with a content-policy error
 Enable pre-call checks and send a test request that exceeds the primary model's configured context window.
 
 
+### Track Fallbacks in Spend Logs
+
+Every spend log row records whether the request was served by the model group the client asked for, or by a fallback. The proxy writes two keys into the `metadata` column of `LiteLLM_SpendLogs`:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `attempted_fallbacks` | int | Number of fallback attempts made. `0` means the requested model group served the request |
+| `original_model_group` | str | The model group the client originally requested |
+
+For example, a request to `gpt-3.5-turbo` that fails over to `claude-fable-5` produces a row with `model_group=claude-fable-5`, `attempted_fallbacks=1`, and `original_model_group=gpt-3.5-turbo`, so fallback-served and directly-served requests stay distinguishable after the fact:
+
+```sql
+SELECT model_group,
+       metadata->>'attempted_fallbacks' AS attempted_fallbacks,
+       metadata->>'original_model_group' AS original_model_group
+FROM "LiteLLM_SpendLogs";
+```
+
+Both keys are set by the proxy and overwrite any client-supplied values of the same name. Rows written before this feature read `null` for both keys.
+
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
 **Before call is made** check if a call is within model context window with  **`enable_pre_call_checks: true`**.

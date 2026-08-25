@@ -150,6 +150,10 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
   "total_tokens": 100,
   "completion_tokens": 80,
   "prompt_tokens": 20,
+  "metadata": {
+    "attempted_fallbacks": 0,                                                    # 0 = requested model group served the request
+    "original_model_group": "llama3"                                             # Model group originally requested
+  },
 
 }
 ```
