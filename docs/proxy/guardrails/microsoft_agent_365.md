@@ -93,16 +93,16 @@ An allowed call returns the tool result. A call blocked by Defender returns HTTP
 | `resource_app_id` | No | Application id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
 | `agent_id` | No | Agent identity reported to Agent 365 with every evaluation. Defaults to the caller's key alias |
 | `timeout` | No | Per-request timeout in seconds for the token exchange and the evaluation call. Defaults to 10 |
-| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 cannot be reached or the OBO exchange fails; `fail_open` allows it unscanned |
+| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block |
 
 ## Failure behavior
 
 | Situation | Result |
 |-----------|--------|
 | Defender verdict is block | HTTP 400 with the Defender message and correlation id. Always blocks |
-| Agent 365 rejects the request (HTTP 400) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
-| Caller sent no Entra bearer token | `fail_closed`: HTTP 401. `fail_open`: allowed, recorded as unscanned |
-| OBO exchange rejected by Entra | `fail_closed`: HTTP 401. `fail_open`: allowed, recorded as unscanned |
+| Agent 365 rejects the evaluation request (any HTTP 4xx) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
+| Caller sent no Entra bearer token | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| OBO exchange rejected by Entra | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
 ## Conversation grouping
