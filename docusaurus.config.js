@@ -136,6 +136,10 @@ const config = {
             from: '/docs/observability/telemetry',
             to: '/docs/observability/opentelemetry_v2',
           },
+          {
+            from: '/docs/providers/vllm_batches',
+            to: '/docs/batches',
+          },
         ],
       },
     ],

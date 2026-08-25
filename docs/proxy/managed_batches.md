@@ -31,7 +31,7 @@ Here's how to give developers access to your Batch models.
 ### 1. Setup config.yaml
 
 - specify `mode: batch` for each model: Allows developers to know this is a batch model.
-- optionally skip pre-read of batch input files for specific batch providers/models (useful for large files on custom vLLM batch deployments).
+- optionally skip pre-read of batch input files for specific batch providers/models (useful for large batch input files).
 
 ```yaml showLineNumbers title="litellm_config.yaml"
 model_list:
