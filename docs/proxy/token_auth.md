@@ -638,6 +638,8 @@ general_settings:
 To enable team JWT tokens to access Anthropic-style endpoints such as `/v1/messages`, update `team_allowed_routes` in your `litellm_jwtauth` configuration. `team_allowed_routes` supports the following values:
 
 - Named route groups from `LiteLLMRoutes` (e.g., `openai_routes`, `anthropic_routes`, `info_routes`, `mapped_pass_through_routes`).
+- Exact routes, e.g. `/v1/messages`.
+- Route prefixes ending in `*`, e.g. `/internal-models/*`, which match every route under that prefix.
 
 Below is a quick reference for the route groups you can use and example representative routes from each group. If you need the exhaustive list, see the `LiteLLMRoutes` enum in `litellm/proxy/_types.py` for the authoritative list.
 
@@ -683,6 +685,18 @@ general_settings:
     team_ids_jwt_field: "team_ids"
     team_allowed_routes: ["/v1/messages", "info_routes"]
 ```
+
+If you register pass-through endpoints that all share a prefix, grant the prefix once with a trailing `*` so routes added later are covered without another config change. `admin_allowed_routes` accepts the same patterns.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes", "info_routes", "/internal-models/*"]
+```
+
+Only a trailing `*` is treated as a wildcard, and it matches routes below the prefix, so `/internal-models/*` covers `/internal-models/anthropic/v1/messages` but not the bare `/internal-models` route.
 
 
 ### Caching Public Keys 
