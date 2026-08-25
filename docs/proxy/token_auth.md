@@ -932,7 +932,7 @@ environment_variables:
 
 - `team_ids_jwt_field`: Field containing team IDs (as a list). **Supports dot notation** (e.g., `"groups"`, `"teams.ids"`).
 - `user_email_jwt_field`: Field containing user email. **Supports dot notation** (e.g., `"email"`, `"user.email"`).
-- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`).
+- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`). When set, the end-user ID from the verified JWT claim takes precedence over any request-supplied value (headers like `x-litellm-end-user-id` or body fields like `metadata.user_id`; see the [customer ID priority order](customers#1-make-llm-api-call-w-customer-id)).
 
 - `role_mappings`: A list of role mappings. Map the received role in the JWT token to an internal role on LiteLLM.
 
