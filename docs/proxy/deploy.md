@@ -444,7 +444,7 @@ Three GCP-specific caveats. First, always override `image_registry`: it defaults
 </TabItem>
 </Tabs>
 
-To manage LiteLLM resources (keys, teams, models) as code once the stack is up, use [terraform-provider-litellm](https://github.com/BerriAI/terraform-provider-litellm).
+To manage LiteLLM resources (keys, teams, models) as code once the stack is up, use [terraform-provider-litellm](https://github.com/BerriAI/terraform-provider-litellm). If you run the proxy on Kubernetes and reconcile the rest of your platform with [Crossplane](https://crossplane.io/) instead of Terraform, the community [provider-litellm](https://github.com/TheCodingSheikh/provider-litellm) exposes the same management API as Kubernetes custom resources, so models, teams and budgets are applied with `kubectl` and reconciled continuously alongside your cluster state.
 
 ## Other platforms
 
