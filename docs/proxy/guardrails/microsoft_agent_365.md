@@ -100,9 +100,10 @@ An allowed call returns the tool result. A call blocked by Defender returns HTTP
 | Situation | Result |
 |-----------|--------|
 | Defender verdict is block | HTTP 400 with the Defender message and correlation id. Always blocks |
-| Agent 365 rejects the evaluation request (any HTTP 4xx) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
+| Agent 365 rejects the evaluation request (HTTP 4xx other than 408/429) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
 | Caller sent no Entra bearer token | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
 | OBO exchange rejected by Entra | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| Agent 365 or Entra returns 408 or 429 (throttled) | HTTP 503, recorded as Throttled. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
 ## Conversation grouping
