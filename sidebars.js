@@ -1317,6 +1317,7 @@ const sidebars = {
         "proxy/security_encryption_faq",
         "proxy/docker_image_security",
         "migration_policy",
+        "api_stability_policy",
         "proxy/release_cycle",
         "load_test_advanced",
         "load_test_sdk",
