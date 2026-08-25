@@ -9,22 +9,9 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 ## Usage 
 
-### Prerequisites - Start LiteLLM Proxy with Beta Flag
+:::note
 
-:::warning[Beta Feature - Required]
-
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
-
-```bash
-export EXPERIMENTAL_UI_LOGIN="True"
-litellm --config config.yaml
-```
-
-Or add it to your proxy startup command:
-
-```bash
-EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
-```
+Older versions of this page said the proxy had to be started with `EXPERIMENTAL_UI_LOGIN="True"`. That flag is no longer required: CLI authentication works on a default deployment, and the CLI's credential is accepted without it
 
 :::
 
@@ -37,24 +24,19 @@ By default, CLI authentication tokens expire after **24 hours**. You can customi
 ```bash
 # Set CLI JWT tokens to expire after 48 hours
 export LITELLM_CLI_JWT_EXPIRATION_HOURS=48
-export EXPERIMENTAL_UI_LOGIN="True"
 litellm --config config.yaml
 ```
 
 Or in a single command:
 
 ```bash
-LITELLM_CLI_JWT_EXPIRATION_HOURS=48 EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
+LITELLM_CLI_JWT_EXPIRATION_HOURS=48 litellm --config config.yaml
 ```
 
 **Examples:**
 - `LITELLM_CLI_JWT_EXPIRATION_HOURS=12` - Tokens expire after 12 hours
 - `LITELLM_CLI_JWT_EXPIRATION_HOURS=168` - Tokens expire after 7 days (168 hours)
 - `LITELLM_CLI_JWT_EXPIRATION_HOURS=720` - Tokens expire after 30 days (720 hours)
-
-:::note[Experimental UI Session]
-When `EXPERIMENTAL_UI_LOGIN` is enabled, the **browser UI login** session uses a fixed 10-minute expiry (not configurable). `LITELLM_UI_SESSION_DURATION` applies only to non-experimental flows.
-:::
 
 :::tip
 You can check your current token's age and expiration status using:
