@@ -379,11 +379,13 @@ The setting applies only to these metric families:
 - `litellm_deployment_success_responses`
 - `litellm_deployment_failure_responses`
 - `litellm_request_total_latency_metric`
+- `litellm_llm_api_latency_metric`
 - `litellm_llm_api_time_to_first_token_metric`
+- `litellm_request_queue_time_seconds`
 - `litellm_overhead_latency_metric`
 - `litellm_deployment_latency_per_output_token`
 
-It does not change related metrics that are not caller-scoped, or other latency metrics such as `litellm_llm_api_latency_metric` and `litellm_overhead_with_guardrails_latency_metric`. Counter samples use the Prometheus `_total` suffix, and histogram `_bucket`, `_sum`, and `_count` samples all receive the selected identity label or labels.
+It does not change related metrics that are not caller-scoped, or the guardrail-inclusive `litellm_overhead_with_guardrails_latency_metric`. Counter samples use the Prometheus `_total` suffix, and histogram `_bucket`, `_sum`, and `_count` samples all receive the selected identity label or labels.
 
 Requests without a resolved email use LiteLLM's established `"None"` label value. For example, these queries group provider requests and p95 end-to-end latency by resolved email while excluding requests with no email:
 
