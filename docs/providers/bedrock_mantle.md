@@ -242,8 +242,8 @@ os.environ['BEDROCK_MANTLE_REGION'] = "us-east-1"  # or use AWS_REGION
 
 | Model | Endpoint | Context Window | Input (per 1M tokens) | Output (per 1M tokens) |
 |-------|----------|---------------|----------------------|------------------------|
-| `openai.gpt-5.5` | `/responses` | 272K | $5.50 | $33.00 |
-| `openai.gpt-5.4` | `/responses` | 272K | $2.75 | $16.50 |
+| `openai.gpt-5.5` | `/responses` | 1.05M | $5.50 | $33.00 |
+| `openai.gpt-5.4` | `/responses` | 1.05M | $2.75 | $16.50 |
 | `openai.gpt-oss-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
 | `openai.gpt-oss-20b` | `/chat/completions` | 131K | $0.075 | $0.30 |
 | `openai.gpt-oss-safeguard-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
