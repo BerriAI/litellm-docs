@@ -176,9 +176,7 @@ guardrails:
 
 Unlike most other guardrails that run via a direct hook on the raw request, Lakera v2 honors both skip flags directly; most direct-hook guardrails do not. See [Where the skip flags apply](./quick_start#where-the-skip-flags-apply) for the full picture across guardrails.
 
-When either flag excludes a message that Lakera would otherwise have masked in place for a PII-only violation, Lakera v2 blocks instead of masking: masking rewrites the request's `messages` from the (now-shorter) inspected list, which would silently drop the excluded message from what's actually sent to the LLM.
-
-This block-instead-of-mask behavior isn't limited to the skip flags. Lakera v2 degrades to blocking any time masking in place would corrupt the outgoing request: when a message carries non-string (multimodal) content, when a message has fields beyond `role`/`content` such as a tool message's `tool_call_id`, when the request combines chat completions `messages` with a Responses API `input` field, since masking would splice `input`-derived text into `messages`, or when the request carries a Responses API `instructions` field at all, since there's no field this guardrail can safely rewrite a redacted version into.
+Masking in place preserves both skip flags and every other field on a message (a tool message's `tool_call_id`, an assistant message's `tool_calls`, `name`, `cache_control`, and so on): only the message's own `content` is rewritten, and a message excluded by either skip flag is left completely untouched at its original position rather than being dropped. Lakera v2 still degrades to blocking, rather than masking, in two narrower cases where a redacted result can't be safely written back: when a message carries non-string (multimodal) content, or when the request combines chat completions `messages` with a Responses API `input` field or carries a Responses API `instructions` field, since there's no single field masking can safely target there.
 
 ## Advisory mode
 
@@ -206,7 +204,7 @@ The user's latest message was flagged for {reason} by a content safety guardrail
 
 For a Responses API request, the advisory is appended to `instructions` when that field is present, not to `input`: `instructions` is the developer-set, privileged system-level field, while `input` is caller-controlled and a caller could otherwise include text telling the model to disregard a trailing warning appended there. `instructions` is inspected the same way, so a flag originating there still triggers the advisory correctly.
 
-Advisory mode skips PII masking: a PII-only flag still gets the advisory message instead of redaction, rather than showing the model already-masked text alongside a note about a flag it can no longer see.
+A PII-only flag is masked in place rather than getting the advisory message: there is no reason to show the model raw PII to deliver an advisory note, and masking already resolves the concern on its own. The advisory message is reserved for flags advisory mode can't otherwise resolve, such as a prompt-injection heuristic.
 
 Advisory mode has two limitations tied to when in the request lifecycle the guardrail runs:
 
