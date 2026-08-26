@@ -1,14 +1,19 @@
+---
+title: "[Beta] Auto Routing"
+sidebar_label: "[Beta] Auto Routing"
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Auto Routing
+# [Beta] Auto Routing
 
 One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier.
 
 :::info Availability
 
-Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+Auto routing is in **beta**, so config keys and defaults can still change between releases. Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
