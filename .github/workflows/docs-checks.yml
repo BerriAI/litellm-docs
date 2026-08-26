@@ -14,3 +14,14 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/check-writing-style.js docs blog release_notes
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
