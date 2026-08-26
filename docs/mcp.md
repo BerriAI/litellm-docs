@@ -6,6 +6,8 @@ import Image from '@theme/IdealImage';
 
 LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint for all MCP tools and control MCP access by Key, Team. 
 
+New to the MCP Gateway? Start with the [10-minute quickstart](./mcp_quickstart.md); it takes you from install to a verified `tools/list` and tool call with a single config file.
+
 <Image 
   img={require('../img/mcp_2.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
