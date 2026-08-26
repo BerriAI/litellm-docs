@@ -27,6 +27,8 @@ Starting in LiteLLM v1.80.18, the LiteLLM MCP protocol version is `2025-11-25`.<
 LiteLLM namespaces multiple MCP servers by prefixing each tool name with its MCP server name, so newly created servers now must use names that comply with SEP-986; noncompliant names cannot be added anymore. Existing servers that still violate SEP-986 only emit warnings today, but future MCP-side rollouts may block those names entirely, so we recommend updating any legacy server names proactively before MCP enforcement makes them unusable.
 :::
 
+For a single decision reference covering which endpoint, transport, and auth pattern to use, see the [MCP Configuration Reference](./mcp_config_reference)
+
 ## Adding your MCP
 
 ### Prerequisites
@@ -226,7 +228,7 @@ mcp_servers:
 - **Server Name**: Use any descriptive name for your MCP server (e.g., `zapier_mcp`, `deepwiki_mcp`, `circleci_mcp`)
 - **Alias**: This name will be prefilled with the server name with "_" replacing spaces, else edit it to be the prefix in tool names
 - **URL**: The endpoint URL for your MCP server (required for HTTP/SSE transports)
-- **Transport**: Optional transport type (defaults to `sse`)
+- **Transport**: Optional transport type (defaults to `http`)
   - `sse` - SSE (Server-Sent Events) transport
   - `http` - Streamable HTTP transport
   - `stdio` - Standard Input/Output transport
@@ -253,7 +255,6 @@ mcp_servers:
 
 - **Extra Headers**: Optional list of additional header names that should be forwarded from client to the MCP server
 - **Static Headers**: Optional map of header key/value pairs to include every request to the MCP server.
-- **Spec Version**: Optional MCP specification version (defaults to `2025-06-18`)
 
 Examples for each auth type:
 
