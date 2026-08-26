@@ -19,7 +19,7 @@ This callback writes a local, tamper-evident log: the SHA-256 chain shows a reco
 
 ## Quick start
 
-Set `ASQAV_LOG_PATH` to choose where the file lands (default: `~/.litellm_asqav_audit.jsonl`), then add `asqav` to `success_callbacks` and `failure_callbacks`:
+Set `ASQAV_LOG_PATH` to choose where the file lands (default: `~/.litellm_asqav_audit.jsonl`), then add `asqav` to `success_callback` and `failure_callback`:
 
 ```python
 import litellm
@@ -27,8 +27,8 @@ import os
 
 os.environ["ASQAV_LOG_PATH"] = "/var/log/litellm_audit.jsonl"
 
-litellm.success_callbacks = ["asqav"]
-litellm.failure_callbacks = ["asqav"]
+litellm.success_callback = ["asqav"]
+litellm.failure_callback = ["asqav"]
 
 response = litellm.completion(
     model="gpt-3.5-turbo",
@@ -102,11 +102,17 @@ pip install asqav[litellm]
 ```
 
 ```python
+import os
 import litellm
 from asqav.extras.litellm import AsqavSigningLogger
 
+os.environ["ASQAV_API_KEY"] = "sk_live_..."  # or call asqav.init("sk_live_...")
+
 litellm.callbacks = [AsqavSigningLogger(agent_name="my-agent")]
 ```
+
+Without an API key the logger warns once and no-ops; signing is evidence, not enforcement, so it
+never blocks the LLM call.
 
 `AsqavSigningLogger` signs each call through the Asqav API and stitches the returned receipt into the same local JSONL index, so the chain and the third-party-verifiable receipts stay linked. See [`asqav/extras/litellm`](https://github.com/jagmarques/asqav-sdk/blob/main/python/src/asqav/extras/litellm.py).
 
