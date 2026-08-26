@@ -101,6 +101,7 @@ The health check picks the operation to test from the model's `model_info.mode`.
 | `realtime` | realtime session |
 | `ocr` | OCR |
 | `video_generation` | video generation |
+| `image_edit` | image edit |
 
 For a wildcard route (`*` in `litellm_params.model`), set `health_check_model` to the concrete model the probe should call. With `mode` unset on a wildcard route, `max_tokens` is left unset on the probe request.
 
