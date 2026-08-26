@@ -357,6 +357,63 @@ histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_
 
 </details>
 
+### Configure caller identity on deployment and latency metrics
+
+By default, deployment counters and caller-scoped latency histograms identify the caller with `api_key_alias`. Set `prometheus_deployment_and_latency_caller_identity` to use `user_email` instead, or to expose both labels:
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_deployment_and_latency_caller_identity: user_email
+```
+
+| Value | Caller identity labels | Behavior |
+|---|---|---|
+| `api_key_alias` (default) | `api_key_alias` | Preserves the existing metric schema and existing queries. |
+| `user_email` | `user_email` | Replaces `api_key_alias` at the same position in the label schema. |
+| `both` | `api_key_alias`, then `user_email` | Emits both dimensions. `user_email` is placed immediately after `api_key_alias`. |
+
+The setting applies only to these metric families:
+
+- `litellm_deployment_total_requests`
+- `litellm_deployment_success_responses`
+- `litellm_deployment_failure_responses`
+- `litellm_request_total_latency_metric`
+- `litellm_llm_api_latency_metric`
+- `litellm_llm_api_time_to_first_token_metric`
+- `litellm_request_queue_time_seconds`
+- `litellm_overhead_latency_metric`
+- `litellm_deployment_latency_per_output_token`
+
+It does not change related metrics that are not caller-scoped, or the guardrail-inclusive `litellm_overhead_with_guardrails_latency_metric`. Counter samples use the Prometheus `_total` suffix, and histogram `_bucket`, `_sum`, and `_count` samples all receive the selected identity label or labels.
+
+Requests without a resolved email use LiteLLM's established `"None"` label value. For example, these queries group provider requests and p95 end-to-end latency by resolved email while excluding requests with no email:
+
+```promql
+sum by (user_email) (
+  rate(litellm_deployment_total_requests_total{user_email!="None"}[5m])
+)
+```
+
+```promql
+histogram_quantile(
+  0.95,
+  sum by (user_email, le) (
+    rate(litellm_request_total_latency_metric_bucket{user_email!="None"}[5m])
+  )
+)
+```
+
+`prometheus_metrics_config.include_labels` is validated against the selected mode. In `api_key_alias` mode it can include `api_key_alias`; in `user_email` mode it can include `user_email`; and in `both` mode it can include either or both. An invalid mode value fails proxy startup with a `ValueError` naming the accepted values, and `user_email` mode combined with `include_labels: [api_key_alias]` on an affected family also fails startup, naming both settings. `prometheus_exclude_labels` is applied afterward and can remove either identity label. For example, selecting `both` globally and excluding `api_key_alias` leaves only `user_email` on the affected families.
+
+:::warning
+Changing this setting changes fixed Prometheus collector label schemas. Restart every LiteLLM Proxy/logger process after changing it; a live configuration reload cannot rebuild existing collectors.
+
+Email addresses are sensitive data. Keep the default unless email-level attribution is required, retain [authentication on `/metrics`](#authentication-on-metrics-endpoint), and restrict network access to trusted Prometheus scrapers.
+:::
+
+`both` records one series per observed complete label tuple; it does not create a second series for the same request. If aliases and emails have a stable one-to-one mapping, adding the email label does not increase the number of distinct series. Cardinality can increase when aliases are reused across users, mappings change over time, or the same alias is observed with both a resolved and an absent email.
+
 ### Segmenting latency and spend by service tier
 
 The `service_tier` label on the request latency metrics and on `litellm_spend_metric` carries the tier a request actually ran on, so you can compare latency and cost before and after moving traffic to a cheaper or a faster tier:
