@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-26T06:11:30Z",
+  "generated_at": "2026-08-27T06:20:09Z",
   "litellm_version": "v1.98.0",
   "claude_code_version": "2.1.228",
   "providers": [
@@ -289,7 +289,8 @@
       "name": "Tool search (MCP discovery)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6] tool_search probe failed: transport error: transport: timed out"
         },
         "bedrock_invoke": {
           "status": "pass"
