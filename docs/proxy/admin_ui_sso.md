@@ -436,21 +436,20 @@ general_settings:
 
 For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](./saml_sso.md).
 
-### Disable `Default Team` on Admin UI
+### Restrict Personal Key Creation
 
-Use this if you want to hide the Default Team on the Admin UI
+Use this if you want to stop users from creating personal keys (keys with no team). This is enforced on `/key/generate`, so it applies to both the Admin UI and direct API calls
 
-The following logic will apply
-- If team assigned don't show `Default Team`
-- If no team assigned then they should see `Default Team`
-
-Set `default_team_disabled: true` on your litellm config.yaml
+Set `key_generation_settings` on your litellm config.yaml
 
 ```yaml
-general_settings:
-  master_key: sk-1234
-  default_team_disabled: true # OR you can set env var PROXY_DEFAULT_TEAM_DISABLED="true"
+litellm_settings:
+  key_generation_settings:
+    personal_key_generation:
+      allowed_user_roles: ["proxy_admin"]
 ```
+
+See [Restricting Key Generation](./virtual_keys.md#restricting-key-generation) for all options
 
 ### Use Username, Password when SSO is on
 
