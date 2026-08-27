@@ -511,7 +511,7 @@ const sidebars = {
         {
           type: "category",
           label: "Troubleshooting",
-          items: ["proxy/debugging", "proxy/error_diagnosis"],
+          items: ["proxy/debugging", "proxy/error_reference", "proxy/error_diagnosis"],
         },
         {
           type: "category",
