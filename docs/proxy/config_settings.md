@@ -517,6 +517,7 @@ router_settings:
 | AKTO_API_KEY | API key for authenticating with the Akto Guardrail service.
 | ALEPH_ALPHA_API_BASE | Base URL for Aleph Alpha. Default is https://api.aleph-alpha.com/complete
 | ALEPH_ALPHA_API_KEY | API key for Aleph Alpha
+| ALERTING_WEBHOOK_URL | Provider-neutral webhook URL for Slack-format alerts (works with any Slack-compatible receiver such as Rocket.Chat or Mattermost), read only when `SLACK_WEBHOOK_URL` is unset
 | ALLOWED_EMAIL_DOMAINS | List of email domains allowed for access
 | AMAZON_NOVA_API_BASE | Base URL for Amazon Nova. Default is https://api.nova.amazon.com/v1
 | ANTHROPIC_AWS_API_BASE | Base URL for Claude on AWS, read after `ANTHROPIC_AWS_BASE_URL`
