@@ -116,6 +116,32 @@ litellm_settings:
 
 **Where this does *not* apply:** Guardrails that run only via direct hooks on the raw request (e.g. Lakera v2, Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). It also does not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
 
+### Evaluate a guardrail against the raw request, regardless of declaration order
+
+`pre_call` guardrails run in the order you declare them under `guardrails`, and each one sees whatever the guardrails before it already did to the request. That's usually fine, but if one guardrail masks or redacts content (PII masking, say) and a later one is only there to block on certain content, the later guardrail only ever sees the already-redacted version. Reordering the two guardrails in your config could then silently change whether a request gets blocked.
+
+Set `scan_raw_request: true` on a guardrail's `litellm_params` to make that guardrail always evaluate the request exactly as it looked before any guardrail in the same `pre_call` hook ran, no matter where it's declared in the list:
+
+```yaml
+guardrails:
+  - guardrail_name: "pii-masker"
+    litellm_params:
+      guardrail: presidio
+      mode: pre_call
+      # masks/redacts PII in the request
+
+  - guardrail_name: "keyword-blocker"
+    litellm_params:
+      guardrail: custom_guardrail.myCustomGuardrail
+      mode: pre_call
+      scan_raw_request: true
+      # blocks on raw content regardless of declaration order relative to pii-masker
+```
+
+`scan_raw_request` is block-only, the same contract as the existing `run_in_parallel` flag: whatever the guardrail returns is discarded instead of being merged back into the live request. Applying a mutation on top of a stale, pre-guardrail snapshot would silently undo whatever a later guardrail already did to the real request, so only set this on a guardrail whose sole job is to raise or block, never on one that masks or rewrites content. If a guardrail sets `scan_raw_request: true` and still returns a modified payload, the proxy logs a warning and discards the mutation rather than failing the request outright, since there's no generic way to tell at config time whether a given guardrail mutates.
+
+`scan_raw_request` only affects `pre_call` guardrails; setting it on a `post_call` or `during_call` guardrail has no effect. It's also a constructor kwarg on `CustomGuardrail` if you're writing your own guardrail, alongside `run_in_parallel`, and defaults to `False`.
+
 ### Load Balancing Guardrails
 
 Need to distribute guardrail requests across multiple accounts or regions? See [Guardrail Load Balancing](./guardrail_load_balancing.md) for details on:
