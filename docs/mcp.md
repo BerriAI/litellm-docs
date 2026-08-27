@@ -66,7 +66,7 @@ model_list:
 
 If `supported_db_objects` is not set, all object types are loaded from the database (default behavior).
 
-For diagnosing connectivity problems after setup, see the [MCP Troubleshooting Guide](./mcp_troubleshoot.md).
+For diagnosing connectivity problems after setup, start with the [five-minute triage](./mcp_troubleshoot.md#locate-the-error-source) and the [symptom matrix](./mcp_troubleshoot.md#symptom-matrix) in the MCP Troubleshooting Guide.
 
 <Tabs>
 <TabItem value="ui" label="LiteLLM UI">
@@ -1501,4 +1501,4 @@ The UI keeps only transient state in `sessionStorage` so the OAuth redirect flow
 
 **Q: I'm seeing MCP connection errors. What should I check?**
 
-Walk through the [MCP Troubleshooting Guide](./mcp_troubleshoot.md) for step-by-step isolation (Client → LiteLLM vs. LiteLLM → MCP), log examples, and verification methods like MCP Inspector and `curl`.
+Start with the [five-minute triage](./mcp_troubleshoot.md#locate-the-error-source) in the MCP Troubleshooting Guide: one curl isolates the failing layer (Client → LiteLLM vs. LiteLLM → MCP), and the [symptom matrix](./mcp_troubleshoot.md#symptom-matrix) maps each status code and symptom to its fix. If you need to escalate, collect the [support bundle](./mcp_troubleshoot.md#support-bundle) first.
