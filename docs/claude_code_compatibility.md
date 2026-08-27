@@ -24,15 +24,6 @@ cell goes green only if all three model tiers pass.
 | — | No test ran for this combination. |
 | n/a | Not applicable (e.g. provider doesn't expose this feature). Hover for the reason. |
 
-## Known issues
-
-Red cells with a known root cause and a tracked fix are listed here. Each
-entry stays until the named fix has shipped in a release the populator picks
-up, meaning the newest final `vX.Y.Z` tag; the next daily run after that
-flips the cells green and the entry is removed.
-
-There are no open entries right now: every cell in the current run passes.
-
 ## Source
 
 The matrix JSON lives at
