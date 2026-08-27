@@ -285,7 +285,7 @@ guardrails:
 
 ### Large content chunking
 
-Presidio analyzer deployments commonly cap the `/analyze` request body size (for example at 1 MB), and analyzer latency grows with payload size. LiteLLM automatically splits any single content block larger than `presidio_analyze_chunk_size_bytes` (default: `500000` UTF-8 bytes) into overlapping chunks, analyzes the chunks concurrently, and merges the detections back onto the original text, so large content blocks are masked correctly instead of failing with `HTTP 413`.
+Presidio analyzer deployments commonly cap the `/analyze` request body size (for example at 1 MB), and analyzer latency grows with payload size. LiteLLM automatically splits any single content block whose serialized `/analyze` body would exceed `presidio_analyze_chunk_size_bytes` (default: `500000` bytes, measured on the JSON-escaped form the analyzer receives) into overlapping chunks, analyzes the chunks with a bounded fan-out, and merges the detections back onto the original text, so large content blocks are masked correctly instead of failing with `HTTP 413`.
 
 ```yaml
 guardrails:
