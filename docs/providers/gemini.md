@@ -498,7 +498,7 @@ curl http://0.0.0.0:4000/v1/audio/transcriptions \
 
 ### Supported Params
 
-`language`, `response_format`, and `timestamp_granularities` are supported. Requesting word timestamps also enables speaker diarization on the underlying Interactions API call. The `srt` and `vtt` response formats currently return the plain transcript.
+`language`, `response_format`, and `timestamp_granularities` are supported. Requesting word timestamps also enables speaker diarization on the underlying Interactions API call. The `srt` and `vtt` response formats are synthesized by LiteLLM from Gemini's word timestamps, so `text` holds the subtitle document; when Gemini returns no timestamps, `text` falls back to the plain transcript.
 
 ### Live Transcription over `/v1/realtime`
 
