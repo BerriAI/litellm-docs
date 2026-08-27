@@ -121,7 +121,9 @@ Fill in the fields:
 
 ### 2. Add a custom model
 
-Cursor's built-in models reject custom API keys with `This model does not support custom API keys`, so you must add and select a custom model. Click **+ Add Custom Model**, enter a name that does not collide with a built-in model (e.g. `litellm-claude`), enable it, and select it in the chat model picker.
+While the Azure OpenAI toggle is on, only custom models work. Cursor refuses its own models (Composer, Cursor Grok) with `This model does not support custom API keys`, and it still routes built-in Claude and GPT models to your proxy, but in Anthropic Messages or Azure Responses formats that the chat completions deployment route rejects, so those chats hang. Click **+ Add Custom Model**, enter a name that does not collide with a built-in model (e.g. `litellm-claude`), enable it, and select it in the chat model picker.
+
+To use Composer or another built-in model on your Cursor subscription, turn the Azure OpenAI toggle off; turn it back on to route through LiteLLM again.
 
 :::warning The Deployment Name decides the model
 On this path, Cursor sends every request to `/openai/deployments/<Deployment Name>/chat/completions`, and LiteLLM serves the model the path names. The custom model you pick in Cursor is only a label: picking a different custom model does not change which model answers. To switch models, edit the **Deployment Name** in the Azure OpenAI settings. Keep a single enabled custom model so the picker cannot mislead you.
@@ -174,6 +176,7 @@ LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
 | Cursor does not list your LiteLLM models | Upgrade to LiteLLM v1.97.0+, which serves `GET /cursor/models`. Earlier versions do not serve that route and answer 401 or 404. Verify with `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"` |
 | `The model "X" is already available as "Y"` | Cursor blocks names that match its built-in models. Add the model under a distinct public model name (see the warning in step 3) |
-| `This model does not support custom API keys` | You selected a Cursor built-in model. Select the custom model you added instead |
+| `This model does not support custom API keys` | You selected a Cursor-native model (Composer, Cursor Grok) while a custom API key is enabled. Select the custom model you added, or disable the Azure OpenAI toggle to use Cursor's models on your subscription |
+| Chat hangs with a built-in model picked while Azure OpenAI is enabled | Cursor still routes built-in Claude and GPT models to your proxy, in formats the deployment route rejects. Select the custom model you added |
 | No **Override OpenAI Base URL** setting | Your Cursor build does not offer it. Use the [Azure OpenAI fallback](#fallback-azure-openai-settings) |
 | Azure fallback always answers with the same model | Expected: the **Deployment Name** decides the model, whichever custom model is picked. Edit the Deployment Name to switch |
