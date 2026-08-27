@@ -7,9 +7,9 @@ Route the same model to different LLM provider endpoints (e.g. different Azure i
 
 ## Overview
 
-In multi-tenant deployments, different teams often need the same model name (e.g., `gpt-4`) to hit different provider endpoints — for example, separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
+In multi-tenant deployments, different teams often need the same model name (e.g., `gpt-4`) to hit different provider endpoints, for example separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
 
-**Credential routing** lets you configure this in team/project metadata using the existing [credentials table](./ui_credentials.md), without duplicating model definitions or creating separate model groups per team.
+**Credential routing** lets you configure this in team/project metadata using the existing [credentials table](./model_management.md#reusable-provider-credentials), without duplicating model definitions or creating separate model groups per team.
 
 ```
 Hotel Team → gpt-4 → https://hotel-eastus.openai.azure.com/
@@ -31,7 +31,7 @@ When a request comes in, the system walks this precedence chain (first match win
 
 ### Step 1: Create Credentials
 
-Store your Azure endpoint credentials in the credentials table. You can do this via the [UI](./ui_credentials.md) or API:
+Store your Azure endpoint credentials in the credentials table. You can do this via the [UI](./model_management.md#reusable-provider-credentials) or API:
 
 ```bash showLineNumbers
 # Create credential for Hotel team's Azure endpoint
@@ -185,7 +185,7 @@ curl -X PATCH 'http://0.0.0.0:4000/project/update' \
 **Setup:**
 - **Hotel Team**: default `hotel-azure-eastus`, GPT-4 override to `hotel-azure-westus`
 - **Hotel Rec App** (project): default `hotel-rec-azure`, GPT-4-Vision override to `hotel-rec-vision`
-- **Hotel Review App** (project): no overrides — inherits team config
+- **Hotel Review App** (project): no overrides, inherits team config
 
 **Resolution:**
 
@@ -222,7 +222,7 @@ The `model_config` key is a JSON object in team/project `metadata`:
 | `defaultconfig` | Fallback credential for any model not explicitly listed |
 | `<model-name>` | Model-specific override — must match the LiteLLM model group name |
 | `<provider>` | Provider key (e.g. `azure`, `openai`, `bedrock`). When the model name includes a provider prefix (e.g. `azure/gpt-4`), the system prefers the matching provider key |
-| `litellm_credentials` | Name of a credential in the [credentials table](./ui_credentials.md) |
+| `litellm_credentials` | Name of a credential in the [credentials table](./model_management.md#reusable-provider-credentials) |
 
 ### Credential Values
 
@@ -262,12 +262,12 @@ export LITELLM_ENABLE_MODEL_CONFIG_CREDENTIAL_OVERRIDES=true
 </Tabs>
 
 :::info
-The feature flag must be enabled before `model_config` entries in team/project metadata take effect. Without it, credential routing is completely inert — no metadata is read, no credentials are resolved.
+The feature flag must be enabled before `model_config` entries in team/project metadata take effect. Without it, credential routing is completely inert: no metadata is read and no credentials are resolved.
 :::
 
 ## Related Documentation
 
-- [Adding LLM Credentials](./ui_credentials.md) — Create and manage reusable credentials
+- [Adding LLM Credentials](./model_management.md#reusable-provider-credentials) — Create and manage reusable credentials
 - [Project Management](./project_management.md) — Project hierarchy and API
 - [Team Budgets](./team_budgets.md) — Team-level budget management
 - [Clientside LLM Credentials](./clientside_auth.md) — Passing credentials in the request body

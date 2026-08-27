@@ -166,7 +166,7 @@ LiteLLM now reduces CPU usage by removing premature `model.dump()` calls from th
 
 <Image img={require('../../img/ui_deleted_keys_table.png')} />
 
-LiteLLM now provides a comprehensive audit table for deleted API keys and teams directly in the UI. This feature allows you to easily track the spend of deleted keys, view their associated team information, and maintain accurate financial records for auditing and compliance purposes. The table displays key details including key aliases, team associations, and spend information captured at the time of deletion. For more information on how to use this feature, see the [Deleted Keys & Teams documentation](../../docs/proxy/deleted_keys_teams).
+LiteLLM now provides an audit table for deleted API keys and teams directly in the UI. This feature allows you to easily track the spend of deleted keys, view their associated team information, and maintain accurate financial records for auditing and compliance purposes. The table displays key details including key aliases, team associations, and spend information captured at the time of deletion. For more information on how to use this feature, see the [Deleted Keys & Teams documentation](../../docs/proxy/deleted_keys_teams).
 
 ---
 
@@ -208,7 +208,7 @@ LiteLLM now provides a comprehensive audit table for deleted API keys and teams 
 - **[Ollama](../../docs/providers/ollama)**
   - Set finish_reason to tool_calls and remove broken capability check - [PR #18924](https://github.com/BerriAI/litellm/pull/18924)
 
-- **[Watsonx](../../docs/providers/watsonx/index)**
+- **[Watsonx](/docs/providers/watsonx)**
   - Allow passing scope ID for Watsonx inferencing - [PR #18959](https://github.com/BerriAI/litellm/pull/18959)
 
 - **[Replicate](../../docs/providers/replicate)**
@@ -356,7 +356,7 @@ LiteLLM now provides a comprehensive audit table for deleted API keys and teams 
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
   - Include Langfuse logger in JSON logging when Langfuse callback is used - [PR #19162](https://github.com/BerriAI/litellm/pull/19162)
 
-- **[Logfire](../../docs/observability/logfire)**
+- **[Logfire](/docs/observability/logfire_integration)**
   - Add ability to customize Logfire base URL through env var - [PR #19148](https://github.com/BerriAI/litellm/pull/19148)
 
 - **General Logging**

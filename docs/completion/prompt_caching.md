@@ -13,7 +13,7 @@ Supported Providers:
 - xAI (`xai/`)
 
 :::warning Minimum token requirements
-Prompt caching is silently skipped when the input is below the provider's minimum — **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
+Prompt caching is silently skipped when the input is below the provider's minimum, and **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
 
 | Provider | Minimum input tokens |
 |---|---|
@@ -198,12 +198,12 @@ assert response.usage.prompt_tokens_details.cached_tokens > 0
 
 ### OpenAI `prompt_cache_key` and `prompt_cache_retention`
 
-OpenAI prompt caching is [**automatic**](https://platform.openai.com/docs/guides/prompt-caching) — no `cache_control` message annotations are needed. Any request with 1024+ prompt tokens is eligible for caching.
+OpenAI prompt caching is [**automatic**](https://platform.openai.com/docs/guides/prompt-caching); no `cache_control` message annotations are needed. Any request with 1024+ prompt tokens is eligible for caching.
 
 OpenAI also supports two optional parameters for more control over caching behavior:
 
-- **`prompt_cache_key`** (string) — A routing hint that improves cache hit rates for requests sharing long common prefixes. Requests with the same cache key are routed to the same backend, increasing the likelihood of a cache hit.
-- **`prompt_cache_retention`** (`"in_memory"` or `"24h"`) — Controls cache TTL. Default is `"in_memory"` (5–10 min). Set to `"24h"` for extended caching that offloads KV tensors to GPU-local storage.
+- **`prompt_cache_key`** (string): a routing hint that improves cache hit rates for requests sharing long common prefixes. Requests with the same cache key are routed to the same backend, increasing the likelihood of a cache hit.
+- **`prompt_cache_retention`** (`"in_memory"` or `"24h"`): controls cache TTL. Default is `"in_memory"` (5–10 min). Set to `"24h"` for extended caching that offloads KV tensors to GPU-local storage.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -263,6 +263,83 @@ response = client.chat.completions.create(
     },
 )
 print(response.usage)
+```
+
+</TabItem>
+</Tabs>
+
+### OpenAI explicit breakpoints (GPT-5.6 and newer)
+
+GPT-5.6 and newer also accept [explicit cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints): a `prompt_cache_breakpoint` marker on a content block plus a request-level `prompt_cache_options` that picks the mode (`implicit` keeps OpenAI's automatic breakpoint on the latest message alongside yours, `explicit` uses only yours) and the cache `ttl` (`30m`). LiteLLM passes both through on `/chat/completions`, `/responses` and, for Anthropic-shaped clients, `/v1/messages`. Models that accept the marker carry `supports_prompt_cache_breakpoint: true` in the cost map, and a GPT-5.6 or newer OpenAI model name the map has not flagged yet is treated the same way. To have LiteLLM place the marker for you from the deployment config, see the [auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+import os
+
+os.environ["OPENAI_API_KEY"] = ""
+
+response = completion(
+    model="openai/gpt-5.6",
+    messages=[
+        {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "You are an AI assistant tasked with analyzing legal documents. "
+                    + "Here is the full text of a complex legal agreement " * 400,
+                    "prompt_cache_breakpoint": {"mode": "explicit"},
+                }
+            ],
+        },
+        {
+            "role": "user",
+            "content": "What are the key terms and conditions?",
+        },
+    ],
+    prompt_cache_options={"mode": "explicit", "ttl": "30m"},
+)
+print(response.usage.prompt_tokens_details)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="LITELLM_PROXY_KEY",
+    base_url="LITELLM_PROXY_BASE",
+)
+
+response = client.responses.create(
+    model="gpt-5.6",
+    input=[
+        {
+            "type": "message",
+            "role": "developer",
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "You are an AI assistant tasked with analyzing legal documents. "
+                    + "Here is the full text of a complex legal agreement " * 400,
+                    "prompt_cache_breakpoint": {"mode": "explicit"},
+                }
+            ],
+        },
+        {
+            "type": "message",
+            "role": "user",
+            "content": [{"type": "input_text", "text": "What are the key terms and conditions?"}],
+        },
+    ],
+    extra_body={"prompt_cache_options": {"mode": "explicit", "ttl": "30m"}},
+)
+print(response.usage.input_tokens_details)
 ```
 
 </TabItem>
@@ -374,7 +451,7 @@ print(response.usage)
 </Tabs>
 
 :::tip Minimum tokens (Anthropic)
-Prompts below the minimum are processed without caching — no error is returned. Check `cache_creation_input_tokens` in the response.
+Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model | Min tokens |
 |---|---|
@@ -387,10 +464,10 @@ Prompts below the minimum are processed without caching — no error is returned
 
 ### Bedrock Example
 
-LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format — no changes needed to your existing code if you're already using `cache_control`.
+LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format, so no changes are needed to your existing code if you're already using `cache_control`.
 
 :::tip Minimum tokens (Bedrock)
-Prompts below the minimum are processed without caching — no error is returned. Check `cache_creation_input_tokens` in the response.
+Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model family | Min tokens per request |
 |---|---|
@@ -486,13 +563,13 @@ See the [AWS Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/la
 
 ### Google AI Studio / Vertex AI (Gemini) Example
 
-Use the same Anthropic-style `cache_control` format — LiteLLM automatically translates it to Google's [context caching API](https://ai.google.dev/api/caching).
+Use the same Anthropic-style `cache_control` format; LiteLLM automatically translates it to Google's [context caching API](https://ai.google.dev/api/caching).
 
 **How it works under the hood:**
 1. Messages with `cache_control` are separated and sent to Google's `cachedContents` API
 2. The cached content ID is then passed as `cachedContent` in the Gemini request body
 3. Works across all three providers: `gemini/` (Google AI Studio), `vertex_ai/`, and `vertex_ai_beta/`
-4. Requires a minimum of **1024 tokens** in the cached content — below that, caching is silently skipped
+4. Requires a minimum of **1024 tokens** in the cached content. Below that, caching is silently skipped
 
 <Tabs>
 <TabItem value="sdk" label="SDK">

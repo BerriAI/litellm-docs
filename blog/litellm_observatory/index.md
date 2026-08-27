@@ -81,7 +81,7 @@ Our focus moving forward is on being the first to detect issues, even when they 
    - If a duplicate test is already running or queued, we receive an error to avoid wasting resources
    - Otherwise, the test is added to a queue and runs when capacity is available (up to 5 tests can run concurrently by default)
 
-3. **Instant Response**: The API responds immediately—we do not wait for the test to finish. Tests may run for hours, but the request itself completes in milliseconds.
+3. **Instant Response**: The API responds immediately; we do not wait for the test to finish. Tests may run for hours, but the request itself completes in milliseconds.
 
 4. **Background Execution**:
    - The test runs in the background, issuing requests against our LiteLLM deployment

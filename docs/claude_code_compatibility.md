@@ -37,7 +37,7 @@ the entry will be removed.
 - **Symptom**: Claude Code's `--effort max` flag is sent to the proxy as `output_config.effort=max`. The Bedrock Invoke and Vertex AI request transformers in `v1.83.14-stable` strip `output_config.effort` for Claude 4.6+ models that aren't on a small hardcoded allow-list, so the upstream request goes out without extended thinking enabled. The response has no `thinking` content block and the cell is marked failed.
 - **Status**: Fixed on `main` by [commit `a6c673e7b9`](https://github.com/BerriAI/litellm/commit/a6c673e7b9) (`fix(anthropic,bedrock,vertex): forward output_config.effort + 400 on garbage reasoning_effort`). Waiting on the next `v*-stable` cut.
 
-### Bedrock Converse — Haiku 4.5 content-block validation
+### Bedrock Converse: Haiku 4.5 content-block validation
 
 - **Affected cells**: every `* × bedrock_converse` cell (the entire Converse column).
 - **Symptom**: Claude Haiku 4.5 routed through AWS Bedrock's Converse API returns `Content block is not a text block` on the first assistant message of every conversation. Because the matrix only marks a cell green when all three model tiers pass, this Haiku-only failure paints the whole Converse column red even for features that work on Sonnet 4.6 and Opus 4.7 through Converse.

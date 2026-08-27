@@ -253,7 +253,7 @@ guardrails:
 
 ### Transaction Tracking
 
-For standard request/response scans, `tr_id` maps to `litellm_call_id`. MCP tool scans use the parent `litellm_call_id` when available; if missing, PANW synthesizes a fallback MCP transaction ID. The real limitation is correlation loss — synthesized MCP `tr_id` values are not grouped with the parent request's prompt/response scans in AIRS dashboards.
+For standard request/response scans, `tr_id` maps to `litellm_call_id`. MCP tool scans use the parent `litellm_call_id` when available; if missing, PANW synthesizes a fallback MCP transaction ID. The real limitation is correlation loss: synthesized MCP `tr_id` values are not grouped with the parent request's prompt/response scans in AIRS dashboards.
 
 By default, LiteLLM generates a UUID for `litellm_call_id`. To provide your own:
 
@@ -276,7 +276,7 @@ The `x-litellm-call-id` is also returned in response headers. If you pass `litel
 - Response masking works on OpenAI chat streaming (`mask_response_content: true`)
 - `/v1/messages` and `/v1/responses` raw streaming blocks instead of masking when violations are detected
 - Request-side masking (`mask_request_content`) is unaffected by endpoint type
-- When `fallback_on_error: "allow"` is set, streaming responses fail open on transient PANW API errors (timeout, 5xx, network) — original chunks are yielded unchanged
+- When `fallback_on_error: "allow"` is set, streaming responses fail open on transient PANW API errors (timeout, 5xx, network), and original chunks are yielded unchanged
 
 ## MCP Tool Security
 

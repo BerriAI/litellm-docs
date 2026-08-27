@@ -124,7 +124,7 @@ Here's the full specification with all available fields:
 
 ### Using Aliases
 
-Many providers release the same model under multiple names — for example, a `latest` tag and a dated version like `claude-sonnet-4-5-20250929`. Instead of duplicating the entire entry, you can use the `aliases` field:
+Many providers release the same model under multiple names, for example a `latest` tag and a dated version like `claude-sonnet-4-5-20250929`. Instead of duplicating the entire entry, you can use the `aliases` field:
 
 ```json
 {
@@ -145,5 +145,5 @@ Many providers release the same model under multiple names — for example, a `l
 At load time, each alias is expanded into a top-level entry sharing the same data as the canonical entry. The example above makes both `claude-sonnet-4-5` and `claude-sonnet-4-5-20250929` resolve with the same pricing and capabilities.
 
 :::info
-This is different from [`model_alias_map`](../completion/model_alias.md), which is a runtime SDK/proxy feature for mapping user-facing model names to LiteLLM model identifiers. The `aliases` field here is for the model cost JSON only — it avoids duplicate entries for models that share identical pricing and capabilities.
+This is different from [`model_alias_map`](../completion/model_alias.md), which is a runtime SDK/proxy feature for mapping user-facing model names to LiteLLM model identifiers. The `aliases` field here is for the model cost JSON only, and it avoids duplicate entries for models that share identical pricing and capabilities.
 :::

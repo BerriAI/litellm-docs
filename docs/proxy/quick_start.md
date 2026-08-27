@@ -8,13 +8,17 @@ Setup LiteLLM Proxy quickly via CLI.
 
 LiteLLM Server (LLM Gateway) manages:
 
-* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](#other-supported-models) in the OpenAI `ChatCompletions` & `Completions` format
+* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](/docs/proxy/quick_start#supported-llms) in the OpenAI `ChatCompletions` & `Completions` format
 * **Cost tracking**: Authentication, Spend Tracking & Budgets [Virtual Keys](https://docs.litellm.ai/docs/proxy/virtual_keys)
-* **Load Balancing**: between [Multiple Models](#multiple-models---quick-start) + [Deployments of the same model](#multiple-instances-of-1-model) - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
+* **Load Balancing**: between Multiple Models + Deployments of the same model - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
 
 ```shell
 $ uv tool install 'litellm[proxy]'
 ```
+
+:::warning Requires Python 3.10+
+LiteLLM 1.84.0 and newer require Python 3.10 or higher (`requires-python >=3.10`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on Python 3.9 pip silently resolves down to the last release that still allowed 3.9, which is 1.83.9, with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to 3.10+ (or use uv), then reinstall
+:::
 
 ## Quick Start - LiteLLM Proxy CLI
 

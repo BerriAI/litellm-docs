@@ -2,7 +2,7 @@
 
 Upload docs, ask questions --> get answers.
 
-Leverage GenAI with your confidential documents to increase efficiency and collaboration.
+Use GenAI with your confidential documents to increase efficiency and collaboration.
 
 OSS core, everything can run in your environment. An extensible platform you can build your GenAI strategy on. Support a variety of popular LLMs including embedded for air gap use cases.
 

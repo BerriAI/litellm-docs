@@ -34,7 +34,7 @@ All gateway and budget tests share one deployment and one org/team/key. Do this 
 <Tabs>
 <TabItem value="docker-compose" label="Docker Compose">
 
-Follow the [Docker Compose tab](/docs/proxy/docker_quick_start) in the Getting Started Tutorial. Condensed steps:
+Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
 docker pull ghcr.io/berriai/litellm-database:latest
@@ -205,7 +205,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 <TabItem value="helm" label="Helm">
 
-The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/deploy/charts/litellm-helm/values.yaml).
+The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
 
 #### Step 1. Create a Secret for your license + provider keys
 
@@ -245,7 +245,7 @@ proxy_config:
 
 `db.deployStandalone: true` provisions a single-node Postgres with the Bitnami chart and a default password. Fine for a trial; for anything longer-lived, override it with `--set postgresql.auth.password=<pw>,postgresql.auth.postgres-password=<pw>` or bring your own database below.
 
-**Bring your own database** — to point at an existing Postgres instead of letting the chart provision one, replace the `db` block. Create a Secret (default name `postgres`) holding `username` and `password` keys; the chart builds the connection URL from `endpoint`, `database`, and those credentials.
+**Bring your own database.** To point at an existing Postgres instead of letting the chart provision one, replace the `db` block. Create a Secret (default name `postgres`) holding `username` and `password` keys; the chart builds the connection URL from `endpoint`, `database`, and those credentials.
 
 ```yaml title="values-enterprise.yaml" showLineNumbers
 db:
@@ -282,7 +282,7 @@ Your LiteLLM Gateway is now running on `http://127.0.0.1:4000`.
 
 ### Verify Enterprise Edition
 
-Open `http://localhost:4000/` — Swagger should show **"Enterprise Edition"** in the description. See the [Enterprise license FAQ](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
+Open `http://localhost:4000/`. Swagger should show **"Enterprise Edition"** in the description. See the [Enterprise license FAQ](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
 
 Open the Admin UI at `http://localhost:4000/ui` and sign in with your master key.
 
@@ -486,7 +486,7 @@ asyncio.run(main())
 
 ## 4. Budgets & Spend
 
-Budget enforcement runs on **all three gateways** through the same virtual key — one control plane governs LLM, MCP, and Agent spend.
+Budget enforcement runs on **all three gateways** through the same virtual key, so one control plane governs LLM, MCP, and Agent spend.
 
 ```mermaid
 flowchart TD
@@ -527,7 +527,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 3. **Second request within the same minute** → rate limit error (RPM exceeded).
 4. Confirm key spend in Admin UI under **Virtual Keys**.
 
-→ [Virtual Keys](/docs/proxy/virtual_keys) · [Docker Quick Start — RPM test](/docs/proxy/docker_quick_start)
+→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart: RPM test](/docs/proxy/docker_quick_start)
 
 ### 4b. Team budget
 
@@ -577,7 +577,7 @@ curl -X GET 'http://localhost:4000/spend/tags' \
 
 
 
-**Explore next:** [Projects](/docs/proxy/project_management) · [Temporary budget increases](/docs/proxy/temporary_budget_increase) · [Soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts) · [Spend reports](/docs/proxy/cost_tracking) · [Budget Routing](/docs/proxy/provider_budget_routing) · [Enterprise Spend Tracking](/docs/enterprise#-spend-tracking)
+**Explore next:** [Projects](/docs/proxy/project_management) · [Temporary budget increases](/docs/proxy/temporary_budget_increase) · [Soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts) · [Spend reports](/docs/proxy/cost_tracking) · [Budget Routing](/docs/proxy/provider_budget_routing) · [Enterprise Spend Tracking](/docs/enterprise)
 
 ---
 
@@ -587,7 +587,7 @@ Layer security and compliance on top of working gateways and budgets.
 
 ### Audit logs
 
-Enable via `store_audit_logs: true` under litellm_settings of your `config.yml`. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
+On by default with an enterprise license; set `store_audit_logs: false` under litellm_settings of your `config.yml` to turn it off. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
 
 → [Audit Logs](/docs/proxy/multiple_admins)
 
@@ -602,7 +602,7 @@ Enable via `store_audit_logs: true` under litellm_settings of your `config.yml`.
 
 ### SSO for Admin UI
 
-SSO controls **Admin UI login** — separate from API auth (virtual keys or JWT). Register this redirect URI in your IdP:
+SSO controls **Admin UI login**, which is separate from API auth (virtual keys or JWT). Register this redirect URI in your IdP:
 
 ```
 https://<your-proxy-base-url>/sso/callback
@@ -695,7 +695,7 @@ items={[
   {
     icon: "🔒",
     title: "Data Security",
-    description: "SOC 2, ISO 27001, data regions, and compliance FAQs.",
+    description: "Self-hosted data handling, vulnerability reporting, and compliance FAQs.",
     to: "/docs/data_security",
   },
   {

@@ -47,7 +47,9 @@ You can add A2A-compatible agents through the LiteLLM Admin UI.
 
 The URL should be the invocation URL for your A2A agent (e.g., `http://localhost:10001`).
 
-Set `protocolVersion` in `agent_card_params` when registering via API or config:
+#### Define agents in config.yaml
+
+Agents can also be declared in `config.yaml` under the top-level `agents` key, which is useful when the gateway is deployed from a ConfigMap or another read-only source. `agent_name` and `agent_card_params` are both required; entries missing either one are skipped at startup.
 
 ```yaml title="config.yaml"
 agents:
@@ -58,6 +60,24 @@ agents:
       protocolVersion: "1.0"  # or "0.3"
 ```
 
+`protocolVersion` can be set the same way when registering through the API.
+
+Config-defined agents show up in the Agents tab and in `GET /v1/agents` alongside agents created in the UI, and they survive the periodic reload from the database. Verify them with:
+
+```shell
+curl -s http://localhost:4000/v1/agents \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+If an agent created in the UI already uses a name you then declare in `config.yaml`, the database record wins and the config entry with that name is skipped, so the name always resolves to the record you can edit. Delete the database agent and the config entry takes the name back on the next reload.
+
+:::info
+
+Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
+
+The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+
+:::
 
 ### Add Azure AI Foundry Agents
 
@@ -73,7 +93,7 @@ Follow [this guide, to add your bedrock agentcore agent to LiteLLM Agent Gateway
 
 ### Add LangGraph Agents
 
-Follow [this guide to register a LangGraph agent and configure its agent card](./providers/langgraph#register-a-langgraph-platform-agent)
+Follow [this guide to register a LangGraph agent and configure its agent card](/docs/providers/langgraph)
 
 ### Add Pydantic AI Agents
 
@@ -294,7 +314,7 @@ See [Supported A2A methods](./a2a_agent_card#supported-a2a-methods) for examples
 
 ### Authentication
 
-Include your LiteLLM Virtual Key in either of two headers — `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3--convention-based-forwarding) to forward the caller's identity).
+Include your LiteLLM Virtual Key in either of two headers. `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3-convention-based-forwarding) to forward the caller's identity).
 
 ```
 Authorization: Bearer sk-your-litellm-key
@@ -323,7 +343,7 @@ curl -X POST http://localhost:4000/v1/agents \
   }'
 ```
 
-The reverse direction — enforcing trace ID on **outbound** calls made by a key owned by an agent — is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
+Enforcing a trace ID on **outbound** calls made by a key owned by an agent is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
 
 #### Sub-agent identity propagation
 

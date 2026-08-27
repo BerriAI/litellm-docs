@@ -12,7 +12,7 @@ hide_table_of_contents: false
 
 After the [supply chain incident](https://docs.litellm.ai/blog/security-update-march-2026) in March, we brought in [Veria Labs](https://verialabs.com/) to audit the LiteLLM proxy and fixed a number of vulnerability reports from independent researchers. All issues below are fixed in v1.83.0. If you are affected, particularly if you have JWT auth enabled, we recommend upgrading.
 
-We've also launched a [bug bounty program](#bug-bounty-program) and Veria Labs is continuing to audit the proxy. More fixes will ship in upcoming versions.
+We've also launched a [bug bounty program](/blog/security-hardening-april-2026#bug-bounty-program) and Veria Labs is continuing to audit the proxy. More fixes will ship in upcoming versions.
 
 The two high-severity issues ([CVE-2026-35029](https://github.com/BerriAI/litellm/security/advisories/GHSA-53mr-6c8q-9789) and [GHSA-69x8-hrgq-fjj8](https://github.com/BerriAI/litellm/security/advisories/GHSA-69x8-hrgq-fjj8)) **both require the attacker to already have a valid API key for the proxy**. These are not exploitable by unauthenticated users. 
 

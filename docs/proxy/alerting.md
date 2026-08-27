@@ -17,8 +17,8 @@ Get alerts for:
 
 Works across: 
 - [Slack](#quick-start)
-- [Discord](#advanced---using-discord-webhooks)
-- [Microsoft Teams](#advanced---using-ms-teams-webhooks)
+- [Discord](/docs/proxy/alerting#discord-webhooks)
+- [Microsoft Teams](/docs/proxy/alerting#ms-teams-webhooks)
 
 ## Quick Start
 
@@ -28,7 +28,7 @@ Set up a slack alert channel to receive alerts from proxy.
 
 Get a slack webhook url from https://api.slack.com/messaging/webhooks
 
-You can also use Discord Webhooks, see [here](#using-discord-webhooks)
+You can also use Discord Webhooks, see [here](/docs/proxy/alerting#discord-webhooks)
 
 
 Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
@@ -521,7 +521,7 @@ general_settings:
 
 ## **All Possible Alert Types**
 
-👉 [**Here is how you can set specific alert types**](#opting-into-specific-alert-types)
+👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
 
 LLM-related Alerts
 

@@ -32,7 +32,7 @@ export SSL_CERTFILE_PATH="/path/to/cert.pem"
 
 **Implementation Details:**
 - Uses Python's `ssl.create_default_context()` 
-- Leverages HTTPX and aiohttp libraries with SSL/TLS enabled
+- Uses HTTPX and aiohttp libraries with SSL/TLS enabled
 - Uses certifi CA bundle by default for SSL verification
 
 **Code Reference:** `litellm/llms/custom_httpx/http_handler.py` (lines 43-105)

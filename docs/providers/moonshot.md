@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `moonshot/` |
 | Link to Provider Doc | [Moonshot AI ↗](https://platform.moonshot.ai/) |
 | Base URL | `https://api.moonshot.ai/` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/moonshot#usage---litellm-python-sdk) |
 
 <br />
 <br />
@@ -252,7 +252,7 @@ print(response.choices[0].message.content)
 
 ## Moonshot AI Limitations & LiteLLM Handling
 
-LiteLLM automatically handles the following [Moonshot AI limitations](https://platform.moonshot.ai/docs/guide/migrating-from-openai-to-kimi#about-api-compatibility) to provide seamless OpenAI compatibility:
+LiteLLM automatically handles the following [Moonshot AI limitations](https://platform.moonshot.ai/docs/guide/migrating-from-openai-to-kimi#about-api-compatibility) to keep OpenAI compatibility:
 
 ### Temperature Range Limitation
 **Limitation**: Moonshot AI only supports temperature range [0, 1] (vs OpenAI's [0, 2])  

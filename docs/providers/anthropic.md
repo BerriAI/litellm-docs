@@ -1988,7 +1988,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ## Files API
 
-Upload files once and reference them by `file_id` in multiple requests—no need to re-upload content each time.
+Upload files once and reference them by `file_id` in multiple requests, with no need to re-upload content each time.
 
 :::info
 The `file_id` obtained from Anthropic only works with Anthropic Claude models. You cannot use it with other providers (OpenAI, Bedrock, etc.).

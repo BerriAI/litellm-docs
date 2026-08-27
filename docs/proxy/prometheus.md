@@ -60,18 +60,18 @@ This directory is used by the Prometheus client library to store metric files th
 
 ## Virtual Keys, Teams, Internal Users
 
-Use this for for tracking per [user, key, team, etc.](virtual_keys)
+Use this for tracking per [user, key, team, etc.](virtual_keys)
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_spend_metric`                | Total Spend, per `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user"`                 |
-| `litellm_total_tokens_metric`         | input + output tokens per `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model"`     |
-| `litellm_input_tokens_metric`         | input tokens per `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model"`     |
-| `litellm_output_tokens_metric`        | output tokens per `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model"`             |
+| `litellm_spend_metric`                | Total Spend, per `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider", "service_tier"`                 |
+| `litellm_total_tokens_metric`         | input + output tokens per `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "requested_model", "model_id", "api_provider"`     |
+| `litellm_input_tokens_metric`         | input tokens per `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "requested_model", "model_id", "api_provider"`     |
+| `litellm_output_tokens_metric`        | output tokens per `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "requested_model", "model_id", "api_provider"`             |
 
 #### Token type detail metrics
 
-Per-token-type counters that break out the `usage.prompt_tokens_details` and `usage.completion_tokens_details` fields providers report (e.g. OpenAI prompt caching, Anthropic prompt caching, audio I/O, reasoning tokens). These are **additive** to the totals above — the existing `litellm_input_tokens_metric` / `litellm_output_tokens_metric` / `litellm_total_tokens_metric` counters are unchanged.
+Per-token-type counters that break out the `usage.prompt_tokens_details` and `usage.completion_tokens_details` fields providers report (e.g. OpenAI prompt caching, Anthropic prompt caching, audio I/O, reasoning tokens). These are **additive** to the totals above, and the existing `litellm_input_tokens_metric` / `litellm_output_tokens_metric` / `litellm_total_tokens_metric` counters are unchanged.
 
 Each detail counter is **sparse**: it is only incremented when the provider reports a non-zero value for the corresponding field, so providers that don't expose a given detail will not produce a series for it. The label set is identical to the parent input / output token counter, so you can join cleanly in PromQL.
 
@@ -83,7 +83,7 @@ Each detail counter is **sparse**: it is only incremented when the provider repo
 | `litellm_output_reasoning_tokens_metric`         | `completion_tokens_details.reasoning_tokens`                         | OpenAI `o1-*` / `o3-*`, Anthropic extended thinking |
 | `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-4o-audio-*` audio outputs              |
 
-Example PromQL — cache-hit ratio for a model group:
+Example PromQL, cache-hit ratio for a model group:
 
 ```promql
 sum by (requested_model) (rate(litellm_input_cached_tokens_metric_total[5m]))
@@ -91,7 +91,7 @@ sum by (requested_model) (rate(litellm_input_cached_tokens_metric_total[5m]))
 sum by (requested_model) (rate(litellm_input_tokens_metric_total[5m]))
 ```
 
-Example PromQL — reasoning-token share of output:
+Example PromQL, reasoning-token share of output:
 
 ```promql
 sum by (requested_model) (rate(litellm_output_reasoning_tokens_metric_total[5m]))
@@ -102,6 +102,16 @@ sum by (requested_model) (rate(litellm_output_tokens_metric_total[5m]))
 :::info
 `litellm_input_cached_tokens_metric` tracks **provider-side** prompt-cache reads (the provider reports a cached portion of the input). This is different from `litellm_cached_tokens_metric`, which tracks LiteLLM's own response-cache hits (the entire response was served from LiteLLM's cache and no provider request was made).
 :::
+
+### Cache Metrics
+
+Track LiteLLM's own response cache. All three metrics carry the labels `"model", "hashed_api_key", "api_key_alias", "team", "team_alias", "end_user", "user", "model_id", "api_provider"`.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_cache_hits_metric`           | Requests served entirely from LiteLLM's response cache (no provider request made) |
+| `litellm_cache_misses_metric`         | Requests that missed LiteLLM's response cache |
+| `litellm_cached_tokens_metric`        | Tokens served from LiteLLM's response cache |
 
 ### Team - Budget
 
@@ -120,12 +130,32 @@ sum by (requested_model) (rate(litellm_output_tokens_metric_total[5m]))
 | `litellm_remaining_api_key_budget_metric`                | Remaining Budget for API Key (A key Created on LiteLLM) Labels: `"hashed_api_key", "api_key_alias"`|
 | `litellm_api_key_budget_remaining_hours_metric`          | Hours before the API Key budget is reset Labels: `"hashed_api_key", "api_key_alias"`|
 
+### Internal User - Budget
+
+Only emitted for requests attached to an internal user; the max budget and reset hours gauges additionally require the user to have a budget set. Use [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup) to emit them for all users on a schedule.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_user_budget_metric`              | Remaining Budget for Internal User Labels: `"user"`|
+| `litellm_user_max_budget_metric`                    | Max Budget for Internal User Labels: `"user"`|
+| `litellm_user_budget_remaining_hours_metric`        | Hours before the Internal User budget is reset Labels: `"user"`|
+
+### Organization - Budget
+
+Only emitted for requests attached to an organization, with the same conditions as the internal user metrics above.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_org_budget_metric`               | Remaining Budget for Organization Labels: `"org_id", "org_alias"`|
+| `litellm_org_max_budget_metric`                     | Max Budget for Organization Labels: `"org_id", "org_alias"`|
+| `litellm_org_budget_remaining_hours_metric`         | Hours before the Organization budget is reset Labels: `"org_id", "org_alias"`|
+
 ### Virtual Key - Rate Limit
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_remaining_api_key_requests_for_model`                | Remaining Requests for a LiteLLM virtual API key, only if a model-specific rate limit (rpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model"`|
-| `litellm_remaining_api_key_tokens_for_model`                | Remaining Tokens for a LiteLLM virtual API key, only if a model-specific token limit (tpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model"`|
+| `litellm_remaining_api_key_requests_for_model`                | Remaining Requests for a LiteLLM virtual API key, only if a model-specific rate limit (rpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
+| `litellm_remaining_api_key_tokens_for_model`                | Remaining Tokens for a LiteLLM virtual API key, only if a model-specific token limit (tpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 
 
 ### Initialize Budget Metrics on Startup
@@ -135,8 +165,8 @@ If you want litellm to emit the budget metrics for all keys, teams irrespective 
 **How this works:**
 
 - If the `prometheus_initialize_budget_metrics` is set to `true`
-  - Every 5 minutes litellm runs a cron job to read all keys, teams from the database
-  - It then emits the budget metrics for each key, team
+  - Every 5 minutes litellm runs a cron job to read all keys, teams, internal users, and organizations from the database
+  - It then emits the budget metrics for each of them
   - This is used to populate the budget metrics on the `/metrics` endpoint
 
 ```yaml
@@ -179,21 +209,56 @@ Use this to track overall LiteLLM Proxy usage.
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_proxy_failed_requests_metric`             | Total number of failed responses from proxy - the client did not get a success response from litellm proxy. Labels: `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "user_email", "exception_status", "exception_class", "route", "model_id"`          |
-| `litellm_proxy_total_requests_metric`             | Total number of requests made to the proxy server - track number of client side requests. Labels: `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "status_code", "user_email", "route", "model_id"`. Optionally includes `"stream"` — see [Emit Stream Label](#emit-stream-label).          |
+| `litellm_proxy_failed_requests_metric`             | Total number of failed responses from proxy - the client did not get a success response from litellm proxy. Labels: `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "user_email", "exception_status", "exception_class", "route", "client_ip", "user_agent", "model_id", "api_provider"`          |
+| `litellm_proxy_total_requests_metric`             | Total number of requests made to the proxy server - track number of client side requests. Labels: `"end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "status_code", "user_email", "route", "client_ip", "user_agent", "model_id", "api_provider"`. Optionally includes `"stream"` — see [Emit Stream Label](#emit-stream-label).          |
 
 ### Callback Logging Metrics
 
-Monitor failures while shipping logs to downstream callbacks like `s3_v3` cold storage
+Monitor failures while shipping logs to downstream callbacks like S3 cold storage
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_callback_logging_failures_metric` | Total number of failed attempts to emit logs to a configured callback. Labels: `"callback_name"`. Use this to alert on callback delivery issues such as repeated failures when writing to `s3_v3`, `langfuse`, or `langfuse_otel` and other otel providers |
+| `litellm_callback_logging_failures_metric` | Total number of failed attempts to emit logs to a configured callback. Labels: `"callback_name"`. Use this to alert on callback delivery issues such as repeated failures when writing to S3, `langfuse`, or `langfuse_otel` and other otel providers |
 
 **Supported Callbacks:**
-- `S3Logger` - S3 v2 cold storage failures
+- `S3Logger` - S3 cold storage failures
 - `langfuse` - Langfuse logging failures
 - `otel` -  OpenTelemetry logging failures
+
+## Guardrail Metrics
+
+Only emitted when [guardrails](guardrails/quick_start) run.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_guardrail_requests_total` | Total number of guardrail invocations. Labels: `"guardrail_name", "status", "hook_type"` |
+| `litellm_guardrail_errors_total` | Total number of errors encountered during guardrail execution. Labels: `"guardrail_name", "error_type", "hook_type"` |
+| `litellm_guardrail_latency_seconds` | Histogram of guardrail execution latency (seconds). Labels: `"guardrail_name", "status", "error_type", "hook_type"` |
+
+## MCP Gateway Metrics
+
+Only emitted for MCP tool calls made through the [MCP gateway](../mcp). Both metrics carry the labels `"mcp_tool_name", "mcp_server_name", "hashed_api_key", "api_key_alias", "team", "team_alias", "user", "end_user"`.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_mcp_tool_calls_total` | Total MCP tool calls, segmented by tool and server name |
+| `litellm_mcp_tool_call_spend_metric` | Total spend on MCP tool calls; only incremented when the call has a nonzero cost |
+
+## Managed Batch Metrics
+
+Enterprise only. Emitted when using [LiteLLM managed batches](managed_batches) and the CheckBatchCost background job that cost-tracks them.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_managed_batch_created_total` | Total number of managed batches created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_created_total` | Total number of managed files created. Labels: `"model", "api_provider", "user", "user_email", "api_key_alias"` |
+| `litellm_managed_file_deleted_total` | Total number of managed file deletions, success or blocked. Labels: `"result"` |
+| `litellm_managed_file_size_bytes` | Size of the most recent managed batch file in bytes, last-seen value per label combination. Labels: `"purpose", "file_type", "model", "api_provider", "user"` |
+| `litellm_managed_batch_duration_seconds` | Histogram of completed batch duration in seconds (completed_at - created_at). Labels: `"model", "api_provider"` |
+| `litellm_check_batch_cost_jobs_polled` | Number of unprocessed batches found by the last CheckBatchCost poll |
+| `litellm_check_batch_cost_jobs_processed_total` | Total number of batches successfully cost-tracked by CheckBatchCost. Labels: `"model", "api_provider"` |
+| `litellm_check_batch_cost_errors_total` | Total number of errors in CheckBatchCost by error type. Labels: `"error_type"` |
+| `litellm_check_batch_cost_last_run_timestamp` | Unix timestamp of the last CheckBatchCost job run |
 
 ## LLM Provider Metrics
 
@@ -219,46 +284,145 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
- `litellm_deployment_success_responses`              | Total number of successful LLM API calls for deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
-| `litellm_deployment_failure_responses`              | Total number of failed LLM API calls for a specific LLM deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "exception_status", "exception_class"` |
-| `litellm_deployment_total_requests`                 | Total number of LLM API calls for deployment - success + failure. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
+ `litellm_deployment_success_responses`              | Total number of successful LLM API calls for deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
+| `litellm_deployment_failure_responses`              | Total number of failed LLM API calls for a specific LLM deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "exception_status", "exception_class", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
+| `litellm_deployment_total_requests`                 | Total number of LLM API calls for deployment - success + failure. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
 
 ### Remaining Requests and Tokens
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_remaining_requests_metric`             | Track `x-ratelimit-remaining-requests` returned from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias"` |
-| `litellm_remaining_tokens_metric`                | Track `x-ratelimit-remaining-tokens` return from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias"` |
+| `litellm_remaining_requests_metric`             | Track `x-ratelimit-remaining-requests` returned from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id"` |
+| `litellm_remaining_tokens_metric`                | Track `x-ratelimit-remaining-tokens` return from LLM API Deployment. Labels: `"model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id"` |
+
+### Provider Budget
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
 
 ### Deployment State 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_deployment_state`             | The state of the deployment: 0 = healthy, 1 = partial outage, 2 = complete outage. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
 | `litellm_deployment_latency_per_output_token`       | Latency per output token for deployment. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
+| `litellm_deployment_tpm_limit`             | Configured TPM limit for the deployment; only set for deployments with a tpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
+| `litellm_deployment_rpm_limit`             | Configured RPM limit for the deployment; only set for deployments with an rpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
 
 #### Fallback (Failover) Metrics
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_deployment_cooled_down`             | Number of times a deployment has been cooled down by LiteLLM load balancing logic. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
-| `litellm_deployment_successful_fallbacks`           | Number of successful fallback requests from primary model -> fallback model. Labels: `"requested_model", "fallback_model", "hashed_api_key", "api_key_alias", "team", "team_alias", "exception_status", "exception_class"` |
-| `litellm_deployment_failed_fallbacks`               | Number of failed fallback requests from primary model -> fallback model. Labels: `"requested_model", "fallback_model", "hashed_api_key", "api_key_alias", "team", "team_alias", "exception_status", "exception_class"` |
+| `litellm_deployment_cooled_down`             | Number of times a deployment has been cooled down by LiteLLM load balancing logic. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider", "exception_status"` |
+| `litellm_deployment_successful_fallbacks`           | Number of successful fallback requests from primary model -> fallback model. Labels: `"requested_model", "fallback_model", "hashed_api_key", "api_key_alias", "team", "team_alias", "exception_status", "exception_class", "model_id"` |
+| `litellm_deployment_failed_fallbacks`               | Number of failed fallback requests from primary model -> fallback model. Labels: `"requested_model", "fallback_model", "hashed_api_key", "api_key_alias", "team", "team_alias", "exception_status", "exception_class", "model_id"` |
 
 ## Request Counting Metrics
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_requests_metric`             | Total number of requests tracked per endpoint. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email"` |
+| `litellm_requests_metric`             | **deprecated** use `litellm_proxy_total_requests_metric`. Total number of LLM calls to litellm, tracked per API key, team, user. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider"` |
 
-## Request Latency Metrics 
+## Request Latency Metrics
 
-| Metric Name          | Description                          |
-|----------------------|--------------------------------------|
-| `litellm_request_total_latency_metric`             | Total latency (seconds) for a request to LiteLLM Proxy Server - tracked for labels "end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model", "model_id" |
-| `litellm_overhead_latency_metric`             | Latency overhead (seconds) added by LiteLLM processing - tracked for labels "model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias" |
-| `litellm_overhead_with_guardrails_latency_metric`             | Latency overhead (seconds) added by LiteLLM processing including pre_call and post_call guardrails - tracked for labels "model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias". During_call (moderation) guardrails run concurrently with the LLM API call, so they are excluded from this number |
-| `litellm_llm_api_latency_metric`  | Latency (seconds) for just the LLM API call - tracked for labels "model", "hashed_api_key", "api_key_alias", "team", "team_alias", "requested_model", "end_user", "user" |
-| `litellm_llm_api_time_to_first_token_metric`             | Time to first token for LLM API call - tracked for labels `model`, `hashed_api_key`, `api_key_alias`, `team`, `team_alias`, `requested_model`, `end_user`, `user`, `model_id` [Note: only emitted for streaming requests] |
+Use `litellm_request_total_latency_metric` for latency SLOs and alerts. It measures the full request from arrival at the proxy through the end of processing. If total latency increases, use the other metrics to identify whether the delay comes from authentication, the LLM provider, or LiteLLM processing.
+
+All request latency metrics are Prometheus histograms measured in seconds.
+
+| What you want to measure | Metric | Measurement window |
+|---|---|---|
+| End-to-end latency | `litellm_request_total_latency_metric` | Request arrival to the end of processing. Includes authentication, pre-call hooks, the LLM API call, and post-call processing. |
+| Authentication and request wait time | `litellm_request_queue_time_seconds` | Request arrival to the start of pre-call processing. Includes authentication and ASGI-level queueing. Compare this with [`litellm_in_flight_requests`](#pod-health-metrics) when diagnosing overloaded proxy pods. |
+| LLM provider latency | `litellm_llm_api_latency_metric` | LLM API call start to finish. |
+| Time to first token | `litellm_llm_api_time_to_first_token_metric` | LLM API call start to the first token. Emitted only for streaming requests. |
+| LiteLLM processing overhead | `litellm_overhead_latency_metric` | LiteLLM processing time, excluding the LLM API call and guardrails. |
+| LiteLLM processing and guardrail overhead | `litellm_overhead_with_guardrails_latency_metric` | LiteLLM processing time plus pre-call and post-call guardrails, excluding the LLM API call. During-call guardrails run concurrently with the LLM API call and are not included. |
+
+For example, this query returns end-to-end p95 latency over the last five minutes:
+
+```promql
+histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket[5m])))
+```
+
+<details>
+<summary>Labels for request latency metrics</summary>
+
+| Metrics | Labels |
+|---|---|
+| `litellm_request_total_latency_metric`<br />`litellm_llm_api_latency_metric`<br />`litellm_llm_api_time_to_first_token_metric` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider`, `service_tier` |
+| `litellm_request_queue_time_seconds` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider` |
+| `litellm_overhead_latency_metric`<br />`litellm_overhead_with_guardrails_latency_metric` | `model_group`, `api_provider`, `api_base`, `litellm_model_name`, `hashed_api_key`, `api_key_alias`, `model_id` |
+
+`litellm_request_queue_time_seconds` does not include `service_tier` because the provider has not selected a service tier when this metric is recorded.
+
+</details>
+
+### Configure caller identity on deployment and latency metrics
+
+By default, deployment counters and caller-scoped latency histograms identify the caller with `api_key_alias`. Set `prometheus_deployment_and_latency_caller_identity` to use `user_email` instead, or to expose both labels:
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_deployment_and_latency_caller_identity: user_email
+```
+
+| Value | Caller identity labels | Behavior |
+|---|---|---|
+| `api_key_alias` (default) | `api_key_alias` | Preserves the existing metric schema and existing queries. |
+| `user_email` | `user_email` | Replaces `api_key_alias` at the same position in the label schema. |
+| `both` | `api_key_alias`, then `user_email` | Emits both dimensions. `user_email` is placed immediately after `api_key_alias`. |
+
+The setting applies only to these metric families:
+
+- `litellm_deployment_total_requests`
+- `litellm_deployment_success_responses`
+- `litellm_deployment_failure_responses`
+- `litellm_request_total_latency_metric`
+- `litellm_llm_api_latency_metric`
+- `litellm_llm_api_time_to_first_token_metric`
+- `litellm_request_queue_time_seconds`
+- `litellm_overhead_latency_metric`
+- `litellm_deployment_latency_per_output_token`
+
+It does not change related metrics that are not caller-scoped, or the guardrail-inclusive `litellm_overhead_with_guardrails_latency_metric`. Counter samples use the Prometheus `_total` suffix, and histogram `_bucket`, `_sum`, and `_count` samples all receive the selected identity label or labels.
+
+Requests without a resolved email use LiteLLM's established `"None"` label value. For example, these queries group provider requests and p95 end-to-end latency by resolved email while excluding requests with no email:
+
+```promql
+sum by (user_email) (
+  rate(litellm_deployment_total_requests_total{user_email!="None"}[5m])
+)
+```
+
+```promql
+histogram_quantile(
+  0.95,
+  sum by (user_email, le) (
+    rate(litellm_request_total_latency_metric_bucket{user_email!="None"}[5m])
+  )
+)
+```
+
+`prometheus_metrics_config.include_labels` is validated against the selected mode. In `api_key_alias` mode it can include `api_key_alias`; in `user_email` mode it can include `user_email`; and in `both` mode it can include either or both. An invalid mode value fails proxy startup with a `ValueError` naming the accepted values, and `user_email` mode combined with `include_labels: [api_key_alias]` on an affected family also fails startup, naming both settings. `prometheus_exclude_labels` is applied afterward and can remove either identity label. For example, selecting `both` globally and excluding `api_key_alias` leaves only `user_email` on the affected families.
+
+:::warning
+Changing this setting changes fixed Prometheus collector label schemas. Restart every LiteLLM Proxy/logger process after changing it; a live configuration reload cannot rebuild existing collectors.
+
+Email addresses are sensitive data. Keep the default unless email-level attribution is required, retain [authentication on `/metrics`](#authentication-on-metrics-endpoint), and restrict network access to trusted Prometheus scrapers.
+:::
+
+`both` records one series per observed complete label tuple; it does not create a second series for the same request. If aliases and emails have a stable one-to-one mapping, adding the email label does not increase the number of distinct series. Cardinality can increase when aliases are reused across users, mappings change over time, or the same alias is observed with both a resolved and an absent email.
+
+### Segmenting latency and spend by service tier
+
+The `service_tier` label on the request latency metrics and on `litellm_spend_metric` carries the tier a request actually ran on, so you can compare latency and cost before and after moving traffic to a cheaper or a faster tier:
+
+```promql
+histogram_quantile(0.95, sum by (service_tier, le) (rate(litellm_request_total_latency_metric_bucket[5m])))
+```
+
+The value is the tier the provider reports it served, which is what makes a request sent with `"service_tier": "auto"` show up under the concrete tier the provider picked (for example `default`) rather than under `auto`. When a provider reports no tier, the tier named in the request is used, and a request that neither asks for nor gets a tier is labelled with an empty value
 
 ## Tracking `end_user` on Prometheus
 
@@ -564,6 +728,25 @@ litellm_settings:
 
 **Default Behavior**: If no `prometheus_metrics_config` is specified, all metrics are enabled with their default labels (backward compatible).
 
+### Exclude Metrics and Labels Globally
+
+`prometheus_metrics_config` is include-based, so it requires you to enumerate every metric you want to keep. When you only want to drop a small set of metrics or labels, use the global `prometheus_exclude_metrics` and `prometheus_exclude_labels` options instead. Everything not listed stays enabled with its default labels, and metrics added in future LiteLLM releases are emitted automatically without further config changes.
+
+```yaml
+litellm_settings:
+  callbacks: ["prometheus"]
+  # Drop these metrics entirely
+  prometheus_exclude_metrics:
+    - "litellm_input_tokens_metric"
+    - "litellm_output_tokens_metric"
+  # Drop these labels from every metric that would otherwise emit them
+  prometheus_exclude_labels:
+    - "hashed_api_key"
+    - "api_key_alias"
+```
+
+Both lists are validated at startup; an unknown metric or label name raises a configuration error so typos surface immediately. Exclusion always wins, so a metric named in `prometheus_exclude_metrics` is dropped even if a `prometheus_metrics_config` group enables it, and a label in `prometheus_exclude_labels` is removed even when a group's `include_labels` lists it.
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
@@ -577,11 +760,33 @@ litellm_settings:
   service_callback: ["prometheus_system"]
 ```
 
-| Metric Name          | Description                          |
-|----------------------|--------------------------------------|
-| `litellm_redis_latency`         | histogram latency for redis calls     |
-| `litellm_redis_fails`         | Number of failed redis calls    |
-| `litellm_self_latency`         | Histogram latency for successful litellm api call    |
+Each monitored service emits three metrics, named `litellm_<service>_<type>`:
+
+| Metric Name | Type | Description |
+|---|---|---|
+| `litellm_<service>_latency` | Histogram | Latency (seconds) for calls to the service |
+| `litellm_<service>_failed_requests_total` | Counter | Number of failed calls to the service. Labels: `"error_class", "function_name"` for debugging what is failing |
+| `litellm_<service>_total_requests_total` | Counter | Total number of calls to the service, use it with the failed counter to compute an error rate |
+
+The monitored services are:
+
+| Service | Description |
+|---|---|
+| `redis` | Redis calls (caching, rate limiting state) |
+| `postgres` | Postgres DB calls (keys, teams, spend logs). Example: `litellm_postgres_latency`, `litellm_postgres_failed_requests_total`, `litellm_postgres_total_requests_total` |
+| `auth` | Request authentication checks. Useful for catching auth slowness caused by an overloaded DB |
+| `batch_write_to_db` | Batched spend/usage writes to the DB |
+| `reset_budget_job` | The periodic budget reset job |
+| `router` | LiteLLM router operations |
+| `proxy_pre_call` | Pre-call hooks run by the proxy before hitting the LLM API |
+| `self` | LiteLLM's own API call handling |
+
+Example alerts, DB failing or slow:
+
+```promql
+rate(litellm_postgres_failed_requests_total[5m]) > 0
+histogram_quantile(0.95, sum by (le) (rate(litellm_postgres_latency_bucket[5m]))) > 1
+```
 
 #### DB Transaction Queue Health Metrics
 
@@ -592,6 +797,8 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 | `litellm_pod_lock_manager_size`                     | Indicates which pod has the lock to write updates to the database.         | Redis    |
 | `litellm_in_memory_daily_spend_update_queue_size`   | Number of items in the in-memory daily spend update queue. These are the aggregate spend logs for each user.                 | In-Memory    |
 | `litellm_redis_daily_spend_update_queue_size`       | Number of items in the Redis daily spend update queue.  These are the aggregate spend logs for each user.                    | Redis        |
+| `litellm_redis_daily_end_user_spend_update_queue_size` | Number of items in the Redis daily end user spend update queue.          | Redis        |
+| `litellm_redis_daily_agent_spend_update_queue_size` | Number of items in the Redis daily agent spend update queue.               | Redis        |
 | `litellm_in_memory_spend_update_queue_size`         | In-memory aggregate spend values for keys, users, teams, team members, etc.| In-Memory    |
 | `litellm_redis_spend_update_queue_size`             | Redis aggregate spend values for keys, users, teams, etc.                  | Redis        |
 
@@ -648,7 +855,6 @@ litellm_settings:
 
 ### What are `_created` vs. `_total` metrics?
 
-- `_created` metrics are metrics that are created when the proxy starts
-- `_total` metrics are metrics that are incremented for each request
+The Python Prometheus client emits a `_created` sample alongside every counter and histogram. It holds the unix timestamp of when that series was created (typically process start, or the first time that label combination was seen), and it never counts anything.
 
 You should consume the `_total` metrics for your counting purposes

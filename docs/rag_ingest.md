@@ -77,6 +77,8 @@ curl -X POST "http://localhost:4000/v1/rag/ingest" \
 
 ### AWS S3 Vectors
 
+Full setup, IAM permissions, and search configuration: [AWS S3 Vectors](./providers/s3_vectors.md).
+
 ```bash showLineNumbers title="Ingest to S3 Vectors"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
     -H "Authorization: Bearer sk-1234" \

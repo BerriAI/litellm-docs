@@ -1,4 +1,4 @@
-# Gemini — Lyria (music generation)
+# Gemini Lyria (music generation)
 
 Google Lyria 3 preview models are listed in LiteLLM’s [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) under the `gemini/` provider for metadata and spend tracking.
 

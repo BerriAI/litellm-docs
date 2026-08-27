@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.92.0 — Claude Sonnet 5, Production MCP OAuth & New Providers](/release_notes/v1.92.0/v1-92-0)
+### [v1.98.0: Provisioned Throughput Billing, Shadow Evals & Routing Groups](/release_notes/v1.98.0/v1-98-0)
 
-_July 11, 2026_
+_August 22, 2026_
 
-First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including regional inference profiles), Vertex AI, and Azure AI with a 1M-token context window, reasoning, computer use, and PDF input; a production-ready MCP OAuth 2.0 On-Behalf-Of arm on the v2 resolver with RFC 9728 to RFC 8414 endpoint discovery, persisted Dynamic Client Registration, per-server outbound concurrency limits, and an `mcp_tool_search` virtual tool for large tool catalogs; two new providers in Tencent (DeepSeek V4 flash and pro) and Google Distributed Cloud Gemini for on-prem and sovereign deployments; access-control hardening across the key, user, and team endpoints plus AES-256-GCM at-rest credential encryption; and faster spend and budget hot paths with Redis-cluster reconnect and read-replica boot resilience.
+Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cost_per_ptu_per_hour` on a deployment driving a per-model flat cost by active hour while per-token billing is switched off there, so a team paying for reserved capacity is not charged twice for the same traffic; a shadow eval job that samples a slice of one key's successful traffic, replays it through the auto-router in a detached task that never serves a response or adds latency, and has an LLM judge compare both answers blind, so the router can be measured before it is adopted; routing groups that are callable models, where `model=<group_name>` routes across the union of member deployments with the group's own strategy, appears in `/v1/models` for Claude Code and Codex discovery, and is grantable on keys and teams; six `x-litellm-response-cost-*` headers that split a response's cost into input, cache read, cache creation, output, reasoning, and tool usage; TPM reservations that follow declared output size per key, per team, and per model instead of one static floor for every tenant; and the largest step yet in the Admin UI's move off antd and Tremor, with 75 UI pull requests carrying the navbar, playground, usage, cost tracking, the log details drawer, and much of the shared component library onto shadcn. Note that the Langfuse metadata blob is now sourced from a StandardLoggingPayload allowlist, so roughly 20 fields no longer appear on the generation.
 
 ---
 
@@ -22,6 +22,12 @@ First-class Claude Sonnet 5 support across Anthropic, Amazon Bedrock (including 
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
+| [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
 | [v1.90.0](/release_notes/v1.90.0/v1-90-0)   | Jun 26, 2026 | Six new providers, OpenTelemetry v2 metrics parity, streaming-reliability sweep |

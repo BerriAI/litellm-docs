@@ -8,7 +8,7 @@
 | Provider Route on LiteLLM | `nano-gpt/` |
 | Link to Provider Doc | [NanoGPT Website ↗](https://nano-gpt.com) |
 | Base URL | `https://nano-gpt.com/api/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage), [`/completions`](#text-completion), [`/embeddings`](#embeddings) |
+| Supported Operations | [`/chat/completions`](/docs/providers/nano-gpt#usage---litellm-python-sdk), `/completions`, `/embeddings` |
 
 <br />
 

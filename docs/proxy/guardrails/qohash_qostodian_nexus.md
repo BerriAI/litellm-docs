@@ -35,7 +35,7 @@ Additional deployment options are available. [Contact Qohash](https://qohash.com
 
 ### 2. Configure LiteLLM Proxy (config.yaml)
 
-**Pre-call** — block sensitive data before it reaches the model:
+**Pre-call.** Block sensitive data before it reaches the model:
 
 ```yaml title="config.yaml (pre-call)"
 guardrails:
@@ -47,7 +47,7 @@ guardrails:
       default_on: true
 ```
 
-**Post-call** — redact or block sensitive data in model output before it reaches the caller:
+**Post-call.** Redact or block sensitive data in model output before it reaches the caller:
 
 ```yaml title="config.yaml (post-call)"
 guardrails:
@@ -90,7 +90,7 @@ Expected: Qostodian Nexus returns `BLOCK` → LiteLLM returns an error, no provi
 </TabItem>
 <TabItem label="REDACT" value="redact">
 
-**Pre-call** — sensitive substrings are masked before the prompt reaches the model:
+**Pre-call.** Sensitive substrings are masked before the prompt reaches the model:
 
 ```bash
 curl -i http://localhost:4000/v1/chat/completions \
@@ -107,7 +107,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 Expected: Qostodian Nexus returns `REDACT` → LiteLLM forwards a masked prompt to the provider. Response headers include `x-qostodian-nexus-outcome-decision: REDACT`.
 
-**Post-call** — sensitive content in the model response is masked before it reaches the caller:
+**Post-call.** Sensitive content in the model response is masked before it reaches the caller:
 
 ```bash
 curl -i http://localhost:4000/v1/chat/completions \
@@ -233,7 +233,7 @@ These fields are required in all deployment modes. Their effect depends on the o
 
 ## Security Guidance
 
-Qostodian Nexus operates on a **zero-copy, data-sovereign processing model** in all deployment modes: content is analyzed in-memory and never persisted or transmitted to Qohash. Only metadata (detection outcomes, policy decisions, identifiers) is reported — prompt and response content stays within your infrastructure at all times.
+Qostodian Nexus operates on a **zero-copy, data-sovereign processing model** in all deployment modes: content is analyzed in-memory and never persisted or transmitted to Qohash. Only metadata (detection outcomes, policy decisions, identifiers) is reported, and prompt and response content stays within your infrastructure at all times.
 
 - **Use TLS** between LiteLLM and Qostodian Nexus in production environments
 - **Authenticate calls** using mTLS (preferred) or bearer token

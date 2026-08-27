@@ -64,7 +64,7 @@ Here's a Demo Instance to test changes:
 - Bedrock - support `us.deepseek.r1-v1:0` model name [Docs](../../docs/providers/bedrock#supported-aws-bedrock-models)
 - OpenRouter - `OPENROUTER_API_BASE` env var support [Docs](../../docs/providers/openrouter)
 - Azure - add audio model parameter support - [Docs](../../docs/providers/azure#azure-audio-model)
-- OpenAI - PDF File support [Docs](../../docs/completion/document_understanding#openai-file-message-type)
+- OpenAI - PDF File support [Docs](/docs/completion/document_understanding)
 - OpenAI - o1-pro Responses API streaming support [Docs](../../docs/response_api#streaming)
 - [BETA] MCP - Use MCP Tools with LiteLLM SDK [Docs](../../docs/mcp)
 
@@ -110,7 +110,7 @@ Here's a Demo Instance to test changes:
 - Allow disabling all spend updates / writes to DB - patch to allow disabling all spend updates to DB with a flag [PR](https://github.com/BerriAI/litellm/pull/9331)
 - Azure OpenAI - correctly re-use azure openai client, fixes perf issue from previous Stable release [PR](https://github.com/BerriAI/litellm/commit/f2026ef907c06d94440930917add71314b901413)
 - Azure OpenAI - uses litellm.ssl_verify on Azure/OpenAI clients [PR](https://github.com/BerriAI/litellm/commit/f2026ef907c06d94440930917add71314b901413)
-- Usage-based routing - Wildcard model support [Get Started](../../docs/proxy/usage_based_routing#wildcard-model-support)
+- Usage-based routing - Wildcard model support [Get Started](/docs/wildcard_routing)
 - Usage-based routing - Support batch writing increments to redis - reduces latency to same as ‘simple-shuffle’ [PR](https://github.com/BerriAI/litellm/pull/9357)
 - Router - show reason for model cooldown on ‘no healthy deployments available error’ [PR](https://github.com/BerriAI/litellm/pull/9438)
 - Caching - add max value limit to an item in in-memory cache (1MB) - prevents OOM errors on large image url’s being sent through proxy [PR](https://github.com/BerriAI/litellm/pull/9448)
@@ -121,7 +121,7 @@ Here's a Demo Instance to test changes:
 - Passthrough Endpoints - support returning api-base on pass-through endpoints Response Headers [Docs](../../docs/proxy/response_headers#litellm-specific-headers)
 - SSL - support reading ssl security level from env var - Allows user to specify lower security settings [Get Started](../../docs/guides/security_settings)
 - Credentials - only poll Credentials table when `STORE_MODEL_IN_DB` is True [PR](https://github.com/BerriAI/litellm/pull/9376)
-- Image URL Handling - new architecture doc on image url handling [Docs](../../docs/proxy/image_handling)
+- Image URL Handling - new architecture doc on image url handling [Docs](../../docs/proxy/architecture#image-url-handling)
 - OpenAI - bump to pip install "openai==1.68.2" [PR](https://github.com/BerriAI/litellm/commit/e85e3bc52a9de86ad85c3dbb12d87664ee567a5a)
 - Gunicorn - security fix - bump gunicorn==23.0.0 [PR](https://github.com/BerriAI/litellm/commit/7e9fc92f5c7fea1e7294171cd3859d55384166eb)
 

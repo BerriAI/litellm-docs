@@ -54,16 +54,16 @@ pip install litellm==1.83.3
 ## Key Highlights
 
 - **MCP Toolsets** — [Create curated tool subsets from one or more MCP servers with scoped permissions, and manage them from the UI or API](../../docs/mcp)
-- **Skills Marketplace** — [Browse, install, and publish Claude Code skills from a self-hosted marketplace — works across Anthropic, Vertex AI, Azure, and Bedrock](../../docs/skills_gateway)
-- **Guardrail Fallbacks** — [Configure `on_error` behavior so guardrail failures degrade gracefully instead of blocking the request](../../docs/proxy/guardrails)
-- **Team Bring Your Own Guardrails** — [Teams can now attach and manage their own guardrails directly from team settings in the UI](../../docs/proxy/guardrails)
+- **Skills Marketplace**: [Browse, install, and publish Claude Code skills from a self-hosted marketplace. Works across Anthropic, Vertex AI, Azure, and Bedrock](../../docs/skills_gateway)
+- **Guardrail Fallbacks** — [Configure `on_error` behavior so guardrail failures degrade gracefully instead of blocking the request](/docs/proxy/guardrails/quick_start)
+- **Team Bring Your Own Guardrails** — [Teams can now attach and manage their own guardrails directly from team settings in the UI](/docs/proxy/guardrails/quick_start)
 
 ---
 
 
 ### Skills Marketplace
 
-The Skills Marketplace gives teams a self-hosted catalog for discovering, installing, and publishing Claude Code skills. Skills are portable across Anthropic, Vertex AI, Azure, and Bedrock — so a skill published once works everywhere your gateway routes to.
+The Skills Marketplace gives teams a self-hosted catalog for discovering, installing, and publishing Claude Code skills. Skills are portable across Anthropic, Vertex AI, Azure, and Bedrock, so a skill published once works everywhere your gateway routes to.
 
 ![Skills Marketplace](../../img/release_notes/skills_marketplace.png)
 
@@ -73,17 +73,17 @@ The Skills Marketplace gives teams a self-hosted catalog for discovering, instal
 
 ![Guardrail Fallbacks](../../img/release_notes/guardrail_fallbacks.png)
 
-Guardrail pipelines now support an optional `on_error` behavior. When a guardrail check fails or errors out, you can configure the pipeline to fall back gracefully — logging the failure and continuing the request — instead of returning a hard 500 to the caller. This is especially useful for non-critical guardrails where availability matters more than enforcement.
+Guardrail pipelines now support an optional `on_error` behavior. When a guardrail check fails or errors out, you can configure the pipeline to fall back gracefully, logging the failure and continuing the request, instead of returning a hard 500 to the caller. This is especially useful for non-critical guardrails where availability matters more than enforcement.
 
 [Get Started](../../docs/proxy/guardrails/policy_flow_builder)
 
 ### Team Bring Your Own Guardrails
 
-Teams can now attach guardrails directly from the team management UI. Admins configure available guardrails at the project or proxy level, and individual teams select which ones apply to their traffic — no config file changes or proxy restarts needed. This also ships with project-level guardrail support in the project create/edit flows.
+Teams can now attach guardrails directly from the team management UI. Admins configure available guardrails at the project or proxy level, and individual teams select which ones apply to their traffic, with no config file changes or proxy restarts needed. This also ships with project-level guardrail support in the project create/edit flows.
 
 ### MCP Toolsets
 
-MCP Toolsets let AI platform admins create curated subsets of tools from one or more MCP servers and assign them to teams and keys with scoped permissions. Instead of granting access to an entire MCP server, you can now bundle specific tools into a named toolset — controlling exactly which tools each team or API key can invoke. Toolsets are fully managed through the UI (new Toolsets tab) and API, and work seamlessly with the Responses API and Playground.
+MCP Toolsets let AI platform admins create curated subsets of tools from one or more MCP servers and assign them to teams and keys with scoped permissions. Instead of granting access to an entire MCP server, you can now bundle specific tools into a named toolset, controlling exactly which tools each team or API key can invoke. Toolsets are fully managed through the UI (new Toolsets tab) and API, and work with the Responses API and Playground.
 
 ![MCP Toolsets](../../img/release_notes/mcp_toolsets.jpeg)
 
@@ -188,7 +188,7 @@ MCP Toolsets let AI platform admins create curated subsets of tools from one or 
 - **[OCI GenAI](../../docs/providers/oci)**
     - Native embeddings support and expanded chat + embedding model catalog - [PR #24887](https://github.com/BerriAI/litellm/pull/24887), [PR #25151](https://github.com/BerriAI/litellm/pull/25151)
 
-- **[Volcengine](../../docs/providers/volcengine)**
+- **[Volcengine](/docs/providers/volcano)**
     - Add Doubao Seed 2.0 pro/lite/mini/code-preview entries - cost map
 
 - **[Mistral](../../docs/providers/mistral)**
@@ -228,7 +228,7 @@ MCP Toolsets let AI platform admins create curated subsets of tools from one or 
 #### Features
 
 - **[Responses API](../../docs/response_api)**
-    - File Search support — Phase 1 native passthrough and Phase 2 emulated fallback for non-OpenAI models - [PR #23969](https://github.com/BerriAI/litellm/pull/23969)
+    - File Search support: Phase 1 native passthrough and Phase 2 emulated fallback for non-OpenAI models - [PR #23969](https://github.com/BerriAI/litellm/pull/23969)
     - Prompt management support for Responses API - [PR #23999](https://github.com/BerriAI/litellm/pull/23999)
     - Encrypted-content affinity across model versions - [PR #23854](https://github.com/BerriAI/litellm/pull/23854), [PR #24110](https://github.com/BerriAI/litellm/pull/24110)
     - Round-trip Responses API `reasoning_items` in chat completions - [PR #24690](https://github.com/BerriAI/litellm/pull/24690)
@@ -254,7 +254,7 @@ MCP Toolsets let AI platform admins create curated subsets of tools from one or 
 - **[Embeddings API](../../docs/embedding/supported_embedding)**
     - Gemini: convert `task_type` to camelCase `taskType` for Gemini API - [PR #24191](https://github.com/BerriAI/litellm/pull/24191)
 
-- **[Video Generation](../../docs/video_generation)**
+- **[Video Generation](/docs/videos)**
     - New reusable video character endpoints (create / edit / extension / get) with router-first routing - [PR #23737](https://github.com/BerriAI/litellm/pull/23737)
 
 - **[Search API](../../docs/search)**
@@ -367,7 +367,7 @@ MCP Toolsets let AI platform admins create curated subsets of tools from one or 
     - Fix Langfuse OTEL traceparent propagation - [PR #24048](https://github.com/BerriAI/litellm/pull/24048)
     - Re-apply Langfuse key-leakage fix - [PR #22188](https://github.com/BerriAI/litellm/pull/22188), revert [PR #23868](https://github.com/BerriAI/litellm/pull/23868)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Organization budget metrics - [PR #24449](https://github.com/BerriAI/litellm/pull/24449)
     - Prometheus spend metadata - [PR #24434](https://github.com/BerriAI/litellm/pull/24434)
 

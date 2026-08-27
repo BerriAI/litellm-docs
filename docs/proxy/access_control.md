@@ -1,4 +1,4 @@
-import Image from '@theme/IdealImage';
+import { TenancyDiagram } from '@site/src/components/CloudArchitecture';
 
 # Role-based Access Controls (RBAC)
 
@@ -8,7 +8,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 
 <iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
-<Image img={require('../../img/litellm_user_heirarchy.png')} style={{ width: '100%', maxWidth: '4000px' }} />
+<TenancyDiagram />
 
 
 - `Organizations` are the top-level entities that contain Teams.
@@ -56,6 +56,19 @@ LiteLLM has two types of roles:
 |-----------|-------------|
 | `org_admin` | Admin over a specific organization. Can create teams and users within their organization ✨ **Premium Feature** |
 | `team_admin` | Admin over a specific team. Can manage team members, update team member permissions, and create keys for their team. ✨ **Premium Feature** |
+
+## Usage dashboard visibility
+
+The Usage page shows different data depending on the selected view and the signed-in user's role:
+
+| View | What it shows |
+| --- | --- |
+| Personal usage | The signed-in user's aggregate usage. If the user belongs to multiple teams, this view does not split their personal usage by team. |
+| Team usage | The complete usage for the selected team, not only the signed-in user's contribution to that team. |
+| Organization usage | Aggregate usage for an organization, when the user's organization role permits access. |
+| Global usage | Platform-wide usage for proxy admins and proxy admin viewers. |
+
+The LiteLLM Admin UI does not host custom dashboards. For a custom view such as per-user usage within each team, query the spend data through the management API or export telemetry to an external system. See [Prometheus metrics](./prometheus.md) and [OpenTelemetry](../observability/opentelemetry_v2.md) for Grafana-compatible exports.
 
 ## What Can Each Role Do?
 
@@ -145,7 +158,7 @@ An internal user viewer can view their own information but cannot create or dele
 ## Organization/Team Specific Roles
 
 :::info 
-Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 7 day trial here](https://www.litellm.ai/#trial).
+Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 :::
 
 These roles are scoped to specific organizations or teams. Users with these roles can only manage resources within their assigned organization or team.
@@ -186,7 +199,7 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 
 **What they cannot do:**
 - Create new teams
-- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`) — only a proxy admin can do this
+- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`); only a proxy admin can do this
 - Add/remove global proxy models to their team
 
 :::info Team budget raises
@@ -197,7 +210,7 @@ On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or cl
 
 :::info How to create a team admin
 
-You need to be a LiteLLM Enterprise user to assign team admins. [Get a 7 day trial here](https://www.litellm.ai/#trial).
+You need to be a LiteLLM Enterprise user to assign team admins. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
@@ -467,7 +480,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
     -d '{"team_id": "01044ee8-441b-45f4-be7d-c70e002722d8", "member": {"role": "admin", "user_id": "john@company.com"}}'
 ```
 
-Now `john@company.com` is a team admin. They can manage the `engineering_team` — add members, update rate limits, keep or lower the team budget, create keys — but they can't touch other teams or raise the team budget above its current cap.
+Now `john@company.com` is a team admin. They can manage the `engineering_team` (add members, update rate limits, keep or lower the team budget, create keys) but they can't touch other teams or raise the team budget above its current cap.
 
 Create a Virtual Key for the team admin:
 

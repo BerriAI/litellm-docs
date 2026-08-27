@@ -83,7 +83,7 @@ Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
 :::tip Gemini 3 Models
-For **Gemini 3+ models** (e.g., `gemini-3-pro-preview`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level` — the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
+For **Gemini 3+ models** (e.g., `gemini-3-pro-preview`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
 :::warning Image Models
@@ -432,6 +432,96 @@ response = completion(
 ```
 
 For more information about Gemini's TTS capabilities and available voices, see the [official Gemini TTS documentation](https://ai.google.dev/gemini-api/docs/speech-generation).
+
+## Audio Transcription (Speech-to-Text)
+
+:::info
+
+LiteLLM supports `gemini-3.5-transcribe` on `/v1/audio/transcriptions` and `gemini-3.5-transcribe-live` on `/v1/realtime`.
+
+:::
+
+### Quick Start
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import transcription
+import os
+
+os.environ["GEMINI_API_KEY"] = "your-api-key"
+
+audio_file = open("speech.wav", "rb")
+response = transcription(
+    model="gemini/gemini-3.5-transcribe",
+    file=audio_file,
+    response_format="verbose_json",
+    timestamp_granularities=["word"],
+)
+print(response.text)
+print(response.words)  # word-level timestamps
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. Add the model to your config
+
+```yaml
+model_list:
+  - model_name: gemini-3.5-transcribe
+    litellm_params:
+      model: gemini/gemini-3.5-transcribe
+      api_key: os.environ/GEMINI_API_KEY
+```
+
+2. Start the proxy
+
+```bash
+litellm --config config.yaml
+```
+
+3. Test it
+
+```bash
+curl http://0.0.0.0:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer sk-1234" \
+  -F file=@speech.wav \
+  -F model=gemini-3.5-transcribe \
+  -F response_format=verbose_json \
+  -F "timestamp_granularities[]=word"
+```
+
+</TabItem>
+</Tabs>
+
+### Supported Params
+
+`language`, `response_format`, and `timestamp_granularities` are supported. Requesting word timestamps also enables speaker diarization on the underlying Interactions API call. The `srt` and `vtt` response formats currently return the plain transcript.
+
+### Live Transcription over `/v1/realtime`
+
+`gemini-3.5-transcribe-live` runs over the Realtime websocket. Stream `pcm16` audio with `input_audio_buffer.append` and read transcripts from `conversation.item.input_audio_transcription.completed` events. The Gemini Live API reports no token usage for transcription sessions, so LiteLLM estimates usage (and spend) from the streamed audio duration using Google's published estimator rates.
+
+```python
+import asyncio
+import json
+import websockets
+
+async def main():
+    async with websockets.connect(
+        "ws://0.0.0.0:4000/v1/realtime?model=gemini-3.5-transcribe-live",
+        additional_headers={"Authorization": "Bearer sk-1234"},
+    ) as ws:
+        await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": "<base64 pcm16 audio>"}))
+        async for message in ws:
+            event = json.loads(message)
+            if event.get("type") == "conversation.item.input_audio_transcription.completed":
+                print(event["transcript"], event.get("usage"))
+
+asyncio.run(main())
+```
 
 ## Passing Gemini Specific Params
 ### Response schema 
@@ -888,7 +978,7 @@ When enabled, Gemini can execute Google Search server-side, use those results to
 1. You pass `include_server_side_tool_invocations=True` along with both Google Search and your function tools
 2. Gemini executes server-side tools internally and returns `toolCall`/`toolResponse` parts alongside any `functionCall` parts
 3. LiteLLM extracts the server-side invocations into `provider_specific_fields["server_side_tool_invocations"]`
-4. On subsequent turns, include the full assistant message in your conversation history — LiteLLM re-injects the server-side parts automatically
+4. On subsequent turns, include the full assistant message in your conversation history; LiteLLM re-injects the server-side parts automatically
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -978,7 +1068,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 :::info
 
 - Context circulation requires **Gemini 3+** models
-- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls` — they are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
+- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls`. They are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
 - `thought_signatures` are automatically preserved alongside server-side invocations for multi-turn coherence
 
 :::

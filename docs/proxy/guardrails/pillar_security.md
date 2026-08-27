@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Pillar Security
 
-Pillar Security integrates with [LiteLLM Proxy](https://docs.litellm.ai) via the [Generic Guardrail API](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api), providing comprehensive AI security scanning for your LLM applications.
+Pillar Security integrates with [LiteLLM Proxy](https://docs.litellm.ai) via the [Generic Guardrail API](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api), providing AI security scanning for your LLM applications.
 
 - **Prompt Injection Protection**: Prevent malicious prompt manipulation
 - **Jailbreak Detection**: Detect attempts to bypass AI safety measures
@@ -48,7 +48,7 @@ guardrails:
 ```
 
 :::warning Important
-- The `api_base` must be exactly `https://api.pillar.security/api/v1/integrations/litellm` — this is the only endpoint that supports the Generic Guardrail API integration.
+- The `api_base` must be exactly `https://api.pillar.security/api/v1/integrations/litellm`, the only endpoint that supports the Generic Guardrail API integration.
 - The value `guardrail: generic_guardrail_api` must not be changed. This is the LiteLLM built-in guardrail type. However, you can customize the `guardrail_name` to any value you prefer.
 :::
 
@@ -80,7 +80,7 @@ Before you begin, ensure you have:
 
 ## Guardrail Modes
 
-Pillar Security supports three execution modes for comprehensive protection:
+Pillar Security supports three execution modes:
 
 | Mode | When It Runs | What It Protects | Use Case |
 |------|-------------|------------------|----------|
@@ -330,7 +330,7 @@ Ideal for debugging, audit logs, or compliance exports.
 
 ## Session Tracking
 
-Pillar supports comprehensive session tracking using LiteLLM's metadata system:
+Pillar supports session tracking using LiteLLM's metadata system:
 
 ```bash
 curl -X POST "http://localhost:4000/v1/chat/completions" \
@@ -346,7 +346,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   }'
 ```
 
-This provides clear, explicit conversation tracking that works seamlessly with LiteLLM's session management.
+This provides clear, explicit conversation tracking that works with LiteLLM's session management.
 
 ## Environment Variables
 

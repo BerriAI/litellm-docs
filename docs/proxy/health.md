@@ -1,295 +1,76 @@
+import Image from '@theme/IdealImage';
+
 # Health Checks
-Use this to health check all LLMs defined in your config.yaml
 
-## When to Use Each Endpoint
+Two things consume the proxy's health state. Your orchestrator (Kubernetes, a load balancer, an uptime monitor) polls lightweight probe endpoints to decide whether the process is up and ready for traffic. You, the operator, check whether each configured LLM can actually serve requests. This page covers both.
 
-| Endpoint | Use Case | Purpose |
-|----------|----------|---------|
-| `/health/liveliness` | **Container liveness probes** | Basic alive check - use for container restart decisions |
-| `/health/readiness` | **Load balancer health checks** | Ready to accept traffic - includes DB connection status |
-| `/health` | **Model health monitoring** | Comprehensive LLM model health - makes actual API calls |
-| `/health/services` | **Service debugging** | Check specific integrations (datadog, langfuse, etc.) |
-| `/health/shared-status` | **Multi-pod coordination** | Monitor shared health check state across pods |
+## Probe endpoints
 
-## Summary 
+These endpoints answer "is the gateway process up and able to serve traffic?" without making any LLM calls. They are the canonical liveness and readiness contract for the proxy.
 
-The proxy exposes: 
-* a /health endpoint which returns the health of the LLM APIs  
-* a /health/readiness endpoint for returning if the proxy is ready to accept requests 
-* a /health/liveliness endpoint for returning if the proxy is alive
-* a /health/shared-status endpoint for monitoring shared health check coordination across pods
+| Endpoint | Auth | Returns | Meaning |
+|----------|------|---------|---------|
+| `GET /health/liveliness` | none | `"I'm alive!"` (200), or `{"status": "shutting_down"}` (503) during graceful shutdown | The process is up. No dependencies are checked. `GET /health/liveness` is an alias with the Kubernetes spelling; both are real routes |
+| `GET /health/readiness` | none | `{"status": "healthy", "db": ...}` (200) when ready; 503 when a configured database is unreachable | The worker is ready to accept traffic. The `db` field is `"connected"`, `"disconnected"`, or `"Not connected"` when no database is configured |
 
-## Shared Health Check State
+The `db` value lets an orchestrator distinguish a healthy worker from one that booted but cannot reach its database. When the database is configured and unreachable, readiness returns 503 so the pod is pulled from rotation.
 
-When running multiple LiteLLM proxy pods, you can enable shared health check state to coordinate health checks across pods and avoid duplicate API calls. This is especially beneficial for expensive models like Gemini 2.5-pro.
+The default readiness payload is deliberately low-detail so it is safe to expose to unauthenticated probes. For full diagnostics (callbacks, cache, version), either set `general_settings.allow_public_health_readiness_details: true` to expand `/health/readiness` itself, or call the authenticated `GET /health/readiness/details` endpoint.
 
-**Key Benefits:**
-- Reduces duplicate health checks across pods
-- Saves costs on expensive model API calls
-- Reduces monitoring noise and logging
-- Improves resource efficiency
+A minimal Kubernetes probe pair on the proxy's port 4000:
 
-**Requirements:**
-- Redis for shared state coordination
-- Background health checks enabled
-- Multiple proxy pods
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/liveliness
+    port: 4000
+readinessProbe:
+  httpGet:
+    path: /health/readiness
+    port: 4000
+```
 
-For detailed configuration and usage, see [Shared Health Check State](./shared_health_check.md). 
+For full deployment manifests, see the [Production Deployment guide](./deploy.md) and the [production checklist](./prod.md).
 
-## `/health`
-#### Request
-Make a GET Request to `/health` on the proxy 
+## Model health in the Admin UI
 
-:::info
-**This endpoint makes an LLM API call to each model to check if it is healthy.**
-:::
+The primary way to check whether your models are serving is the Admin UI. Go to Models + Endpoints, open the Health Status tab, and click Run All Checks. Each model shows a status, error details when it fails, and the last check and last success times.
+
+<Image img={require('../../img/ui_health_status.png')} alt="Model Health Status tab showing a healthy model after Run All Checks" />
+
+The API equivalent is `GET /health`, which accepts any valid key. It runs a real test request against every configured model, so it costs a few tokens per model.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer sk-1234"
 ```
 
-You can also run `litellm -health` it makes a `get` request to `http://0.0.0.0:4000/health` for you
-```
-litellm --health
-```
-#### Response
-```shell
+```json
 {
     "healthy_endpoints": [
-        {
-            "model": "azure/gpt-35-turbo",
-            "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"
-        },
-        {
-            "model": "azure/gpt-35-turbo",
-            "api_base": "https://my-endpoint-europe-berri-992.openai.azure.com/"
-        }
+        {"model": "azure/gpt-35-turbo", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
     ],
     "unhealthy_endpoints": [
-        {
-            "model": "azure/gpt-35-turbo",
-            "api_base": "https://openai-france-1234.openai.azure.com/"
-        }
+        {"model": "azure/gpt-35-turbo", "api_base": "https://openai-france-1234.openai.azure.com/"}
     ]
 }
 ```
 
-### Embedding Models 
+To check a single model, pass `?model=<model_name>` or `?model_id=<id>`; you can find a model's id from `GET /v1/model/info`.
 
-To run embedding health checks, specify the mode as "embedding" in your config for the relevant model.
+## Background health checks
 
-```yaml
-model_list:
-  - model_name: azure-embedding-model
-    litellm_params:
-      model: azure/azure-embedding-model
-      api_base: os.environ/AZURE_API_BASE
-      api_key: os.environ/AZURE_API_KEY
-      api_version: "2023-07-01-preview"
-    model_info:
-      mode: embedding # 👈 ADD THIS
-```
-
-### Image Generation Models 
-
-To run image generation health checks, specify the mode as "image_generation" in your config for the relevant model.
+By default `/health` probes every model on each call. To avoid querying models too frequently, run the checks in the background and have `/health` serve the last cached result. Configure this in `general_settings`:
 
 ```yaml
-model_list:
-  - model_name: dall-e-3
-    litellm_params:
-      model: azure/dall-e-3
-      api_base: os.environ/AZURE_API_BASE
-      api_key: os.environ/AZURE_API_KEY
-      api_version: "2023-07-01-preview"
-    model_info:
-      mode: image_generation # 👈 ADD THIS
+general_settings:
+  background_health_checks: true      # run checks in the background
+  health_check_interval: 300          # seconds between runs (default 300)
+  health_check_details: true          # include endpoint URLs and errors in the response (default true)
 ```
 
-#### Custom Health Check Prompt
+Set `health_check_details: false` to strip endpoint URLs, error messages, and other params from the response when the proxy is exposed to a broad audience.
 
-By default, health checks use the prompt `"test from litellm"`. You can customize this prompt globally by setting an environment variable, or per-model via config:
-
-```bash
-DEFAULT_HEALTH_CHECK_PROMPT="this is a test prompt"
-```
-
-### Text Completion Models 
-
-
-To run `/completions` health checks, specify the mode as "completion" in your config for the relevant model.
-
-```yaml
-model_list:
-  - model_name: azure-text-completion
-    litellm_params:
-      model: azure/text-davinci-003
-      api_base: os.environ/AZURE_API_BASE
-      api_key: os.environ/AZURE_API_KEY
-      api_version: "2023-07-01-preview"
-    model_info:
-      mode: completion # 👈 ADD THIS
-```
-
-### Speech to Text Models 
-
-```yaml
-model_list:
-  - model_name: whisper
-    litellm_params:
-      model: whisper-1
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      mode: audio_transcription
-```
-
-
-### Text to Speech Models 
-
-```yaml
-# OpenAI Text to Speech Models
-  - model_name: tts
-    litellm_params:
-      model: openai/tts-1
-      api_key: "os.environ/OPENAI_API_KEY"
-    model_info:
-      mode: audio_speech
-      health_check_voice: alloy
-```
-
-You can specify a `health_check_voice` if you need to use a voice other than "alloy".
-
-### Rerank Models 
-
-To run rerank health checks, specify the mode as "rerank" in your config for the relevant model.
-
-```yaml
-model_list:
-  - model_name: rerank-english-v3.0
-    litellm_params:
-      model: cohere/rerank-english-v3.0
-      api_key: os.environ/COHERE_API_KEY
-    model_info:
-      mode: rerank
-```
-
-### Batch Models (Azure Only)
-
-For Azure models deployed as 'batch' models, set `mode: batch`. 
-
-```yaml
-model_list:
-  - model_name: "batch-gpt-4o-mini"
-    litellm_params:
-      model: "azure/batch-gpt-4o-mini"
-      api_key: os.environ/AZURE_API_KEY
-      api_base: os.environ/AZURE_API_BASE
-    model_info:
-      mode: batch
-```
-
-Expected Response 
-
-
-```bash
-{
-    "healthy_endpoints": [
-        {
-            "api_base": "https://...",
-            "model": "azure/gpt-4o-mini",
-            "x-ms-region": "East US"
-        }
-    ],
-    "unhealthy_endpoints": [],
-    "healthy_count": 1,
-    "unhealthy_count": 0
-}
-```
-
-### Realtime Models 
-
-To run realtime health checks, specify the mode as "realtime" in your config for the relevant model.
-
-```yaml
-model_list:
-  - model_name: openai/gpt-4o-realtime-audio
-    litellm_params:
-      model: openai/gpt-4o-realtime-audio
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      mode: realtime
-```
-
-### OCR Models 
-
-To run OCR health checks, specify the mode as "ocr" in your config for the relevant model.
-
-```yaml
-model_list:
-  - model_name: mistral/mistral-ocr-latest
-    litellm_params:
-      model: mistral/mistral-ocr-latest
-      api_key: os.environ/MISTRAL_API_KEY
-    model_info:
-      mode: ocr
-```
-
-### Wildcard Routes
-
-For wildcard routes, you can specify a `health_check_model` in your config.yaml. This model will be used for health checks for that wildcard route.
-
-In this example, when running a health check for `openai/*`, the health check will make a `/chat/completions` request to `openai/gpt-4o-mini`.
-
-```yaml
-model_list:
-  - model_name: openai/*
-    litellm_params:
-      model:  openai/*
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      health_check_model: openai/gpt-4o-mini
-  - model_name: anthropic/*
-    litellm_params:
-      model: anthropic/*
-      api_key: os.environ/ANTHROPIC_API_KEY
-    model_info:
-      health_check_model: anthropic/claude-3-5-sonnet-20240620
-```
-
-## Background Health Checks 
-
-You can enable model health checks being run in the background, to prevent each model from being queried too frequently via `/health`. 
-
-:::info
-
-**This makes an LLM API call to each model to check if it is healthy.**
-
-:::
-
-Here's how to use it: 
-1. in the config.yaml add:
-```
-general_settings: 
-  background_health_checks: True # enable background health checks
- health_check_interval: 300 # frequency of background health checks
-```
-
-2. Start server 
-```
-$ litellm /path/to/config.yaml
-```
-
-3. Query health endpoint: 
-```
- curl --location 'http://0.0.0.0:4000/health'
-```
-
-### Disable Background Health Checks For Specific Models
-
-Use this if you want to disable background health checks for specific models.
-
-If `background_health_checks` is enabled you can skip individual models by
-setting `disable_background_health_check: true` in the model's `model_info`.
+To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. That only skips the background loop; an on-demand `GET /health` still probes it unless you also set `general_settings.health_check_skip_disabled_background_models: true`, which omits those deployments from on-demand and shared health checks as well.
 
 ```yaml
 model_list:
@@ -301,228 +82,75 @@ model_list:
       disable_background_health_check: true
 ```
 
-### Skip the same models on `GET /health`
-
-By default, `disable_background_health_check: true` only skips those deployments in the **background** health loop. On-demand `GET /health` still probes them unless you enable this global flag:
+To scope the background loop to specific model groups instead of excluding models one by one, set `general_settings.background_health_check_model_groups` to the list of model group names to probe. Only deployments in the listed groups are checked, so `/health` reports only those groups, and [health check routing](./health_check_routing.md) applies only to them; unlisted groups keep their configured routing behavior. Model groups added later are not probed until you add them to the list, and a value that is not a list of strings fails at startup
 
 ```yaml
 general_settings:
-  health_check_skip_disabled_background_models: true
+  background_health_checks: true
+  background_health_check_model_groups: ["prod-openai"]
 ```
 
-When `true`, deployments with `model_info.disable_background_health_check: true` are omitted from on-demand `GET /health` (including `?model=` / `?model_id=`) and from health-check runs that honor `general_settings` (including Redis-backed shared health checks).
+For coordinating checks across multiple pods so expensive models are not probed once per pod, see [Shared Health Check State](./shared_health_check.md).
 
-### Hide details
+## Model modes
 
-The health check response contains details like endpoint URLs, error messages,
-and other LiteLLM params. While this is useful for debugging, it can be
-problematic when exposing the proxy server to a broad audience.
+The health check picks the operation to test from the model's `model_info.mode`. Set it so the probe uses the right API surface; if you leave it unset, LiteLLM auto-detects from the model's capabilities and falls back to a chat completion.
 
-You can hide these details by setting the `health_check_details` setting to `False`.
+| `mode` | Health check calls |
+|--------|--------------------|
+| `chat` (default) | `/chat/completions` |
+| `completion` | `/completions` |
+| `embedding` | `/embeddings` |
+| `image_generation` | image generation |
+| `audio_transcription` | audio transcription |
+| `audio_speech` | text to speech (requires `health_check_voice`) |
+| `rerank` | rerank |
+| `batch` | batch (Azure only) |
+| `realtime` | realtime session |
+| `ocr` | OCR |
+| `video_generation` | video generation |
+| `image_edit` | image edit |
 
-```yaml
-general_settings: 
-  health_check_details: False
-```
-
-## Health Check Driven Routing
-
-Route traffic away from unhealthy deployments proactively — before user requests hit them. Supports per-error-type failure thresholds, transient error suppression, and automatic safety nets.
-
-See the full guide: [Health Check Driven Routing](./health_check_routing.md)
-
-## Health Check Timeout
-
-The health check timeout is set in `litellm/constants.py` and defaults to 60 seconds.
-
-This can be overridden in the config.yaml by setting `health_check_timeout` in the model_info section.
+For a wildcard route (`*` in `litellm_params.model`), set `health_check_model` to the concrete model the probe should call. With `mode` unset on a wildcard route, `max_tokens` is left unset on the probe request.
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: azure-embedding-model
     litellm_params:
-      model: openai/gpt-4o
-      api_key: os.environ/OPENAI_API_KEY
+      model: azure/azure-embedding-model
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2023-07-01-preview"
     model_info:
-      health_check_timeout: 10 # 👈 OVERRIDE HEALTH CHECK TIMEOUT
+      mode: embedding
 ```
 
-## Health Check Max Tokens
+## Health check tuning reference
 
-By default, health checks use `max_tokens=5` to balance reliability with low cost and latency. For wildcard models, the default is `max_tokens=10`.
+Set these under a model's `model_info` unless noted otherwise. They control how the probe request is shaped.
 
-You can override this per-model by setting `health_check_max_tokens` in the `model_info` section of your config.yaml.
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `health_check_timeout` | 60s | Per-model timeout for the probe |
+| `health_check_max_tokens` | 16 (unset for wildcard routes) | `max_tokens` on the probe request |
+| `health_check_max_tokens_reasoning` | unset | `max_tokens` for reasoning models when `health_check_max_tokens` is not set |
+| `health_check_max_tokens_non_reasoning` | unset | `max_tokens` for non-reasoning models when `health_check_max_tokens` is not set |
+| `health_check_reasoning_effort` | unset | `reasoning_effort` on the probe (chat, completion, batch, responses modes only) |
+| `health_check_voice` | `alloy` | Voice for `audio_speech` probes |
+| `health_check_model` | unset | Concrete model a wildcard route probes |
+| `disable_background_health_check` | false | Skip this model in the background loop |
 
-```yaml
-model_list:
-  - model_name: openai/gpt-4o
-    litellm_params:
-      model: openai/gpt-4o
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      health_check_max_tokens: 5 # 👈 OVERRIDE HEALTH CHECK MAX TOKENS
-```
+Reasoning models often need a higher probe `max_tokens` because providers count reasoning tokens toward the completion budget; the separate reasoning and non-reasoning keys let you raise it without listing every model. Three environment variables set global defaults: `DEFAULT_HEALTH_CHECK_PROMPT` overrides the default probe prompt (`"test from litellm"`), `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` is the global `max_tokens` fallback, and `BACKGROUND_HEALTH_CHECK_MAX_TOKENS_REASONING` takes precedence for non-wildcard reasoning models.
 
-### Reasoning vs non-reasoning defaults
+To route traffic away from deployments that fail health checks, see [Health Check Driven Routing](./health_check_routing.md).
 
-Reasoning models (per `supports_reasoning` in the model map) often need a higher health-check `max_tokens` because providers count reasoning tokens toward the completion budget. You can set **separate** limits without listing every model:
+## Other health endpoints
 
-**Per deployment (`model_info`)** — used when `health_check_max_tokens` is not set. Ignored for wildcard routes (`*` in `litellm_params.model`, i.e. the deployment model string; not `health_check_model`).
+All of these require a valid key unless noted.
 
-```yaml
-model_list:
-  - model_name: openai-stack
-    litellm_params:
-      model: openai/gpt-5-nano
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      health_check_max_tokens_reasoning: 128
-      health_check_max_tokens_non_reasoning: 1
-```
-
-**Global (environment)**:
-
-- `BACKGROUND_HEALTH_CHECK_MAX_TOKENS_REASONING` — for non-wildcard reasoning models, this value takes precedence when set
-- `BACKGROUND_HEALTH_CHECK_MAX_TOKENS` — global fallback for all models (including wildcard routes)
-
-If neither is set, non-wildcard models default to `5` and wildcard routes omit `max_tokens`.
-
-## Health check reasoning effort
-
-For reasoning models (e.g. GPT-5, o-series), you can set **only for the health-check request** how much reasoning to use via `health_check_reasoning_effort` in `model_info`. This is forwarded as `reasoning_effort` on the underlying completion call so you can use a minimal level (for example `none` or `minimal`) to reduce latency and cost during probes.
-
-Applies when `mode` is unset (chat), or explicitly `chat`, `completion`, `batch`, or `responses`. It is not applied for `embedding`, `audio_*`, `rerank`, etc.
-
-```yaml
-model_list:
-  - model_name: openai/gpt-5-nano
-    litellm_params:
-      model: openai/gpt-5-nano
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      health_check_reasoning_effort: none # options depend on provider/model map
-```
-
-### Checking which `reasoning_effort` values your model supports
-
-LiteLLM reads per-model flags from [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). For reasoning effort, entries may include `supports_none_reasoning_effort`, `supports_minimal_reasoning_effort`, `supports_low_reasoning_effort`, `supports_xhigh_reasoning_effort`, `supports_max_reasoning_effort`, and similar keys. When a key is **`true`**, LiteLLM treats that level as supported for that model.
-
-Call **`litellm.get_model_info()`** with the **same model string** you use under `litellm_params.model` (including a provider prefix such as `azure/` when you use one), then inspect the returned `supports_*_reasoning_effort` fields:
-
-```python
-import litellm
-
-info = litellm.get_model_info("azure/gpt-5.4-mini")
-for name in sorted(dir(info)):
-    if "reasoning_effort" in name and not name.startswith("_"):
-        print(name, getattr(info, name))
-```
-
-If the model is not present in the LiteLLM model map, `get_model_info` may raise. In that case add or fix the entry in the JSON, or confirm allowed values from your provider’s API documentation (Azure OpenAI, OpenAI, Anthropic, etc.)—provider docs are the final authority when the map has not caught up to a new SKU.
-
-## `/health/readiness`
-
-Unprotected endpoint for checking if proxy is ready to accept requests
-
-Example Request: 
-
-```bash
-curl http://0.0.0.0:4000/health/readiness
-```
-
-Example Response:  
-
-```json
-{
-  "status": "connected",
-  "db": "connected",
-  "cache": null,
-  "litellm_version": "1.40.21",
-  "success_callbacks": [
-    "langfuse",
-    "_PROXY_track_cost_callback",
-    "response_taking_too_long_callback",
-    "_PROXY_MaxParallelRequestsHandler",
-    "_PROXY_MaxBudgetLimiter",
-    "_PROXY_CacheControlCheck",
-    "ServiceLogging"
-  ],
-  "last_updated": "2024-07-10T18:59:10.616968"
-}
-```
-
-If the proxy is not connected to a database, then the `"db"` field will be `"Not
-connected"` instead of `"connected"` and the `"last_updated"` field will not be present.
-
-## `/health/liveliness`
-
-Unprotected endpoint for checking if proxy is alive
-
-
-Example Request: 
-
-```
-curl -X 'GET' \
-  'http://0.0.0.0:4000/health/liveliness' \
-  -H 'accept: application/json'
-```
-
-Example Response: 
-
-```json
-"I'm alive!"
-```
-
-## `/health/services`
-
-Use this admin-only endpoint to check if a connected service (datadog/slack/langfuse/etc.) is healthy.
-
-```bash
-curl -L -X GET 'http://0.0.0.0:4000/health/services?service=datadog'     -H 'Authorization: Bearer sk-1234'
-```
-
-[**API Reference**](https://litellm-api.up.railway.app/#/health/health_services_endpoint_health_services_get)
-
-
-## Advanced - Call specific models 
-
-To check health of specific models, here's how to call them: 
-
-### 1. Get model id via `/model/info` 
-
-```bash
-curl -X GET 'http://0.0.0.0:4000/v1/model/info' \
---header 'Authorization: Bearer sk-1234' \
-```
-
-**Expected Response**
-
-```bash
-{
-    "model_name": "bedrock-anthropic-claude-3",
-    "litellm_params": {
-        "model": "anthropic.claude-3-sonnet-20240229-v1:0"
-    },
-    "model_info": {
-        "id": "634b87c444..", # 👈 UNIQUE MODEL ID
-}
-```
-
-### 2. Call specific model via `/chat/completions` 
-
-```bash
-curl -X POST 'http://localhost:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
--D '{
-  "model": "634b87c444.." # 👈 UNIQUE MODEL ID
-  "messages": [
-    {
-      "role": "user",
-      "content": "ping"
-    }
-  ],
-}
-'
-```
-
+- `GET /health/services?service=<name>` tests a configured alerting or logging service (datadog, slack, langfuse, and so on); accepts any valid key
+- `GET /health/readiness/details` returns the authenticated readiness diagnostics (db, cache, callbacks, version)
+- `GET /health/history` returns past health check results
+- `GET /health/latest` returns the most recent health check result
+- `GET /health/backlog` returns the number of in-flight requests on the worker
+- `GET /health/drain` starts a graceful drain for Kubernetes `preStop` hooks; disabled by default (404) unless `general_settings.enable_drain_endpoint: true`, and gated by the `X-Drain-Token` header when `DRAIN_ENDPOINT_TOKEN` is set

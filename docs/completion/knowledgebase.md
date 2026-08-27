@@ -26,7 +26,7 @@ LiteLLM integrates with vector stores, allowing your models to access your organ
 
 ## Quick Start
 
-In order to use a vector store with LiteLLM, you need to 
+To use a vector store with LiteLLM, you need to 
 
 - Initialize litellm.vector_store_registry
 - Pass tools with vector_store_ids to the completion request. Where `vector_store_ids` is a list of vector store ids you initialized in litellm.vector_store_registry
@@ -71,7 +71,7 @@ print(response.choices[0].message.content)
 
 #### 1. Configure your vector_store_registry
 
-In order to use a vector store with LiteLLM, you need to configure your vector_store_registry. This tells litellm which vector stores to use and api provider to use for the vector store.
+To use a vector store with LiteLLM, you need to configure your vector_store_registry. This tells litellm which vector stores to use and api provider to use for the vector store.
 
 <Tabs>
 <TabItem value="config-yaml" label="config.yaml">

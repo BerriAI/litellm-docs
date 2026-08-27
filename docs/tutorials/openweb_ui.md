@@ -12,7 +12,7 @@ This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM wit
 
 ## Quickstart
 
-- Make sure to setup LiteLLM with the [LiteLLM Getting Started Guide](https://docs.litellm.ai/docs/proxy/docker_quick_start)
+- Make sure to setup LiteLLM with the [LiteLLM Quickstart](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 
 
 ## 1. Start LiteLLM & Open WebUI
@@ -123,7 +123,7 @@ This video walks through on how we can map the openweb ui headers to LiteLLM use
 
 ## Render `thinking` content on Open WebUI
 
-Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. In order to render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
+Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. To render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
 
 Example litellm config.yaml:
 

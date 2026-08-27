@@ -1,5 +1,11 @@
 # Routing Plugins
 
+:::info
+
+Routing plugins are available from **v1.92.x** (Thursday's release). The design is still evolving, so tell us how you'd use it and what you'd want next in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
+
 Routing plugins are a pipeline, where each plugin receives the routing context, enriches it, and passes it to the next plugin before the final routing decision.
 
 Two configuration surfaces:
@@ -8,6 +14,8 @@ Two configuration surfaces:
 - **Proxy YAML.** `complexity_router_config.plugins` accepts dotted-path refs. Runs inside the complexity router's tier-pick, against the tier's actual candidate pool.
 
 Plugins don't replace the router. They enrich the routing context in a standardized way before the router makes the final decision.
+
+The complexity auto-router takes a second, separate plugin for the other half of the decision: a classifier plugin names the tier instead of narrowing a pool. Same context object, different interface, and the two compose. See [Classifier plugins: choosing the tier](#classifier-plugins-choosing-the-tier).
 
 ## What plugins can and can't do
 
@@ -23,6 +31,7 @@ A plugin cannot:
 - **Mutate the request body.** Changing `context.raw_messages` or `context.structured_messages` doesn't rewrite the messages sent to the provider. For prompt rewriting, use a pre-call hook or guardrail; routing plugins are read-only over the request.
 - **Mutate request metadata directly.** `context.metadata` is a copy. Publish through `context.signals` instead; the Router surfaces them on `metadata["routing_plugin_signals"]`.
 - **Add deployments to the candidate pool.** Filtering is include/exclude only. A model added to `candidate_models` that isn't in the Router's `model_list` has no effect.
+- **Choose the complexity router's tier.** A routing plugin runs against whichever tier was already classified. To decide the tier itself, write a [classifier plugin](#classifier-plugins-choosing-the-tier).
 
 ## Concrete end-to-end example
 
@@ -224,6 +233,78 @@ router = Router(
 )
 ```
 
+## Classifier plugins: choosing the tier
+
+A routing plugin narrows the pool the router picks from. A classifier plugin decides which pool that is. It replaces the complexity router's classification step, so instead of the heuristic scorer, an LLM classifier, or keyword rules deciding the tier, your code names it and the router serves that tier's models.
+
+Reach for it when the tier does not follow from reading the prompt: route by team or tenant plan, by an entitlement in a service you own, by a flag you flip during an incident. Caller identity arrives on `context.metadata` (`user_api_key_team_id`, `user_api_key_team_alias`, `user_api_key_user_id`), so team-based or tenant-based tiering needs no plumbing of its own.
+
+:::info
+
+Classifier plugins ship in **v1.99.x** ([PR #37249](https://github.com/BerriAI/litellm/pull/37249)). Config file only, the same close-off `plugins` has: a live object does not travel over HTTP, so neither key can be set through the model-management API or the UI.
+
+:::
+
+Set `classifier_type: custom` and point `classifier_plugin` at a dotted path to a `ClassifierPlugin` instance, resolved at startup exactly like a `plugins` entry (relative to `config.yaml`'s directory). `classifier_plugin_timeout_ms` bounds the call and defaults to 3000.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: smart-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        classifier_type: custom
+        classifier_plugin: plugins.tier_by_team.tier_by_team
+        classifier_plugin_timeout_ms: 3000
+        tiers:
+          SIMPLE: ["gpt-4o-mini"]
+          REASONING: ["gpt-5.1", "gpt-4o"]
+        default_model: gpt-4o-mini
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+Sibling `plugins/tier_by_team.py`:
+
+```python
+class TierByTeam:
+    async def classify(self, context):
+        team = context.metadata.get("user_api_key_team_alias")
+        if team == "research":
+            return "REASONING"
+        if team == "support":
+            return "SIMPLE"
+        return None
+
+
+tier_by_team = TierByTeam()
+```
+
+A classifier plugin is any object with `async def classify(self, context) -> str | None`. It receives the same `RoutingContext` a routing plugin does, and returns the name of a tier: a built-in tier (`SIMPLE`, `MEDIUM`, `COMPLEX`, `REASONING`) or its `tier_labels` display name. Returning `None` declines the request and hands it to the configured fallback.
+
+### How it differs from a routing plugin
+
+`ClassifierPlugin` is a separate interface rather than an overload of `RoutingPlugin`, and the differences follow from what each one decides.
+
+A router has one classifier and a list of routing plugins. `classifier_plugin` takes a single dotted path, `plugins` takes a list that runs as a pipeline; there is nothing to chain when the question is which tier, since the first answer is the answer.
+
+`candidate_models` is informational here. It arrives as a snapshot of every tier's models so a classifier can see what the router serves, but the tier you return picks the pool, so filtering the list is a no-op. Narrowing is the routing pipeline's job.
+
+Failure means the opposite thing in each seam. A routing plugin that narrows to zero raises, because narrowing to nothing is a policy decision and quietly widening the pool would defeat it. A classifier that declines, raises, exceeds `classifier_plugin_timeout_ms`, or names a tier the router does not recognize has produced no policy at all, so the request falls back the way it does when the LLM classifier fails: `classifier_fallback` sends it to the heuristic scorer, or to `default_model`. A classifier plugin that is down degrades routing; it never fails the request.
+
+Config mistakes surface at startup, not on the first classified request. A dotted path that does not resolve to an object with an async `classify` is rejected with the config key named, `classifier_type: custom` without a plugin raises, and a `classifier_plugin` left under any other `classifier_type` raises too, since it would never run.
+
+### Composing the two
+
+Both keys live on the same `complexity_router_config` and a router may set both. The classifier picks the tier, then the routing pipeline filters that tier's pool, so a team-based classifier and a cost-ceiling routing plugin stack without either knowing about the other.
+
+The two constraints noted above for `plugins` are specific to candidate narrowing and do not apply to a classifier plugin. `session_affinity` keeps working, since a classifier only runs on turns that are classified and the pin skips classification rather than policy. `adaptive: true` also composes, Thompson-sampling inside whichever tier the classifier returned, where `adaptive` combined with `plugins` still raises at config-validation time.
+
+Everything else on the router behaves as documented: `keyword_tier_rules` short-circuit ahead of the classifier, escalation keywords can still escalate the tier it returned, and the `classifier_context_*` settings stay LLM-classifier only, since a plugin reads the messages itself. Each decision logs as `cause=classifier_plugin`. Full field reference on the [Auto Routing](./proxy/auto_routing.md#classification) page.
+
 ## Limitations
 
 Async only. Sync `Router.completion()` raises when plugins are configured. Supported strategies: `simple-shuffle`, `usage-based-routing-v2`, `cost-based-routing`, `latency-based-routing`, `least-busy`, and `auto_router/*` (complexity router today). Legacy `usage-based-routing` (v1) raises.
@@ -235,4 +316,8 @@ Current candidate filtering is include/exclude only. Weighted scoring, where plu
 ## Reference
 
 Config: [`router_settings.plugins`](./proxy/config_settings#router_settings---reference).
-PRs: [#32972](https://github.com/BerriAI/litellm/pull/32972) (SDK), [#33251](https://github.com/BerriAI/litellm/pull/33251) (proxy YAML for complexity router). Discussion: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+PRs: [#32972](https://github.com/BerriAI/litellm/pull/32972) (SDK), [#33251](https://github.com/BerriAI/litellm/pull/33251) (proxy YAML for complexity router), [#37249](https://github.com/BerriAI/litellm/pull/37249) (classifier plugins). Discussion: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+## Join the discussion
+
+Available from **v1.92.x** (Thursday's release). We're actively shaping where routing plugins and the autorouter go next, and want your input on the plugins you'd write, the signals you'd want, and the routing strategies you'd reach for. Share your use case and follow along in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).

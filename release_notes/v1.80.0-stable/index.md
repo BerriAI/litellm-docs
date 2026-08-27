@@ -124,7 +124,7 @@ curl --location 'http://localhost:4000/v1/videos' \
 
 ### Prometheus Metrics - Open Source
 
-Prometheus metrics are now available in the open-source version of LiteLLM, providing comprehensive observability for your AI Gateway without requiring an enterprise license.
+Prometheus metrics are now available in the open-source version of LiteLLM, providing full observability for your AI Gateway without requiring an enterprise license.
 
 **Quick Start:**
 
@@ -134,7 +134,7 @@ litellm_settings:
   failure_callback: ["prometheus"]
 ```
 
-[Get Started with Prometheus](../../docs/proxy/logging#prometheus)
+[Get Started with Prometheus](/docs/proxy/prometheus)
 
 ---
 
@@ -262,7 +262,7 @@ curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
     - Fix preserve `$defs` for Anthropic tools input schema - [PR #16648](https://github.com/BerriAI/litellm/pull/16648)
     - Fix support Anthropic tool_use and tool_result in token counter - [PR #16351](https://github.com/BerriAI/litellm/pull/16351)
 
-- **[Vertex AI](../../docs/providers/vertex_ai)**
+- **[Vertex AI](/docs/providers/vertex)**
     - Add Vertex Kimi-K2-Thinking support - [PR #16671](https://github.com/BerriAI/litellm/pull/16671)
     - Add `vertex_credentials` support to `litellm.rerank()` - [PR #16479](https://github.com/BerriAI/litellm/pull/16479)
 
@@ -307,12 +307,12 @@ curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
 
 #### New Endpoints
 
-- **[GET /providers](../../docs/proxy/management_endpoints)**
+- **[GET /providers](/docs/proxy/model_management)**
     - Add GET list of providers endpoint - [PR #16432](https://github.com/BerriAI/litellm/pull/16432)
 
 #### Features
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Allow internal users to access video generation routes - [PR #16472](https://github.com/BerriAI/litellm/pull/16472)
 
 - **[Vector Stores API](../../docs/vector_stores)**
@@ -327,7 +327,7 @@ curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
 
 #### Bugs
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Fix use GET for `/v1/videos/{video_id}/content` - [PR #16672](https://github.com/BerriAI/litellm/pull/16672)
 
 - **General**
@@ -419,7 +419,7 @@ curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
 
 #### Guardrails
 
-- **[IBM Detector](../../docs/proxy/guardrails)**
+- **[IBM Detector](/docs/proxy/guardrails/quick_start)**
     - Ensure detector-id is passed as header to IBM detector server - [PR #16649](https://github.com/BerriAI/litellm/pull/16649)
 
 #### Prompt Management
@@ -449,7 +449,7 @@ curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
 
 ## Agents
 
-- **[Agent Registration (A2A Spec)](../../docs/agents)**
+- **[Agent Registration (A2A Spec)](/docs/managed_agents)**
     - Support agent registration + discovery following Agent-to-Agent specification - [PR #16615](https://github.com/BerriAI/litellm/pull/16615)
 
 ---

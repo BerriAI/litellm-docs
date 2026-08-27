@@ -7,7 +7,7 @@ import { MultiRegionArchitecture } from '@site/src/components/CloudArchitecture'
 
 Run LiteLLM proxy instances in multiple regions of the same cloud provider, all connected to one shared PostgreSQL database. Clients get routed to the nearest region for low latency, while keys, teams, users, and spend tracking stay consistent everywhere because there is a single source of truth.
 
-This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Deploy to Cloud (AWS, GCP, Azure)](./deploy_cloud.md).
+This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Production Deployment](./deploy.md).
 
 ## Architecture
 
@@ -33,9 +33,9 @@ The corollary: separate databases per region are separate deployments, and each 
 |---|---|---|
 | Multi-region, shared database (this page) | 1 | 1 |
 | Independent deployment per region | 1 per region | 1 per region |
-| [High Availability Control Plane](./high_availability_control_plane.md) (BETA) | 1 per worker | 1 per worker |
+| [Global Control Plane](./global_control_plane.md) | 1 per worker | 1 per worker |
 
-If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [High Availability Control Plane](./high_availability_control_plane.md) (BETA, Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
+If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [Global Control Plane](./global_control_plane.md) (Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
 
 ## Requirements
 
@@ -59,11 +59,11 @@ Rate limits (TPM/RPM on keys, teams, and users) are enforced through Redis. With
 
 ## Setup
 
-The steps below assume you can already deploy a single-region production proxy (load balancer, proxy instances, Postgres, Redis). If not, start with [Deploy to Cloud](./deploy_cloud.md) and the [production checklist](./prod.md).
+The steps below assume you can already deploy a single-region production proxy (load balancer, proxy instances, Postgres, Redis). If not, start with the [Production Deployment guide](./deploy.md) and the [production checklist](./prod.md).
 
 ### 1. Provision the shared database
 
-Create one PostgreSQL database in your primary region and run the schema migrations against it once, using the migrations job from the [Helm charts](./deploy_cloud.md#deploy-with-helm) or the [Terraform modules](./deploy_cloud.md#deploy-with-terraform-aws-and-gcp). All regions will use this database's connection string.
+Create one PostgreSQL database in your primary region and run the schema migrations against it once, using the migrations job from the [Helm charts](./deploy.md#deploy-with-helm) or the [Terraform modules](./deploy.md#deploy-with-terraform-aws-and-gcp). All regions will use this database's connection string.
 
 ### 2. Connect the regions' networks
 
@@ -125,13 +125,9 @@ Health-check each region against `/health/liveliness`, not `/health/readiness`. 
 
 1. Open the primary region's Admin UI (`https://llm.example.com/ui`), go to **Virtual Keys**, and create a key.
 
-<Image img={require('../../img/ui_create_key_flow.gif')} alt="Creating a virtual key in the LiteLLM Admin UI" />
-
 2. Open the secondary region's UI directly (`https://eu.llm.example.com/ui`), go to the **Test Key** playground, paste the key you just created, and send a request. It succeeds because both regions validate keys against the same database.
 
-<Image img={require('../../img/ui_playground_navigation.png')} alt="Test Key playground in the LiteLLM Admin UI" />
-
-3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region.
+3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region. The UI flows themselves are covered with screenshots in the [Quickstart](./docker_quick_start.md#5-create-a-virtual-key).
 
 ## Optional: dedicated admin instance
 
@@ -182,7 +178,7 @@ Often not. A single-region deployment with a multi-AZ database and Redis already
 The shared-database topology itself runs on the open source proxy. Enterprise features are covered by one license across regions, as described in [Licensing across regions](#licensing-across-regions).
 
 **What happens if the primary region's database goes down?**
-All regions lose database access: key validation falls back to caches, and management operations fail until the database returns. The database is the single point of coupling in this architecture. Set `general_settings.allow_requests_on_db_unavailable: true` so proxies keep serving traffic for already-cached keys during the outage (see [graceful DB unavailability](./prod.md#6-if-running-litellm-on-vpc-gracefully-handle-db-unavailability)), run the database multi-AZ with automated failover, and if that is still not enough isolation, consider the [High Availability Control Plane](./high_availability_control_plane.md) instead.
+All regions lose database access: key validation falls back to caches, and management operations fail until the database returns. The database is the single point of coupling in this architecture. Set `general_settings.allow_requests_on_db_unavailable: true` so proxies keep serving traffic for already-cached keys during the outage (see [graceful DB unavailability](./prod.md#gracefully-handle-db-unavailability)), run the database multi-AZ with automated failover, and if that is still not enough isolation, consider the [Global Control Plane](./global_control_plane.md) instead.
 
 **Can I run different LiteLLM versions in different regions?**
 Briefly, during a rolling upgrade. Do not run mixed versions steady-state; the shared database schema follows the newest version, and migrations should run exactly once per upgrade.

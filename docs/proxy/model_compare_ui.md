@@ -89,7 +89,7 @@ Apply tags to organize and filter your comparisons:
 Configure vector store retrieval for RAG (Retrieval Augmented Generation) comparisons:
 
 1. Select vector stores from the dropdown
-2. Compare how different models utilize retrieved context
+2. Compare how different models use retrieved context
 3. Evaluate RAG performance across models
 
 <Image img={require('../../img/ui_model_compare_vector_stores_config.png')} />

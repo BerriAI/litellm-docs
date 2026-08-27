@@ -741,7 +741,7 @@ You will see `raw_request` in your Langfuse Metadata. This is the RAW CURL comma
 
 :::tip
 
-The full OpenTelemetry reference — span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting — lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
+The full OpenTelemetry reference (span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting) lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
 
 :::
 
@@ -1346,6 +1346,8 @@ litellm_settings:
     s3_endpoint_url: https://s3.amazonaws.com  # [OPTIONAL] S3 endpoint URL, if you want to use Backblaze/cloudflare s3 buckets
     s3_use_virtual_hosted_style: false # [OPTIONAL] use virtual-hosted-style URLs (bucket.endpoint/key) instead of path-style (endpoint/bucket/key). Useful for S3-compatible services like MinIO
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
+    s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
+    s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
 ```
 
 **Step 3**: Start the proxy, make a test request
@@ -1545,6 +1547,10 @@ AZURE_STORAGE_ACCOUNT_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 AZURE_STORAGE_TENANT_ID="985efd7cxxxxxxxxxx" # The Application Tenant ID to use for Authentication
 AZURE_STORAGE_CLIENT_ID="abe66585xxxxxxxxxx" # The Application Client ID to use for Authentication
 AZURE_STORAGE_CLIENT_SECRET="uMS8Qxxxxxxxxxx" # The Application Client Secret to use for Authentication
+
+# Sovereign Clouds (optional, defaults to the Azure commercial cloud)
+AZURE_STORAGE_ENDPOINT_SUFFIX="core.usgovcloudapi.net" # The storage endpoint suffix to use. Defaults to core.windows.net
+AZURE_AUTHORITY_HOST="https://login.microsoftonline.us" # The Entra ID login authority to use. Only needed with Option 2
 ```
 
 3. Start Proxy
@@ -1769,6 +1775,10 @@ litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
 
 ```
+
+:::warning
+The dotted path has to name the instance created in Step 1 (`proxy_handler_instance = MyCustomHandler()`), not the class. Name the class and the proxy fails config load with an error naming the entry and what it resolved to, since only `CustomLogger` instances are dispatched. On versions before that check, a class-valued entry started clean and never ran, with no error and no log line
+:::
 
 #### Step 2b - Loading Custom Callbacks from S3/GCS (Alternative)
 
@@ -2228,8 +2238,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     }
 '
 ```
-Expect to see your log on Langfuse
-<Image img={require('../../img/langsmith_new.png')} />
+Expect to see your logs in Arize.
 
 
 ## Langtrace
