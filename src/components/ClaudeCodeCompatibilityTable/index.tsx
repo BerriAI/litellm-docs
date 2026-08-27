@@ -6,8 +6,8 @@ import styles from "./styles.module.css";
  * Claude Code compatibility matrix table.
  *
  * Renders the JSON published daily by the populator
- * (`tests/claude_code/cron_vm/run_daily.sh` in BerriAI/litellm) into a
- * features-by-providers grid. Each cell shows pass / fail / not_tested /
+ * (`tests/e2e/claude_code/cron_vm/run_daily.sh` in BerriAI/litellm) into
+ * a features-by-providers grid. Each cell shows pass / fail / not_tested /
  * not_applicable; failure cells expose the upstream error on hover.
  *
  * The JSON is bundled at build time (no fetch), so the docs page works
@@ -44,6 +44,10 @@ const PROVIDER_LABELS: Record<string, string> = {
   bedrock_converse: "Bedrock (Converse)",
   vertex_ai: "Vertex AI",
   azure: "Azure (Foundry)",
+  openai: "OpenAI",
+  azure_openai: "Azure OpenAI",
+  bedrock_mantle: "Bedrock (Mantle)",
+  vertex_ai_gpt: "Vertex AI (GPT)",
 };
 
 const STATUS_GLYPH: Record<CellStatus, string> = {
