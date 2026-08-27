@@ -217,7 +217,7 @@ Phoenix assigns a whole trace to one project by whichever of its spans arrives f
 
 A gRPC-only Phoenix exporter cannot route: `x-project-name` is honored on OTLP/HTTP only. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` at an HTTP `/v1/traces` URL (see [Picking the right collector endpoint](#picking-the-right-collector-endpoint)). Guardrail spans are not project-routed.
 
-This is different from [per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant), which send traces to a different backend. Project routing stays on the one Phoenix collector and only changes the project name.
+This is different from [per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant), which send a tenant's traces to its own backend account. Project routing stays on the one Phoenix collector and only changes the project name.
 
 ## Advanced
 
