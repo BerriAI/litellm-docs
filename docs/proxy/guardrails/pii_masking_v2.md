@@ -283,6 +283,21 @@ guardrails:
 - `presidio_score_thresholds.<ENTITY>`: apply only to that entity
 - If both `ALL` and an entity override exist, `ALL` applies globally and the entity override takes precedence for that entity
 
+### Large content chunking
+
+Presidio analyzer deployments commonly cap the `/analyze` request body size (for example at 1 MB), and analyzer latency grows with payload size. LiteLLM automatically splits any single content block larger than `presidio_analyze_chunk_size_bytes` (default: `500000` UTF-8 bytes) into overlapping chunks, analyzes the chunks concurrently, and merges the detections back onto the original text, so large content blocks are masked correctly instead of failing with `HTTP 413`.
+
+```yaml
+guardrails:
+  - guardrail_name: "presidio-pii"
+    litellm_params:
+      guardrail: presidio
+      mode: "pre_call"
+      presidio_analyze_chunk_size_bytes: 500000 # optional, default 500000
+```
+
+Set it below your analyzer deployment's request body limit, leaving headroom for the rest of the analyze payload (entities list, ad-hoc recognizers).
+
 ### Supported Entity Types
 
 LiteLLM Supports all Presidio entity types. See the complete list of presidio entity types [here](https://microsoft.github.io/presidio/supported_entities/).
