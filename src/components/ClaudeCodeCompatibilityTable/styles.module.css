@@ -32,6 +32,19 @@
 .featureCol {
   text-align: left !important;
   white-space: nowrap;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  /* --ifm-background-color is transparent in the light theme */
+  background: var(--ifm-background-surface-color);
+}
+
+@media (max-width: 600px) {
+  .featureCol {
+    white-space: normal;
+    min-width: 7.5rem;
+    max-width: 9.5rem;
+  }
 }
 
 .status_pass {
