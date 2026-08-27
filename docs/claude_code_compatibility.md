@@ -29,5 +29,5 @@ cell goes green only if all three model tiers pass.
 The matrix JSON lives at
 [`src/data/compatibility-matrix.json`](https://github.com/BerriAI/litellm-docs/blob/main/src/data/compatibility-matrix.json).
 The populator is in
-[`tests/claude_code/cron_vm/`](https://github.com/BerriAI/litellm/tree/main/tests/claude_code/cron_vm)
+[`tests/e2e/claude_code/cron_vm/`](https://github.com/BerriAI/litellm/tree/main/tests/e2e/claude_code/cron_vm)
 on the main repo.
