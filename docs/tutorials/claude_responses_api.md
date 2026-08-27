@@ -231,7 +231,7 @@ Common issues and solutions:
 
 **MCP tools filling the context window:**
 - Claude Code turns its tool search off when `ANTHROPIC_BASE_URL` is not a first-party Anthropic host, so `/context` shows every MCP tool schema inlined instead of `loaded on-demand`
-- Set `ENABLE_TOOL_SEARCH=true` in Claude Code's environment; see [Keep MCP tools out of the context window](./claude_mcp.md#keep-mcp-tools-out-of-the-context-window-tool-search)
+- Set the `ENABLE_TOOL_SEARCH=true` environment variable, ideally in the `env` block of `.claude/settings.json`; see [Keep MCP tools out of the context window](./claude_mcp.md#keep-mcp-tools-out-of-the-context-window-tool-search)
 
 ## Using Bedrock/Vertex AI/Azure Foundry Models
 

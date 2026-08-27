@@ -138,7 +138,7 @@ e. Once completed, you should see this success message:
 
 Claude Code normally keeps MCP tool schemas out of the context window and loads them on demand through its built-in tool search. That flow needs the `advanced-tool-use-2025-11-20` beta header on every request and `tool_reference` blocks to round-trip through the API, so since Claude Code 2.1.70 the client turns tool search off on its own whenever `ANTHROPIC_BASE_URL` points at anything other than a first-party Anthropic host. The decision happens on the client before any request is sent, which is why `/context` shows every MCP tool schema inlined (tens of thousands of tokens with a few hundred tools) as soon as Claude Code is routed through LiteLLM, and why no proxy-side setting can turn it back on.
 
-LiteLLM passes the beta header, `defer_loading`, and `tool_reference` blocks through unchanged on `/v1/messages` (and translates the beta to the Bedrock and Vertex AI names), so the fix lives on the Claude Code side. Tell it to keep tool search on (Claude Code 2.1.72 or newer):
+LiteLLM passes the beta header, `defer_loading`, and `tool_reference` blocks through unchanged on `/v1/messages` (and translates the beta to the Bedrock and Vertex AI names), so the fix lives on the Claude Code side. Tool search is controlled by the `ENABLE_TOOL_SEARCH` **environment variable**; it must be set to `true` in Claude Code's environment. There is no top-level settings key for it, so a bare `"enableToolSearch": true` in a settings file does nothing. Tell Claude Code (2.1.72 or newer) to keep tool search on:
 
 ```bash
 export ANTHROPIC_BASE_URL=http://0.0.0.0:4000
@@ -147,7 +147,7 @@ export ENABLE_TOOL_SEARCH=true
 claude
 ```
 
-Or persist it in `~/.claude/settings.json` (or a managed settings file, to cover the whole team):
+We recommend persisting it in `.claude/settings.json` under the `env` block, either the project's `.claude/settings.json` or your user-level `~/.claude/settings.json` (or a managed settings file, to cover the whole team), so every session picks it up without remembering the export:
 
 ```json
 {
