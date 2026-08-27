@@ -319,7 +319,6 @@ router_settings:
 | custom_key_update | str | Custom function for key updates. Required if `custom_key_generate` policies should also apply to key edits [Doc on custom key update](./virtual_keys.md#custom-keyupdate) |
 | allowed_ips | List[str] | List of IPs allowed to access the proxy. If not set, all IPs are allowed. |
 | embedding_model | str | The default model to use for embeddings - ignores model set in request |
-| default_team_disabled | boolean | If true, users cannot create 'personal' keys (keys with no team_id). |
 | alert_to_webhook_url | Dict[str] | [Specify a webhook url for each alert type.](./alerting.md#map-slack-channels-to-alert-type) |
 | key_management_settings | List[Dict[str, Any]] | Settings for key management system (e.g. AWS KMS, Azure Key Vault) [Doc on key management](../secret.md) |
 | allow_user_auth | boolean | (Deprecated) old approach for user authentication. |
@@ -354,6 +353,7 @@ router_settings:
 | database_connection_pool_timeout | integer | Database connection pool timeout in seconds |
 | disable_error_logs | boolean | If true, suppresses error tracking and storage in the database |
 | enable_health_check_routing | boolean | If true, enables health check-driven request routing to avoid unhealthy deployments |
+| background_health_check_model_groups | Optional[List[str]] | Opt-in allowlist of model group names for background health checks. When set, only listed groups are probed and health-check routing applies only to them; unlisted groups keep their configured routing behavior. Defaults to None (all groups) |
 | health_check_ignore_transient_errors | boolean | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
 | enable_mcp_registry | boolean | If true, enables access to the centralized MCP server registry |
 | enforce_rbac | boolean | If true, enables role-based access control (RBAC) for all proxy operations |
@@ -485,6 +485,7 @@ router_settings:
 | search_tools | List[SearchToolTypedDict] | List of search tool configurations for Search API integration. Each tool specifies a search_tool_name and litellm_params with search_provider, api_key, api_base, etc. [Further Docs](../search/index.md) |
 | guardrail_list | List[GuardrailTypedDict] | List of guardrail configurations for guardrail load balancing. Enables load balancing across multiple guardrail deployments with the same guardrail_name. [Further Docs](./guardrails/guardrail_load_balancing.md) |
 | enable_health_check_routing | boolean | If true, enables health check-driven deployment filtering to avoid routing requests to unhealthy deployments |
+| background_health_check_model_groups | Optional[List[str]] | Model groups that background health checks and health-check routing are scoped to. On the proxy this is usually set via `general_settings.background_health_check_model_groups`. Defaults to None (all groups) |
 | health_check_staleness_threshold | integer | Maximum age in seconds for cached health check results before marking deployments as stale |
 | health_check_ignore_transient_errors | boolean | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
 | routing_groups | Optional[List[RoutingGroup]] | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. Defaults to None. |

@@ -5,7 +5,13 @@ import Image from '@theme/IdealImage';
 Route Cursor IDE requests through LiteLLM for unified logging, budget controls, and access to any model.
 
 :::info
-**Supported modes:** Ask, Plan, Agent. Agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
+**Supported modes:** Ask, Plan, Agent. With the base URL override, agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
+
+Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs.
+:::
+
+:::warning Override OpenAI Base URL missing?
+Newer Cursor builds no longer show the **Override OpenAI Base URL** setting on every plan. If your Cursor does not have it, use the [Azure OpenAI fallback](#fallback-azure-openai-settings) below instead of the setup in this section.
 :::
 
 ## Quick Reference
@@ -93,6 +99,42 @@ Send a message. All requests now route through LiteLLM.
 
 ---
 
+## Fallback: Azure OpenAI settings
+
+If your Cursor build has no **Override OpenAI Base URL** setting, Cursor's Azure OpenAI settings still accept a custom base URL and route traffic to your LiteLLM proxy. This path uses LiteLLM's Azure-compatible `/openai/deployments/<deployment>/chat/completions` route, which has been in LiteLLM since 2023, so it needs no proxy upgrade. Ask, Plan, and Agent modes all work over it (verified on Cursor 3.17.21); Cursor's Azure client sends plain chat completions requests for agent mode too, so the v1.97.0 requirement from the base URL override path does not apply here.
+
+| Setting | Value |
+|---------|-------|
+| Base URL | `<LITELLM_PROXY_BASE_URL>` (no `/cursor` suffix) |
+| Deployment Name | Public Model Name from LiteLLM |
+| API Key | Your LiteLLM Virtual Key |
+
+### 1. Enable Azure OpenAI
+
+Open **Cursor → Settings → Cursor Settings → Models**, expand **API Keys**, and enable the **Azure OpenAI** toggle. Cursor shows a confirmation dialog warning that some features cannot be billed to an API key; confirm it.
+
+Fill in the fields:
+
+- **Base URL**: your LiteLLM proxy URL, e.g. `https://your-litellm-proxy.com`. Do not append `/cursor`. The proxy must be reachable from the internet: Cursor sends requests from its backend, not from your machine.
+- **Deployment Name**: the LiteLLM public model name to use, e.g. `claude-sonnet-5`. This decides which model serves every request (see the warning below).
+- **API Key**: your LiteLLM virtual key.
+
+### 2. Add a custom model
+
+While the Azure OpenAI toggle is on, only custom models work. Cursor refuses its own models (Composer, Cursor Grok) with `This model does not support custom API keys`, and it still routes built-in Claude and GPT models to your proxy, but in Anthropic Messages or Azure Responses formats that the chat completions deployment route rejects, so those chats hang. Click **+ Add Custom Model**, enter a name that does not collide with a built-in model (e.g. `litellm-claude`), enable it, and select it in the chat model picker.
+
+To use Composer or another built-in model on your Cursor subscription, turn the Azure OpenAI toggle off; turn it back on to route through LiteLLM again.
+
+:::warning The Deployment Name decides the model
+On this path, Cursor sends every request to `/openai/deployments/<Deployment Name>/chat/completions`, and LiteLLM serves the model the path names. The custom model you pick in Cursor is only a label: picking a different custom model does not change which model answers. To switch models, edit the **Deployment Name** in the Azure OpenAI settings. Keep a single enabled custom model so the picker cannot mislead you.
+:::
+
+### 3. Test
+
+Send a message in Ask mode, then try Agent mode. Requests appear in your LiteLLM logs as chat completions on `/openai/deployments/<Deployment Name>/chat/completions`, attributed to the deployment's model.
+
+---
+
 ## Connecting MCP Servers
 
 You can also connect MCP servers to Cursor via LiteLLM Proxy.
@@ -134,3 +176,7 @@ LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
 | Cursor does not list your LiteLLM models | Upgrade to LiteLLM v1.97.0+, which serves `GET /cursor/models`. Earlier versions do not serve that route and answer 401 or 404. Verify with `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"` |
 | `The model "X" is already available as "Y"` | Cursor blocks names that match its built-in models. Add the model under a distinct public model name (see the warning in step 3) |
+| `This model does not support custom API keys` | You selected a Cursor-native model (Composer, Cursor Grok) while a custom API key is enabled. Select the custom model you added, or disable the Azure OpenAI toggle to use Cursor's models on your subscription |
+| Chat hangs with a built-in model picked while Azure OpenAI is enabled | Cursor still routes built-in Claude and GPT models to your proxy, in formats the deployment route rejects. Select the custom model you added |
+| No **Override OpenAI Base URL** setting | Your Cursor build does not offer it. Use the [Azure OpenAI fallback](#fallback-azure-openai-settings) |
+| Azure fallback always answers with the same model | Expected: the **Deployment Name** decides the model, whichever custom model is picked. Edit the Deployment Name to switch |

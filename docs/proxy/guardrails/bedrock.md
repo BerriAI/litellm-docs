@@ -30,6 +30,7 @@ guardrails:
       guardrailVersion: "DRAFT"              # your guardrail version on bedrock
       aws_region_name: os.environ/AWS_REGION # region guardrail is defined
       aws_role_name: os.environ/AWS_ROLE_ARN # your role with permissions to use the guardrail
+      aws_external_id: os.environ/AWS_EXTERNAL_ID # only if that role's trust policy requires sts:ExternalId
   
 ```
 

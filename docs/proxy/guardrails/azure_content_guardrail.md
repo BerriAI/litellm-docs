@@ -98,7 +98,30 @@ AzureHarmCategories:
 
 ### Azure Prompt Shield Only
 
-n/a 
+- `cost_tier` - Optional[Literal["free", "paid"]] - Billing tier of your Azure Content Safety resource. `free` reports usage with a cost of `0`; `paid` prices usage using `price_per_1000_text_records` (required for `paid`). Omit to track usage without a cost estimate
+- `price_per_1000_text_records` - Optional[float] - USD price per 1,000 text records used to estimate Prompt Shield cost. Azure bills one text record per 1,000 characters (rounded up per request). `0` marks the free tier. Supports `os.environ/` references
+
+```yaml
+guardrails:
+  - guardrail_name: azure-prompt-shield
+    litellm_params:
+      guardrail: azure/prompt_shield
+      mode: pre_call
+      api_key: os.environ/AZURE_CONTENT_SAFETY_API_KEY
+      api_base: os.environ/AZURE_CONTENT_SAFETY_API_BASE
+      cost_tier: paid
+      price_per_1000_text_records: 0.38
+```
+
+### Azure Prompt Shield Cost Tracking
+
+When pricing is configured, every guardrail run records its billable usage and estimated cost:
+
+- **Usage counters** - `requests` (Azure API calls), `input_characters`, and `text_records` (Azure's billing unit: one per started 1,000 characters of each submitted chunk). Long prompts split across the 10,000 character limit accumulate usage per chunk. A chunk that triggers an intervention was still submitted to Azure, so it is counted; chunks after it are never sent and never counted
+- **Estimated cost** - `text_records x price_per_1000_text_records / 1000`, shown on the request's log entry in the dashboard and exported on the guardrail OTEL span as `litellm.cost.guardrail`
+- **Spend isolation** - the guardrail cost estimate is reporting-only. It is never added to the request's `response_cost`, key/team/user spend, or budget enforcement
+
+A `paid` tier without a positive `price_per_1000_text_records` fails at proxy startup, so a misconfigured deployment cannot silently report wrong costs. If neither `cost_tier` nor a price is set, usage counters are still recorded and no cost is invented.
 
 ## Important Notes
 

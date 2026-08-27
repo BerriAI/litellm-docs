@@ -71,6 +71,46 @@ mcp_servers:
 | `audience` | Recommended | Resource identifier for the MCP server. LiteLLM sends this as the token exchange `audience`. |
 | `scopes` | Optional | Scopes LiteLLM requests for the exchanged token. LiteLLM joins the list into the OAuth `scope` parameter. |
 | `subject_token_type` | Optional | RFC 8693 subject token type. Defaults to `urn:ietf:params:oauth:token-type:access_token`. |
+| `upstream_token_header` | Optional | Which upstream header carries the exchanged token. Defaults to `Authorization`. See [sending the token on a different header](#sending-the-exchanged-token-on-a-different-header). |
+
+### Sending the exchanged token on a different header
+
+By default the exchanged token goes out as `Authorization: Bearer <token>`. When the MCP server sits
+behind an API gateway that reads its own credential from a private header, and the server behind the
+gateway still expects its own bearer on `Authorization`, both credentials have to travel on the same
+request.
+
+Set `upstream_token_header` to name the header the exchanged token should use. Anything under
+`static_headers` is then left alone, so a shared credential still reaches the server behind the
+gateway.
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  my_mcp_server:
+    url: "https://gateway.example.com/mcp"
+    auth_type: oauth2_token_exchange
+    token_exchange_endpoint: "https://idp.example.com/token"
+    client_id: os.environ/MCP_CLIENT_ID
+    client_secret: os.environ/MCP_CLIENT_SECRET
+    audience: "api://esb"
+    upstream_token_header: "esb-oauth"
+    static_headers:
+      Authorization: "Bearer os.environ/UPSTREAM_MCP_TOKEN"
+```
+
+Each upstream request then carries both, with the exchanged token scoped to the calling user:
+
+```
+esb-oauth: Bearer <token exchanged for this user>
+Authorization: Bearer <the shared token you configured>
+```
+
+The exchanged token is still cached per user, so a short-lived token does not mean an exchange on
+every request. Leaving `upstream_token_header` unset keeps the default.
+
+If a redirect from the upstream crosses origin, the custom header is dropped rather than forwarded,
+the same way HTTP clients drop `Authorization`. An upstream that legitimately redirects across
+origins will not see the credential on the second hop.
 
 ## Token Exchange Request
 

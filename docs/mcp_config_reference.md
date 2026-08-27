@@ -82,6 +82,8 @@ Supported `auth_type` values:
 | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>`; RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
 | `aws_sigv4` | Per-request AWS SigV4 signature. See [MCP AWS SigV4](./mcp_aws_sigv4.md) |
 
+The header shown above is the default. Set `upstream_token_header` on the server to send the resolved token somewhere other than `Authorization`, which is what an MCP server behind an API gateway usually needs. See [MCP OAuth](./mcp_oauth.md#sending-the-token-on-a-different-header)
+
 Note: the header table above describes the managed SSE/HTTP transport path. The OpenAPI-tool path emits `Authorization: ApiKey <value>` instead of `X-API-Key` for `auth_type: api_key`; the deprecated `x-mcp-auth` broadcast header also uses the `ApiKey` form.
 
 Examples for each auth type:

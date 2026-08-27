@@ -84,7 +84,7 @@ model_list:
 
 ### Auto-routed requests
 
-For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can read the picked tier from the `router_model_name` body field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
+For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can set `return_raw_model_name` on the router to get the picked tier in the body `model` field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
 
 ### More examples (illustrative)
 

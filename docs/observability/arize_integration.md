@@ -132,7 +132,7 @@ litellm_settings:
 
 ### Per-team and per-key credentials {#pass-arize-spacekey-per-request}
 
-Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Configure this from the Admin UI or the API as described in [per-key / per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant).
+Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
 ## Full OpenTelemetry reference
 

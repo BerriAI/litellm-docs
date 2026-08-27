@@ -547,7 +547,7 @@ const sidebars = {
         {
           type: "category",
           label: "Troubleshooting",
-          items: ["proxy/debugging", "proxy/error_diagnosis"],
+          items: ["proxy/debugging", "proxy/error_reference", "proxy/error_diagnosis"],
         },
         {
           type: "category",
@@ -980,6 +980,7 @@ const sidebars = {
             "anthropic_unified/index",
             "anthropic_unified/structured_output",
             "anthropic_unified/messages_to_responses_mapping",
+            "anthropic_unified/native_passthrough",
           ]
         },
         "count_tokens",
