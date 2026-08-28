@@ -29,13 +29,7 @@ Here is where they landed:
 
 We backport security fixes across the last four minor release lines. If you're on a version older than a month, upgrading to a newer version is recommended. The current release is v1.99.
 
-### Oliver Jensen joins as Director of Security
-
-Oliver Jensen has joined LiteLLM as Director of Security, starting earlier this week.
-
-![Oliver Jensen, Director of Security at LiteLLM](./oliver-jensen.png)
-
-Oliver brings in years of experience in security. He was most recently CISO at Regrello, and also worked on important security topics at Workiva
+We also announced that Oliver Jensen has joined as Director of Security; he was most recently CISO at Regrello.
 
 ### What's next for security
 
