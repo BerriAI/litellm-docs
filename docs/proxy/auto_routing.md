@@ -633,12 +633,12 @@ Selecting **LLM Classifier** reveals, alongside the classifier model and timeout
 
 ## Claude Code and Claude Desktop
 
-Two prerequisites before a router is selectable in a Claude client:
+Two things decide whether a router shows up in a Claude client, and only one of them is about the name:
 
-1. **The router's `model_name` has to read as an Anthropic model.** It needs `claude`, `anthropic`, or a family name such as `opus`, `sonnet`, or `haiku` somewhere in it, and no other vendor's name, so `claude-auto` is accepted where `smart-router` is rejected.
-2. **On Claude for Teams or Enterprise, that name has to be on the organization's `availableModels` allowlist.** Anything missing from the allowlist is greyed out in the Claude Desktop picker and replaced at CLI startup with `restricted by your organization's settings`.
+1. **Gateway model discovery only picks up a `model_name` containing `claude` or `anthropic`.** That's the whole filter Claude Code applies when it populates the `/model` picker from `/v1/models`; a name like `smart-router` just doesn't get auto-discovered. It still works fine if you point `ANTHROPIC_MODEL` or `ANTHROPIC_CUSTOM_MODEL_OPTION` at it directly, which skips discovery and its filter entirely.
+2. **On Claude for Teams or Enterprise, the name has to be on the organization's `availableModels` allowlist.** Anything missing from the allowlist is greyed out in the Claude Desktop picker and replaced at CLI startup with `restricted by your organization's settings`, regardless of whether the name looks Anthropic.
 
-Both checks run in the client, so a router that fails either one leaves nothing in the LiteLLM logs to explain itself. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
+The allowlist check runs client-side, so a router excluded by it leaves nothing in the LiteLLM logs to explain itself. See [Auto Router with Claude Code and Claude Desktop](../tutorials/claude_code_autorouter.md).
 
 ## See also
 
