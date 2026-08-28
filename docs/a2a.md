@@ -456,3 +456,48 @@ curl -X POST "http://localhost:4000/a2a/my-agent" \
 Want to create a central registry so your team can discover what agents are available within your company?
 
 Use the [AI Hub](./proxy/ai_hub) to make agents public and discoverable across your organization. This allows developers to browse available agents without needing to rebuild them.
+
+### Search the registry
+
+`GET /v1/agents` lists every agent the key can reach. Add `query=<task>` to rank those same agents by semantic similarity between the task and each agent's name, description, and skills. Pick the embedding model first:
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  agent_search_embedding_model: text-embedding-3-small
+```
+
+```console title="Rank agents for a task" showLineNumbers
+$ curl -s "http://localhost:4000/v1/agents?query=translate+a+pdf+document&top_k=3" \
+    -H "Authorization: Bearer $LITELLM_KEY" | jq -c '.[] | {agent_name, search_score}'
+{"agent_name":"document-translator","search_score":0.6732403392080719}
+{"agent_name":"trip-planner","search_score":0.1121043964671429}
+{"agent_name":"warehouse-sql-analyst","search_score":0.0946962275274791}
+```
+
+`top_k` defaults to 5 and caps at 100. Each result is the normal agent object plus a `search_score` (cosine similarity, higher is better). Ranking only ever covers agents the key is allowed to see, so a key restricted to two agents gets those two back whatever the query. Without `agent_search_embedding_model` a `query` returns `400 agent_search_not_configured`; if the embedding call fails, the request returns `503 agent_search_unavailable`. Agent embeddings are computed once per process and reused until the agent card changes.
+
+MCP clients get the same search as a virtual tool. A key with `mcp_tool_search_enabled: true` on its `object_permission` sees `agent_search(query, top_k)` next to `mcp_tool_search` and `mcp_tool_call` on `tools/list`, over both `/mcp/` and `/mcp-rest`:
+
+```console title="agent_search over /mcp-rest" showLineNumbers
+$ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
+    -H "Authorization: Bearer $KEY" \
+    -d '{"name":"agent_search","arguments":{"query":"check how many units are left in stock","top_k":1}}' \
+  | jq -r '.content[0].text | fromjson'
+[
+  {
+    "agent_id": "b21b8787-8b9e-4c5f-a45c-3f5e4061d70e",
+    "agent_name": "warehouse-sql-analyst",
+    "description": "Answers questions about stock by running SQL queries against the inventory database",
+    "skills": [{"name": "Query stock levels", "description": "Run a SQL query against the inventory database and summarize the stock levels it returns", "tags": ["sql", "analytics"]}],
+    "score": 0.37912064119364597
+  }
+]
+```
+
+See [MCP Tool Search](./mcp_tool_search.md) for how to enable the virtual tools on a key.
