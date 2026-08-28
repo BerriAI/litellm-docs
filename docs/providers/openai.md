@@ -623,7 +623,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 | `gpt-5.1-codex` | `adaptive` | `low`, `medium`, `high` (no `minimal`) |
 | `gpt-5.1-codex-mini` | `adaptive` | `low`, `medium`, `high` (no `minimal`) |
 | `gpt-5.1-codex-max` | `adaptive` | `low`, `medium`, `high`, `xhigh` (no `minimal`) |
-| `gpt-5.2` | `none` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.2` | `medium` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.2-pro` | `high` | `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.5` | `medium` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.5-pro` | `high` | `minimal`, `low`, `medium`, `high`, `xhigh` |
