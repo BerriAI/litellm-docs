@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # MCP Tool Search
 
-Swap the full MCP catalog for a fixed pair of virtual tools (`mcp_tool_search`, `mcp_tool_call`) so a key with hundreds of tools available only ever exposes two on `tools/list`. The LLM searches by keyword, gets back the ranked matches, then calls the discovered tool by name.
+Swap the full MCP catalog for a fixed set of virtual tools (`mcp_tool_search`, `mcp_tool_call`, `agent_search`) so a key with hundreds of tools available only ever exposes three on `tools/list`. The LLM searches by keyword, gets back the ranked matches, then calls the discovered tool by name. `agent_search` does the same for the [A2A agent registry](./a2a.md#search-the-registry), ranked by embeddings instead of keywords.
 
 :::info Related Documentation
 - [MCP Overview](./mcp.md)
@@ -30,7 +30,7 @@ curl -X POST http://localhost:4000/key/generate \
 ```console title="2. tools/list returns only the virtual tools" showLineNumbers
 $ curl -s http://localhost:4000/mcp-rest/tools/list \
     -H "Authorization: Bearer $KEY" | jq '[.tools[].name]'
-["mcp_tool_search", "mcp_tool_call"]
+["mcp_tool_search", "mcp_tool_call", "agent_search"]
 ```
 
 ```console title="3. Search discovers the real tools" showLineNumbers
@@ -67,7 +67,7 @@ async with streamablehttp_client(
 
         tools = await session.list_tools()
         print([t.name for t in tools.tools])
-        # ['mcp_tool_search', 'mcp_tool_call']
+        # ['mcp_tool_search', 'mcp_tool_call', 'agent_search']
 
         found = await session.call_tool("mcp_tool_search", {"query": "add numbers"})
         print(found.content[0].text)
@@ -97,10 +97,11 @@ The default is merged **after** the caller-scope validation runs, so it never tu
 
 ## How it works
 
-When `mcp_tool_search_enabled: true` is set on a key's `object_permission`, both the streamable-http endpoint (`/mcp/`) and the REST surface (`/mcp-rest/tools/list`) return exactly two tools regardless of how many MCP servers the key can reach:
+When `mcp_tool_search_enabled: true` is set on a key's `object_permission`, both the streamable-http endpoint (`/mcp/`) and the REST surface (`/mcp-rest/tools/list`) return exactly three tools regardless of how many MCP servers the key can reach:
 
 - `mcp_tool_search(query, top_k=5)` returns the ranked list of real tools that match the query.
 - `mcp_tool_call(tool_name, arguments)` executes one of the tools the LLM discovered through search.
+- `agent_search(query, top_k=5)` returns the A2A agents the key can reach, ranked by semantic similarity to the task described in `query`. It needs `litellm_settings.agent_search_embedding_model`; see [Search the registry](./a2a.md#search-the-registry).
 
 Both handlers run through the same filtered catalog and dispatch path as the normal `/tools/call` route, so search only surfaces tools the key is already allowed to see, and calls still resolve through `_get_allowed_mcp_servers` and `execute_mcp_tool`.
 
@@ -140,4 +141,4 @@ curl "http://localhost:4000/key/info?key=$KEY" \
 
 ## When to use tool search vs. semantic filter
 
-Both features address large-catalog blowout, but they live at different layers. Tool search is an MCP-layer opt-in per key; the LLM sees two tools and drives discovery itself over the MCP protocol, which suits agent frameworks that speak MCP end to end. The [semantic filter](./mcp_semantic_filter.md) sits on `/v1/responses` and `/v1/chat/completions` and rewrites the tool list on each request using embeddings, which suits chat-completion callers that never touch `/mcp/` directly. They can coexist; a key with tool search on will only expose the two virtual tools even when semantic filtering is enabled upstream.
+Both features address large-catalog blowout, but they live at different layers. Tool search is an MCP-layer opt-in per key; the LLM sees three tools and drives discovery itself over the MCP protocol, which suits agent frameworks that speak MCP end to end. The [semantic filter](./mcp_semantic_filter.md) sits on `/v1/responses` and `/v1/chat/completions` and rewrites the tool list on each request using embeddings, which suits chat-completion callers that never touch `/mcp/` directly. They can coexist; a key with tool search on will only expose the three virtual tools even when semantic filtering is enabled upstream.
