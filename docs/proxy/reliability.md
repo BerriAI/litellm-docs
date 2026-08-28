@@ -1016,6 +1016,38 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
+### Enforce Key Model Access on Fallbacks
+
+By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `claude-sonnet-5` whenever `gpt-5.6` fails and `claude-sonnet-5` is its fallback.
+
+Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      access_groups: ["openai-only"]
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks:
+    - gpt-5.6: ["claude-sonnet-5"]
+
+general_settings:
+  master_key: sk-1234
+  enforce_fallback_model_access: true
+```
+
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `claude-sonnet-5`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `claude-sonnet-5` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "claude-sonnet-5"]` still falls back.
+
+Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
+
 ### Disable Fallbacks (Per Request/Key)
 
 

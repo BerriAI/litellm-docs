@@ -126,6 +126,7 @@ general_settings:
   disable_adding_master_key_hash_to_db: boolean  # turn off storing master key hash in db, for spend tracking
   disable_responses_id_security: boolean  # turn off response ID security checks that prevent users from accessing other users' responses
   disable_auto_add_proxy_admin_to_teams: boolean  # if true, a proxy admin calling /team/new is no longer auto-added to the new team as team admin
+  enforce_fallback_model_access: boolean  # if true, router_settings fallbacks only run when the calling key, team and project may call the fallback model
   enable_jwt_auth: boolean  # allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims
   enforce_user_param: boolean  # requires all openai endpoint requests to have a 'user' param
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
@@ -260,6 +261,7 @@ router_settings:
 | disable_adding_master_key_hash_to_db | boolean | If true, turns off storing master key hash in db |
 | disable_responses_id_security | boolean | If true, disables response ID security checks that prevent users from accessing response IDs from other users. When false (default), response IDs are encrypted with user information to ensure users can only access their own responses. Applies to /v1/responses endpoints |
 | disable_auto_add_proxy_admin_to_teams | boolean | Default `false`. When a user calls `/team/new`, LiteLLM auto-adds that caller to the new team as a team admin. Set this to `true` so proxy admins are no longer auto-added; members you explicitly list in `members_with_roles` are still added, and non-admin callers (e.g. internal users) are still auto-added. Also toggleable from the Admin UI under **Settings > Router Settings > General Settings**. |
+| enforce_fallback_model_access | boolean | Default `false`. When `true`, a fallback configured in `router_settings` (`fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks`, `default_fallbacks`) only runs if the calling key, its team and its project are allowed to call the fallback model; unauthorized targets are skipped and the primary model's error is returned when none remain. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
 | enable_jwt_auth | boolean | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
 | enforce_user_param | boolean | If true, requires all OpenAI endpoint requests to have a 'user' param. [Doc on call hooks](call_hooks)|
 | reject_clientside_metadata_tags | boolean | If true, rejects requests that contain client-side 'metadata.tags' to prevent users from influencing budgets by sending different tags. Tags can only be inherited from the API key metadata. |
@@ -441,6 +443,7 @@ router_settings:
 | fallbacks | array of objects | Specifies fallback models for all types of errors. [More information here](reliability) |
 | enable_tag_filtering | boolean | If true, uses tag based routing for requests [Tag Based Routing](tag_routing) |
 | enable_weighted_failover | boolean | If true and `routing_strategy` is `simple-shuffle`, a retryable failure on one deployment re-picks (weighted) across other deployments in the same model group before cross-group fallbacks. Default: false. |
+| fallback_access_check | Optional[FallbackAccessCheck] | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_model_access`. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
 | tag_filtering_match_any | boolean | Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags |
 | tag_routing_prefix | string | Default `""` (no-op). A request tag starting with this exact string is stripped and matched as an explicit, trusted routing directive, exempt from the heuristic that otherwise infers routing intent from deployment tag vocabulary. Unprefixed tags keep matching as today. [Tag Based Routing](tag_routing) |
 | cooldown_time | integer | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
