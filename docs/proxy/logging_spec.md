@@ -1,7 +1,7 @@
 
 # StandardLoggingPayload Specification
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every successful and failed response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Custom logging callbacks should read request identity from `kwargs["standard_logging_object"]["metadata"]`, rather than raw `litellm_params` metadata. Optional identity fields are `null` when unavailable. Intermediate streaming events and callbacks where payload construction fails can omit `standard_logging_object`.
 
 ## StandardLoggingPayload
 
@@ -80,6 +80,7 @@ class CostBreakdown(TypedDict, total=False):
 | `user_api_key_org_id` | `Optional[str]` | Organization ID associated with the key |
 | `user_api_key_team_id` | `Optional[str]` | Team ID associated with the key |
 | `user_api_key_user_id` | `Optional[str]` | User ID associated with the key |
+| `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
 | `user_api_key_team_alias` | `Optional[str]` | Team alias associated with the key |
 
 ## StandardLoggingMetadata

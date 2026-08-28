@@ -340,7 +340,7 @@ Use this to:
 
 ## What gets logged?
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Intermediate streaming events and callbacks where payload construction fails can omit it.
 
 [👉 **Standard Logging Payload Specification**](./logging_spec)
 
