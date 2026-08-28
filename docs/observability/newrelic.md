@@ -235,6 +235,46 @@ NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_ATTRIBUTE_VALUE=4095
 NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100000
 ```
 
+
+## Per-team routing (OTel v2)
+
+Each LiteLLM team can send its traces and cost metrics to its own New Relic account, using that team's own ingest license key. Requests from teams without a configured key export nothing to New Relic.
+
+Requires the proxy to run with:
+
+```shell
+LITELLM_OTEL_V2=true
+```
+
+Configure the team callback (proxy admin or org admin):
+
+```shell
+curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
+  -H 'Authorization: Bearer <master-or-admin-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "newrelic",
+    "callback_type": "success",
+    "callback_vars": {
+      "newrelic_api_key": "<team ingest license key, 40 chars ending NRAL>",
+      "newrelic_region": "us"
+    }
+  }'
+```
+
+`newrelic_region` accepts `us` or `eu` and picks the data center for both traces (OTLP) and cost metrics (Metric API). The key is stored encrypted and reads back masked. Request bodies cannot supply `newrelic_api_key` or `newrelic_region`; only admin-configured team or key callback settings are honored.
+
+Traces arrive as OTLP `gen_ai.*` spans with `litellm.team.id`, `litellm.team.alias` and `litellm.cost.*` attributes. Cost metrics arrive as `litellm.requests`, `litellm.cost.usd`, `litellm.tokens.*` counts and a `litellm.request.duration_ms` summary, faceted by `team_id`, `team_alias`, `model_group`, `model`, `custom_llm_provider` and `status`.
+
+Optional operator-level fallback for traffic without team credentials:
+
+```shell
+NEW_RELIC_LICENSE_KEY=<operator ingest key>
+NEW_RELIC_REGION=us
+```
+
+With `LITELLM_OTEL_V2=true` the `newrelic` callback exports over OTLP instead of loading the Python agent; `NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED=false` still disables message-content capture on the OTLP path. Note the OTLP path feeds distributed tracing, dashboards, NRQL and alerting; it does not populate the New Relic AI Monitoring product UI.
+
 ## Support
 
 For support with this integration, contact [New Relic support](https://docs.newrelic.com/docs/new-relic-solutions/solve-common-issues/find-help-get-support/).
