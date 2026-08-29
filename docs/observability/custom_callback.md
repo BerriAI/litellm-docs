@@ -66,6 +66,7 @@ asyncio.run(completion())
 **Proxy-only hooks** (only work with LiteLLM Proxy):
 - `async_post_call_success_hook` - Access user data + modify responses
 - `async_pre_call_hook` - Modify requests before sending
+- `async_release_disconnect_state_hook` - Release per-request state (e.g. a reserved rate limit slot) when a client disconnects before either `async_log_success_event` or `async_log_failure_event` can run
 
 ### Per-Attempt Deployment Hooks
 
