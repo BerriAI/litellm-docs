@@ -150,11 +150,9 @@ print(response.json())
 
 ### Test fallback
 
-:::warning Deprecated for Proxy requests
-Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
-:::
+There are two ways to exercise a fallback chain through the Proxy.
 
-To validate the fallback through the Proxy, make the primary deployment unavailable in a non-production environment and send a normal request:
+**Without changing config**, make the primary deployment unavailable in a non-production environment and send a normal request:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
@@ -171,6 +169,34 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 }
 '
 ```
+
+**By forcing a failure**, which does not require a deliberately broken deployment. Opt in first:
+
+```yaml
+general_settings:
+  dangerously_allow_mock_testing_request_params: true
+```
+
+Then set `mock_testing_fallbacks` on the request:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/chat/completions' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer sk-1234' \
+-d '{
+  "model": "gpt-3.5-turbo",
+  "messages": [
+    {
+      "role": "user",
+      "content": "ping"
+    }
+  ],
+  "mock_testing_fallbacks": true
+}
+'
+```
+
+Without the opt-in, that request is rejected with a `400` naming the param and the setting to enable. See [Test Fallbacks](./reliability.md#3-test-fallbacks) for the full list of covered params and what to weigh before enabling it in production.
 
 
 
