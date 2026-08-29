@@ -4,6 +4,10 @@ LiteLLM helps prevent failed requests in 2 ways:
 - Retries
 - Fallbacks: Context Window + General
 
+:::tip
+[Combine LiteLLM with Restate's Durable Execution engine to build agents with automatic retries and recovery.](/docs/tutorials/restate_durable_agents)
+:::
+
 ## Helper utils 
 LiteLLM supports the following functions for reliability:
 * `litellm.longer_context_model_fallback_dict`: Dictionary which has a mapping for those models which have larger equivalents  

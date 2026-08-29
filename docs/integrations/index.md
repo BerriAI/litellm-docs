@@ -290,6 +290,12 @@ items={[
     description: "Real-time voice and video AI agents.",
     to: "../tutorials/livekit_xai_realtime",
   },
+  {
+    icon: "🔁",
+    title: "Restate",
+    description: "Durable execution for resilient AI agents.",
+    to: "../tutorials/restate_durable_agents",
+  },
 ]}
 />
 
