@@ -2,16 +2,16 @@
 
 ## Overview
 
-| Property | Details |
-|---|---|
-| Description | Open-model inference routed across independently operated workers |
-| Provider route on LiteLLM | `aipg/` |
-| Provider documentation | [AI Power Grid API documentation](https://docs.aipowergrid.io/streaming-api) |
-| API console | [AI Power Grid console](https://console.aipowergrid.io/dashboard/api-key) |
-| Base URL | `https://api.aipowergrid.io/v1` |
-| Supported operations | `/chat/completions`, `/responses` |
+| Property                  | Details                                                                      |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| Description               | Open-model inference routed across independently operated workers            |
+| Provider route on LiteLLM | `aipg/`                                                                      |
+| Provider documentation    | [AI Power Grid API documentation](https://docs.aipowergrid.io/streaming-api) |
+| API console               | [AI Power Grid console](https://console.aipowergrid.io/dashboard/api-key)    |
+| Base URL                  | `https://api.aipowergrid.io/v1`                                              |
+| Supported operations      | `/chat/completions`, `/responses`, `/images/generations`                     |
 
-The LiteLLM provider covers AI Power Grid's text APIs. Image, video, and audio generation use separate Grid API contracts and are not exposed through this LiteLLM provider.
+The LiteLLM provider covers AI Power Grid text and text-to-image generation. Video, audio, and image-editing workflows use separate Grid API contracts and are not exposed through this LiteLLM provider.
 
 ## Authentication
 
@@ -31,15 +31,31 @@ The public catalog can change as workers join and leave. Query the canonical cat
 curl https://api.aipowergrid.io/v1/models
 ```
 
-The following models were listed on August 28, 2026:
+The following text models were listed on August 29, 2026:
 
-| LiteLLM model | Context window | Input price | Output price |
-|---|---:|---:|---:|
-| `aipg/gpt-oss-120b` | 60,000 | $0.075 / 1M tokens | $0.30 / 1M tokens |
-| `aipg/deepseek-v4-flash-nvfp4` | 262,144 | $0.07 / 1M tokens | $0.14 / 1M tokens |
-| `aipg/Smollm-135m` | 2,048 | $0.005 / 1M tokens | $0.01 / 1M tokens |
+| LiteLLM model                  | Context window |        Input price |      Output price |
+| ------------------------------ | -------------: | -----------------: | ----------------: |
+| `aipg/gpt-oss-120b`            |         60,000 | $0.075 / 1M tokens | $0.30 / 1M tokens |
+| `aipg/deepseek-v4-flash-nvfp4` |        262,144 |  $0.07 / 1M tokens | $0.14 / 1M tokens |
+| `aipg/Smollm-135m`             |          2,048 | $0.005 / 1M tokens | $0.01 / 1M tokens |
 
 `aipg/auto` asks the Grid to select an available text model. LiteLLM cannot attach stable model-specific pricing metadata to `auto`, so use an explicit model when exact pre-request cost calculation matters.
+
+Image availability is reported by the Grid's modality status endpoint:
+
+```bash title="List online image models"
+curl https://api.aipowergrid.io/v1/status/models
+```
+
+The current priced text-to-image models are:
+
+| LiteLLM model              |          Price |
+| -------------------------- | -------------: |
+| `aipg/z-image-turbo`       | $0.003 / image |
+| `aipg/Krea 2 Turbo`        | $0.005 / image |
+| `aipg/FLUX.2 Klein 4B FP8` |  $0.01 / image |
+
+The status endpoint is the source of truth for whether a model has an online worker. A listed price does not guarantee current capacity.
 
 ## Chat Completions
 
@@ -99,6 +115,27 @@ response = litellm.responses(
 
 print(response)
 ```
+
+## Image Generation
+
+```python showLineNumbers title="AI Power Grid image generation"
+import os
+
+import litellm
+
+os.environ["AIPG_API_KEY"] = "grid_..."
+
+response = litellm.image_generation(
+    model="aipg/z-image-turbo",
+    prompt="An amber geometric grid on a black background.",
+    n=1,
+    size="512x512",
+)
+
+print(response.data[0]["url"])
+```
+
+This path supports OpenAI-shaped text-to-image requests through `/v1/images/generations`. It does not expose Grid video, audio, or img2img-specific parameters through LiteLLM.
 
 ## LiteLLM Proxy
 
