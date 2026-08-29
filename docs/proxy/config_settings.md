@@ -293,6 +293,9 @@ router_settings:
 | health_check_interval | integer | The interval for health checks in seconds [Doc on health checks](health) |
 | alerting | array of strings | List of alerting methods [Doc on Slack Alerting](alerting) |
 | alerting_threshold | integer | The threshold for triggering alerts [Doc on Slack Alerting](alerting) |
+| sgr_limit | integer | Allowance of successful gateway requests (SGR) per window. Crossing it raises a banner on the admin UI usage page and alerts over any configured alerting integration; it never rejects traffic. Takes precedence over an enterprise license's `max_sgr` |
+| sgr_soft_limit_percent | float | Fraction of `sgr_limit` at which the earlier, softer alert fires. Defaults to 0.8 |
+| sgr_limit_window | string | Period `sgr_limit` is counted over, `month` or `year`, calendar aligned in UTC. Takes precedence over an enterprise license's `sgr_window`, and defaults to `year` |
 | use_client_credentials_pass_through_routes | boolean | If true, uses client credentials for all pass-through routes. [Doc on pass through routes](pass_through) |
 | health_check_details | boolean | If false, hides health check details (e.g. remaining rate limit). [Doc on health checks](health) |
 | public_routes | List[str] | (Enterprise Feature) Control list of public routes |
