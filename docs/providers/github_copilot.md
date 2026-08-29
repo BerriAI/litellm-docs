@@ -11,6 +11,12 @@ https://docs.github.com/en/copilot
 
 :::
 
+:::info
+
+This page covers calling Copilot's models from LiteLLM. For the opposite direction, pointing Copilot itself at LiteLLM so its chat and agent traffic gets cost tracking and guardrails, see the [GitHub Copilot tutorial](../tutorials/github_copilot_integration.md).
+
+:::
+
 | Property | Details |
 |-------|-------|
 | Description | GitHub Copilot Chat API provides access to GitHub's AI-powered coding assistant. |
