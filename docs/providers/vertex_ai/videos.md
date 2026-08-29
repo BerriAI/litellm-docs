@@ -9,8 +9,8 @@ LiteLLM supports Vertex AI's Veo video generation models using the unified OpenA
 |-------|-------|
 | Description | Google Cloud Vertex AI Veo video generation models |
 | Provider Route on LiteLLM | `vertex_ai/` |
-| Supported Models | `veo-2.0-generate-001`, `veo-3.0-generate-preview`, `veo-3.0-fast-generate-preview`, `veo-3.1-generate-preview`, `veo-3.1-fast-generate-preview` |
-| Cost Tracking | ✅ Duration-based pricing |
+| Supported Models | `veo-2.0-generate-001`, `veo-3.0-generate-preview`, `veo-3.0-fast-generate-preview`, `veo-3.1-generate-preview`, `veo-3.1-fast-generate-preview`, `veo-3.1-lite-generate-001` |
+| Cost Tracking | ✅ Duration-based pricing, with 720p and 1080p tiers where Google prices them (Veo 3.1 Lite) |
 | Logging Support | ✅ Full request/response logging |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
 | Spend Management | ✅ Budget tracking and rate limiting |
@@ -98,6 +98,9 @@ with open("generated_video.mp4", "wb") as f:
 | veo-3.0-fast-generate-preview | Veo 3.0 fast generation | 8 seconds | Preview |
 | veo-3.1-generate-preview | Veo 3.1 high quality | 10 seconds | Preview |
 | veo-3.1-fast-generate-preview | Veo 3.1 fast | 10 seconds | Preview |
+| veo-3.1-lite-generate-001 | Veo 3.1 Lite, the lowest-cost tier, 720p or 1080p output | 8 seconds | Preview |
+
+Veo 3.1 Lite is priced per second of output at $0.05 for 720p and $0.08 for 1080p, and Veo renders 720p unless a request asks for 1080p. See [Size to Resolution Mapping](#size-to-resolution-mapping) for how to request 1080p through the OpenAI `size` parameter.
 
 ## Video Generation Parameters
 
@@ -106,7 +109,7 @@ LiteLLM converts OpenAI-style parameters to Veo's API shape automatically:
 | OpenAI Parameter | Vertex AI Parameter | Description | Example |
 |------------------|---------------------|-------------|---------|
 | `prompt` | `instances[].prompt` | Text description of the video | "A cat playing" |
-| `size` | `parameters.aspectRatio` | Converted to `16:9` or `9:16` | "1280x720" → `16:9` |
+| `size` | `parameters.aspectRatio`, plus `parameters.resolution` on models with a 1080p price tier | Converted to `16:9` or `9:16`, and to `720p` or `1080p` where the model is priced per resolution | "1920x1080" → `16:9` and `1080p` |
 | `seconds` | `parameters.durationSeconds` | Clip length in seconds | "8" → `8` |
 | `input_reference` | `instances[].image` | Reference image for animation | `open("image.jpg", "rb")` |
 | Provider-specific params | `extra_body` | Forwarded to Vertex API | `{"negativePrompt": "blurry"}` |
@@ -116,6 +119,39 @@ LiteLLM converts OpenAI-style parameters to Veo's API shape automatically:
 - `1280x720`, `1920x1080` → `16:9`
 - `720x1280`, `1080x1920` → `9:16`
 - Unknown sizes default to `16:9`
+
+### Size to Resolution Mapping
+
+Veo picks the output resolution from its own `resolution` parameter, not from the aspect ratio, so a `1920x1080` request that only sets `aspectRatio` still comes back as 720p. For models whose LiteLLM pricing carries a separate 1080p rate (today `veo-3.1-lite-generate-001`), LiteLLM also infers `resolution` from `size`:
+
+| `size` | `aspectRatio` sent | `resolution` sent |
+|--------|--------------------|-------------------|
+| `1280x720` | `16:9` | `720p` |
+| `720x1280` | `9:16` | `720p` |
+| `1920x1080` | `16:9` | `1080p` |
+| `1080x1920` | `9:16` | `1080p` |
+
+Any other `size` value maps to an aspect ratio only and leaves the resolution to Veo's default. Models without a 1080p price tier (Veo 2.0, Veo 3.0, and the other Veo 3.1 variants) never get an inferred `resolution`, so their requests are unchanged. Passing `resolution` yourself, either as a top-level parameter or inside `extra_body`, always wins over the value inferred from `size`.
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/videos' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer sk-1234' \
+--data '{
+  "model": "veo-3.1-lite-generate-001",
+  "prompt": "A slow aerial shot of a lighthouse at sunrise",
+  "seconds": "8",
+  "size": "1920x1080"
+}'
+```
+
+The response `usage` reports the resolution that was requested, and the spend log prices the clip at that tier:
+
+```json
+{"duration_seconds": 8.0, "video_resolution": "1080p"}
+```
+
+An 8 second Veo 3.1 Lite clip therefore costs $0.40 at `1280x720` and $0.64 at `1920x1080`.
 
 ## Async Usage
 
@@ -252,6 +288,8 @@ response = video_generation(
 
 print(response.usage)  # {"duration_seconds": 5.0}
 ```
+
+For models priced per resolution, `usage` also carries `video_resolution` (`720p` or `1080p`) and the cost uses that tier's per-second rate, as shown in [Size to Resolution Mapping](#size-to-resolution-mapping).
 
 ## Troubleshooting
 
