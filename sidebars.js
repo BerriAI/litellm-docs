@@ -284,6 +284,7 @@ const sidebars = {
         "tutorials/google_genai_sdk",
         "tutorials/livekit_xai_realtime",
         "integrations/letta",
+        "integrations/hindsight",
         { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM" },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM" },
