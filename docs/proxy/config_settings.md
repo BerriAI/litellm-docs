@@ -1132,6 +1132,8 @@ router_settings:
 | LITELLM_DROP_PARAMS | Parameters to drop in LiteLLM requests
 | LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
 | LITELLM_EMAIL | Email associated with LiteLLM account
+| LITELLM_FALLBACK_GENERALIZATIONS_URL | Custom URL for fetching the fallback generalization rules that map unmapped model names (e.g. regional Claude ids) onto a provider. Default is https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/fallback_generalizations.json, with automatic fallback to the bundled copy on failure
+| LITELLM_LOCAL_FALLBACK_GENERALIZATIONS | When set to `True`, uses the bundled fallback generalization rules only, disabling remote fetching. Default is `False`
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRIES | Maximum retries for parallel requests in LiteLLM
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
