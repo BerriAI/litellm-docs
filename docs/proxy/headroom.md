@@ -66,6 +66,8 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
     "model": "claude-sonnet-4",
     "messages": [
       {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Here is the build log: <paste a few thousand tokens of log output>"},
+      {"role": "assistant", "content": "I have read the log and can answer questions about it."},
       {"role": "user", "content": "Summarize the prior conversation..."}
     ],
     "guardrails": ["headroom-compression"]
@@ -83,6 +85,8 @@ curl -i http://0.0.0.0:4000/v1/messages \
     "model": "claude-sonnet-4",
     "max_tokens": 1024,
     "messages": [
+      {"role": "user", "content": "Here is the build log: <paste a few thousand tokens of log output>"},
+      {"role": "assistant", "content": "I have read the log and can answer questions about it."},
       {"role": "user", "content": "Summarize the prior conversation..."}
     ],
     "litellm_metadata": {"guardrails": ["headroom-compression"]}
@@ -91,6 +95,8 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 </TabItem>
 </Tabs>
+
+Compression only applies to conversation history. LiteLLM never sends the system messages, the last user message, or the last assistant message to Headroom, since the last turn is what the model is being asked to act on right now and replacing it with a retrieval marker would change the request. A single-turn request (only a system message plus one user message) therefore has nothing left to compress, so Headroom is not called at all and the request is forwarded unchanged. Use a request that carries at least one earlier turn when you are testing the integration.
 
 The messages are sent to the headroom service at `{api_base}/v1/compress` with the JSON body `{"messages": [...], "model": "<model>"}`. The returned `messages` list replaces the request payload before the LLM call.
 
@@ -151,7 +157,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
 </TabItem>
 </Tabs>
 
-The response includes an `x-litellm-applied-guardrails: headroom-compression` header so the caller can confirm compression actually ran.
+The response includes an `x-litellm-applied-guardrails: headroom-compression` header so the caller can confirm the request opted into compression. The header says the guardrail was selected for the request, not that any message was rewritten; for that, read `guardrail_information` on the spend log row.
 
 ## Claude Code usage
 
@@ -184,7 +190,7 @@ export ANTHROPIC_AUTH_TOKEN="sk-the-key-the-admin-issued"
 claude
 ```
 
-From here, every `/v1/messages` request Claude Code makes is compressed by Headroom before being dispatched to Anthropic. The developer sees no behavioral change other than lower token usage on their spend log. To verify compression ran, the admin can inspect `guardrail_information` on the corresponding spend log row, or check the response headers for `x-litellm-applied-guardrails: headroom-compression`.
+From here, every `/v1/messages` request Claude Code makes is compressed by Headroom before being dispatched to Anthropic. The developer sees no behavioral change other than lower token usage on their spend log. To verify compression ran, the admin can inspect `guardrail_information` on the corresponding spend log row.
 
 If a developer wants to skip compression for one request (for example, to compare an uncompressed baseline), they can set the `x-headroom-bypass: true` header on that call.
 
@@ -216,7 +222,9 @@ CMD ["headroom", "proxy", "--host", "0.0.0.0", "--port", "8787"]
 
 ### Why `requests_compressed` can be 0
 
-Headroom protects two message types by default, set on the Headroom container itself, not in LiteLLM's `config.yaml`:
+First check that the request had compressible history at all. LiteLLM holds back the system messages, the last user message, and the last assistant message, so a single-turn request never reaches Headroom, and the response still carries `x-litellm-applied-guardrails: headroom-compression` because that header reflects the guardrails the request opted into, not whether compression changed anything. A request whose `/v1/compress` call really ran shows token counts under `guardrail_information` on its spend log row.
+
+Beyond that, Headroom protects two message types by default, set on the Headroom container itself, not in LiteLLM's `config.yaml`:
 
 - `user`/`system` messages, unless `ENV HEADROOM_COMPRESS_USER_MESSAGES=1` is set. Most Claude Code traffic is `user` role, so a default deployment compresses none of it.
 - Messages with an Anthropic `cache_control` marker, always. Compressing them would break prompt-cache byte matching. No override exists.
