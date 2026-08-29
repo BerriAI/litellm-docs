@@ -1172,6 +1172,7 @@ const sidebars = {
         "providers/nlp_cloud",
         "providers/nano-gpt",
         "providers/novita",
+        "providers/nexus_shield",
         { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
         {
           type: "category",
