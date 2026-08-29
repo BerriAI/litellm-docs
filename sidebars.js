@@ -1154,6 +1154,7 @@ const sidebars = {
         "providers/inception",
         "providers/infinity",
         "providers/jina_ai",
+        "providers/kenari",
         "providers/lambda_ai",
         "providers/langgraph",
         "providers/lemonade",
