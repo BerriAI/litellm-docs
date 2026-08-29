@@ -85,7 +85,7 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 
 ### Skip system messages in guardrail evaluation
 
-You can stop **unified** guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
+You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
 **Global**, in `litellm_settings`:
 
@@ -112,9 +112,26 @@ litellm_settings:
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
 
-**Where this applies:** Only the **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`.
+### Skip tool messages in guardrail evaluation
 
-**Where this does *not* apply:** Guardrails that run only via direct hooks on the raw request (e.g. Lakera v2, Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). It also does not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
+Same idea, for `role: tool` content: stop guardrails from scanning tool call results while still sending the full `messages` list to the model.
+
+**Global** (in `litellm_settings`):
+
+```yaml
+litellm_settings:
+  skip_tool_message_in_guardrail: true
+```
+
+**Per guardrail**: under that guardrail's `litellm_params`, set `skip_tool_message_in_guardrail: true` or `false`, with the same global/per-guardrail precedence as the system-message flag above.
+
+**Via LiteLLM UI**: set **Skip tool messages in guardrail** the same way, right below the system-message dropdown described above, with the same three options (**Use global default**, **Yes, exclude from guardrail scan**, **No, always include in scan**).
+
+### Where the skip flags apply
+
+**Where these apply:** The **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`. **Lakera v2** also honors both flags, despite running via a direct hook rather than the unified path; see [Lakera AI](./lakera_ai#supported-params).
+
+**Where these do *not* apply:** Other guardrails that run only via direct hooks on the raw request (e.g. Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). These flags also do not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
 
 ### Load Balancing Guardrails
 
