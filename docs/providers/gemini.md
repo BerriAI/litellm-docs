@@ -437,7 +437,7 @@ For more information about Gemini's TTS capabilities and available voices, see t
 
 :::info
 
-LiteLLM supports `gemini-3.5-transcribe` on `/v1/audio/transcriptions` and `gemini-3.5-transcribe-live` on `/v1/realtime`.
+LiteLLM supports `gemini-3.5-transcribe` on `/v1/audio/transcriptions` and `gemini-3.5-transcribe-live` on `/v1/realtime`. Using Vertex AI instead of an API key? See [Vertex AI Audio Transcription](./vertex_transcription.md).
 
 :::
 
