@@ -295,7 +295,7 @@ By default, non-admin callers are **scoped to their own data**:
 | Caller role | `/spend/keys` | `/spend/users` |
 |-------------|---------------|----------------|
 | `proxy_admin` / `proxy_admin_viewer` | All keys | All users (or `?user_id=` for one row) |
-| `internal_user` / `internal_user_view_only` | Keys where `user_id` matches the caller | Only the caller's row |
+| `internal_user` / `internal_user_viewer` | Keys where `user_id` matches the caller | Only the caller's row |
 | Non-admin with no `user_id` on the key | Empty list `[]` | Empty list `[]` |
 
 An internal user who passes `?user_id=` for **another** user receives **HTTP 403** (not a silently filtered list).

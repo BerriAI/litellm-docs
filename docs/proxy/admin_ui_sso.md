@@ -272,7 +272,7 @@ Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token co
 - `proxy_admin` - Admin over the platform
 - `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
 - `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_view_only` - Can login, view their own keys, view their own spend
+- `internal_user_viewer` - Can login, view their own keys, view their own spend (⚠️ **deprecated** - use team/org specific roles instead, see [access control](./access_control.md#global-proxy-roles))
 
 Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
 
@@ -623,7 +623,7 @@ Centralize role management by defining user permissions in Azure Entra ID. LiteL
 - `proxy_admin` - Full admin access
 - `proxy_admin_viewer` - Read-only admin access
 - `internal_user` - Can create/view/delete own keys
-- `internal_user_viewer` - Can view own keys (read-only)
+- `internal_user_viewer` - Can view own keys (read-only) (⚠️ **deprecated** - use team/org specific roles instead, see [access control](./access_control.md#global-proxy-roles))
 
 <Image img={require('../../img/app_roles.png')} style={{ width: '900px', height: 'auto' }} />
 
