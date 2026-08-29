@@ -51,11 +51,13 @@ For production deployments, use one primary source of truth for model definition
 | Approach | Storage | Restart required for model changes? | Best for |
 | --- | --- | --- | --- |
 | `config.yaml` | Configuration file | Yes. Reload or restart the proxy tasks after changing the file. | GitOps workflows where every model change is deployed with the application. |
-| Admin UI, management API, or Terraform | LiteLLM database | No. Changes apply to new requests after the write succeeds. | Day-2 operations, frequent model changes, and centralized automation. |
+| Admin UI, management API, Terraform, or Crossplane | LiteLLM database | No. Changes apply to new requests after the write succeeds. | Day-2 operations, frequent model changes, and centralized automation. |
 
 LiteLLM can load file-based and database-backed models at the same time, but using both as model-management systems creates two sources of truth. A model loaded from `config.yaml` remains owned by that file and cannot be edited or deleted through the UI. Keep model definitions in one system, and continue using `config.yaml` or environment variables for infrastructure settings that are not exposed through the management API.
 
 The [LiteLLM Terraform provider](https://github.com/BerriAI/terraform-provider-litellm) calls the same management API used by the Admin UI. It persists resources in the LiteLLM database, so you do not need to build a separate REST client or restart the proxy for model changes.
+
+On Kubernetes, the community [provider-litellm](https://github.com/TheCodingSheikh/provider-litellm) Crossplane provider calls that same management API from inside the cluster. Models, teams, budgets and guardrails are declared as Kubernetes custom resources, which lets Argo CD or Flux own them the way they already own the rest of the platform, and lets the controller correct drift if a model is edited out of band.
 
 ## Automation (API)
 
