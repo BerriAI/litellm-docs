@@ -1,23 +1,24 @@
 ---
 slug: two-week-stability-update
-title: "July stability update: hardening MCP auth and cutting pass-through memory"
+title: "July stability update: hardening MCP auth, quashing LLM provider bugs, and cutting pass-through memory"
 date: 2026-07-11T12:00:00
 authors:
   - ishaan
   - tin
   - mateo
   - yassin
-description: "A two-week product quality update. We addressed two major issues (MCP credential resolution and pass-through memory) and shipped 134 bug fixes in total. Plus our next goal: 95% end-to-end test coverage."
+description: "A two-week product quality update. We addressed three major issues (MCP credential resolution, LLM provider translation bugs on new models, and pass-through memory) and shipped 134 bug fixes in total. Plus our next goal: 95% end-to-end test coverage."
 tags: [stability, mcp, performance, product]
 hide_table_of_contents: false
 ---
 
-Over the last two weeks we addressed two major product quality issues:
+Over the last two weeks we addressed three major product quality issues:
 
 1. The MCP Gateway did not have a single class for credential resolution.
-2. Pass-through APIs had high memory consumption.
+2. LLM provider translation had a high volume of bugs, clustered on newly launched models.
+3. Pass-through APIs had high memory consumption.
 
-Across the same window we shipped 134 bug fixes in total. This post covers the two big changes first, then the rest of the AI Eng and reliability work, the full breakdown, and what we are doing next.
+Across the same window we shipped 134 bug fixes in total. This post covers the three big changes first, then the rest of the reliability work, the full breakdown, and what we are doing next.
 
 {/* truncate */}
 
@@ -72,19 +73,46 @@ flowchart TD
 
 Each mode has its own fully typed config, so there is no guessing from which fields are set and no precedence order. The match is exhaustive, so adding a mode without handling it fails the type checker, and an unhandled case raises instead of quietly attaching no auth.
 
-## AI Eng: LLM providers (27 fixes)
+## LLM providers: 41 translation bugs quashed
 
-AI Eng was focused on driving down reported bugs. Most of them were on new models (Claude 4.8, Opus 4.8, Bedrock Invoke). Here are the types of bugs we fixed:
+We merged 41 provider fix PRs in this window. Most traced back to one event: a model launch. A model reaches users through many doors: chat completions, the native `/v1/messages` endpoint, the Responses API, realtime, batches, and pass-through. Each surface had its own hardcoded assumptions about what models can do (can it take a mid-conversation system message, does it support adaptive thinking, is tool strict-mode allowed), its own pricing lookups, and its own routing rules. So the same model behaved differently depending on which door you came in through, and the bugs clustered on recently launched models (Claude Sonnet 5, gpt-realtime-2.1, gpt-5.6) and on surfaces that lagged an earlier launch (the Claude 4.8 family on Bedrock Invoke).
+
+### Where the fixes landed
+
+| Provider surface | Fixes |
+|---|---|
+| Bedrock | 15 |
+| Responses API (OpenAI) | 6 |
+| Anthropic | 5 |
+| Vertex AI | 3 |
+| Azure | 2 |
+| Databricks | 1 |
+| Cross-provider cost tracking | 8 |
+| Other | 1 |
+| Total | 41 |
+
+### The types of bugs that got fixed
 
 | Type of bug | Count |
 |---|---|
-| New model capabilities getting dropped | 10 |
-| Wrong cost or billing | 6 |
-| Routing or fallback picking the wrong model | 6 |
-| Broken response or streaming output | 5 |
-| Total | 27 |
+| New model capabilities getting dropped | 15 |
+| Broken response or streaming output | 12 |
+| Wrong cost or billing | 8 |
+| Request auth or URL building | 6 |
+| Total | 41 |
 
-Most of these were on Bedrock and the routing layer.
+The appendix lists every provider fix, grouped by these classes.
+
+### The structural fix: capabilities and prices are declared data, not per-surface guesses
+
+The fixes follow the same principle as the MCP resolver: replace inference with declaration, in one place.
+
+- What a model supports is now a flag in the model map (for example `supports_mid_conversation_system` on Claude 4.8+), so translation logic gates on declared capability instead of model-name guesses scattered per surface.
+- Fallback and routing rules generalize declaratively, so a newly launched model inherits its family's behavior instead of falling through to wrong defaults.
+- Newer API concepts translate down explicitly: adaptive thinking and effort map to what pre-4.6 models support instead of erroring.
+- Regional inference profiles resolve to regional pricing, so cost tracking is correct in every region a model launches in.
+
+The goal is that the next model launch produces no bug reports: a gap shows up as a missing declaration in one file rather than a bug report per endpoint.
 
 ## Performance: pass-through memory
 
@@ -121,8 +149,8 @@ All 134 fixes, by area:
 | Area | Fixes |
 |---|---|
 | MCP Gateway | 50 |
-| LLM Providers (AI Eng) | 27 |
-| Proxy Core / Reliability | 23 |
+| LLM Providers (AI Eng) | 41 |
+| Proxy Core / Reliability | 9 |
 | UI / Dashboard | 20 |
 | Logging / Observability | 9 |
 | Guardrails | 5 |
@@ -171,43 +199,70 @@ Sealed envelope and delegate admission (LIT-4338):
 - [#32794](https://github.com/BerriAI/litellm/pull/32794) envelope edge consumer
 - [#32824](https://github.com/BerriAI/litellm/pull/32824) delegate admission
 
-**AI Eng (LLM providers)**
+**LLM providers, grouped by failure class**
 
-Bedrock:
+New model capabilities getting dropped:
 
 - [#32882](https://github.com/BerriAI/litellm/pull/32882) flag Claude 4.8+ entries with supports_mid_conversation_system
 - [#32831](https://github.com/BerriAI/litellm/pull/32831) gate in-place system role messages for Claude Invoke
 - [#32578](https://github.com/BerriAI/litellm/pull/32578) keep mid-conversation system messages for Claude Invoke
+- [#32872](https://github.com/BerriAI/litellm/pull/32872) backport the Invoke system-role fixes to 1.91.2
+- [#31364](https://github.com/BerriAI/litellm/pull/31364) normalize system role and adaptive thinking for Claude Invoke
 - [#32658](https://github.com/BerriAI/litellm/pull/32658) retain clear_tool_uses context-management edits and emit the beta header
+- [#32020](https://github.com/BerriAI/litellm/pull/32020) keep context_management working when drop_params is enabled
 - [#32551](https://github.com/BerriAI/litellm/pull/32551) honor cache_control ttl on message-level cachePoint blocks
 - [#32538](https://github.com/BerriAI/litellm/pull/32538) preserve cache_control ttl on message-level cache points
-- [#32840](https://github.com/BerriAI/litellm/pull/32840) add jp.anthropic.claude-opus-4-8 to the model cost map
-- [#32389](https://github.com/BerriAI/litellm/pull/32389) resolve regional inference profiles to regional pricing
-
-Anthropic:
-
 - [#32874](https://github.com/BerriAI/litellm/pull/32874) thread the real provider through capability probes (was pinned to anthropic)
 - [#32867](https://github.com/BerriAI/litellm/pull/32867) translate adaptive thinking/effort for pre-4.6 models
 - [#32833](https://github.com/BerriAI/litellm/pull/32833) strip @version suffix in model lookup
+- [#31654](https://github.com/BerriAI/litellm/pull/31654) drop unsignable thinking blocks and allow null signature in logging
+- [#31663](https://github.com/BerriAI/litellm/pull/31663) drop unmappable Responses tools instead of failing the request
+- [#31923](https://github.com/BerriAI/litellm/pull/31923) drop toolSpec.strict for Opus 4.7/4.8 on Converse
+- [#31985](https://github.com/BerriAI/litellm/pull/31985) map guardrailConfig to InvokeModel guardrail headers
 
-Routing and fallbacks:
-
-- [#32859](https://github.com/BerriAI/litellm/pull/32859) complexity router keyword tiers (max aggregation, blank-keyword hardening)
-- [#32943](https://github.com/BerriAI/litellm/pull/32943) complexity router logging and auth propagation, index built once
-- [#32873](https://github.com/BerriAI/litellm/pull/32873) fallback rules routing split (bare-Claude coverage, cost-map precedence, legacy schema)
-
-Responses API:
+Broken response or streaming output:
 
 - [#32835](https://github.com/BerriAI/litellm/pull/32835) raise APIError on in-stream error events
 - [#32837](https://github.com/BerriAI/litellm/pull/32837) preserve reasoning_tokens through chat to responses
 - [#32034](https://github.com/BerriAI/litellm/pull/32034) idempotent response-id encoding (prevents MCP gateway double-encoding)
-
-Cost, Vertex, Rerank:
-
-- [#32387](https://github.com/BerriAI/litellm/pull/32387) add gpt-realtime-2.1 models with regional uplift
-- coerce string tiered-pricing costs and share the tier helper
-- [#32550](https://github.com/BerriAI/litellm/pull/32550) forward realtime health check params (Vertex)
+- [#32159](https://github.com/BerriAI/litellm/pull/32159) emit SSE error event when an Invoke stream ends without message_stop
+- [#32141](https://github.com/BerriAI/litellm/pull/32141) preserve stream param and decode SSE for Bedrock Mantle streaming
+- [#31924](https://github.com/BerriAI/litellm/pull/31924) trigger Nova Sonic generation on response.create so realtime sessions stop hanging
+- [#31633](https://github.com/BerriAI/litellm/pull/31633) split parallel tool calls so each tool message follows its tool_calls
+- [#32018](https://github.com/BerriAI/litellm/pull/32018) preserve content, tables, and keyValuePairs in doc-intelligence /v1/ocr
+- [#31484](https://github.com/BerriAI/litellm/pull/31484) wrap the websearch agentic loop in a fake stream for streaming requests
+- [#32287](https://github.com/BerriAI/litellm/pull/32287) surface upstream error status on responses get instead of 500
+- [#32271](https://github.com/BerriAI/litellm/pull/32271) map upstream 4xx on responses cancel to a client error instead of 500
+- [#32269](https://github.com/BerriAI/litellm/pull/32269) decrypt response ids for input_items follow-ups
+- [#32258](https://github.com/BerriAI/litellm/pull/32258) custom tool round-trip and allowlist preservation for Codex CLI
 - [#32533](https://github.com/BerriAI/litellm/pull/32533) log rerank params at debug to stop leaking request content
+
+Wrong cost or billing:
+
+- [#32840](https://github.com/BerriAI/litellm/pull/32840) add jp.anthropic.claude-opus-4-8 to the model cost map
+- [#32389](https://github.com/BerriAI/litellm/pull/32389) resolve regional inference profiles to regional pricing
+- [#32387](https://github.com/BerriAI/litellm/pull/32387) add gpt-realtime-2.1 models with regional uplift
+- [#32307](https://github.com/BerriAI/litellm/pull/32307) price anthropic pass-through message batches correctly in the batch cost job
+- [#32163](https://github.com/BerriAI/litellm/pull/32163) stop per-request custom pricing from clobbering shared model_cost pricing
+- [#32073](https://github.com/BerriAI/litellm/pull/32073) bill streaming 1h prompt-cache writes at the 1h rate
+- [#31917](https://github.com/BerriAI/litellm/pull/31917) apply claude-sonnet-5 introductory pricing
+- [#31355](https://github.com/BerriAI/litellm/pull/31355) preserve server_tool_use web search usage in cost tracking
+- coerce string tiered-pricing costs and share the tier helper
+
+Request auth or URL building:
+
+- [#32371](https://github.com/BerriAI/litellm/pull/32371) stop stale SigV4 headers clobbering the fresh signature on re-sign
+- [#32275](https://github.com/BerriAI/litellm/pull/32275) honor AWS auth params in the realtime handler
+- [#32367](https://github.com/BerriAI/litellm/pull/32367) build the full request path when a custom api_base has no path
+- [#32380](https://github.com/BerriAI/litellm/pull/32380) return create_vertex_url result directly for partner models with custom api_base
+- [#32270](https://github.com/BerriAI/litellm/pull/32270) build responses input_items url with path before query string
+- [#32550](https://github.com/BerriAI/litellm/pull/32550) forward realtime health check params (Vertex)
+
+Routing and fallback hardening shipped alongside the fixes:
+
+- [#32859](https://github.com/BerriAI/litellm/pull/32859) complexity router keyword tiers (max aggregation, blank-keyword hardening)
+- [#32943](https://github.com/BerriAI/litellm/pull/32943) complexity router logging and auth propagation, index built once
+- [#32873](https://github.com/BerriAI/litellm/pull/32873) fallback rules routing split (bare-Claude coverage, cost-map precedence, legacy schema)
 
 **Performance**
 
