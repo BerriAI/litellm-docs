@@ -468,6 +468,12 @@ If you run the code two times, response1 will use the cache from the first run t
 
 </Tabs>
 
+:::warning Picking a `similarity_threshold`
+
+Semantic caching embeds the concatenated content of every message on the request, so successive turns of one conversation land very close together and a long chat can match its own earlier turn well above 0.95. Values around 0.8 suit single-turn traffic; multi-turn and agentic workloads need 0.97 or higher, or `cache={"no-cache": True}` on the agent loop. See [tuning semantic cache hits](../proxy/caching#tuning-semantic-cache-hits).
+
+:::
+
 ## Switch Cache On / Off Per LiteLLM Call 
 
 LiteLLM supports 4 cache-controls:
