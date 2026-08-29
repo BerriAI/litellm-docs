@@ -1105,6 +1105,7 @@ const sidebars = {
         "providers/amazon_nova",
         "providers/anyscale",
         "providers/apertis",
+        "providers/apitoken",
         "providers/baseten",
         "providers/black_forest_labs",
         "providers/black_forest_labs_img_edit",
