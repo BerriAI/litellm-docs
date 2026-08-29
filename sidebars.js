@@ -418,6 +418,7 @@ const sidebars = {
             "proxy/deploy",
             "proxy/prod",
             "proxy/redis_requirements",
+            "proxy/redis_setup",
             "proxy/db_sizing",
             "proxy/redis_sizing",
             "proxy/security_best_practices",
