@@ -147,6 +147,18 @@ lite claude --skip-verify --resume
 
 To pin the model, pass the agent's own model flag (`lite claude --model my-proxy-model` or `lite codex -m my-proxy-model`) or export the variable the agent reads (`ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` for Claude Code); the wrapper preserves anything you already set. Whatever model the agent requests must exist on the proxy, since requests land on the proxy's `/v1/messages` (Anthropic) or `/v1/chat/completions` and `/v1/responses` (OpenAI) endpoints.
 
+### Keep using the plain `claude` command
+
+`lite up` patches `~/.claude/settings.json` so Claude Code routes through the proxy on its own, from any terminal, with no wrapper command:
+
+```bash
+lite up
+```
+
+It sets `env.ANTHROPIC_BASE_URL` to the proxy and points Claude Code's `apiKeyHelper` at `lite auth print-token`, so each request picks up a fresh token from your last `lite login`. Every other key in the file is preserved, a stray `env.ANTHROPIC_API_KEY` is dropped so it cannot outrank the proxy token, and the original file is backed up first and restored when you press Ctrl-C. If the process is killed uncleanly, run `lite down` to restore the backup. This assumes a proxy is already running; it does not start one. Cursor has no equivalent file to patch, so it is not supported.
+
+To make the same wiring permanent, or to enforce it for everyone on a shared machine, write those two settings yourself as [managed settings](https://code.claude.com/docs/en/settings) instead of leaving `lite up` running.
+
 ### The `lite login` credential
 
 The token minted by `lite login` is a short-lived, per-session agent credential, not a managed virtual key. It is scoped to the user and team you authenticated as, inherits that user's and team's models and budgets, and is enforced on the proxy exactly like a virtual key on the same team (guardrails, routing, logging, spend). Spend is tracked against the shared team and user budgets, so running several agents (or logging in more than once) does not give each session its own budget; they all draw down the same team and user allowance, and there is no separate per-session cap.
