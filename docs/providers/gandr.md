@@ -25,6 +25,8 @@ export GANDR_API_KEY="gnd_..."
 
 Get a key at [https://gandr.ai](https://gandr.ai).
 
+Optionally, `GANDR_API_BASE` overrides the endpoint base URL (default `https://tts.gandr.ai/v1`). Most setups never set it.
+
 ### 2. LiteLLM Python SDK
 
 ```python showLineNumbers title="Text-to-speech with Gandr"
