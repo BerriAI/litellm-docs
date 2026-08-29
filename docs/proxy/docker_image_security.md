@@ -15,8 +15,11 @@ All image variants published to `ghcr.io/berriai/` are signed with the same cosi
 
 The signing key was introduced in [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub).
 
-:::info Enterprise images
-Enterprise images (`litellm-ee`) follow the same signing process. Contact [support@berri.ai](mailto:support@berri.ai) to confirm coverage for your specific enterprise image tag.
+:::warning `litellm-ee` is deprecated — removal scheduled for end of June 2026
+
+There is **no separate enterprise image**. The `litellm-ee` tag is built from the same source as `ghcr.io/berriai/litellm` and is functionally identical — enterprise features are unlocked at runtime by your `LITELLM_LICENSE` key, not by the image you pull. The `litellm-ee` tag is deprecated and will stop being published at the **end of June 2026**.
+
+Migrate to `ghcr.io/berriai/litellm` (or `litellm-database` / `litellm-non_root`) and set `LITELLM_LICENSE` to enable enterprise features. These images follow the same cosign signing process described above.
 :::
 
 ## Verify image signatures

@@ -97,6 +97,11 @@ Deploy our Docker image (or build from the pip package) on your own infrastructu
 LITELLM_LICENSE="eyJ..."
 ```
 
+:::warning `litellm-ee` image is deprecated — removal scheduled for end of June 2026
+
+Use the standard `ghcr.io/berriai/litellm` image (or `litellm-database` / `litellm-non_root`) and set `LITELLM_LICENSE` to unlock enterprise features. There is **no separate enterprise image** — `litellm-ee` is built from the same source and is functionally identical. The `litellm-ee` tag is deprecated and will stop being published at the **end of June 2026**.
+:::
+
 **No data leaves your environment.** [Procurement available via AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
 
 Pricing depends on your deployment size. [Get in touch](https://enterprise.litellm.ai/demo) to scope it.
