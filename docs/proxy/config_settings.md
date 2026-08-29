@@ -1392,6 +1392,7 @@ router_settings:
 | SMTP_PORT | Port number for SMTP server
 | SMTP_SENDER_EMAIL | Email address used as the sender in SMTP transactions
 | SMTP_SENDER_LOGO | Logo used in emails sent via SMTP
+| SMTP_TIMEOUT | Timeout in seconds for SMTP connections and operations (default: 30)
 | SMTP_TLS | Flag to enable or disable TLS for SMTP connections
 | SMTP_USE_SSL | Set to "True" to force implicit SSL (SMTP_SSL) on any port. Not needed for port 465, which uses implicit SSL automatically; other ports use STARTTLS by default (see SMTP_TLS)
 | SMTP_USERNAME | Username for SMTP authentication (do not set if SMTP does not require auth)
