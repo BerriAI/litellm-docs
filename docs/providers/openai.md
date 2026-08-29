@@ -175,6 +175,36 @@ os.environ["OPENAI_ORGANIZATION"] = "your-org-id"       # OPTIONAL
 os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 ```
 
+### Regional Processing (Data Residency) Pricing
+
+OpenAI charges a regional-processing uplift (currently +10%) on the latest
+GPT models when the request is served from a regionalized hostname:
+
+| Region | Hostname |
+|--------|----------|
+| EU     | `https://eu.api.openai.com/v1` |
+| US     | `https://us.api.openai.com/v1` |
+| Global | `https://api.openai.com/v1` (no uplift) |
+
+LiteLLM auto-detects the region from `api_base` and applies the
+per-model `regional_processing_uplift_multiplier_<region>` to the
+calculated cost. No request-level parameter is needed.
+
+```python
+import litellm
+
+response = litellm.completion(
+    model="gpt-5",
+    messages=[{"role": "user", "content": "hi"}],
+    api_base="https://eu.api.openai.com/v1",  # EU host -> +10% uplift applied
+)
+print(response._hidden_params["response_cost"])
+```
+
+The resolved region is also exposed to custom callbacks as
+`kwargs["litellm_params"]["data_residency"]` (one of `"eu"`, `"us"`, or
+`None`), so you can read it without parsing the URL on your side.
+
 ### OpenAI Chat Completion Models
 
 | Model Name            | Function Call                                                   |
