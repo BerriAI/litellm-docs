@@ -9,25 +9,6 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 ## Usage 
 
-### Prerequisites - Start LiteLLM Proxy with Beta Flag
-
-:::warning[Beta Feature - Required]
-
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
-
-```bash
-export EXPERIMENTAL_UI_LOGIN="True"
-litellm --config config.yaml
-```
-
-Or add it to your proxy startup command:
-
-```bash
-EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
-```
-
-:::
-
 ### Configuration
 
 #### JWT Token Expiration
@@ -37,14 +18,13 @@ By default, CLI authentication tokens expire after **24 hours**. You can customi
 ```bash
 # Set CLI JWT tokens to expire after 48 hours
 export LITELLM_CLI_JWT_EXPIRATION_HOURS=48
-export EXPERIMENTAL_UI_LOGIN="True"
 litellm --config config.yaml
 ```
 
 Or in a single command:
 
 ```bash
-LITELLM_CLI_JWT_EXPIRATION_HOURS=48 EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
+LITELLM_CLI_JWT_EXPIRATION_HOURS=48 litellm --config config.yaml
 ```
 
 **Examples:**
