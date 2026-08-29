@@ -19,9 +19,29 @@ model_list:
       supported_endpoints: ["/v1/chat/completions", "/v1/messages"]
 ```
 
-With the opt-in, a request to the proxy's `/v1/messages` is POSTed to `{api_base}/v1/messages` with the Anthropic body unchanged. A trailing `/v1` on `api_base` is stripped first, so `https://inference.example.com/v1` and `https://inference.example.com` both resolve to `https://inference.example.com/v1/messages`. LiteLLM sends `Authorization: Bearer <api_key>` unless the request already carries an `Authorization` or `x-api-key` header, defaults `anthropic-version` to `2023-06-01`, and forwards `anthropic-beta` headers, both the ones the caller sent and the ones LiteLLM adds for features like context management. Streaming and response parsing work the same way they do for a native Anthropic deployment
+With the opt-in, a request to the proxy's `/v1/messages` is POSTed to `{api_base}/v1/messages` with the Anthropic body unchanged, apart from `cache_control` (see below). A trailing `/v1` on `api_base` is stripped first, so `https://inference.example.com/v1` and `https://inference.example.com` both resolve to `https://inference.example.com/v1/messages`. LiteLLM sends `Authorization: Bearer <api_key>` unless the request already carries an `Authorization` or `x-api-key` header, defaults `anthropic-version` to `2023-06-01`, and forwards `anthropic-beta` headers, both the ones the caller sent and the ones LiteLLM adds for features like context management. Streaming and response parsing work the same way they do for a native Anthropic deployment
 
 Without the opt-in the deployment behaves as before and the request is translated. `/v1/chat/completions` calls to the same deployment are not affected either way
+
+## `cache_control` is reduced to its portable core
+
+Strict implementations of the Messages API reject Anthropic-only `cache_control` extensions such as `ttl` with `cache_control.ttl: 1h is not supported`, and clients like Claude Code send `{"type": "ephemeral", "ttl": "1h"}` on every prompt block whenever 1h prompt caching is on. So by default every `cache_control` in the forwarded body is reduced to `{"type": "ephemeral"}`, at the request level and in system blocks, tools, message content blocks, and `tool_result` content. Application data such as `tool_use.input` and tool `input_schema` is never touched
+
+When the upstream honors `ttl`, keep it with `cache_control_ttl: true` in `model_info`:
+
+```yaml
+model_list:
+  - model_name: my-open-model
+    litellm_params:
+      model: openai/some-open-model
+      api_base: https://inference.example.com/v1
+      api_key: os.environ/EXAMPLE_API_KEY
+    model_info:
+      supported_endpoints: ["/v1/chat/completions", "/v1/messages"]
+      cache_control_ttl: true
+```
+
+Deployments of providers with built-in Anthropic Messages support (`anthropic/`, `bedrock/`, `vertex_ai/`, and others) keep forwarding `cache_control` as sent
 
 Test it with an Anthropic-only feature in the request:
 
