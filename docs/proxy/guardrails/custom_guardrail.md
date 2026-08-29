@@ -166,6 +166,8 @@ For **streaming responses**, `post_call` guardrails run on the fully assembled r
 
 To filter or block streaming content in real-time, use `async_post_call_streaming_iterator_hook` instead, which processes chunks as they arrive.
 
+Built-in guardrails that implement `apply_guardrail` (for example [Bedrock](./bedrock#streaming)) take the opposite default on streams: LiteLLM buffers every chunk until the assembled response passes moderation, so a block lands before any content reaches the client. Set `streaming_buffer_until_moderated: false` together with `streaming_end_of_stream_only: true` on such a guardrail to get the audit-only behavior described above, with no added time-to-first-token.
+
 :::
 
 <details>
