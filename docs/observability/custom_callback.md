@@ -5,6 +5,7 @@
 ::: 
 
 ## Callback Class
+
 You can create a custom callback class to precisely log events as they occur in litellm. 
 
 ```python
@@ -19,7 +20,6 @@ class MyCustomHandler(CustomLogger):
     def log_post_api_call(self, kwargs, response_obj, start_time, end_time): 
         print(f"Post-API Call")
     
-
     def log_success_event(self, kwargs, response_obj, start_time, end_time): 
         print(f"On Success")
 
@@ -48,12 +48,13 @@ for chunk in response:
 ## async
 import asyncio 
 
-def async completion():
+async def async_completion():
     response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
-asyncio.run(completion())
+
+asyncio.run(async_completion())
 ```
 
 ## Common Hooks
@@ -114,6 +115,7 @@ async def async_post_call_success_hook(data, user_api_key_dict, response):
 This allows you to inject custom metadata or headers into the response for downstream consumers. You can use this pattern to pass information to clients, proxies, or observability tools.
 
 ## Callback Functions
+
 If you just want to log on a specific event (e.g. on input) - you can use callback functions. 
 
 You can set custom callbacks to trigger for:
@@ -122,6 +124,7 @@ You can set custom callbacks to trigger for:
 - `litellm.failure_callback` - Track inputs/outputs + exceptions for litellm calls
 
 ## Defining a Custom Callback Function
+
 Create a custom callback function that takes specific arguments:
 
 ```python
@@ -139,6 +142,7 @@ def custom_callback(
 ```
 
 ### Setting the custom callback function
+
 ```python
 import litellm
 litellm.success_callback = [custom_callback]
@@ -164,7 +168,6 @@ response = completion(
 )
 
 print(response)
-
 ```
 
 ## Async Callback Functions 
@@ -178,8 +181,6 @@ from litellm import acompletion
 class MyCustomHandler(CustomLogger):
     #### ASYNC #### 
     
-
-
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
         print(f"On Async Success")
 
@@ -187,19 +188,20 @@ class MyCustomHandler(CustomLogger):
         print(f"On Async Failure")
 
 import asyncio 
-customHandler = MyCustomHandler()
 
+customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
-def async completion():
+async def async_completion():
     response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
-asyncio.run(completion())
+
+asyncio.run(async_completion())
 ```
 
-**Functions**
+### Async Functions
 
 If you just want to pass in an async function for logging. 
 
@@ -215,12 +217,14 @@ async def test_chat_openai():
     try:
         # litellm.set_verbose = True
         litellm.success_callback = [async_test_logging_fn]
-        response = await litellm.acompletion(model="gpt-3.5-turbo",
-                              messages=[{
-                                  "role": "user",
-                                  "content": "Hi 👋 - i'm openai"
-                              }],
-                              stream=True)
+        response = await litellm.acompletion(
+            model="gpt-3.5-turbo",
+            messages=[{
+                "role": "user",
+                "content": "Hi 👋 - i'm openai"
+            }],
+            stream=True
+        )
         async for chunk in response: 
             continue
     except Exception as e:
@@ -260,6 +264,7 @@ def custom_callback(kwargs, completion_response, start_time, end_time):
 ## Practical Examples
 
 ### Track API Costs
+
 ```python
 def track_cost_callback(kwargs, completion_response, start_time, end_time):
     cost = kwargs["response_cost"] # litellm calculates this for you
@@ -271,6 +276,7 @@ response = completion(model="gpt-3.5-turbo", messages=[{"role": "user", "content
 ```
 
 ### Log Inputs to LLMs
+
 ```python
 def get_transformed_inputs(kwargs):
     params_to_model = kwargs["additional_args"]["complete_input_dict"]
@@ -282,6 +288,7 @@ response = completion(model="claude-2", messages=[{"role": "user", "content": "H
 ```
 
 ### Send to External Service
+
 ```python
 import requests
 
@@ -299,12 +306,14 @@ litellm.success_callback = [send_to_analytics]
 ## Common Issues
 
 ### Callback Not Called
+
 Make sure you:
 1. Register callbacks correctly: `litellm.callbacks = [MyHandler()]`
 2. Use the right hook names (check spelling)
 3. Don't use proxy-only hooks in library mode
 
 ### Performance Issues  
+
 - Use async hooks for I/O operations
 - Don't block in callback functions
 - Handle exceptions properly:
@@ -318,3 +327,55 @@ class SafeHandler(CustomLogger):
             print(f"Callback error: {e}")  # Log but don't break the flow
 ```
 
+## versyn-litellm - Cryptographic audit logging
+
+Versyn-litellm provides cryptographic audit logging for LLM responses using Ed25519-signed certificates, ensuring tamper-evidence and auditability.
+
+### Installation
+
+```bash
+pip install versyn-litellm
+```
+
+### Quick Start
+
+```python
+import litellm
+from versyn_litellm import VersynCallback
+
+# Initialize with automatic environment variable reading
+litellm.callbacks = [VersynCallback()]
+
+# Make your LLM calls as usual
+response = litellm.completion(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# Access the certificate ID from the response
+cert_id = response._hidden_params.get("versyn_certificate_id")
+print(f"Certificate ID: {cert_id}")
+```
+
+### Key Features
+
+- **Automatic Key Management** - Reads API key from environment variables (no hardcoding)
+- **Ed25519 Signatures** - Cryptographic signing for every LLM response
+- **Tamper-Detection** - Verify response integrity at any time
+- **Audit Trail** - Complete certificate chain for compliance and auditing
+
+### Environment Setup
+
+Set your API key as an environment variable:
+
+```bash
+export VERSYN_API_KEY="your_api_key_here"
+```
+
+The `VersynCallback()` will automatically read this key—no need to pass it explicitly.
+
+### Getting Started
+
+Get your free API key and documentation at [https://versyn.dev](https://versyn.dev)
+
+For more information on integration patterns and advanced usage, visit the [Versyn documentation](https://versyn.dev/docs).
