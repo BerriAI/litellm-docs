@@ -1055,6 +1055,7 @@ const sidebars = {
             "providers/vertex_embedding",
             "providers/vertex_image",
             "providers/vertex_speech",
+            "providers/vertex_transcription",
             "providers/vertex_batch",
             "providers/vertex_ocr",
             "providers/vertex_ai_agent_engine",
