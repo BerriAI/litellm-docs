@@ -272,7 +272,7 @@ Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token co
 - `proxy_admin` - Admin over the platform
 - `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
 - `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_view_only` - Can login, view their own keys, view their own spend
+- `internal_user_viewer` - Can login, view their own keys, view their own spend
 
 Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
 
