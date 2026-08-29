@@ -27,6 +27,10 @@ Starting in LiteLLM v1.80.18, the LiteLLM MCP protocol version is `2025-11-25`.<
 LiteLLM namespaces multiple MCP servers by prefixing each tool name with its MCP server name, so newly created servers now must use names that comply with SEP-986; noncompliant names cannot be added anymore. Existing servers that still violate SEP-986 only emit warnings today, but future MCP-side rollouts may block those names entirely, so we recommend updating any legacy server names proactively before MCP enforcement makes them unusable.
 :::
 
+:::info Last verified
+The golden-path examples on this page and [the MCP REST API page](./mcp_rest_api.md) were last verified against LiteLLM v1.100.0 on 2026-08-26 by the automated smoke suite in [tests/mcp_tests/docs_snippets](https://github.com/BerriAI/litellm/tree/main/tests/mcp_tests/docs_snippets). Run `make test-mcp-docs` in the main repo to verify them locally before changing these examples.
+:::
+
 ## Adding your MCP
 
 ### Prerequisites
