@@ -1225,6 +1225,7 @@ router_settings:
 | MAX_SIZE_IN_MEMORY_QUEUE | Maximum size for in-memory queue. Default is 10000
 | MAX_SIZE_PER_ITEM_IN_MEMORY_CACHE_IN_KB | Maximum size in KB for each item in memory cache. Default is 512 or 1024
 | MAX_SPENDLOG_ROWS_TO_QUERY | Maximum number of spend log rows to query. Default is 1,000,000
+| MAX_SYNC_STREAM_PRODUCER_THREADS | Maximum number of threads in the dedicated pool that bridges synchronous provider streams (e.g. boto3 Bedrock) into async consumers. Default is 100
 | MAX_TEAM_LIST_LIMIT | Maximum number of teams to list. Default is 20
 | MAX_TILE_HEIGHT | Maximum height for image tiles. Default is 512
 | MAX_TILE_WIDTH | Maximum width for image tiles. Default is 512
