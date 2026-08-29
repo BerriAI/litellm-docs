@@ -29,7 +29,7 @@ LiteLLM also exposes some helper functions:
 
 - `completion_cost`: This returns the overall cost (in USD) for a given LLM API Call. It combines `token_counter` and `cost_per_token` to return the cost for that query (counting both cost of input and output). [**Jump to code**](#6-completion_cost)
 
-- `get_max_tokens`: This returns the maximum number of tokens allowed for the given model. [**Jump to code**](#7-get_max_tokens)
+- `get_max_tokens`: This returns the maximum number of output tokens allowed for the given model. [**Jump to code**](#7-get_max_tokens)
 
 - `model_cost`: This returns a dictionary for all models, with their max_tokens, input_cost_per_token and output_cost_per_token. It uses the `api.litellm.ai` call shown below. [**Jump to code**](#8-model_cost)
 
@@ -135,7 +135,7 @@ print(formatted_string)
 ### 7. `get_max_tokens`
 
 Input: Accepts a model name - e.g., gpt-3.5-turbo (to get a complete list, call litellm.model_list).
-Output: Returns the maximum number of tokens allowed for the given model
+Output: Returns the maximum number of output tokens allowed for the given model
 
 ```python 
 from litellm import get_max_tokens 
