@@ -37,6 +37,8 @@ Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/<>/<>/<>"
 ```
 
+If `SLACK_WEBHOOK_URL` is unset, `ALERTING_WEBHOOK_URL` is read as a provider-neutral fallback. Use it to send the same Slack-format alerts to any Slack-compatible incoming webhook, such as Rocket.Chat or Mattermost
+
 ### Step 2: Setup Proxy
 
 ```yaml
