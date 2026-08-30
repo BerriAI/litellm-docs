@@ -37,7 +37,7 @@ audio = litellm.speech(
     input="Hello from Gandr.",  # Text to synthesize
     voice="alloy",               # OpenAI voice alias or a gandr-* voice id
     api_key="gnd_...",           # optional; defaults to GANDR_API_KEY
-    response_format="wav",       # wav or pcm (24 kHz, 16-bit, mono)
+    response_format="wav",       # mp3, wav or pcm (24 kHz, 16-bit, mono)
     speed=1.0,                   # 0.6 to 1.5
 )
 
@@ -99,7 +99,7 @@ curl http://localhost:4000/v1/audio/speech \
 | Param | Type | Description |
 |-------|------|-------------|
 | `voice` | str | OpenAI voice alias (`alloy`, `ash`, `onyx`, `coral`, `sage`, `shimmer`, `echo`, `verse`, `ballad`, `fable`, `nova`) or a `gandr-*` voice id. Default `alloy`. |
-| `response_format` | str | `wav` (default, RIFF header) or `pcm` (headerless). Anything else returns an honest 400 naming the supported formats. |
+| `response_format` | str | `mp3`, `wav` (default, RIFF header) or `pcm` (headerless). Anything else returns an honest 400 naming the supported formats. |
 | `speed` | float | Pitch-preserving rate from 0.6 to 1.5, applied after synthesis. Out-of-range values clamp server-side. |
 
 ## Voice Aliases
