@@ -724,6 +724,7 @@ router_settings:
 | GALADRIEL_API_BASE | Base URL for Galadriel. Default is https://api.galadriel.com/v1
 | GDC_API_BASE | Base URL for GDC
 | GDC_API_KEY | API key for GDC
+| GIGACHAT_ACCESS_TOKEN | Pre-issued access token for GigaChat, used directly instead of exchanging credentials at `GIGACHAT_AUTH_URL`
 | GIGACHAT_API_BASE | Base URL for GigaChat
 | GIGACHAT_API_KEY | Credentials for GigaChat, read after `GIGACHAT_CREDENTIALS` and exchanged for an access token at `GIGACHAT_AUTH_URL`
 | GIGACHAT_AUTH_URL | OAuth token endpoint used to exchange GigaChat credentials for an access token. Defaults to the GigaChat production auth URL
