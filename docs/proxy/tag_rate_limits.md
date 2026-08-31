@@ -7,6 +7,12 @@ Cap tokens, requests, dollars, or concurrent in-flight requests per tag identity
 
 This is a config-only mechanism, not a database-registered one: any tag value a caller sends is usable immediately, with no `/tag/new` call needed first. Two callbacks share the same entry format: `model_based_tag_rate_limits_hook` declares limits per deployment under `model_info.tag_rate_limits` and enforces them on every routing attempt ([**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/hooks/model_based_tag_rate_limits_hook.py)); `global_tag_rate_limits_hook` declares limits once, model-independently, under `litellm_settings.global_tag_rate_limits`, and enforces them before routing even starts (see [Global Tag Rate Limits](#global-tag-rate-limits), [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/hooks/global_tag_rate_limits_hook.py)). Most of this page describes the per-deployment version; the fields and semantics carry over to the global one except where noted.
 
+## Why Tag Rate Limits
+
+Every other native rate limit on the proxy is anchored to a LiteLLM-managed identity: a virtual key, a user, a team. Tag rate limits anchor to whatever string a caller sends, so a tag can represent any business object your application already tracks, an end customer, a workspace, a project, a feature flag, an experiment variant, without provisioning that object as a LiteLLM entity first. A SaaS platform serving many downstream customers through one shared virtual key can cap each customer's usage independently just by tagging requests with the customer's own ID, no per-customer key issuance or database record required.
+
+Because the tag identity is decoupled from the calling key, the same customer or project stays capped consistently even as it moves across keys, teams, or model deployments over time, and a single limit can cut across a whole fallback chain via the global hook rather than resetting at each hop.
+
 **See Also:**
 - [Setting Tag Budgets](tag_budgets.md) for a database-registered, dollars-only tag budget with a scheduled reset, rather than a rolling window.
 - [Request Tags](request_tags.md) for how tags reach the proxy (`metadata.tags`, the `x-litellm-tags` header, or a key's own tags).
