@@ -13,6 +13,8 @@ Every other native rate limit on the proxy is anchored to a LiteLLM-managed iden
 
 Because the tag identity is decoupled from the calling key, the same customer or project stays capped consistently even as it moves across keys, teams, or model deployments over time, and a single limit can cut across a whole fallback chain via the global hook rather than resetting at each hop.
 
+**Caveat:** a purely caller-supplied tag value like `end_user_id` is not authenticated by LiteLLM. The proxy protects a tag value that a key, team, or project's own config already inherited (`metadata.inherited_tags`) from being overridden by a caller, but it has no way to verify that a freely-chosen tag value genuinely corresponds to whoever is making the request. Tag rate limits are only as trustworthy as the application generating the tag: safe when your backend derives the tag server-side from an identity it already trusts (its own session or auth layer), not safe if a client-controlled field flows straight through into the tag value.
+
 **See Also:**
 - [Setting Tag Budgets](tag_budgets.md) for a database-registered, dollars-only tag budget with a scheduled reset, rather than a rolling window.
 - [Request Tags](request_tags.md) for how tags reach the proxy (`metadata.tags`, the `x-litellm-tags` header, or a key's own tags).
