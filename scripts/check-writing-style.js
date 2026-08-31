@@ -1,7 +1,20 @@
 #!/usr/bin/env node
-// Writing style check for docs: em dashes in prose are errors, AI-flavored vocabulary is a
-// warning (error under --strict); typography dashes in tables and list labels stay exempt
-// Usage: node scripts/check-writing-style.js [--strict] [--warnings] [paths...]
+/**
+ * Writing style check for LiteLLM docs.
+ *
+ * Errors (fail the build):
+ *   - em dashes used as prose punctuation
+ *
+ * Warnings (informational, or errors with --strict):
+ *   - inflated vocabulary that reads as AI-generated ("utilize", "seamless", ...)
+ *
+ * Usage:
+ *   node scripts/check-writing-style.js [--strict] [--warnings] [paths...]
+ *
+ * Defaults to scanning `docs/`. Table cells, fenced code blocks, and
+ * `- **Term** — description` list labels are exempt: there the dash is
+ * typography, not a spliced sentence.
+ */
 
 const fs = require("fs");
 const path = require("path");
@@ -33,7 +46,7 @@ function collectFiles(target) {
   return out;
 }
 
-// A dash that only labels a list item or table cell is typography, not prose
+// A dash that only labels a list item or table cell is typography, not prose.
 const LIST_LABEL = new RegExp(
   `^([-*+]|\\d+\\.)\\s+(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\([^)]+\\)|\`[^\`]+\`)\\s*${EM_DASH}`
 );
