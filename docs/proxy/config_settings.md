@@ -1351,6 +1351,7 @@ router_settings:
 | REDIS_CIRCUIT_BREAKER_ENABLED | When false, the Redis circuit breaker is disabled and never opens. Default is true
 | REDIS_CIRCUIT_BREAKER_FAILURE_THRESHOLD | Number of consecutive failures before the Redis circuit breaker opens. Default is 5
 | REDIS_CIRCUIT_BREAKER_RECOVERY_TIMEOUT | Time in seconds before the Redis circuit breaker attempts recovery after opening. Default is 60
+| REDIS_CIRCUIT_BREAKER_TIMEOUT_MIN_DURATION | Minimum duration in seconds a streak of timeout-only failures must persist before the Redis circuit breaker opens; hard connectivity failures still open it at the failure threshold. Default is 5.0
 | REDIS_CLUSTER_NODES | JSON-formatted list of Redis cluster startup nodes for Redis Cluster mode. Example: `[{"host": "node1", "port": 6379}]`
 | REDIS_HOST | Hostname for Redis server
 | REDIS_PASSWORD | Password for Redis service
