@@ -14,6 +14,64 @@ This guide uses Okta, but any OIDC provider that issues JWT access tokens (Azure
 
 The first time a developer uses Claude Code, a small `apiKeyHelper` script opens an Okta sign-in page. After that, everything is silent: the script serves cached tokens and refreshes them in the background, Claude Code sends the token as its API key, and LiteLLM verifies the token signature against Okta's published JWKS keys. Because `user_id_upsert` is enabled, LiteLLM creates an internal user record from the token's `sub` and `email` claims on first request, so per-user spend tracking starts immediately without an admin issuing anything.
 
+The developer keeps running plain `claude`. Nothing about their workflow changes, and no extra CLI is installed; the only moving parts on the machine are the helper script, its token cache, and the Claude Code settings that point at your proxy.
+
+```mermaid
+flowchart TD
+  cc["Claude Code<br/><i>developer machine</i>"]
+  helper["apiKeyHelper script<br/><i>token cache, mode 0600</i>"]
+  okta["Okta authorization server<br/><i>device authorize, token, JWKS</i>"]
+  proxy["LiteLLM proxy<br/><i>JWT validation, routing, budgets</i>"]
+  db[("PostgreSQL<br/><i>users, teams, spend</i>")]
+  prov["Amazon Bedrock<br/>Anthropic, Vertex, Azure"]
+
+  cc -->|"1. needs a credential"| helper
+  helper -->|"2. sign in once, then silent refresh"| okta
+  okta -->|"3. access token (JWT)"| cc
+  cc -->|"4. /v1/messages, Bearer JWT"| proxy
+  okta -.->|"5. public keys, cached by the proxy"| proxy
+  proxy -->|"6. upsert user, log spend"| db
+  proxy -->|"7. provider call"| prov
+```
+
+Only the helper talks to Okta, and only the proxy holds provider credentials, so a developer's machine never sees an AWS or Anthropic key. The full exchange looks like this:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant D as Developer
+  participant CC as Claude Code
+  participant H as apiKeyHelper
+  participant O as Okta
+  participant L as LiteLLM
+  participant B as Bedrock
+
+  Note over CC,O: First run, one interactive sign-in
+  CC->>H: run helper, no cached token
+  H->>O: POST /v1/device/authorize
+  O-->>H: user code and verification URL
+  H-->>D: print sign-in URL on stderr
+  D->>O: sign in with Okta, including MFA
+  loop poll until approved
+    H->>O: POST /v1/token (device_code grant)
+    O-->>H: authorization_pending, then access + refresh token
+  end
+  H-->>CC: access token on stdout
+
+  Note over CC,B: Every request
+  CC->>L: POST /v1/messages with Bearer JWT
+  L->>O: GET /v1/keys, cached after first fetch
+  L->>L: verify token, upsert user from sub and email
+  L->>B: InvokeModel
+  B-->>L: completion
+  L-->>CC: response, spend attributed to the user
+
+  Note over CC,H: Later runs
+  CC->>H: run helper
+  H->>O: refresh_token exchange only when the access token has expired
+  H-->>CC: access token on stdout, no user interaction
+```
+
 ## 1. Create an Okta app
 
 In the Okta Admin Console, create an **OIDC Native Application** for Claude Code:
@@ -182,9 +240,133 @@ Then point Claude Code at LiteLLM in `~/.claude/settings.json`:
 
 `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` controls how long Claude Code caches the helper's output; set it just under your Okta access token lifetime (Okta's default is 1 hour, so 55 minutes here). On first launch the developer completes one Okta sign-in in the browser, and every request after that carries their identity automatically.
 
-## 5. Roll out to your org
+## 5. Roll out through MDM
 
-Nothing above requires per-user admin work, so rollout is just distributing two files through your device management tooling: the helper script and the Claude Code settings. To enforce the settings centrally instead of relying on each developer's `~/.claude/settings.json`, deploy them as [managed settings](https://code.claude.com/docs/en/settings) (`/Library/Application Support/ClaudeCode/managed-settings.json` on macOS, `/etc/claude-code/managed-settings.json` on Linux), which take precedence and cannot be overridden locally.
+Nothing above requires per-user admin work, so rollout is just distributing two files to every machine: the helper script and the Claude Code settings. Ship the settings as [managed settings](https://code.claude.com/docs/en/settings) rather than `~/.claude/settings.json`, because managed settings take precedence over user and project settings and cannot be overridden locally, which is what pins every request through LiteLLM and blocks a developer from pointing Claude Code back at the public API. Deploy both files with whatever you already use for endpoint management (Jamf or Kandji on macOS, Intune or Group Policy on Windows, Ansible, Puppet, Chef, or your golden image on Linux); Anthropic publishes starter templates for the common ones in the [Claude Code settings docs](https://code.claude.com/docs/en/settings).
+
+The two files are the same on every platform, only the paths change. Managed settings live at `/Library/Application Support/ClaudeCode/managed-settings.json` on macOS, `/etc/claude-code/managed-settings.json` on Linux and WSL, and `C:\Program Files\ClaudeCode\managed-settings.json` on Windows. Install the helper somewhere world-readable but only root-writable, such as `/usr/local/bin/okta-token.sh` (mode `0755`, owned by root), and reference it by absolute path:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://litellm.yourcompany.com",
+    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "3300000"
+  },
+  "apiKeyHelper": "/usr/local/bin/okta-token.sh"
+}
+```
+
+The token cache stays per user under `$HOME/.claude/okta_token.json` at mode `0600`, which is what makes this safe on a shared lab server that several developers SSH into: each of them signs in as themselves, each gets their own refresh token, and spend in LiteLLM lands on the right user even though the helper script is shared. Never place the cache in a shared directory such as `/tmp`.
+
+### Windows
+
+On Windows you can deploy the same JSON to `C:\Program Files\ClaudeCode\managed-settings.json`, or push it as policy through Intune or Group Policy by writing the JSON document into the `Settings` value under `HKLM\SOFTWARE\Policies\ClaudeCode`. Policy is the better fit for Intune since it needs no file staging and is easy to report on; the file is easier if you already deploy configuration with your imaging pipeline.
+
+The helper is the one part that needs a Windows-specific version. Claude Code invokes `apiKeyHelper` through the system shell, so point it at a small `.cmd` shim that runs PowerShell, which avoids execution-policy and quoting problems:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://litellm.yourcompany.com",
+    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "3300000"
+  },
+  "apiKeyHelper": "C:\\Program Files\\ClaudeCode\\okta-token.cmd"
+}
+```
+
+`okta-token.cmd` is one line:
+
+```bat
+@powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0okta-token.ps1"
+```
+
+And `okta-token.ps1` is the PowerShell equivalent of the bash helper, cached under the user's profile and locked down with `icacls`:
+
+```powershell
+#Requires -Version 5.1
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$OktaDomain = 'https://<your-okta-domain>'
+$AuthServer = 'default'
+$ClientId   = '<okta-app-client-id>'
+$Scopes     = 'openid profile email offline_access'
+$Cache      = Join-Path $HOME '.claude\okta_token.json'
+
+$tokenUrl = "$OktaDomain/oauth2/$AuthServer/v1/token"
+$now      = [int][double]::Parse((Get-Date -UFormat %s))
+
+function Save-Token($resp) {
+    $dir = Split-Path -Parent $Cache
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $resp | Add-Member -NotePropertyName expires_at `
+        -NotePropertyValue ([int][double]::Parse((Get-Date -UFormat %s)) + $resp.expires_in) -Force
+    $resp | ConvertTo-Json -Compress | Set-Content -Path $Cache -Encoding ascii
+    icacls $Cache /inheritance:r /grant:r "$($env:USERNAME):(R,W)" | Out-Null
+    $resp.access_token
+}
+
+# Okta signals "not signed in yet" with a 400 carrying an `error` field, so read the body either way.
+function Invoke-TokenRequest($body) {
+    try {
+        return Invoke-RestMethod -Method Post -Uri $tokenUrl -Body $body
+    } catch {
+        $detail = $_.ErrorDetails.Message
+        if ($detail) { return $detail | ConvertFrom-Json }
+        throw
+    }
+}
+
+if (Test-Path $Cache) {
+    $cached = Get-Content $Cache -Raw | ConvertFrom-Json
+    if ($now -lt ($cached.expires_at - 60)) {
+        $cached.access_token
+        exit 0
+    }
+    if ($cached.PSObject.Properties['refresh_token'] -and $cached.refresh_token) {
+        $resp = Invoke-TokenRequest @{
+            grant_type    = 'refresh_token'
+            client_id     = $ClientId
+            refresh_token = $cached.refresh_token
+            scope         = $Scopes
+        }
+        if ($resp.PSObject.Properties['access_token']) {
+            Save-Token $resp
+            exit 0
+        }
+    }
+}
+
+$device = Invoke-RestMethod -Method Post -Uri "$OktaDomain/oauth2/$AuthServer/v1/device/authorize" `
+    -Body @{ client_id = $ClientId; scope = $Scopes }
+[Console]::Error.WriteLine("Sign in with Okta: $($device.verification_uri_complete)")
+$interval = if ($device.PSObject.Properties['interval']) { $device.interval } else { 5 }
+
+while ($true) {
+    Start-Sleep -Seconds $interval
+    $resp = Invoke-TokenRequest @{
+        grant_type  = 'urn:ietf:params:oauth:grant-type:device_code'
+        client_id   = $ClientId
+        device_code = $device.device_code
+    }
+    if ($resp.PSObject.Properties['access_token']) {
+        Save-Token $resp
+        exit 0
+    }
+    if ($resp.error -notin @('authorization_pending', 'slow_down')) {
+        [Console]::Error.WriteLine("Okta sign-in failed: $($resp.error_description)")
+        exit 1
+    }
+}
+```
+
+Developers running Claude Code inside WSL are on the Linux path instead: install the bash helper and `/etc/claude-code/managed-settings.json` inside the distribution, since the Windows-side policy does not apply there.
+
+### Operating it
+
+Roll out to a pilot group first and confirm in the Admin UI under **Internal Users** that requests show up attributed to real Okta identities before widening. Because the helper is a plain file on disk, upgrades are a redeploy of that file and rollback is redeploying the previous one; nothing is stored server side per machine. Two failure modes are worth knowing in advance. If a developer's helper starts printing sign-in prompts again, their refresh token was revoked or expired, so check Okta's token lifetime policy and whether they were unassigned from the app. If requests fail with an authentication error rather than a prompt, delete the cache file to force a fresh device flow, and verify the proxy's `JWT_AUDIENCE` matches the audience your authorization server issues.
+
+On the Okta side, treat the access token lifetime as the blast radius of a leaked token and keep it short, an hour or less, with `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` set just under it. Refresh token lifetime and idle window control how often developers see a browser sign-in at all, so set those to match how long you are comfortable with a machine staying authorized. Revocation is immediate on the Okta side: unassign the user from the app or revoke their tokens, and the next refresh fails.
 
 ## Optional: teams, budgets, and per-user keys
 
