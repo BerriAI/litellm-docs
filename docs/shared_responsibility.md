@@ -18,6 +18,7 @@ The short version: we own the behavior of the product as documented on this site
 | Uptime of your instance and the infrastructure under it | You |
 | Custom callbacks, custom guardrails, custom auth, and other code you inject | You |
 | Deployments that diverge from our recommended path (your own Dockerfile, chart, or base image) | You |
+| Bugs introduced by your own patches on a fork, where upstream at the same version is clean | You |
 | Postgres, Redis, Kubernetes, load balancers, networking, and autoscaling | You |
 | Your provider accounts, quotas, and provider-side outages | You |
 
@@ -35,6 +36,8 @@ You are responsible for keeping your instance up, apart from stability defects i
 
 You are also responsible for any code you run inside the gateway. [Custom callbacks](./observability/custom_callback.md), [custom guardrails](./proxy/guardrails/custom_guardrail.md), [custom auth](./proxy/custom_auth.md), [custom SSO](./proxy/custom_sso.md), [hooks](./proxy/call_hooks.md), and [plugins](./proxy/plugins.md) execute in the proxy process, so a blocking call, an unbounded cache, or a leaked client in that code shows up as proxy latency, memory growth, or a hang even though the proxy is behaving correctly. We will help you understand the hook contract and the payloads you receive; the logic inside your handler, and its performance and memory behavior, is yours. The same applies to anything you wrap around the gateway, including sidecars, proxies in front of it, and request-mutating middleware.
 
+Running a fork works the same way, with the upstream release as the dividing line. A bug that also reproduces on unmodified upstream at the same version is ours; a bug your patches introduced is yours, and so is keeping those patches working as you rebase onto newer releases. If you have patched around something because upstream lacked it, send the patch as a pull request rather than carrying it, and the maintenance moves to us with it.
+
 If you deploy outside our recommended path, that path is yours to maintain. Plenty of teams build their own image, write their own chart, change the base image or Python version, pin their own dependency set, or run their own process manager and worker counts. That is supported use of the software, and it also means a broken build, a missing system library, a mismatched dependency, an OOMKill from a container memory limit, or a misconfigured worker count is something you own. Our reference for what a known-good deployment looks like is [Production Deployment](./proxy/deploy.md), plus [Docker Quick Start](./proxy/docker_quick_start.md) and [Server Tuning](./proxy/server_tuning.md).
 
 Your configuration and your provider accounts are yours as well: the model list and credentials, budgets and rate limits, routing and fallback choices, and provider-side quota, throttling, and outages. We will help you read the errors and pick the right settings, and we will fix the gateway if it mishandles a provider response.
@@ -43,7 +46,7 @@ Your configuration and your provider accounts are yours as well: the model list 
 
 Before filing, reproduce the problem on a stock deployment. The test is the official image at a supported version, with your config stripped to the models involved, and every piece of custom code removed:
 
-1. Run the official `ghcr.io/berriai/litellm` image at a supported tag, not a derived image.
+1. Run the official `ghcr.io/berriai/litellm` image at a supported tag, not a derived image or a build of your fork.
 2. Remove `callbacks`, `success_callback`, `failure_callback`, `guardrails`, `custom_auth`, and any plugin or hook entries from the config.
 3. Reproduce with the smallest request that triggers the behavior. For suspected leaks or hangs, hold steady traffic and watch RSS over time rather than judging from a single spike.
 
