@@ -146,7 +146,7 @@ response = httpx.post(
 )
 
 print(response.json())
-# {"input_tokens": 7}
+# {"object": "response.input_tokens", "input_tokens": 13}
 ```
 
 </TabItem>
@@ -154,7 +154,7 @@ print(response.json())
 
 **Response:**
 ```json
-{"input_tokens": 7}
+{"object": "response.input_tokens", "input_tokens": 13}
 ```
 
 ### Anthropic Format: `/v1/messages/count_tokens`
