@@ -227,7 +227,7 @@ The maintenance pass over existing entries touched 383 of them. Cache pricing mo
     - Forward image content lists to DeepSeek vision models so attached images actually reach the model, and register `deepseek-v4-flash-vision-exp`; non-vision models, non-user roles, and RAG text keep the historical collapse-to-string behavior - [PR #38397](https://github.com/BerriAI/litellm/pull/38397)
 - **[Tencent](../../docs/providers/tencent)**
     - Route `thinking` through `extra_body` so reasoning requests stop 500ing before reaching Tencent, coerce `thinking.type: enabled` to `adaptive` for MiniMax models, and map `reasoning_effort: none` to disabled thinking - [PR #38100](https://github.com/BerriAI/litellm/pull/38100)
-- **[RunwayML](../../docs/providers/runwayml)**
+- **[RunwayML](../../docs/providers/runwayml/videos)**
     - Route text-to-video, image-to-video, and video-to-video requests to the right RunwayML endpoint, return Runway errors with their real status codes, accept Runway's fractional progress while polling, and track video spend from deployment pricing plus refreshed resolution-tier rates - [PR #38115](https://github.com/BerriAI/litellm/pull/38115)
 - **General**
     - Stop forwarding `temperature` and `top_p` to gpt-5.5/5.6 reasoning models that reject them; a new `default_reasoning_effort` map key gates the params across chat, Responses, and `/v1/messages`, and `drop_params` is honored instead of leaking the provider 400 - [PR #38593](https://github.com/BerriAI/litellm/pull/38593)
