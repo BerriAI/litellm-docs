@@ -44,17 +44,25 @@ Every gate reports what it did. Escalated decisions carry `context_escalated` or
 
 ## Context-window based routing
 
-The market-standard answer to "the prompt didn't fit" is reactive: send the request, catch the context-length 400, retry on a bigger model. You pay for the failed call, you pay the latency, and in a long session you pay it again on every turn. When we surveyed how routing products handle this, reactive fallback was the norm; we didn't find one that filters candidates by token count before dispatch.
+The market-standard answer to "the prompt didn't fit" is reactive: send the request, catch the context-length 400, retry on a bigger model. You pay for the failed call and the latency, on every turn of a long session. When we surveyed how routing products handle this, reactive fallback was the norm; we didn't find one that filters candidates by token count before dispatch.
 
-The Auto-Router now does it pre-dispatch. After classification, it estimates the full prompt footprint, including system prompts and tool definitions; for coding agents like Claude Code those carry most of the payload, so estimating from the message list alone would undercount exactly the traffic this exists for. If the decided tier provably can't hold the prompt, the router prefers a fitting model group in-tier, then escalates to the lowest tier that provably fits, so you never pay for more model than the prompt requires. Models with unknown context windows are left alone; the gate acts only when it can prove a mismatch. Escalated decisions are never session-pinned, so when the session shrinks back down (after compaction, or a fresh conversation) routing comes back down with it.
+The Auto-Router now does it pre-dispatch:
 
-Context-window escalation ships enabled, with a safety buffer (`context_window_escalation_buffer: 0.95`) so prompts near the limit escalate instead of gambling.
+- **Estimates the full prompt footprint before sending**, including system prompts and tool definitions; for coding agents like Claude Code those carry most of the payload
+- **Escalates to the cheapest tier that provably fits.** A fitting model group in the decided tier wins first, so you never pay for more model than the prompt requires
+- **Unknown context windows are left alone.** The gate acts only when it can prove a mismatch
+- **Escalated decisions are never session-pinned.** When the session shrinks back down, routing comes back down with it
+- **On by default**, with a safety buffer (`context_window_escalation_buffer: 0.95`) so prompts near the limit escalate instead of gambling
 
 ## Modality-based routing
 
-If your cheap tier is text-only and a request carries an image, the old outcome was a provider-side error after the request had already left the gateway. With `modality_routing: true`, the router detects images anywhere in the request: OpenAI `image_url` and `input_image` parts, Anthropic `image` blocks, and images nested inside tool results, which is the shape real agent screenshots actually arrive in. It then walks up from the decided tier to the nearest tier whose models support vision. If no configured tier can see, you get a clear 400 from the gateway instead of a confusing provider error.
+If your cheap tier is text-only and a request carries an image, the old outcome was a provider-side error after the request had already left the gateway. With `modality_routing: true`:
 
-Capability comes from the model registry, and only models explicitly marked as lacking vision are excluded; unknown models stay eligible. The gate is opt-in and off by default.
+- **Images are detected anywhere in the request**: OpenAI `image_url` and `input_image` parts, Anthropic `image` blocks, and images nested inside tool results, the shape real agent screenshots arrive in
+- **The router walks up to the nearest vision-capable tier** from the one the classifier decided
+- **No tier can see? A clear 400 from the gateway**, instead of a confusing provider error
+- **Conservative by design.** Only models explicitly marked as lacking vision are excluded; unknown models stay eligible
+- **Opt-in**, off by default
 
 ## Classify when it matters
 
