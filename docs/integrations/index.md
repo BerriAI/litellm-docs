@@ -76,6 +76,12 @@ items={[
     description: "Product analytics.",
     to: "/docs/observability/posthog_integration",
   },
+  {
+    icon: "🔎",
+    title: "The Context Company",
+    description: "AI agent observability and customer analytics.",
+    to: "/docs/observability/the_context_company",
+  },
 ]}
 />
 
