@@ -198,6 +198,41 @@ Expected Response
 </Tabs>
 
 
+## Restricting Which IDs Become Customers
+
+Every distinct customer ID LiteLLM sees is upserted into the customer table, which becomes a problem when a client sends a per-session identifier. Claude Code, for example, puts a JSON blob in `metadata.user_id`:
+
+```json title="What Claude Code sends"
+{"device_id": "4ec41ed1...", "account_uuid": "...", "session_id": "..."}
+```
+
+Each session then lands in Usage -> Customer Usage as its own customer, and if you have a [default customer budget](#default-budget-for-all-customers) configured, each session gets its own copy of that budget, so a monthly cap meant for real customers turns into a per-session cap on that traffic.
+
+Set `validate_end_user_id_in_db` to keep those IDs out. Available in v1.87.0 and above.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  validate_end_user_id_in_db: true
+```
+
+An ID is then accepted only when it matches an existing customer's `user_id`, an internal user's `user_id`, or an internal user's email. IDs shaped like a JSON object or array are dropped before any database lookup, since those are never real customer identifiers. Dropping is not an error: the request still succeeds, it just carries no customer, and its spend is attributed to the virtual key, team and internal user as usual. Lookups are cached for 5 minutes when the ID resolved and 1 minute when it did not, so a newly created customer can take up to a minute to be recognized.
+
+### Keeping a default budget for unregistered customers
+
+On its own, `validate_end_user_id_in_db` drops every ID with no matching row, which works against `max_end_user_budget_id` if you rely on that to cap customers you never explicitly created. Set both and the two cooperate: JSON-shaped IDs are still dropped, while a plain-string ID with no row is preserved so the default budget still applies to it.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  validate_end_user_id_in_db: true
+  max_end_user_budget_id: "your_default_budget_id"
+```
+
+### Bucketing internal traffic under one customer
+
+If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md).
+
+Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
+
 ## Setting Customer Object Permissions
 
 Control which resources (MCP servers, vector stores, agents) a customer can access.
@@ -406,6 +441,8 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 The customer will be subject to the default budget limits (RPM, TPM, and $ budget). Customers with explicit budgets are unaffected, and the default also applies to customers that don't exist in the database yet. LiteLLM caches the budget object for 60 seconds, so edits to it take up to a minute to apply.
 
 The float setting `max_end_user_budget` is no longer enforced; if you have it in your config, replace it with `max_end_user_budget_id` as shown above.
+
+The default applies to every ID that reaches customer tracking, including per-session IDs sent by agent clients. See [Restricting Which IDs Become Customers](#restricting-which-ids-become-customers) if you want those kept out of the customer table while real customers keep the default budget.
 
 ### Quick Start 
 
