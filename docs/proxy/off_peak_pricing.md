@@ -22,6 +22,8 @@ model_list:
 
 `hours_utc` is a `"HH:MM-HH:MM"` window in UTC, or a list of them for providers with several windows per day. These windows apply every day of the week. A window may wrap past midnight, as above; the start is inclusive and the end exclusive; a window whose start equals its end covers the whole day. Numbers and windows here are illustrative; take the real schedule and rates from your provider's price sheet.
 
+The schedule is scoped to the deployment it is set on. Other deployments of the same backend model keep their own pricing, so two deployments can carry different schedules and a deployment without the block always bills at its standard rates.
+
 ## Weekday-qualified windows
 
 When the provider's schedule differs by day of week, use `windows`, a list of rules that each pair `hours_utc` with the weekdays it applies on. Weekdays are ISO numbers (1 = Monday through 7 = Sunday) or English names or abbreviations. A rule without `weekdays` applies every day, and any flat `hours_utc` at the top level stays active alongside the rules; the request is off-peak if any of them matches.
