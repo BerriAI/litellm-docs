@@ -683,7 +683,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 
 | Preset | Callback | Fields on the key or team | What varies per tenant |
 |---|---|---|---|
-| Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key` | The Langfuse project traces land in |
+| Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key`, `langfuse_host` | The Langfuse project traces land in, and the host they are sent to |
 | Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
@@ -733,7 +733,9 @@ Existing keys take the same field on `/key/update`. You can also fill both of th
 
 The key wins outright over the team. If a key has any `metadata.logging` entry, the team's callbacks are not consulted at all rather than merged with the key's, so a key that overrides one backend has to restate the others it still wants.
 
-Only the OTLP headers vary per tenant, plus New Relic's region endpoint, which is picked from a fixed us/eu table. The exporter's host stays whatever the preset resolved at boot, so `langfuse_host` on a key or team does not move that tenant's traces to a different Langfuse host under v2.
+A tenant's `langfuse_host` moves its traces to that host, the same way it does under v1. Give it alongside the key pair it belongs to: a host on its own is ignored and the tenant stays on the proxy-wide endpoint, because otherwise the request would move the destination while still carrying the proxy's own credentials.
+
+Every other preset varies only its OTLP headers per tenant, plus New Relic's region endpoint, which is picked from a fixed us/eu table. Their exporter host stays whatever the preset resolved at boot.
 
 Credentials scope to the exporter their own preset contributed. A request carrying one tenant's Arize key never rewrites the headers of a co-configured Langfuse or self-hosted collector exporter, so a tenant's key cannot leak to a backend it was not meant for. Those other exporters do still receive the request's spans, with their own proxy-wide credentials.
 

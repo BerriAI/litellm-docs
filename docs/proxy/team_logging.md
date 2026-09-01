@@ -78,6 +78,13 @@ Navigate to your configured logging provider and check if you received the logs 
 <br />
 
 ### API Usage
+
+#### Who can call these
+
+A proxy admin, an org admin of the team's organization, and an admin of the team itself can list, set and remove that team's callbacks. Everyone else gets a 403, and an admin of one team cannot read another team's.
+
+`POST /team/{team_id}/disable_logging` is the exception: it stays proxy-admin only. A team admin who wants to turn one integration off uses `DELETE /team/{team_id}/callback/{callback_name}`.
+
 ### Set Callbacks Per Team
 
 #### 1. Set callback for team 
