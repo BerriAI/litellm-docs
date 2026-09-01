@@ -75,8 +75,9 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
+  onBrokenAnchors: 'throw',
+  onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -94,6 +95,10 @@ const config = {
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
+          },
+          {
+            from: '/docs/proxy/high_availability_control_plane',
+            to: '/docs/proxy/global_control_plane',
           },
           {
             from: '/docs/proxy/deploy_cloud',

@@ -1,7 +1,7 @@
 # Zscaler AI Guard
 
 ## Overview
-Zscaler AI Guard enforces security policies for all traffic to AI sites, models, and applications. As part of the Zero Trust Exchange, it provides a comprehensive platform for visibility, control, and deep packet inspection of AI prompts.
+Zscaler AI Guard enforces security policies for all traffic to AI sites, models, and applications. As part of the Zero Trust Exchange, it provides a single platform for visibility, control, and deep packet inspection of AI prompts.
 
 ## 1. Set Up Zscaler AI Guard Policy
 First, set up your guardrail policy in the Zscaler AI Guard dashboard to obtain your `ZSCALER_AI_GUARD_API_KEY` and `ZSCALER_AI_GUARD_POLICY_ID`.
@@ -158,7 +158,7 @@ policy_id = (
                 )
             )
 ```
-You can leverage this feature to apply multiple policies configured on the Zscaler AI Guard (ZGuard) to traffic from different applications. (Note: It is recommended to map policies using either Team or Key metadata, but not a mix of both.)
+You can use this feature to apply multiple policies configured on the Zscaler AI Guard (ZGuard) to traffic from different applications. (Note: It is recommended to map policies using either Team or Key metadata, but not a mix of both.)
 
 Example set in Team/Key Metadata, you can set From UI:
 ```

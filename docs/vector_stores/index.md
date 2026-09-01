@@ -42,7 +42,8 @@ Support for the unified endpoints varies by provider. `Search` is `POST /v1/vect
 | `gemini` (File Search) | Yes | Yes | [Setup](../providers/gemini_file_search.md) |
 | `milvus` | Yes | Yes | [Setup](../providers/milvus_vector_stores.md) |
 | `pg_vector` | Yes | Yes | Requires the [litellm-pgvector](../completion/knowledgebase.md) connector |
-| `s3_vectors` | Yes | No | |
+| `s3_vectors` | Yes | No | Create via [/rag/ingest](../rag_ingest.md), [Setup](../providers/s3_vectors.md) |
+| `valkey` | Yes | No | Searches an existing valkey-search index, [setup](../providers/valkey_vector_stores.md) |
 | `ragflow` | No | Yes | Dataset management only, [setup](../providers/ragflow_vector_store.md) |
 
 Retrieve, list, update, and delete (`GET`/`POST`/`DELETE /v1/vector_stores/{id}`) forward the OpenAI request shape as-is, so use them with providers that expose an OpenAI-shaped vector stores API (OpenAI, Azure OpenAI). See [Create](./create.md#vector-store-management-and-routing-on-the-proxy) for routing details.

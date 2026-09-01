@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Prompt Security
 
-Use [Prompt Security](https://prompt.security/) to protect your LLM applications from prompt injection attacks, jailbreaks, harmful content, PII leakage, and malicious file uploads through comprehensive input and output validation.
+Use [Prompt Security](https://prompt.security/) to protect your LLM applications from prompt injection attacks, jailbreaks, harmful content, PII leakage, and malicious file uploads through input and output validation.
 
 ## Quick Start
 
@@ -35,7 +35,7 @@ guardrails:
 
 - `pre_call` - Run **before** LLM call to validate **user input**. Blocks requests with detected policy violations (jailbreaks, harmful prompts, PII, malicious files, etc.)
 - `post_call` - Run **after** LLM call to validate **model output**. Blocks responses containing harmful content, policy violations, or sensitive information
-- `during_call` - Run **both** pre and post call validation for comprehensive protection
+- `during_call` - Run **both** pre and post call validation
 
 ### 2. Set Environment Variables
 
@@ -419,7 +419,7 @@ guardrails:
 
 ## Security Features
 
-Prompt Security provides comprehensive protection against:
+Prompt Security protects against:
 
 ### Input Threats
 - **Prompt Injection**: Detects attempts to override system instructions
@@ -494,7 +494,7 @@ Solution: Ensure files are properly base64-encoded in data URLs
 
 ## Best Practices
 
-1. **Use `during_call` mode** for comprehensive protection of both inputs and outputs
+1. **Use `during_call` mode** to cover both inputs and outputs
 2. **Enable for production workloads** using `default_on: true` to protect all requests by default
 3. **Configure user tracking** to identify patterns across user sessions
 4. **Monitor violations** in Prompt Security dashboard to tune policies

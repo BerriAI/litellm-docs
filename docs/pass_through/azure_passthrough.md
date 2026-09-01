@@ -6,13 +6,13 @@ Pass-through endpoints for `/azure`
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ❌ | Not supported |
+| Cost Tracking | ✅ | v1 API paths only: `/v1/chat/completions`, `/v1/embeddings`, `/v1/images/generations`, `/v1/images/edits`, `/v1/responses`. Deployments-style paths (`/openai/deployments/...`) are logged without cost |
 | Logging | ✅ | Works across all integrations |
 | Streaming | ✅ | Fully supported |
 
 ### When to use this?
 
-- For most use cases, you should use the [native LiteLLM Azure OpenAI Integration](../providers/azure/azure) (`/chat/completions`, `/embeddings`, `/completions`, `/images`, etc.)
+- For most use cases, you should use the [native LiteLLM Azure OpenAI Integration](/docs/providers/azure) (`/chat/completions`, `/embeddings`, `/completions`, `/images`, etc.)
 - Use this passthrough to call newer or less common Azure OpenAI endpoints that LiteLLM doesn't fully support yet, such as `/assistants`, `/threads`, `/vector_stores`
 
 Simply replace your Azure endpoint (e.g. `https://<your-resource-name>.openai.azure.com`) with `LITELLM_PROXY_BASE_URL/azure`

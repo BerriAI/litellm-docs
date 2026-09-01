@@ -116,7 +116,7 @@ Use [Email Notifications](./email.md) to email users onboarding links
 
 :::info 
 
-LiteLLM Enterprise: Enable [SSO login](./ui.md#setup-ssoauth-for-ui)
+LiteLLM Enterprise: Enable [SSO login](./admin_ui_sso.md)
 
 :::
 
@@ -358,7 +358,7 @@ When you connect litellm to your SSO provider, litellm can auto-create teams. Us
 
 ```yaml showLineNumbers title="Default Params for new teams"
 litellm_settings:
-  default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is not explicitly set
+  default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is omitted or null; an explicit budget_duration: null is honored
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
     models: ["gpt-3.5-turbo"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
@@ -368,6 +368,12 @@ litellm_settings:
       - "/team/daily/activity"     # Allow members to view team usage
       - "/key/generate"            # Allow members to generate API keys
 ```
+
+:::info
+
+These defaults fill any field that is missing or `null` in the `/team/new` request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` (the "Never resets" option in the UI create form) creates a team whose budget never resets, skipping the configured default.
+
+:::
 
 
 ### Restrict Users from creating personal keys 
@@ -395,7 +401,7 @@ litellm_settings:
         max_budget_in_team: 100 # Optional[float], optional): $100 budget for the team. Defaults to None.
         user_role: "user" # Optional[str], optional): "user" or "admin". Defaults to "user"
   
-  default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is not explicitly set
+  default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is omitted or null; an explicit budget_duration: null is honored
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
     models: ["gpt-3.5-turbo"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)

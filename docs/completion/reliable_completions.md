@@ -73,7 +73,7 @@ response = completion(model="azure/gpt-4", messages=messages, api_key=api_key,
     fallbacks=[{"api_key": "good-key-1"}, {"api_key": "good-key-2", "api_base": "good-api-base-2"}])
 ```
 
-[Check out this section for implementation details](#fallbacks-1)
+[Check out this section for implementation details](/docs/completion/reliable_completions#fallbacks)
 
 ## Implementation Details (SDK)
 

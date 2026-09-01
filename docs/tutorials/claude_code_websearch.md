@@ -60,9 +60,26 @@ search_tools:
       api_key: os.environ/PERPLEXITY_API_KEY
 ```
 
+To use Parallel Search instead, set `PARALLEL_API_KEY` and replace the `litellm_settings` and `search_tools` sections:
+
+```yaml showLineNumbers title="Parallel Search configuration"
+litellm_settings:
+  callbacks: ["websearch_interception"]
+  websearch_interception_params:
+    enabled_providers: [bedrock]
+    search_tool_name: parallel-search
+
+search_tools:
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
+```
+
 ### 2. Start Proxy
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+# For Parallel Search, export PARALLEL_API_KEY=your-key instead.
 export PERPLEXITY_API_KEY=your-key
 litellm --config config.yaml
 ```
@@ -82,7 +99,7 @@ Now use web search in Claude Code - it works with any provider!
 When Claude Code sends a web search request, LiteLLM:
 1. Intercepts the native `web_search` tool
 2. Converts it to LiteLLM's standard format
-3. Executes the search via Perplexity/Tavily
+3. Executes the search using the configured provider, such as Parallel, Perplexity, or Tavily
 4. Returns the final answer to Claude Code
 
 ```mermaid
@@ -90,7 +107,7 @@ sequenceDiagram
     participant CC as Claude Code
     participant LP as LiteLLM Proxy
     participant B as Bedrock/Azure/etc
-    participant P as Perplexity/Tavily
+    participant P as Configured search provider
 
     CC->>LP: Request with web_search tool
     Note over LP: Convert native tool<br/>to LiteLLM format

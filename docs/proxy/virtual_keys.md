@@ -603,11 +603,12 @@ litellm_settings:
 
 - Send a `/key/generate` request with `max_budget=200`
 - Key will be created with `max_budget=100` since 100 is the upper bound
+- Omit `budget_duration`, or send it as `null`: the key is created with `budget_duration="10d"`. Upperbounds also act as defaults and cannot be opted out of
 
 ### Default /key/generate params
 Use this, if you need to control the default `max_budget` or any `key/generate` param per key. 
 
-When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`
+When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies).
 
 Set `litellm_settings:default_key_generate_params`:
 ```yaml
@@ -655,7 +656,7 @@ curl 'http://localhost:4000/key/sk-1234/regenerate' \
 
 ```
 
-**Grace period (optional)**: Set `grace_period` (e.g. `"24h"`, `"2d"`, `"1w"`) to keep the old key valid for a transitional period. Both old and new keys work until the grace period elapses, enabling seamless cutover without production downtime. Omitted or empty = immediate revoke. Can also be set via `LITELLM_KEY_ROTATION_GRACE_PERIOD` env var for scheduled rotations.
+**Grace period (optional)**: Set `grace_period` (e.g. `"24h"`, `"2d"`, `"1w"`) to keep the old key valid for a transitional period. Both old and new keys work until the grace period elapses, so you can cut over without production downtime. Omitted or empty = immediate revoke. Can also be set via `LITELLM_KEY_ROTATION_GRACE_PERIOD` env var for scheduled rotations.
 
 **Read More**
 

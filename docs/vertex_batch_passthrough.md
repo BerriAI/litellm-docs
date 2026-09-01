@@ -125,14 +125,14 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
 
 ## Cost Tracking Details
 
-LiteLLM provides comprehensive cost tracking for Vertex AI batch operations:
+LiteLLM tracks cost for Vertex AI batch operations:
 
 - **Token Usage**: Tracks input and output tokens for each batch request
 - **Cost Calculation**: Automatically calculates costs based on current Vertex AI pricing
 - **Usage Aggregation**: Aggregates costs across all requests in a batch job
 - **Real-time Monitoring**: Monitor costs as batch jobs progress
 
-The cost tracking works seamlessly with the `generateContent` API and provides detailed insights into your batch processing expenses.
+Cost tracking works with the `generateContent` API and reports your batch processing expenses in detail.
 
 ## Error Handling
 

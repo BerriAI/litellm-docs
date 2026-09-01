@@ -23,7 +23,13 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 | 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
 | 8 | `safety_identifier` field | Request body | Responses API |
 
-**Option 1: Standard headers** (recommended — no request body modification needed)
+:::info JWT auth takes precedence
+
+If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
+
+:::
+
+**Option 1: Standard headers** (recommended, no request body modification needed)
 
 ```bash showLineNumbers title="Make request with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \

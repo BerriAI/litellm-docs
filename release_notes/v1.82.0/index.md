@@ -41,11 +41,11 @@ pip install litellm==1.82.0
 
 ## Key Highlights
 
-- **Realtime API guardrails** — [Full guardrails support for `/v1/realtime` WebSocket sessions with pre/post-call enforcement, voice transcription hooks, session termination policies, and Vertex AI Gemini Live support](../../docs/proxy/guardrails) - [PR #22152](https://github.com/BerriAI/litellm/pull/22152), [PR #22153](https://github.com/BerriAI/litellm/pull/22153), [PR #22161](https://github.com/BerriAI/litellm/pull/22161), [PR #22165](https://github.com/BerriAI/litellm/pull/22165)
-- **Projects Management** — [New Projects UI with full CRUD, project-scoped virtual keys, and admin opt-in toggle — organize teams and keys by project](../../docs/proxy/model_management#database-vs-configyaml-models) - [PR #22315](https://github.com/BerriAI/litellm/pull/22315), [PR #22360](https://github.com/BerriAI/litellm/pull/22360), [PR #22373](https://github.com/BerriAI/litellm/pull/22373), [PR #22412](https://github.com/BerriAI/litellm/pull/22412)
-- **Guardrail ecosystem expansion** — [Noma v2, Lakera v2 post-call, Singapore regulatory policies (PDPA + MAS), employment discrimination blockers, code execution blocker, guardrail policy versioning, and production monitoring](../../docs/proxy/guardrails) - [PR #21400](https://github.com/BerriAI/litellm/pull/21400), [PR #21783](https://github.com/BerriAI/litellm/pull/21783), [PR #21948](https://github.com/BerriAI/litellm/pull/21948)
-- **OpenAI Codex 5.3 — day 0** — [Full support for `gpt-5.3-codex` on OpenAI and Azure, plus `gpt-audio-1.5` and `gpt-realtime-1.5` model coverage](../../docs/providers/openai) - [PR #22035](https://github.com/BerriAI/litellm/pull/22035)
-- **10+ performance optimizations** — Streaming hot-path fixes, Redis pipeline batching, database task batching, ModelResponse init skip, and router cache improvements — lower latency and CPU on every request
+- **Realtime API guardrails** — [Full guardrails support for `/v1/realtime` WebSocket sessions with pre/post-call enforcement, voice transcription hooks, session termination policies, and Vertex AI Gemini Live support](/docs/proxy/guardrails/quick_start) - [PR #22152](https://github.com/BerriAI/litellm/pull/22152), [PR #22153](https://github.com/BerriAI/litellm/pull/22153), [PR #22161](https://github.com/BerriAI/litellm/pull/22161), [PR #22165](https://github.com/BerriAI/litellm/pull/22165)
+- **Projects Management**: [New Projects UI with full CRUD, project-scoped virtual keys, and an admin opt-in toggle, so you can organize teams and keys by project](../../docs/proxy/model_management#database-vs-configyaml-models) - [PR #22315](https://github.com/BerriAI/litellm/pull/22315), [PR #22360](https://github.com/BerriAI/litellm/pull/22360), [PR #22373](https://github.com/BerriAI/litellm/pull/22373), [PR #22412](https://github.com/BerriAI/litellm/pull/22412)
+- **Guardrail ecosystem expansion** — [Noma v2, Lakera v2 post-call, Singapore regulatory policies (PDPA + MAS), employment discrimination blockers, code execution blocker, guardrail policy versioning, and production monitoring](/docs/proxy/guardrails/quick_start) - [PR #21400](https://github.com/BerriAI/litellm/pull/21400), [PR #21783](https://github.com/BerriAI/litellm/pull/21783), [PR #21948](https://github.com/BerriAI/litellm/pull/21948)
+- **OpenAI Codex 5.3, day 0**: [Full support for `gpt-5.3-codex` on OpenAI and Azure, plus `gpt-audio-1.5` and `gpt-realtime-1.5` model coverage](../../docs/providers/openai) - [PR #22035](https://github.com/BerriAI/litellm/pull/22035)
+- **10+ performance optimizations**: Streaming hot-path fixes, Redis pipeline batching, database task batching, ModelResponse init skip, and router cache improvements, for lower latency and CPU on every request
 - **`/v1/messages` → `/responses` routing** — `/v1/messages` requests are now routed to the [Responses API](../../docs/response_api) by default for OpenAI/Azure models
 
 :::danger v1/messages routing change
@@ -171,13 +171,13 @@ This version starts routing `/v1/messages` requests to the `/responses` API by d
     - Fix guardrails not firing for Gemini/Vertex AI and `provider_config` realtime sessions - [PR #22168](https://github.com/BerriAI/litellm/pull/22168)
     - Add logging, spend tracking support + tool tracing - [PR #22105](https://github.com/BerriAI/litellm/pull/22105)
 
-- **[Video Generation](../../docs/video_generation)**
+- **[Video Generation](/docs/videos)**
     - Add `variant` parameter to video content download - [PR #21955](https://github.com/BerriAI/litellm/pull/21955)
     - Pass `api_key` from `litellm_params` to video remix handlers - [PR #21965](https://github.com/BerriAI/litellm/pull/21965)
     - Apply custom video pricing from deployment `model_info` - [PR #21923](https://github.com/BerriAI/litellm/pull/21923)
     - Fix passing of image and parameters in videos API - [PR #22170](https://github.com/BerriAI/litellm/pull/22170)
 
-- **[OCR](../../docs/providers/openai#ocr--document-understanding)**
+- **[OCR](/docs/completion/document_understanding)**
     - Enable local file support for OCR - [PR #22133](https://github.com/BerriAI/litellm/pull/22133)
 
 - **[Websearch / Tool Calling](../../docs/completion/input)**
@@ -275,14 +275,14 @@ This version starts routing `/v1/messages` requests to the `/responses` API by d
     - Correlate LiteLLM call IDs with DataDog APM spans - [PR #22219](https://github.com/BerriAI/litellm/pull/22219)
     - Fix TTS metric emission issues - [PR #20632](https://github.com/BerriAI/litellm/pull/20632)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add opt-in `stream` label on `litellm_proxy_total_requests_metric` - [PR #22023](https://github.com/BerriAI/litellm/pull/22023)
     - Fix team `+Inf` budgets in Prometheus metrics - [PR #22243](https://github.com/BerriAI/litellm/pull/22243)
 
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Fix Langfuse OTEL trace issues - [PR #21309](https://github.com/BerriAI/litellm/pull/21309)
 
-- **[Arize Phoenix](../../docs/observability/arize_phoenix)**
+- **[Arize Phoenix](/docs/observability/phoenix_integration)**
     - Fix nested traces coexistence with OTEL callback - [PR #22169](https://github.com/BerriAI/litellm/pull/22169)
 
 - **[Slack](../../docs/proxy/alerting)**
@@ -294,13 +294,13 @@ This version starts routing `/v1/messages` requests to the `/responses` API by d
 
 ### Guardrails
 
-- **[Noma](../../docs/proxy/guardrails)**
+- **[Noma](/docs/proxy/guardrails/quick_start)**
     - Noma guardrails v2 based on custom guardrails framework - [PR #21400](https://github.com/BerriAI/litellm/pull/21400)
 
-- **[LakeraAI](../../docs/proxy/guardrails)**
+- **[LakeraAI](/docs/proxy/guardrails/quick_start)**
     - Add Lakera v2 post-call hook with fixed PII masking - [PR #21783](https://github.com/BerriAI/litellm/pull/21783)
 
-- **[Presidio](../../docs/proxy/guardrails)**
+- **[Presidio](/docs/proxy/guardrails/quick_start)**
     - Fix Presidio streaming and false positives - [PR #21949](https://github.com/BerriAI/litellm/pull/21949)
     - Fix Presidio streaming v3 reliability improvements - [PR #22283](https://github.com/BerriAI/litellm/pull/22283)
     - Prevent Presidio crash on non-JSON responses - [PR #22084](https://github.com/BerriAI/litellm/pull/22084)
@@ -318,7 +318,7 @@ This version starts routing `/v1/messages` requests to the `/responses` API by d
     - Guardrail policy versioning - [PR #21862](https://github.com/BerriAI/litellm/pull/21862)
 
 - **Guardrail Monitoring**
-    - Guardrail Monitor — measure guardrail reliability in production - [PR #21944](https://github.com/BerriAI/litellm/pull/21944)
+    - Guardrail Monitor: measure guardrail reliability in production - [PR #21944](https://github.com/BerriAI/litellm/pull/21944)
 
 - **Security**
     - Fix unauthenticated RCE and sandbox escape in custom code guardrail - [PR #22095](https://github.com/BerriAI/litellm/pull/22095)
@@ -365,7 +365,7 @@ No major secret manager changes in this release.
 
 **Streaming & hot-path**
 
-- Streaming latency improvements — 4 targeted hot-path fixes - [PR #22346](https://github.com/BerriAI/litellm/pull/22346)
+- Streaming latency improvements: 4 targeted hot-path fixes - [PR #22346](https://github.com/BerriAI/litellm/pull/22346)
 - Skip throwaway `Usage()` construction in `ModelResponse.__init__` - [PR #21611](https://github.com/BerriAI/litellm/pull/21611)
 - Optimize `is_model_o_series_model` with `startswith` - [PR #21690](https://github.com/BerriAI/litellm/pull/21690)
 - Use cached `_safe_get_request_headers` instead of per-request construction - [PR #21430](https://github.com/BerriAI/litellm/pull/21430)

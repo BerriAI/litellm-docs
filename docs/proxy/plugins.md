@@ -40,7 +40,7 @@ You can also add plugins through the dashboard at **Admin Settings > Plugins**. 
 
 ### 2. Implement the two plugin endpoints
 
-The plugin service must expose two public endpoints. `GET /api/plugin-manifest` returns plugin metadata that the LiteLLM UI uses to render the sidebar, and `POST /api/plugin-auth` decrypts the identity claim that LiteLLM hands the iframe for seamless sign-in.
+The plugin service must expose two public endpoints. `GET /api/plugin-manifest` returns plugin metadata that the LiteLLM UI uses to render the sidebar, and `POST /api/plugin-auth` decrypts the identity claim that LiteLLM hands the iframe so the user does not sign in twice.
 
 A minimal manifest:
 

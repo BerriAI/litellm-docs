@@ -120,6 +120,18 @@ You should see following logs in Azure Workspace.
 | `AZURE_SENTINEL_TENANT_ID` | Azure Tenant ID for OAuth2 authentication | None (falls back to `AZURE_TENANT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_ID` | Application (client) ID for OAuth2 authentication | None (falls back to `AZURE_CLIENT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_SECRET` | Client secret for OAuth2 authentication | None (falls back to `AZURE_CLIENT_SECRET`) | ✅ Yes |
+| `AZURE_SENTINEL_AUTHORITY_HOST` | Microsoft Entra authority host that issues the OAuth2 token | None (falls back to `AZURE_AUTHORITY_HOST`, then `https://login.microsoftonline.com`) | ❌ No |
+
+## Sovereign clouds
+
+Azure Government uses its own Entra authority and its own Azure Monitor audience, so pointing `AZURE_SENTINEL_ENDPOINT` at a sovereign ingestion endpoint is not enough on its own. Set the authority host and LiteLLM derives the matching audience:
+
+| Cloud | Authority host | Derived audience |
+|-------|------------------------|------------------|
+| Azure Public Cloud (default) | `https://login.microsoftonline.com` | `https://monitor.azure.com/.default` |
+| Azure Government | `https://login.microsoftonline.us` | `https://monitor.azure.us/.default` |
+
+`AZURE_AUTHORITY_HOST` is shared with the `azure_storage` callback and Azure OpenAI OIDC, so setting it moves those to the same cloud. Use `AZURE_SENTINEL_AUTHORITY_HOST` when your Sentinel workspace lives in a different cloud than the rest of your Azure resources; it takes precedence for Sentinel only. Both are read when the callback is first used, so restart the proxy to apply a change
 
 ## How It Works
 

@@ -258,8 +258,8 @@ and select any LiteLLM-managed model (`gpt-4o`, `gemini-3.0-flash-exp`, `anthrop
 :::info Requirements
 
 - Claude Code **v2.1.129** or later.
-- `ANTHROPIC_BASE_URL` must point at a gateway that serves the Anthropic Messages API format — LiteLLM does this on `/v1/messages`.
-- Discovery is opt-in. Without `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Claude Code will not query your proxy's `/v1/models`.
+- `ANTHROPIC_BASE_URL` must point at a gateway that serves the Anthropic Messages API format. LiteLLM does this on `/v1/messages`.
+- Discovery is opt-in. Without `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Claude Code will not query your proxy's `/v1/models` and the `/model` picker only shows the built-in Anthropic models. Verified against Claude Code v2.1.247: the picker only labels models **From gateway** once the variable is set. Like `ENABLE_TOOL_SEARCH`, you can persist it in the `env` block of `.claude/settings.json`.
 
 :::
 

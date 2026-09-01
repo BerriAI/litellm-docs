@@ -18,7 +18,7 @@ Use JWT's to auth admins / users / projects into the proxy.
 
 :::tip JWT → Virtual Key Mapping
 
-Want per-user model restrictions, spend limits, and rate limits without distributing API keys? See **[JWT → Virtual Key Mapping](./jwt_key_mapping.md)** — enterprise-grade granular access control for JWT-authenticated users (e.g. Claude Code + SSO).
+Want per-user model restrictions, spend limits, and rate limits without distributing API keys? See **[JWT → Virtual Key Mapping](./jwt_key_mapping.md)** for granular access control for JWT-authenticated users (e.g. Claude Code + SSO).
 
 :::
 
@@ -515,7 +515,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### Fall back to DB team when JWT claims don't resolve
 
-By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error — the claim is treated as authoritative.
+By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error: the claim is treated as authoritative.
 
 For deployments where the IdP team claim is **advisory** (e.g. machine tokens whose `groups` claim lives in a separate namespace from LiteLLM `team_id`s), opt in to a fallback: if the configured claim is present but unresolved, LiteLLM defers to the user's single LiteLLM team (when the user belongs to exactly one team in the DB).
 
@@ -638,6 +638,8 @@ general_settings:
 To enable team JWT tokens to access Anthropic-style endpoints such as `/v1/messages`, update `team_allowed_routes` in your `litellm_jwtauth` configuration. `team_allowed_routes` supports the following values:
 
 - Named route groups from `LiteLLMRoutes` (e.g., `openai_routes`, `anthropic_routes`, `info_routes`, `mapped_pass_through_routes`).
+- Exact routes, e.g. `/v1/messages`.
+- Route prefixes ending in `*`, e.g. `/internal-models/*`, which match every route under that prefix.
 
 Below is a quick reference for the route groups you can use and example representative routes from each group. If you need the exhaustive list, see the `LiteLLMRoutes` enum in `litellm/proxy/_types.py` for the authoritative list.
 
@@ -683,6 +685,18 @@ general_settings:
     team_ids_jwt_field: "team_ids"
     team_allowed_routes: ["/v1/messages", "info_routes"]
 ```
+
+If you register pass-through endpoints that all share a prefix, grant the prefix once with a trailing `*` so routes added later are covered without another config change. `admin_allowed_routes` accepts the same patterns.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes", "info_routes", "/internal-models/*"]
+```
+
+Only a trailing `*` is treated as a wildcard, and it matches routes below the prefix, so `/internal-models/*` covers `/internal-models/anthropic/v1/messages` but not the bare `/internal-models` route.
 
 
 ### Caching Public Keys 
@@ -847,7 +861,7 @@ general_settings:
 - A rule matches when **all** configured selectors match the corresponding token claims (AND semantics).
 - Supported selectors: `iss` (required), `client_id` (optional), `scope` (optional), `aud` (optional).
 - Selector values can be a single string or a list of strings (the claim must match at least one entry, using the rules below).
-- **Wildcards:** selectors may use shell-style `*` and `?`. Matching is **case-sensitive**—use the same casing your IdP emits in JWT claims.
+- **Wildcards:** selectors may use shell-style `*` and `?`. Matching is **case-sensitive**, so use the same casing your IdP emits in JWT claims.
 - **`scope` claim as a space-delimited string:** OAuth/OIDC often sends `scope` as one string (e.g. `openid profile App:LiteLLM`). LiteLLM splits that string **only when matching the `scope` selector**, so a configured value like `App:LiteLLM` can match. **`iss`, `aud`, and `client_id` are never split on spaces**; the full claim string is used (routing uses unverified claims only for path selection; final auth still validates the token).
 - If no rule matches, LiteLLM continues with standard JWT validation.
 
@@ -918,7 +932,7 @@ environment_variables:
 
 - `team_ids_jwt_field`: Field containing team IDs (as a list). **Supports dot notation** (e.g., `"groups"`, `"teams.ids"`).
 - `user_email_jwt_field`: Field containing user email. **Supports dot notation** (e.g., `"email"`, `"user.email"`).
-- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`).
+- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`). When set, the end-user ID from the verified JWT claim takes precedence over any request-supplied value (headers like `x-litellm-end-user-id` or body fields like `metadata.user_id`; see the [customer ID priority order](customers#1-make-llm-api-call-w-customer-id)).
 
 - `role_mappings`: A list of role mappings. Map the received role in the JWT token to an internal role on LiteLLM.
 
@@ -1153,7 +1167,7 @@ curl -X GET 'http://0.0.0.0:4000/user/info?user_id=user-123' \
 
 Map JWT identities to LiteLLM virtual keys so that JWT-authenticated users get per-user budgets, rate limits, model access controls, and spend tracking.
 
-When a JWT comes in, LiteLLM looks up a configured claim (e.g. `email`, `sub`) in a mapping table. If a mapping exists, the request is treated as if it arrived with the corresponding virtual key — all virtual key features apply.
+When a JWT comes in, LiteLLM looks up a configured claim (e.g. `email`, `sub`) in a mapping table. If a mapping exists, the request is treated as if it arrived with the corresponding virtual key, and all virtual key features apply.
 
 ### Setup
 
@@ -1171,7 +1185,7 @@ general_settings:
 
 All endpoints require admin auth (`Authorization: Bearer <master_key>`).
 
-**Create a mapping** — link a JWT claim value to an existing virtual key:
+**Create a mapping.** Link a JWT claim value to an existing virtual key:
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/new \
@@ -1226,7 +1240,7 @@ curl -X POST http://localhost:4000/jwt/key/mapping/delete \
 2. LiteLLM validates the JWT signature
 3. Extracts the configured claim (e.g. `email` → `user@example.com`)
 4. Looks up the claim value in the `LiteLLM_JWTKeyMapping` table
-5. If a mapping exists, the request proceeds as if the mapped virtual key was used — budgets, rate limits, model access, and spend tracking all apply
+5. If a mapping exists, the request proceeds as if the mapped virtual key was used, so budgets, rate limits, model access, and spend tracking all apply
 6. If no mapping exists, falls back to standard JWT auth (team-level controls)
 
 ### Error Codes

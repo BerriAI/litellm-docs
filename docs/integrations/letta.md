@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Letta Integration
 
-[Letta](https://github.com/letta-ai/letta) (formerly MemGPT) is a framework for building stateful LLM agents with persistent memory. This guide shows how to integrate both LiteLLM SDK and LiteLLM Proxy with Letta to leverage multiple LLM providers while building memory-enabled agents.
+[Letta](https://github.com/letta-ai/letta) (formerly MemGPT) is a framework for building stateful LLM agents with persistent memory. This guide shows how to integrate both LiteLLM SDK and LiteLLM Proxy with Letta so you can use multiple LLM providers while building memory-enabled agents.
 
 ## What is Letta?
 
@@ -476,7 +476,7 @@ azure_config = LLMConfig(
 <Tabs>
 <TabItem value="proxy" label="LiteLLM Proxy Features">
 
-LiteLLM proxy's load balancing and fallback features work seamlessly with Letta:
+LiteLLM proxy's load balancing and fallback features work with Letta:
 
 ```yaml
 # config.yaml with fallbacks

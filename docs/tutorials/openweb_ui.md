@@ -123,7 +123,7 @@ This video walks through on how we can map the openweb ui headers to LiteLLM use
 
 ## Render `thinking` content on Open WebUI
 
-Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. In order to render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
+Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. To render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
 
 Example litellm config.yaml:
 

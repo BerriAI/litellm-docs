@@ -7,9 +7,12 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock, vLLM | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
+
+Guardrails configured on your proxy are applied to the records inside a batch input file when it is
+uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
 
 ## Quick Start 
 
@@ -425,31 +428,176 @@ All batch and file endpoints support model-based routing:
 | `/v1/batches/{batch_id}` | GET | ✅ Auto from encoded ID |
 | `/v1/batches/{batch_id}/cancel` | POST | ✅ Auto from encoded ID |
 
-## **Supported Providers**:
-### [Azure OpenAI](./providers/azure#azure-batches-api)
-### [OpenAI](#quick-start)
-### [Vertex AI](./providers/vertex#batch-apis)
-### [Bedrock](./providers/bedrock_batches)
-### [vLLM](./providers/vllm_batches)
+## Supported providers
 
+LiteLLM supports the following provider-native batch APIs:
+
+| Provider | Documentation |
+| --- | --- |
+| Azure OpenAI | [Azure OpenAI batches](./providers/azure#azure-batches-api) |
+| OpenAI | [Quick start](#quick-start) |
+| Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
+| Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
+
+Amazon Bedrock is the supported AWS integration for batch inference.
+
+## Batch Input File Validation
+
+LiteLLM validates batch input files at upload time. When a client uploads a file to `POST /v1/files` with `purpose="batch"`, LiteLLM checks the file locally and rejects invalid files before anything is forwarded to the provider. Validation runs on every `/v1/files` routing path, including provider-routed uploads configured through `files_settings` and [LiteLLM managed files](./proxy/managed_batches) uploads that use `target_model_names`
+
+Rejections use the OpenAI error format, an `error` object with `message`, `type`, `param`, and `code` fields, so existing OpenAI SDK error handling works unchanged
+
+### Limit the batch input file size
+
+Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch input files. The value is an integer in MB. When it is unset, no size cap applies
+
+```yaml
+general_settings:
+  master_key: sk-1234
+  max_batch_file_size_mb: 10
+```
+
+A `purpose="batch"` upload larger than the cap is rejected with HTTP `413`:
+
+```json
+{
+  "error": {
+    "message": "Batch input file is 12.0 MB, which exceeds the configured max_batch_file_size_mb of 10 MB. The file was not forwarded to the provider.",
+    "type": "invalid_request_error",
+    "param": "file",
+    "code": "413"
+  }
+}
+```
+
+`max_batch_file_size_mb` applies only to batch input file uploads. It is separate from `max_request_size_mb`, which applies to every proxy route
+
+### Content validation
+
+LiteLLM always validates the content of `purpose="batch"` uploads. There is no setting to configure. The filename must end in `.jsonl`, matched case-insensitively. The file must contain at least one non-blank line. Every non-blank line must be valid JSON. Every line must be a JSON object. Every object must contain the `custom_id`, `method`, `url`, and `body` keys
+
+A file that fails any of these checks is rejected with HTTP `400` and `"type": "invalid_request_error"`. The `param` field names the offending field: `file` for a wrong extension, an empty file, a line that is not valid JSON, or a line that is not a JSON object. For a line that is missing a required key, `param` is the missing key, such as `method`. The `message` includes the 1-based line number where relevant. Line numbers count every line in the file, including blank lines
+
+### Provider batch limits
+
+Each provider enforces its own limits on batch input files. Use them to pick a value for `max_batch_file_size_mb`
+
+| Provider | Max input file size | Max requests |
+|----------|---------------------|--------------|
+| [OpenAI](https://developers.openai.com/api/docs/guides/batch) | 200 MB | 50,000 per batch |
+| [Azure OpenAI](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/batch) | 200 MB | 100,000 per file |
+| [Vertex AI](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini) | 1 GB | 200,000 per job |
+| [Amazon Bedrock](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) | 1 GB per file | See AWS Service Quotas |
+
+Azure OpenAI raises its file cap to 1 GB with bring-your-own Blob Storage. The Vertex AI cap applies to Cloud Storage input. Amazon Bedrock also caps total job size, at 5 GB for most models. Set `max_batch_file_size_mb` at or below the smallest limit of the providers you route batch traffic to
+
+## How Rate Limiting for Batches API Works
+
+Batch rate limits are enforced when the client calls `POST /v1/batches`, not when the input file is uploaded.
+
+1. The client uploads the JSONL input file with `POST /v1/files`. This upload does not consume the batch TPM or RPM allowance.
+2. When the client creates the batch, LiteLLM downloads and evaluates the referenced input file.
+3. LiteLLM atomically checks the complete file against every applicable limit.
+4. If any limit would be exceeded, LiteLLM returns `429` and does not submit the batch to the provider. Otherwise, it records the usage and creates the provider batch.
+
+This allows LiteLLM to accept or reject the batch before the provider processes it.
+
+### What LiteLLM counts
+
+| Limit | Batch charge |
+| --- | --- |
+| RPM | One request for each JSONL record. |
+| TPM | Input tokens found in each record's `body.messages`, `body.prompt`, or `body.input`. |
+| Project ITPM | The same input-token count, grouped by each record's `body.model`. |
+| Project OTPM | An output-token reservation for each record, grouped by `body.model`. LiteLLM uses `max_tokens`, `max_completion_tokens`, or `max_output_tokens` when present and accounts for `n` or `best_of`. Embedding records reserve no output tokens. If no output cap is present, LiteLLM uses the v3 limiter's built-in estimate, bounded by the smallest applicable OTPM limit. |
+
+If LiteLLM cannot tokenize an individual record, it uses a conservative estimate based on the serialized record size. A malformed JSONL line still counts as one request.
+
+:::important
+
+`LITELLM_TPM_TOKEN_RESERVATION_ENABLED` does not control batch rate limiting. That variable controls pre-request reservation for real-time requests such as chat completions. `POST /v1/batches` always uses the batch input-file limiter described here unless one of the batch-specific skip settings below is enabled.
+
+:::
+
+### Enqueued-token limits
+
+Per-minute windows fit batches poorly: a batch runs for hours, but its whole input file is charged to a single minute at submission. To govern batch submissions by outstanding batch work instead, set an enqueued-token allowance in the key or team metadata:
+
+```bash
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
+```
+
+`batch_enqueued_token_limit` also works in team metadata. When both the key and its team set one, the batch must fit both allowances.
+
+Only a proxy admin can set or change `batch_enqueued_token_limit`. Key and team requests from other roles that try to write it are rejected with a `403`.
+
+When a key or team has an enqueued-token limit, batch submission is governed only by that allowance:
+
+1. When the client creates a batch, LiteLLM reserves the file's estimated tokens (the input tokens plus each record's output cap) against the allowance.
+2. If the batch does not fit, LiteLLM returns `429` naming the enqueued token limit and does not submit the batch to the provider.
+3. When LiteLLM serves a response showing the batch in a terminal state (completed, failed, expired, or cancelled), it refunds the reservation. Polling `GET /v1/batches/{batch_id}` and cancelling with `POST /v1/batches/{batch_id}/cancel` both qualify.
+4. Batch submissions are not charged to the per-minute TPM and RPM windows, so a batch whose record count exceeds the key's RPM is accepted when it fits the allowance.
+
+Real-time traffic such as chat completions is unaffected: it consumes the key's TPM and RPM limits exactly as before.
+
+Two details to plan around:
+
+- `disable_batch_input_file_rate_limiting` and `skip_batch_input_file_rate_limiting_for_providers` take precedence. When they apply, LiteLLM performs no enqueued-token accounting.
+- Reservations for batches whose terminal state LiteLLM never observes (for example, a batch only ever polled directly against the provider) expire after 8 days.
+
+### Operational behavior
+
+| Behavior | Operational impact |
+| --- | --- |
+| Accounting is based on the submitted file | Batch TPM and RPM counters are not reconciled against the provider's final usage. Final cost tracking is separate. |
+| The complete file cannot be downloaded or evaluated | LiteLLM logs the error and submits the batch without charging it to TPM or RPM. Monitor these errors if your deployment requires strict rate-limit enforcement. |
+| No applicable rate limit is configured | LiteLLM submits the batch without downloading it for rate-limit accounting. |
+| The API key has a model allowlist | LiteLLM reads the file and validates every `body.model` before submission. |
+
+### Skipping the input-file pre-read
+
+Reading a large JSONL file can add latency to batch submission. If you do not need the batch to be charged against TPM or RPM at submission, configure one of these options:
+
+```yaml
+general_settings:
+  # Apply to all batch submissions
+  disable_batch_input_file_rate_limiting: true
+
+  # Or apply only to batches routed to selected providers
+  skip_batch_input_file_rate_limiting_for_providers:
+    - bedrock
+```
+
+The provider-specific option uses the provider configured on the selected route. It does not use a `custom_llm_provider` value supplied by the client.
+
+For API keys with a model allowlist, LiteLLM must still read the file to validate each `body.model` value. In this case, the settings above skip the TPM and RPM counter update, but not the file download or model validation.
+
+The following options are not supported:
+
+- `skip_batch_input_file_rate_limiting_for_models` is retained for compatibility but has no effect. LiteLLM logs a warning at startup when it is configured.
+- A `skip_batch_input_file_rate_limiting` flag in request metadata is ignored.
+
+Use the global or provider-specific settings above to manage this behavior at the server level.
 
 ## How Cost Tracking for Batches API Works
 
-LiteLLM tracks batch processing costs by logging two key events:
+✨ **Enterprise:** Automated batch cost tracking requires a LiteLLM Enterprise license.
 
-| Event Type | Description | When it's Logged |
-|------------|-------------|------------------|
-| `acreate_batch` | Initial batch creation | When batch request is submitted |
-| `batch_success` | Final usage and cost | When batch processing completes |
+For managed batches, LiteLLM monitors the provider job in the background. When the job reaches a terminal state, LiteLLM:
 
-Cost calculation:
+1. Downloads the provider's output file.
+2. Reads each successful output record.
+3. Aggregates prompt, completion, and total token usage across those records.
+4. Calculates each record's cost using the deployment's configured batch pricing.
+5. Records the combined usage and cost against the user, key, team, and request tags that created the batch.
 
-- LiteLLM polls the batch status until completion
-- Upon completion, it aggregates usage and costs from all responses in the output file
-- Total `token` and `response_cost` reflect the combined metrics across all batch responses
+Failed output records are excluded from the aggregate. If the batch has no output file because every record failed, LiteLLM records zero usage and zero cost.
 
+The initial submission and the completed aggregate are recorded separately. The completed aggregate is emitted through standard spend tracking as an `aretrieve_batch` record, so it is available to the Admin UI and configured logging callbacks.
 
-
-
+Batch cost tracking does not change the TPM or RPM counters reserved at submission. Those counters remain based on the input-file calculation described above.
 
 ## [Swagger API Reference](https://litellm-api.up.railway.app/#/batch)

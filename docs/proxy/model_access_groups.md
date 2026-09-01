@@ -419,6 +419,11 @@ curl -X PUT 'http://localhost:4000/access_group/production-models/update' \
 ```
 
 The API key from Step 4 now automatically has access to `gemini-pro` without any changes to the key itself.
+
+### Budgets
+
+A group can also carry one shared budget that every key granted the group draws from. See [Model Access Group Budgets](model_access_group_budgets.md).
+
 ### API Reference - Access Group Management
 
 For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://litellm-api.up.railway.app/#/model%20management/create_model_group_access_group_new_post).

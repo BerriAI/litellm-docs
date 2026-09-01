@@ -8,7 +8,7 @@ Evaluate LLMs 20x faster with TGI via litellm proxy's `/completions` endpoint.
 
 This tutorial assumes you're using the `big-refactor` branch of [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness/tree/big-refactor)
 
-NOTE: LM Harness has not updated to using `openai 1.0.0+`, in order to deal with this we will run lm harness in a venv
+NOTE: LM Harness has not updated to using `openai 1.0.0+`, so we will run lm harness in a venv
 
 **Step 1: Start the local proxy**
 see supported models [here](https://docs.litellm.ai/docs/simple_proxy)

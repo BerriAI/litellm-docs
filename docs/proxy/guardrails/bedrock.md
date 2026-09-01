@@ -30,6 +30,7 @@ guardrails:
       guardrailVersion: "DRAFT"              # your guardrail version on bedrock
       aws_region_name: os.environ/AWS_REGION # region guardrail is defined
       aws_role_name: os.environ/AWS_ROLE_ARN # your role with permissions to use the guardrail
+      aws_external_id: os.environ/AWS_EXTERNAL_ID # only if that role's trust policy requires sts:ExternalId
   
 ```
 
@@ -48,7 +49,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 3. Test request 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Unsuccessful call" value = "not-allowed">
@@ -140,6 +141,36 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 
 </Tabs>
+
+## Streaming
+
+Streaming responses are scanned on `post_call`. By default the stream is buffered: every chunk is withheld until the assembled response passes one ApplyGuardrail OUTPUT scan, so no flagged content reaches the client before a block. The client sees nothing until the scan completes, then the whole response arrives in one burst.
+
+For latency-sensitive clients (interactive chat, coding agents), you can keep the stream flowing and run the scan in audit mode instead:
+
+```yaml
+guardrails:
+  - guardrail_name: "bedrock-post-guard"
+    litellm_params:
+      guardrail: bedrock
+      mode: "post_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      streaming_buffer_until_moderated: false
+      streaming_end_of_stream_only: true
+```
+
+Chunks now stream to the client as they arrive, and one OUTPUT scan runs over the assembled response at end of stream. A violation still terminates the stream with the guardrail's block message, but content that already streamed has been seen: this is detect-and-log, not prevention. Either way the scan result is recorded in `guardrail_information` on the request's spend log.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `streaming_buffer_until_moderated` | `true` | Withhold every streamed chunk until end-of-stream moderation passes, so no flagged chunk reaches the client before a block |
+| `streaming_end_of_stream_only` | `false` | Scan streamed output once, over the assembled response, instead of per sampled chunk |
+| `streaming_sampling_rate` | `5` | When not buffering and not end-of-stream-only, scan the accumulated text every Nth chunk. Must be at least 1 |
+
+With `streaming_buffer_until_moderated: false` alone, the guardrail scans the accumulated response every `streaming_sampling_rate` chunks while streaming. Each sampled scan is a separate ApplyGuardrail call over all text so far, so it adds mid-stream latency and repeated Bedrock text-unit charges. Pair it with `streaming_end_of_stream_only: true` unless you need mid-stream blocking.
+
+These settings apply to both `/v1/chat/completions` and native `/v1/messages` streams.
 
 ## Resource-less Checks: InvokeGuardrailChecks
 

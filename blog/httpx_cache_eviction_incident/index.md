@@ -38,7 +38,7 @@ When the cache is full or entries expire, `InMemoryCache.evict_cache()` calls `_
 
 The cached values are a mix of:
 - **Redis/async Redis clients** — owned exclusively by the cache, safe to close on eviction
-- **httpx-backed SDK clients** (OpenAI, Anthropic, etc.) — shared references, still in use by router/model instances
+- **httpx-backed SDK clients** (OpenAI, Anthropic, etc.): shared references, still in use by router/model instances
 
 ---
 
@@ -70,7 +70,7 @@ class LLMClientCache(InMemoryCache):
 
 </details>
 
-The intent was correct for Redis clients — prevent connection pool leaks when cached Redis clients expire. But `LLMClientCache` also stores httpx-backed SDK clients (e.g., `AsyncOpenAI`, `AsyncAnthropic`). These clients:
+The intent was correct for Redis clients, where closing prevents connection pool leaks when cached Redis clients expire. But `LLMClientCache` also stores httpx-backed SDK clients (e.g., `AsyncOpenAI`, `AsyncAnthropic`). These clients:
 
 1. Have an `aclose()` method (inherited from httpx)
 2. Are still held by references elsewhere in the codebase (router, model instances)

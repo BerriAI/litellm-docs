@@ -3,7 +3,7 @@
 
 :::info
 
-You need a LiteLLM License to unlock this feature. [Grab time](https://enterprise.litellm.ai/demo), to get one today!
+You need a LiteLLM License to use this feature. [Grab time](https://enterprise.litellm.ai/demo), to get one today!
 
 :::
 

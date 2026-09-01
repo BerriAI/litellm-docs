@@ -71,7 +71,7 @@ Use this for tracking per [user, key, team, etc.](virtual_keys)
 
 #### Token type detail metrics
 
-Per-token-type counters that break out the `usage.prompt_tokens_details` and `usage.completion_tokens_details` fields providers report (e.g. OpenAI prompt caching, Anthropic prompt caching, audio I/O, reasoning tokens). These are **additive** to the totals above — the existing `litellm_input_tokens_metric` / `litellm_output_tokens_metric` / `litellm_total_tokens_metric` counters are unchanged.
+Per-token-type counters that break out the `usage.prompt_tokens_details` and `usage.completion_tokens_details` fields providers report (e.g. OpenAI prompt caching, Anthropic prompt caching, audio I/O, reasoning tokens). These are **additive** to the totals above, and the existing `litellm_input_tokens_metric` / `litellm_output_tokens_metric` / `litellm_total_tokens_metric` counters are unchanged.
 
 Each detail counter is **sparse**: it is only incremented when the provider reports a non-zero value for the corresponding field, so providers that don't expose a given detail will not produce a series for it. The label set is identical to the parent input / output token counter, so you can join cleanly in PromQL.
 
@@ -83,7 +83,7 @@ Each detail counter is **sparse**: it is only incremented when the provider repo
 | `litellm_output_reasoning_tokens_metric`         | `completion_tokens_details.reasoning_tokens`                         | OpenAI `o1-*` / `o3-*`, Anthropic extended thinking |
 | `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-4o-audio-*` audio outputs              |
 
-Example PromQL — cache-hit ratio for a model group:
+Example PromQL, cache-hit ratio for a model group:
 
 ```promql
 sum by (requested_model) (rate(litellm_input_cached_tokens_metric_total[5m]))
@@ -91,7 +91,7 @@ sum by (requested_model) (rate(litellm_input_cached_tokens_metric_total[5m]))
 sum by (requested_model) (rate(litellm_input_tokens_metric_total[5m]))
 ```
 
-Example PromQL — reasoning-token share of output:
+Example PromQL, reasoning-token share of output:
 
 ```promql
 sum by (requested_model) (rate(litellm_output_reasoning_tokens_metric_total[5m]))
@@ -323,16 +323,96 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 |----------------------|--------------------------------------|
 | `litellm_requests_metric`             | **deprecated** use `litellm_proxy_total_requests_metric`. Total number of LLM calls to litellm, tracked per API key, team, user. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider"` |
 
-## Request Latency Metrics 
+## Request Latency Metrics
 
-| Metric Name          | Description                          |
-|----------------------|--------------------------------------|
-| `litellm_request_total_latency_metric`             | Total latency (seconds) for a request to LiteLLM Proxy Server - tracked for labels "end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model", "model_id", "api_provider", "service_tier" |
-| `litellm_overhead_latency_metric`             | Latency overhead (seconds) added by LiteLLM processing - tracked for labels "model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id" |
-| `litellm_overhead_with_guardrails_latency_metric`             | Latency overhead (seconds) added by LiteLLM processing including pre_call and post_call guardrails - tracked for labels "model_group", "api_provider", "api_base", "litellm_model_name", "hashed_api_key", "api_key_alias", "model_id". During_call (moderation) guardrails run concurrently with the LLM API call, so they are excluded from this number |
-| `litellm_llm_api_latency_metric`  | Latency (seconds) for just the LLM API call - tracked for labels "model", "hashed_api_key", "api_key_alias", "team", "team_alias", "requested_model", "end_user", "user", "model_id", "api_provider", "service_tier" |
-| `litellm_llm_api_time_to_first_token_metric`             | Time to first token for LLM API call - tracked for labels `model`, `hashed_api_key`, `api_key_alias`, `team`, `team_alias`, `requested_model`, `end_user`, `user`, `model_id`, `api_provider`, `service_tier` [Note: only emitted for streaming requests] |
-| `litellm_request_queue_time_seconds`             | Time (seconds) a request spent queued inside the proxy between arrival and the start of processing - tracked for labels "end_user", "hashed_api_key", "api_key_alias", "requested_model", "team", "team_alias", "user", "model", "model_id", "api_provider". Pairs well with `litellm_in_flight_requests` for diagnosing pod overload |
+Use `litellm_request_total_latency_metric` for latency SLOs and alerts. It measures the full request from arrival at the proxy through the end of processing. If total latency increases, use the other metrics to identify whether the delay comes from authentication, the LLM provider, or LiteLLM processing.
+
+All request latency metrics are Prometheus histograms measured in seconds.
+
+| What you want to measure | Metric | Measurement window |
+|---|---|---|
+| End-to-end latency | `litellm_request_total_latency_metric` | Request arrival to the end of processing. Includes authentication, pre-call hooks, the LLM API call, and post-call processing. |
+| Authentication and request wait time | `litellm_request_queue_time_seconds` | Request arrival to the start of pre-call processing. Includes authentication and ASGI-level queueing. Compare this with [`litellm_in_flight_requests`](#pod-health-metrics) when diagnosing overloaded proxy pods. |
+| LLM provider latency | `litellm_llm_api_latency_metric` | LLM API call start to finish. |
+| Time to first token | `litellm_llm_api_time_to_first_token_metric` | LLM API call start to the first token. Emitted only for streaming requests. |
+| LiteLLM processing overhead | `litellm_overhead_latency_metric` | LiteLLM processing time, excluding the LLM API call and guardrails. |
+| LiteLLM processing and guardrail overhead | `litellm_overhead_with_guardrails_latency_metric` | LiteLLM processing time plus pre-call and post-call guardrails, excluding the LLM API call. During-call guardrails run concurrently with the LLM API call and are not included. |
+
+For example, this query returns end-to-end p95 latency over the last five minutes:
+
+```promql
+histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket[5m])))
+```
+
+<details>
+<summary>Labels for request latency metrics</summary>
+
+| Metrics | Labels |
+|---|---|
+| `litellm_request_total_latency_metric`<br />`litellm_llm_api_latency_metric`<br />`litellm_llm_api_time_to_first_token_metric` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider`, `service_tier` |
+| `litellm_request_queue_time_seconds` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider` |
+| `litellm_overhead_latency_metric`<br />`litellm_overhead_with_guardrails_latency_metric` | `model_group`, `api_provider`, `api_base`, `litellm_model_name`, `hashed_api_key`, `api_key_alias`, `model_id` |
+
+`litellm_request_queue_time_seconds` does not include `service_tier` because the provider has not selected a service tier when this metric is recorded.
+
+</details>
+
+### Configure caller identity on deployment and latency metrics
+
+By default, deployment counters and caller-scoped latency histograms identify the caller with `api_key_alias`. Set `prometheus_deployment_and_latency_caller_identity` to use `user_email` instead, or to expose both labels:
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_deployment_and_latency_caller_identity: user_email
+```
+
+| Value | Caller identity labels | Behavior |
+|---|---|---|
+| `api_key_alias` (default) | `api_key_alias` | Preserves the existing metric schema and existing queries. |
+| `user_email` | `user_email` | Replaces `api_key_alias` at the same position in the label schema. |
+| `both` | `api_key_alias`, then `user_email` | Emits both dimensions. `user_email` is placed immediately after `api_key_alias`. |
+
+The setting applies only to these metric families:
+
+- `litellm_deployment_total_requests`
+- `litellm_deployment_success_responses`
+- `litellm_deployment_failure_responses`
+- `litellm_request_total_latency_metric`
+- `litellm_llm_api_latency_metric`
+- `litellm_llm_api_time_to_first_token_metric`
+- `litellm_request_queue_time_seconds`
+- `litellm_overhead_latency_metric`
+- `litellm_deployment_latency_per_output_token`
+
+It does not change related metrics that are not caller-scoped, or the guardrail-inclusive `litellm_overhead_with_guardrails_latency_metric`. Counter samples use the Prometheus `_total` suffix, and histogram `_bucket`, `_sum`, and `_count` samples all receive the selected identity label or labels.
+
+Requests without a resolved email use LiteLLM's established `"None"` label value. For example, these queries group provider requests and p95 end-to-end latency by resolved email while excluding requests with no email:
+
+```promql
+sum by (user_email) (
+  rate(litellm_deployment_total_requests_total{user_email!="None"}[5m])
+)
+```
+
+```promql
+histogram_quantile(
+  0.95,
+  sum by (user_email, le) (
+    rate(litellm_request_total_latency_metric_bucket{user_email!="None"}[5m])
+  )
+)
+```
+
+`prometheus_metrics_config.include_labels` is validated against the selected mode. In `api_key_alias` mode it can include `api_key_alias`; in `user_email` mode it can include `user_email`; and in `both` mode it can include either or both. An invalid mode value fails proxy startup with a `ValueError` naming the accepted values, and `user_email` mode combined with `include_labels: [api_key_alias]` on an affected family also fails startup, naming both settings. `prometheus_exclude_labels` is applied afterward and can remove either identity label. For example, selecting `both` globally and excluding `api_key_alias` leaves only `user_email` on the affected families.
+
+:::warning
+Changing this setting changes fixed Prometheus collector label schemas. Restart every LiteLLM Proxy/logger process after changing it; a live configuration reload cannot rebuild existing collectors.
+
+Email addresses are sensitive data. Keep the default unless email-level attribution is required, retain [authentication on `/metrics`](#authentication-on-metrics-endpoint), and restrict network access to trusted Prometheus scrapers.
+:::
+
+`both` records one series per observed complete label tuple; it does not create a second series for the same request. If aliases and emails have a stable one-to-one mapping, adding the email label does not increase the number of distinct series. Cardinality can increase when aliases are reused across users, mappings change over time, or the same alias is observed with both a resolved and an absent email.
 
 ### Segmenting latency and spend by service tier
 

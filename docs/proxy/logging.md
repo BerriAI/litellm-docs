@@ -340,7 +340,7 @@ Use this to:
 
 ## What gets logged?
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Intermediate streaming events and callbacks where payload construction fails can omit it.
 
 [👉 **Standard Logging Payload Specification**](./logging_spec)
 
@@ -741,7 +741,7 @@ You will see `raw_request` in your Langfuse Metadata. This is the RAW CURL comma
 
 :::tip
 
-The full OpenTelemetry reference — span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting — lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
+The full OpenTelemetry reference (span hierarchy, every emitted span and attribute, metrics, semconv mode, and troubleshooting) lives at [Observability → OpenTelemetry Integration](/docs/observability/opentelemetry_integration). The section below is a proxy-focused quickstart.
 
 :::
 
@@ -1776,6 +1776,10 @@ litellm_settings:
 
 ```
 
+:::warning
+The dotted path has to name the instance created in Step 1 (`proxy_handler_instance = MyCustomHandler()`), not the class. Name the class and the proxy fails config load with an error naming the entry and what it resolved to, since only `CustomLogger` instances are dispatched. On versions before that check, a class-valued entry started clean and never ran, with no error and no log line
+:::
+
 #### Step 2b - Loading Custom Callbacks from S3/GCS (Alternative)
 
 Instead of using local Python files, you can load custom callbacks directly from S3 or GCS buckets. This is useful for centralized callback management or when deploying in containerized environments.
@@ -2234,8 +2238,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     }
 '
 ```
-Expect to see your log on Langfuse
-<Image img={require('../../img/langsmith_new.png')} />
+Expect to see your logs in Arize.
 
 
 ## Langtrace

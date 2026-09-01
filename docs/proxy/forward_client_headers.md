@@ -8,7 +8,7 @@ By default, LiteLLM does not forward client headers to LLM provider APIs for sec
 
 ## How it Works
 
-LiteLLM does **not** forward all client headers to the LLM provider. Instead, it uses an **allowlist** approach — only headers matching specific rules are forwarded. This ensures sensitive headers (like your LiteLLM API key) are never accidentally sent to upstream providers.
+LiteLLM does **not** forward all client headers to the LLM provider. Instead, it uses an **allowlist** approach: only headers matching specific rules are forwarded. Sensitive headers (like your LiteLLM API key) are therefore never accidentally sent to upstream providers.
 
 ```mermaid
 sequenceDiagram

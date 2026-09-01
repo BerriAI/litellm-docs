@@ -8,7 +8,7 @@ View deleted API keys and teams along with their spend and budget information at
 
 ## Overview
 
-The Deleted Keys & Teams feature provides a comprehensive audit trail for deleted entities in your LiteLLM proxy. This feature was implemented to easily allow audits of which key or team was deleted along with the spend/budget at the time of deletion.
+The Deleted Keys & Teams feature provides an audit trail for deleted entities in your LiteLLM proxy. This feature was implemented to easily allow audits of which key or team was deleted along with the spend/budget at the time of deletion.
 
 When a key or team is deleted, LiteLLM automatically captures:
 
@@ -46,7 +46,7 @@ Click on "Deleted Keys" to view the table of all deleted API keys.
 
 ### Step 4: Review Deletion Information
 
-The Deleted Keys table includes comprehensive information about each deleted key:
+The Deleted Keys table includes the following information about each deleted key:
 
 - **When** the key was deleted (timestamp)
 - **Who** deleted the key (user/admin information)
@@ -102,5 +102,5 @@ This feature is particularly useful for:
 
 ## Related Features
 
-- [Audit Logs](./multiple_admins.md) - View comprehensive audit logs for all entity changes
+- [Audit Logs](./multiple_admins.md) - View audit logs for all entity changes
 - [UI Logs](./ui_logs.md) - View request logs and spend tracking

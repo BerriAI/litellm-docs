@@ -11,7 +11,7 @@ Drop unsupported OpenAI params by your LLM Provider.
 
 For example, if you send `temperature=0.2` to a model that doesn't support the `temperature` parameter, LiteLLM will raise an exception.
 
-**When `drop_params=True` is set**, LiteLLM will drop the unsupported parameter instead of raising an exception. This allows your code to work seamlessly across different providers without having to customize parameters for each one.
+**When `drop_params=True` is set**, LiteLLM will drop the unsupported parameter instead of raising an exception. This lets your code work across different providers without having to customize parameters for each one.
 
 ## Quick Start 
 

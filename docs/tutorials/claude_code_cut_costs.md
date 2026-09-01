@@ -164,9 +164,9 @@ model_list:
       complexity_router_default_model: gpt-4o
 ```
 
-Name the router `claude-auto` (or another Anthropic-shaped name) and add that name to your organization's `availableModels` allowlist before rolling it out, otherwise Claude Code and Claude Desktop refuse to select it. [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers both requirements.
+Name the router `claude-auto` (or another name containing `claude`/`anthropic`, so gateway discovery finds it) and add that name to your organization's `availableModels` allowlist before rolling it out, otherwise Claude for Teams and Enterprise refuse to select it. [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers both requirements.
 
-Learn more: [Complexity Router](../proxy/auto_routing#complexity-router), [Semantic Auto Routing](../proxy/auto_routing), and [Adaptive Router](../adaptive_router).
+Learn more: [Complexity Router](../proxy/auto_routing#classification), [Semantic Auto Routing](../proxy/auto_routing), and [Adaptive Router](../adaptive_router).
 
 ## Stacking the levers
 

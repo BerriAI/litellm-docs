@@ -166,7 +166,7 @@ This allows Proxy Admins to immediately identify which specific models are in a 
     - Enhance Mistral API with parallel tool calls support - [PR](https://github.com/BerriAI/litellm/pull/11770)
 - **[Meta Llama API](../../docs/providers/meta_llama)**
     - Enable tool calling for meta_llama models - [PR](https://github.com/BerriAI/litellm/pull/11895)
-- **[Volcengine](../../docs/providers/volcengine)**
+- **[Volcengine](/docs/providers/volcano)**
     - Add thinking parameter support - [PR](https://github.com/BerriAI/litellm/pull/11914)
 
 
@@ -194,9 +194,9 @@ This allows Proxy Admins to immediately identify which specific models are in a 
     - Day-0 support for OpenAI re-usable prompts Responses API - [PR](https://github.com/BerriAI/litellm/pull/11782), [Get Started](../../docs/providers/openai/responses_api#reusable-prompts)
     - Support passing image URLs in Completion-to-Responses bridge - [PR](https://github.com/BerriAI/litellm/pull/11833)
 - **[MCP Gateway](../../docs/mcp)**
-    - Add Allowed MCPs to Creating/Editing Organizations - [PR](https://github.com/BerriAI/litellm/pull/11893), [Get Started](../../docs/mcp#-mcp-permission-management)
+    - Add Allowed MCPs to Creating/Editing Organizations - [PR](https://github.com/BerriAI/litellm/pull/11893), [Get Started](/docs/mcp_control)
     - Allow connecting to MCP with authentication headers - [PR](https://github.com/BerriAI/litellm/pull/11891), [Get Started](../../docs/mcp#using-your-mcp-with-client-side-credentials)
-- **[Speech API](../../docs/speech)**
+- **[Speech API](/docs/text_to_speech)**
     - Working Gemini TTS support via OpenAI's `/v1/speech` endpoint - [PR](https://github.com/BerriAI/litellm/pull/11832)
 - **[Passthrough Endpoints](../../docs/proxy/pass_through)**
     - Add support for subroutes for passthrough endpoints - [PR](https://github.com/BerriAI/litellm/pull/11827)
@@ -239,16 +239,16 @@ This allows Proxy Admins to immediately identify which specific models are in a 
 #### Features
 - **Test Key Page**
     - Allow testing `/v1/messages` on the Test Key Page - [PR](https://github.com/BerriAI/litellm/pull/11930)
-- **[SSO](../../docs/proxy/sso)**
+- **[SSO](/docs/proxy/admin_ui_sso)**
     - Allow passing additional headers - [PR](https://github.com/BerriAI/litellm/pull/11781)
-- **[JWT Auth](../../docs/proxy/jwt_auth)**
+- **[JWT Auth](/docs/proxy/token_auth)**
     - Correctly return user email - [PR](https://github.com/BerriAI/litellm/pull/11783)
 - **[Model Management](../../docs/proxy/model_management)**
     - Allow editing model access group for existing model - [PR](https://github.com/BerriAI/litellm/pull/11783)
-- **[Team Management](../../docs/proxy/team_management)**
+- **[Team Management](/docs/proxy/user_management_heirarchy)**
     - Allow setting default team for new users - [PR](https://github.com/BerriAI/litellm/pull/11874), [PR](https://github.com/BerriAI/litellm/pull/11877)
     - Fix default team settings - [PR](https://github.com/BerriAI/litellm/pull/11887)
-- **[SCIM](../../docs/proxy/scim)**
+- **[SCIM](/docs/tutorials/scim_litellm)**
     - Add error handling for existing user on SCIM - [PR](https://github.com/BerriAI/litellm/pull/11862)
     - Add SCIM PATCH and PUT operations for users - [PR](https://github.com/BerriAI/litellm/pull/11863)
 - **Health Check Dashboard**
@@ -264,7 +264,7 @@ This allows Proxy Admins to immediately identify which specific models are in a 
 ## Logging / Guardrails Integrations
 
 #### Bugs
-- **[Prometheus](../../docs/observability/prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Fix bug for using prometheus metrics config - [PR](https://github.com/BerriAI/litellm/pull/11779)
 
 ---
@@ -298,7 +298,7 @@ This allows Proxy Admins to immediately identify which specific models are in a 
     - LiteLLM SDK / Proxy improvement (don't transform message client-side) - [PR](https://github.com/BerriAI/litellm/pull/11908)
 
 #### Bugs
-- **[Observability](../../docs/observability)**
+- **[Observability](/docs/integrations/observability_integrations)**
     - Fix boto3 tracer wrapping for observability - [PR](https://github.com/BerriAI/litellm/pull/11869)
 
 

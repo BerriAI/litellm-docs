@@ -516,7 +516,7 @@ Request body will be in the Anthropic messages API format. **litellm follows the
     Enables the summary style for thinking blocks. Possible values: `"auto"`, `"concise"`, `"detailed"`, `"disabled"`.
     When routing to non-Anthropic providers (e.g., `openai/gpt-5.1`), the `summary` value is preserved and forwarded to the downstream API.
 - **tool_choice** (object):  
-  Instructs how the model should utilize any provided tools.
+  Instructs how the model should use any provided tools.
 - **tools** (array of objects):  
   Definitions for tools available to the model. Each tool includes:
   - **name** (string):  

@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.95.0 — Claude Opus 5, MCP Gateway DCR & Rust /v1/messages](/release_notes/v1.95.0/v1-95-0)
+### [v1.99.0: Dark Mode, CLI OAuth Login & Batch Billing](/release_notes/v1.99.0/v1-99-0)
 
-_August 1, 2026_
+_September 1, 2026_
 
-Day-0 support for the 1M-context Claude Opus 5 across Anthropic, Amazon Bedrock, Google Vertex AI, and Azure AI Foundry, joined by Gemini 3.6 Flash and Gemini 3.5 Flash Lite; an MCP gateway front door built on always-on aggregate DCR discovery, identity-only session tokens, RFC 8707 resource indicators, and a standalone `/connect` route; native Anthropic `/v1/messages` routed through the Rust axum gateway alongside a Responses API WebSockets port and SigV4 in `litellm-core`; SAML 2.0 SSO for the admin UI; roughly twenty dashboard routes completing the shadcn and shared DataTable migration; and a budget-reset correctness pass covering reset time of day, word-form durations, and NULL `budget_reset_at` repair. Note that user budgets are no longer enforced on team keys, reverting the `v1.94.0` change.
+The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, `antd` and `@ant-design/icons` dropped from the dashboard's dependencies and the dashboard now on React 19; dark mode ships with a light/dark/system toggle, semantic status tokens, and theme-aware logos, surfaces and code blocks; `lite login` becomes a real OAuth flow with authorization code plus PKCE, storing the credential and refresh token in the OS keychain, and `lite login --config-claude` wires up Claude Code at login; batch spend is accounted for end to end, with enqueued-token rate limiting that refunds on completion, atomic cost claims so multi-pod polling cannot double-bill, and billing for cancelled and failed batches that still produced output; provisioned throughput can be declared in `config.yaml`; and the complexity router becomes operator-configurable with custom classifier plugins, tier sets, and per-model reasoning effort. This stable also folds in the v1.99.0-rc.2 fixes.
 
 ---
 
@@ -22,6 +22,10 @@ Day-0 support for the 1M-context Claude Opus 5 across Anthropic, Amazon Bedrock,
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
 | [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
 | [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |

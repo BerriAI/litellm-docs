@@ -129,7 +129,7 @@ pip install litellm==1.83.14
     - Include DOCUMENT modality tokens in cost calculation - [PR #24410](https://github.com/BerriAI/litellm/pull/24410)
 - **[Vertex AI](../../docs/providers/vertex)**
     - Forward `dimensions` parameter in `multimodalembedding` requests - [PR #24415](https://github.com/BerriAI/litellm/pull/24415)
-- **[Zhipu / GLM](../../docs/providers/zhipu)**
+- **[Zhipu / GLM](/docs/providers/zai)**
     - Map non-standard `finish_reason` values - [PR #24373](https://github.com/BerriAI/litellm/pull/24373)
 - **[OVHcloud](../../docs/providers/ovhcloud)**
     - Fix tool calling not working - [PR #25948](https://github.com/BerriAI/litellm/pull/25948)
@@ -225,7 +225,7 @@ pip install litellm==1.83.14
 
 ### Guardrails
 
-- **[Bedrock Guardrails](../../docs/proxy/guardrails/bedrock_guardrails)**
+- **[Bedrock Guardrails](/docs/proxy/guardrails/bedrock)**
     - Use Bedrock OUTPUT source for `apply_guardrail` when scanning model responses - [PR #26144](https://github.com/BerriAI/litellm/pull/26144)
     - Dedupe post-call log entry when only `post_call` is configured - [PR #26474](https://github.com/BerriAI/litellm/pull/26474)
     - Hook mode + match redaction + streaming `request_data` for spend logs - [PR #25854](https://github.com/BerriAI/litellm/pull/25854), [PR #26266](https://github.com/BerriAI/litellm/pull/26266)

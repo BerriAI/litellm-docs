@@ -25,7 +25,7 @@ calling the LLM API again.
 
 ## Virtual Key Authentication Cache (Redis)
 
-When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**—so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
+When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
 Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
 
@@ -99,6 +99,25 @@ and keys will be stored like:
 ```
 litellm.caching.caching:<hash>
 ```
+
+#### Restricted ACL users (Redis 7+ / Valkey)
+
+If your security policy requires the proxy to connect as a least-privilege user instead of `default`, set a namespace (as above) and grant that user the namespace's key pattern and channel pattern plus the commands it needs:
+
+```bash
+ACL SETUSER litellm-proxy on '>your-password' '~litellm:*' '&litellm:*' +@all
+```
+
+replacing `litellm` with your namespace. With a namespace set, every key the proxy writes lives under `<namespace>:`, so `~<namespace>:*` covers all of them. Without a namespace the proxy's keys have assorted names, so there is no practical key pattern to scope an ACL to
+
+The channel grant matters too: Redis 7+ and Valkey create ACL users with `resetchannels`, which denies all pub/sub channels. The proxy subscribes to channels for config sync and auth cache invalidation, and without `&<namespace>:*` (or `&litellm_proxy.*` when no namespace is set) your logs will repeat `No permissions to access a channel; reconnecting in 5s` every few seconds and config changes will only propagate on the periodic reload
+
+Two more things to know when scoping ACLs:
+
+- The `general_settings.coordination_redis` block (for pointing coordination at a different Redis than your response cache) also accepts `namespace`, so its user can be scoped the same way
+- When coordination Redis is configured through `REDIS_HOST` / `REDIS_PORT` environment variables alone (no `cache_params` redis block), it cannot carry a namespace, so its keys are unprefixed and the connecting user needs an unscoped key grant
+
+If you see `No permissions to access a key` in the proxy logs and spend tracking repeatedly logs `Restoring N transaction sets to in-memory queues`, the connecting user's ACL is missing one of the grants above. On proxy versions without [the namespace delimiter fix](https://github.com/BerriAI/litellm/pull/38403), internal keys whose literal names begin with the namespace string (for example `litellm_spend_update_buffer` under namespace `litellm`) were written outside the namespace and denied even with the grants in place; upgrade if the denied keys in your Redis `ACL LOG` show up unprefixed
 
 #### Redis Cluster
 
@@ -350,6 +369,12 @@ $ litellm --config /path/to/config.yaml
 
 <TabItem value="qdrant-semantic" label="Qdrant Semantic cache">
 
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
+
 Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 #### Step 1: Add `cache` to the config.yaml
@@ -411,6 +436,12 @@ one**
 </TabItem>
 
 <TabItem value="valkey-semantic" label="Valkey Semantic cache">
+
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
 
 Semantic caching on a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, such as AWS ElastiCache for Valkey. RediSearch and RedisVL are not required.
 
@@ -555,6 +586,12 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 
 <TabItem value="redis-sem" label="redis semantic cache">
+
+:::warning
+
+Semantic caching is designed for single-shot prompts. On multi-turn or agentic traffic it will replay stale responses. See [Semantic Caching and Multi-Turn Agentic Traffic](#semantic-caching-and-multi-turn-agentic-traffic) before enabling it for those workloads.
+
+:::
 
 Caching can be enabled by adding the `cache` key in the `config.yaml`
 
@@ -943,6 +980,61 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Semantic Caching and Multi-Turn Agentic Traffic
+
+Semantic caches (`redis-semantic`, `qdrant-semantic`, `valkey-semantic`) embed the text content of the entire `messages` array (system prompt included) and serve the closest cached response whose cosine similarity clears `similarity_threshold`.
+
+This works well for single-shot prompts, but it is a poor fit for multi-turn or agentic workloads (coding agents, tool-calling loops, any client that resends the whole conversation each turn). Each new turn is the previous request plus a small appended delta, so consecutive turns are nearly identical text and their embeddings are ~0.99 similar. At any practical threshold, every turn matches the previous turn's cached entry and the client replays a stale response, which typically shows up as an agent repeating the same tool call over and over. Raising `similarity_threshold` does not reliably fix this. Assistant `tool_calls` are also not part of the embedded text, which makes consecutive agent turns even harder to tell apart.
+
+The recommendation is to keep semantic caching for single-shot traffic and exclude agentic traffic with one of the options below. If you still want caching for agentic traffic, use an exact-match cache (`type: redis`) instead: it keys on a hash of the full request, so any change to the conversation is a cache miss and stale replays cannot happen.
+
+### Option 1: Disable caching on the keys used by agentic tools
+
+Set the `cache` field in the virtual key's metadata. The proxy applies it to every request made with that key, so no client-side changes are needed.
+
+```shell
+curl http://localhost:4000/key/generate \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "metadata": {"cache": {"no-cache": true}}
+  }'
+```
+
+Supported key-level cache controls: `ttl`, `s-maxage`, `no-cache`, `no-store`.
+
+### Option 2: Make caching opt-in
+
+Set `mode: default_off` in `cache_params` (see the Set Caching Default Off section further down this page) so nothing is cached or served from cache unless the caller opts in with `"cache": {"use-cache": true}`.
+
+### Option 3: Opt out per request
+
+Send `"cache": {"no-cache": true}` in the request body, as shown in [Dynamic Cache Controls](#dynamic-cache-controls).
+
+:::note
+
+Caching only runs on the call types listed in `supported_call_types` (OpenAI-compatible surfaces such as `/chat/completions`, `/completions`, `/embeddings`, `/responses`). Requests on `/v1/messages` (Anthropic format) and provider passthrough routes never go through the cache.
+
+:::
+
+## Semantic Caching and a Slow Embedding Endpoint
+
+A semantic cache embeds the prompt before every request, and that embedding call runs inline, so the request cannot reach the LLM until it finishes. LiteLLM caps it at 5 seconds. Past the deadline the lookup is abandoned, the response carries `x-litellm-semantic-similarity: 0.0`, and the request proceeds to the model as a cache miss. An embedding endpoint that is unreachable or hanging therefore costs a few seconds instead of stalling the request.
+
+Raise the deadline if your embedding endpoint is legitimately slower than that, either per cache with `semantic_cache_embedding_timeout` under `cache_params` or globally with the `SEMANTIC_CACHE_EMBEDDING_TIMEOUT_SECONDS` environment variable.
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: my-embedding-model
+    semantic_cache_embedding_timeout: 10.0
+```
+
+Bear in mind that a higher deadline is how long every request waits when the embedding endpoint stops answering, so keep it close to the endpoint's real latency.
+
 ## Set cache for proxy, but not on the actual llm api call
 
 Use this if you just want to enable features like rate limiting, and loadbalancing across multiple
@@ -1037,7 +1129,7 @@ litellm_settings:
 
 ### Deleting Cache Keys - `/cache/delete`
 
-In order to delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
+To delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
 
 Example
 
@@ -1222,6 +1314,10 @@ cache_params:
   gcs_bucket_name: your_gcs_bucket_name # Name of the GCS bucket
   gcs_path_service_account: /path/to/service-account.json # Path to GCS service account JSON file
   gcs_path: cache/ # [OPTIONAL] GCS path prefix for cache objects
+
+  # Semantic cache parameters (redis-semantic, valkey-semantic, qdrant-semantic)
+  similarity_threshold: 0.8 # Minimum cosine similarity for a cached response to be served
+  semantic_cache_embedding_timeout: 5.0 # Seconds the prompt embedding may take before the lookup gives up
 ```
 
 ## Provider-Specific Optional Parameters Caching

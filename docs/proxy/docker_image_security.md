@@ -67,7 +67,7 @@ The following checks were performed on each of these signatures:
 
 ## Enforce verification in CI/CD
 
-### Kubernetes — Sigstore Policy Controller
+### Kubernetes: Sigstore Policy Controller
 
 The [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) rejects pods whose images fail cosign verification.
 
@@ -106,7 +106,7 @@ kubectl label namespace litellm policy.sigstore.dev/include=true
 
 Any pod in that namespace using an unsigned `ghcr.io/berriai/litellm*` image will be rejected at admission.
 
-### GCP — Binary Authorization
+### GCP: Binary Authorization
 
 [Binary Authorization](https://cloud.google.com/binary-authorization/docs) can enforce cosign signatures on Cloud Run and GKE.
 
@@ -123,7 +123,7 @@ Any pod in that namespace using an unsigned `ghcr.io/berriai/litellm*` image wil
 
 Refer to the [GCP Binary Authorization docs](https://cloud.google.com/binary-authorization/docs/setting-up) for full setup steps.
 
-### AWS — ECS / ECR
+### AWS: ECS / ECR
 
 AWS does not natively verify cosign signatures at deploy time. Common approaches:
 

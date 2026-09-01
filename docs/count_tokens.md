@@ -112,7 +112,7 @@ print(result.tokenizer_type)  # "local_tokenizer"
 
 ## Proxy Usage
 
-### OpenAI Format — `/v1/responses/input_tokens`
+### OpenAI Format: `/v1/responses/input_tokens`
 
 <Tabs>
 <TabItem value="curl" label="curl">
@@ -146,7 +146,7 @@ response = httpx.post(
 )
 
 print(response.json())
-# {"input_tokens": 7}
+# {"object": "response.input_tokens", "input_tokens": 13}
 ```
 
 </TabItem>
@@ -154,10 +154,10 @@ print(response.json())
 
 **Response:**
 ```json
-{"input_tokens": 7}
+{"object": "response.input_tokens", "input_tokens": 13}
 ```
 
-### Anthropic Format — `/v1/messages/count_tokens`
+### Anthropic Format: `/v1/messages/count_tokens`
 
 See [Anthropic Token Counting](./anthropic_count_tokens.md) for full documentation.
 

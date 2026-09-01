@@ -506,6 +506,79 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Reasoning on the Responses API
+
+`/v1/responses` accepts the OpenAI `reasoning` object, and LiteLLM translates it into whatever the target model expects. Claude models take it on every route LiteLLM serves them on (`anthropic/`, `bedrock/`, `vertex_ai/`, `azure_ai/`), so the same request shape controls reasoning depth no matter which provider is behind the model.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers
+response = litellm.responses(
+  model="vertex_ai/claude-opus-4-8",
+  input="How many prime numbers are less than 30?",
+  reasoning={"effort": "low"},
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash showLineNumbers
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "claude-opus-4-8",
+    "input": "How many prime numbers are less than 30?",
+    "reasoning": {"effort": "low"}
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Anthropic changed how thinking is configured in Claude 4.6, so the translation depends on which model you are calling. LiteLLM decides from the model's `supports_adaptive_thinking` capability rather than the model name, so your own code never has to branch on it.
+
+Claude 4.6 and newer (Sonnet 4.6, Opus 4.7, Opus 4.8) use adaptive thinking, and the effort level is forwarded alongside it:
+
+```json title="what LiteLLM sends for reasoning.effort = low"
+{"thinking": {"type": "adaptive"}, "output_config": {"effort": "low"}}
+```
+
+`minimal` collapses to `low` in that form; the other levels pass through unchanged. Earlier Claude models get the legacy token budget instead, `{"thinking": {"type": "enabled", "budget_tokens": N}}`, sized from the effort level:
+
+| `reasoning.effort` | `budget_tokens` |
+| --- | --- |
+| `minimal` | 1024 |
+| `low` | 1024 |
+| `medium` | 2048 |
+| `high` | 4096 |
+| `xhigh` | 8192 |
+| `max` | 16384 |
+
+Each budget is overridable through the matching `DEFAULT_REASONING_EFFORT_*_THINKING_BUDGET` environment variable, and `{"effort": "none"}` turns thinking off entirely on both shapes.
+
+If you would rather set Anthropic's native parameters yourself, send `thinking` and `output_config` in the request body and LiteLLM forwards them untouched.
+
+```bash showLineNumbers
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "claude-opus-4-8",
+    "input": "How many prime numbers are less than 30?",
+    "thinking": {"type": "adaptive"},
+    "output_config": {"effort": "high"}
+  }'
+```
+
+:::info
+
+Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI needs v1.89.0+ ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
+
+:::
+
 ## Checking if a model supports reasoning
 
 <Tabs>
@@ -595,7 +668,7 @@ Expected Response
 
 :::tip gpt-5.4: reasoning_effort + function tools
 
-When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers — no extra configuration needed.
+When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 
 You can also route explicitly via `openai/responses/gpt-5.4` or `azure/responses/gpt-5.4`. See [Responses API Bridge](/docs/providers/openai#openai-chat-completion-to-responses-api-bridge) for details.
 

@@ -98,6 +98,8 @@ Create `~/.config/opencode/opencode.json` (global config):
 
 :::tip
 The keys in the "models" object (e.g., "gpt-4", "claude-3-5-sonnet-20241022") should match the `model_name` values from your LiteLLM configuration. The "name" field provides a friendly display name that will appear as an alias in OpenCode.
+
+If a model accepts images, it also needs a `modalities` entry; see [Enabling image and vision input](#enabling-image-and-vision-input).
 :::
 
 ### Step 3: Connect to LiteLLM Provider
@@ -164,6 +166,75 @@ You can customize model parameters like context limits:
   }
 }
 ```
+
+### Enabling image and vision input
+
+OpenCode does **not** discover model capabilities from the `/v1/models` endpoint. The OpenAI
+model-listing schema has no field for modalities, so there is nothing for it to read. Models under a
+custom `@ai-sdk/openai-compatible` provider therefore fall back to text-only input.
+
+The effect is client-side and silent: OpenCode checks the model's declared input modalities, sees no
+`image`, and **strips image attachments out of the request before it is sent**. LiteLLM never
+receives the image, and the model replies as though you had pasted nothing.
+
+Declare `modalities` on every vision-capable model in your OpenCode config:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM",
+      "options": {
+        "baseURL": "http://localhost:4000/v1"
+      },
+      "models": {
+        "claude-3-5-sonnet-20241022": {
+          "name": "Claude 3.5 Sonnet",
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "gpt-4o": {
+          "name": "GPT-4o",
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "deepseek-chat": {
+          "name": "DeepSeek Chat"
+        }
+      }
+    }
+  }
+}
+```
+
+Leave `modalities` off text-only models such as `deepseek-chat`; declaring `image` input for a model
+that cannot accept it moves the failure from the client to the provider.
+
+:::warning
+Setting `supports_vision: true` under `model_info` in your LiteLLM `config.yaml` does **not** fix
+this. That flag drives LiteLLM's own routing and cost logic and is not exposed on `/v1/models`, and
+OpenCode would not read it if it were. `modalities` in the OpenCode config is the only place this
+can be declared.
+:::
+
+#### Auto Router and other model groups
+
+A model group is just another model name to OpenCode, so an [Auto Router](../proxy/auto_routing)
+entry needs the same declaration even though the models behind it are vision-capable:
+
+```json
+{
+  "models": {
+    "smart-router": {
+      "name": "Smart Router",
+      "modalities": { "input": ["text", "image"], "output": ["text"] }
+    }
+  }
+}
+```
+
+Declare `image` input only when every tier the router can select accepts images. If one tier is
+text-only, an image-bearing request will fail once the router lands on that tier.
 
 ### Multi-Provider Setup
 
@@ -306,6 +377,19 @@ model_list:
 - Check the config file path and permissions
 - Validate JSON syntax using a JSON validator
 - Ensure the `$schema` URL is accessible
+
+**Images and screenshots are ignored:**
+- OpenCode defaults custom OpenAI-compatible provider models to text-only input and strips image
+  attachments before sending, so the request reaching LiteLLM contains no image. Declare
+  `modalities` on the model in your OpenCode config:
+  ```json
+  "claude-3-5-sonnet-20241022": {
+    "name": "Claude 3.5 Sonnet",
+    "modalities": { "input": ["text", "image"], "output": ["text"] }
+  }
+  ```
+- `model_info: supports_vision: true` in your LiteLLM `config.yaml` has no effect here. See
+  [Enabling image and vision input](#enabling-image-and-vision-input).
 
 **`Unknown parameter: 'reasoningSummary'` error:**
 - OpenCode sends a `reasoningSummary` parameter that is not supported by the Chat Completions API. Add `additional_drop_params: ["reasoningSummary"]` to each affected model entry in your `litellm_params`:

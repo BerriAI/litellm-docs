@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `crusoe/` |
 | Link to Provider Doc | [Crusoe Managed Inference Documentation ↗](https://docs.crusoecloud.com/managed-inference/overview/index.html) |
 | Base URL | `https://managed-inference-api-proxy.crusoecloud.com/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/crusoe#usage---litellm-python-sdk) |
 
 <br />
 <br />
