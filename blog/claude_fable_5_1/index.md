@@ -17,7 +17,7 @@ import TabItem from '@theme/TabItem';
 
 ![LiteLLM x Claude Fable 5.1](/img/litellm_claude_fable_5_1_announcement.png)
 
-LiteLLM supports [Claude Fable 5.1](https://www.anthropic.com/claude-fable-and-mythos-5-1) on Day 0, with spend, rate limits, fallbacks, and logging in one place. Anthropic is live now; Bedrock, Azure, and Gemini Enterprise Agent Platform land later today.
+LiteLLM supports [Claude Fable 5.1](https://www.anthropic.com/claude-fable-and-mythos-5-1) on Day 0 across Anthropic, Bedrock, Gemini Enterprise Agent Platform, and Azure, with spend, rate limits, fallbacks, and logging in one place.
 
 {/* truncate */}
 
