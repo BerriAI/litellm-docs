@@ -39,6 +39,8 @@ for result in response.results:
     print(f"Snippet: {result.snippet}\n")
 ```
 
+To use [Parallel AI Search](./parallel_ai.md), set `PARALLEL_API_KEY` and pass `search_provider="parallel_ai"`.
+
 ### Async Usage 
 
 ```python showLineNumbers title="Async Search"
@@ -102,6 +104,11 @@ search_tools:
     litellm_params:
       search_provider: tavily
       api_key: os.environ/TAVILY_API_KEY
+
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
 ```
 
 Start litellm
