@@ -15,7 +15,7 @@ Example trace in Langfuse using multiple models via LiteLLM:
 
 For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
 
-The SDK callback below (`langfuse`) is the legacy v2 SDK integration and is maintained for backward compatibility.
+The SDK callback below (`langfuse`) uses the Langfuse Python SDK v4 (`langfuse>=4.7`) and ingests via Langfuse's OTel-native endpoint, so traces appear in near real time.
 
 :::
 
@@ -27,20 +27,20 @@ The SDK callback below (`langfuse`) is the legacy v2 SDK integration and is main
 
 ## Usage with LiteLLM Python SDK
 
-:::note Legacy SDK Integration
+:::note
 
-This section covers the legacy Langfuse v2 SDK integration. For Langfuse v3+, prefer the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets) for better performance and compatibility.
+This section covers the `langfuse` callback, which uses the Langfuse Python SDK v4. Alternatively, you can use the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets) directly.
 
 :::
 
 ### Pre-Requisites
 Ensure you have run `uv add langfuse` for this integration
 ```shell
-uv add langfuse==2.59.7 litellm
+uv add "langfuse>=4.7" litellm
 ```
 
 ### Quick Start
-Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse (legacy v2 SDK):
+Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse:
 
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
@@ -150,16 +150,16 @@ response = completion(
       "session_id": "session-1",                    # set langfuse Session ID
       "tags": ["tag1", "tag2"],                     # set langfuse Tags
       "trace_name": "new-trace-name"                # set langfuse Trace Name
-      "trace_id": "trace-id22",                     # set langfuse Trace ID
+      "trace_id": "trace-id22",                     # set langfuse Trace ID (non-hex IDs are deterministically hashed, see note below)
       "trace_metadata": {"key": "value"},           # set langfuse Trace Metadata
-      "trace_version": "test-trace-version",        # set langfuse Trace Version (if not set, defaults to Generation Version)
+      "trace_version": "test-trace-version",        # set langfuse Version. v4 has a single version attribute - on a new trace, trace_version takes precedence over version
       "trace_release": "test-trace-release",        # set langfuse Trace Release
       ### OR ### 
       "existing_trace_id": "trace-id22",            # if generation is continuation of past trace. This prevents default behaviour of setting a trace name
       ### OR enforce that certain fields are trace overwritten in the trace during the continuation ###
       "existing_trace_id": "trace-id22",
       "trace_metadata": {"key": "updated_trace_value"},            # The new value to use for the langfuse Trace Metadata
-      "update_trace_keys": ["input", "output", "trace_metadata"],  # Updates the trace input & output to be this generations input & output also updates the Trace Metadata to match the passed in value. Requires `langfuse_enable_update_trace_keys: true`
+      "update_trace_keys": ["input", "output", "trace_metadata"],  # Updates the trace input & output to be this generations input & output (written via observation fields in v4) and updates the Trace Metadata to match the passed in value. Requires `langfuse_enable_update_trace_keys: true`
       "debug_langfuse": True,                                      # Will log the scalar metadata sent to litellm for the trace/generation as `metadata_passed_to_litellm` 
   },
 )
@@ -167,6 +167,14 @@ response = completion(
 print(response)
 
 ```
+
+:::info Langfuse v4 semantics
+
+- **Custom `trace_id`**: Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). A `trace_id` that isn't already in that format is deterministically hashed to one (via `Langfuse.create_trace_id(seed=<your id>)`). The same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the 32-hex hash, not your original string.
+- **`version` / `trace_version`**: Langfuse v4 has a single `version` attribute. On a new trace, `trace_version` takes precedence over `version`; on an `existing_trace_id` continuation, `version` still lands on the generation.
+- **Continued traces**: the v4 server derives a trace's name/input/output from the latest root observation in the trace. `update_trace_keys` with `input`/`output` is still honored - the values are written via observation fields.
+
+:::
 
 You can also pass `metadata` as part of the request header with a `langfuse_*` prefix:
 
@@ -193,10 +201,10 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 
 ##### Trace Specific Parameters
 
-* `trace_id`       - Identifier for the trace, must use `existing_trace_id` instead of `trace_id` if this is an existing trace, auto-generated by default
+* `trace_id`       - Identifier for the trace, must use `existing_trace_id` instead of `trace_id` if this is an existing trace, auto-generated by default. Non-hex IDs are deterministically hashed to a 32-hex W3C trace ID (see note above)
 * `trace_name`     - Name of the trace, auto-generated by default
 * `session_id`     - Session identifier for the trace, defaults to `None`
-* `trace_version`  - Version for the trace, defaults to value for `version`
+* `trace_version`  - Version for the trace, defaults to value for `version`. Langfuse v4 has a single `version` attribute: `trace_version` takes precedence on a new trace
 * `trace_release`  - Release for the trace, defaults to `None`
 * `trace_metadata` - Metadata for the trace, defaults to `None`
 * `trace_user_id`  - User identifier for the trace, defaults to completion argument `user`
