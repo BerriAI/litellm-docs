@@ -761,6 +761,8 @@ router_settings:
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
 | OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OPENZOO_API_BASE | Base URL for OpenZoo. Default is https://api.openzoo.fun/v1
+| OPENZOO_API_KEY | API key for OpenZoo. Any non-empty value works, since OpenZoo has no signup and bills per call
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
