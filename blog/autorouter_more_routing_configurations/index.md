@@ -70,11 +70,11 @@ Agentic sessions fire many requests per conversation, and most of them (tool res
 
 ## Shadow-evaluate it on a team, before anyone notices
 
-[Shadow evaluations](/blog/auto-router-shadow-evaluations) already let you test the Auto-Router against a key's live traffic without changing a single user-facing response. They picked up two upgrades:
+[Shadow evaluations](/blog/auto-router-shadow-evaluations) test the Auto-Router against your live traffic without changing a single user-facing response. Here's what you can do with them now:
 
-- **Target a `key`, `team`, or `user`.** JWT-authenticated traffic has no virtual key to point at; team and user targeting makes it evaluable for the first time
+- **Target a `key`, a `team`, or a `user`.** JWT-authenticated traffic has no virtual key to point at; team and user targeting makes it evaluable for the first time
 - **Compare several router configs in one job**, against the same sampled traffic
-- **Sampling is paired.** Every config sees the identical request, so quality and cost differences come from the config, never traffic luck
+- **Trust the comparison: sampling is paired.** Every config sees the identical request, so quality and cost differences come from the config, never traffic luck
 
 That closes the loop on everything above: draft a config with the new gates on, shadow it against your current router on a real team's traffic, read the paired comparison, promote the winner.
 
