@@ -17,7 +17,7 @@ import TabItem from '@theme/TabItem';
 
 ![LiteLLM x Claude Fable 5.1](/img/litellm_claude_fable_5_1_announcement.png)
 
-LiteLLM supports [Claude Fable 5.1](https://www.anthropic.com/claude-fable-and-mythos-5-1) on Day 0, with spend, rate limits, fallbacks, and logging in one place. Anthropic is live now; Bedrock, Vertex AI, and Azure AI land later today.
+LiteLLM supports [Claude Fable 5.1](https://www.anthropic.com/claude-fable-and-mythos-5-1) on Day 0 across Anthropic, Bedrock, Gemini Enterprise Agent Platform, and Azure, with spend, rate limits, fallbacks, and logging in one place.
 
 {/* truncate */}
 
@@ -47,32 +47,6 @@ model_list:
 ```
 
 </TabItem>
-<TabItem value="azure" label="Azure">
-
-```yaml
-model_list:
-  - model_name: claude-fable-5-1
-    litellm_params:
-      model: azure_ai/claude-fable-5-1
-      api_key: os.environ/AZURE_AI_API_KEY
-      api_base: os.environ/AZURE_AI_API_BASE  # https://<resource>.services.ai.azure.com
-```
-
-</TabItem>
-<TabItem value="vertex" label="Vertex AI">
-
-```yaml
-model_list:
-  - model_name: claude-fable-5-1
-    litellm_params:
-      model: vertex_ai/claude-fable-5-1
-      vertex_project: os.environ/VERTEX_PROJECT
-      vertex_location: global
-```
-
-Pinned regions carry a 10% premium over global, which LiteLLM applies.
-
-</TabItem>
 <TabItem value="bedrock" label="Bedrock">
 
 ```yaml
@@ -86,6 +60,32 @@ model_list:
 ```
 
 Bedrock serves it through inference profiles. `us.` and `eu.` carry the 10% regional premium, `global.` stays at base.
+
+</TabItem>
+<TabItem value="gemini-enterprise" label="Gemini Enterprise Agent Platform">
+
+```yaml
+model_list:
+  - model_name: claude-fable-5-1
+    litellm_params:
+      model: vertex_ai/claude-fable-5-1
+      vertex_project: os.environ/VERTEX_PROJECT
+      vertex_location: global
+```
+
+Google renamed Vertex AI to Gemini Enterprise Agent Platform; the LiteLLM prefix is still `vertex_ai/`. Pinned regions carry a 10% premium over global, which LiteLLM applies.
+
+</TabItem>
+<TabItem value="azure" label="Azure">
+
+```yaml
+model_list:
+  - model_name: claude-fable-5-1
+    litellm_params:
+      model: azure_ai/claude-fable-5-1
+      api_key: os.environ/AZURE_AI_API_KEY
+      api_base: os.environ/AZURE_AI_API_BASE  # https://<resource>.services.ai.azure.com
+```
 
 </TabItem>
 </Tabs>
@@ -102,12 +102,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 `reasoning_effort` maps to adaptive thinking, the only mode Fable 5.1 accepts. Fixed budgets, assistant prefill, and non-default `temperature` or `top_p` return a 400. Pass `output_config: {"effort": "max"}` for the full ladder [Fable 5 uses](../claude_fable_5/index.md).
-
-## Before you switch traffic over
-
-Thinking blocks travel one way, so a fallback onto Fable 5.1 keeps the conversation's reasoning while one off it to Opus 5 or Opus 4.8 drops it for the turns that run there. Keep the chain regardless: refusals come back as HTTP 200 with `stop_reason: "refusal"`, and the permitted targets are Opus 4.8 and Opus 5. Treat history as append-only, since editing an earlier turn invalidates every thinking block after it.
-
-Four behaviors also differ with no code change on your side: one tool call per turn where Fable 5 batched several, fewer progress updates between tool calls, more answers from memory at `low` effort, and whole-file rewrites in place of targeted edits. Anthropic's [prompting guide](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) has a fix for each.
 
 ## Feedback
 
