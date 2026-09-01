@@ -45,7 +45,7 @@ pip install litellm==1.99.0
 
 :::note
 
-PyPI and Docker artifacts for this release were built from different SHAs, but are expected to be functionally the same.
+PyPI and Docker artifacts for this release were built from different SHAs, but are expected to be functionally the same. PyPI was built from [`d0c8667`](https://github.com/BerriAI/litellm/commit/d0c86678ed3c8951a2c47ed1b1fabcf8de65b553) and Docker from [`fa647f7`](https://github.com/BerriAI/litellm/commit/fa647f742d7baefe8eb1181899d9c81b41559772).
 
 :::
 
