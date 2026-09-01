@@ -1,7 +1,7 @@
 ---
-title: "v1.99.0rc1 - Dark Mode, CLI OAuth Login & Batch Billing"
-slug: "v1-99-0-rc-1"
-date: 2026-08-22T18:00:01
+title: "v1.99.0 - Dark Mode, CLI OAuth Login & Batch Billing"
+slug: "v1-99-0"
+date: 2026-09-01T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,18 +30,24 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.99.0-rc.1
+docker.litellm.ai/berriai/litellm:1.99.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.99.0rc1
+pip install litellm==1.99.0
 ```
 
 </TabItem>
 </Tabs>
+
+:::note
+
+PyPI and Docker artifacts for this release were built from different SHAs, but are expected to be functionally the same. PyPI was built from [`d0c8667`](https://github.com/BerriAI/litellm/commit/d0c86678ed3c8951a2c47ed1b1fabcf8de65b553) and Docker from [`fa647f7`](https://github.com/BerriAI/litellm/commit/fa647f742d7baefe8eb1181899d9c81b41559772).
+
+:::
 
 :::danger Breaking Changes
 
@@ -55,12 +61,36 @@ pip install litellm==1.99.0rc1
 
 ## Key Highlights
 
-- **The Admin UI's migration off antd and Tremor is complete** - `@tremor/react`, `antd`, and `@ant-design/icons` are all removed from the dashboard's dependencies, with the last components, the shared primitives, and every form ported onto shadcn (base-vega) and react-hook-form. 115 UI pull requests land in this window, and the dashboard is now on React 19
+- **The Admin UI's migration off antd and Tremor is complete** - `@tremor/react`, `antd`, and `@ant-design/icons` are all removed from the dashboard's dependencies, with the last components, the shared primitives, and every form ported onto shadcn (base-vega) and react-hook-form. 130 UI pull requests land in this window, and the dashboard is now on React 19
 - **Dark mode ships** - a light/dark/system toggle in the top bar, semantic status tokens for success, warning and info, a dark variant of the LiteLLM logo, and an admin-supplied dark variant of a custom logo. Hardcoded Tailwind palette classes across the dashboard are mapped onto theme tokens so surfaces, form controls, inline styles and code blocks all follow the theme
 - **`lite login` is a real OAuth flow** - the CLI now authenticates with an authorization code plus PKCE against the proxy, stores the credential and the refresh token in the OS keychain rather than a `token.json` on disk, and `lite login --config-claude` wires Claude Code up at login
 - **Batch spend is accounted for end to end** - enqueued-token rate limiting admits batches against a token budget and refunds on completion or cancellation, cost rows are claimed atomically so multi-pod polling cannot double-bill, cancelled and failed batches that still produced output are billed, a single undecodable output line no longer zeroes a batch's spend, and Bedrock batches can be cancelled through `POST /v1/batches/{id}/cancel`
 - **Provisioned throughput can be declared in `config.yaml`** - a PTU reservation no longer has to be created through the API; the rollup accrues flat cost for config-declared deployments, refuses an incomplete reservation the way the endpoints do, requires an operator-declared id, and warns when a config declares PTU while attribution is switched off
 - **The complexity router is operator-configurable** - operator-defined tier sets for the LLM classifier, custom classifier plugins via `classifier_type: custom`, a plan-mode tier floor for coding-agent clients, a business classification rubric preset, and per-model reasoning effort in the tier editor
+
+## Included from v1.99.0-rc.2
+
+This stable also carries everything that landed on the release line after the rc.1 cut, shipped in v1.99.0-rc.2 and included here:
+
+- **[Anthropic](../../docs/providers/anthropic)**
+    - Translate `tool_result` document blocks in the `/v1/messages` bridge - [PR #38251](https://github.com/BerriAI/litellm/pull/38251)
+- **Dashboard (dark mode follow-ups)**
+    - Make provider logos readable in dark mode - [PR #38588](https://github.com/BerriAI/litellm/pull/38588)
+    - One-click theme toggle and matching Docs/Blog styling in the top bar - [PR #38601](https://github.com/BerriAI/litellm/pull/38601)
+    - Make code blocks and the logs JSON viewer follow the theme in dark mode - [PR #38771](https://github.com/BerriAI/litellm/pull/38771), [PR #38778](https://github.com/BerriAI/litellm/pull/38778)
+    - Make playground chat bubbles theme-aware, and theme the created-key box - [PR #37978](https://github.com/BerriAI/litellm/pull/37978), [PR #37985](https://github.com/BerriAI/litellm/pull/37985)
+- **Dashboard (bug fixes)**
+    - Open select popups below the trigger instead of over it - [PR #38554](https://github.com/BerriAI/litellm/pull/38554)
+    - Stop server-searched comboboxes from clobbering picks and queries, and let the paginated search select keep what the user types - [PR #38574](https://github.com/BerriAI/litellm/pull/38574), [PR #38475](https://github.com/BerriAI/litellm/pull/38475)
+    - Keep a deleted-from search query instead of blanking the box - [PR #38830](https://github.com/BerriAI/litellm/pull/38830)
+    - Keep focus in the add model public name input while typing, and restore its tooltip layout - [PR #38366](https://github.com/BerriAI/litellm/pull/38366), [PR #37986](https://github.com/BerriAI/litellm/pull/37986)
+    - Restore the reopen control for the log drawer's trace sidebar - [PR #38782](https://github.com/BerriAI/litellm/pull/38782)
+    - Stack the policy flow builder below the popup layer so guardrail options render - [PR #38273](https://github.com/BerriAI/litellm/pull/38273)
+    - Drop stray text next to Close in the model connection test dialog - [PR #38852](https://github.com/BerriAI/litellm/pull/38852)
+- **Docker**
+    - Pin the image builds' apk python to 3.13 and bump wolfi-base for glibc 2.44 - [PR #38917](https://github.com/BerriAI/litellm/pull/38917), [PR #38973](https://github.com/BerriAI/litellm/pull/38973)
+- **End-to-End Testing**
+    - De-flake the select-anchoring, router-fallback, vertex realtime and vision fixture specs (test-only) - [PR #38848](https://github.com/BerriAI/litellm/pull/38848), [PR #38862](https://github.com/BerriAI/litellm/pull/38862)
 
 ## New Providers and Endpoints
 
@@ -453,13 +483,13 @@ Documentation now lives in [BerriAI/litellm-docs](https://github.com/BerriAI/lit
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 433)
+PRs by ownership area (total: 451)
 
-- UI: 115
-- Other (CI / chore / tests / build / version bumps): 65
+- UI: 130
+- Other (CI / chore / tests / build / version bumps): 67
 - Spend / Budgets / Rate Limits: 48
 - Performance: 44
-- Models & Providers: 42
+- Models & Providers: 43
 - LLM API Endpoints: 41
 - Logging: 23
 - Auth & Management: 22
@@ -499,4 +529,4 @@ Three fixes in this release reached the repository as maintainer-pushed copies s
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.98.0-rc.1...v1.99.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.98.0...v1.99.0

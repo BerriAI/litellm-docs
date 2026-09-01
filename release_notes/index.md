@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.98.0: Provisioned Throughput Billing, Shadow Evals & Routing Groups](/release_notes/v1.98.0/v1-98-0)
+### [v1.99.0: Dark Mode, CLI OAuth Login & Batch Billing](/release_notes/v1.99.0/v1-99-0)
 
-_August 22, 2026_
+_September 1, 2026_
 
-Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cost_per_ptu_per_hour` on a deployment driving a per-model flat cost by active hour while per-token billing is switched off there, so a team paying for reserved capacity is not charged twice for the same traffic; a shadow eval job that samples a slice of one key's successful traffic, replays it through the auto-router in a detached task that never serves a response or adds latency, and has an LLM judge compare both answers blind, so the router can be measured before it is adopted; routing groups that are callable models, where `model=<group_name>` routes across the union of member deployments with the group's own strategy, appears in `/v1/models` for Claude Code and Codex discovery, and is grantable on keys and teams; six `x-litellm-response-cost-*` headers that split a response's cost into input, cache read, cache creation, output, reasoning, and tool usage; TPM reservations that follow declared output size per key, per team, and per model instead of one static floor for every tenant; and the largest step yet in the Admin UI's move off antd and Tremor, with 75 UI pull requests carrying the navbar, playground, usage, cost tracking, the log details drawer, and much of the shared component library onto shadcn. Note that the Langfuse metadata blob is now sourced from a StandardLoggingPayload allowlist, so roughly 20 fields no longer appear on the generation.
+The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, `antd` and `@ant-design/icons` dropped from the dashboard's dependencies and the dashboard now on React 19; dark mode ships with a light/dark/system toggle, semantic status tokens, and theme-aware logos, surfaces and code blocks; `lite login` becomes a real OAuth flow with authorization code plus PKCE, storing the credential and refresh token in the OS keychain, and `lite login --config-claude` wires up Claude Code at login; batch spend is accounted for end to end, with enqueued-token rate limiting that refunds on completion, atomic cost claims so multi-pod polling cannot double-bill, and billing for cancelled and failed batches that still produced output; provisioned throughput can be declared in `config.yaml`; and the complexity router becomes operator-configurable with custom classifier plugins, tier sets, and per-model reasoning effort. This stable also folds in the v1.99.0-rc.2 fixes.
 
 ---
 
@@ -22,6 +22,7 @@ Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cos
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
