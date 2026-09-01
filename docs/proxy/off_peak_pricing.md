@@ -24,6 +24,8 @@ model_list:
 
 The schedule is scoped to the deployment it is set on. Other deployments of the same backend model keep their own pricing, so two deployments can carry different schedules and a deployment without the block always bills at its standard rates.
 
+When `model_info` carries only the `off_peak_pricing` block, as above, the standard rates outside the windows come from the built-in cost map entry for the backend model. Set `input_cost_per_token` and `output_cost_per_token` beside the block to override them.
+
 ## Weekday-qualified windows
 
 When the provider's schedule differs by day of week, use `windows`, a list of rules that each pair `hours_utc` with the weekdays it applies on. Weekdays are ISO numbers (1 = Monday through 7 = Sunday) or English names or abbreviations. A rule without `weekdays` applies every day, and any flat `hours_utc` at the top level stays active alongside the rules; the request is off-peak if any of them matches.
