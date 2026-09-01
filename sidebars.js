@@ -755,6 +755,7 @@ const sidebars = {
             "proxy/pricing_calculator",
             "proxy/provider_margins",
             "proxy/provider_discounts",
+            "proxy/off_peak_pricing",
             "proxy/sync_models_github",
             "proxy/billing",
             "proxy/spend_logs_deletion",
