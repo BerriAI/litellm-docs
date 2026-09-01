@@ -401,7 +401,7 @@ The maintenance pass over existing entries touched 383 of them. Cache pricing mo
     - Run `/v1/messages` provider errors through the same exception mapping as `/v1/chat/completions` before failure logging, so error spans carry the provider and the upstream status survives - [PR #38310](https://github.com/BerriAI/litellm/pull/38310)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Support `langfuse_environment` as a per-key dynamic callback param, and warn and fall back to the default environment on an invalid `LANGFUSE_TRACING_ENVIRONMENT` instead of failing requests - [PR #38264](https://github.com/BerriAI/litellm/pull/38264), [PR #38582](https://github.com/BerriAI/litellm/pull/38582)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](../../docs/proxy/prometheus)**
     - Add `prometheus_deployment_and_latency_caller_identity` to expose the caller's alias, email, or both on the deployment and latency metric families, including early failure counters - [PR #38221](https://github.com/BerriAI/litellm/pull/38221)
 - **[New Relic](../../docs/proxy/logging)**
     - Route each team's traces to its own New Relic account and region via the `newrelic` team callback, and emit per-team cost, token, request, and latency metrics with the same credentials - [PR #37603](https://github.com/BerriAI/litellm/pull/37603), [PR #37610](https://github.com/BerriAI/litellm/pull/37610)
