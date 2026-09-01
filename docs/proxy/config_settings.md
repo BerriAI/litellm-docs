@@ -1085,16 +1085,18 @@ router_settings:
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
 | LAGO_API_EVENT_CODE | Event code for Lago API events
 | LAGO_API_KEY | API key for accessing Lago services
-| LANGFUSE_BASE_URL | Base URL for Langfuse service |
-| LANGFUSE_DEBUG | Toggle debug mode for Langfuse
+| LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
+| LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
 | LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
-| LANGFUSE_HOST | Deprecated host URL for Langfuse service |
+| LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
 | LANGFUSE_MOCK_LATENCY_MS | Mock latency in milliseconds for Langfuse API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGFUSE_PUBLIC_KEY | Public key for Langfuse authentication
 | LANGFUSE_RELEASE | Release version of Langfuse integration
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
+| LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
+| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`
 | LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
 | LANGSMITH_API_KEY | API key for Langsmith platform
 | LANGSMITH_BASE_URL | Base URL for Langsmith service
@@ -1440,11 +1442,11 @@ router_settings:
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for accessing the UI
 | UI_USERNAME | Username for accessing the UI
-| UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse
-| UPSTREAM_LANGFUSE_HOST | Host URL for upstream Langfuse service
-| UPSTREAM_LANGFUSE_PUBLIC_KEY | Public key for upstream Langfuse authentication
-| UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
-| UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
+| UPSTREAM_LANGFUSE_DEBUG | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
+| UPSTREAM_LANGFUSE_HOST | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
+| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
+| UPSTREAM_LANGFUSE_RELEASE | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
+| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
 | USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
