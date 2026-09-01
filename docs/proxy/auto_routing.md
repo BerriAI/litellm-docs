@@ -471,17 +471,20 @@ The v1.99 release candidates briefly carried a separate `router_model_name` body
 
 ## Reported savings
 
-Every auto-routed request records what routing saved against a counterfactual: the one model the traffic would have run on without a router
+Every auto-routed request records what routing saved against a counterfactual: the one model the traffic would have run on without a router, net of what the routing decision itself cost
 
 ```text
-savings = cost(baseline model, this request) - cost(the model the router picked, this request)
+savings = cost(baseline model, this request)
+        - cost(the model the router picked, this request)
+        - cost(the classifier call that routed it)
 ```
 
 - **The baseline is derived, not configured.** Without a router a deployment has to pick one model able to carry the hardest request it will see, so the baseline is the most expensive model in the hardest tier the router configures. Hardest *configured*, so a router defining only `SIMPLE` and `MEDIUM` is measured against the best it could actually have picked. A tier naming a pool contributes every model in it, and self-defined tier labels carry no severity order, so there every model across every tier competes
 - **"Most expensive" is settled by cost, not by rate**, since a model dearer per output token can be cheaper per cached token. Candidates are priced once against a fixed reference request (20k prompt tokens: 19k cache reads and a 1k cache write, plus 1k completion) through the same engine the savings use. Unpriceable candidates drop out, and if none price the driver reports zero. The ranking is pinned per router instance, so it stays off the per-request path
 - **Only one side is hypothetical.** What the request actually cost is read back from what the cost calculator recorded, on the service tier and data residency it was billed on, rather than re-derived; the baseline never ran, so it is priced through the same engine on that same basis. That figure is input plus output cost, leaving built-in tool cost, discounts and margins outside the comparison
 - **The result is signed.** Switching models leaves the new one cold, and when the resulting cache-creation charge outweighs the cheaper rates the number goes negative and the dashboard says so
-- **It reads `0.0`** when either side cannot be resolved or priced, or when both resolve to the same provider and model. That is model identity rather than deployment identity, so routing between two deployments of one model reports zero even where their negotiated rates differ
+- **The classifier's own charge counts against the saving** (v1.100 and later). An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
+- **The model comparison reads `0.0`** when either side cannot be resolved or priced, or when both resolve to the same provider and model. That is model identity rather than deployment identity, so routing between two deployments of one model reports zero even where their negotiated rates differ. A recorded `classifier_cost` still comes off that zero, so a request routed to the baseline itself reports the classifier charge as a small negative saving
 
 ### The baseline is priced with a warm cache
 
@@ -503,11 +506,11 @@ writes = 0 if warm else cache_creation
 - **Usage**, normalized from each provider's own shape: `cache_read_input_tokens` and `cache_creation_input_tokens` on the Anthropic surface, `prompt_tokens_details.cached_tokens` on the OpenAI-compatible surface, plus DeepSeek's `prompt_cache_hit_tokens`
 - **Daily rollups**: `cache_read_input_tokens` and `cache_creation_input_tokens` columns alongside `autorouter_savings_spend`, on `LiteLLM_DailyUserSpend`, `LiteLLM_DailyTeamSpend`, `LiteLLM_DailyTagSpend`, `LiteLLM_DailyOrganizationSpend`, `LiteLLM_DailyEndUserSpend` and `LiteLLM_DailyAgentSpend`
 - **API**: `GET /user/daily/activity` returns them under `metrics`, with a `total_autorouter_savings_spend` in the response metadata
-- **UI**: the **Cost Optimization** page reads that endpoint, where the number is labeled "Auto-router savings"
+- **UI**: the **Cost Optimization** page reads that endpoint, where the number is labeled "Auto-router savings". Its Auto-Router Benchmarks tab folds each turn's `classifier_cost` into that turn's spend, so the savings percentage there is net savings measured against the full baseline cost
 
 :::note
 
-`LiteLLM_SpendLogs` has no cache-token or savings columns, so the split is not queryable there; the daily rollup above is. The usage carrying that split does ride in the row's `metadata` under `usage_object`, which is what the daily savings writer reads back to rebuild `Usage`. Its `cache_hit` and `cache_key` columns are unrelated, describing LiteLLM's own response cache rather than provider-side prompt caching. Routing itself persists as `routing_decision` in metadata: `routed_model`, `cause` and `conversation_continuing` always, `tier` when a tier was determined, and the derived baseline alongside the deployment it resolved to
+`LiteLLM_SpendLogs` has no cache-token or savings columns, so the split is not queryable there; the daily rollup above is. The usage carrying that split does ride in the row's `metadata` under `usage_object`, which is what the daily savings writer reads back to rebuild `Usage`. Its `cache_hit` and `cache_key` columns are unrelated, describing LiteLLM's own response cache rather than provider-side prompt caching. Routing itself persists as `routing_decision` in metadata: `routed_model`, `cause` and `conversation_continuing` always, `tier` when a tier was determined, `classifier_cost` when the LLM classifier ran, and the derived baseline alongside the deployment it resolved to. The net figure itself is stamped on that same metadata as `autorouter_savings`, and readers honor the stamped value over recomputing it
 
 :::
 
