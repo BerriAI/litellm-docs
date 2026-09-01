@@ -1202,6 +1202,7 @@ const sidebars = {
         "providers/publicai",
         "providers/predibase",
         "providers/pydantic_ai_agent",
+        "providers/qwencloud",
         "providers/ragflow",
         "providers/ragflow_vector_store",
         "providers/recraft",
