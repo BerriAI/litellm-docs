@@ -1,6 +1,10 @@
 # Dashscope API (Qwen models)
 https://dashscope.console.aliyun.com/
 
+:::info
+This platform now goes by QwenCloud outside mainland China and Qwen AI Platform in mainland China. See the [QwenCloud and Qwen AI Platform page](./qwencloud) for the `qwencloud/` and `qwen_ai_platform/` prefixes. The `dashscope/` prefix remains fully supported as an alias
+:::
+
 **We support ALL Qwen models (from Alibaba Cloud), just set `dashscope/` as a prefix when sending completion requests**
 
 ## API Key

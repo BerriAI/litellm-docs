@@ -769,6 +769,14 @@ router_settings:
 | PG_VECTOR_API_KEY | API key for a pgvector vector store
 | PINSTRIPES_API_KEY | API key for Pinstripes
 | PROMETHEUS_SELECTED_INSTANCE | Prometheus `instance` label to restrict to when the proxy queries `PROMETHEUS_URL` for fallback metrics. Series carrying any other instance are skipped; when unset, every instance is counted
+| QWEN_AI_PLATFORM_API_BASE | Base URL for Qwen AI Platform (mainland China). Default is https://dashscope.aliyuncs.com/compatible-mode/v1
+| QWEN_AI_PLATFORM_API_BASE_IMAGE | Base URL for Qwen AI Platform image generation. Default is https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+| QWEN_AI_PLATFORM_API_BASE_RERANK | Base URL for Qwen AI Platform rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
+| QWEN_AI_PLATFORM_API_KEY | API key for Qwen AI Platform, read before the `DASHSCOPE_API_KEY` fallback
+| QWENCLOUD_API_BASE | Base URL for QwenCloud. Default is https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+| QWENCLOUD_API_BASE_IMAGE | Base URL for QwenCloud image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+| QWENCLOUD_API_BASE_RERANK | Base URL for QwenCloud rerank. Default is https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks
+| QWENCLOUD_API_KEY | API key for QwenCloud, read before the `DASHSCOPE_API_KEY` fallback
 | REDIS_AZURE_AD_TOKEN | Flag enabling Azure AD authentication for Redis. Set it to `true`, not to a token. Ignored with a warning when a GCP IAM service account is configured as well. **Default is False**
 | REDUCTO_API_KEY | API key for Reducto OCR
 | REPLICATE_API_BASE | Base URL for Replicate. Default is https://api.replicate.com/v1
