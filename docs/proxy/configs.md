@@ -705,6 +705,28 @@ NO_REDOC="True"
 
 in your environment, and restart the proxy. 
 
+### Disable OpenAPI schema
+
+To disable the raw OpenAPI schema (defaults to `<your-proxy-url>/openapi.json`), set 
+
+```env
+NO_OPENAPI="True"
+```
+
+in your environment, and restart the proxy. 
+
+### Restrict all API documentation for production/air-gapped deployments
+
+Swagger, Redoc and the raw OpenAPI schema are three independent surfaces, each disabled by its own env var. To fully lock down a production or air-gapped deployment, set all three: 
+
+```env
+NO_DOCS="True"
+NO_REDOC="True"
+NO_OPENAPI="True"
+```
+
+Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` then all 404 with no schema in the response, while inference and management routes are unaffected.
+
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 
 1. Setup config.yaml
