@@ -38,6 +38,8 @@ Enable **Override OpenAI Base URL** and enter your proxy URL with `/cursor`:
 https://your-litellm-proxy.com/cursor
 ```
 
+The proxy must be reachable from the internet: Cursor sends the requests from its own servers, not from your machine, with `User-Agent: Cursor/1.0`.
+
 ![](https://colony-recorder.s3.amazonaws.com/files/2025-12-13/6580de2b-3a59-45b2-b7b6-3ab105d87e74/ascreenshot.jpeg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2JDELI43356LVVTC%2F20251213%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20251213T224156Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=5a1af4ff63d38d51e06d398ed50f10161d690e3e57e9d67c1d23ce5b7ffdefd5)
 
 ### 2. Create Virtual Key
@@ -172,7 +174,8 @@ LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api
 | Issue | Solution |
 |-------|----------|
 | Model not responding | Check base URL ends with `/cursor` and key has model access |
-| Auth errors | Regenerate key; ensure it starts with `sk-` |
+| `Invalid API key` / `Unauthorized User API key` | Cursor shows this when the proxy answers 401. The API Key field must hold a LiteLLM virtual key (it starts with `sk-`); a placeholder value is rejected |
+| `User API Key Rate limit exceeded` | Cursor shows this for any 429 or 5xx from the proxy, so the cause is not always a rate limit. Look up those requests in the LiteLLM logs (they arrive with `User-Agent: Cursor/1.0`) for the real error. Frequent causes are rpm or tpm limits on the key, since each Cursor request carries a system prompt of about 25k tokens, and provider 429s |
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
 | Cursor does not list your LiteLLM models | Upgrade to LiteLLM v1.97.0+, which serves `GET /cursor/models`. Earlier versions do not serve that route and answer 401 or 404. Verify with `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"` |
 | `The model "X" is already available as "Y"` | Cursor blocks names that match its built-in models. Add the model under a distinct public model name (see the warning in step 3) |
