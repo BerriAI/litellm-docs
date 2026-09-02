@@ -5,7 +5,7 @@ import Image from '@theme/IdealImage';
 
 # Using your MCP
 
-This document covers how to use LiteLLM as an MCP Gateway. You can see how to use it with Responses API, Cursor IDE, and OpenAI SDK.
+This document covers how to use LiteLLM as an MCP Gateway. You can see how to use it with Responses API, Cursor IDE, and OpenAI SDK. For choosing between endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference)
 
 ### Use on LiteLLM UI 
 
@@ -120,7 +120,7 @@ curl --location 'http://localhost:4000/v1/responses' \
         {
             "type": "mcp",
             "server_label": "litellm",
-            "server_url": "litellm_proxy/mcp",
+            "server_url": "litellm_proxy",
             "require_approval": "never",
             "allowed_tools": ["GitMCP-fetch_litellm_documentation"]
         }
@@ -154,7 +154,7 @@ response = client.responses.create(
         {
             "type": "mcp",
             "server_label": "litellm",
-            "server_url": "litellm_proxy/mcp",
+            "server_url": "litellm_proxy",
             "require_approval": "never",
             "allowed_tools": ["GitMCP-fetch_litellm_documentation"]
         }
@@ -183,7 +183,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP:
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "http://localhost:4000/mcp",
       "headers": {
         "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
       }

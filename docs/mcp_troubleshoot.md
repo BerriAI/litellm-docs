@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 When LiteLLM acts as an MCP proxy, traffic normally flows `Client → LiteLLM Proxy → MCP Server`, while OAuth-enabled setups add an authorization server for metadata discovery.
 
-For provisioning steps, transport options, and configuration fields, refer to [mcp.md](./mcp.md).
+For provisioning steps and configuration fields, refer to [mcp.md](./mcp.md). For choosing endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference).
 
 ## Quick Start: Debug with One Command
 
