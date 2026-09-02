@@ -177,6 +177,7 @@ const sidebars = {
           "proxy/guardrails/javelin",
           "proxy/guardrails/akto",
           "proxy/guardrails/vigil_guard",
+          "proxy/guardrails/wingback",
           "proxy/guardrails/xecguard",
           "proxy/guardrails/straiker",
           "proxy/guardrails/alice",
