@@ -1,7 +1,7 @@
 ---
 title: "v1.99.1 - OTel Cache Token Counts"
 slug: "v1-99-1"
-date: 2026-09-01T13:50:29
+date: 2026-09-02T14:01:25
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -18,13 +18,15 @@ authors:
 hide_table_of_contents: false
 ---
 
+:::info This is a Docker-only release
+
+`v1.99.1` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.99.1` will not resolve. If you install LiteLLM from PyPI, stay on `1.99.0`; the change in this release reaches you through the image.
+
+The `latest` tag does point at this release.
+
+:::
+
 ## Deploy this version
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs>
-<TabItem value="docker" label="Docker">
 
 ```bash
 docker run \
@@ -33,23 +35,13 @@ docker run \
 docker.litellm.ai/berriai/litellm:1.99.1
 ```
 
-</TabItem>
-<TabItem value="pip" label="Pip">
-
-```bash
-pip install litellm==1.99.1
-```
-
-</TabItem>
-</Tabs>
-
 `v1.99.1` is a patch release on top of [`v1.99.0`](/release_notes/v1.99.0/v1-99-0). It adds cache token counts to OpenTelemetry v2 LLM spans.
 
 If you export OTel v2 traces to a tool that prices requests from token counts, this release is worth picking up. Under `v1.99.0` an LLM span carried the cache cost attributes but no cache token counts, so anything computing cache spend from tokens recorded zero even when the provider had billed for a cache write or a cache read. The span now carries `gen_ai.usage.cache_creation.input_tokens` and `gen_ai.usage.cache_read.input_tokens` alongside the existing input and output token counts, matching what the API response reports in `usage`.
 
 The counts are read from the provider's own usage object, so they are populated today for Anthropic-shaped usage, which is where prompt caching reports a separate creation and read count. Providers that report a cached-token count in a different shape are not yet covered, and generalizing that is follow-up work.
 
-This release also refreshes RestrictedPython to 8.5 in the lockfile, matching the version the development line already resolves. No configuration changes.
+This release also refreshes RestrictedPython to 8.5 in the lockfile, matching the version the development line already resolves. That only affects the image, since there is no PyPI artifact for this version. No configuration changes.
 
 ### What's Changed
 
