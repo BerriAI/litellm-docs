@@ -646,4 +646,5 @@ The allowlist check runs client-side, so a router excluded by it leaves nothing 
 ## See also
 
 - Announcement post: [Auto Router v2: one router for complexity, semantic, and adaptive routing](/blog/autorouter-v2)
+- Local Claude Code preview: [Autorouter CLI](../learn/autorouter_cli.md)
 - Legacy semantic router: [Semantic Auto Router (deprecated)](./auto_routing_semantic.md)

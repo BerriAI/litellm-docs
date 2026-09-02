@@ -12,6 +12,8 @@ The autorouter CLI is early and evolving. Tell us what works, what breaks, and w
 
 :::
 
+For proxy setup and the full configuration reference, see [Auto Routing](../proxy/auto_routing.md).
+
 ## 1. Install the CLI
 
 Install `lite` from the internal staging branch with a single curl command; `uv` is bootstrapped automatically if it is missing.

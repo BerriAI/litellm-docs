@@ -389,9 +389,9 @@ const config = {
           { to: '/blog', label: 'Blog', position: 'left' },
           {
             type: 'doc',
-            docId: 'learn/autorouter_cli',
+            docId: 'proxy/auto_routing',
             position: 'left',
-            label: 'Autorouter CLI',
+            label: 'Auto Router',
           },
           {
             href: 'https://trust.litellm.ai/',
