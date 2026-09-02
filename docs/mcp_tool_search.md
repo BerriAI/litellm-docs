@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # MCP Tool Search
 
-Swap the full MCP catalog for a fixed set of virtual tools (`mcp_tool_search`, `mcp_tool_call`, `agent_search`) so a key with hundreds of tools available only ever exposes three on `tools/list`. The LLM searches by keyword, gets back the ranked matches, then calls the discovered tool by name. `agent_search` does the same for the [A2A agent registry](./a2a.md#search-the-registry), ranked by embeddings instead of keywords.
+Swap the full MCP catalog for a fixed set of virtual tools (`mcp_tool_search`, `mcp_tool_call`, `agent_search`) so a key with hundreds of tools available only ever exposes three on `tools/list`. The LLM searches by meaning (or by keyword when no embedding model is configured), gets back the ranked matches, then calls the discovered tool by name. `agent_search` does the same for the [A2A agent registry](./a2a.md#search-the-registry).
 
 :::info Related Documentation
 - [MCP Overview](./mcp.md)
@@ -99,26 +99,54 @@ The default is merged **after** the caller-scope validation runs, so it never tu
 
 When `mcp_tool_search_enabled: true` is set on a key's `object_permission`, both the streamable-http endpoint (`/mcp/`) and the REST surface (`/mcp-rest/tools/list`) return exactly three tools regardless of how many MCP servers the key can reach:
 
-- `mcp_tool_search(query, top_k=5)` returns the ranked list of real tools that match the query.
+- `mcp_tool_search(query, top_k=5)` returns the ranked list of real tools that match the query. See [Semantic search](#semantic-search) for how ranking works and how to tune it.
 - `mcp_tool_call(tool_name, arguments)` executes one of the tools the LLM discovered through search.
 - `agent_search(query, top_k=5)` returns the A2A agents the key can reach, ranked by semantic similarity to the task described in `query`. It needs `litellm_settings.agent_search_embedding_model`; see [Search the registry](./a2a.md#search-the-registry).
 
 Both handlers run through the same filtered catalog and dispatch path as the normal `/tools/call` route, so search only surfaces tools the key is already allowed to see, and calls still resolve through `_get_allowed_mcp_servers` and `execute_mcp_tool`.
 
-### Search algorithm
+### Semantic search
 
-Ranking is a token-overlap count against the tool's `name` and `description` fields; no embeddings and no extra dependency. For each request the proxy:
+By default `mcp_tool_search` ranks by keyword overlap, so a query has to share a token with the tool's `name` or `description`: `"exchange"` finds a tool described as "Get the latest foreign exchange rates", but `"FX"` does not. Point `litellm_settings.mcp_tool_search.embedding_model` at an embedding model from your `model_list` and the proxy ranks by meaning instead. It embeds the query and each reachable tool's `name` plus `description`, scores them by cosine similarity, and returns the best `top_k`. Tool embeddings are cached per model, so repeat searches over an unchanged catalog only embed the query. The embedding call is billed to the calling key and shows up in spend logs like any other embedding request
 
-1. Lowercases the query and splits it on whitespace into tokens (`"add numbers"` becomes `["add", "numbers"]`).
-2. For every tool the caller can reach, builds a haystack of `lower(name + " " + description)`.
-3. Scores each tool by the number of query tokens found as a substring of the haystack. A tool that contains both `add` and `numbers` scores 2; a tool that contains only `add` scores 1.
-4. Drops anything with a score of 0, sorts the rest by score descending, and returns the first `top_k` (default 5).
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
 
-There is no similarity threshold beyond "score > 0", so a query that lands on only one token still returns matches. Order among tools with the same score follows Python's stable sort of the underlying catalog. Empty queries return an empty list. The `top_k` argument on `mcp_tool_search` is per-call, so an LLM can widen the window itself when the first result set is too narrow.
+litellm_settings:
+  mcp_tool_search:
+    embedding_model: text-embedding-3-small  # unset = keyword matching
+    top_k: 5                                 # 1-100, most ranked tools a search returns
+    similarity_threshold: 0.2                # 0.0-1.0, drop weaker matches (0.0 = no cutoff)
+    core_tools:                              # always returned first, when the caller can reach them
+      - treasury-get_rates
+```
+
+```console title="FX now finds the foreign exchange tool" showLineNumbers
+$ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
+    -H "Authorization: Bearer $KEY" \
+    -d '{"name":"mcp_tool_search","arguments":{"query":"FX"}}' \
+  | jq -r '.content[0].text | fromjson | [.[] | {name, score}]'
+[
+  {
+    "name": "treasury-get_rates",
+    "score": 0.2631137623742877
+  }
+]
+```
+
+`top_k` caps how many ranked tools come back; the `top_k` argument on the `mcp_tool_search` call is applied on top of it, so a caller can narrow the window but not widen it past the configured value. `similarity_threshold` is the lowest cosine similarity a tool needs to appear; leave it at `0.0` to always fill `top_k`, or raise it when you would rather return nothing than a weak match. Semantic results carry a `score` field so the LLM can judge confidence
+
+`core_tools` is the hybrid mode: the named tools (in the `server-tool` form that `tools/list` shows) are returned first on every search, without a score, and do not count against `top_k`. The remaining reachable tools are ranked semantically after them. A core tool the caller's key, team, or server permissions do not allow is simply omitted, so listing a tool here never grants access to it. An empty query returns only the core tools. Without an embedding model the same core-first ordering applies on top of keyword matching
+
+These settings can also be changed at runtime from the Admin UI under MCP Servers, Tool Search, or through `GET /get/mcp_tool_search_settings` and `PATCH /update/mcp_tool_search_settings` (proxy admin only). Values saved this way are stored in the database and picked up by every pod within a few seconds, no restart needed
 
 ## Prerequisites
 
-Requires LiteLLM v1.92.x or later.
+Requires LiteLLM v1.92.x or later. Semantic ranking and `core_tools` require an embedding model in `model_list`; no extra Python dependency is needed.
 
 ## Access control
 
