@@ -271,6 +271,22 @@ You can also add individual model entries manually via `ANTHROPIC_CUSTOM_MODEL_O
 
 :::
 
+### 7. Show a Clean Name in the Picker with `display_name`
+
+The `/model` picker only keeps gateway models whose id contains `claude` or `anthropic`, so a non-Anthropic model needs a claude-flavored name like `kimi-k3-claude-compatible` to appear at all; the picker then shows that raw id as the label. To keep the id for routing but show a friendlier label, set `display_name` under the model's `model_info`:
+
+```yaml
+model_list:
+  - model_name: kimi-k3-claude-compatible
+    litellm_params:
+      model: moonshot/kimi-k3
+      api_key: os.environ/MOONSHOT_API_KEY
+    model_info:
+      display_name: Kimi K3
+```
+
+The Anthropic-shaped `GET /v1/models` response now returns `"display_name": "Kimi K3"` for that entry, so the picker lists **Kimi K3** (labeled From gateway) while every request keeps using the `kimi-k3-claude-compatible` id. Models without a `display_name` keep showing their id, and the OpenAI-shaped listing is unaffected; nothing gets duplicated in other harnesses.
+
 ## How It Works
 
 LiteLLM acts as a unified interface that:
