@@ -309,6 +309,54 @@ curl -L -X POST 'http://0.0.0.0:4000/rerank' \
 </TabItem>
 </Tabs>
 
+### Truncating long documents
+
+vLLM's `/rerank` endpoint takes its own truncation controls, and LiteLLM forwards them to `hosted_vllm` rerank models whenever they are set. Without one of them, a document longer than the reranker's context window fails with a context length error
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `truncate_prompt_tokens` | integer | Truncate each query and document pair to this many tokens before scoring |
+| `truncation_side` | `left` or `right` | Which end of the input is cut off |
+| `max_tokens_per_doc` | integer | Cap each document at this many tokens |
+| `max_tokens_per_query` | integer | Cap the query at this many tokens |
+
+An invalid value, such as `truncation_side: "middle"`, returns a 400 before anything is sent to vLLM
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import rerank
+
+response = rerank(
+    model="hosted_vllm/your-rerank-model",
+    query="What is the capital of the United States?",
+    documents=["<a document longer than the reranker context window>"],
+    truncate_prompt_tokens=512,
+    truncation_side="left",
+)
+print(response)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl -L -X POST 'http://0.0.0.0:4000/rerank' \
+-H 'Authorization: Bearer sk-1234' \
+-H 'Content-Type: application/json' \
+-d '{
+    "model": "my-rerank-model",
+    "query": "What is the capital of the United States?",
+    "documents": ["<a document longer than the reranker context window>"],
+    "truncate_prompt_tokens": 512,
+    "truncation_side": "left"
+}'
+```
+
+</TabItem>
+</Tabs>
+
 ## Send Video URL to VLLM
 
 Example Implementation from VLLM [here](https://github.com/vllm-project/vllm/pull/10020)
