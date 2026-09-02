@@ -757,7 +757,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest --detailed_debug
+   docker.litellm.ai/berriai/litellm:latest --detailed_debug
 ```
 
 </TabItem>
@@ -778,7 +778,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 </TabItem>
 </Tabs>
