@@ -448,7 +448,7 @@ This tells the API that `SKILL.md` belongs to the `test-skill` directory.
 `custom_llm_provider=litellm_proxy` skills (stored in the proxy's own database rather than proxied to Anthropic) support ranking by semantic similarity, so a caller can describe what they need instead of paging through the whole registry.
 
 :::info Related Documentation
-- [MCP Tool Search](./mcp_tool_search.md#search-the-skill-registry) for the `skill_search` MCP virtual tool
+- [MCP Tool Search](./mcp_tool_search.md#how-it-works) for the `skill_search` MCP virtual tool
 :::
 
 ### Enable it
