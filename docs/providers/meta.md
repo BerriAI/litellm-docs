@@ -5,18 +5,19 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Meta's Model API provides access to Meta's Muse Spark family of reasoning models. |
+| Description | Meta's Model API provides access to Muse Spark reasoning models and Muse Voice transcription. |
 | Provider Route on LiteLLM | `meta/` |
-| Supported Endpoints | `/chat/completions`, `/responses`, `/v1/messages` |
+| Supported Endpoints | `/chat/completions`, `/responses`, `/v1/messages`, `/v1/realtime` |
 | API Reference | [Meta Model API Reference ↗](https://dev.meta.ai/docs) |
 
 ## Required Variables
 
 ```python showLineNumbers title="Environment Variables"
-os.environ["META_API_KEY"] = ""  # your Meta Model API key
+os.environ["META_API_KEY"] = ""   # chat and responses; realtime fallback
+os.environ["MODEL_API_KEY"] = ""  # preferred for Muse Voice realtime
 ```
 
-Requests go to `https://api.meta.ai/v1` by default. Set `META_API_BASE` to override the API base.
+Requests go to `https://api.meta.ai/v1` by default. Set `META_API_BASE` to override the API base. Muse Voice realtime uses `MODEL_API_KEY` first and falls back to `META_API_KEY`.
 
 ## Supported Models
 
@@ -27,10 +28,23 @@ We actively maintain the list of models, pricing, token window, etc. [here](http
 | Model ID | Input context length | Input Modalities | Output Modalities |
 | --- | --- | --- | --- |
 | `muse-spark-1.1` | 1M | Text, Image, Video, PDF | Text |
+| `muse-voice-transcribe-1.0` | N/A | Audio | Text |
 
 `muse-spark-1.1` supports function calling, parallel function calling, structured outputs, prompt caching, web search grounding, and reasoning via `reasoning_effort` (`"minimal"` through `"xhigh"`).
 
 The API also natively exposes the Anthropic Messages format, so LiteLLM forwards `/v1/messages` requests to `https://api.meta.ai/v1/messages` untranslated, preserving Anthropic-only features like thinking blocks.
+
+## Muse Voice Realtime Transcription
+
+Connect to the LiteLLM proxy with:
+
+```text
+ws://localhost:4000/v1/realtime?model=meta/muse-voice-transcribe-1.0&intent=transcription
+```
+
+Send an OpenAI-compatible `session.update`, followed by `input_audio_buffer.append` events containing base64-encoded mono PCM16 audio. Muse Voice accepts 16 kHz and 24 kHz input. LiteLLM returns OpenAI-compatible speech boundary, transcription delta, completed transcript, and duration usage events.
+
+Muse Voice is realtime-only. Batch or file transcription endpoints are not supported.
 
 ## Usage - LiteLLM Python SDK
 
