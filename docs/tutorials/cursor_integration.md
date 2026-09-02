@@ -7,7 +7,7 @@ Route Cursor IDE requests through LiteLLM for unified logging, budget controls, 
 :::info
 **Supported modes:** Ask, Plan, Agent. With the base URL override, agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
 
-Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs.
+Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs. The Cursor CLI (`agent` / `cursor-agent`) cannot target LiteLLM at all, see [Cursor CLI](#cursor-cli-cursor-agent).
 :::
 
 :::warning Override OpenAI Base URL missing?
@@ -169,11 +169,31 @@ For official instructions on configuring MCP integration with Cursor, please ref
 
 LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api.cursor.com` get the same credential management and logging. See [Cursor Cloud Agents](../pass_through/cursor.md).
 
+## Cursor CLI (cursor-agent)
+
+The Cursor CLI (`agent`, also installed as `cursor-agent`) cannot target LiteLLM or any other gateway. Its `--endpoint` flag and `CURSOR_API_ENDPOINT` variable pick which Cursor backend the CLI logs in to, not an OpenAI-compatible API: on startup the CLI posts your key to `<endpoint>/auth/exchange_user_api_key` to trade it for Cursor session tokens, and every request after that is a Cursor-private RPC. Cursor does not document the flag and does not offer a custom endpoint or an OpenAI-compatible key in the CLI ([open feature request](https://forum.cursor.com/t/cursor-cli-custom-endpoint-and-api-key-support/129424)); its one bring-your-own-credentials option, `agent bedrock`, still routes through Cursor's backend.
+
+Pointing the CLI at a proxy fails before any model is reached (verified on the public Cursor CLI 2026.08.31 build):
+
+```shell
+export CURSOR_API_KEY=<LITELLM_VIRTUAL_KEY>
+agent --endpoint https://your-litellm-proxy.com
+```
+
+```
+⚠ Warning: The provided API key is invalid.
+The API key was loaded from the CURSOR_API_KEY environment variable.
+Please check you have the right key, create a new one, or authenticate without it.
+```
+
+The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](./openai_codex.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
+
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
 | Model not responding | Check base URL ends with `/cursor` and key has model access |
+| `The provided API key is invalid` from the Cursor CLI (`agent` / `cursor-agent`) | The Cursor CLI cannot use a gateway: `--endpoint` selects a Cursor backend, not an OpenAI-compatible API, so its login fails with this warning on any proxy that lacks Cursor's auth route. See [Cursor CLI](#cursor-cli-cursor-agent) |
 | `Invalid API key` / `Unauthorized User API key` | Cursor shows this when the proxy answers 401. The API Key field must hold a LiteLLM virtual key (it starts with `sk-`); a placeholder value is rejected |
 | `User API Key Rate limit exceeded` | Cursor shows this for any 429 or 5xx from the proxy, so the cause is not always a rate limit. Look up those requests in the LiteLLM logs (they arrive with `User-Agent: Cursor/1.0`) for the real error. Frequent causes are rpm or tpm limits on the key, since each Cursor request carries a system prompt of about 25k tokens, and provider 429s |
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
