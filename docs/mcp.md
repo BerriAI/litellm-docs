@@ -224,6 +224,7 @@ mcp_servers:
 
 **Configuration Options:**
 - **Server Name**: Use any descriptive name for your MCP server (e.g., `zapier_mcp`, `deepwiki_mcp`, `circleci_mcp`)
+- **server_id**: Optional. Pins the server's id instead of deriving it from `server_name`, `url`, `transport`, `auth_type` and `alias`. See [Pinning `server_id`](#pinning-server_id)
 - **Alias**: This name will be prefilled with the server name with "_" replacing spaces, else edit it to be the prefix in tool names
 - **URL**: The endpoint URL for your MCP server (required for HTTP/SSE transports)
 - **Transport**: Optional transport type (defaults to `sse`)
@@ -317,6 +318,35 @@ mcp_servers:
       X-API-Key: "abc123"
       X-Custom-Header: "some-value"
 ```
+
+### Pinning `server_id`
+
+Key and team MCP permissions are stored as server ids. For a server defined in `config.yaml`, LiteLLM derives that id by hashing `server_name`, `url`, `transport`, `auth_type` and `alias`, so editing any of those fields (moving a server from a staging url to a production url, renaming it, adding an alias) produces a different id. Every key and team that was granted the old id keeps pointing at an id that no longer exists, and the server stops appearing in `tools/list` for them.
+
+Set `server_id` to pin it. The pinned value is used verbatim and does not change when the connection fields do, so existing grants keep working.
+
+```yaml title="Pinned server_id (config.yaml)" showLineNumbers
+mcp_servers:
+  internal_docs:
+    server_id: "internal-docs"        # 👈 grants survive url/name/alias edits
+    url: "https://docs.internal.example/mcp"
+    transport: "http"
+```
+
+To adopt this on a server that already has grants, read its current id from `GET /v1/mcp/server` (or the Admin UI MCP Servers page) and pin that exact value, so the ids already stored in `object_permission.mcp_servers` stay valid:
+
+```bash
+curl -s http://localhost:4000/v1/mcp/server -H "Authorization: Bearer sk-1234"
+```
+
+Rules:
+
+- The value must be a non-empty string. A blank or non-string `server_id` fails config load rather than silently falling back to the derived hash.
+- Use letters, digits and underscores. The id is used verbatim, the same way a `server_id` supplied to `POST /v1/mcp/server` is, so an id containing `/` makes the server unreachable on `/v1/mcp/server/{server_id}` routes.
+- Two `mcp_servers` entries cannot share an id, and a pinned id cannot be another entry's `server_name` or `alias`. Both fail config load: the first would overwrite the other's registry entry, and the second would capture permission entries written for that other server, since a grant is matched against server ids before it is matched against names and aliases.
+- A pinned id that is already held by a server added through the Admin UI or `/v1/mcp/server` is a misconfiguration, but it does not fail config load on a restart. LiteLLM reads `config.yaml` before it reads the database, so nothing is there to compare against yet; the database row then wins and the config server becomes unreachable. You get `config.yaml MCP server_id(s) ... are also database-backed MCP servers` at WARNING level, so watch the startup logs after pinning.
+- With `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` enabled the short tool prefix is derived from the server id, so pinning an id other than the one currently in use renames every tool that server exposes. Pin the current derived id (the adoption recipe above) if anything holds prefixed tool names.
+- Servers added through the Admin UI or `/v1/mcp/server` are unaffected: they already have a persistent id that survives edits.
 
 ### MCP Walkthroughs
 
