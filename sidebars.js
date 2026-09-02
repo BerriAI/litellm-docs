@@ -460,6 +460,7 @@ const sidebars = {
               label: "MCP Gateway",
               items: [
                 "mcp",
+                "mcp_quickstart",
                 "mcp_usage",
                 {
                   type: "category",
@@ -874,6 +875,7 @@ const sidebars = {
           label: "/mcp - Model Context Protocol",
           items: [
             "mcp",
+            "mcp_quickstart",
             "mcp_usage",
             {
               type: "category",
