@@ -388,8 +388,8 @@ const config = {
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            type: 'doc',
-            docId: 'proxy/auto_routing',
+            type: 'docSidebar',
+            sidebarId: 'autoRouterSidebar',
             position: 'left',
             label: 'Auto Router',
           },
