@@ -8,7 +8,8 @@ import TabItem from '@theme/TabItem';
 | Description | Meta's Model API provides access to Muse Spark reasoning models and Muse Voice transcription. |
 | Provider Route on LiteLLM | `meta/` |
 | Supported Endpoints | `/chat/completions`, `/responses`, `/v1/messages`, `/v1/realtime` |
-| API Reference | [Meta Model API Reference ↗](https://dev.meta.ai/docs) |
+| Developer Portal | [Meta Model API ↗](https://dev.meta.ai/) |
+| Speech-to-Text Reference | [Muse Voice transcription ↗](https://dev.meta.ai/docs/speech-to-text) |
 
 ## Required Variables
 
