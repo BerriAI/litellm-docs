@@ -1,6 +1,6 @@
 ---
 slug: auto-router-prompt-caching-benchmark
-title: "Cut 69% Costs Stacking Auto-Routing on Prompt Caching"
+title: "Prompt Caching Works with Auto Router"
 date: 2026-07-31T10:00:00
 authors:
   - tin
