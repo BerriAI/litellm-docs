@@ -1,6 +1,6 @@
 ---
 slug: fusion-terminal-bench-benchmark
-title: "Model Fusion: 14/21 Tasks Solved vs 9/21 on One Model"
+title: "Introducing LiteLLM Fusion: 56% More Tasks Solved Than Fable 5"
 date: 2026-09-01T14:00:00
 authors:
   - tin
