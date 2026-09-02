@@ -46,6 +46,12 @@ Store provider credentials, the master key, and the salt key in your platform's 
 
 Enable [audit logs](./multiple_admins) and review administrative changes such as key creation, key deletion, role changes, and team updates.
 
-## 7. Add guardrails for sensitive workloads (optional)
+## 7. Avoid disclosing internals through error responses and headers
+
+An unexpected 5xx error returns a generic `Internal server error` message to the client; the original exception, including any stack trace, is always written to the server logs. Use the `x-litellm-call-id` [response header](./response_headers) to correlate a failed request with its server-side log entry without needing the client-facing message to carry any detail.
+
+LiteLLM's own uvicorn-based startup (`litellm --config ...`, or the default Docker image) does not send a `Server` response header. If you run the proxy behind gunicorn, hypercorn, or granian workers, or behind a reverse proxy or load balancer (nginx, an ingress controller, a CDN), that layer may add its own `Server` header disclosing its name and version. Configure it to omit or generalize that header, for example `server_tokens off;` in nginx, or the equivalent setting for your ingress controller or CDN.
+
+## 8. Add guardrails for sensitive workloads (optional)
 
 If your workloads handle sensitive or regulated data, add [guardrails](./guardrails/quick_start) to screen prompts and responses. We recommend [Bedrock Guardrails](./guardrails/bedrock) for content filtering, PII detection, and denied-topic policies, and the [LiteLLM content filter](./guardrails/litellm_content_filter) for lightweight, regex-based blocking of specific words or patterns. Guardrails can be applied per key, team, or model so you can enforce stricter controls where they are needed.
