@@ -4,13 +4,16 @@ title: "Model Fusion: 14/21 Tasks Solved vs 9/21 on One Model"
 date: 2026-09-01T14:00:00
 authors:
   - tin
-description: "Running three models on the same task and synthesizing their work solved 14 of 21 Terminal-Bench tasks against 9 for Claude Fable-5 alone. Total spend rose 36%, cost per solved task fell 12%, and turn latency went up 5x."
+image: ./lite-fusion-light.png
+description: "LiteLLM Auto Router Fusion ran three models on the same task and synthesized their work, solving 14 of 21 Terminal-Bench tasks against 9 for Claude Fable-5 alone. Total spend rose 36%, cost per solved task fell 12%, and turn latency went up 5x."
 keywords: [model fusion, best of n, llm ensemble, terminal bench, llm benchmarks, model routing, litellm, agent benchmarks]
 tags: [routing, benchmarks, cost, engineering]
 hide_table_of_contents: false
 ---
 
-**Fusion solved 14 of 21 Terminal-Bench tasks; Claude Fable-5 on its own solved 9.** Fusion here means running the task on several models in parallel and having one of them synthesize the candidate work into a single answer. Both arms ran the same 21 tasks.
+![LiteLLM Auto Router Fusion solved 14 of 21 tasks against 9 for Fable 5](./lite-fusion-light.png)
+
+**LiteLLM Auto Router Fusion solved 14 of 21 Terminal-Bench tasks; Claude Fable-5 on its own solved 9.** Fusion runs the task on several models in parallel and has one of them synthesize the candidate work into a single answer. Both arms ran the same 21 tasks.
 
 {/* truncate */}
 
