@@ -221,6 +221,7 @@ router_settings:
 | default_fallbacks | array of strings | List of fallback models to use if a specific model group is misconfigured / bad. [Further docs](./reliability#default-fallbacks) |
 | request_timeout | integer | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) |
 | force_ipv4 | boolean | If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API |
+| disable_aiohttp_transport | boolean | If true, LLM requests go through plain httpx instead of the default aiohttp transport. Set this (or the `DISABLE_AIOHTTP_TRANSPORT` env var) if you see aiohttp connector errors such as a `CancelledError` surfacing as `No response returned` on `/v1/responses`, `/v1/chat/completions` or `/v1/messages`. **Default is False** |
 | content_policy_fallbacks | array of objects | Fallbacks to use when a ContentPolicyViolationError is encountered. [Further docs](./reliability#content-policy-fallbacks) |
 | context_window_fallbacks | array of objects | Fallbacks to use when a ContextWindowExceededError is encountered. [Further docs](./reliability#context-window-fallbacks) |
 | cache | boolean | If true, enables caching. [Further docs](./caching) |
