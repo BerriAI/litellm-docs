@@ -122,7 +122,7 @@ For teams that need guaranteed response times around the clock, we offer 24/7 Su
 
 Custom SLAs available on request.
 
-For what support covers and what stays with your team, including custom callbacks, custom guardrails, and deployments built outside our official image and chart, see the [Shared Responsibility Model](./shared_responsibility.md).
+For what support covers, see the [Shared Responsibility Model](./shared_responsibility.md).
 
 ---
 
