@@ -29,7 +29,7 @@ LiteLLM now supports `gemini-3.7-flash` on day 0, on both Google AI Studio (`gem
 
 ## Launch pricing
 
-Gemini 3.7 Flash launches at a 50% discount that runs through December 31, 2027. LiteLLM tracks cost at the promotional rate.
+Gemini 3.7 Flash launches at a 50% discount that runs through December 31, 2026. LiteLLM tracks cost at the promotional rate.
 
 | | Promotional | Standard |
 |---|---|---|
