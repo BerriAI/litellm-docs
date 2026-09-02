@@ -11,7 +11,7 @@ Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com
 
 Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
 
-This route fronts the Cloud Agents REST API only. The Cursor CLI (`agent --endpoint`) does not talk to `api.cursor.com` and cannot use it, see [Cursor CLI](../tutorials/cursor_integration.md#cursor-cli-cursor-agent).
+This route fronts the Cloud Agents REST API only. Cursor CLI agent sessions log in to `api2.cursor.sh` by default (`agent --endpoint` only moves that login), not to `api.cursor.com`, so they cannot use this route, see [Cursor CLI](../tutorials/cursor_integration.md#cursor-cli-cursor-agent).
 
 **Supported endpoints:**
 
