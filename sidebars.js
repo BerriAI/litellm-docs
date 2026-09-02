@@ -97,6 +97,7 @@ const sidebars = {
             "observability/mavvrik",
             "observability/openmeter",
             "observability/ramp_integration",
+            "observability/ternary",
             "observability/vantage",
           ],
         },
