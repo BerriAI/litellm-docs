@@ -1318,6 +1318,7 @@ const sidebars = {
         "proxy/docker_image_security",
         "migration_policy",
         "api_stability_policy",
+        "shared_responsibility",
         "proxy/release_cycle",
         "load_test_advanced",
         "load_test_sdk",
