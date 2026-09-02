@@ -312,6 +312,8 @@ router_settings:
 | max_request_size_mb | int | The maximum size for requests in MB. Requests above this size will be rejected. |
 | max_response_size_mb | int | The maximum size for responses in MB. LLM Responses above this size will not be sent. |
 | max_batch_file_size_mb | int | The maximum size in MB for a batch input file uploaded to `/v1/files` with `purpose="batch"`. Larger uploads are rejected with a `413` before reaching the provider. Unset means no cap. See [Batch input file validation](../batches#batch-input-file-validation) |
+| max_file_size_mb | int | The maximum size in MB for a file uploaded to `/v1/files`, for any `purpose`. Larger uploads are rejected with a `413` before reaching the provider. Unset means no cap. |
+| blocked_file_extensions | List[str] | File extensions (e.g. `[".exe", ".sh"]`) rejected on upload to `/v1/files`, for any `purpose`. Matched case-insensitively against the uploaded filename. Unset means no extensions are blocked. |
 | proxy_budget_rescheduler_min_time | int | The minimum time (in seconds) to wait before checking db for budget resets. **Default is 597 seconds** |
 | proxy_budget_rescheduler_max_time | int | The maximum time (in seconds) to wait before checking db for budget resets. **Default is 605 seconds** |
 | proxy_batch_write_at | int | Time (in seconds) to wait before batch writing spend logs to the db. **Default is 10 seconds** |
