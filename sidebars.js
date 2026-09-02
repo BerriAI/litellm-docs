@@ -1022,6 +1022,7 @@ const sidebars = {
         },
         "providers/text_completion_openai",
         "providers/openai_compatible",
+        "providers/hefu",
         {
           type: "category",
           label: "Azure OpenAI",
