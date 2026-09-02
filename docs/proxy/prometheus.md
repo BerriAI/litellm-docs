@@ -183,6 +183,9 @@ Use these to measure per-pod queue depth and diagnose latency that occurs **befo
 | Metric Name | Type | Description |
 |---|---|---|
 | `litellm_in_flight_requests` | Gauge | Number of HTTP requests currently in-flight on this uvicorn worker. Tracks the pod's queue depth in real time. With multiple workers, values are summed across all live workers (`livesum`). |
+| `litellm_admission_admitted_requests` | Gauge | Requests currently holding a per-worker admission slot. Only populated when [per-worker admission control](./server_tuning#per-worker-admission-control) is enabled. Summed across live workers (`livesum`). |
+| `litellm_admission_queued_requests` | Gauge | Requests waiting for a per-worker admission slot. Summed across live workers (`livesum`). |
+| `litellm_admission_rejected_requests_total` | Counter | Requests rejected with `503` by admission control, labelled by `reason`: `queue_full` (queue already at its cap on arrival) or `queue_timeout` (waited `admission_queue_timeout_seconds` without getting a slot). |
 
 ### When to use this
 
