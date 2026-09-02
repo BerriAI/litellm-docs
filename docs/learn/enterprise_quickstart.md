@@ -37,7 +37,6 @@ All gateway and budget tests share one deployment and one org/team/key. Do this 
 Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
-docker pull ghcr.io/berriai/litellm-database:latest
 curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker-compose.yml
 ```
 
@@ -135,7 +134,7 @@ spec:
     spec:
       containers:
         - name: litellm
-          image: docker.litellm.ai/berriai/litellm-database:latest
+          image: docker.litellm.ai/berriai/litellm:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 4000

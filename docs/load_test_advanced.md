@@ -10,7 +10,6 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
 - [ ] Ensure you're using the **latest `-stable` version** of litellm
     - [Github releases](https://github.com/BerriAI/litellm/releases)
     - [litellm docker containers](https://github.com/BerriAI/litellm/pkgs/container/litellm)
-    - [litellm database docker container](https://github.com/BerriAI/litellm/pkgs/container/litellm-database)
 - [ ] Ensure you're following **ALL** [best practices for production](./proxy/prod.md)
 - [ ] Locust - Ensure you're Locust instance can create 1K+ requests per second
     - 👉 You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**

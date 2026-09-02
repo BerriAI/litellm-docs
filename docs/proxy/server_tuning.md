@@ -169,7 +169,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME="litellm-proxy" \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="proxy_config.yaml" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 
 </TabItem>
@@ -181,7 +181,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME="litellm-proxy" \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="litellm_proxy_config.yaml" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 
 </TabItem>
