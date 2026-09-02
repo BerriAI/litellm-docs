@@ -1116,6 +1116,7 @@ const sidebars = {
         "providers/cerebras",
         "providers/chutes",
         "providers/clarifai",
+        "providers/clf_ai_gateway",
         "providers/cloudflare_workers",
         "providers/codestral",
         "providers/cognition",
