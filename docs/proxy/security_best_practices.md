@@ -55,7 +55,7 @@ If your workloads handle sensitive or regulated data, add [guardrails](./guardra
 The proxy's session, SSO, and SAML cookies are marked `Secure` whenever the public-facing origin is HTTPS. When TLS terminates at a reverse proxy or load balancer in front of LiteLLM, LiteLLM only sees the plain-HTTP hop from that proxy, so it needs one trusted signal to know the public origin is actually HTTPS:
 
 - Set [`PROXY_BASE_URL`](./config_settings#environment-variables---reference) to the exact `https://` origin your users see in their browser. This is the simplest option and takes precedence over everything else.
-- Otherwise, set `general_settings.use_x_forwarded_for: true` and `general_settings.mcp_trusted_proxy_ranges` to your reverse proxy's CIDR range(s). LiteLLM then honors `X-Forwarded-Proto: https` from that proxy, but only when the request's direct peer address falls inside one of those CIDRs — an untrusted caller cannot spoof this header to strip `Secure` from its own cookies.
+- Otherwise, set `general_settings.use_x_forwarded_for: true` and `general_settings.mcp_trusted_proxy_ranges` to your reverse proxy's CIDR range(s). LiteLLM then honors `X-Forwarded-Proto: https` from that proxy, but only when the request's direct peer address falls inside one of those CIDRs: an untrusted caller cannot spoof this header to strip `Secure` from its own cookies.
 
 ```yaml
 general_settings:
