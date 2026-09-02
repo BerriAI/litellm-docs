@@ -496,7 +496,7 @@ Each result carries a `search_score` (cosine similarity to the query) and, unlik
 
 ### Authorization
 
-Search only ranks the skills the calling key can already access — the same visibility rules `GET /v1/skills` already enforces apply before ranking runs, so search cannot be used to enumerate skills outside a key's scope.
+Search only ranks the skills the calling key can already access: the same visibility rules `GET /v1/skills` already enforces apply before ranking runs, so search cannot be used to enumerate skills outside a key's scope.
 
 ## **Supported Providers**
 
