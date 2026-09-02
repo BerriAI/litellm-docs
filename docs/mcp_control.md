@@ -44,11 +44,13 @@ Permissions can be set at six distinct levels. When more than one level applies 
 | **Key** | `object_permission.mcp_servers` / `object_permission.mcp_access_groups` on the virtual key | If the key has an explicit list, it's used. |
 | **Team** | Same fields on the team | If both key and team have lists, the result is the **intersection** (only servers in both). If only the team has a list, the key inherits it. |
 | **End user** | Same fields on the `LiteLLM_EndUserTable` row matching `x-litellm-end-user-id` | Intersected with the running result. Skipped if no end-user-id is present on the request. |
-| **Agent** | Same fields on the agent identified by `x-litellm-agent-id` | Intersected with the running result. Skipped if no agent-id is present. |
+| **Agent** | Same fields on the agent identified by `x-litellm-agent-id`, or the agent the key is bound to (`agent_id` set at key generation) | Intersected with the running result. Skipped if no agent applies. |
 | **Internal user** | Same fields on the internal user (the human) the request authenticated as | Intersected with the running result, so it can only narrow. Skipped if that user carries no entitlement. |
 | **Organization** | Same fields on the org owning the key/team | Acts as a **ceiling**; the final allowed-server set is intersected with the org's list. If the org has no list, no additional restriction. |
 
 If no level has a list, the request can access **every** MCP server (open by default).
+
+A key bound to an agent (`agent_id` passed to `/key/generate`) gets the same treatment as a request carrying `x-litellm-agent-id`: the agent's list is intersected with the key's on every request the key makes. Granting a server to the key alone is not enough; the agent must also hold the grant (via the Admin UI agent edit form or `PATCH /v1/agents/{agent_id}`), otherwise requests scoped to that server are denied with an error naming the agent.
 
 ```mermaid
 flowchart TD
@@ -68,7 +70,7 @@ flowchart TD
     J -->|No| L[Keep current]
     K --> M
     L --> M
-    M{agent-id present and agent has list?}
+    M{agent-id header or key-bound agent has list?}
     M -->|Yes| N[Intersect with agent list]
     M -->|No| O[Keep current]
     N --> S
