@@ -960,6 +960,102 @@ router_settings:
 
 Routing groups can be updated via `Router.update_settings(routing_groups=[...])` or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
 
+## Session Affinity (Sticky Sessions)
+
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+
+Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+<Tabs>
+<TabItem value="proxy" label="Proxy">
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: gpt-4.1
+    litellm_params:
+      model: azure/gpt-4.1
+      api_key: os.environ/AZURE_API_KEY_EASTUS
+      api_base: https://eastus.openai.azure.com
+  - model_name: gpt-4.1
+    litellm_params:
+      model: azure/gpt-4.1
+      api_key: os.environ/AZURE_API_KEY_WESTUS
+      api_base: https://westus.openai.azure.com
+
+router_settings:
+  routing_strategy: simple-shuffle          # any strategy
+  optional_pre_call_checks: ["session_affinity"]
+  deployment_affinity_ttl_seconds: 3600     # optional, default 3600
+```
+
+Send a session id with every request of the conversation. The proxy reads it from the `x-litellm-session-id` header (`x-litellm-trace-id` is interchangeable), from any `x-<vendor>-session-id` header such as `x-claude-code-session-id`, or from `metadata.session_id` in the request body.
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-session-id: 7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21" \
+  -d '{"model": "gpt-4.1", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+The `x-litellm-model-id` response header shows which deployment served the request. It stays the same for every request that carries the same session id.
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {
+            "model_name": "gpt-4.1",
+            "litellm_params": {"model": "azure/gpt-4.1", "api_key": "...", "api_base": "https://eastus.openai.azure.com"},
+        },
+        {
+            "model_name": "gpt-4.1",
+            "litellm_params": {"model": "azure/gpt-4.1", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
+        },
+    ],
+    routing_strategy="simple-shuffle",                 # any strategy
+    optional_pre_call_checks=["session_affinity"],
+    deployment_affinity_ttl_seconds=3600,              # optional, default 3600
+)
+
+response = await router.acompletion(
+    model="gpt-4.1",
+    messages=[{"role": "user", "content": "hi"}],
+    metadata={"session_id": "7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21"},
+)
+print(response._hidden_params["model_id"])  # same deployment for every call with this session_id
+```
+
+</TabItem>
+</Tabs>
+
+#### How it works
+
+- The first request with a new session id is routed by the strategy as usual. The deployment it lands on becomes the pin for that model group and session id (on the proxy the pin is also scoped to the calling API key).
+- Every later request with the same session id is narrowed to the pinned deployment before the strategy runs.
+- Every request refreshes the pin, so `deployment_affinity_ttl_seconds` bounds the idle time between turns, not the length of a conversation.
+- Pins live in the router cache. With Redis configured they are shared across proxy instances; without Redis each instance keeps its own.
+- If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
+- Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
+
+#### Settings
+
+| Setting | Description |
+|---|---|
+| `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by API key instead of, or as well as, session id (a session pin takes priority). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
+| `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
+| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
+
+These settings are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy.
+
+:::info
+The `session_affinity` option inside `complexity_router_config` on the [Auto Router](./proxy/auto_routing.md) page is a different setting. It pins the auto router's model choice for a session; the pre-call check on this page pins a deployment inside a model group.
+:::
+
 ## Traffic Mirroring / Silent Experiments
 
 Traffic mirroring allows you to "mimic" production traffic to a secondary (silent) model for evaluation purposes. The silent model's response is gathered in the background and does not affect the latency or result of the primary request.
