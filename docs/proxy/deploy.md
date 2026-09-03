@@ -175,7 +175,10 @@ redis:
 # one host fronting gateway, backend, and ui
 ingress:
   enabled: true
-  className: "<alb | gce | azure-application-gateway>"
+  className: "<alb | gce | azure-application-gateway | nginx>"
+  # alb (default) or nginx. ingress-nginx's admission webhook rejects the chart's
+  # dotted paths (/favicon.ico, /eu.assemblyai) unless this is nginx
+  controller: alb
   host: llm.example.com
   # optional: routes the chart does not ship a rule for, e.g. a passthrough
   # prefix added after this chart version or a custom
