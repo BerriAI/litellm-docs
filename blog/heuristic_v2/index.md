@@ -5,7 +5,7 @@ date: 2026-09-02T10:00:00
 authors:
   - tin
 image: ./hero.png
-description: "Heuristic v2 is a new classifier for LiteLLM's Auto Router, pretrained on 255,000+ human-graded responses from the public UltraFeedback dataset so it ships with zero cold start. On a 21-task Terminal-Bench 2.0 subset it solved 3 more tasks than Heuristic v1, at 45% lower cost per solved task and lower latency."
+description: "Heuristic v2 is a new classifier for LiteLLM's Auto Router, pretrained across multiple rounds of graded response data so it ships with zero cold start. On a 21-task Terminal-Bench 2.0 subset it solved 3 more tasks than Heuristic v1, at 45% lower cost per solved task and lower latency."
 keywords: [heuristic router, complexity router, auto router, model routing, llm cost savings, terminal bench, litellm auto routing, probability routing]
 tags: [routing, complexity-router, cost, benchmarks, engineering, product]
 hide_table_of_contents: false
@@ -31,7 +31,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 ## Key findings
 
-- **No cold start.** Heuristic v2 ships pretrained on 255,864 human-graded responses from the public, MIT-licensed UltraFeedback dataset, so it already knows which tier to trust before it sees your first prompt
+- **No cold start.** Heuristic v2 ships pretrained across multiple rounds of graded response data, so it already knows which tier to trust before it sees your first prompt
 - **3 more tasks solved.** 14/21 against 11/21, a 27% jump in solve rate on this subset
 - **45% lower cost per solved task.** $0.70 against $1.28, and 30% lower total spend across the run ($9.78 against $14.06)
 - **Faster, too.** Mean LLM call latency fell 10% (13.1s against 14.5s), p90 fell 10% (30.7s against 34.1s), and median task completion time fell from 8m53s to 7m08s
@@ -67,9 +67,9 @@ corrected: [0.60, 0.72, 0.72, 0.91]
 
 Same four abstract tiers as before, `SIMPLE`, `MEDIUM`, `COMPLEX`, `REASONING`. You still decide which models live in each one.
 
-## Pretrained on public data, zero cold start
+## Pretrained, zero cold start
 
-Adaptive routing earns its edge by watching your traffic: a Thompson-sampled tier pool loses a few rounds on the wrong model before it learns which one wins. Heuristic v2 skips that step. Its success-probability tables are pretrained on 255,864 human-graded responses from [UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback), an MIT-licensed, publicly available dataset spanning code, math, writing, and reasoning. It already knows which tier to trust before it sees your first prompt, no ramp-up period on your traffic required.
+Adaptive routing earns its edge by watching your traffic: a Thompson-sampled tier pool loses a few rounds on the wrong model before it learns which one wins. Heuristic v2 skips that step. Its success-probability tables are calibrated across multiple rounds of graded response data before the classifier ever ships, so it already knows which tier to trust before it sees your first prompt, no ramp-up period on your traffic required.
 
 ## Results
 
