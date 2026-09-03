@@ -1017,6 +1017,24 @@ Caching only runs on the call types listed in `supported_call_types` (OpenAI-com
 
 :::
 
+## Semantic Caching and End-User Isolation
+
+A semantic cache key deliberately leaves the prompt out, so the only thing keeping two callers apart is the tenant scope: the virtual key, its team and its organization. Every end user behind one virtual key therefore shares one semantic bucket by default, and a response generated for one of them (tool calls included) can be served to another who sends a semantically similar prompt through the same key.
+
+Set `semantic_cache_scope: end_user` under `cache_params` to also isolate buckets per end user. The end-user id is the one the proxy authenticates for the request (`user_api_key_end_user_id`): the `x-litellm-customer-id` header, a configured `user_header_name`, or the request `user` field. It is read from both `metadata` and `litellm_metadata`, so `/v1/chat/completions`, `/v1/responses` and `/v1/messages` are all covered. A request that carries no end-user id falls back to the key/team/org bucket rather than landing in a shared empty one. The default, `key`, keeps today's key/team/org scope.
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: my-embedding-model
+    semantic_cache_scope: end_user # key (default) | end_user
+```
+
+The same setting is available in the Admin UI under Caching -> Cache Settings as "Semantic Cache Scope" when the cache type is `redis-semantic`.
+
 ## Semantic Caching and a Slow Embedding Endpoint
 
 A semantic cache embeds the prompt before every request, and that embedding call runs inline, so the request cannot reach the LLM until it finishes. LiteLLM caps it at 5 seconds. Past the deadline the lookup is abandoned, the response carries `x-litellm-semantic-similarity: 0.0`, and the request proceeds to the model as a cache miss. An embedding endpoint that is unreachable or hanging therefore costs a few seconds instead of stalling the request.
