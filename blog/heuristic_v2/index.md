@@ -11,7 +11,7 @@ tags: [routing, complexity-router, cost, benchmarks, engineering, product]
 hide_table_of_contents: false
 ---
 
-![Heuristic v2 beats Heuristic v1: 45% lower cost per solved task, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
+![Heuristic v2 is cheaper, faster, and better: -45% cost per solved task, -20% median task time, +3 more tasks solved, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
 
 **Heuristic v2 solved 3 more tasks than Heuristic v1 on a 21-task Terminal-Bench 2.0 subset, at 45% lower cost per solved task.** Both classifiers ran the same 21 tasks, through the same tiers, on the same proxy. Only the classifier changed.
 
@@ -33,13 +33,13 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 - **3 more tasks solved.** 14/21 against 11/21, a 27% jump in solve rate on this subset
 - **45% lower cost per solved task.** $0.70 against $1.28, and 30% lower total spend across the run ($9.78 against $14.06)
-- **Lower latency, not just lower cost.** Mean LLM call latency fell 10% (13.1s against 14.5s), p90 fell 10% (30.7s against 34.1s), and median task completion time fell from 8m53s to 7m08s
+- **Faster, too.** Mean LLM call latency fell 10% (13.1s against 14.5s), p90 fell 10% (30.7s against 34.1s), and median task completion time fell from 8m53s to 7m08s
 - **Steadier tier choices mean fewer cache misses.** 87% of input tokens were cache reads, against 82% for Heuristic v1
 - **Just as reliable.** Zero failed requests in either arm, across 933 combined LLM calls
 
 ## What changed
 
-Heuristic v1 scores a prompt's complexity and maps the score to a tier. Heuristic v2 asks a more direct question: for this request, how likely is each tier to actually succeed? It routes to the cheapest tier that clears a success-probability bar, instead of the tier that matches a difficulty estimate.
+Heuristic v1 scores a prompt's complexity and maps the score to a tier. Heuristic v2 estimates each tier's odds of success on the request and routes to the cheapest tier that clears a probability bar, not the tier that matches a difficulty score.
 
 ```text
 Prompt
@@ -50,7 +50,13 @@ Prompt
   -> Route to a model configured in that tier
 ```
 
-The probability estimate blends three levels of evidence: how the tier performs overall, how it performs on this kind of request (code, technical design, analytical reasoning, writing, factual lookup, or general), and how it performs on requests that look most like this one. Thin evidence defers to the broader estimate; a large sample overrides it. Because a stronger tier should never look less capable than a weaker one, the four probabilities are then corrected to be monotonic before the router picks the first one that clears the bar:
+The probability estimate blends three levels of evidence:
+
+- **Tier-wide performance:** how the tier does across all requests
+- **Request-type performance:** how it does on this kind of request (code, technical design, analytical reasoning, writing, factual lookup, or general)
+- **Similar-request performance:** how it does on requests that look most like this one
+
+Thin evidence defers to the broader estimate; a large sample overrides it. A stronger tier should never look less capable than a weaker one, so the router corrects the four probabilities to be monotonic, then picks the first one that clears the bar:
 
 ```text
 raw:       [0.60, 0.72, 0.69, 0.91]
@@ -108,7 +114,7 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-No LLM classifier call on the request path, same tier config as Heuristic v1 or the LLM classifier. Swap `classifier_type` and compare against your current setup. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
+Heuristic v2 makes no LLM classifier call on the request path, and reuses the same tier config as Heuristic v1 or the LLM classifier. Swap `classifier_type` and compare against your current setup. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
 :::note Free trial scope
 
