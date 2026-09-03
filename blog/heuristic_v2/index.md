@@ -1,6 +1,6 @@
 ---
 slug: heuristic-v2
-title: "Introducing AutoRouter Heuristic v2: Better Quality with 45% Lower Cost"
+title: "Introducing AutoRouter Heuristic v2: 27% More Tasks Solved at 45% Lower Cost"
 date: 2026-09-02T10:00:00
 authors:
   - tin
