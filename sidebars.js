@@ -161,6 +161,7 @@ const sidebars = {
           "proxy/guardrails/dynamoai",
           "proxy/guardrails/openai_moderation",
           "proxy/guardrails/pangea",
+          "proxy/guardrails/peyeeye",
           "proxy/guardrails/pillar_security",
           "proxy/guardrails/repelloai",
           "proxy/guardrails/promptguard",
