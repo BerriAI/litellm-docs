@@ -177,17 +177,23 @@ On the Datadog LLM Observability page, you should see that both input messages a
 | **Events** | Success + Failure |
 | **Product Link** | [Datadog Metrics](https://docs.datadoghq.com/metrics/) |
 
-Publishes the following metrics to Datadog via the `/api/v2/series` endpoint:
+Publishes the following metrics to Datadog:
 
 | Metric | Type | Description |
 |--------|------|-------------|
 | `litellm.request.total_latency` | Gauge | End-to-end request latency (seconds) |
+| `litellm.request.total_latency.distribution` | Distribution | Same value as above, as a distribution |
 | `litellm.llm_api.latency` | Gauge | Time spent waiting for the LLM provider response (seconds) |
+| `litellm.llm_api.latency.distribution` | Distribution | Same value as above, as a distribution |
+| `litellm.overhead.latency` | Gauge | Time spent inside LiteLLM, excluding the provider call (seconds) |
+| `litellm.overhead.latency.distribution` | Distribution | Same value as above, as a distribution |
 | `litellm.llm_api.request_count` | Count | Request count, tagged with status code |
+
+Gauges and counts go to `/api/v2/series`, distributions go to `/api/v1/distribution_points`. Datadog stores one gauge value per second per tag set, so under concurrent traffic to the same model the gauges only keep the last sample in each second. Use the `.distribution` metrics for `avg`, `p50`, `p95` and `p99` over every request. Note that Datadog counts a distribution as several custom metrics per unique tag set, so check your custom metrics quota.
 
 Using `total_latency` and `llm_api.latency`, you can derive **internal latency** = `total_latency - llm_api.latency`.
 
-All metrics include the following tags: `env`, `service`, `version`, `HOSTNAME`, `POD_NAME`, `provider`, `model_name`, `model_group`, `team`, `status_code`.
+All metrics include the following tags: `env`, `service`, `version`, `POD_NAME`, `provider`, `model_name`, `model_group`, `team`, `status_code`. `HOSTNAME` is added when the `HOSTNAME` env var is set. `litellm.overhead.latency` is not tagged with `status_code`.
 
 **Step 1**: Create a `config.yaml` file
 
@@ -226,7 +232,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 **Step 4**: View metrics in Datadog Metrics Explorer
 
-Navigate to **Metrics > Explorer** in Datadog and search for `litellm.request.total_latency`, `litellm.llm_api.latency`, or `litellm.llm_api.request_count`.
+Navigate to **Metrics > Explorer** in Datadog and search for `litellm.request.total_latency`, `litellm.llm_api.latency`, or `litellm.llm_api.request_count`. Tags on a new custom metric can take a few minutes to become filterable after the first data point arrives.
 
 ## Datadog Cloud Cost Management
 
