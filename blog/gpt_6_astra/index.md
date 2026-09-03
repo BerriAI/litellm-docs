@@ -118,7 +118,7 @@ The `flex` service tier is billed at half the standard rate and `priority` at do
 
 ## Notes
 
-- `gpt-6-astra` supports `reasoning_effort` values `none`, `low`, `medium`, `high`, and `xhigh`; `minimal` is not accepted.
+- `gpt-6-astra` accepts `reasoning_effort` values `low`, `medium`, `high`, and `xhigh` on Chat Completions, plus `max` on the Responses API; `none` and `minimal` are rejected, so `temperature` cannot be used with it.
 - Availability is rolling out through the API; check your OpenAI account for model access.
 - See the [OpenAI provider docs](../../docs/providers/openai) for the full parameter reference.
 
