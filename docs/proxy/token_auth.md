@@ -120,6 +120,60 @@ Set `JWT_PUBLIC_KEY_URL` in your environment to a comma-separated list of URLs f
 export JWT_PUBLIC_KEY_URL="https://demo.duendesoftware.com/.well-known/openid-configuration/jwks,https://accounts.google.com/.well-known/openid-configuration/jwks"
 ```
 
+This validates tokens from every listed provider against one shared set of claim mappings. If your providers disagree about what a given claim contains, use per-issuer claim mapping instead
+
+#### Per-issuer claim mapping
+
+Use `litellm_jwtauth.issuers` when the same claim means different things depending on which provider minted the token. A common case: one provider puts the team ID in `sub` while another puts the user ID there, so a single global `team_id_jwt_field: "sub"` cannot serve both
+
+Each entry is matched against the token's `iss` claim and carries its own JWKS URL, audience, and claim mappings
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    admin_jwt_scope: "litellm_proxy_admin"
+    issuers:
+      - issuer: "https://accounts.google.com"
+        audience: "my-gcp-audience"
+        team_id_jwt_field: "sub"
+
+      - issuer: "https://keycloak.example.com/realms/my-realm"
+        jwks_url: "https://keycloak.example.com/realms/my-realm/protocol/openid-connect/certs"
+        audience: "my-keycloak-audience"
+        user_id_jwt_field: "sub"
+        user_email_jwt_field: "email"
+```
+
+With this config a token from `accounts.google.com` resolves `sub` to a team ID, while a token from Keycloak resolves the same `sub` to a user ID
+
+##### Per-issuer fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `issuer` | Yes | Exact expected `iss` claim value. Matching is an exact string comparison |
+| `audience` | Yes, unless `disable_audience_validation` is set | Expected `aud` for tokens from this issuer |
+| `disable_audience_validation` | Yes, unless `audience` is set | Skip audience validation for this issuer. Setting both this and `audience` is rejected |
+| `jwks_url` | No | This issuer's JWKS endpoint. Defaults to reading `<issuer>/.well-known/openid-configuration` and following its `jwks_uri` |
+| `team_id_jwt_field` | No | Claim path to read as the team ID |
+| `team_ids_jwt_field` | No | Claim path to read as a list of team IDs |
+| `user_id_jwt_field` | No | Claim path to read as the user ID |
+| `user_email_jwt_field` | No | Claim path to read as the user email |
+| `org_id_jwt_field` | No | Claim path to read as the organization ID |
+| `end_user_id_jwt_field` | No | Claim path to read as the end-user ID |
+
+Claim paths support dot notation for nested claims, for example `resource_access.my-client.team`
+
+##### Things to know
+
+Every issuer must set either `audience` or `disable_audience_validation: true`. LiteLLM rejects the config at startup otherwise, so tokens minted by another application that shares your provider's signing keys cannot authenticate against your proxy
+
+Claim mappings you leave out of an issuer entry fall back to the top-level `litellm_jwtauth` setting. If you keep a global `team_id_jwt_field: "sub"` and add an issuer that only maps `user_id_jwt_field: "sub"`, that issuer's tokens still get a team ID read from `sub`. Move all of your claim mappings into `issuers` to avoid this
+
+`issuers` is additive routing rather than an allow-list. A token whose `iss` matches no entry falls through to the global `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` path, so leave those unset if you want only your listed issuers accepted
+
+Matching is on `iss` only. The `kid` header still selects the signing key within the matched issuer's JWKS
+
 ### Kubernetes ServiceAccount Authentication
 
 Use Kubernetes ServiceAccount tokens to authenticate workloads running in your cluster. This is useful when you want pods to authenticate to LiteLLM using their native Kubernetes identity.
