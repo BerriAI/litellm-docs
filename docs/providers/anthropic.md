@@ -364,11 +364,11 @@ export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal"
 
 ### Monitoring
 
-Token health is emitted through the standard service-logging path, so it lands on both Prometheus and OpenTelemetry with no extra wiring. The services are `anthropic_wif` for the exchange itself and `anthropic_wif_cache` for cache hits and misses, giving you mint counts, mint latency, and failures broken out by cause. Enable them with:
+Token health is emitted through the standard service-logging path: `prometheus_system` sends it to Prometheus and `otel` sends it to OpenTelemetry, using the exporter settings from the [OpenTelemetry docs](../observability/opentelemetry_integration). The services are `anthropic_wif` for the exchange itself and `anthropic_wif_cache` for cache hits and misses, giving you mint counts, mint latency, and failures broken out by cause. Enable them with:
 
 ```yaml
 litellm_settings:
-  service_callback: ["prometheus_system"]
+  service_callback: ["prometheus_system", "otel"]
 ```
 
 ## Usage
