@@ -47,7 +47,7 @@ model_info:
 
 ## How the rates apply
 
-An off-peak rate replaces the rate that would otherwise apply rather than discounting it. That includes tiered `above_{N}k` pricing: while a window is open, the flat off-peak rate bills the whole request. The block supports `input_cost_per_token`, `output_cost_per_token`, and `cache_read_input_token_cost`; any of them left unset falls back to the standard rate, and cache creation rates are never affected.
+An off-peak rate replaces the rate that would otherwise apply rather than discounting it. That includes tiered `above_{N}k` pricing: while a window is open, the flat off-peak rate bills the whole request. The block supports `input_cost_per_token`, `output_cost_per_token`, `output_cost_per_reasoning_token`, `cache_read_input_token_cost`, and `cache_creation_input_token_cost`; any of them left unset falls back to the standard rate. When `output_cost_per_reasoning_token` is unset, reasoning tokens bill the way they do outside the window: at the model's dedicated reasoning rate if it has one, otherwise at the output rate, off-peak included. The one-hour cache creation rate (`cache_creation_input_token_cost_above_1hr`) is never affected.
 
 A request is priced by its completion time. A request that starts at the standard rate and finishes inside a window bills entirely at the off-peak rate, and one that crosses out of the window bills entirely at the standard rate.
 
