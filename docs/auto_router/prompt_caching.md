@@ -40,8 +40,11 @@ items={[
 
 ## When to pin anyway
 
-- `session_affinity` is **off by default**. The numbers above show it is not needed for the cache, and pinning forfeits the savings from routing later turns down a tier.
-- Turn it on when a tier switch would change behavior the client depends on, such as a long Claude Code session that should stay on one model.
+- `session_affinity` is **off by default**, and that is the right setting for most routers. The numbers above show it is not needed for the cache, and pinning forfeits the savings from routing later turns down a tier.
+- **Turn it on when a tier switch would change behavior the client depends on.** Two kinds of case:
+  - **Provider state in the history.** History produced by one model can fail on another: an Anthropic `thinking` block or `cache_control` marker replayed to a non-Anthropic tier, or tool-call formats that differ between providers. Pinning keeps the session on the model that produced the history.
+  - **Consistency the user can see.** Each model has its own style. A design workflow that generates layouts, shapes, or components over many turns keeps one look only if every turn comes from the same model; a writing assistant that should keep one voice is the same case.
+- **Single-family ladders rarely need it.** When every tier is the same provider (all Claude, all GPT), history replays cleanly and the cache measurements above apply. Leave it off and let follow-ups route down.
 - A tier with several deployments behind it also needs `deployment_affinity` and the `prompt_caching` pre-call check in `router_settings`, so continuing turns return to the deployment holding the cache.
 - Both together: [Coding agents with load balancing](/docs/auto_router/recommended_configurations#coding-agents-with-load-balancing).
 
