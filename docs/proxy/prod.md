@@ -480,7 +480,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx
 
 Postgres does not allow `CONCURRENTLY` on a partitioned table. If `LiteLLM_SpendLogs` is partitioned, create the index `ON ONLY` the parent, build it `CONCURRENTLY` on each partition, and `ATTACH PARTITION` each partition index to the parent one
 
-Unset the flag once your indexes are in place. While it stays set, every index-only migration in future releases is skipped the same way
+Unset the flag once your indexes are in place. While it stays set, every index-only migration in future releases is skipped the same way, and the schema check that runs after migrations never recreates an index owned by an index-only migration, even one applied long ago. So a dropped index stays dropped until you rebuild it yourself or unset the flag
 
 ### Read-only file system
 
