@@ -465,6 +465,23 @@ How LiteLLM ships migrations:
 
 3. When you upgrade to a new version of LiteLLM, the migration file is applied to the database. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/litellm-proxy-extras/litellm_proxy_extras/utils.py#L42)
 
+### Skip index builds on a large database
+
+Some releases ship a migration that only adds an index, for example on `LiteLLM_SpendLogs`. Postgres builds it with a plain `CREATE INDEX`, which blocks inserts into that table until the build finishes. On a small database that is seconds; on a spend log table with hundreds of millions of rows it can stall request logging for the whole upgrade
+
+Set `LITELLM_SKIP_INDEX_MIGRATIONS=true` on whatever runs your migrations (the proxy pod, or the migration job if you use `DISABLE_SCHEMA_UPDATE`) to skip those builds. Every pending migration made only of `CREATE INDEX` and `DROP INDEX` statements is recorded as applied without being run, and the startup log names each one together with the indexes it would have built. Migrations that add tables or columns always run, so the proxy never starts against a schema it does not know. The flag does nothing on a brand-new database, where the index is built on an empty table anyway, and nothing under `--use_prisma_db_push`
+
+Then build the index yourself without blocking writes, using the index name from the log:
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx"
+    ON "LiteLLM_SpendLogs" ("api_key", "startTime");
+```
+
+Postgres does not allow `CONCURRENTLY` on a partitioned table. If `LiteLLM_SpendLogs` is partitioned, create the index `ON ONLY` the parent, build it `CONCURRENTLY` on each partition, and `ATTACH PARTITION` each partition index to the parent one
+
+Unset the flag once your indexes are in place. While it stays set, every index-only migration in future releases is skipped the same way
+
 ### Read-only file system
 
 Running LiteLLM with `readOnlyRootFilesystem: true` is a Kubernetes security best practice that prevents container processes from writing to the root filesystem. LiteLLM fully supports this configuration.
