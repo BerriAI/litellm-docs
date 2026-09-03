@@ -64,6 +64,14 @@ To get the router into the `/model` picker rather than only into the startup mod
 
 For Claude Desktop, enter the proxy URL and virtual key under **Developer > Configure Third-Party Inference**, then pick the router in the model list. The [Claude Desktop integration guide](./claude_desktop_cowork.md) walks the dialog screen by screen.
 
+## Context window shown in the client
+
+The window LiteLLM advertises for the router and the window Claude Code works to are separate numbers, and the proxy cannot push its value into the client. Claude Code applies its own default for a model name it does not recognize as one of Anthropic's, which a gateway-served router name never is. Setting `max_input_tokens` in the router's `model_info` changes what `/v1/models` and the LiteLLM UI report without moving what the client displays or when it compacts, so a mismatch between the two is expected rather than a sign the router is misconfigured.
+
+Configure the client separately. `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, or `autoCompactWindow` in `.claude/settings.json`, sets the context window Claude Code targets before auto-compaction, and `autoCompactEnabled` turns compaction off. See Claude Code's [model configuration](https://code.claude.com/docs/en/model-config) reference.
+
+The same split applies to any harness pointed at a router: the number it shows comes from its own defaults for a name it does not know, so it has to be set in the harness. What the proxy enforces is unaffected either way, because [context-window checks and escalation](../proxy/auto_routing.md#context-window) run against the tier model the router actually picked rather than against the router name.
+
 ## Scope the virtual key to the router
 
 Give Claude clients a key scoped to the router alone.
@@ -86,6 +94,7 @@ Model discovery lists whatever the key can reach, and Claude Desktop's **Test co
 | Router never shows up in the picker even though `availableModels` lists it | Relying on discovery with a name that lacks `claude`/`anthropic`, so it never gets discovered in the first place | Rename it, or add it directly with `ANTHROPIC_CUSTOM_MODEL_OPTION` instead of depending on discovery |
 | Test connection fails naming a model you never selected | Key discovers models beyond the router and the probe picks one of them | Scope the virtual key to the router |
 | Router missing from `/v1/models` and the Models page after an edit | Older builds did not relink the in-memory router registry when a deployment was replaced | Restart the proxy to reload it from the database, and upgrade to a release containing [PR #34564](https://github.com/BerriAI/litellm/pull/34564) |
+| Context window in the client looks wrong for the router | Claude Code applies its own default for a model name it does not recognize; the proxy value is advisory | Set `CLAUDE_CODE_AUTO_COMPACT_WINDOW` or `autoCompactWindow` on the client. `model_info.max_input_tokens` on the router changes only what `/v1/models` and the UI report |
 
 ## Related
 
