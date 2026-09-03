@@ -629,6 +629,7 @@ general_settings:
 - `database_socket_timeout` is the main knob for capping idle DB connections from LiteLLM.
 - `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
 - `database_extra_connection_params` is an untyped passthrough: any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- To verify the database server certificate against a custom CA (e.g. AWS RDS), set `sslmode: "verify-full"` and `sslrootcert: "/certs/global-bundle.pem"` here or on the URL; LiteLLM translates them into Prisma's `sslcert` + `sslaccept=strict`. See [Verify the database server certificate](./prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds).
 
 ### Bounding Statement and Lock Time
 
