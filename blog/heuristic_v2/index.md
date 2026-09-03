@@ -1,11 +1,11 @@
 ---
 slug: heuristic-v2
-title: "Introducing Auto Router Heuristic v2: Better Quality with 45% Lower Cost"
+title: "Introducing AutoRouter Heuristic v2: Better Quality with 45% Lower Cost"
 date: 2026-09-02T10:00:00
 authors:
   - tin
 image: ./hero.png
-description: "Heuristic v2 is a new classifier for LiteLLM's Auto Router, pretrained across multiple rounds of graded response data so it ships with zero cold start. On a 21-task Terminal-Bench 2.0 subset it solved 3 more tasks than Heuristic v1, at 45% lower cost per solved task and lower latency."
+description: "Heuristic v2 is a new classifier for LiteLLM's AutoRouter, pretrained across multiple rounds of graded response data so it ships with zero cold start. On a 21-task Terminal-Bench 2.0 subset it solved 3 more tasks than Heuristic v1, at 45% lower cost per solved task and lower latency."
 keywords: [heuristic router, complexity router, auto router, model routing, llm cost savings, terminal bench, litellm auto routing, probability routing]
 tags: [routing, complexity-router, cost, benchmarks, engineering, product]
 hide_table_of_contents: false
@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Heuristic v2 is cheaper, faster, and better: -45% cost per solved task, -20% median task time, -10% LLM call latency, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
 
-**Heuristic v2, LiteLLM's new Auto Router classifier, is up to 45% more efficient than Heuristic v1: more tasks solved, at lower cost, in less time.** Only the classifier changed.
+**Heuristic v2, LiteLLM's new AutoRouter classifier, is up to 45% more efficient than Heuristic v1: more tasks solved, at lower cost, in less time.** Only the classifier changed.
 
 {/* truncate */}
 
