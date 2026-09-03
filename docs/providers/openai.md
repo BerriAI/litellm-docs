@@ -196,6 +196,7 @@ os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 | gpt-5.4-2026-03-05 | `response = completion(model="gpt-5.4-2026-03-05", messages=messages)` |
 | gpt-5.5 | `response = completion(model="gpt-5.5", messages=messages)` |
 | gpt-5.5-2026-04-23 | `response = completion(model="gpt-5.5-2026-04-23", messages=messages)` |
+| gpt-6-astra | `response = completion(model="gpt-6-astra", messages=messages)` |
 | gpt-5.2-pro | `response = completion(model="gpt-5.2-pro", messages=messages)` |
 | gpt-5.2-pro-2025-12-11 | `response = completion(model="gpt-5.2-pro-2025-12-11", messages=messages)` |
 | gpt-5.4-pro | `response = completion(model="gpt-5.4-pro", messages=messages)` |
