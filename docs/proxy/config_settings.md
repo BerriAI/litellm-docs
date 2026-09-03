@@ -795,6 +795,9 @@ router_settings:
 | SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
 | SCX_API_BASE | Base URL for SCX.ai. Default is https://api.scx.ai/v1
 | SCX_API_KEY | API key for SCX.ai
+| SEARCH1API_API_BASE | Base URL for the Search1API search provider. Default is https://api.search1api.com
+| SEARCH1API_API_KEY | API key for the Search1API search provider
+| SEARCH1API_KEY | Fallback API key for the Search1API search provider, the name Search1API's own CLI and SDKs read
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
 | SERPER_API_BASE | Base URL for the Serper search provider
 | SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
