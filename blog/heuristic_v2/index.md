@@ -110,6 +110,12 @@ model_list:
 
 No LLM classifier call on the request path, same tier config as Heuristic v1 or the LLM classifier. Swap `classifier_type` and compare against your current setup. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
+:::note Free trial scope
+
+The free trial covers Heuristic v2 on one auto router. If you want it on more than one, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) and we'll sort it out with you directly.
+
+:::
+
 ## How it was measured
 
 - **Benchmark:** a 21-task subset of Terminal-Bench 2.0, both classifiers run concurrently through one LiteLLM proxy, harbor 0.20.0 + terminus-2, `max_turns=50`, `-n 6` per arm, 1 trial per task
