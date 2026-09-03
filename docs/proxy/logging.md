@@ -1343,7 +1343,7 @@ litellm_settings:
     s3_aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID  # us os.environ/<variable name> to pass environment variables. This is AWS Access Key ID for S3
     s3_aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY  # AWS Secret Access Key for S3
     s3_path: my-test-path # [OPTIONAL] set path in bucket you want to write logs to
-    s3_endpoint_url: https://s3.amazonaws.com  # [OPTIONAL] S3 endpoint URL, if you want to use Backblaze/cloudflare s3 buckets
+    s3_endpoint_url: https://s3.amazonaws.com  # [OPTIONAL] S3 endpoint URL, if you want to use Backblaze/Cloudflare/Tigris s3 buckets
     s3_use_virtual_hosted_style: false # [OPTIONAL] use virtual-hosted-style URLs (bucket.endpoint/key) instead of path-style (endpoint/bucket/key). Useful for S3-compatible services like MinIO
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
     s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
@@ -1375,6 +1375,21 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 Your logs should be available on the specified s3 Bucket
+
+### Logging to S3-compatible storage (Tigris)
+
+Any S3-compatible service works by setting `s3_endpoint_url`. For example, to log to [Tigris](https://www.tigrisdata.com), which has no egress fees when you read logs back for analysis or evals:
+
+```yaml
+litellm_settings:
+  success_callback: ["s3_v2"]
+  s3_callback_params:
+    s3_bucket_name: logs-bucket-litellm
+    s3_region_name: auto  # Tigris routes to the nearest region automatically
+    s3_aws_access_key_id: os.environ/TIGRIS_ACCESS_KEY_ID
+    s3_aws_secret_access_key: os.environ/TIGRIS_SECRET_ACCESS_KEY
+    s3_endpoint_url: https://t3.storage.dev
+```
 
 ### Team Alias Prefix in Object Key
 
