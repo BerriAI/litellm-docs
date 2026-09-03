@@ -496,6 +496,17 @@ article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='code
   margin-bottom: 0.25rem !important;
 }
 
+/* Auto Router sidebar: top-level pages read like top-level category labels */
+.autorouter-nav-item > .menu__link {
+  color: #111827;
+  font-weight: 600 !important;
+  font-size: 14px;
+}
+
+[data-theme='dark'] .autorouter-nav-item > .menu__link {
+  color: #f9fafb;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {

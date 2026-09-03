@@ -538,7 +538,6 @@ const sidebars = {
               items: [
                 "proxy/ai_hub",
                 "proxy/model_compare_ui",
-                "proxy/ui/routing_groups",
               ]
             },
             {
@@ -1709,4 +1708,27 @@ const learnSidebar = {
   ],
 };
 
-module.exports = { ...sidebars, ...learnSidebar };
+const autoRouterSidebar = {
+  autoRouterSidebar: [
+    { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/evaluate", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/feature_history", className: "autorouter-nav-item" },
+    {
+      type: "category",
+      label: "Reference",
+      collapsed: false,
+      items: [
+        { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
+        { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
+        { type: "link", label: "Autorouter CLI", href: "/docs/learn/autorouter_cli" },
+        { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
+      ],
+    },
+  ],
+};
+
+module.exports = { ...sidebars, ...learnSidebar, ...autoRouterSidebar };
