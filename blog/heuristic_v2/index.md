@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Heuristic v2 is cheaper, faster, and better: -45% cost per solved task, -20% median task time, +3 more tasks solved, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
 
-**Heuristic v2 solved 3 more tasks than Heuristic v1 on a 21-task Terminal-Bench 2.0 subset, at 45% lower cost per solved task.** Both classifiers ran the same 21 tasks, through the same tiers, on the same proxy. Only the classifier changed.
+**Heuristic v2, LiteLLM's new Auto Router classifier, is up to 45% more efficient than Heuristic v1: more tasks solved, at lower cost, in less time.** Both classifiers ran the same 21 tasks, through the same tiers, on the same proxy. Only the classifier changed.
 
 {/* truncate */}
 
