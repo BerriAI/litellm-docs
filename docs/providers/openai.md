@@ -175,6 +175,53 @@ os.environ["OPENAI_ORGANIZATION"] = "your-org-id"       # OPTIONAL
 os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 ```
 
+### Workload Identity Federation (no API key)
+
+Instead of a static `OPENAI_API_KEY`, the proxy can authenticate to OpenAI with workload identity federation: it reads an OIDC token from a file (for example a Kubernetes projected service account token), exchanges it for a short-lived OpenAI bearer token, and refreshes that token before it expires. This needs `openai>=2.32.0`.
+
+You need three values from the OpenAI platform: the identity provider id (`idp_...`), the service account id (`user-...`) the workload authenticates as, and the path of the token file inside the pod.
+
+<Tabs>
+<TabItem value="wif-env" label="Environment (proxy-wide default)">
+
+```bash
+export OPENAI_IDENTITY_PROVIDER_ID="idp_..."
+export OPENAI_SERVICE_ACCOUNT_ID="user-..."
+export OPENAI_IDENTITY_TOKEN_FILE="/var/run/secrets/tokens/openai"
+```
+
+Every `openai/` deployment that has no `api_key` then uses federation.
+
+</TabItem>
+<TabItem value="wif-config" label="config.yaml (per deployment)">
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      openai_identity_provider_id: idp_...
+      openai_service_account_id: user-...
+      openai_identity_token_file: /var/run/secrets/tokens/openai
+```
+
+Values set on a deployment take precedence over the environment variables, so different deployments can federate as different service accounts.
+
+</TabItem>
+<TabItem value="wif-ui" label="Admin UI (credential)">
+
+1. Open Models + Endpoints, go to the Credentials tab and click Add Credential
+2. Pick OpenAI as the provider, then Workload Identity Federation (token file) as the authentication method
+3. Fill in the identity provider id, the service account id and the token file path, then save
+4. In Add Model, pick OpenAI, choose the model, and select the credential under Existing Credentials. The API key field disappears because the credential carries the federation settings
+
+</TabItem>
+</Tabs>
+
+A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
+
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+
 ### OpenAI Chat Completion Models
 
 | Model Name            | Function Call                                                   |

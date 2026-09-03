@@ -1291,7 +1291,7 @@ router_settings:
 | OPENAI_API_KEY | API key for OpenAI services
 | OPENAI_CHATGPT_API_BASE | Alternative to CHATGPT_API_BASE. Base URL for ChatGPT API
 | OPENAI_FILE_SEARCH_COST_PER_1K_CALLS | Cost per 1000 calls for OpenAI file search. Default is 0.0025
-| OPENAI_IDENTITY_PROVIDER_ID | Identity provider ID (`idp_...`) for OpenAI workload identity federation. When this, `OPENAI_SERVICE_ACCOUNT_ID`, and `OPENAI_IDENTITY_TOKEN_FILE` are all set and no OpenAI API key is configured, the proxy authenticates `openai/` models by exchanging the OIDC token for a short-lived bearer (RFC 8693). Requires `openai>=2.32.0`
+| OPENAI_IDENTITY_PROVIDER_ID | Identity provider ID (`idp_...`) for OpenAI workload identity federation. When this, `OPENAI_SERVICE_ACCOUNT_ID`, and `OPENAI_IDENTITY_TOKEN_FILE` are all set and no OpenAI API key is configured, the proxy authenticates `openai/` models by exchanging the OIDC token for a short-lived bearer (RFC 8693). These env vars are the proxy-wide default; the same three values can be set per deployment or per credential as `openai_identity_provider_id`, `openai_service_account_id`, and `openai_identity_token_file`, which take precedence. See [OpenAI workload identity federation](../providers/openai#workload-identity-federation-no-api-key). Requires `openai>=2.32.0`
 | OPENAI_IDENTITY_TOKEN_FILE | Path to the OIDC subject token file used for OpenAI workload identity federation, e.g. the Kubernetes projected service account token path
 | OPENAI_ORGANIZATION | Organization identifier for OpenAI
 | OPENAI_SERVICE_ACCOUNT_ID | OpenAI platform service account ID (`user-...`) that workload identity federation authenticates as. Unrelated to LiteLLM virtual-key service accounts
