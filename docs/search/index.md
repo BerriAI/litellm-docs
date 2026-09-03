@@ -2,7 +2,7 @@
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `search1api` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -217,7 +217,7 @@ See the [official Perplexity Search documentation](https://docs.perplexity.ai/ap
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string or array | Yes | Search query. Can be a single string or array of strings |
-| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` |
+| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` or `"search1api"` |
 | `search_tool_name` | string | Yes (Proxy) | Name of the search tool configured in `config.yaml` |
 | `max_results` | integer | No | Maximum number of results to return (1-20). Default: 10 |
 | `search_domain_filter` | array | No | List of domains to filter results (max 20 domains) |
@@ -291,6 +291,7 @@ The response follows Perplexity's search format with the following structure:
 | Bedrock AgentCore | `AGENTCORE_GATEWAY_URL` (required), AWS credentials or `AGENTCORE_GATEWAY_TOKEN` | `agentcore` |
 | Nimble | `NIMBLE_API_KEY` | `nimble` |
 | Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
+| Search1API | `SEARCH1API_API_KEY` | `search1api` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
 
