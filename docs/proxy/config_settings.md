@@ -1180,7 +1180,7 @@ router_settings:
 | LITELLM_LOCAL_AUTOROUTER_PRESETS | Set to `True` to serve the auto-router preset catalog bundled with the package only, disabling remote fetching. Default is `False`
 | LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS | Comma-separated list of absolute directories from which the `oidc/file/` provider is permitted to read token files. Defaults to `/var/run/secrets,/run/secrets`.
 | LITELLM_LOCAL_BLOG_POSTS | When set to `True`, uses the local bundled blog posts only, disabling remote fetching from GitHub. Default is `False`
-| LITELLM_LOCAL_MODEL_COST_MAP | Local configuration for model cost mapping in LiteLLM
+| LITELLM_LOCAL_MODEL_COST_MAP | Set to `True` to use the model cost map bundled with the package (`litellm/model_prices_and_context_window_backup.json`) only, disabling the remote fetch from GitHub at startup and on `/reload/model_cost_map`. Default is `False`: the remote file is fetched at startup and the bundled copy is only used as a fallback if the fetch fails
 | LITELLM_LOCAL_POLICY_TEMPLATES | When set to "true", uses local backup policy templates instead of fetching from GitHub. Policy templates are fetched from https://raw.githubusercontent.com/BerriAI/litellm/main/policy_templates.json by default, with automatic fallback to local backup on failure
 | LITELLM_LOG | Enable detailed logging for LiteLLM
 | LITELLM_MODEL_COST_MAP_URL | URL for fetching model cost map data. Default is https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json

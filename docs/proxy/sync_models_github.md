@@ -12,6 +12,10 @@ With auto-sync, LiteLLM automatically pulls the latest model data from GitHub's 
 - **Always accurate pricing** for cost tracking and budgets
 - **Automatic updates** - set it once and forget it
 
+:::info Startup behavior (no configuration needed)
+The endpoints on this page only control **re-syncing while the proxy is running**. Independently of them, every LiteLLM process already fetches the remote `model_prices_and_context_window.json` from GitHub `main` (or `LITELLM_MODEL_COST_MAP_URL` if set) **once at startup**, and falls back to the copy bundled with the package (`litellm/model_prices_and_context_window_backup.json`) only if that fetch fails or fails validation. If you ship your own copy of the pricing file in your image and want the proxy to use it instead of the remote file, you must set `LITELLM_LOCAL_MODEL_COST_MAP=True`. See [Custom model cost map](./custom_model_cost_map) for details and `GET /model/cost_map/source` to check which copy is loaded.
+:::
+
 <iframe width="840" height="500" src="https://www.loom.com/embed/ba41acc1882d41b284bbddbb0e9c27ce?sid=bdae351e-2026-4e39-932b-fcb185ff612c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 <br/>
@@ -63,12 +67,14 @@ print(result['message'])
 
 ## Configuration
 
-**Custom model cost map URL:**
+Both variables apply to the startup fetch and to every reload triggered by the endpoints above.
+
+**Custom model cost map URL** (default shown; the remote fetch happens even when this is unset):
 ```bash
 export LITELLM_MODEL_COST_MAP_URL="https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
 ```
 
-**Use local model cost map:**
+**Use local model cost map only** (disables the remote fetch at startup and on reload; the bundled backup file is used):
 ```bash
 export LITELLM_LOCAL_MODEL_COST_MAP=True
 ```
