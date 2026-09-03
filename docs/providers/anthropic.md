@@ -4,6 +4,13 @@ import TabItem from '@theme/TabItem';
 # Anthropic
 LiteLLM supports all anthropic models.
 
+- `claude-fable-5-1`
+- `claude-opus-5`
+- `claude-sonnet-5`
+- `claude-haiku-4-5` (`claude-haiku-4-5-20251001`)
+- `claude-fable-5`
+- `claude-opus-4-8`
+- `claude-opus-4-7` (`claude-opus-4-7-20260416`)
 - `claude-opus-4-6` (`claude-opus-4-6-20260205`)
 - `claude-sonnet-4-6`
 - `claude-sonnet-4-5-20250929`
@@ -58,15 +65,16 @@ Check this in code, [here](../completion/input.md#translated-openai-params)
 
 ## **Structured Outputs**
 
-LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Sonnet 4.5 and Opus 4.1 models. When you use `response_format` with these models, LiteLLM automatically:
+LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Opus 4.1, Sonnet 4.5 and every later model. When you use `response_format` with these models, LiteLLM automatically:
 - Adds the required `structured-outputs-2025-11-13` beta header
 - Transforms OpenAI's `response_format` to Anthropic's `output_format` format
 
 ### Supported Models
-- `sonnet-4-5` or `sonnet-4.5` (all Sonnet 4.5 variants)
-- `opus-4-1` or `opus-4.1` (all Opus 4.1 variants)
-  - `opus-4-5` or `opus-4.5` (all Opus 4.5 variants)
-  
+- `fable-5-1`, `fable-5`
+- `opus-5`, `sonnet-5`, `haiku-4-5`
+- `opus-4-8`, `opus-4-7`, `opus-4-6`, `opus-4-5`, `opus-4-1`
+- `sonnet-4-6`, `sonnet-4-5`
+
 ### Example Usage
 
 <Tabs>
@@ -417,7 +425,15 @@ print(response)
 
 | Model Name       | Function Call                              |
 |------------------|--------------------------------------------|
+| claude-fable-5-1  | `completion('claude-fable-5-1', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-opus-5  | `completion('claude-opus-5', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-sonnet-5  | `completion('claude-sonnet-5', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-haiku-4-5  | `completion('claude-haiku-4-5-20251001', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-fable-5  | `completion('claude-fable-5', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-opus-4-8  | `completion('claude-opus-4-8', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-opus-4-7  | `completion('claude-opus-4-7-20260416', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-opus-4-6  | `completion('claude-opus-4-6-20260205', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
+| claude-sonnet-4-6  | `completion('claude-sonnet-4-6', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-sonnet-4-5  | `completion('claude-sonnet-4-5-20250929', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-opus-4-5  | `completion('claude-opus-4-5-20251101', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-opus-4-1  | `completion('claude-opus-4-1-20250805', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
@@ -1479,7 +1495,7 @@ LiteLLM translates OpenAI's `reasoning_effort` to Anthropic's `thinking` paramet
 | "high"           | "budget_tokens": 4096 |
 
 :::note
-`reasoning_effort` maps to Anthropic's [adaptive thinking](https: //docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-4-6`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
+`reasoning_effort` maps to Anthropic's [adaptive thinking](https://docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and later models (including `claude-opus-5`, `claude-sonnet-5`, `claude-fable-5-1`, `claude-opus-4-8`, `claude-opus-4-6`, `claude-sonnet-4-6`, etc.), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
 
 ```json
 {
