@@ -771,6 +771,9 @@ router_settings:
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
 | OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OPENCODE_API_KEY | API key for OpenCode Zen (`opencode/`) and OpenCode Go (`opencode_go/`). One account key authenticates both
+| OPENCODE_API_BASE | Base URL for OpenCode Zen. Default is https://opencode.ai/zen/v1
+| OPENCODE_GO_API_BASE | Base URL for OpenCode Go. Default is https://opencode.ai/zen/go/v1
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
