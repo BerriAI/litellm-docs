@@ -7,7 +7,7 @@ authors:
 image: ./lite-fusion-light.png
 description: "LiteLLM Auto Router Fusion ran three models on the same task and synthesized their work, solving 14 of 21 Terminal-Bench tasks against 9 for Claude Fable-5 alone. Total spend rose 36%, cost per solved task fell 12%, and turn latency went up 5x."
 keywords: [model fusion, best of n, llm ensemble, terminal bench, llm benchmarks, model routing, litellm, agent benchmarks]
-tags: [routing, benchmarks, cost, engineering]
+tags: [routing, auto-router, benchmarks, cost, engineering]
 hide_table_of_contents: false
 ---
 
