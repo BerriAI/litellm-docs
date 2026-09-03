@@ -1035,7 +1035,7 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 
 #### How it works
 
-- The first request with a new session id is routed by the strategy as usual. The deployment it lands on becomes the pin for that model group and session id (on the proxy the pin is also scoped to the calling API key).
+- The first request with a new session id is routed by the strategy as usual. The deployment it lands on becomes the pin for that model group and session id (on the proxy the pin is also scoped to the caller: the virtual key, or the authenticated user id under JWT auth).
 - Every later request with the same session id is narrowed to the pinned deployment before the strategy runs.
 - Every request refreshes the pin, so `deployment_affinity_ttl_seconds` bounds the idle time between turns, not the length of a conversation.
 - Pins live in the router cache. With Redis configured they are shared across proxy instances; without Redis each instance keeps its own.
@@ -1046,7 +1046,7 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 
 | Setting | Description |
 |---|---|
-| `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by API key instead of, or as well as, session id (a session pin takes priority). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
+| `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
 | `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
