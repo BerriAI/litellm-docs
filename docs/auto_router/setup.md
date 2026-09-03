@@ -82,4 +82,5 @@ model_list:
 
 - Claude Code populates its model picker from `/v1/models` and keeps only names containing `claude` or `anthropic`. Name the router accordingly, or set `ANTHROPIC_MODEL` directly.
 - On Claude for Teams or Enterprise, the exact router name must be on the organization allowlist. The check runs client-side, so a rejected router leaves nothing in gateway logs.
+- A router advertises no context window until you declare one in `model_info`, and Claude Code applies its own default regardless. Both sides: [context window](/docs/proxy/auto_routing#context-window).
 - Tutorial: [Auto Router with Claude Code and Claude Desktop](/docs/tutorials/claude_code_autorouter).

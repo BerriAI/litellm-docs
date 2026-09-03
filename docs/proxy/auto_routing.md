@@ -126,6 +126,16 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       # Marker pair whose blocks are stripped before classification
       reminder_markers: ["<system-reminder>", "</system-reminder>"]   # default
 
+      # Escalate a prompt that provably does not fit the decided tier, before dispatch
+      enable_context_window_escalation: true   # default
+      context_window_escalation_buffer: 0.95   # default; prompt must fit within this fraction of the window
+
+      # Send image-bearing requests to a tier that can see them
+      modality_routing: false   # default; set true to opt in
+
+      # Classify new user asks only, carrying the decision through continuation turns
+      classification_mode: every_request   # default; or user_turn
+
       # Thompson-sample within the tier's pool
       adaptive: true
 
@@ -528,6 +538,62 @@ writes = 0 if warm else cache_creation
         role: system
     complexity_router_config: {...}
 ```
+
+## Context window
+
+An auto router entry is a marker rather than a callable model, so it carries no provider metadata of its own and advertises no context window until you declare one. The number is not derived from the tier models: not the minimum across them, not the maximum, and not the window of `complexity_router_default_model`. Tiers hold model names the proxy resolves at request time, and nothing in the model-info path walks that list. Until you declare a window, `GET /v1/models` omits `max_input_tokens` and `max_output_tokens` for the router entirely, and `/model_group/info` reports `null` for both.
+
+Declare it in `model_info` on the router entry:
+
+```yaml title="config.yaml"
+- model_name: smart-router
+  litellm_params:
+    model: auto_router/complexity_router
+    complexity_router_config:
+      tiers:
+        SIMPLE:    gpt-4o-mini
+        REASONING: gpt-5.5
+    complexity_router_default_model: gpt-4o
+  model_info:
+    max_input_tokens: 200000
+    max_output_tokens: 64000
+```
+
+Both values then appear on `/v1/models`, `/model/info`, and `/model_group/info`, which is what clients and the LiteLLM UI read. They are advisory. Nothing gates, escalates, or rejects a request against the window declared on the router entry, so pick a number that describes the router honestly to callers; the smallest window a request might land on is the conservative choice, and the largest is the optimistic one.
+
+Where a `model_name` fronts both a router marker and ordinary deployments, `/model_group/info` reports the largest `max_input_tokens` in that group rather than the smallest, since model-group metadata aggregates by maximum across deployments.
+
+:::info Cost fields read zero on a router entry
+
+`/model_group/info` reports `input_cost_per_token` and `output_cost_per_token` as `0.0` for an auto router, and its `providers` as an empty string, because custom pricing on a strategy alias is deliberately excluded from the cost map. Spend is still tracked against the tier model that served the request, so those zeros are a gap in this metadata view rather than untracked usage.
+
+:::
+
+### What enforces the window
+
+Routing resolves first. The router picks a tier, the marker drops out of the candidate pool, and everything after that is ordinary model-group behavior applied to the selected model: deployment selection, cooldowns, tag routing, and context-window pre-call checks against that deployment's own `max_input_tokens`. Enforcement therefore depends on `router_settings.enable_pre_call_checks: true` and on a window being declared or resolvable for the tier deployments, never on the router entry. See [Context Window Fallbacks](./reliability.md#context-window-fallbacks-pre-call-checks--fallbacks).
+
+`context_window_fallbacks` are resolved against the tier the router selected first and the name the client called second, so a chain keyed on either `smart-router` or the tier's own model group is honored.
+
+`auto_router_max_input_chars` is unrelated to any of this. It truncates the text handed to the embedding model that matches routes on a semantic router, and defaults to 2000 characters.
+
+### Context-window escalation
+
+From v1.101.0 the complexity router checks whether the decided tier can hold the prompt before dispatch and moves the request when it provably cannot. This is on by default.
+
+```yaml title="config.yaml"
+complexity_router_config:
+  enable_context_window_escalation: true   # default
+  context_window_escalation_buffer: 0.95   # default
+```
+
+The estimate covers the whole prompt footprint, including the top-level `system` block, Responses API `instructions`, and serialized tool definitions, which carry most of the payload on coding-agent traffic. A tier model qualifies when the count fits within `context_window_escalation_buffer` of its declared window, so the default keeps 5% of headroom instead of gambling on prompts that land near the limit. Where only some of the tier's models fit, the tier keeps the request and the pick narrows to those; where none fit, the request moves to the lowest higher tier holding a model that provably fits.
+
+Unknown windows are left alone in both directions. A model group with no resolvable window is never escalated away from, because its misfit cannot be proven, and never escalated onto, because its fit cannot be proven either. A group counts as unproven if even one of its deployments lacks a window, since the group is only as safe as its smallest member. When nothing anywhere provably fits, the classified tier stands and the request dispatches, so escalation never raises on its own and never diverts to `complexity_router_default_model`.
+
+The window escalation reads is `model_info.max_input_tokens` on each tier deployment, falling back to the model cost map. Declaring a window on the router entry has no effect here. Escalated decisions log `context_escalated` alongside the tier the classifier originally picked, and they are never session-pinned, so routing comes back down when the session does.
+
+Both keys belong inside `complexity_router_config`. Setting either one level up, directly under `litellm_params`, is rejected at load and on management-endpoint writes rather than silently ignored.
 
 ## Effort ladders
 
