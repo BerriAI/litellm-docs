@@ -443,9 +443,65 @@ This tells the API that `SKILL.md` belongs to the `test-skill` directory.
 ```
 
 
+## **Semantic Search over LiteLLM-Hosted Skills**
+
+`custom_llm_provider=litellm_proxy` skills (stored in the proxy's own database rather than proxied to Anthropic) support ranking by semantic similarity, so a caller can describe what they need instead of paging through the whole registry.
+
+:::info Related Documentation
+- [MCP Tool Search](./mcp_tool_search.md#how-it-works) for the `skill_search` MCP virtual tool
+:::
+
+### Enable it
+
+Set an embedding model in `litellm_settings`:
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  skill_search_embedding_model: text-embedding-3-small
+```
+
+### Search over REST
+
+Pass `query` (and optionally `top_k`, default 5) to `GET /v1/skills`:
+
+```bash showLineNumbers title="search_skills.sh"
+curl "http://0.0.0.0:4000/v1/skills?custom_llm_provider=litellm_proxy&query=summarize+a+pdf&top_k=5" \
+  -H "Authorization: Bearer $LITELLM_KEY"
+```
+
+Each result carries a `search_score` (cosine similarity to the query) and, unlike a plain list, a populated `description` field:
+
+```json showLineNumbers
+{
+  "data": [
+    {
+      "id": "litellm_skill_...",
+      "display_title": "Document Summarizer",
+      "description": "Reads a PDF and produces a short summary",
+      "search_score": 0.71,
+      ...
+    }
+  ],
+  "has_more": false
+}
+```
+
+`query` is only supported for `custom_llm_provider=litellm_proxy`; passing it with any other provider returns a `400 skill_search_unsupported_provider`. If `skill_search_embedding_model` isn't set, the same request returns `400 skill_search_not_configured` naming the setting to add.
+
+### Authorization
+
+Search only ranks the skills the calling key can already access: the same visibility rules `GET /v1/skills` already enforces apply before ranking runs, so search cannot be used to enumerate skills outside a key's scope.
+
 ## **Supported Providers**
 
 | Provider | Link to Usage |
 |----------|---------------|
 | Anthropic | [Usage](#quick-start---create-a-skill) |
+| LiteLLM (self-hosted) | [Semantic Search](#semantic-search-over-litellm-hosted-skills) |
 
