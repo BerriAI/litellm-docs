@@ -469,7 +469,7 @@ How LiteLLM ships migrations:
 
 Some releases ship a migration that only adds an index, for example on `LiteLLM_SpendLogs`. Postgres builds it with a plain `CREATE INDEX`, which blocks inserts into that table until the build finishes. On a small database that is seconds; on a spend log table with hundreds of millions of rows it can stall request logging for the whole upgrade
 
-Set `LITELLM_SKIP_INDEX_MIGRATIONS=true` on whatever runs your migrations (the proxy pod, or the migration job if you use `DISABLE_SCHEMA_UPDATE`) to skip those builds. Every pending migration made only of `CREATE INDEX` and `DROP INDEX` statements is recorded as applied without being run, and the startup log names each one together with the indexes it would have built. Migrations that add tables or columns always run, so the proxy never starts against a schema it does not know. The flag does nothing on a brand-new database, where the index is built on an empty table anyway, and nothing under `--use_prisma_db_push`
+Set `LITELLM_SKIP_INDEX_MIGRATIONS=true` on whatever runs your migrations (the proxy pod, or the migration job if you use `DISABLE_SCHEMA_UPDATE`) to skip those builds. Every pending migration that only creates indexes (a `DROP INDEX` alongside is fine) is recorded as applied without being run, and the startup log names each one together with the indexes it would have built. A migration that only drops indexes always runs, since a drop is not a build. Migrations that add tables or columns always run, so the proxy never starts against a schema it does not know. The flag does nothing on a brand-new database, where the index is built on an empty table anyway, and nothing under `--use_prisma_db_push`
 
 Then build the index yourself without blocking writes, using the index name from the log:
 
@@ -480,7 +480,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx
 
 Postgres does not allow `CONCURRENTLY` on a partitioned table. If `LiteLLM_SpendLogs` is partitioned, create the index `ON ONLY` the parent, build it `CONCURRENTLY` on each partition, and `ATTACH PARTITION` each partition index to the parent one
 
-Unset the flag once your indexes are in place. While it stays set, every index-only migration in future releases is skipped the same way, and the schema check that runs after migrations never recreates an index owned by an index-only migration, even one applied long ago. So a dropped index stays dropped until you rebuild it yourself or unset the flag
+Unset the flag once your indexes are in place. While it stays set, every index-only migration in future releases is skipped the same way, and the schema check that runs after migrations never recreates an index owned by an index-only migration, even one applied long ago. So a dropped index stays dropped until you rebuild it yourself or unset the flag. A skipped migration's own `DROP INDEX` statements are not run either, so an index it replaces stays in place until you drop it by hand
 
 ### Read-only file system
 
