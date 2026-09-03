@@ -1209,6 +1209,98 @@ print(response)
 </Tabs>
 
 
+#### Proxy-to-proxy: forward spend logs metadata to an upstream LiteLLM proxy
+
+If a downstream LiteLLM proxy routes through an upstream LiteLLM proxy, the upstream writes its own
+SpendLogs row and only knows about the virtual key the downstream authenticated with. Set
+`forward_spend_logs_metadata_to_llm_api` on the **downstream** proxy and it sends the request's
+resolved `spend_logs_metadata` (caller, key and team values merged) upstream as the
+`x-litellm-spend-logs-metadata` header, which the upstream already reads into its own
+`spend_logs_metadata`.
+
+```
+client -> downstream LiteLLM proxy -> upstream LiteLLM proxy -> model provider
+```
+
+**1. Downstream `config.yaml`**
+
+```yaml
+model_list:
+  - model_name: upstream-gpt
+    litellm_params:
+      model: openai/gpt-4.1-mini
+      api_base: http://upstream-litellm:4000/v1
+      api_key: os.environ/UPSTREAM_VIRTUAL_KEY
+
+general_settings:
+  master_key: sk-1234
+  forward_spend_logs_metadata_to_llm_api: true
+```
+
+The same toggle is on the Admin UI under **Settings -> Admin Settings -> UI Settings**, labelled
+"Forward spend logs metadata to LLM API".
+
+**2. Put the per-user values on the downstream virtual key**
+
+```bash
+curl -L -X POST 'http://downstream-litellm:4000/key/generate' \
+-H 'Authorization: Bearer sk-1234' \
+-H 'Content-Type: application/json' \
+-d '{
+    "models": ["upstream-gpt"],
+    "metadata": {
+      "spend_logs_metadata": {
+          "username": "jdoe",
+          "email": "jdoe@example.com"
+      }
+    }
+}'
+```
+
+**3. Make a request against the downstream**
+
+```bash
+curl -L -X POST 'http://downstream-litellm:4000/v1/chat/completions' \
+-H 'Authorization: Bearer <downstream-key>' \
+-H 'Content-Type: application/json' \
+-d '{"model": "upstream-gpt", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+Both proxies now record the same values. On the upstream:
+
+```bash
+curl -X GET 'http://upstream-litellm:4000/spend/logs?request_id=<call-id>' \
+-H 'Authorization: Bearer sk-1234'
+```
+
+```json
+[
+  {
+    "metadata": {
+      "user_api_key_alias": "downstream-proxy-key",
+      "spend_logs_metadata": {
+        "username": "jdoe",
+        "email": "jdoe@example.com"
+      }
+    }
+  }
+]
+```
+
+**Notes**
+
+- Precedence is unchanged: a value the caller sends (request body `metadata.spend_logs_metadata` or
+  the `x-litellm-spend-logs-metadata` header) wins over the key's, which wins over the team's. The
+  header carries exactly what the downstream writes to its own SpendLogs, so the two rows match.
+- The upstream keeps its own trusted fields. Forwarded values only ever land under
+  `spend_logs_metadata`, never over `user_api_key_hash`, `user_api_key_team_id` or any other field
+  the upstream computes from the key it authenticated.
+- The setting is proxy-wide, so the header is added to every provider call this proxy makes, not
+  only to LiteLLM upstreams. Enable it when your configured upstreams are LiteLLM proxies you trust
+  with those identifiers, and keep secrets out of `spend_logs_metadata`.
+- Values above 4KB once JSON-encoded are dropped with a warning rather than sent, because an
+  oversized header would make the upstream reject the whole request.
+
 #### Viewing Spend w/ custom metadata
 
 #### `/spend/logs` Request Format 

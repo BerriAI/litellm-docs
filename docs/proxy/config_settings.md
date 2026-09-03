@@ -119,6 +119,7 @@ general_settings:
   completion_model: string
   store_prompts_in_spend_logs: boolean
   forward_client_headers_to_llm_api: boolean
+  forward_spend_logs_metadata_to_llm_api: boolean
   disable_spend_logs: boolean  # turn off writing each transaction to the db
   disable_master_key_return: boolean  # turn off returning master key on UI (checked on '/user/info' endpoint)
   disable_retry_on_max_parallel_request_limit_error: boolean  # turn off retries when max parallel request limit is reached
@@ -351,6 +352,7 @@ router_settings:
 | enable_oauth2_proxy_auth | boolean | (Enterprise Feature) If true, enables oauth2.0 authentication |
 | forward_openai_org_id | boolean | If true, forwards the OpenAI Organization ID to the backend LLM call (if it's OpenAI). |
 | forward_client_headers_to_llm_api | boolean | If true, forwards the client headers (any `x-` headers and `anthropic-beta` headers) to the backend LLM call |
+| forward_spend_logs_metadata_to_llm_api | boolean | If true, sends the request's resolved `spend_logs_metadata` (caller, key and team values merged) to the backend LLM call as the `x-litellm-spend-logs-metadata` header, so an upstream LiteLLM proxy records it in its own SpendLogs. See [proxy-to-proxy spend logs metadata](./cost_tracking#proxy-to-proxy-forward-spend-logs-metadata-to-an-upstream-litellm-proxy). Default is false |
 | maximum_spend_logs_retention_period               | str                   | Used to set the max retention time for spend logs in the db, after which they will be auto-purged                                                                                                                                                                                                                             |
 | maximum_spend_logs_retention_interval             | str                   | Used to set the interval in which the spend log cleanup task should run in.                                                                                                                                                                                                                                                   |
 | alert_type_config | dict | Configuration mapping alert types to their handler settings |
