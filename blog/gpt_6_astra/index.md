@@ -121,3 +121,7 @@ The `flex` service tier is billed at half the standard rate and `priority` at do
 - `gpt-6-astra` supports `reasoning_effort` values `none`, `low`, `medium`, `high`, and `xhigh`; `minimal` is not accepted.
 - Availability is rolling out through the API; check your OpenAI account for model access.
 - See the [OpenAI provider docs](../../docs/providers/openai) for the full parameter reference.
+
+## Feedback
+
+Running GPT-6 Astra through LiteLLM and hitting something unexpected? Share it on [GitHub discussion #39633](https://github.com/BerriAI/litellm/discussions/39633).
