@@ -119,13 +119,13 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-Heuristic v2 makes no LLM classifier call on the request path, and reuses the same tier config as Heuristic v1 or the LLM classifier. Swap `classifier_type` and compare against your current setup. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
-
 :::note Free trial scope
 
 The free trial covers Heuristic v2 on one auto router. If you want it on more than one, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) and we'll sort it out with you directly.
 
 :::
+
+Heuristic v2 makes no LLM classifier call on the request path, and reuses the same tier config as Heuristic v1 or the LLM classifier. Swap `classifier_type` and compare against your current setup. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
 ## How it was measured
 
