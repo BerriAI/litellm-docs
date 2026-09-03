@@ -2,7 +2,9 @@
 slug: gpt_6_astra
 title: "Day 0 Support: GPT-6 Astra"
 date: 2026-09-03T11:00:00
+image: /img/litellm_gpt_6_astra_announcement.png
 authors:
+  - misbah
   - mateo
   - krrish
   - ishaan-alt
@@ -14,11 +16,13 @@ hide_table_of_contents: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
+![LiteLLM x GPT-6 Astra](/img/litellm_gpt_6_astra_announcement.png)
+
 LiteLLM now supports `gpt-6-astra`, OpenAI's next major model. Route traffic to it through the LiteLLM AI Gateway with the same config you use for every other OpenAI model.
 
 {/* truncate */}
 
-Astra is the first model on the GPT-6 name, and OpenAI's own [research post](https://openai.com/index/ten-advances-in-mathematics-and-theoretical-computer-science/) previewed it producing machine-checked proofs for ten open problems in mathematics and theoretical computer science. Through the API it behaves like the GPT-5 reasoning line: `max_completion_tokens` instead of `max_tokens`, `reasoning_effort` up to `xhigh`, no `temperature` while reasoning is on, prompt caching, and the long-context pricing tier above 272K input tokens.
+Astra is the first model on the GPT-6 name, and OpenAI's own [research post](https://openai.com/index/ten-advances-in-mathematics-and-theoretical-computer-science/) previewed it producing machine-checked proofs for ten open problems in mathematics and theoretical computer science. It scores 98% on FrontierMath Tier 4, 99.9% on ARC-AGI 3, and 100% on ExploitBench, with a 1,050,000-token context window, 128K max output, an April 30 2026 knowledge cutoff, and text and image input. Through the API it behaves like the GPT-5 reasoning line: `max_completion_tokens` instead of `max_tokens`, `reasoning_effort` up to `xhigh`, no `temperature` while reasoning is on, prompt caching, and the long-context pricing tier above 272K input tokens.
 
 :::note
 **Cost tracking works on the version you already run.** Hit the **Reload Model Cost Map** button in the Admin UI (or `POST /reload/model_cost_map`) to pull the `gpt-6-astra` pricing from GitHub. This feature is available on `v1.76.0` and above.
@@ -110,10 +114,14 @@ Prices are per 1M tokens (USD), shown as short context (≤272K tokens) / long c
 |-------|-------|--------------|-------------|--------|
 | `gpt-6-astra` | $10.00 / $20.00 | $1.00 / $2.00 | $12.50 / $25.00 | $50.00 / $75.00 |
 
-The `flex` service tier is billed at half the standard rate and `priority` at double, on both the short and long context tiers, and the Batch API is billed at half the standard input and output rate. Pass `service_tier` on the request and LiteLLM picks the matching rate.
+The `flex` service tier is billed at half the standard rate and `priority` at double, on both the short and long context tiers, and the Batch API is billed at half the standard input and output rate. Pass `service_tier` on the request and LiteLLM picks the matching rate. Fast mode costs 2x the applicable rate for up to 2.5x the speed.
 
 ## Notes
 
 - `gpt-6-astra` supports `reasoning_effort` values `none`, `low`, `medium`, `high`, and `xhigh`; `minimal` is not accepted.
 - Availability is rolling out through the API; check your OpenAI account for model access.
 - See the [OpenAI provider docs](../../docs/providers/openai) for the full parameter reference.
+
+## Feedback
+
+Running GPT-6 Astra through LiteLLM and hitting something unexpected? Share it on [GitHub discussion #39633](https://github.com/BerriAI/litellm/discussions/39633).
