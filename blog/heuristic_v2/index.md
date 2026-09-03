@@ -11,7 +11,7 @@ tags: [routing, complexity-router, cost, benchmarks, engineering, product]
 hide_table_of_contents: false
 ---
 
-![Heuristic v2 is cheaper, faster, and better: -45% cost per solved task, -20% median task time, -10% LLM call latency, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
+![Heuristic v2 is cheaper, faster, and better: -45% cost per solved task, -20% median task time, +27% more quality than Heuristic v1, on a 21-task Terminal-Bench 2.0 subset](./hero.png)
 
 **Heuristic v2, LiteLLM's new AutoRouter classifier, is up to 45% more efficient than Heuristic v1: more tasks solved, at lower cost, in less time.** Only the classifier changed.
 
