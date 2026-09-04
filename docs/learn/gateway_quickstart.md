@@ -64,7 +64,7 @@ If the request succeeds, the proxy returns `200 OK` with an OpenAI-style respons
 
 The assistant text will be in:
 
-```json
+```text
 choices[0].message.content
 ```
 

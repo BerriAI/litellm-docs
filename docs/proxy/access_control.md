@@ -433,7 +433,7 @@ Expected Response
   "models": [],
   "user_id": "ishaan@berri.ai",
   "key": "sk-7shH8TGMAofR4zQpAAo6kQ",
-  "key_name": "sk-...o6kQ",
+  "key_name": "sk-...o6kQ"
 }
 ```
 
@@ -459,7 +459,7 @@ Expected Response
 {
   "team_alias": "engineering_team",
   "team_id": "01044ee8-441b-45f4-be7d-c70e002722d8",
-  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23",
+  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23"
 }
 ```
 

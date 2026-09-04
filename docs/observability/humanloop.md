@@ -138,7 +138,7 @@ You can do `humanloop/<litellm_model_name>`
 ```python
 litellm.completion(
     model="humanloop/gpt-3.5-turbo", # or `humanloop/anthropic/claude-3-5-sonnet`
-    ...
+    # ...
 )
 ```
 

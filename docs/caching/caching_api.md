@@ -12,7 +12,7 @@ litellm.cache = Cache(type="hosted") # init cache to use api.litellm.ai
 # Make completion calls
 response1 = completion(
     model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": "Tell me a joke."}]
+    messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 

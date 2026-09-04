@@ -190,20 +190,20 @@ You can also set a `weight` param, to specify which model should get picked when
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-v-2
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		rpm: 900 
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-functioncalling
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		rpm: 10 
+    - model_name: gpt-3.5-turbo
+      litellm_params:
+        model: azure/chatgpt-v-2
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        rpm: 900 
+    - model_name: gpt-3.5-turbo
+      litellm_params:
+        model: azure/chatgpt-functioncalling
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        rpm: 10 
 ```
 
 ##### **Python SDK**
@@ -252,20 +252,20 @@ asyncio.run(router_acompletion())
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-v-2
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		weight: 9
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-functioncalling
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		weight: 1 
+    - model_name: gpt-3.5-turbo
+      litellm_params:
+        model: azure/chatgpt-v-2
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        weight: 9
+    - model_name: gpt-3.5-turbo
+      litellm_params:
+        model: azure/chatgpt-functioncalling
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        weight: 1 
 ```
 
 ##### **Python SDK**
@@ -313,8 +313,11 @@ asyncio.run(router_acompletion())
 </TabItem>
 <TabItem value="usage-based-v2" label="Rate-Limit Aware v2 (ASYNC)">
 
-> [!WARNING]  
+:::warning
+
 **Usage-based routing is not recommended for production due to performance impacts.** Use `simple-shuffle` (default) for optimal performance in high-traffic scenarios. Usage-based routing adds significant latency due to Redis operations for tracking usage across deployments.
+
+:::
 
 
 **🎉 NEW** This is an async implementation of usage-based-routing.
@@ -340,7 +343,7 @@ model_list = [{ # list of model deployments
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
-		"api_base": os.getenv("AZURE_API_BASE")
+		"api_base": os.getenv("AZURE_API_BASE"),
 		"tpm": 100000,
 		"rpm": 10000,
 	}, 
@@ -350,7 +353,7 @@ model_list = [{ # list of model deployments
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
-		"api_base": os.getenv("AZURE_API_BASE")
+		"api_base": os.getenv("AZURE_API_BASE"),
 		"tpm": 100000,
 		"rpm": 1000,
 	},
@@ -367,12 +370,12 @@ router = Router(model_list=model_list,
                 redis_host=os.environ["REDIS_HOST"], 
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
-                routing_strategy="simple-shuffle" # 👈 RECOMMENDED - best performance
+                routing_strategy="simple-shuffle", # 👈 RECOMMENDED - best performance
 				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 response = await router.acompletion(model="gpt-3.5-turbo", 
-				messages=[{"role": "user", "content": "Hey, how's it going?"}]
+				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 ```
@@ -383,20 +386,20 @@ print(response)
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo # model alias 
-	  litellm_params: # params for litellm completion/embedding call 
-		model: azure/chatgpt-v-2 # actual model name
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
+    - model_name: gpt-3.5-turbo # model alias 
+      litellm_params: # params for litellm completion/embedding call 
+        model: azure/chatgpt-v-2 # actual model name
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
       tpm: 100000
-	  rpm: 10000
-	- model_name: gpt-3.5-turbo 
-	  litellm_params: # params for litellm completion/embedding call 
-		model: gpt-3.5-turbo 
-		api_key: os.getenv(OPENAI_API_KEY)
+      rpm: 10000
+    - model_name: gpt-3.5-turbo 
+      litellm_params: # params for litellm completion/embedding call 
+        model: gpt-3.5-turbo 
+        api_key: os.getenv(OPENAI_API_KEY)
       tpm: 100000
-	  rpm: 1000
+      rpm: 1000
 
 router_settings:
   routing_strategy: simple-shuffle # 👈 RECOMMENDED - best performance
@@ -489,7 +492,7 @@ router = Router(..., routing_strategy_args={"ttl": 10})
 
 ```yaml
 router_settings:
-	routing_strategy_args: {"ttl": 10}
+  routing_strategy_args: {"ttl": 10}
 ```
 
 #### Set Lowest Latency Buffer
@@ -519,7 +522,7 @@ router = Router(..., routing_strategy_args={"lowest_latency_buffer": 0.5})
 
 ```yaml
 router_settings:
-	routing_strategy_args: {"lowest_latency_buffer": 0.5}
+  routing_strategy_args: {"lowest_latency_buffer": 0.5}
 ```
 
 </TabItem>
@@ -572,12 +575,12 @@ router = Router(model_list=model_list,
                 redis_host=os.environ["REDIS_HOST"], 
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
-                routing_strategy="usage-based-routing"
+                routing_strategy="usage-based-routing",
 				enable_pre_call_check=True, # enables router rate limits for concurrent calls
 				)
 
 response = await router.acompletion(model="gpt-3.5-turbo", 
-				messages=[{"role": "user", "content": "Hey, how's it going?"}]
+				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 ```
@@ -1164,15 +1167,15 @@ print(response)
 ```yaml
 model_list:
   - model_name: o1
-  	litellm_params:
-		model: o1
-		api_key: os.environ/OPENAI_API_KEY
-		weight: 1	
+    litellm_params:
+      model: o1
+      api_key: os.environ/OPENAI_API_KEY
+      weight: 1
   - model_name: o1
     litellm_params:
-		model: o1-preview
-		api_key: os.environ/OPENAI_API_KEY
-		weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
+      model: o1-preview
+      api_key: os.environ/OPENAI_API_KEY
+      weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
 ```
 
 </TabItem>
@@ -1291,7 +1294,7 @@ model_list = [{
 	"model_name": "gpt-4",
 	"litellm_params": {
 		"model": "azure/gpt-4",
-		...
+		# ...
 		"max_parallel_requests": 10 # 👈 SET PER DEPLOYMENT
 	}
 }]
@@ -1339,8 +1342,8 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-	allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  	cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
@@ -1392,7 +1395,7 @@ router = Router(..., disable_cooldowns=True)
 
 ```yaml
 router_settings:
-	disable_cooldowns: True
+  disable_cooldowns: True
 ```
 
 </TabItem>
@@ -1644,8 +1647,8 @@ router_settings:
     "ContentPolicyViolationErrorRetries": 4
   }
   allowed_fails_policy: {
-	"ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment
-	"RateLimitErrorAllowedFails": 100 # Allow 100 RateLimitErrors before cooling down a deployment
+    "ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment
+    "RateLimitErrorAllowedFails": 100 # Allow 100 RateLimitErrors before cooling down a deployment
   }
 ```
 
@@ -1696,9 +1699,9 @@ print(response)
 
 **Pass in Redis URL, additional kwargs** 
 ```python 
-router = Router(model_list: Optional[list] = None,
+router = Router(model_list=model_list,
                  ## CACHING ## 
-                 redis_url=os.getenv("REDIS_URL")",
+                 redis_url=os.getenv("REDIS_URL"),
 				 cache_kwargs= {}, # additional kwargs to pass to RedisCache (see caching.py)
 				 cache_responses=True)
 ```
@@ -1744,7 +1747,7 @@ model_list = [
                     "api_key": os.getenv("AZURE_API_KEY"),
                     "api_version": os.getenv("AZURE_API_VERSION"),
                     "api_base": os.getenv("AZURE_API_BASE"),
-					"region_name": "eu" # 👈 SET 'EU' REGION NAME
+					"region_name": "eu", # 👈 SET 'EU' REGION NAME
 					"base_model": "azure/gpt-35-turbo", # 👈 (Azure-only) SET BASE MODEL
                 },
             },
@@ -1757,7 +1760,7 @@ model_list = [
             },
 			{
 				"model_name": "gemini-pro",
-				"litellm_params: {
+				"litellm_params": {
 					"model": "vertex_ai/gemini-pro-1.5", 
 					"vertex_project": "adroit-crow-1234",
 					"vertex_location": "us-east1" # 👈 AUTOMATICALLY INFERS 'region_name'

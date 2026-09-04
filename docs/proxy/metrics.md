@@ -7,8 +7,8 @@ curl -X GET "http://0.0.0.0:4000/daily_metrics" -H "Authorization: Bearer sk-123
 
 ## Response format 
 ```json
-[
-    daily_spend = [
+{
+    "daily_spend": [
         {
             "daily_spend": 7.9261938052047e+16,
             "day": "2024-02-01T00:00:00",
@@ -35,10 +35,10 @@ curl -X GET "http://0.0.0.0:4000/daily_metrics" -H "Authorization: Bearer sk-123
         }
 
     ],
-    total_spend = 200,
-    top_models = {"gpt4": 0.2, "vertexai/gemini-pro":10},
-    top_api_keys = {"899922": 0.9, "838hcjd999seerr88": 20}
+    "total_spend": 200,
+    "top_models": {"gpt4": 0.2, "vertexai/gemini-pro":10},
+    "top_api_keys": {"899922": 0.9, "838hcjd999seerr88": 20}
 
-]
+}
 
 ```

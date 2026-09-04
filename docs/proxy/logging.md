@@ -70,7 +70,7 @@ Set `litellm.turn_off_message_logging=True` This will prevent the messages and r
 **1. Setup config.yaml**
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -116,7 +116,7 @@ Example config.yaml
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 ```
@@ -358,7 +358,7 @@ uv add langfuse>=2.0.0
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -1332,7 +1332,7 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -2011,7 +2011,7 @@ class MyCustomHandler(CustomLogger):
 
 **Expected Output**
 
-```json
+```python
 {'mode': 'embedding', 'input_cost_per_token': 0.002}
 ```
 
@@ -2031,7 +2031,7 @@ class MyCustomHandler(CustomLogger):
 
 **Expected Output /chat/completion [for both `stream` and `non-stream` responses]**
 
-```json
+```python
 ModelResponse(
     id='chatcmpl-8Tfu8GoMElwOZuj2JlHBhNHG01PPo',
     choices=[
@@ -2058,7 +2058,7 @@ ModelResponse(
 
 **Expected Output /embeddings**
 
-```json
+```python
 {
     'model': 'ada',
     'data': [
@@ -2448,7 +2448,7 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -2548,7 +2548,7 @@ Your logs should be available on DynamoDB
     "S": "{'user': 'ishaan-2'}"
   },
   "response": {
-    "S": "EmbeddingResponse(model='text-embedding-ada-002-v2', data=[{'embedding': [-0.03503197431564331, -0.020601635798811913, -0.015375726856291294,
+    "S": "EmbeddingResponse(model='text-embedding-ada-002-v2', data=[{'embedding': [-0.03503197431564331, -0.020601635798811913, -0.015375726856291294,"
   }
 }
 ```
@@ -2575,7 +2575,7 @@ export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (defau
 
 ```yaml 
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:

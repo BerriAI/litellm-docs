@@ -145,7 +145,7 @@ import litellm
 # Example dummy function
 
 def get_current_weather(location, unit="fahrenheit"):
-    if unit == "fahrenheit"
+    if unit == "fahrenheit":
         return{"location": location, "temperature": "72", "unit": "fahrenheit"}
     else:
         return{"location": location, "temperature": "22", "unit": "celsius"}
@@ -184,8 +184,7 @@ print("\nFirst LLM Response:\n", response)
 response_message = response.choices[0].message
 tool_calls = response_message.tool_calls
 
-if tool_calls:
-    # Step 2: check if the model wanted to call a function
+# Step 2: check if the model wanted to call a function
 if tool_calls:
     # Step 3: call the function
     # Note: the JSON response may not always be valid; be sure to handle errors
@@ -305,7 +304,7 @@ response = litellm.completion(
     stream=False
 )
 
-print(response.choices[0].message.content))
+print(response.choices[0].message.content)
 ```
 
 ## SambaNova - Embeddings

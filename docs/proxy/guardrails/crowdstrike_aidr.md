@@ -186,7 +186,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -221,7 +221,7 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>

@@ -23,7 +23,7 @@ Let's make sure our keys are working. Run this script in any environment of your
 
 🚨 Don't forget to replace the placeholder key values with your keys!
 
-```python 
+```bash
 uv add litellm
 ```
 
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
 ### Let's test it
 Start the server:
-```python 
+```bash
 python main.py
 ```
 
@@ -179,7 +179,7 @@ This is what you should see:
 <Image img={require('../../img/litellm_streamlit_playground.png')} alt="streamlit_playground" />
 
 
-# Congratulations 🚀 
+## Congratulations 🚀 
 
 You've created your first LLM Playground - with the ability to call 50+ LLM APIs. 
 

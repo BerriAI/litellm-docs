@@ -76,9 +76,10 @@ Response Object:
 <TabItem value="curl" label="Curl">
 
 ```bash
+# Authorization: 👈 Team's Key
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-tXL0wt5-lOOVK9sfY2UacA' \ # 👈 Team's Key
+--header 'Authorization: Bearer sk-tXL0wt5-lOOVK9sfY2UacA' \
 --data ' {
       "model": "fake-openai-endpoint",
       "messages": [

@@ -105,7 +105,7 @@ model_list:
 
 guardrails:
     - guardrail_name: my_guardrail
-        litellm_params:
+      litellm_params:
         guardrail: my_guardrail
         mode: during_call
         api_key: os.environ/MY_GUARDRAIL_API_KEY

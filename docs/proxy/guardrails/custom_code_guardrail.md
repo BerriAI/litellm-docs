@@ -12,13 +12,13 @@ Write custom guardrail logic using Python-like code that runs in a sandboxed env
 ```yaml
 model_list:
     - model_name: gpt-4
-        litellm_params:
+      litellm_params:
         model: gpt-4
         api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
     - guardrail_name: block-ssn
-        litellm_params:
+      litellm_params:
         guardrail: custom_code
         mode: pre_call
         custom_code: |

@@ -48,7 +48,7 @@ for chunk in response:
 ## async
 import asyncio 
 
-def async completion():
+async def completion():
     response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
@@ -191,7 +191,7 @@ customHandler = MyCustomHandler()
 
 litellm.callbacks = [customHandler]
 
-def async completion():
+async def completion():
     response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 

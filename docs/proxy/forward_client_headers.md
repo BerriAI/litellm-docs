@@ -116,9 +116,11 @@ For **Claude Code** with `/login` and your own Anthropic key, see [Claude Code B
 
 Client request:
 ```bash
+# Authorization: Proxy authentication (stripped)
+# x-api-key: Client's Anthropic key (forwarded!)
 curl -X POST "http://localhost:4000/v1/messages" \
-  -H "Authorization: Bearer sk-proxy-auth-123" \     # Proxy authentication (stripped)
-  -H "x-api-key: sk-ant-api03-YOUR-KEY..." \        # Client's Anthropic key (forwarded!)
+  -H "Authorization: Bearer sk-proxy-auth-123" \
+  -H "x-api-key: sk-ant-api03-YOUR-KEY..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "claude-sonnet-4",

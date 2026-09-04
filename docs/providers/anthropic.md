@@ -580,7 +580,7 @@ import litellm
 
 response = await litellm.acompletion(
     model="anthropic/claude-3-5-sonnet-20240620",
-    messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
+    messages = [{"role": "user", "content": "What's the weather like in Boston today?"}],
     tools = [
         {
             "type": "function",
@@ -626,7 +626,7 @@ client = openai.AsyncOpenAI(
 
 response = await client.chat.completions.create(
     model="anthropic/claude-3-5-sonnet-20240620",
-    messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
+    messages = [{"role": "user", "content": "What's the weather like in Boston today?"}],
     tools = [
         {
             "type": "function",
@@ -1398,7 +1398,7 @@ print(response)
 ```yaml
 model_list:
     - model_name: claude-memory-model
-    litellm_params:
+      litellm_params:
         model: anthropic/claude-sonnet-4-5-20250929
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
@@ -1732,8 +1732,11 @@ response = completion(
 
 You can "put words in Claude's mouth" by including an `assistant` role message as the last item in the `messages` array.
 
-> [!IMPORTANT]
-> The returned completion will _not_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+:::info
+
+The returned completion will _not_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+
+:::
 
 ```python
 import os
@@ -2164,7 +2167,7 @@ response = completion(
 ```yaml
 model_list:
     - model_name: claude-sonnet-4-5-20250929
-        litellm_params:
+      litellm_params:
         model: anthropic/claude-sonnet-4-5-20250929
         api_key: os.environ/ANTHROPIC_API_KEY
 ```

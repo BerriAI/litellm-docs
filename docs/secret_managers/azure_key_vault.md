@@ -29,7 +29,7 @@ export["AZURE_KEY_VAULT_URI"]="your-azure-key-vault-uri"
 ```yaml
 model_list: 
     - model_name: "my-azure-models" # model alias 
-        litellm_params:
+      litellm_params:
             model: "azure/<your-deployment-name>"
             api_key: "os.environ/AZURE-API-KEY" # reads from key vault - get_secret("AZURE_API_KEY")
             api_base: "os.environ/AZURE-API-BASE" # reads from key vault - get_secret("AZURE_API_BASE")

@@ -25,7 +25,7 @@ Supported Providers:
 
 LiteLLM will standardize the `reasoning_content` in the response and `thinking_blocks` in the assistant message.
 
-```python title="Example response from litellm"
+```python nolint title="Example response from litellm"
 "message": {
     ...
     "reasoning_content": "The capital of France is Paris.",
@@ -646,17 +646,17 @@ Expected Response
       "model_group": "claude-3-sonnet-reasoning",
       "providers": ["anthropic"],
       "mode": "chat",
-      "supports_reasoning": true,
+      "supports_reasoning": true
     },
     {
       "model_group": "deepseek-reasoning",
       "providers": ["deepseek"],
-      "supports_reasoning": true,
+      "supports_reasoning": true
     },
     {
       "model_group": "my-custom-reasoning-model",
       "providers": ["openai"],
-      "supports_reasoning": true,
+      "supports_reasoning": true
     }
   ]
 }
@@ -676,7 +676,7 @@ You can also route explicitly via `openai/responses/gpt-5.4` or `azure/responses
 
 **SDK:**
 ```python
-litellm.completion(model="azure/responses/my-reasoning-model", ...)
+litellm.completion(model="azure/responses/my-reasoning-model")  # ...
 ```
 
 **Proxy config:**

@@ -179,7 +179,8 @@ To enable these features, your A2A server must **forward these headers** to any 
 ### Implementation Steps
 
 **Step 1: Extract headers from incoming A2A request**
-```python def get_litellm_headers(request) -> dict:
+```python
+def get_litellm_headers(request) -> dict:
     """Extract X-LiteLLM-* headers from incoming A2A request."""
     all_headers = request.call_context.state.get('headers', {})
     return {
@@ -193,7 +194,8 @@ Pass the extracted headers when making calls back to LiteLLM:
 <Tabs>
 <TabItem value="openai" label="OpenAI SDK" default>
 
-```python from openai import OpenAI
+```python
+from openai import OpenAI
 
 headers = get_litellm_headers(request)
 

@@ -20,7 +20,7 @@ Store prompts as `.prompt` files in your repository and use them directly with L
 
 Create `prompts/hello.prompt`:
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4
 temperature: 0.7
@@ -52,7 +52,7 @@ response = litellm.completion(
 
 Create `prompts/hello.prompt` in your BitBucket repository:
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4
 temperature: 0.7
@@ -96,7 +96,7 @@ response = litellm.completion(
 
 Create `prompts/hello.prompt` in your gitlab repository:
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4
 temperature: 0.7
@@ -141,7 +141,7 @@ response = litellm.completion(
 
 Create `prompts/hello.prompt`:
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4
 temperature: 0.7
@@ -205,7 +205,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 `.prompt` files use YAML frontmatter for metadata and support Jinja2 templating:
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4                    # Model to use
 temperature: 0.7                # Optional parameters
@@ -223,7 +223,7 @@ User: {{user_message}}
 
 **Multi-role conversations:**
 
-```yaml
+```yaml nolint
 ---
 model: gpt-4
 temperature: 0.3
@@ -235,7 +235,7 @@ User: {{user_question}}
 
 **Dynamic model selection:**
 
-```yaml
+```yaml nolint
 ---
 model: "{{preferred_model}}"  # Model can be a variable
 temperature: 0.7

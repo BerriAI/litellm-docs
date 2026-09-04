@@ -54,9 +54,10 @@ Expected Response:
 ## 3. Check if budget is enforced on key 
 
 ```bash
+# Authorization: 👈 KEY from step 2.
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-...' \ # 👈 KEY from step 2.
+-H 'Authorization: Bearer sk-...' \
 -d '{
     "model": "<REPLACE_WITH_MODEL_NAME_FROM_CONFIG.YAML>",
     "messages": [

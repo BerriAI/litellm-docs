@@ -164,7 +164,7 @@ The main handler that manages the token lifecycle.
 from litellm.proxy_auth import ProxyAuthHandler
 
 handler = ProxyAuthHandler(
-    credential=<TokenCredential>,  # required - credential provider
+    credential="<TokenCredential>",  # required - credential provider
     scope="<oauth2-scope>"         # required - OAuth2 scope to request
 )
 ```

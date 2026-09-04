@@ -146,7 +146,7 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -195,7 +195,7 @@ When the recipe configured in the `pangea-ai-guard-response` plugin detects PII,
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>

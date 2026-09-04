@@ -343,7 +343,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 Add all openai models across all OpenAI organizations with just 1 model definition 
 
 ```yaml
-  - model_name: *
+  - model_name: "*"
     litellm_params:
       model: openai/*
       api_key: os.environ/OPENAI_API_KEY
@@ -376,7 +376,7 @@ For optimal performance:
 - Select your optimal routing strategy in `router_settings:routing_strategy`.
 
 LiteLLM supports
-```python
+```text
 ["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"`
 ```
 
@@ -541,7 +541,7 @@ model_list:
       roles: {"system":{"pre_message":"<|im_start|>system\n", "post_message":"<|im_end|>"}, "assistant":{"pre_message":"<|im_start|>assistant\n","post_message":"<|im_end|>"}, "user":{"pre_message":"<|im_start|>user\n","post_message":"<|im_end|>"}}
       final_prompt_value: "\n"
       bos_token: " "
-      eos_token: " "
+      eos_token: " "
       max_tokens: 4096
 ```
 

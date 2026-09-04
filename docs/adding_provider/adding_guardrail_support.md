@@ -285,7 +285,7 @@ def _has_text_content(self, response: Any) -> bool:
 
 Create `__init__.py` to register the handler with call types:
 
-```python
+```python nolint
 """My Endpoint handler for Unified Guardrails."""
 
 from litellm.llms.{provider}/{endpoint}/guardrail_translation.handler import (

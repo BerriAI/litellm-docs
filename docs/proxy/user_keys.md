@@ -707,8 +707,8 @@ print(query_result[:5])
       "embedding": [
         0.0023064255,
         -0.009327292,
-        .... 
-        -0.0028842222,
+        ...,
+        -0.0028842222
       ],
       "index": 0
     }
@@ -888,7 +888,7 @@ $ aider --openai-api-base http://0.0.0.0:4000 --openai-api-key fake-key
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 

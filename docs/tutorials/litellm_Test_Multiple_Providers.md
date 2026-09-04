@@ -9,8 +9,8 @@
 
 
 
-```python
-!uv add litellm python-dotenv
+```bash
+uv add litellm python-dotenv
 ```
 
 
@@ -26,9 +26,9 @@ from dotenv import load_dotenv
 load_dotenv()
 ```
 
-# Quality Test endpoint
+## Quality Test endpoint
 
-## Test the same prompt across multiple LLM providers
+### Test the same prompt across multiple LLM providers
 
 In this example, let's ask some questions about Paul Graham
 
@@ -42,7 +42,7 @@ result = testing_batch_completion(models=models, messages=messages)
 ```
 
 
-# Load Test endpoint
+## Load Test endpoint
 
 Run 100+ simultaneous queries across multiple providers to see when they fail + impact on latency
 
@@ -55,7 +55,7 @@ final_prompt = context + prompt
 result = load_test_model(models=models, prompt=final_prompt, num_calls=5)
 ```
 
-## Visualize the data
+### Visualize the data
 
 
 ```python
@@ -89,7 +89,7 @@ plt.show()
     
 
 
-# Duration Test endpoint
+## Duration Test endpoint
 
 Run load testing for 2 mins. Hitting endpoints with 100+ queries every 15 seconds.
 

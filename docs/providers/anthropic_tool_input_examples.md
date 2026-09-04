@@ -262,7 +262,7 @@ On Google Cloud's Vertex AI and Amazon Bedrock, only Claude Opus 4.5 supports to
 
 Include examples that demonstrate different use cases:
 
-```python
+```python nolint
 "input_examples": [
     {"location": "San Francisco, CA", "unit": "fahrenheit"},  # US city
     {"location": "Tokyo, Japan", "unit": "celsius"},          # International
@@ -274,7 +274,7 @@ Include examples that demonstrate different use cases:
 
 Show when optional parameters should and shouldn't be included:
 
-```python
+```python nolint
 "input_examples": [
     {
         "query": "machine learning",
@@ -290,7 +290,7 @@ Show when optional parameters should and shouldn't be included:
 
 Make format expectations clear through examples:
 
-```python
+```python nolint
 "input_examples": [
     {
         "phone": "+1-555-123-4567",  # Shows expected phone format
@@ -304,7 +304,7 @@ Make format expectations clear through examples:
 
 Use realistic, production-like examples rather than placeholder data:
 
-```python
+```python nolint
 # ✅ Good - realistic examples
 "input_examples": [
     {"email": "alice@company.com", "role": "admin"},

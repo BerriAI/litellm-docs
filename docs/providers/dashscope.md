@@ -86,4 +86,3 @@ for chunk in response:
 | qwen3-235b-a22b | `completion(model="dashscope/qwen3-235b-a22b", messages)` |  
 | qwen3-32b | `completion(model="dashscope/qwen3-32b", messages)` |  
 | qwen3-30b-a3b | `completion(model="dashscope/qwen3-30b-a3b", messages)` |
-```

@@ -18,7 +18,7 @@ def my_custom_rule(input): # receives the model response
 
 ### Step 2. Point it to your proxy
 
-```python
+```yaml
 litellm_settings:
   post_call_rules: post_call_rules.my_custom_rule
 ```

@@ -27,7 +27,7 @@ litellm_settings:
     - hide_secrets_guard:
         callbacks: [hide_secrets]
         default_on: false
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```
@@ -139,7 +139,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -165,7 +165,7 @@ chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "llama3",
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -348,7 +348,7 @@ litellm_settings:
         callback: ["presidio"]
         default_on: true
         logging_only: true
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```

@@ -148,7 +148,7 @@ litellm_settings:
 
 Customize budget alert behavior using these environment variables:
 
-```yaml showLineNumbers title=".env"
+```bash showLineNumbers title=".env"
 # Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%)
 # Only applies to keys without max_budget_alert_emails configured
 EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE=0.8

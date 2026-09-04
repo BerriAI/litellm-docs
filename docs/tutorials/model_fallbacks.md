@@ -8,8 +8,8 @@ keywords: [fallbacks, failover, provider failover, model failover, OpenAI, Anthr
 Here's how you can implement model fallbacks (provider failover) across 3 LLM providers (OpenAI, Anthropic, Azure) using LiteLLM. 
 
 ## 1. Install LiteLLM
-```python 
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 ## 2. Basic Fallbacks Code 
@@ -66,13 +66,13 @@ try:
 except ContextWindowExceededError as e:
     model_max_tokens = get_max_tokens(model)
     for model in context_window_fallback_list:
-        if model_max_tokens < model["max_tokens"]
-        try:
-            response = completion(model=model["model"], messages=messages)
-            return response
-        except ContextWindowExceededError as e:
-            model_max_tokens = get_max_tokens(model["model"])
-            continue
+        if model_max_tokens < model["max_tokens"]:
+            try:
+                response = completion(model=model["model"], messages=messages)
+                return response
+            except ContextWindowExceededError as e:
+                model_max_tokens = get_max_tokens(model["model"])
+                continue
 
 print(response)
 ```

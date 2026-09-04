@@ -324,12 +324,12 @@ This config will return the `/guardrails/list` response above. The `guardrail_in
 
 ```yaml
 - guardrail_name: "aporia-post-guard"
-    litellm_params:
+  litellm_params:
       guardrail: aporia  # supported values: "aporia", "lakera"
       mode: "post_call"
       api_key: os.environ/APORIA_API_KEY_2
       api_base: os.environ/APORIA_API_BASE_2
-    guardrail_info: # Optional field, info is returned on GET /guardrails/list
+  guardrail_info: # Optional field, info is returned on GET /guardrails/list
       # you can enter any fields under info for consumers of your guardrail
       params:
         - name: "toxicity_score"
@@ -755,10 +755,10 @@ The `guardrails` parameter can be passed to any LiteLLM Proxy endpoint (`/chat/c
 1. Simple List Format:
 
 ```python
-"guardrails": [
+{"guardrails": [
     "aporia-pre-guard",
     "aporia-post-guard"
-]
+]}
 ```
 
 1. Advanced Dictionary Format:
@@ -766,14 +766,14 @@ The `guardrails` parameter can be passed to any LiteLLM Proxy endpoint (`/chat/c
 In this format the dictionary key is `guardrail_name` you want to run
 
 ```python
-"guardrails": {
+{"guardrails": {
     "aporia-pre-guard": {
         "extra_body": {
             "success_threshold": 0.9,
             "other_param": "value"
         }
     }
-}
+}}
 ```
 
 #### Type Definition

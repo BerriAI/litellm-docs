@@ -35,7 +35,7 @@ import litellm
 from litellm import completion
 from litellm.caching.caching import Cache
 
-litellm.cache = Cache(type="redis", host=<host>, port=<port>, password=<password>)
+litellm.cache = Cache(type="redis", host="<host>", port="<port>", password="<password>")
 
 # Make completion calls
 response1 = completion(
@@ -569,7 +569,7 @@ litellm.enable_cache()
 Advanced Params
 
 ```python
-litellm.enable_cache(
+def enable_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -578,7 +578,7 @@ litellm.enable_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ### Disabling Cache
@@ -593,7 +593,7 @@ litellm.disable_cache()
 Update the Cache params
 
 ```python
-litellm.update_cache(
+def update_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -602,7 +602,7 @@ litellm.update_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ## Custom Cache Keys:
@@ -638,10 +638,10 @@ cache = Cache()
 ### 2. Define custom add/get cache functions 
 ```python
 def add_cache(self, result, *args, **kwargs):
-  your logic
+  ...
   
 def get_cache(self, *args, **kwargs):
-  your logic
+  ...
 ```
 
 ### 3. Point cache add/get functions to your add/get functions 
@@ -714,7 +714,7 @@ def __init__(
 
     qdrant_semantic_cache_vector_size: Optional[int] = None,
     **kwargs
-):
+): ...
 ```
 
 ## Logging 
@@ -724,7 +724,7 @@ Cache hits are logged in success events as `kwarg["cache_hit"]`.
 Here's an example of accessing it: 
 
   ```python
-  import litellm
+import litellm
 from litellm.integrations.custom_logger import CustomLogger
 from litellm import completion, acompletion, Cache
 
@@ -732,7 +732,7 @@ from litellm import completion, acompletion, Cache
 class MyCustomHandler(CustomLogger):
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time): 
         print(f"On Success")
-        print(f"Value of Cache hit: {kwargs['cache_hit']"})
+        print(f"Value of Cache hit: {kwargs['cache_hit']}")
 
 async def test_async_completion_azure_caching():
     # set custom callback

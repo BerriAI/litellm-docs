@@ -111,7 +111,7 @@ async for chunk in response:
       "finish_reason": null
     }
   ],
-  "model": "codestral-2405", 
+  "model": "codestral-2405"
 }
 
 ```
@@ -172,12 +172,12 @@ response = await litellm.acompletion(
   "object": "chat.completion",
   "created": 1677652288,
   "model": "codestral/codestral-latest",
-  "system_fingerprint": None,
+  "system_fingerprint": null,
   "choices": [{
     "index": 0,
     "message": {
       "role": "assistant",
-      "content": "\n\nHello there, how may I assist you today?",
+      "content": "\n\nHello there, how may I assist you today?"
     },
     "logprobs": null,
     "finish_reason": "stop"
@@ -231,7 +231,7 @@ async for chunk in response:
     "object":"chat.completion.chunk",
     "created":1694268190,
     "model": "codestral/codestral-latest",
-    "system_fingerprint": None, 
+    "system_fingerprint": null, 
     "choices":[
         {
             "index":0,

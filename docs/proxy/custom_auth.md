@@ -82,7 +82,7 @@ These fields are read straight off the returned object and enforced with no flag
 Who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true`.
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     api_key: Optional[str] = None,                    # The API key (will be hashed automatically)
     token: Optional[str] = None,                      # Hashed token for internal use
     key_alias: Optional[str] = None,                  # Key alias for identification
@@ -92,7 +92,7 @@ UserAPIKeyAuth(
     team_id: Optional[str] = None,                    # Team identifier (also used to load the team record)
     org_id: Optional[str] = None,                     # Organization identifier (also used to load the org record)
     end_user_id: Optional[str] = None,                # End-user identifier (also used to load the end-user record)
-)
+): ...
 ```
 
 ### Rate limits
@@ -100,7 +100,7 @@ UserAPIKeyAuth(
 All scopes below are enforced directly off the returned object, with no flag.
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     # Key
     tpm_limit: Optional[int] = None,
     rpm_limit: Optional[int] = None,
@@ -119,7 +119,7 @@ UserAPIKeyAuth(
     # Per-model (key / team scoped)
     metadata: Dict = {},          # e.g. {"model_tpm_limit": {...}, "model_rpm_limit": {...}}
     team_metadata: Optional[Dict] = None,  # same keys, team scoped
-)
+): ...
 ```
 
 :::note
@@ -133,12 +133,12 @@ Per-model rate limits are read from `metadata` (key) and `team_metadata` (team),
 ### Advanced
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     max_parallel_requests: Optional[int] = None,      # Concurrent request limit
     allowed_model_region: Optional[AllowedModelRegion] = None,  # Geographic restrictions
     blocked: Optional[bool] = None,                   # Whether the key is blocked
     config: Dict = {},                                # Configuration settings
-)
+): ...
 ```
 
 ### Object permission (MCP, agents, etc.)

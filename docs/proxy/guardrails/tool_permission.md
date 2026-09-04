@@ -214,8 +214,8 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 		"prompt_tokens": 112,
 		"total_tokens": 735,
 		"completion_tokens_details": {
-			"reasoning_tokens": 384,
-		},
+			"reasoning_tokens": 384
+		}
 	},
 	"service_tier": "default"
 }

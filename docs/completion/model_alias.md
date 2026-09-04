@@ -4,7 +4,7 @@ The model name you show an end-user might be different from the one you pass to 
 
 LiteLLM simplifies this by letting you pass in a model alias mapping. 
 
-# expected format
+## expected format
 
 ```python
 litellm.model_alias_map = {
@@ -13,7 +13,7 @@ litellm.model_alias_map = {
 }
 ```
 
-# usage 
+## usage 
 
 ### Relevant Code
 ```python

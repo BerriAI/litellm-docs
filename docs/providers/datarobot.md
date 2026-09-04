@@ -17,6 +17,7 @@ response = completion(
             model="datarobot/openai/gpt-4o-mini",
             messages=messages,
         )
+```
 
 
 ### Completion

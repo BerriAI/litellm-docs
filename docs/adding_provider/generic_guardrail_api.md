@@ -110,7 +110,7 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 
 ### Response Format
 
-```json
+```json nolint
 {
   "action": "BLOCKED" | "NONE" | "GUARDRAIL_INTERVENED",
   "blocked_reason": "why content was blocked",  // required if action=BLOCKED

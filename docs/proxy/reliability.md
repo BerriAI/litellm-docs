@@ -121,7 +121,7 @@ For direct `Router` tests, pass `mock_testing_fallbacks=True` to trigger fallbac
 
 from litellm import Router
 
-model_list = [{..}, {..}] # defined in Step 1.
+model_list = [{...}, {...}] # defined in Step 1.
 
 router = Router(model_list=model_list, fallbacks=[{"bad-model": ["my-good-model"]}])
 
@@ -172,7 +172,7 @@ In this request the following will occur:
 ```python
 from litellm import Router
 
-router = Router(model_list=[..]) # defined in Step 1.
+router = Router(model_list=[...]) # defined in Step 1.
 
 resp = router.completion(
     model="gpt-3.5-turbo",
@@ -300,7 +300,7 @@ fallbacks = [
 ```python
 from litellm import Router
 
-router = Router(model_list=[..]) # defined in Step 1.
+router = Router(model_list=[...]) # defined in Step 1.
 
 resp = router.completion(
     model="gpt-3.5-turbo",
@@ -472,7 +472,7 @@ In your proxy config.yaml just add this line 👇
 
 ```yaml
 router_settings:
-  content_policy_fallbacks=[{"claude-2": ["my-fallback-model"]}]
+  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}]
 ```
 
 Start proxy 
@@ -536,7 +536,7 @@ In your proxy config.yaml just add this line 👇
 
 ```yaml
 router_settings:
-  context_window_fallbacks=[{"claude-2": ["my-fallback-model"]}]
+  context_window_fallbacks: [{"claude-2": ["my-fallback-model"]}]
 ```
 
 Start proxy 
@@ -797,11 +797,11 @@ router_settings:
 model_list:
   - model_name: gpt-3.5-turbo-small
     litellm_params:
-    model: azure/chatgpt-v-2
+      model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
-      model_info:
+    model_info:
       base_model: azure/gpt-4-1106-preview # 2. 👈 (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
@@ -859,9 +859,9 @@ Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit conte
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo-small
-    litellm_params:
-    model: azure/chatgpt-v-2
+    - model_name: gpt-3.5-turbo-small
+      litellm_params:
+        model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
         api_key: os.environ/AZURE_API_KEY
         api_version: "2023-07-01-preview"
@@ -884,9 +884,9 @@ You can also set default_fallbacks, in case a specific model group is misconfigu
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo-small
-    litellm_params:
-    model: azure/chatgpt-v-2
+    - model_name: gpt-3.5-turbo-small
+      litellm_params:
+        model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
         api_key: os.environ/AZURE_API_KEY
         api_version: "2023-07-01-preview"

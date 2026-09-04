@@ -273,7 +273,7 @@ Note: **Azure requires the `base_url` to be set with `/extensions`**
 
 Example 
 ```python
-base_url=https://gpt-4-vision-resource.openai.azure.com/openai/deployments/gpt-4-vision/extensions
+base_url="https://gpt-4-vision-resource.openai.azure.com/openai/deployments/gpt-4-vision/extensions"
 # base_url="{azure_endpoint}/openai/deployments/{azure_deployment}/extensions"
 ```
 
@@ -971,7 +971,7 @@ curl http://localhost:4000/v1/batches?limit=2 \
 **1. Create File for Batch Completion**
 
 ```python
-from litellm
+import litellm
 import os 
 
 os.environ["AZURE_API_KEY"] = ""
@@ -1142,7 +1142,7 @@ In production, [Router connects to a Redis Cache](#redis-queue) to track usage a
 
 #### Quick Start
 
-```python
+```bash
 uv add litellm
 ```
 
@@ -1183,7 +1183,7 @@ router = Router(model_list=model_list)
 
 # openai.chat.completions.create replacement
 response = router.completion(model="gpt-3.5-turbo", 
-				messages=[{"role": "user", "content": "Hey, how's it going?"}]
+				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 ```

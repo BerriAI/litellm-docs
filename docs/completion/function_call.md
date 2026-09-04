@@ -190,7 +190,7 @@ tool_calls = response.choices[0].message.tool_calls
 
 ##### Expected output
 In the output you can see the model calls the function multiple times - for San Francisco, Tokyo, Paris
-```json
+```python
 ModelResponse(
   id='chatcmpl-8MHBKZ9t6bXuhBvUMzoKsfmmlv7xq', 
   choices=[
@@ -262,7 +262,7 @@ print("Second Response\n", second_response)
 ```
 
 #### Expected output
-```json
+```python
 ModelResponse(
   id='chatcmpl-8MHBLh1ldADBP71OrifKap6YfAd4w', 
   choices=[
@@ -453,7 +453,7 @@ print(function_json)
 ```
 
 #### Output from function_to_dict
-```json
+```python
 {
     'name': 'get_current_weather', 
     'description': 'Get the current weather in a given location', 

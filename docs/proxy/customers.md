@@ -115,8 +115,10 @@ If the customer_id already exists, spend will be incremented.
 Call `/customer/info` to get a customer's all up spend
 
 ```bash showLineNumbers title="Get customer spend"
-curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \ # 👈 CUSTOMER ID
-        -H 'Authorization: Bearer sk-1234' \ # 👈 YOUR PROXY KEY
+# end_user_id: 👈 CUSTOMER ID
+# Authorization: 👈 YOUR PROXY KEY
+curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
+        -H 'Authorization: Bearer sk-1234'
 ```
 
 Expected Response:

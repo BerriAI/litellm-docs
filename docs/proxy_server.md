@@ -212,7 +212,7 @@ docker compose up -d
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 
@@ -345,7 +345,7 @@ python3 run.py --task "a script that says hello world" --name "hello world"
 </TabItem>
 <TabItem value="langroid" label="Langroid">
 
-```python
+```bash
 uv add langroid
 ```
 
@@ -447,7 +447,7 @@ $ aider --openai-api-base http://0.0.0.0:8000 --openai-api-key fake-key
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 
@@ -580,7 +580,7 @@ python3 run.py --task "a script that says hello world" --name "hello world"
 </TabItem>
 <TabItem value="langroid" label="Langroid">
 
-```python
+```bash
 uv add langroid
 ```
 

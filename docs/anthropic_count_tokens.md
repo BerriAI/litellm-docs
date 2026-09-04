@@ -123,7 +123,7 @@ model_list:
 
 ```json
 {
-  "input_tokens": <number>
+  "input_tokens": "<number>"
 }
 ```
 
