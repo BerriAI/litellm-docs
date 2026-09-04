@@ -338,7 +338,7 @@ Mixing fields across variants is rejected rather than silently ignored, so a con
 
 ### Setting it up in the UI
 
-The Admin UI covers the whole flow under **Models + Endpoints -> Add Provider**. Pick Anthropic, choose a workload identity variant instead of an API key, and fill in the federation identifiers. With LiteLLM as the issuer the credential saves before you have a rule id, since you need the JWKS it publishes in order to create the rule in the first place; register that JWKS with Anthropic, then paste the rule id back into the wizard.
+The Admin UI covers the whole flow under **Models + Endpoints -> LLM Credentials**. Press Add Credential, pick Anthropic, choose a workload identity variant instead of an API key, and fill in that variant's fields, using a reference such as `os.environ/KEYCLOAK_CLIENT_SECRET` for anything secret. With LiteLLM as the issuer the credential saves before you have a rule id, since you need the JWKS it publishes in order to create the rule in the first place: add the credential with only the issuer fields, then open Edit on its row, where the modal shows the public JWKS with a copy button. Register that JWKS with Anthropic, paste the Organization ID, Federation Rule ID and Service Account ID (plus the Workspace ID when the rule is enabled in more than one workspace) back into the same modal, press Update Credential, then reopen Edit and press Test Connection to see the models the credential can reach. Attach the credential to a model through Add Model under Existing Credentials.
 
 ### Token lifetime and refresh
 
