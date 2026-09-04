@@ -75,25 +75,28 @@ model_list:
 
 ## Model-management API
 
-For CI/CD or scripts, create the same deployment with `POST /model/new`. Enable `store_model_in_db` first; Auto Routers are model deployments, so there is no separate `/auto_router/new` endpoint.
+For CI/CD or scripts, create the same deployment with `POST /model/new`. Enable `store_model_in_db` first; Auto Routers are model deployments, so there is no separate `/auto_router/new` endpoint. This example uses the [Anthropic Family preset](/docs/auto_router/recommended_configurations#anthropic-family); create the referenced model deployments first.
 
 ```bash
 curl -X POST "http://localhost:4000/model/new" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model_name": "smart-router",
+    "model_name": "claude-auto",
     "litellm_params": {
       "model": "auto_router/complexity_router",
       "complexity_router_config": {
         "tiers": {
-          "SIMPLE": "gpt-4o-mini",
-          "MEDIUM": "gpt-4o",
-          "COMPLEX": "claude-sonnet-5",
-          "REASONING": "gpt-5.5"
-        }
+          "SIMPLE": "claude-haiku-4-5",
+          "MEDIUM": "claude-sonnet-5",
+          "COMPLEX": "claude-opus-5",
+          "REASONING": "claude-opus-5-high"
+        },
+        "classifier_type": "heuristic",
+        "escalation_keywords": ["LITELLM ESCALATE"],
+        "session_affinity": false
       },
-      "complexity_router_default_model": "gpt-4o"
+      "complexity_router_default_model": "claude-sonnet-5"
     }
   }'
 ```
