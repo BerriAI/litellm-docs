@@ -1024,7 +1024,7 @@ litellm --config config.yaml
 3. Test it!
 
 ```bash
-curl --location 'http://0.0.0.0:8000/v1/audio/transcriptions' \
+curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header 'Authorization: Bearer sk-1234' \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 --form 'model="gpt-4o-transcribe"'
