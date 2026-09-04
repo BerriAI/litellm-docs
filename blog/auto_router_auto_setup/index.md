@@ -30,29 +30,21 @@ The existing **Template** dropdown asks you to choose Anthropic, OpenAI, or Cust
 
 **Configure automatically** makes that choice for you. It checks your available chat model groups across providers and:
 
-- applies the first complete preset your proxy can support
-- builds a four-tier configuration from the preferred models you do have when no complete preset fits
-- uses price-based ranking only when your proxy has none of those preferred models
+- builds each tier from the preferred models used in LiteLLM's presets
+- mixes model families when that produces the best match for the models you have
+- includes a small curated list of common models beyond the presets
 
-The existing presets remain available when you want direct control. Auto Setup uses them as trusted starting points, then handles partial and mixed-family model inventories that a single preset cannot cover.
+The existing presets remain available when you want direct control. Auto Setup uses their tier assignments as a shared catalog, so a complete family preset does not override a better match from another preset.
 
 ## One click, using your models
 
 Open **Add Model → Auto Router** in the LiteLLM Dashboard. The new **Configure automatically** button checks the chat models available to you and builds the four Auto Router tiers.
 
-LiteLLM first looks for a complete match with one of the configurations we use internally and have seen work well. It prefers the templates in this order:
+LiteLLM checks the model assignments in the 1M Context, Anthropic, OpenAI, Gemini, and Lite presets, plus a small list of common OpenAI, Anthropic, Gemini, DeepSeek, and xAI models. For each tier, it uses a preferred model that your proxy serves. It can use an OpenAI model for a simple request, an Anthropic model for a complex request, and another family in between. If no preferred model is available for one tier, it reuses the closest tier match.
 
-1. 1M Context
-2. Anthropic
-3. OpenAI
-4. Gemini
-5. Lite
+The setup uses your own model-group names, so the generated router points at deployments you can call.
 
-LiteLLM only chooses a template when you have access to every model it requires. The setup uses your own model-group names, so the generated router points at deployments you can call.
-
-If none of the complete templates fit, LiteLLM checks the preferred models configured for each tier across those templates. It uses the preferred models you have and fills any gap with the closest matched tier. This covers users who have a useful mix of models without every model required by one family template.
-
-The last fallback runs only when you have none of the preferred models. LiteLLM orders your available chat model groups using their configured or published input and output token prices, then selects one group for each tier. Even with hundreds of models, the generated router still has four tier assignments rather than splitting the whole inventory across the tiers.
+If none of your models appear in the curated catalog, LiteLLM hides **Configure automatically**. You can still choose a family preset or configure the tiers yourself. Even with hundreds of models, Auto Setup selects one model group per tier.
 
 ## Review it before saving
 
@@ -75,7 +67,7 @@ At runtime, [Heuristic v2](/blog/heuristic-v2) classifies each request and sends
 
 ## Start now, tune from your traffic
 
-The first version solves the setup problem with a small, predictable rule: reuse a complete configuration we trust, then use the preferred tier models you have, and keep price ranking as the last fallback. Users have seen 42% savings without changing the generated configuration. You can see every choice Auto Setup made and tune it after the fact.
+The first version solves the setup problem with a small rule: fill each tier from the curated models you have and stay out of the way when none match. Users have seen 42% savings without changing the generated configuration. You can see every choice Auto Setup made and tune it after the fact.
 
 Open **Add Model → Auto Router**, click **Configure automatically**, and inspect the four tiers. You can get started right away and tune the setup later from your own traffic, spend, and quality data.
 
