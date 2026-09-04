@@ -14,6 +14,8 @@ LiteLLM already includes one-click Anthropic and OpenAI presets for Auto Router.
 
 Enter a router name and click **Configure automatically**. LiteLLM checks the models your proxy already serves, chooses the best configuration it can build, and fills the form for you. Review the four tiers and save.
 
+![Configure automatically fills the four Auto Router tiers from the models available to your proxy](/img/blog/auto-router-auto-setup.png)
+
 Users have seen 42% lower model spend from the generated setup before making any manual changes. Your savings will depend on your models and traffic, but Auto Setup gives you a useful baseline from the first request.
 
 {/* truncate */}
