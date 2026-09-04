@@ -81,7 +81,7 @@ litellm.api_key = "sk-AnthropicKey"
 response = litellm.completion(messages=messages, model="claude-2")
 ```
 
-### litellm.provider_key (example litellm.openai_key)
+### `litellm.<provider>_key` (example `litellm.openai_key`)
 
 ```python
 litellm.openai_key = "sk-OpenAIKey"
