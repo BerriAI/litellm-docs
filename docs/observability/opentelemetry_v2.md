@@ -524,6 +524,7 @@ Response, usage, cost, identity:
 | `litellm.call_id` | always |
 | `litellm.provider.model` | always (the model string actually sent to the provider) |
 | `litellm.request.streaming` | when true |
+| `litellm.request.route` | on the proxy (the normalized inbound route, e.g. `/v1/chat/completions`, matching the root span's `http.route`) |
 | `litellm.cost.total` | on success |
 | `litellm.cost.input`, `output`, `cache_read`, `cache_creation`, `tool_usage` | when the source reported the breakdown |
 | `litellm.cost.original`, `discount_amount`, `discount_percent`, `margin_fixed_amount`, `margin_percent`, `margin_total_amount` | when reported |
