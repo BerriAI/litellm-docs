@@ -21,7 +21,7 @@ class YourProviderRerankConfig(BaseRerankConfig):
         # Transform request to RerankRequest spec
         return rerank_request.model_dump(exclude_none=True)
 
-    def transform_rerank_response(self, model: str, raw_response: httpx.Response, ...) -> RerankResponse:
+    def transform_rerank_response(self, model: str, raw_response: httpx.Response, **kwargs) -> RerankResponse:
         # Transform provider response to RerankResponse
         return RerankResponse(**raw_response_json)
 ```
@@ -30,7 +30,7 @@ class YourProviderRerankConfig(BaseRerankConfig):
 ## 2. Register Your Provider
 Add your provider to `litellm.utils.get_provider_rerank_config()`:
 
-```python
+```python nolint
 elif litellm.LlmProviders.YOUR_PROVIDER == provider:
     return litellm.YourProviderRerankConfig()
 ```
@@ -41,7 +41,7 @@ elif litellm.LlmProviders.YOUR_PROVIDER == provider:
 Add a code block to handle when your provider is called. Your provider should use the `base_llm_http_handler.rerank` method
 
 
-```python
+```python nolint
 elif _custom_llm_provider == "your_provider":
     ...
     response = base_llm_http_handler.rerank(
@@ -55,7 +55,7 @@ elif _custom_llm_provider == "your_provider":
         _is_async=_is_async,
         headers=headers or litellm.headers or {},
         client=client,
-        mod el_response=model_response,
+        model_response=model_response,
     )
     ...
 ```

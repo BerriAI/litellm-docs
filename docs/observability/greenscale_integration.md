@@ -43,7 +43,7 @@ litellm.success_callback = ["greenscale"]
 #openai call
 response = completion(
   model="gpt-3.5-turbo",
-  messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}]
+  messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}],
   metadata={
     "greenscale_project": "acme-project",
     "greenscale_application": "acme-application"

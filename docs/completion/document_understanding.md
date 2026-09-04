@@ -400,7 +400,7 @@ Expected Response
       "max_output_tokens": 16384,
       "mode": "chat",
       ...,
-      "supports_pdf_input": true, # 👈 supports_pdf_input is true
+      "supports_pdf_input": true # 👈 supports_pdf_input is true
     }
   ]
 }

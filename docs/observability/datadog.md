@@ -26,7 +26,7 @@ We will use the `--config` to set `litellm.callbacks = ["datadog"]` this will lo
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -47,7 +47,7 @@ litellm_settings:
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -86,8 +86,11 @@ When `LITELLM_DD_AGENT_HOST` is set, logs are sent to the agent instead of direc
 
 **Note:** We use `LITELLM_DD_AGENT_HOST` instead of `DD_AGENT_HOST` to avoid conflicts with `ddtrace` which automatically sets `DD_AGENT_HOST` for APM tracing.
 
-> [!IMPORTANT]
-> **Datadog LLM Observability**: `DD_API_KEY` is **REQUIRED** even when using the Datadog Agent (`LITELLM_DD_AGENT_HOST`). The agent acts as a proxy but the API key header is mandatory for the LLM Observability endpoint.
+:::info
+
+**Datadog LLM Observability**: `DD_API_KEY` is **REQUIRED** even when using the Datadog Agent (`LITELLM_DD_AGENT_HOST`). The agent acts as a proxy but the API key header is mandatory for the LLM Observability endpoint.
+
+:::
 
 **Step 3**: Start the proxy, make a test request
 
@@ -131,7 +134,7 @@ When redaction is enabled, the actual message content and response text will be 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:
@@ -242,7 +245,7 @@ We will use the `--config` to set `litellm.callbacks = ["datadog_cost_management
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
 litellm_settings:

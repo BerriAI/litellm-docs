@@ -1772,7 +1772,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 </TabItem>
 </Tabs>
-# Gemini-Pro-Vision
+## Gemini-Pro-Vision
 LiteLLM Supports the following image types passed in `url`
 - Images with direct links - https://storage.googleapis.com/github-repo/img/gemini/intro/landmark3.jpg
 - Image in local storage - ./localimage.jpeg
@@ -2126,7 +2126,7 @@ LiteLLM follows the OpenAI format and accepts sending inline data as an encoded 
 
 The format to follow is 
 
-```python
+```text
 data:<mime_type>;base64,<encoded_data>
 ```
 

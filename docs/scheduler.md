@@ -97,7 +97,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ 
-        "priority": 0 👈 SET VALUE HERE
+        "priority": 0 # 👈 SET VALUE HERE
     }
 )
 
@@ -156,7 +156,7 @@ litellm_settings:
     request_timeout: 600 # 👈 Will keep retrying until timeout occurs
 
 router_settings:
-    redis_host; os.environ/REDIS_HOST
+    redis_host: os.environ/REDIS_HOST
     redis_password: os.environ/REDIS_PASSWORD
     redis_port: os.environ/REDIS_PORT
 ```

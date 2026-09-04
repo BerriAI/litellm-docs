@@ -28,9 +28,11 @@ Endpoint activity is **automatically tracked** whenever you make API calls throu
 When you make a request to any endpoint, activity is automatically recorded:
 
 ```bash showLineNumbers title="Endpoint activity is automatically tracked"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \ # 👈 ENDPOINT AUTOMATICALLY TRACKED
+# /chat/completions: 👈 ENDPOINT AUTOMATICALLY TRACKED
+# Authorization: 👈 YOUR PROXY KEY
+curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \ # 👈 YOUR PROXY KEY
+  --header 'Authorization: Bearer sk-1234' \
   --data '{
     "model": "gpt-3.5-turbo",
     "messages": [

@@ -163,10 +163,12 @@ Configure each route with:
 - **Utterances** - Example phrases that will trigger this route. Use placeholders in brackets for variables:
 
 ```json
+[
 "how to code a program in [language]",
 "can you explain this [language] code",
 "can you explain this [language] script",
 "can you convert this [language] code to [target_language]"
+]
 ```
 
 - **Description** - A human-readable description of what this route handles

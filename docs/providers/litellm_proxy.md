@@ -38,7 +38,7 @@ litellm.api_base = "your-openai-proxy-url"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # litellm proxy call
-response = completion(model="litellm_proxy/your-model-name", messages)
+response = completion(model="litellm_proxy/your-model-name", messages=messages)
 ```
 
 ## Usage - passing `api_base`, `api_key` per request

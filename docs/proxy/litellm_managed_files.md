@@ -335,7 +335,6 @@ print(file) # File retrieved successfully
 <TabItem value="no_access" label="User did not create file">
 
 ```python
-```python
 from openai import OpenAI
 
 ... # User created file (3b)

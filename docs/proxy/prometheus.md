@@ -633,7 +633,7 @@ Configure which metrics to emit by specifying them in `prometheus_metrics_config
 
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: gpt-4o
     litellm_params:
       model: gpt-4o
 
@@ -756,7 +756,7 @@ To monitor the health of litellm adjacent services (redis / postgres), do:
 
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: gpt-4o
     litellm_params:
       model: gpt-4o
 litellm_settings:

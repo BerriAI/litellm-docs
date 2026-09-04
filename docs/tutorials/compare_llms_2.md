@@ -19,8 +19,8 @@ given test set using litellm
 
 <div class="cell code" id="fBkbl4Qo9pvz">
 
-``` python
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 </div>

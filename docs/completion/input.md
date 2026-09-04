@@ -120,7 +120,7 @@ def completion(
     # Optional liteLLM function params
     **kwargs,
 
-) -> ModelResponse:
+) -> ModelResponse: ...
 ```
 ### Required Fields
 

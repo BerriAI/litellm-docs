@@ -113,7 +113,7 @@ response = await litellm.anthropic.messages.acreate(
 
 You can also trigger on tool-use count instead of tokens:
 
-```python
+```python nolint
 "trigger": {"type": "tool_uses", "value": 10}   # activate after 10 tool calls
 ```
 

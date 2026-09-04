@@ -309,10 +309,10 @@ output_config={"effort": "very_low"}
 output_config={"effort": "low"}
 
 # ❌ This will raise an error (max only works on Opus 4.6)
-litellm.completion(model="anthropic/claude-sonnet-4-6", reasoning_effort="max", ...)
+litellm.completion(model="anthropic/claude-sonnet-4-6", messages=messages, reasoning_effort="max")
 
 # ✅ max is only for Opus 4.6
-litellm.completion(model="anthropic/claude-opus-4-6", reasoning_effort="max", ...)
+litellm.completion(model="anthropic/claude-opus-4-6", messages=messages, reasoning_effort="max")
 ```
 
 ### Model not supported

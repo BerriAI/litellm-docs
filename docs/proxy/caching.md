@@ -1184,7 +1184,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 
 Response from litellm proxy
 
-```json
+```text
 date: Thu, 04 Apr 2024 17:37:21 GMT
 content-type: application/json
 x-litellm-cache-key: 586bf3f3c1bf5aecb55bd9996494d3bbc69eb58397163add6d49537762a7548d
@@ -1235,7 +1235,7 @@ litellm_settings:
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=<litellm-api-key>, base_url="http://0.0.0.0:4000")
+client = OpenAI(api_key="<litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 chat_completion = client.chat.completions.create(
     messages=[

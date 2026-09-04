@@ -96,5 +96,3 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 ```
 
 Will automatically receive usage information in the response, without needing to explicitly include `stream_options`.
-
-```

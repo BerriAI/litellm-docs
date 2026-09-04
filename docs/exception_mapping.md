@@ -192,6 +192,7 @@ When calling the LiteLLM proxy, content policy violations will return detailed f
     }
   }
 }
+```
 
 ## Details 
 

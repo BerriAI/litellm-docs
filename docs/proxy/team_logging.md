@@ -505,7 +505,7 @@ Use this to enable prompt logging for specific keys when you have globally disab
 Example config.yaml with globally disabled prompt logging (message redaction)
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: gpt-4o
     litellm_params:
       model: gpt-4o
 litellm_settings:

@@ -36,7 +36,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 3. Expected response
 
-```json
+```python
 {
     "error": {
         "message": {

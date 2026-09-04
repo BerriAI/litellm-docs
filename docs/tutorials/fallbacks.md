@@ -64,11 +64,14 @@ Allow `45seconds` for each request. In the 45s this function tries calling the p
 ```python
 while response == None and time.time() - start_time < 45:
         for model in fallbacks:
+            ...
 ```
 
 #### Cool-Downs for rate-limited models
 If a model API call leads to an error - allow it to cooldown for `60s`
 ```python
+try:
+  ...
 except Exception as e:
   print(f"got exception {e} for model {model}")
   rate_limited_models.add(model)

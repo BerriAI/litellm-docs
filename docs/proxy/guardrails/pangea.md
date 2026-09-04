@@ -129,7 +129,7 @@ curl -sSLX POST http://localhost:4000/v1/chat/completions \
 
 The above request should not be blocked, and you should receive a regular LLM response (simplified for brevity):
 
-```json
+```text
 {
   "choices": [
     {
@@ -178,7 +178,7 @@ curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 When the recipe configured in the `pangea-ai-guard-response` plugin detects PII, it redacts the sensitive content before returning the response to the user:
 
-```json
+```text
 {
   "choices": [
     {

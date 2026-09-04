@@ -105,7 +105,7 @@ You need to specify `cache_control_injection_points` in your model configuration
 
 LiteLLM will then automatically add a `cache_control` directive to the specified messages in your requests:
 
-```json showLineNumbers title="cache_control_directive.json"
+```text showLineNumbers title="cache_control_directive.json"
 "cache_control": {
     "type": "ephemeral"
 }

@@ -197,8 +197,8 @@ router_settings:
     "ContentPolicyViolationErrorAllowedFails": 15, # int 
     "InternalServerErrorAllowedFails": 20, # int 
   }
-  content_policy_fallbacks=[{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
-  fallbacks=[{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
+  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
+  fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
 
 ```
 
@@ -440,8 +440,8 @@ router_settings:
     "ContentPolicyViolationErrorAllowedFails": 15, # int
     "InternalServerErrorAllowedFails": 20, # int
   }
-  content_policy_fallbacks=[{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
-  fallbacks=[{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
+  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
+  fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
 ```
 
 | Name | Type | Description |

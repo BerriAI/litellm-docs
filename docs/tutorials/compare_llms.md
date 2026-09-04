@@ -87,8 +87,8 @@ Benchmark Results for 'When will BerriAI IPO?':
 
 <!-- 
 ## Pre-requisites:
-``` python
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 ## Example Use Case 1 - Code Generator

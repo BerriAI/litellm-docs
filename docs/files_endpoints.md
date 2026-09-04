@@ -252,7 +252,7 @@ print("content=", content)
 
 **Upload a File**
 ```python
-from litellm
+import litellm
 import os 
 
 os.environ["OPENAI_API_KEY"] = "sk-.."

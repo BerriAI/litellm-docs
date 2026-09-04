@@ -269,7 +269,7 @@ Expected Response
       "max_output_tokens": 16384,
       "mode": "chat",
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     },
     {
       "model_group": "llava-hf",
@@ -278,7 +278,7 @@ Expected Response
       "max_output_tokens": null,
       "mode": null,
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     }
   ]
 }

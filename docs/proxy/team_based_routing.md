@@ -43,8 +43,9 @@ litellm --config /path/to/config.yaml
 ### Create Team with Model Alias
 
 ```bash
+# Authorization: 👈 Master Key
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \ # 👈 Master Key
+--header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_alias": "my-new-team_4",

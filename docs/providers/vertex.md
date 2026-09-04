@@ -138,7 +138,7 @@ tools = [
 ]
 
 data = {
-    "model": "vertex_ai/gemini-1.5-pro-preview-0514"),
+    "model": "vertex_ai/gemini-1.5-pro-preview-0514",
     "messages": messages,
     "tools": tools,
     "tool_choice": "required",
@@ -210,7 +210,7 @@ model_list:
 or
 ```yaml
 model_list:
- - model_name: gemini-pro
+  - model_name: gemini-pro
     litellm_params:
       model: vertex_ai/gemini-1.5-pro
       litellm_credential_name: vertex-global
@@ -1392,7 +1392,7 @@ model_list:
         model: gemini-1.5-pro
         vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
         vertex_project: "my-special-project"
-        vertex_location: "my-special-location:
+        vertex_location: "my-special-location"
 ```
 
 </TabItem>
@@ -1586,7 +1586,7 @@ In certain use-cases you may need to make calls to the models and pass [safety s
 ```python
 response = completion(
     model="vertex_ai/gemini-2.5-pro", 
-    messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}]
+    messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}],
     safety_settings=[
         {
             "category": "HARM_CATEGORY_HARASSMENT",
@@ -1678,7 +1678,7 @@ response = client.chat.completions.create(
 ```python
 import litellm 
 
-litellm.set_verbose = True 👈 See RAW REQUEST/RESPONSE 
+litellm.set_verbose = True # 👈 See RAW REQUEST/RESPONSE 
 
 litellm.vertex_ai_safety_settings = [
         {
@@ -1747,12 +1747,12 @@ litellm.vertex_project = "hardy-device-38811" # Your Project ID`
 import os, litellm 
 
 # set via env var
-os.environ["VERTEXAI_LOCATION"] = "us-central1 # Your Location
+os.environ["VERTEXAI_LOCATION"] = "us-central1" # Your Location
 
 ### OR ###
 
 # set directly on module 
-litellm.vertex_location = "us-central1 # Your Location
+litellm.vertex_location = "us-central1" # Your Location
 ```
 
 ## Gemini Pro
@@ -2376,7 +2376,7 @@ response = completion(
                 },
                 {
                     "type": "audio_input",
-                    "audio_input {
+                    "audio_input": {
                         "audio_input": f"data:audio/mp3;base64,{encoded_file}", # 👈 AUDIO File ('file' message works as too)
                     }  
                 },
@@ -2602,7 +2602,7 @@ All models listed [here](https://github.com/BerriAI/litellm/blob/57f37f743886a02
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     input_type = "RETRIEVAL_DOCUMENT",
     dimensions=1,
 )
@@ -2651,7 +2651,7 @@ You can pass any vertex specific params to the embedding model. Just pass them t
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     task_type = "RETRIEVAL_DOCUMENT",
     title = "test",
     dimensions=1,

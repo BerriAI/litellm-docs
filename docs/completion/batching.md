@@ -212,7 +212,7 @@ print(responses)
 
 ### Output
 
-```json
+```text
 [<ModelResponse chat.completion id=chatcmpl-e673ec8e-4e8f-4c9e-bf26-bf9fa7ee52b9 at 0x103a62160> JSON: {
   "object": "chat.completion",
   "choices": [

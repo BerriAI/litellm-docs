@@ -196,7 +196,7 @@ Expected Response
 
 If you have images without a mime-type, or if litellm is incorrectly inferring the mime type of your image (e.g. calling `gs://` url's with vertex ai), you can set this explicitly via the `format` param. 
 
-```python
+```text
 "image_url": {
   "url": "gs://my-gs-image",
   "format": "image/jpeg"

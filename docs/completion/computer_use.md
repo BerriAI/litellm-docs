@@ -30,22 +30,22 @@ from litellm import completion
 os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 # Computer use tool
-    tools = [
-        {
-            "type": "computer_20241022",
-            "name": "computer",
-            "display_height_px": 768,
-            "display_width_px": 1024,
-            "display_number": 0,
-        }
-    ]
-    
-    messages = [
-        {
-            "role": "user", 
-            "content": [
-                {
-                    "type": "text",
+tools = [
+    {
+        "type": "computer_20241022",
+        "name": "computer",
+        "display_height_px": 768,
+        "display_width_px": 1024,
+        "display_number": 0,
+    }
+]
+
+messages = [
+    {
+        "role": "user", 
+        "content": [
+            {
+                "type": "text",
                 "text": "Take a screenshot and tell me what you see"
             },
             {

@@ -328,7 +328,7 @@ Example response with masked entities:
       "index": 0,
       "finish_reason": "stop"
     }
-  ],
+  ]
   // ... other response fields
 }
 ```

@@ -153,7 +153,7 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
   "metadata": {
     "attempted_fallbacks": 0,                                                    # 0 = requested model group served the request
     "original_model_group": "llama3"                                             # Model group originally requested
-  },
+  }
 
 }
 ```
@@ -371,6 +371,7 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
                         "completion_tokens": 9,
                         "total_tokens": 46,
                         "api_requests": 1
+                    }
                 },
                 "providers": { "openai": { ... }, "azure_ai": { ... } },
                 "api_keys": { "3126b6eaf1...": { ... } }
@@ -1214,7 +1215,8 @@ print(response)
 #### `/spend/logs` Request Format 
 
 ```bash
-curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \ # e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+# request_id: e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
 -H "Authorization: Bearer sk-1234"
 ```
 

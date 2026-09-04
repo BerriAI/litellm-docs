@@ -74,9 +74,10 @@ curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 Create a JWT for your project on your OpenID provider (e.g. Keycloak).
 
 ```bash
+# client_id: 👈 project id
 curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'client_id={CLIENT_ID}' \ # 👈 project id
+--data-urlencode 'client_id={CLIENT_ID}' \
 --data-urlencode 'client_secret={CLIENT_SECRET}' \
 --data-urlencode 'grant_type=client_credential' \
 ```
@@ -300,7 +301,7 @@ general_settings:
   enable_jwt_auth: True
   litellm_jwtauth:  
     # Use namespace as team identifier (resolves via team_alias in DB)
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
 ```
 
 #### Step 3: Create ServiceAccount and Configure Pod
@@ -413,7 +414,7 @@ general_settings:
   litellm_jwtauth:
     user_id_jwt_field: "sub"
     # Map the namespace to team_alias in the database
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
     user_id_upsert: true
 ```
 
@@ -744,7 +745,7 @@ general_settings:
   master_key: sk-1234
   enable_jwt_auth: True
   litellm_jwtauth:
-    ...
+    # ...
     team_id_jwt_field: "litellm-team" # 👈 Set field in the JWT token that stores the team ID
     team_allowed_routes: ["/v1/chat/completions"] # 👈 Set accepted routes
 ```

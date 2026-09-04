@@ -96,7 +96,7 @@ cd FastEval
 On FastEval make the following **2 line code change** to set `OPENAI_BASE_URL`
 
 https://github.com/FastEval/FastEval/pull/90/files
-```python
+```python nolint
 try:
     api_base = os.environ["OPENAI_BASE_URL"] #changed: read api base from .env
     if api_base == None:

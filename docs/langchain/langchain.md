@@ -150,7 +150,8 @@ litellm.failure_callback = ["lunary"]
 
 chat = ChatLiteLLM(
   model="gpt-4o"
-  messages = [
+)
+messages = [
     HumanMessage(
         content="what model are you"
     )

@@ -310,7 +310,7 @@ response = client.chat.completions.create(model="bedrock-claude-v1", messages = 
 ],
 temperature=0.7,
 extra_body={
-    top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -1283,8 +1283,11 @@ print(response_guard)
 
 If you're using Anthropic's Claude with Bedrock, you can "put words in Claude's mouth" by including an `assistant` role message as the last item in the `messages` array.
 
-> [!IMPORTANT]
-> The returned completion will _**not**_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+:::info
+
+The returned completion will _**not**_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+
+:::
 
 ```python
 import os
@@ -2238,10 +2241,10 @@ model_list:
     - model_name: bedrock-model
       litellm_params:
         model: bedrock/anthropic.claude-instant-v1
-        aws_access_key_id: "",
-        aws_secret_access_key: "",
-        aws_region_name: "",
-        aws_bedrock_runtime_endpoint: "https://my-fake-endpoint.com",
+        aws_access_key_id: ""
+        aws_secret_access_key: ""
+        aws_region_name: ""
+        aws_bedrock_runtime_endpoint: "https://my-fake-endpoint.com"
         extra_headers: {"key": "value"}
 ```
 

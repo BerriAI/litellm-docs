@@ -526,13 +526,13 @@ response = client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=[{"role": "user", "content": "Write a short poem"}],
     extra_body={
-        "guardrails": [
+        "guardrails": {
             "custom-pre-guard": {
                 "extra_body": {
                     "success_threshold": 0.9
                 }
             }
-        ]
+        }
     }
 )
 ```

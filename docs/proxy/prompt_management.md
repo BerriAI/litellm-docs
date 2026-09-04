@@ -108,7 +108,7 @@ prompts:
 
 Create `.prompt` files in your prompt directory:
 
-```yaml
+```yaml nolint
 # prompts/hello.prompt
 ---
 model: gpt-4
@@ -163,7 +163,7 @@ litellm_settings:
 
 Your BitBucket repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_bitbucket_prompt.prompt
 ---
 model: gpt-4
@@ -198,7 +198,7 @@ litellm_settings:
 
 Your GitLab repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_gitlab_prompt.prompt
 ---
 model: gpt-4
@@ -497,7 +497,7 @@ You can do `langfuse/<litellm_model_name>`
 ```python
 litellm.completion(
     model="langfuse/gpt-3.5-turbo", # or `langfuse/anthropic/claude-3-5-sonnet`
-    ...
+    # ...
 )
 ```
 

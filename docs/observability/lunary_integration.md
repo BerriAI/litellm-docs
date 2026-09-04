@@ -61,7 +61,8 @@ litellm.failure_callback = ["lunary"]
 
 chat = ChatLiteLLM(
   model="gpt-4o"
-  messages = [
+)
+messages = [
     HumanMessage(
         content="what model are you"
     )
@@ -76,7 +77,7 @@ You can use Lunary to manage [prompt templates](https://lunary.ai/docs/features/
 
 ```python
 from litellm import completion
-from lunary
+import lunary
 
 template = lunary.render_template("template-slug", {
   "name": "John", # Inject variables

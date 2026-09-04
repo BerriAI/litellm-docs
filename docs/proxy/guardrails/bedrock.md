@@ -358,7 +358,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       "error": "Violated guardrail policy",
       "bedrock_guardrail_response": {
         "action": "GUARDRAIL_INTERVENED",
-        "blockedResponse": "I can't provide information on creating explosives.",
+        "blockedResponse": "I can't provide information on creating explosives."
         // ... additional details
       }
     },

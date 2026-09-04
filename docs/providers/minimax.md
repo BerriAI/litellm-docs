@@ -3,13 +3,13 @@ import TabItem from '@theme/TabItem';
 
 # MiniMax  
 
-# MiniMax - v1/messages
+## MiniMax - v1/messages
 
-## Overview
+### Overview
 
 Litellm provides anthropic specs compatible support for minmax
 
-## Supported Models
+### Supported Models
 
 MiniMax offers three models through their Anthropic-compatible API:
 
@@ -20,9 +20,9 @@ MiniMax offers three models through their Anthropic-compatible API:
 | **MiniMax-M2** | Agentic capabilities, Advanced reasoning | $0.3/M tokens | $1.2/M tokens | $0.03/M tokens | $0.375/M tokens |
 
 
-## Usage Examples
+### Usage Examples
 
-### Basic Chat Completion
+#### Basic Chat Completion
 
 ```python
 import litellm
@@ -38,7 +38,7 @@ response = litellm.anthropic.messages.acreate(
 print(response.choices[0].message.content)
 ```
 
-### Using Environment Variables
+#### Using Environment Variables
 
 ```bash
 export MINIMAX_API_KEY="your-minimax-api-key"
@@ -55,7 +55,7 @@ response = litellm.anthropic.messages.acreate(
 )
 ```
 
-### With Thinking (M2.1 Feature)
+#### With Thinking (M2.1 Feature)
 
 ```python
 response = litellm.anthropic.messages.acreate(
@@ -71,7 +71,7 @@ for block in response.choices[0].message.content:
         print(f"Thinking: {block.thinking}")
 ```
 
-### With Tool Calling
+#### With Tool Calling
 
 ```python
 tools = [
@@ -102,7 +102,7 @@ response = litellm.anthropic.messages.acreate(
 
 
 
-## Usage with LiteLLM Proxy 
+### Usage with LiteLLM Proxy 
 
 You can use MiniMax models with the Anthropic SDK by routing through LiteLLM Proxy:
 
@@ -112,7 +112,7 @@ You can use MiniMax models with the Anthropic SDK by routing through LiteLLM Pro
 | **2. Set Environment Variables** | Point Anthropic SDK to proxy endpoint |
 | **3. Use Anthropic SDK** | Call MiniMax models using native Anthropic SDK |
 
-### Step 1: Configure LiteLLM Proxy
+#### Step 1: Configure LiteLLM Proxy
 
 Create a `config.yaml`:
 
@@ -131,7 +131,7 @@ Start the proxy:
 litellm --config config.yaml
 ```
 
-### Step 2: Use with Anthropic SDK
+#### Step 2: Use with Anthropic SDK
 
 ```python
 import os
@@ -166,13 +166,13 @@ for block in message.content:
         print(f"Text:\n{block.text}\n")
 ```
 
-# MiniMax - v1/chat/completions
+## MiniMax - v1/chat/completions
 
-## Usage with LiteLLM SDK
+### Usage with LiteLLM SDK
 
 You can use MiniMax's OpenAI-compatible API directly with LiteLLM:
 
-### Basic Chat Completion
+#### Basic Chat Completion
 
 ```python
 import litellm
@@ -190,7 +190,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-### Using Environment Variables
+#### Using Environment Variables
 
 ```bash
 export MINIMAX_API_KEY="your-minimax-api-key"
@@ -206,7 +206,7 @@ response = litellm.completion(
 )
 ```
 
-### With Reasoning Split
+#### With Reasoning Split
 
 ```python
 response = litellm.completion(
@@ -226,7 +226,7 @@ if hasattr(response.choices[0].message, 'reasoning_details'):
 print(f"Response: {response.choices[0].message.content}")
 ```
 
-### With Tool Calling
+#### With Tool Calling
 
 ```python
 tools = [
@@ -255,7 +255,7 @@ response = litellm.completion(
 )
 ```
 
-### Streaming
+#### Streaming
 
 ```python
 response = litellm.completion(
@@ -272,7 +272,7 @@ for chunk in response:
 ```
 
 
-## Usage with OpenAI SDK via LiteLLM Proxy
+### Usage with OpenAI SDK via LiteLLM Proxy
 
 You can also use MiniMax models with the OpenAI SDK by routing through LiteLLM Proxy:
 
@@ -282,7 +282,7 @@ You can also use MiniMax models with the OpenAI SDK by routing through LiteLLM P
 | **2. Set Environment Variables** | Point OpenAI SDK to proxy endpoint |
 | **3. Use OpenAI SDK** | Call MiniMax models using native OpenAI SDK |
 
-### Step 1: Configure LiteLLM Proxy
+#### Step 1: Configure LiteLLM Proxy
 
 Create a `config.yaml`:
 
@@ -301,7 +301,7 @@ Start the proxy:
 litellm --config config.yaml
 ```
 
-### Step 2: Use with OpenAI SDK
+#### Step 2: Use with OpenAI SDK
 
 ```python
 import os
@@ -328,7 +328,7 @@ if hasattr(response.choices[0].message, 'reasoning_details'):
 print(f"Text:\n{response.choices[0].message.content}\n")
 ```
 
-### Streaming with OpenAI SDK
+#### Streaming with OpenAI SDK
 
 ```python
 from openai import OpenAI
@@ -366,7 +366,7 @@ for chunk in stream:
             text_buffer = content_text
 ```
 
-## Cost Calculation
+### Cost Calculation
 
 Cost calculation works automatically using the pricing information in `model_prices_and_context_window.json`.
 
@@ -382,13 +382,13 @@ response = litellm.completion(
 print(f"Cost: ${response._hidden_params.get('response_cost', 0)}")
 ```
 
-# MiniMax - Text-to-Speech
+## MiniMax - Text-to-Speech
 
-## Quick Start
+### Quick Start
 
-## **LiteLLM Python SDK Usage**
+### **LiteLLM Python SDK Usage**
 
-### Basic Usage
+#### Basic Usage
 
 ```python
 from pathlib import Path
@@ -406,7 +406,7 @@ response = speech(
 response.stream_to_file(speech_file_path)
 ```
 
-### Async Usage
+#### Async Usage
 
 ```python
 from litellm import aspeech
@@ -427,7 +427,7 @@ async def test_async_speech():
 asyncio.run(test_async_speech())
 ```
 
-### Voice Selection
+#### Voice Selection
 
 MiniMax supports many voices. LiteLLM provides OpenAI-compatible voice names that map to MiniMax voices:
 
@@ -456,7 +456,7 @@ response = speech(
 )
 ```
 
-### Custom Parameters
+#### Custom Parameters
 
 MiniMax TTS supports additional parameters for fine-tuning audio output:
 
@@ -480,7 +480,7 @@ response = speech(
 response.stream_to_file("custom_speech.mp3")
 ```
 
-### Response Formats
+#### Response Formats
 
 ```python
 from litellm import speech
@@ -518,11 +518,11 @@ response = speech(
 )
 ```
 
-## **LiteLLM Proxy Usage**
+### **LiteLLM Proxy Usage**
 
 LiteLLM provides an OpenAI-compatible `/audio/speech` endpoint for MiniMax TTS.
 
-### Setup
+#### Setup
 
 Add MiniMax to your proxy configuration:
 
@@ -547,7 +547,7 @@ litellm --config /path/to/config.yaml
 # RUNNING on http://0.0.0.0:4000
 ```
 
-### Making Requests
+#### Making Requests
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/speech \
@@ -582,7 +582,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
   --output custom_speech.mp3
 ```
 
-## Voice Mappings
+### Voice Mappings
 
 LiteLLM maps OpenAI-compatible voice names to MiniMax voice IDs:
 
@@ -598,13 +598,13 @@ LiteLLM maps OpenAI-compatible voice names to MiniMax voice IDs:
 You can also use any MiniMax-native voice ID directly by passing it as the `voice` parameter.
 
 
-### Streaming (WebSocket)
+#### Streaming (WebSocket)
 
 :::note
 The current implementation uses MiniMax's HTTP endpoint. For WebSocket streaming support, please refer to MiniMax's official documentation at [https://platform.minimax.io/docs](https://platform.minimax.io/docs).
 :::
 
-## Error Handling
+### Error Handling
 
 ```python
 from litellm import speech
@@ -625,7 +625,7 @@ except Exception as e:
     print(f"Error: {e}")
 ```
 
-### Extra Body Parameters
+#### Extra Body Parameters
 
 Pass these via `extra_body`:
 

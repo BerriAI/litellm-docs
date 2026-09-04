@@ -13,7 +13,7 @@ LiteLLM supports all models on VLLM.
 | Supported Endpoints | `/chat/completions`, `/embeddings`, `/completions`, `/rerank`, `/audio/transcriptions` |
 
 
-# Quick Start
+## Quick Start
 
 ## Usage - litellm.completion (calling OpenAI compatible endpoint)
 vLLM Provides an OpenAI compatible endpoints - here's how to call it with LiteLLM 

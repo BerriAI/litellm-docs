@@ -1019,7 +1019,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 {
     "key": "sk-sA7VDkyhlQ7m8Gt77Mbt3Q",
     "expires": "2024-01-19T01:21:12.816168",
-    "team_id": "my-prod-team",
+    "team_id": "my-prod-team"
 }
 ```
 
@@ -1100,7 +1100,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 {
     "key": "sk-sA7VDkyhlQ7m8Gt77Mbt3Q",
     "expires": "2024-01-19T01:21:12.816168",
-    "user_id": "krrish@berri.ai",
+    "user_id": "krrish@berri.ai"
 }
 ```
 
@@ -1147,7 +1147,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 ```json
 {
     "key": "sk-ulGNRXWtv7M0lFnnsQk0wQ",
-    "expires": "2024-01-18T20:48:44.297973",
+    "expires": "2024-01-18T20:48:44.297973"
 }
 ```
 
