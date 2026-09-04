@@ -1451,7 +1451,7 @@ async with stdio_client(server_params) as (read, write):
         # Use OpenAI SDK pointed to LiteLLM proxy
         client = OpenAI(
             api_key="your-api-key",  # Your LiteLLM proxy API key
-            base_url="http://localhost:8000"  # Your LiteLLM proxy URL
+            base_url="http://localhost:4000"  # Your LiteLLM proxy URL
         )
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]

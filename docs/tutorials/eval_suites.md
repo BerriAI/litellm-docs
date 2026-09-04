@@ -22,7 +22,7 @@ LiteLLM allows you to create an OpenAI compatible server for all supported LLMs.
 ```shell
 $ litellm --model huggingface/bigcode/starcoder
 
-#INFO: Proxy running on http://0.0.0.0:8000
+#INFO: Proxy running on http://0.0.0.0:4000
 ```
 
 **Here's how you can create the proxy for other supported llms**
@@ -157,14 +157,14 @@ $ litellm --model command-nightly
 Before running the eval we will set `openai.api_base` to the litellm proxy from Step 1
 
 ```python
-openai.api_base = "http://0.0.0.0:8000"
+openai.api_base = "http://0.0.0.0:4000"
 ```
 
 ```python
 import openai
 import pandas as pd
 openai.api_key = "anything"             # this can be anything, we set the key on the proxy
-openai.api_base = "http://0.0.0.0:8000" # set api base to the proxy from step 1
+openai.api_base = "http://0.0.0.0:4000" # set api base to the proxy from step 1
 
 
 import mlflow
