@@ -15,12 +15,15 @@ Every check here is deterministic and fails the build:
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
+  retired-model       a fenced block uses a model id listed as retired in docs-models.json
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
 
 Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
-block that is intentionally a fragment.
+block that is intentionally a fragment. Add `keep-model-ids` when a block
+must keep a retired model id because the exact id is the point; run
+`python3 scripts/bump-docs-models.py docs` to rewrite the rest.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -37,6 +40,9 @@ try:
 except ImportError:  # pragma: no cover
     print("PyYAML is required: pip install pyyaml", file=sys.stderr)
     sys.exit(2)
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import docs_models  # noqa: E402
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS_ROOT = os.path.join(REPO_ROOT, "docs")
@@ -285,8 +291,17 @@ def check_page(page, site, page_cache):
         unknown_meta = [t for t in split_meta(meta) if not is_known_meta(t)]
         if unknown_meta:
             err("fence-info", start, f"unexpected text on the fence line: {' '.join(unknown_meta)!r} (code on the ``` line is dropped)")
-        if "nolint" in meta.split():
+        meta_tokens = meta.split()
+        if "nolint" in meta_tokens:
             continue
+        if "keep-model-ids" not in meta_tokens:
+            seen_ids = set()
+            for offset, l in enumerate(buf):
+                for _, _, matched, key, replacement in MODEL_MAP.finditer(l):
+                    if key in seen_ids:
+                        continue
+                    seen_ids.add(key)
+                    err("retired-model", start + offset + 1, f"retired model id `{matched}`; use `{replacement}` (see docs-models.json)")
         content = textwrap.dedent("\n".join(buf))
         if lang in YAML_LANGS:
             try:
@@ -379,7 +394,8 @@ def check_page(page, site, page_cache):
     return errors
 
 
-KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
+KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
+MODEL_MAP = docs_models.load()
 
 
 def split_meta(meta):
