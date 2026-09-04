@@ -6,14 +6,15 @@ description: Every way to stand up an Auto Router, from a one-click preset in th
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
-Four ways in. All of them create the same `auto_router/complexity_router` deployment.
+Five ways in. All of them create the same `auto_router/complexity_router` deployment.
 
 <NavigationCards
-columns={4}
+columns={5}
 items={[
   { title: "Dashboard presets", description: "Pick a template, Test Routing, save.", to: "#dashboard-presets" },
   { title: "Agent skill", description: "One line to your coding agent.", to: "#agent-skill" },
   { title: "config.yaml", description: "One router entry in model_list.", to: "#configyaml" },
+  { title: "Model-management API", description: "POST /model/new, for CI/CD.", to: "#model-management-api" },
   { title: "Autorouter CLI", description: "Try it locally without touching the proxy.", to: "#autorouter-cli" },
 ]}
 />
@@ -71,6 +72,36 @@ model_list:
 - No `classifier_type` means the heuristic scorer: free, no added latency.
 - `classifier_type: llm` with a small model raises accuracy on agent traffic for a fraction of a cent per request. See [benchmarks](/docs/auto_router/benchmarks).
 - Everything else (keyword rules, tier pools, session affinity, scorer tuning): [configuration reference](/docs/proxy/auto_routing).
+
+## Model-management API
+
+For CI/CD or scripts, create the same deployment with `POST /model/new`. Enable `store_model_in_db` first; Auto Routers are model deployments, so there is no separate `/auto_router/new` endpoint. This example uses the [Anthropic Family preset](/docs/auto_router/recommended_configurations#anthropic-family); create the referenced model deployments first.
+
+```bash
+curl -X POST "http://localhost:4000/model/new" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_name": "claude-auto",
+    "litellm_params": {
+      "model": "auto_router/complexity_router",
+      "complexity_router_config": {
+        "tiers": {
+          "SIMPLE": "claude-haiku-4-5",
+          "MEDIUM": "claude-sonnet-5",
+          "COMPLEX": "claude-opus-5",
+          "REASONING": "claude-opus-5-high"
+        },
+        "classifier_type": "heuristic",
+        "escalation_keywords": ["LITELLM ESCALATE"],
+        "session_affinity": false
+      },
+      "complexity_router_default_model": "claude-sonnet-5"
+    }
+  }'
+```
+
+The response includes `model_id`. Use it with `PATCH /model/{model_id}/update` for partial changes, and call the router by its `model_name`. Validate a complexity configuration before saving with `POST /auto_router/validate_complexity_router_config`. See [Model Management](/docs/proxy/model_management) for deployment CRUD and [Configuration Reference](/docs/proxy/auto_routing) for the full router payload.
 
 ## Autorouter CLI
 
