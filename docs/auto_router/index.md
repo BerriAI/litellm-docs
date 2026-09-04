@@ -90,7 +90,7 @@ items={[
   },
   {
     title: "Recommended Configurations",
-    description: "Anthropic, OpenAI, Gemini, and Lite ladders as config.yaml, plus the benchmark and production configs.",
+    description: "1M Context, Anthropic, OpenAI, Gemini, and Lite ladders as config.yaml, plus the benchmark and production configs.",
     to: "/docs/auto_router/recommended_configurations",
   },
   {
