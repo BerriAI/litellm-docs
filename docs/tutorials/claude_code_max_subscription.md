@@ -51,10 +51,8 @@ model_list:
       model: anthropic/claude-3-5-haiku-20241022
 
 general_settings:
-  forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
-
-litellm_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
+  forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
 ```
 
 :::info Why `forward_client_headers_to_llm_api`?
@@ -275,8 +273,10 @@ model_list:
     litellm_params:
       model: anthropic/claude-3-5-haiku-20241022
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
+
+litellm_settings:
   model_group_settings:
     forward_client_headers_to_llm_api:
       - anthropic-claude
@@ -294,11 +294,9 @@ model_list:
       model: anthropic/claude-sonnet-4-20250514
 
 general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
   forward_client_headers_to_llm_api: true
   database_url: "postgresql://..."
-
-litellm_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 Then create virtual keys with budgets:

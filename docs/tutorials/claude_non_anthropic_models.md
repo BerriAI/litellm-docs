@@ -335,11 +335,9 @@ router_settings:
 Track usage and set budgets through the LiteLLM UI:
 
 ```yaml
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: "postgresql://..."  # Enable database for tracking
-  
-general_settings:
   store_model_in_db: true
 ```
 

@@ -682,7 +682,7 @@ model_list:
       model: gemini/gemini-3-pro-preview
       api_key: os.environ/GEMINI_API_KEY
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
