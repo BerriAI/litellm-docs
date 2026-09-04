@@ -331,6 +331,18 @@ A tier value can be a single model name or a list.
 - **List:** router random-picks per request (uniform), same idea as simple-shuffle. Empty pools raise at config load rather than falling through to `default_model`.
 - **List + `adaptive: true`:** Thompson-sample across the pool. Cold requests sample only inside the classified tier so cost weights do not collapse initial traffic on the cheapest model. Models configured in multiple tiers use their minimum distance from the classified tier. Feedback from a later turn attributes back to the model that actually served the previous response.
 
+## Tier fallback
+
+Classifying a request is half the job; the tier still needs something that can answer it. Resolution takes the first of these that works: a live model in the classified tier, then the next tier up and the one above that, then `default_model`, then the classified tier anyway as a best effort. A pool member counts as live when the router knows that model group and it has at least one deployment out of cooldown, so a dead model is passed over for its peers before the tier itself is given up on.
+
+Resolution never falls to a cheaper tier. That is the model the classifier already ruled out, so a COMPLEX request is not answered by the SIMPLE model just because SIMPLE happens to be healthy. The last step is best effort rather than an error because cooldowns expire and the health view is a snapshot; a request that might succeed is sent instead of failed.
+
+Two facts ride on the routing decision, because neither survives in the routed model name alone. `tier_fallback_from` records the tier the request was classified into whenever the ladder climbed, so a cheap request sitting on an expensive model is explainable after the fact. `resolved_by` records how the model was obtained when it did not come from a tier pool at all: `default_model` when the ladder was exhausted, `best_effort` when nothing reported a live deployment and the tier was served anyway. The two are independent, so an exhausted ladder can carry both, and the ordinary path carries neither.
+
+Two cases are deliberately not routed around. A tier configured as an empty pool (`SIMPLE: []`) raises, since that is a config error rather than a gap to work around. And a routing plugin that narrows a tier to zero candidates raises, since refusing every candidate is a policy decision and climbing past it would serve exactly what the plugin denied; plugins run against whichever tier the ladder settles on, so they always vet what is served. If the health view itself cannot be read, the pool is treated as live and resolution behaves as it did before, rather than declaring every tier dead and pushing traffic to the top.
+
+The adaptive path keeps its own selection, which already scores every pool model with a tier-distance penalty.
+
 ## Session affinity
 
 Off by default: every turn is classified on its own merits, so each one lands on the cheapest tier adequate for it.
@@ -425,6 +437,8 @@ Every routing decision emits one greppable line naming its cause. `cause=` is gr
 
 ```
 ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
+ComplexityRouter: routing decision cause=complexity_scorer,      tier=MEDIUM,     score=-0.150, signals=['short (7 tokens)'],                     routed_model=gpt-4o, tier_fallback_from=SIMPLE
+ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)'],                     routed_model=claude-sonnet-5, resolved_by=default_model
 ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.5
 ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model=claude-sonnet-5

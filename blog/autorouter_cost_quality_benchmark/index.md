@@ -34,6 +34,7 @@ Already testing it? Share your results in [discussion #32172](https://github.com
 - **40.4% cheaper at 97.1% of frontier quality**, on 220 prompts from six public benchmarks replayed through a live proxy
 - **74.5% cheaper at 87.3% of frontier quality**, on RouterArena's full 8,399-query set
 - **Around 65% cheaper** on simulated real chat and developer traffic, where most requests are short
+- **46% cheaper than a cached frontier baseline** on multi-turn developer conversations, with prompt caching switched on for both arms
 
 | Evaluation | Sample | Quality retained vs Opus-5 | Cost savings vs Opus-5 | Routing mix (haiku/sonnet/opus) |
 | --- | --- | --- | --- | --- |
@@ -87,11 +88,23 @@ The split runs opposite to intuition:
 
 A question we keep hearing: do I have to choose between auto-routing and prompt caching?
 
-No. Session affinity already lets you keep a conversation on the model its first turn picked, so the cache holds for the rest of that conversation. What it costs you is the routing decision on every turn after the first: once a session is pinned, a one-line follow-up stays on whatever model the opening turn earned. Closing that gap is the first item below.
+No, and on multi-turn traffic you want both. Every benchmark above prices requests from cold, which is the wrong baseline for anyone running long conversations, so we simulated 1,011 multi-turn DevGPT conversations; 11,808 turns, every conversation at least three turns deep, against a baseline that sends each turn to `claude-opus-5` with prompt caching already switched on.
+
+| Configuration | $/1k turns | vs cached Opus-5 |
+| --- | --- | --- |
+| `claude-opus-5`, prompt caching on | 12.85 | baseline |
+| Auto Router, prompt caching off | 12.03 | 6% cheaper |
+| Auto Router, prompt caching on | **6.96** | **46% cheaper** |
+
+The ordering matters more than any single number here. Routing with the cache switched off is close to a wash against cached Opus-5 and loses outright on 31% of conversations, because every turn resends the whole accumulated transcript at full input price and cost climbs with the square of conversation depth. Switch caching back on, hold the routing decisions identical, and the same sessions land 46% under the cached baseline while beating it on 80% of individual conversations. Toggling only the cache moves the bill by 42%, so on multi-turn traffic caching is the larger lever and routing compounds it rather than competing with it.
+
+Session affinity is what lets the two stack. A conversation pins to the model its first turn selected and the prefix stays warm on that model for the rest of the session, while the router keeps scoring each new turn and can move a session up a tier as the work gets harder, never back down; de-escalating repays its cold prefix too slowly to be worth taking. Moving up does start cold on the new model, and 72% of these conversations escalate at least once, so that write is the cost an escalation has to clear before it is worth making.
+
+Two caveats on the 46%. This baseline already has caching switched on, so the number is not comparable with the roughly 65% figures above, which price both arms from cold. And it covers multi-turn conversations only; the deepest 1% of sessions carry enough spend to pull the all-conversation figure down to 28%, since a long session tends to reach the top tier anyway and pays a cold prefix when it gets there.
 
 ## What's next
 
-- **Prompt caching that survives a tier change.** Affinity pins a conversation today because switching models means a cold cache. We are testing a background refresher that keeps the prefix warm on every tier, so a session can move without paying the write cost twice
+- **Keeping a session's caches alive.** A background refresher replays a session's stored prefix against the tiers that session has already used, so an idle gap longer than the provider cache TTL no longer costs the session its cache, and coming back to a tier it has visited is a read rather than a fresh write. The first move to a new tier still starts cold; that write is the cost the escalation decision weighs
 - **Routing decisions you can inspect.** Surfacing why a request landed on the tier it did, not just which model served it. That same signal feeds back into the classifier, so it improves against real traffic rather than benchmarks
 
 ## Try it
