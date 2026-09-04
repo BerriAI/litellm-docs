@@ -98,7 +98,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       classifier_llm_config:
         model: claude-haiku-4-5-20251001
         timeout_ms: 2000
-        # system_prompt: <your rubric>         # replaces the built-in rubric entirely; omit for the default
+        # system_prompt: <your rubric>         # legacy: replaces the entire classifier role; omit for the derived prompt
+      # classification_prompt: <your opening instructions>
+      # classification_examples: <your worked examples, one per line>
+      # The proxy appends the current tier definitions, injection guard, and closing line
       classifier_fallback: heuristic           # default; or default_model
       # Prior conversation the classifier sees (LLM classifier only)
       classifier_context_window_size: 3          # default 3; 0 disables
@@ -696,7 +699,9 @@ Models + Endpoints > Add Model > Auto Router tab. The form opens on the two thin
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
-Selecting **LLM Classifier** reveals, alongside the classifier model and timeout, a **Classifier Prompt** editor (`classifier_llm_config.system_prompt`, prefilled with the built-in rubric for the router's context window size and tier names, and sent only once you edit it), an **If the classifier fails** choice between scoring with the heuristic and routing to the default model (`classifier_fallback`, the second option available only once the router has a default model), and the classifier context settings: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
+Selecting **LLM Classifier** reveals, alongside the classifier model and timeout, a **Classifier Prompt** editor. New routers write two separate fields: `classification_prompt` holds the opening instructions, and `classification_examples` holds the worked examples, which the proxy renders under its own `Calibration examples:` heading. The proxy supplies the current tier criteria, display labels, prompt-injection guard, and context-window closing line, so editing tier names under **Edit tiers** stays synchronized with the prompt. Each field is stored exactly as written, so a prompt that itself contains the words `Calibration examples:` is left alone rather than re-parsed. The editor's assembled preview is fetched from the proxy, so it shows the same text the classifier receives. The existing `classifier_llm_config.system_prompt` field remains available for routers that already use it as a legacy whole-prompt override; it freezes the tier wording and labels in that text until the operator resets it.
+
+The same section includes an **If the classifier fails** choice between scoring with the heuristic and routing to the default model (`classifier_fallback`, the second option available only once the router has a default model), plus the classifier context settings: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
