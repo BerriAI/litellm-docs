@@ -57,7 +57,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Autherization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -435,8 +435,8 @@ Each window shows the reset schedule below the input so it's always clear when s
 
 Set a separate budget for each model available to a virtual key. For example, one key can have:
 
-- A $0.0000001 daily budget for `gpt-4o`
-- A $10 budget every 30 days for `gpt-4o-mini`
+- A $0.0000001 daily budget for `gpt-5.6-terra`
+- A $10 budget every 30 days for `gpt-5.6-luna`
 
 <EnterpriseFeature />
 
@@ -447,7 +447,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "model_max_budget": {"gpt-4o": {"budget_limit": "0.0000001", "time_period": "1d"}}
+  "model_max_budget": {"gpt-5.6-terra": {"budget_limit": "0.0000001", "time_period": "1d"}}
 }'
 ```
 
@@ -484,9 +484,9 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
 ```json
 {
   "info": {
-    "model_max_budget": {"gpt-4o": {"budget_limit": 0.0001, "time_period": "30d"}},
+    "model_max_budget": {"gpt-5.6-terra": {"budget_limit": 0.0001, "time_period": "30d"}},
     "model_max_budget_usage": {
-      "gpt-4o": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+      "gpt-5.6-terra": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
     }
   }
 }
@@ -496,7 +496,7 @@ If a model's `time_period` is missing or invalid, the model is omitted from `mod
 
 #### Test the budget
 
-With the small `gpt-4o` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
+With the small `gpt-5.6-terra` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
 
 **[LangChain and OpenAI SDK usage examples](../proxy/user_keys#request-format)**
 
@@ -508,7 +508,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "gpt-5.6-terra",
       "messages": [
         {
           "role": "user",
@@ -522,14 +522,14 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 </TabItem>
 <TabItem label="Rejected call" value="not-allowed">
 
-Send the same request again. LiteLLM rejects it after the key exceeds its `gpt-4o` budget.
+Send the same request again. LiteLLM rejects it after the key exceeds its `gpt-5.6-terra` budget.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "gpt-5.6-terra",
       "messages": [
         {
           "role": "user",
@@ -545,7 +545,7 @@ Expected response:
 ```json
 {
     "error": {
-        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model=gpt-4o",
+        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model=gpt-5.6-terra",
         "type": "budget_exceeded",
         "param": null,
         "code": "400"
@@ -946,8 +946,8 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
   "tpm_limit": 1000000,
   "default_estimated_output_tokens": 2048,
   "default_estimated_output_tokens_per_model": {
-    "gpt-4o": 4096,
-    "gpt-4o-mini": 1024
+    "gpt-5.6-terra": 4096,
+    "gpt-5.6-luna": 1024
   }
 }'
 ```
@@ -961,7 +961,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "default_estimated_output_tokens": 4096,
-  "default_estimated_output_tokens_per_model": {"gpt-4o": 8192}
+  "default_estimated_output_tokens_per_model": {"gpt-5.6-terra": 8192}
 }'
 ```
 
@@ -1030,8 +1030,8 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
-  "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
+  "model_rpm_limit": {"gpt-5.6-terra": 100, "gpt-5.6-luna": 200},
+  "model_tpm_limit": {"gpt-5.6-terra": 10000, "gpt-5.6-luna": 20000}
 }'
 ```
 
@@ -1043,8 +1043,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
-  "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
+  "model_rpm_limit": {"gpt-5.6-terra": 100, "gpt-5.6-luna": 200},
+  "model_tpm_limit": {"gpt-5.6-terra": 10000, "gpt-5.6-luna": 20000}
 }'
 ```
 
@@ -1059,8 +1059,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "metadata": {
-    "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
-    "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
+    "model_rpm_limit": {"gpt-5.6-terra": 100, "gpt-5.6-luna": 200},
+    "model_tpm_limit": {"gpt-5.6-terra": 10000, "gpt-5.6-luna": 20000}
   }
 }'
 ```
@@ -1125,13 +1125,13 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 Set `model_rpm_limit` and `model_tpm_limit` to set rate limits per model per api key
 
-Here `gpt-4o` is the `model_name` set on the [litellm config.yaml](configs.md)
+Here `gpt-5.6-terra` is the `model_name` set on the [litellm config.yaml](configs.md)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"gpt-4o": 2}, "model_tpm_limit": {"gpt-4o":}}' 
+--data '{"model_rpm_limit": {"gpt-5.6-terra": 2}, "model_tpm_limit": {"gpt-5.6-terra":}}' 
 ```
 
 **Expected Response**
@@ -1152,7 +1152,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-ulGNRXWtv7M0lFnnsQk0wQ" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "Hello, Claude!ss eho ares"}
     ]
@@ -1274,9 +1274,9 @@ This will NOT apply if a key has a team_id (team budgets will apply then). [Tell
 
 ```yaml
 model_list: 
-  - model_name: "gpt-4o-mini"
+  - model_name: "gpt-5.6-luna"
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -1309,7 +1309,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-X53RdxnDhzamRwjKXR4IHg' \
 -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```

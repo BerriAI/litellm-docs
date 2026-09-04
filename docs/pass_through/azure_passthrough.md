@@ -43,7 +43,7 @@ client = openai.AzureOpenAI(
 assistant = client.beta.assistants.create(
     name="Math Tutor",
     instructions="You are a math tutor. Help solve equations.",
-    model="gpt-4o",
+    model="gpt-5.6-terra",
 )
 ```
 

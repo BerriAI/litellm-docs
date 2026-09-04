@@ -56,7 +56,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_auth.py`, t
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-4o-mini"
+      model: "gpt-5.6-luna"
 
 litellm_settings:
   drop_params: True
@@ -185,7 +185,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -d '{
     "team_id": "eng-team",
     "max_budget": 100,
-    "models": ["gpt-4o-mini", "claude-sonnet-4-5"]
+    "models": ["gpt-5.6-luna", "claude-sonnet-5"]
   }'
 ```
 
@@ -198,8 +198,8 @@ For project per-model rate limits, set `model_tpm_limit` / `model_rpm_limit` on 
 
 ```python
 # On the project record (via /project/new or the UI):
-#   model_tpm_limit = {"gpt-4o": 100000, "claude-sonnet-4-5": 50000}
-#   model_rpm_limit = {"gpt-4o": 100,    "claude-sonnet-4-5": 200}
+#   model_tpm_limit = {"gpt-5.6-terra": 100000, "claude-sonnet-5": 50000}
+#   model_rpm_limit = {"gpt-5.6-terra": 100,    "claude-sonnet-5": 200}
 ```
 
 :::note
@@ -238,8 +238,8 @@ from datetime import datetime, timedelta, timezone
 
 return UserAPIKeyAuth(
     api_key=api_key,
-    models=["gpt-4o-mini"],                                   # key model allowlist (needs both flags)
-    model_max_budget={"gpt-4o": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
+    models=["gpt-5.6-luna"],                                   # key model allowlist (needs both flags)
+    model_max_budget={"gpt-5.6-terra": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
     expires=datetime.now(timezone.utc) + timedelta(days=30),  # key expiry
 )
 ```
@@ -290,7 +290,7 @@ Key change set `mode: auto`. This will check both litellm api key auth + custom 
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-4o-mini"
+      model: "gpt-5.6-luna"
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:

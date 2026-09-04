@@ -153,7 +153,7 @@ The polyfill calls a separately-configured model to generate the summary. Add `c
 ```yaml
 # proxy_server_config.yaml
 general_settings:
-  context_management_summary_model: claude-sonnet-4-5   # any model alias in your model_list
+  context_management_summary_model: claude-sonnet-5   # any model alias in your model_list
 ```
 
 Without this setting, the polyfill is a no-op and `applied_edits[0].error: "summary_model_not_configured"` is returned.

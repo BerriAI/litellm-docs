@@ -85,7 +85,7 @@ import litellm
 
 async def main():
     response = await litellm.acompletion(
-        model="aiml/anthropic/claude-3-5-haiku",  # The model name must include prefix "openai" + the model name from ai/ml api
+        model="aiml/anthropic/claude-sonnet-5",  # The model name must include prefix "openai" + the model name from ai/ml api
         api_key="",  # your aiml api-key
         api_base="https://api.aimlapi.com/v2",
         messages=[

@@ -30,7 +30,7 @@ Now we will test the tag based routing rules.
 
 ### 2.1 Invalid model
 
-This request will fail since we send `tags=private-data` but the model `gpt-4o` is not in the allowed models for the `private-data` tag.
+This request will fail since we send `tags=private-data` but the model `gpt-5.6-terra` is not in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_invalid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -49,7 +49,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     messages=[
         {"role": "user", "content": "Hello, how are you?"}
     ],
@@ -67,7 +67,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {
       "role": "user",
@@ -85,7 +85,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### 2.2 Valid model
 
-This request will succeed since we send `tags=private-data` and the model `us.anthropic.claude-3-7-sonnet-20250219-v1:0` is in the allowed models for the `private-data` tag.
+This request will succeed since we send `tags=private-data` and the model `us.anthropic.claude-sonnet-5` is in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_valid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -103,7 +103,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model="us.anthropic.claude-sonnet-5",
     messages=[
         {"role": "user", "content": "Hello, how are you?"}
     ],
@@ -121,7 +121,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+  "model": "us.anthropic.claude-sonnet-5",
   "messages": [
     {
       "role": "user",

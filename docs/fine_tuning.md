@@ -18,7 +18,7 @@ Add `finetune_settings` and `files_settings` to your litellm config.yaml to use 
 ## Example config.yaml for `finetune_settings` and `files_settings`
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -85,7 +85,7 @@ curl http://localhost:4000/v1/files \
 
 ```python
 ft_job = await client.fine_tuning.jobs.create(
-    model="gpt-35-turbo-1106",                   # Azure OpenAI model you want to fine-tune
+    model="gpt-5.6-luna",                   # Azure OpenAI model you want to fine-tune
     training_file="file-abc123",                 # file_id from create file response
     extra_headers={"custom-llm-provider": "azure"}, # tell litellm proxy which provider to use
 )
@@ -100,7 +100,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: azure" \
     -d '{
-    "model": "gpt-35-turbo-1106",
+    "model": "gpt-5.6-luna",
     "training_file": "file-abc123"
     }'
 ```
@@ -186,7 +186,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
 
 ```json
 {
-  "model": "gpt-4o-mini",
+  "model": "gpt-5.6-luna",
   "training_file": "file-abcde12345",
   "hyperparameters": {
     "batch_size": 4,

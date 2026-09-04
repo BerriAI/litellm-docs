@@ -33,7 +33,7 @@ Supported LLMs: https://docs.litellm.ai/docs/providers
 
 ```python
 # Define the list of models to benchmark
-models = ['gpt-3.5-turbo', 'claude-2']
+models = ['gpt-5.6-luna', 'claude-sonnet-5']
 
 # Enter LLM API keys
 os.environ['OPENAI_API_KEY'] = ""
@@ -54,13 +54,13 @@ python3 benchmark.py
 
 ## Expected Output
 ```
-Running question: When will BerriAI IPO? for model: claude-2: 100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:13<00:00,  4.41s/it]
+Running question: When will BerriAI IPO? for model: claude-sonnet-5: 100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:13<00:00,  4.41s/it]
 
 Benchmark Results for 'When will BerriAI IPO?':
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
 | Model           | Response                                                                         | Response Time (seconds)   | Cost ($)   |
 +=================+==================================================================================+===========================+============+
-| gpt-3.5-turbo   | As an AI language model, I cannot provide up-to-date information or predict      | 1.55 seconds              | $0.000122  |
+| gpt-5.6-luna   | As an AI language model, I cannot provide up-to-date information or predict      | 1.55 seconds              | $0.000122  |
 |                 | future events. It is best to consult a reliable financial source or contact      |                           |            |
 |                 | BerriAI directly for information regarding their IPO plans.                      |                           |            |
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
@@ -75,7 +75,7 @@ Benchmark Results for 'When will BerriAI IPO?':
 |                 | their official social media accounts, subscribe to their newsletter, or visit    |                           |            |
 |                 | their website periodically for updates.                                          |                           |            |
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
-| claude-2        | I do not have any information about when or if BerriAI will have an initial      | 3.17 seconds              | $0.002084  |
+| claude-sonnet-5        | I do not have any information about when or if BerriAI will have an initial      | 3.17 seconds              | $0.002084  |
 |                 | public offering (IPO). As an AI assistant created by Anthropic to be helpful,    |                           |            |
 |                 | harmless, and honest, I do not have insider knowledge about Anthropic's business |                           |            |
 |                 | plans or strategies.                                                             |                           |            |
@@ -109,7 +109,7 @@ os.environ["OPENAI_API_KEY"] = "openai key"
 os.environ["COHERE_API_KEY"] = "cohere key"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages)
+response = completion(model="gpt-5.6-luna", messages=messages)
 # cohere call
 response = completion("command-nightly", messages)
 ```
@@ -151,7 +151,7 @@ os.environ['ANTHROPIC_API_KEY'] = ""
 # using https://api.together.xyz/playground for llama2
 # try any supported LLM here: https://docs.litellm.ai/docs/providers
 
-models = ['togethercomputer/llama-2-70b-chat', 'gpt-3.5-turbo', 'claude-instant-1.2']
+models = ['togethercomputer/llama-2-70b-chat', 'gpt-5.6-luna', 'claude-sonnet-5']
 data = []
 
 for question in questions: # group by question
@@ -276,7 +276,7 @@ os.environ['TOGETHERAI_API_KEY'] = ""
 os.environ['OPENAI_API_KEY'] = ""
 os.environ['ANTHROPIC_API_KEY'] = ""
 
-models = ['togethercomputer/llama-2-70b-chat', 'gpt-3.5-turbo', 'claude-instant-1.2'] # enter llms to benchmark
+models = ['togethercomputer/llama-2-70b-chat', 'gpt-5.6-luna', 'claude-sonnet-5'] # enter llms to benchmark
 data_2 = []
 
 for question in questions: # group by question

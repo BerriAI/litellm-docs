@@ -3,7 +3,7 @@
 If your prefer interfacing with the OpenAI Text Completion format this tutorial covers how to use LiteLLM in this format
 ```python
 response = openai.Completion.create(
-    model="text-davinci-003",
+    model="gpt-5.6-luna",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)
@@ -14,7 +14,7 @@ response = openai.Completion.create(
 ```python
 from litellm import text_completion
 response = text_completion(
-    model="gpt-3.5-turbo",
+    model="gpt-5.6-luna",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)
@@ -23,7 +23,7 @@ response = text_completion(
 ### With text-davinci-003
 ```python
 response = text_completion(
-    model="text-davinci-003",
+    model="gpt-5.6-luna",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)

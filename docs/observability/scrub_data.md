@@ -79,7 +79,7 @@ litellm.success_callback = ["langfuse"]
 
 
 ## sync 
-response = completion(model="gpt-4o-mini", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="gpt-5.6-luna", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -89,7 +89,7 @@ for chunk in response:
 import asyncio 
 
 async def completion():
-    response = await acompletion(model="gpt-4o-mini", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="gpt-5.6-luna", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue

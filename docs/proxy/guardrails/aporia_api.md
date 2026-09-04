@@ -36,9 +36,9 @@ Add the `Toxicity - Response` to your Post LLM API Call project
 - Define your guardrails under the `guardrails` section
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -83,7 +83,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -122,7 +122,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -181,7 +181,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-jNm1Zar7XfNdZXp49Z1kSQ' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",

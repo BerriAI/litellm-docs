@@ -16,9 +16,9 @@ Create a config file (e.g., `config.yaml`):
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
 
 general_settings:
   master_key: sk-1234

@@ -73,7 +73,7 @@ eval_obj = client.evals.create(
     testing_criteria=[
         {
             "type": "label_model",
-            "model": "gpt-4o-mini",
+            "model": "gpt-5.6-luna",
             "input": [
                 {
                     "role": "developer",
@@ -133,7 +133,7 @@ Summary: {{sample.output_text}}
 push_notification_grader = {
     "name": "Push Notification Summary Grader",
     "type": "label_model",
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "input": [
         {
             "role": "developer",
@@ -287,7 +287,7 @@ tasks = []
 for notifications in push_notification_data:
     for (prompt, version) in PROMPTS:
         tasks.append(client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5.6-luna",
             messages=[
                 {"role": "developer", "content": prompt},
                 {"role": "user", "content": notifications},
@@ -359,7 +359,7 @@ for prompt_version in ["v1", "v2"]:
                 "type": "item_reference",
                 "item_reference": "item.input",
             },
-            "model": "gpt-4o",
+            "model": "gpt-5.6-terra",
             "source": {
                 "type": "stored_completions",
                 "metadata": {

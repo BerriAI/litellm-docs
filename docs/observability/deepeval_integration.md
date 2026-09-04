@@ -33,7 +33,7 @@ litellm.failure_callback = ["deepeval"]
 
 try:
     response = litellm.completion(
-        model="gpt-4o-mini",
+        model="gpt-5.6-luna",
         messages=[
             {"role": "user", "content": "What's the weather like in San Francisco?"}
         ],

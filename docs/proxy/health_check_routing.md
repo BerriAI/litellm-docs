@@ -190,12 +190,12 @@ Without a policy, the first health check failure marks a deployment as unhealthy
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY_SECONDARY
 
 general_settings:
@@ -252,19 +252,19 @@ With an allowlist set:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY_SECONDARY
 
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-5.6-terra
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
 

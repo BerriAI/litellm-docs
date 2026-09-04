@@ -224,9 +224,9 @@ general_settings:
 ```yaml
 # proxy_config.yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       health_check_timeout: 30  # 30 second timeout for health checks

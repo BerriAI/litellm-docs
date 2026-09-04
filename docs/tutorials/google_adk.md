@@ -58,9 +58,9 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"  # For OpenAI models
 os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"  # For Claude models
 
 # Define model constants for cleaner code
-MODEL_GEMINI_PRO = "gemini-2.5-pro"
-MODEL_GPT_4O = "openai/gpt-4o"
-MODEL_CLAUDE_SONNET = "anthropic/claude-sonnet-4-5"
+MODEL_GEMINI_PRO = "gemini-3.1-pro-preview"
+MODEL_GPT_4O = "openai/gpt-5.6-terra"
+MODEL_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
 ```
 
 ## 2. Define a Simple Tool
@@ -287,7 +287,7 @@ litellm.use_litellm_proxy = True
 # Create a proxy-enabled agent (using environment variables)
 weather_agent_proxy_env = Agent(
     name="weather_agent_proxy_env",
-    model=LiteLlm(model="gpt-4o"), # this will call the `gpt-4o` model on LiteLLM proxy
+    model=LiteLlm(model="gpt-5.6-terra"), # this will call the `gpt-5.6-terra` model on LiteLLM proxy
     description="Provides weather information using a model from LiteLLM proxy.",
     instruction="You are a helpful weather assistant. "
                 "Use the 'get_weather' tool for city weather requests. "

@@ -137,7 +137,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-5-mini",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user","content": "What is the weather like in Tokyo today?"}],
     "tools": [
       {
@@ -176,7 +176,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-5-mini",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user","content": "What is the weather like in Tokyo today?"}],
     "tools": [
       {
@@ -196,7 +196,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 {
 	"id": "chatcmpl-xxxxxxxxxxxxxxx",
 	"created": 1757716050,
-	"model": "gpt-5-mini-2025-08-07",
+	"model": "gpt-5.6-luna",
 	"object": "chat.completion",
 	"choices": [
 		{

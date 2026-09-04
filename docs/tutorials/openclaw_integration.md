@@ -32,9 +32,9 @@ Create a config file  `litellm_config.yaml` with the models you want to use. Her
 
 ```yaml title="litellm_config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -46,19 +46,19 @@ You can add as many models as you want from different providers:
 
 ```yaml title="litellm_config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: gemini-flash
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/gemini-3.8-flash
       api_key: os.environ/GEMINI_API_KEY
 
 general_settings:
@@ -102,12 +102,12 @@ When prompted:
 1. Choose **QuickStart** or **Manual** as the onboarding mode (both work; Manual gives you more options for gateway settings)
 2. Select **LiteLLM** as the model/auth provider
 3. Enter your LiteLLM `master_key` from Step 2 and set the base URL to your proxy address (e.g., `http://localhost:4000`)
-4. When asked for the default model, choose **Enter model manually** and type the model name from your `litellm_config.yaml` (e.g., `litellm/gpt-4o`)
+4. When asked for the default model, choose **Enter model manually** and type the model name from your `litellm_config.yaml` (e.g., `litellm/gpt-5.6-terra`)
 
 You can also set or change the model after onboarding:
 
 ```bash
-openclaw models set litellm/gpt-4o
+openclaw models set litellm/gpt-5.6-terra
 ```
 
 For scripted / CI environments, you can skip the prompts entirely:
@@ -158,7 +158,7 @@ After onboarding, OpenClaw stores the LiteLLM provider config in `~/.openclaw/op
         "api": "openai-completions",
         "models": [
           {
-            "id": "gpt-4o",
+            "id": "gpt-5.6-terra",
             "name": "GPT-4o via LiteLLM"
           }
         ]
@@ -167,7 +167,7 @@ After onboarding, OpenClaw stores the LiteLLM provider config in `~/.openclaw/op
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "litellm/gpt-4o" }
+      "model": { "primary": "litellm/gpt-5.6-terra" }
     }
   }
 }
@@ -190,7 +190,7 @@ curl http://localhost:4000/health -H "Authorization: Bearer sk-your-secret-key"
 The model name in OpenClaw must match a `model_name` from your `litellm_config.yaml`. Switch the active model with:
 
 ```bash
-openclaw models set litellm/gpt-4o
+openclaw models set litellm/gpt-5.6-terra
 ```
 
 **Gateway pairing issues after reinstall**

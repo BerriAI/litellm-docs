@@ -10,9 +10,9 @@ Add to your `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -37,7 +37,7 @@ search_tools:
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     messages=[
         {"role": "user", "content": "What's the weather in San Francisco today?"}
     ],
@@ -192,9 +192,9 @@ See [Search Providers Documentation](../search/index.md) for detailed setup inst
 ```yaml
 model_list:
   # OpenAI
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
   # MiniMax
@@ -206,13 +206,13 @@ model_list:
   # Anthropic
   - model_name: claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # Azure OpenAI
   - model_name: azure-gpt4
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-5.6-terra
       api_base: https://my-azure.openai.azure.com
       api_key: os.environ/AZURE_API_KEY
 
@@ -257,7 +257,7 @@ litellm.callbacks = ["websearch_interception"]
 
 # Make completion with web search tool
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     messages=[
         {"role": "user", "content": "What are the latest AI news?"}
     ],
@@ -296,7 +296,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "What is the weather in San Francisco?"}
     ],

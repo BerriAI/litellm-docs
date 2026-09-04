@@ -28,11 +28,11 @@ In the config below:
 
 E.g.: 
 - `model=vllm-models` will route to `openai/facebook/opt-125m`. 
-- `model=gpt-4o` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
+- `model=gpt-5.6-terra` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
 
 ```yaml
 model_list:
-  - model_name: gpt-4o ### RECEIVED MODEL NAME ###
+  - model_name: gpt-5.6-terra ### RECEIVED MODEL NAME ###
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
       model: azure/gpt-4o-eu ### MODEL NAME sent to `litellm.completion()` ###
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
@@ -40,8 +40,8 @@ model_list:
       rpm: 6      # [OPTIONAL] Rate limit for this deployment: in requests per minute (rpm)
   - model_name: bedrock-claude-v1 
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
-  - model_name: gpt-4o
+      model: bedrock/us.anthropic.claude-sonnet-5
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: azure/gpt-4o-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -49,7 +49,7 @@ model_list:
       rpm: 6
   - model_name: anthropic-claude
     litellm_params: 
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-5
       ### [OPTIONAL] SET AWS REGION ###
       aws_region_name: us-east-1
   - model_name: vllm-models
@@ -61,7 +61,7 @@ model_list:
     model_info: 
       version: 2
   
-  # Use this if you want to make requests to `claude-haiku-4-5`,`claude-sonnet-4-5`,`claude-opus-4-6` without defining them on the config.yaml
+  # Use this if you want to make requests to `claude-sonnet-5`,`claude-sonnet-5`,`claude-opus-5` without defining them on the config.yaml
   # Default models
   # Works for ALL Providers and needs the default provider credentials in .env
   - model_name: "*" 
@@ -100,9 +100,9 @@ $ litellm --config /path/to/config.yaml --detailed_debug
 
 #### Step 3: Test it
 
-Sends request to model where `model_name=gpt-4o` on config.yaml. 
+Sends request to model where `model_name=gpt-5.6-terra` on config.yaml. 
 
-If multiple with `model_name=gpt-4o` does [Load Balancing](https://docs.litellm.ai/docs/proxy/load_balancing)
+If multiple with `model_name=gpt-5.6-terra` does [Load Balancing](https://docs.litellm.ai/docs/proxy/load_balancing)
 
 **[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
 
@@ -110,7 +110,7 @@ If multiple with `model_name=gpt-4o` does [Load Balancing](https://docs.litellm.
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "gpt-5.6-terra",
       "messages": [
         {
           "role": "user",
@@ -147,13 +147,13 @@ model_list:
       max_tokens: 20
   - model_name: gpt-4-team2
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-5.6-terra
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
   - model_name: openai-gpt-4o
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       extra_headers: {"AI-Resource Group": "ishaan-resource"}
       api_key: sk-123
       organization: org-ikDc4ex8NB
@@ -401,27 +401,27 @@ model_list:
         model: huggingface/HuggingFaceH4/zephyr-7b-beta
         api_base: http://0.0.0.0:8003
         rpm: 60000      
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-        model: gpt-4o
+        model: gpt-5.6-terra
         api_key: <my-openai-key>
         rpm: 200      
-  - model_name: gpt-4.1
+  - model_name: gpt-5.6-terra
     litellm_params:
-        model: gpt-4.1
+        model: gpt-5.6-terra
         api_key: <my-openai-key>
         rpm: 100      
 
 litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
-  fallbacks: [{"zephyr-beta": ["gpt-4o"]}] # fallback to gpt-4o if call fails num_retries 
-  context_window_fallbacks: [{"zephyr-beta": ["gpt-4.1"]}, {"gpt-4o": ["gpt-4.1"]}] # fallback to gpt-4.1 if context window error
+  fallbacks: [{"zephyr-beta": ["gpt-5.6-terra"]}] # fallback to gpt-5.6-terra if call fails num_retries 
+  context_window_fallbacks: [{"zephyr-beta": ["gpt-5.6-terra"]}, {"gpt-5.6-terra": ["gpt-5.6-terra"]}] # fallback to gpt-5.6-terra if context window error
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
 
 router_settings: # router_settings are optional
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
-  model_group_alias: {"gpt-4": "gpt-4o"} # all requests with `gpt-4` will be routed to models with `gpt-4o`
+  model_group_alias: {"gpt-5.6-terra": "gpt-5.6-terra"} # all requests with `gpt-5.6-terra` will be routed to models with `gpt-5.6-terra`
   num_retries: 2
   timeout: 30                                  # 30 seconds
   redis_host: <your redis host>                # set this when using multiple litellm proxy deployments, load balancing state stored in redis
@@ -462,9 +462,9 @@ Define credentials once and reuse them across multiple models. This helps with:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-5.6-terra
       litellm_credential_name: default_azure_credential  # Reference credential below
 
 credential_list:
@@ -503,21 +503,21 @@ Supported Environments:
 2. For each model set the list of supported environments in `model_info.supported_environments`
 ```yaml
 model_list:
- - model_name: gpt-4o-mini
+ - model_name: gpt-5.6-luna
    litellm_params:
-     model: openai/gpt-4o-mini
+     model: openai/gpt-5.6-luna
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["development", "production", "staging"]
- - model_name: gpt-4.1
+ - model_name: gpt-5.6-terra
    litellm_params:
-     model: openai/gpt-4.1
+     model: openai/gpt-5.6-terra
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["production", "staging"]
- - model_name: gpt-4o
+ - model_name: gpt-5.6-terra
    litellm_params:
-     model: openai/gpt-4o
+     model: openai/gpt-5.6-terra
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["production"]
@@ -734,9 +734,9 @@ Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` the
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 ```
 

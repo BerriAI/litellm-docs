@@ -26,7 +26,7 @@ os.environ["HUMANLOOP_API_KEY"] = "" # [OPTIONAL] set here or in `.completion`
 litellm.set_verbose = True # see raw request to provider
 
 resp = litellm.completion(
-    model="humanloop/gpt-4o-mini",
+    model="humanloop/gpt-5.6-luna",
     prompt_id="test-chat-prompt",
     prompt_variables={"user_message": "this is used"}, # [OPTIONAL]
     messages=[{"role": "user", "content": "<IGNORED>"}],
@@ -43,9 +43,9 @@ resp = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: humanloop/gpt-4o-mini
+      model: humanloop/gpt-5.6-luna
       prompt_id: "<humanloop_prompt_id>"
       api_key: os.environ/OPENAI_API_KEY
 ```
@@ -66,7 +66,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
             "role": "user",
@@ -90,7 +90,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -120,7 +120,7 @@ print(response)
 POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/ \
--d '{'model': 'gpt-4o-mini', 'messages': <YOUR HUMANLOOP PROMPT TEMPLATE>}'
+-d '{'model': 'gpt-5.6-luna', 'messages': <YOUR HUMANLOOP PROMPT TEMPLATE>}'
 ```
 
 ## How to set model 
@@ -137,7 +137,7 @@ You can do `humanloop/<litellm_model_name>`
 
 ```python
 litellm.completion(
-    model="humanloop/gpt-4o-mini", # or `humanloop/anthropic/claude-sonnet-4-5`
+    model="humanloop/gpt-5.6-luna", # or `humanloop/anthropic/claude-sonnet-5`
     # ...
 )
 ```
@@ -147,9 +147,9 @@ litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: humanloop/gpt-4o-mini # OR humanloop/anthropic/claude-sonnet-4-5
+      model: humanloop/gpt-5.6-luna # OR humanloop/anthropic/claude-sonnet-5
       prompt_id: <humanloop_prompt_id>
       api_key: os.environ/OPENAI_API_KEY
 ```
@@ -170,7 +170,7 @@ This also returns the template model set on Humanloop.
       ... # your prompt template
     }
   ],
-  "model": "gpt-4o-mini" # your template model
+  "model": "gpt-5.6-luna" # your template model
 }
 ```
 

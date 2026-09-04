@@ -48,9 +48,9 @@ model_list:
       model: anthropic/claude-sonnet-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: claude-haiku-4-5-20251001
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -165,7 +165,7 @@ claude --model claude-opus-4-7
 
 # Or specify a different model
 claude --model claude-sonnet-4-6
-claude --model claude-haiku-4-5-20251001
+claude --model claude-sonnet-5
 
 # Or change model during a session
 claude
@@ -177,7 +177,7 @@ Alternatively, set default models with environment variables:
 ```bash
 export ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-7
 export ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6
-export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-5-20251001
+export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5
 claude
 ```
 
@@ -276,7 +276,7 @@ model_list:
 
   - model_name: claude-bedrock-haiku
     litellm_params:
-      model: bedrock/invoke/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/invoke/us.anthropic.claude-sonnet-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2

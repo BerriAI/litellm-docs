@@ -34,7 +34,7 @@ curl -i -sSL --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-      "model": "gpt-4o-mini",
+      "model": "gpt-5.6-luna",
       "messages": [{"role": "user", "content": "what llm are you"}]
     }' | grep 'x-litellm'
 ```
@@ -70,9 +70,9 @@ Set `litellm.turn_off_message_logging=True` This will prevent the messages and r
 **1. Setup config.yaml**
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   success_callback: ["langfuse"]
   turn_off_message_logging: True # 👈 Key Change
@@ -83,7 +83,7 @@ litellm_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -116,9 +116,9 @@ Example config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 ```
 
 **2. Setup per request header**
@@ -176,7 +176,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'LiteLLM-Disable-Message-Redaction: true' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -209,7 +209,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <litellm-api-key>' \
 -d '{
-    "model": "openai/gpt-4o-mini",
+    "model": "openai/gpt-5.6-luna",
     "messages": [
       {
         "role": "user",
@@ -238,7 +238,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -279,7 +279,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-5",
     "messages": [
         {
         "role": "user",
@@ -301,7 +301,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-5",
     messages=[
         {
             "role": "user",
@@ -352,9 +352,9 @@ uv add langfuse>=2.0.0
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   success_callback: ["langfuse"]
 ```
@@ -398,7 +398,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -428,7 +428,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -462,7 +462,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -615,7 +615,7 @@ Specify `langfuse_default_tags` to control what litellm fields get logged on Lan
 Example config.yaml 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -642,7 +642,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -669,7 +669,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -700,7 +700,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -783,7 +783,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -863,7 +863,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -909,7 +909,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -956,7 +956,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -1005,7 +1005,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -1251,9 +1251,9 @@ LiteLLM supports logging on [Confidential AI](https://documentation.confident-ai
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
 litellm_settings:
   success_callback: ["deepeval"]
   failure_callback: ["deepeval"]
@@ -1278,7 +1278,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {
         "role": "system",
@@ -1316,9 +1316,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   success_callback: ["s3_v2"]
   s3_callback_params:
@@ -1432,9 +1432,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
 
 litellm_settings:
   callbacks: ["aws_sqs"]
@@ -1472,7 +1472,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
         {
         "role": "user",
@@ -1622,7 +1622,7 @@ litellm --config config.yaml
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {
         "role": "system",
@@ -1759,9 +1759,9 @@ In the config below, we pass
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -1806,9 +1806,9 @@ custom_handler = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 
 litellm_settings:
   callbacks: ["s3://litellm-proxy/custom_callbacks.custom_handler"]
@@ -1818,9 +1818,9 @@ litellm_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 
 litellm_settings:
   callbacks: ["gcs://my-gcs-bucket/custom_callbacks.custom_handler"]
@@ -1906,7 +1906,7 @@ litellm --config proxy_config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -1922,13 +1922,13 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ```shell
 On Success
-    Model: gpt-4o-mini,
+    Model: gpt-5.6-luna,
     Messages: [{'role': 'user', 'content': 'good morning good sir'}],
     User: ishaan-app,
     Usage: {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21},
     Cost: 7.65e-06,
-    Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': 'gpt-4o-mini', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
-    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': 'gpt-4o-mini', 'deployment': 'gpt-4o-mini-ModelID-gpt-4o-mini'}
+    Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': 'gpt-5.6-luna', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
+    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': 'gpt-5.6-luna', 'deployment': 'gpt-4o-mini-ModelID-gpt-4o-mini'}
 ```
 
 #### Logging Proxy Request Object, Header, Url
@@ -2086,9 +2086,9 @@ Use this if you:
 
 ```yaml showLineNumbers title="litellm config.yaml"
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -2125,7 +2125,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'Authorization: Bearer sk-1234' \
     --data '{
-    "model": "openai/gpt-4o",
+    "model": "openai/gpt-5.6-terra",
     "messages": [
         {
         "role": "user",
@@ -2188,7 +2188,7 @@ Expect to see your log on Langfuse
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -2235,7 +2235,7 @@ Expect to see your logs in Arize.
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -2423,9 +2423,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   success_callback: ["dynamodb"]
   dynamodb_table_name: your-table-name
@@ -2477,13 +2477,13 @@ Your logs should be available on DynamoDB
     "S": "{}"
   },
   "model": {
-    "S": "gpt-4o-mini"
+    "S": "gpt-5.6-luna"
   },
   "modelParameters": {
     "S": "{'temperature': 0.7, 'max_tokens': 100, 'user': 'ishaan-2'}"
   },
   "response": {
-    "S": "ModelResponse(id='chatcmpl-8W15J4480a3fAQ1yQaMgtsKJAicen', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Great! What can I assist you with?', role='assistant'))], created=1702641357, model='gpt-4o-mini', object='chat.completion', system_fingerprint=None, usage=Usage(completion_tokens=9, prompt_tokens=11, total_tokens=20))"
+    "S": "ModelResponse(id='chatcmpl-8W15J4480a3fAQ1yQaMgtsKJAicen', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Great! What can I assist you with?', role='assistant'))], created=1702641357, model='gpt-5.6-luna', object='chat.completion', system_fingerprint=None, usage=Usage(completion_tokens=9, prompt_tokens=11, total_tokens=20))"
   },
   "startTime": {
     "S": "2023-12-15 17:25:56.047035"
@@ -2550,9 +2550,9 @@ export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (defau
 
 ```yaml 
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   # other settings
   failure_callback: ["sentry"]
@@ -2590,9 +2590,9 @@ ATHINA_API_KEY = "your-athina-api-key"
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   success_callback: ["athina"]
 ```
@@ -2611,7 +2611,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -2644,9 +2644,9 @@ AZURE_CONTENT_SAFETY_KEY = "<your-azure-content-safety-key>"
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   callbacks: ["azure_content_safety"]
   azure_content_safety_params:
@@ -2668,7 +2668,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-        "model": "gpt-4o-mini",
+        "model": "gpt-5.6-luna",
         "messages": [
             {
                 "role": "user",
@@ -2691,9 +2691,9 @@ You can customize the thresholds for each category by setting the `thresholds` i
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 litellm_settings:
   callbacks: ["azure_content_safety"]
   azure_content_safety_params:

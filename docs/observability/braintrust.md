@@ -23,7 +23,7 @@ litellm.callbacks = ["braintrust"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -43,9 +43,9 @@ BRAINTRUST_API_BASE="https://api.braintrustdata.com/v1"
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -86,7 +86,7 @@ You can customize the span id, root span name and span parents in Braintrust log
 
 ```python
 response = litellm.completion(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -105,7 +105,7 @@ Note: Other `metadata` can be included here as well when using the SDK.
 
 ```python
 response = litellm.completion(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -151,7 +151,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",

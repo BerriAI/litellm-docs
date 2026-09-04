@@ -32,11 +32,11 @@ curl -X POST http://localhost:4000/key/generate \
     "model_max_budget": {
       "claude-opus-4-8":   {"budget_limit": 20.0, "time_period": "1d"},
       "claude-sonnet-5":   {"budget_limit": 10.0, "time_period": "1d"},
-      "claude-haiku-4-5":  {"budget_limit": 5.0,  "time_period": "1d"}
+      "claude-sonnet-5":  {"budget_limit": 5.0,  "time_period": "1d"}
     },
     "budget_fallbacks": {
-      "claude-opus-4-8":  ["claude-sonnet-5", "claude-haiku-4-5"],
-      "claude-sonnet-5":  ["claude-haiku-4-5"]
+      "claude-opus-4-8":  ["claude-sonnet-5", "claude-sonnet-5"],
+      "claude-sonnet-5":  ["claude-sonnet-5"]
     }
   }'
 ```
@@ -51,9 +51,9 @@ Claude's prompt cache reads a cache hit for roughly 10% of the price of a fresh 
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       cache_control_injection_points:
         - location: message
@@ -69,7 +69,7 @@ for automatically injecting this in all requests, do this
 model_list:
   - model_name: claude-sonnet-4.5-20250929
     litellm_params:
-      model: vertex_ai/claude-sonnet-4-5@20250929
+      model: vertex_ai/claude-sonnet-5
       # ...
 
 router_settings:
@@ -135,17 +135,17 @@ Complexity router is the fastest to set up. Point Claude Code at `smart-router` 
 ```yaml title="config.yaml"
 model_list:
   # Target models
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
 
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
 
   - model_name: claude-sonnet
     litellm_params:
-      model: claude-sonnet-4-20250514
+      model: claude-sonnet-5
 
   - model_name: o1-preview
     litellm_params:
@@ -157,11 +157,11 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE: gpt-4o-mini
-          MEDIUM: gpt-4o
+          SIMPLE: gpt-5.6-luna
+          MEDIUM: gpt-5.6-terra
           COMPLEX: claude-sonnet
           REASONING: o1-preview
-      complexity_router_default_model: gpt-4o
+      complexity_router_default_model: gpt-5.6-terra
 ```
 
 Name the router `claude-auto` (or another name containing `claude`/`anthropic`, so gateway discovery finds it) and add that name to your organization's `availableModels` allowlist before rolling it out, otherwise Claude for Teams and Enterprise refuse to select it. [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers both requirements.

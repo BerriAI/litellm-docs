@@ -118,7 +118,7 @@ Received Proxy Server Request                      (SpanKind.SERVER, root)
 └── Failed Proxy Server Request                    (INTERNAL — only on exception)
 ```
 
-In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), when an LLM-call span is created its name becomes `{operation} {model}` (e.g. `chat gpt-4o`) with `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. The same `USE_OTEL_LITELLM_REQUEST_SPAN` gating decides whether the span is emitted at all. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
+In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), when an LLM-call span is created its name becomes `{operation} {model}` (e.g. `chat gpt-5.6-terra`) with `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. The same `USE_OTEL_LITELLM_REQUEST_SPAN` gating decides whether the span is emitted at all. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
 
 The SDK (no proxy) emits `litellm_request` as the root if no parent context exists; there is no `Received Proxy Server Request` span in pure-SDK use.
 
@@ -311,7 +311,7 @@ Be aware that if you are continuing an existing trace, and you set `update_trace
 
 Expected behavior under the v1.81.0+ default (`USE_OTEL_LITELLM_REQUEST_SPAN=false`): the proxy root span absorbs the LLM-call attributes and there is no separate `litellm_request` span. To restore nested spans, set `USE_OTEL_LITELLM_REQUEST_SPAN=true`. See [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span).
 
-If you're in semconv mode, the LLM-call span exists but is renamed to `{operation} {model}` (e.g. `chat gpt-4o`), so search by `gen_ai.system` rather than by the literal name `litellm_request`.
+If you're in semconv mode, the LLM-call span exists but is renamed to `{operation} {model}` (e.g. `chat gpt-5.6-terra`), so search by `gen_ai.system` rather than by the literal name `litellm_request`.
 
 ### I only see infrastructure spans (`router`, `auth`, `redis`, `proxy_pre_call`)
 

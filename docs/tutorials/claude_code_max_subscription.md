@@ -40,11 +40,11 @@ Create a `config.yaml` with the critical `forward_client_headers_to_llm_api: tru
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/claude-sonnet-5
 
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
 
   - model_name: claude-3-5-haiku-20241022
     litellm_params:
@@ -193,7 +193,7 @@ Click on a request to see detailed information including tokens, cost, duration,
 
 The logs show:
 - **Key Name**: `claude-code-test` (the virtual key you created)
-- **Model**: `anthropic/claude-sonnet-4-20250514`
+- **Model**: `anthropic/claude-sonnet-5`
 - **Tokens**: 65012 (64679 prompt + 333 completion)
 - **Cost**: $0.249754
 - **Status**: Success
@@ -267,7 +267,7 @@ For more granular control, you can enable header forwarding only for specific mo
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/claude-sonnet-5
 
   - model_name: claude-3-5-haiku-20241022
     litellm_params:
@@ -291,7 +291,7 @@ Set up per-user budgets while using Max subscriptions:
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/claude-sonnet-5
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

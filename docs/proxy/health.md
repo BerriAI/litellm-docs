@@ -47,10 +47,10 @@ curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer sk-1234"
 ```json
 {
     "healthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
+        {"model": "azure/gpt-5.6-luna", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
     ],
     "unhealthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://openai-france-1234.openai.azure.com/"}
+        {"model": "azure/gpt-5.6-luna", "api_base": "https://openai-france-1234.openai.azure.com/"}
     ]
 }
 ```
@@ -74,9 +74,9 @@ To exclude a model from the background loop, set `disable_background_health_chec
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       disable_background_health_check: true

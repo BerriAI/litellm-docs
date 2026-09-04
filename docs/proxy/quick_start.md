@@ -59,7 +59,7 @@ $ export AWS_SECRET_ACCESS_KEY=
 ```
 
 ```shell
-$ litellm --model bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+$ litellm --model bedrock/us.anthropic.claude-sonnet-5
 ```
 </TabItem>
 <TabItem value="azure" label="Azure OpenAI">
@@ -80,7 +80,7 @@ $ export OPENAI_API_KEY=my-api-key
 ```
 
 ```shell
-$ litellm --model gpt-4o-mini
+$ litellm --model gpt-5.6-luna
 ```
 </TabItem>
 <TabItem value="ollama" label="Ollama">
@@ -109,7 +109,7 @@ $ export VERTEX_LOCATION="us-west"
 ```
 
 ```shell
-$ litellm --model vertex_ai/gemini-2.5-flash
+$ litellm --model vertex_ai/gemini-3.8-flash
 ```
 </TabItem>
 
@@ -149,7 +149,7 @@ $ litellm --model sagemaker/jumpstart-dft-meta-textgeneration-llama-2-7b
 $ export ANTHROPIC_API_KEY=my-api-key
 ```
 ```shell
-$ litellm --model claude-sonnet-4-5
+$ litellm --model claude-sonnet-5
 ```
 
 </TabItem>
@@ -236,12 +236,12 @@ Example config
 
 ```yaml
 model_list: 
-  - model_name: gpt-4o-mini # user-facing model alias
+  - model_name: gpt-5.6-luna # user-facing model alias
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
       model: azure/<your-deployment-name>
       api_base: <your-azure-api-endpoint>
       api_key: <your-azure-api-key>
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -275,7 +275,7 @@ LiteLLM is compatible with several SDKs - including OpenAI SDK, Anthropic SDK, M
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-4o-mini",
+      "model": "gpt-5.6-luna",
       "messages": [
         {
           "role": "user",
@@ -296,7 +296,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-4o-mini", messages = [
+response = client.chat.completions.create(model="gpt-5.6-luna", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -320,7 +320,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1
 )
 
@@ -380,7 +380,7 @@ This is **not recommended**. There is duplicate logic as the proxy also uses the
 from litellm import completion 
 
 response = completion(
-    model="openai/gpt-4o-mini", 
+    model="openai/gpt-5.6-luna", 
     messages = [
         {
             "role": "user",
@@ -416,7 +416,7 @@ message = client.messages.create(
             "content": "Hello, Claude",
         }
     ],
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
 )
 print(message.content)
 ```
@@ -441,12 +441,12 @@ print(message.content)
 
 Events that occur during normal operation
 ```shell
-litellm --model gpt-4o-mini --debug
+litellm --model gpt-5.6-luna --debug
 ```
 
 Detailed information
 ```shell
-litellm --model gpt-4o-mini --detailed_debug
+litellm --model gpt-5.6-luna --detailed_debug
 ```
 
 ### Set Debug Level using env variables

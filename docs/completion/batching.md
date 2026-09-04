@@ -31,7 +31,7 @@ os.environ['ANTHROPIC_API_KEY'] = ""
 
 
 responses = batch_completion(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
     messages = [
         [
             {
@@ -68,7 +68,7 @@ os.environ['OPENAI_API_KEY'] = ""
 os.environ['COHERE_API_KEY'] = ""
 
 response = batch_completion_models(
-    models=["gpt-4o-mini", "claude-sonnet-4-5", "command-nightly"], 
+    models=["gpt-5.6-luna", "claude-sonnet-5", "command-nightly"], 
     messages=[{"role": "user", "content": "Hey, how's it going"}]
 )
 print(result)
@@ -92,7 +92,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \ 
 -D '{
-    "model": "gpt-4o, groq-llama", # 👈 Comma-separated models
+    "model": "gpt-5.6-terra, groq-llama", # 👈 Comma-separated models
     "messages": [
       {
         "role": "user",
@@ -118,7 +118,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o, groq-llama", # 👈 Comma-separated models
+    model="gpt-5.6-terra, groq-llama", # 👈 Comma-separated models
     messages = [
         {
             "role": "user",
@@ -144,9 +144,9 @@ model_list:
   litellm_params:
     model: groq/llama3-8b-8192
     api_key: os.environ/GROQ_API_KEY
-- model_name: gpt-4o
+- model_name: gpt-5.6-terra
   litellm_params:
-    model: gpt-4o
+    model: gpt-5.6-terra
     api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -203,7 +203,7 @@ os.environ['OPENAI_API_KEY'] = ""
 os.environ['COHERE_API_KEY'] = ""
 
 responses = batch_completion_models_all_responses(
-    models=["gpt-4o-mini", "claude-sonnet-4-5", "command-nightly"], 
+    models=["gpt-5.6-luna", "claude-sonnet-5", "command-nightly"], 
     messages=[{"role": "user", "content": "Hey, how's it going"}]
 )
 print(responses)
@@ -228,7 +228,7 @@ print(responses)
   ],
   "id": "chatcmpl-e673ec8e-4e8f-4c9e-bf26-bf9fa7ee52b9",
   "created": 1695222060.917964,
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-5",
   "usage": {
     "prompt_tokens": 14,
     "completion_tokens": 9,
@@ -259,7 +259,7 @@ print(responses)
   "id": "chatcmpl-80szFnKHzCxObW0RqCMw1hWW1Icrq",
   "object": "chat.completion",
   "created": 1695222061,
-  "model": "gpt-4o-mini",
+  "model": "gpt-5.6-luna",
   "choices": [
     {
       "index": 0,

@@ -41,9 +41,9 @@ LiteLLM supports 3 flows for calling Vertex AI endpoints via pass-through:
 
 ```yaml
 model_list:
-  - model_name: gemini-1.0-pro
+  - model_name: gemini-3.1-pro-preview
     litellm_params:
-      model: vertex_ai/gemini-1.0-pro
+      model: vertex_ai/gemini-3.1-pro-preview
       vertex_project: adroit-crow-413218
       vertex_location: us-central1
       vertex_credentials: /path/to/credentials.json
@@ -79,7 +79,7 @@ export DEFAULT_GOOGLE_APPLICATION_CREDENTIALS="/path/to/credentials.json"
 Try Gemini 2.0 Flash (curl)
 
 ```
-MODEL_ID="gemini-2.0-flash-001"
+MODEL_ID="gemini-3.8-flash"
 PROJECT_ID="YOUR_PROJECT_ID"
 ```
 
@@ -141,7 +141,7 @@ const vertexAI = new VertexAI({
 });
 
 const model = vertexAI.getGenerativeModel({
-    model: 'gemini-1.0-pro'
+    model: 'gemini-3.1-pro-preview'
 }, {
     customHeaders: {
         "x-litellm-api-key": "sk-1234" // Your litellm Virtual Key
@@ -240,7 +240,7 @@ litellm
 Let's call the Google AI Studio token counting endpoint
 
 ```bash
-curl http://localhost:4000/vertex-ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.0-pro:generateContent \
+curl http://localhost:4000/vertex-ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview:generateContent \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
@@ -279,7 +279,7 @@ LiteLLM Proxy Server supports two methods of authentication to Vertex AI:
 
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.8-flash:generateContent \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -d '{"contents":[{"role": "user", "parts":[{"text": "hi"}]}]}'
@@ -311,7 +311,7 @@ curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-cent
 ### Count Tokens API
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:countTokens \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.8-flash:countTokens \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -d '{"contents":[{"role": "user", "parts":[{"text": "hi"}]}]}'
@@ -322,11 +322,11 @@ Create Fine Tuning Job
 
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:tuningJobs \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.8-flash:tuningJobs \
       -H "Content-Type: application/json" \
       -H "x-litellm-api-key: Bearer sk-1234" \
       -d '{
-  "baseModel": "gemini-1.0-pro-002",
+  "baseModel": "gemini-3.1-pro-preview",
   "supervisedTuningSpec" : {
       "training_dataset_uri": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl"
   }
@@ -382,7 +382,7 @@ Expected Response
 
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.0-pro:generateContent \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview:generateContent \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -d '{
@@ -407,7 +407,7 @@ tags: ["vertex-js-sdk", "pass-through-endpoint"]
 <TabItem value="curl" label="curl">
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.0-pro:generateContent \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview:generateContent \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -H "tags: vertex-js-sdk,pass-through-endpoint" \
@@ -432,7 +432,7 @@ const vertexAI = new VertexAI({
 });
 
 const model = vertexAI.getGenerativeModel({
-    model: 'gemini-1.0-pro'
+    model: 'gemini-3.1-pro-preview'
 }, {
     customHeaders: {
         "x-litellm-api-key": "sk-1234", // Your litellm Virtual Key
@@ -469,7 +469,7 @@ When using Anthropic models via Vertex AI passthrough (e.g., Claude on Vertex), 
 The `anthropic-beta` header is automatically forwarded to Vertex AI when calling Anthropic models.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-5:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "anthropic-beta: context-1m-2025-08-07" \
@@ -491,7 +491,7 @@ For example:
 This is useful when you need to send provider-specific headers that aren't in the default allowlist.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-5:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "x-pass-anthropic-beta: context-1m-2025-08-07" \

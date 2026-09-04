@@ -62,7 +62,7 @@ model_list:
         model: claude-3-5-haiku-20241022
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: gpt-5.6-terra
 ```
 
 </TabItem>
@@ -86,7 +86,7 @@ model_list:
         model: claude-3-5-haiku-20241022
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: gpt-5.6-terra
 ```
 
 </TabItem>

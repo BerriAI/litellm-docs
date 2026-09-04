@@ -54,7 +54,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -68,9 +68,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-4-5 # Anthropic claude-sonnet-4-5
+  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -92,7 +92,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
     messages=[
         {
             "role": "user", 
@@ -115,16 +115,16 @@ print(response)
 
 Web fetch is available on the following Anthropic API models:
 
-- `claude-opus-4-6` (Claude Opus 4.6)
+- `claude-opus-5` (Claude Opus 4.6)
 - `claude-sonnet-4-6` (Claude Sonnet 4.6)
-- `claude-opus-4-5` (Claude Opus 4.5)
-- `claude-sonnet-4-5` (Claude Sonnet 4.5)
-- `claude-haiku-4-5` (Claude Haiku 4.5)
-- `claude-opus-4-1-20250805` (Claude Opus 4.1)
-- `claude-opus-4-20250514` (Claude Opus 4)
-- `claude-sonnet-4-20250514` (Claude Sonnet 4)
-- `claude-3-7-sonnet-20250219` (Claude Sonnet 3.7)
-- `claude-3-5-sonnet-latest` (Claude Sonnet 3.5 v2 - deprecated)
+- `claude-opus-5` (Claude Opus 4.5)
+- `claude-sonnet-5` (Claude Sonnet 4.5)
+- `claude-sonnet-5` (Claude Haiku 4.5)
+- `claude-opus-5` (Claude Opus 4.1)
+- `claude-opus-5` (Claude Opus 4)
+- `claude-sonnet-5` (Claude Sonnet 4)
+- `claude-sonnet-5` (Claude Sonnet 3.7)
+- `claude-sonnet-5` (Claude Sonnet 3.5 v2 - deprecated)
 - `claude-3-5-haiku-latest` (Claude Haiku 3.5)
 
 :::note
@@ -157,7 +157,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -189,7 +189,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -221,7 +221,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -259,7 +259,7 @@ messages = [
 ]
     
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )

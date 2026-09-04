@@ -84,7 +84,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
         --header 'Authorization: Bearer sk-1234' \
         --data '{
-        "model": "claude-sonnet-4-5",
+        "model": "claude-sonnet-5",
         "messages": [{"role": "user", "content": "what time is it"}],
         "litellm_metadata": {"user": "ishaan3"}
         }'
@@ -434,7 +434,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user", "content": "Hello"}],
     "user": "my-customer-id"
 }'
@@ -561,7 +561,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}

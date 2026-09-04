@@ -76,7 +76,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your litellm key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]

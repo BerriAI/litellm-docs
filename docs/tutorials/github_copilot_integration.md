@@ -51,14 +51,14 @@ Create a `config.yaml` file with your model configurations:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
   
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -107,9 +107,9 @@ Route requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -123,9 +123,9 @@ Route requests to GPT-4o:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -157,13 +157,13 @@ All deployments with the same model_name will be load balanced. In this example 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-4o  # Same model name for load balancing
+  - model_name: gpt-5.6-terra  # Same model name for load balancing
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:

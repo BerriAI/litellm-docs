@@ -141,7 +141,7 @@ import os
 os.environ["ASSEMBLYAI_API_KEY"] = "your-assemblyai-api-key"
 
 response = litellm.completion(
-    model="assemblyai/claude-sonnet-4-5-20250929",
+    model="assemblyai/claude-sonnet-5",
     messages=[{"role": "user", "content": "What is the capital of France?"}]
 )
 
@@ -181,7 +181,7 @@ response = requests.post(
     "http://0.0.0.0:4000/v1/chat/completions",
     headers=headers,
     json={
-        "model": "assemblyai/claude-sonnet-4-5-20250929",
+        "model": "assemblyai/claude-sonnet-5",
         "messages": [
             {"role": "user", "content": "What is the capital of France?"}
         ],

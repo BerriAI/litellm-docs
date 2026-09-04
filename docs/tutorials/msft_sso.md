@@ -136,7 +136,7 @@ litellm_settings:
   default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is not explicitly set
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
-    models: ["gpt-4o-mini"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
+    models: ["gpt-5.6-luna"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
       - "/team/daily/activity"     # Allow members to view team usage
 ```

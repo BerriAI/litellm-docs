@@ -372,7 +372,7 @@ curl --location 'http://0.0.0.0:4000/organization/new' \
     --header 'Content-Type: application/json' \
     --data '{
         "organization_alias": "marketing_department",
-        "models": ["gpt-4o"],
+        "models": ["gpt-5.6-terra"],
         "max_budget": 20
     }'
 ```
@@ -386,7 +386,7 @@ Expected Response
   "budget_id": "98754244-3a9c-4b31-b2e9-c63edc8fd7eb",
   "metadata": {},
   "models": [
-    "gpt-4o"
+    "gpt-5.6-terra"
   ],
   "created_by": "109010464461339474872",
   "updated_by": "109010464461339474872",

@@ -50,9 +50,9 @@ print(f"Dataset name: {response.name}")
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 vector_store_registry:

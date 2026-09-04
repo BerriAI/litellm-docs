@@ -100,7 +100,7 @@ curl -X POST "http://localhost:4000/cost/estimate" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-5.6-terra",
     "input_tokens": 1000,
     "output_tokens": 500,
     "num_requests_per_day": 1000,
@@ -111,7 +111,7 @@ curl -X POST "http://localhost:4000/cost/estimate" \
 **Response:**
 ```json
 {
-  "model": "gpt-4",
+  "model": "gpt-5.6-terra",
   "input_tokens": 1000,
   "output_tokens": 500,
   "num_requests_per_day": 1000,

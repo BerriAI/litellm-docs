@@ -35,7 +35,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: my-judge-model
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 guardrails:

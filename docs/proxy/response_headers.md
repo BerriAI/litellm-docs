@@ -71,7 +71,7 @@ The component headers sum to the total: input + cache read + cache creation + ou
 model_list:
   - model_name: my-chat-model          # clients call this
     litellm_params:
-      model: gpt-4o-mini               # LiteLLM calls this upstream
+      model: gpt-5.6-luna               # LiteLLM calls this upstream
     model_info:
       id: "7c9f2a1b3d8e4f0a2c6b5d9e1f3a7b8c"   # optional; auto-generated if omitted
 ```

@@ -9,20 +9,20 @@ import TabItem from '@theme/TabItem';
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["free"] # 👈 Key Change
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
       tags: ["paid"] # 👈 Key Change
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
@@ -41,7 +41,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "object": "chat.completion",
   "usage": {"completion_tokens": 12, "prompt_tokens": 9, "total_tokens": 21}
 }
@@ -77,7 +77,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -100,7 +100,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-4o-2024-05-13",
+  "model": "gpt-5.6-terra",
   "object": "chat.completion",
   "usage": {"completion_tokens": 10, "prompt_tokens": 12, "total_tokens": 22}
 }
@@ -114,7 +114,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer sk-1234' \
 -H 'x-litellm-tags: free,my-custom-tag' \
 -d '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {
       "role": "user",
@@ -171,7 +171,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["!provider:anthropic"]}
   }'
@@ -185,19 +185,19 @@ Any deployment tagged `provider:anthropic` is removed from the candidate pool be
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
   - model_name: chat
     litellm_params:
-      model: vertex_ai/gemini-2.0-flash
+      model: vertex_ai/gemini-3.8-flash
       api_key: os.environ/VERTEX_API_KEY
       tags: ["provider:vertex"]
 
@@ -248,13 +248,13 @@ When the primary model group is banned, the router falls through to the configur
 model_list:
   - model_name: primary
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: fallback
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -315,13 +315,13 @@ Only a deployment carrying both `reasoning_type:high` and `provider:anthropic` i
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["reasoning_type:high", "provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["reasoning_type:high", "provider:openai"]
 
@@ -370,7 +370,7 @@ This is an explicit opt-in. Without it, behavior is unchanged: an unsatisfiable 
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -378,7 +378,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai", "default"]
     model_info:
@@ -470,7 +470,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["default", "provider:anthropic"]
     model_info:
@@ -478,7 +478,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -547,7 +547,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat-compliance
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -555,7 +555,7 @@ model_list:
 
   - model_name: chat-compliance
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
     model_info:
@@ -563,7 +563,7 @@ model_list:
 
   - model_name: incident-response
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       enable_tag_filtering: false # opt out for this group only

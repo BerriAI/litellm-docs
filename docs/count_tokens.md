@@ -36,7 +36,7 @@ import litellm
 async def main():
     # OpenAI
     result = await litellm.acount_tokens(
-        model="openai/gpt-4o",
+        model="openai/gpt-5.6-terra",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
     print(f"Token count: {result.total_tokens}")
@@ -44,7 +44,7 @@ async def main():
 
     # Anthropic
     result = await litellm.acount_tokens(
-        model="anthropic/claude-sonnet-4-5",
+        model="anthropic/claude-sonnet-5",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
     print(f"Token count: {result.total_tokens}")
@@ -61,7 +61,7 @@ import litellm
 
 async def main():
     result = await litellm.acount_tokens(
-        model="openai/gpt-4o",
+        model="openai/gpt-5.6-terra",
         messages=[{"role": "user", "content": "What's the weather in Paris?"}],
         tools=[{
             "type": "function",
@@ -88,8 +88,8 @@ asyncio.run(main())
 ```python
 TokenCountResponse(
     total_tokens=15,           # Token count
-    request_model="openai/gpt-4o",  # Model requested
-    model_used="gpt-4o",      # Model used for counting
+    request_model="openai/gpt-5.6-terra",  # Model requested
+    model_used="gpt-5.6-terra",      # Model used for counting
     tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "local_tokenizer"
     original_response={"input_tokens": 15},  # Raw API response
     error=False,               # True if counting failed
@@ -122,7 +122,7 @@ curl -X POST "http://localhost:4000/v1/responses/input_tokens" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "input": "Hello, how are you?"
   }'
 ```
@@ -140,7 +140,7 @@ response = httpx.post(
         "Authorization": "Bearer sk-1234"
     },
     json={
-        "model": "gpt-4o",
+        "model": "gpt-5.6-terra",
         "input": "Hello, how are you?"
     }
 )
@@ -166,7 +166,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "claude-sonnet-4-5",
+    "model": "claude-sonnet-5",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]
@@ -177,13 +177,13 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 ```

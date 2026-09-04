@@ -67,7 +67,7 @@ print(response.choices[0].message.content)
 ```python
 # Also works with Claude Opus 4.5 (beta header auto-injected)
 response = litellm.completion(
-    model="anthropic/claude-opus-4-5-20251101",
+    model="anthropic/claude-opus-5",
     messages=[{
         "role": "user",
         "content": "Analyze the trade-offs between microservices and monolithic architectures"
@@ -156,7 +156,7 @@ curl https://api.anthropic.com/v1/messages \
   --header "anthropic-beta: effort-2025-11-24" \
   --header "content-type: application/json" \
   --data '{
-    "model": "claude-opus-4-5-20251101",
+    "model": "claude-opus-5",
     "max_tokens": 4096,
     "messages": [{
       "role": "user",
@@ -174,9 +174,9 @@ curl https://api.anthropic.com/v1/messages \
 ## Model Compatibility
 
 The effort parameter is supported by:
-- **Claude Opus 4.6** (`claude-opus-4-6`): supports `high`, `medium`, `low`, and `max`
+- **Claude Opus 4.6** (`claude-opus-5`): supports `high`, `medium`, `low`, and `max`
 - **Claude Sonnet 4.6** (`claude-sonnet-4-6`): supports `high`, `medium`, `low`
-- **Claude Opus 4.5** (`claude-opus-4-5-20251101`): supports `high`, `medium`, `low`
+- **Claude Opus 4.5** (`claude-opus-5`): supports `high`, `medium`, `low`
 
 :::info
 `effort="max"` is only available on Claude Opus 4.6. Using it with other models will raise a validation error.
@@ -274,7 +274,7 @@ Token usage with different effort levels is tracked in the standard usage object
 
 ```python
 response = litellm.completion(
-    model="anthropic/claude-opus-4-5-20251101",
+    model="anthropic/claude-opus-5",
     messages=[{"role": "user", "content": "Analyze this"}],
     output_config={"effort": "low"}
 )
@@ -312,7 +312,7 @@ output_config={"effort": "low"}
 litellm.completion(model="anthropic/claude-sonnet-4-6", messages=messages, reasoning_effort="max")
 
 # ✅ max is only for Opus 4.6
-litellm.completion(model="anthropic/claude-opus-4-6", messages=messages, reasoning_effort="max")
+litellm.completion(model="anthropic/claude-opus-5", messages=messages, reasoning_effort="max")
 ```
 
 ### Model not supported

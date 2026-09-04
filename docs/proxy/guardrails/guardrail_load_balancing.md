@@ -48,9 +48,9 @@ Define multiple guardrail entries with the **same `guardrail_name`** but differe
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -83,9 +83,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -108,9 +108,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -149,7 +149,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Hello, how are you?"}],
     "guardrails": ["content-filter"]
   }'
@@ -214,9 +214,9 @@ flowchart TB
 
 ```yaml showLineNumbers title="config.yaml - Multi-account Bedrock"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-5
 
 guardrails:
   # AWS Account 1 - US East
@@ -262,7 +262,7 @@ for i in {1..10}; do
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer sk-1234" \
     -d '{
-      "model": "claude-sonnet-4-5",
+      "model": "claude-sonnet-5",
       "messages": [{"role": "user", "content": "Hello"}],
       "guardrails": ["bedrock-content-filter"]
     }' &

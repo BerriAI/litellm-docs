@@ -36,7 +36,7 @@ $ export AWS_SECRET_ACCESS_KEY=""
 ```
 
 ```shell
-$ litellm --model bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+$ litellm --model bedrock/us.anthropic.claude-sonnet-5
 ```
 </TabItem>
 <TabItem value="huggingface" label="Huggingface (TGI)">
@@ -55,7 +55,7 @@ $ litellm --model huggingface/<your model name> --api_base https://k58ory32yinf1
 $ export ANTHROPIC_API_KEY=my-api-key
 ```
 ```shell
-$ litellm --model claude-sonnet-4-5
+$ litellm --model claude-sonnet-5
 ```
 
 </TabItem>
@@ -248,7 +248,7 @@ import litellm
 # litellm completion call
 question = "which country has the highest population"
 response = litellm.completion(
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     messages = [
         {
             "role": "user",

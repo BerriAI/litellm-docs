@@ -33,9 +33,9 @@ Add a guardrail entry that references the Gray Swan integration. Below is our re
 
 ```yaml
 model_list:                                 # this part is a standard litellm configuration for reference
-  - model_name: openai/gpt-4.1-mini
+  - model_name: openai/gpt-5.6-luna
     litellm_params:
-      model: openai/gpt-4.1-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:

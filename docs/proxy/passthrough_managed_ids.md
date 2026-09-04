@@ -92,14 +92,14 @@ This means any endpoint that accepts a file ID, batch ID, or response ID in path
 ```python
 # Client sends managed IDs for training_file and validation_file
 response = client.post("/azure/openai/v1/fine_tuning/jobs", json={
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "training_file": "bGl0ZWxsbV9wcm94eTpwYXNzdGhyb3VnaDtwcm92...",  # managed ID
     "validation_file": "bGl0ZWxsbV9wcm94eTpwYXNzdGhyb3VnaDtwcm92...",  # managed ID
 })
 
 # Proxy resolves both to raw file IDs and forwards:
 # POST .../fine_tuning/jobs
-# { "model": "gpt-4o-mini", "training_file": "file-2dbc75...", "validation_file": "file-2dbc75..." }
+# { "model": "gpt-5.6-luna", "training_file": "file-2dbc75...", "validation_file": "file-2dbc75..." }
 ```
 
 ## Request flow - any endpoint

@@ -131,7 +131,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -180,7 +180,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -497,9 +497,9 @@ Use this to enable prompt logging for specific keys when you have globally disab
 Example config.yaml with globally disabled prompt logging (message redaction)
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
 litellm_settings:
   callbacks: ["datadog"]
   turn_off_message_logging: True # 👈 Globally logging prompt / response is disabled
@@ -554,7 +554,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-9v6I-jf9-eYtg_PwM8OKgQ" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {"role": "user", "content": "hi my name is ishaan what key alias is this"}
     ]

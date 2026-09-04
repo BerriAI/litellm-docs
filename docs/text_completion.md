@@ -41,9 +41,9 @@ model_list:
     litellm_params:
       model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: text-davinci-003
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: text-completion-openai/text-davinci-003
+      model: text-completion-openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 ```
 

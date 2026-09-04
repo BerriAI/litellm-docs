@@ -27,9 +27,9 @@ Create a Guard Policy rule that references this Engine Profile and your Guard, t
 Define your guardrails under the `guardrails` section
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -72,7 +72,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -105,7 +105,7 @@ When using LiteLLM with virtual keys, an `Authorization` header with the virtual
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -117,7 +117,7 @@ The above request should not be blocked, and you should receive a regular LLM re
 
 ```json
 {
-  "model": "gpt-4o-mini",
+  "model": "gpt-5.6-luna",
   "choices": [
     {
       "finish_reason": "stop",

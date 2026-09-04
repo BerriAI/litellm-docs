@@ -30,7 +30,7 @@ When a request arrives with an `advisor_20260301` tool and a non-Anthropic provi
 
 ```mermaid
 flowchart TD
-    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/gpt-4.1-mini"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
+    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/gpt-5.6-luna"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
 
     B --> C["EXECUTOR CALL\nopenai / bedrock / vertex / etc."]
 
@@ -59,7 +59,7 @@ flowchart TD
 
 ## Model Compatibility
 
-The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-4-6`.
+The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-5`.
 
 | Executor | Advisor |
 |----------|---------|
@@ -87,7 +87,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-5",
         }
     ],
     max_tokens=4096,
@@ -110,7 +110,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-5",
             "max_uses": 3,                             # cap advisor calls per request
             "caching": {"type": "ephemeral", "ttl": "5m"},  # enable for 3+ calls per conversation
         }
@@ -133,7 +133,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-5",
         }
     ],
     max_tokens=4096,
@@ -160,7 +160,7 @@ tools = [
     {
         "type": "advisor_20260301",
         "name": "advisor",
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-5",
     }
 ]
 
@@ -226,7 +226,7 @@ response = client.chat.completions.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-5",
         }
     ],
     max_tokens=4096,
@@ -255,7 +255,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "claude-opus-5",
             }
         ],
         max_tokens=4096,
@@ -282,7 +282,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "claude-opus-5",
             }
         ],
         max_tokens=4096,
@@ -334,7 +334,7 @@ response = client.beta.messages.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-5",
         }
     ],
 )
@@ -348,10 +348,10 @@ import asyncio
 import litellm
 
 async def main():
-    # executor: openai/gpt-4.1-mini  |  advisor: claude-opus-4-6
+    # executor: openai/gpt-5.6-luna  |  advisor: claude-opus-5
     # LiteLLM runs the orchestration loop automatically
     response = await litellm.anthropic.messages.acreate(
-        model="openai/gpt-4.1-mini",
+        model="openai/gpt-5.6-luna",
         messages=[
             {"role": "user", "content": "Implement a Python LRU cache with O(1) get and put."}
         ],
@@ -359,7 +359,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "claude-opus-5",
                 "max_uses": 3,
             }
         ],
@@ -429,7 +429,7 @@ Advisor calls run as a separate sub-inference billed at the advisor model's rate
       },
       {
         "type": "advisor_message",
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-5",
         "input_tokens": 823,
         "output_tokens": 1612
       },

@@ -10,7 +10,7 @@ v1.73.0 introduces the ability to assign new users to Default Teams. This makes 
 ### 1. Create a team
 
 Create a team called `internal exploration` with:
-- `models`:  access to specific models (e.g. `gpt-4o`, `claude-sonnet-4-5`)
+- `models`:  access to specific models (e.g. `gpt-5.6-terra`, `claude-sonnet-5`)
 - `max budget`: The team max budget will ensure spend for the entire team never exceeds a certain amount. 
 - `reset budget`: Set this to monthly. LiteLLM will reset the budget at the start of each month. 
 - `team member max budget`: The team member max budget will ensure spend for an individual team member never exceeds a certain amount. 

@@ -74,22 +74,22 @@ This variable is checked for all providers
 import litellm
 # openai call
 litellm.api_key = "sk-OpenAIKey"
-response = litellm.completion(messages=messages, model="gpt-4o-mini")
+response = litellm.completion(messages=messages, model="gpt-5.6-luna")
 
 # anthropic call
 litellm.api_key = "sk-AnthropicKey"
-response = litellm.completion(messages=messages, model="claude-sonnet-4-5")
+response = litellm.completion(messages=messages, model="claude-sonnet-5")
 ```
 
 ### litellm.provider_key (example litellm.openai_key)
 
 ```python
 litellm.openai_key = "sk-OpenAIKey"
-response = litellm.completion(messages=messages, model="gpt-4o-mini")
+response = litellm.completion(messages=messages, model="gpt-5.6-luna")
 
 # anthropic call
 litellm.anthropic_key = "sk-AnthropicKey"
-response = litellm.completion(messages=messages, model="claude-sonnet-4-5")
+response = litellm.completion(messages=messages, model="claude-sonnet-5")
 ```
 
 ### litellm.api_base
@@ -97,7 +97,7 @@ response = litellm.completion(messages=messages, model="claude-sonnet-4-5")
 ```python
 import litellm
 litellm.api_base = "https://hosted-llm-api.co"
-response = litellm.completion(messages=messages, model="gpt-4o-mini")
+response = litellm.completion(messages=messages, model="gpt-5.6-luna")
 ```
 
 ### litellm.api_version
@@ -105,14 +105,14 @@ response = litellm.completion(messages=messages, model="gpt-4o-mini")
 ```python
 import litellm
 litellm.api_version = "2023-05-15"
-response = litellm.completion(messages=messages, model="gpt-4o-mini")
+response = litellm.completion(messages=messages, model="gpt-5.6-luna")
 ```
 
 ### litellm.organization
 ```python
 import litellm
 litellm.organization = "LiteLlmOrg"
-response = litellm.completion(messages=messages, model="gpt-4o-mini")
+response = litellm.completion(messages=messages, model="gpt-5.6-luna")
 ```
 
 ## Passing Args to completion() (or any litellm endpoint - `transcription`, `embedding`, `text_completion`, etc)
@@ -156,7 +156,7 @@ Check if a user submitted a valid key for the model they're trying to call.
 
 ```python
 key = "bad-key"
-response = check_valid_key(model="gpt-4o-mini", api_key=key)
+response = check_valid_key(model="gpt-5.6-luna", api_key=key)
 assert(response == False)
 ```
 
@@ -217,5 +217,5 @@ This helper tells you if you have all the required environment variables for a m
 ```python
 from litellm import validate_environment
 
-print(validate_environment("openai/gpt-4o-mini"))
+print(validate_environment("openai/gpt-5.6-luna"))
 ```

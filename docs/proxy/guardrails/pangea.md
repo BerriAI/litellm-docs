@@ -27,9 +27,9 @@ Define the Pangea guardrail under the `guardrails` section of your configuration
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -85,7 +85,7 @@ The example below assumes the **Malicious Prompt** detector is enabled in your i
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {
       "role": "system",
@@ -118,7 +118,7 @@ curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 curl -sSLX POST http://localhost:4000/v1/chat/completions \
 --header "Content-Type: application/json" \
 --data '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {"role": "user", "content": "Hi :0)"}
   ],
@@ -161,7 +161,7 @@ It assumes the **Confidential and PII** detector is enabled in your output recip
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {
       "role": "user",

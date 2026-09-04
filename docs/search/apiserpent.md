@@ -49,9 +49,9 @@ response = search(
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: gpt-5
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:

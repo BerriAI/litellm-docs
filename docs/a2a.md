@@ -206,7 +206,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -220,7 +220,7 @@ from langchain_openai import ChatOpenAI
 headers = get_litellm_headers(request)
 
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     openai_api_key="sk-your-litellm-key",
     base_url="http://localhost:4000",
     default_headers=headers,  # Forward headers
@@ -235,7 +235,7 @@ import litellm
 headers = get_litellm_headers(request)
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="gpt-5.6-terra",
     messages=[{"role": "user", "content": "Hello"}],
     api_base="http://localhost:4000",
     extra_headers=headers,  # Forward headers
@@ -253,7 +253,7 @@ headers["Authorization"] = "Bearer sk-your-litellm-key"
 response = httpx.post(
     "http://localhost:4000/v1/chat/completions",
     headers=headers,
-    json={"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}
+    json={"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "Hello"}]}
 )
 ```
 </TabItem>

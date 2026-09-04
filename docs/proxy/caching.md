@@ -68,9 +68,9 @@ Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -518,9 +518,9 @@ one**
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -551,9 +551,9 @@ $ litellm --config /path/to/config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -599,9 +599,9 @@ Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
   - model_name: azure-embedding-model
     litellm_params:
       model: azure/azure-embedding-model
@@ -700,7 +700,7 @@ Send the same request twice:
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-     "model": "gpt-4o-mini",
+     "model": "gpt-5.6-luna",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}],
      "temperature": 0.7
    }'
@@ -708,7 +708,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-     "model": "gpt-4o-mini",
+     "model": "gpt-5.6-luna",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}],
      "temperature": 0.7
    }'
@@ -767,7 +767,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body={
         "cache": {
             "ttl": 300  # Cache response for 5 minutes
@@ -785,7 +785,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"ttl": 300},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -813,7 +813,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body={
         "cache": {
             "s-maxage": 600  # Only use cache if less than 10 minutes old
@@ -831,7 +831,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"s-maxage": 600},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -859,7 +859,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body={
         "cache": {
             "no-cache": True  # Skip cache check, get fresh response
@@ -877,7 +877,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"no-cache": true},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -905,7 +905,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body={
         "cache": {
             "no-store": True  # Don't cache this response
@@ -923,7 +923,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"no-store": true},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -951,7 +951,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body={
         "cache": {
             "namespace": "my-custom-namespace"  # Store in custom namespace
@@ -969,7 +969,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"namespace": "my-custom-namespace"},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -1123,9 +1123,9 @@ litellm_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-5.6-luna
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -1171,7 +1171,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-5.6-luna",
     "user": "ishan",
     "messages": [
         {
@@ -1244,7 +1244,7 @@ chat_completion = client.chat.completions.create(
             "content": "Say this is a test",
         }
     ],
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     extra_body = {        # OpenAI python accepts extra args in extra_body
         "cache": {"use-cache": True}
     }
@@ -1260,7 +1260,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "cache": {"use-cache": True}
     "messages": [
       {"role": "user", "content": "Say this is a test"}

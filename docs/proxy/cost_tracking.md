@@ -365,7 +365,7 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             },
             "breakdown": {
                 "models": {
-                    "gpt-4o-mini": {
+                    "gpt-5.6-luna": {
                         "spend": 1.095e-05,
                         "prompt_tokens": 37,
                         "completion_tokens": 9,
@@ -457,7 +457,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -489,7 +489,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.6-luna",
       messages: [
         {
           role: "user",
@@ -521,7 +521,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -546,7 +546,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -625,13 +625,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "gpt-5.6-terra",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "gpt-5.6-terra",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -643,7 +643,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "gpt-5.6-luna",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -696,22 +696,22 @@ Output from script
 # Date: 2024-05-11T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.003675099999999999
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
+# Metadata:  [{'model': 'gpt-5.6-luna', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: Unassigned Team
 # Total Spend: 3.4e-05
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
+# Metadata:  [{'model': 'gpt-5.6-luna', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: central
 # Total Spend: 0.000684
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
+# Metadata:  [{'model': 'gpt-5.6-luna', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.0005715000000000001
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
+# Metadata:  [{'model': 'gpt-5.6-luna', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
 ```
 
 </TabItem>
@@ -751,13 +751,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "gpt-5.6-terra",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "gpt-5.6-terra",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -769,7 +769,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "gpt-5.6-luna",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -867,7 +867,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
     "total_output_tokens": 27.0,
     "model_details": [
       {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-5.6-luna",
         "total_cost": 5.2499999999999995e-05,
         "total_input_tokens": 24,
         "total_output_tokens": 27
@@ -996,7 +996,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -1026,7 +1026,7 @@ client = openai.OpenAI(
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -1057,7 +1057,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5.6-luna',
       messages: [
         {
           role: 'user',
@@ -1094,7 +1094,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5.6-luna',
       messages: [
         {
           role: 'user',
@@ -1127,7 +1127,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -1154,7 +1154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5.6-luna",
     "messages": [
         {
         "role": "user",
@@ -1178,7 +1178,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1,
     extra_body={
         "metadata": {

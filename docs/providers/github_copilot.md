@@ -34,7 +34,7 @@ GitHub Copilot uses OAuth device flow for authentication. On first use, you'll b
 from litellm import completion
 
 response = completion(
-    model="github_copilot/gpt-4o",
+    model="github_copilot/gpt-5.6-terra",
     messages=[
         {"role": "system", "content": "You are a helpful coding assistant"},
         {"role": "user", "content": "Write a Python function to calculate fibonacci numbers"}
@@ -47,7 +47,7 @@ print(response)
 from litellm import completion
 
 stream = completion(
-    model="github_copilot/gpt-4o",
+    model="github_copilot/gpt-5.6-terra",
     messages=[{"role": "user", "content": "Explain async/await in Python"}],
     stream=True
 )
@@ -65,7 +65,7 @@ For GPT Codex models, only responses API is supported.
 import litellm
 
 response = await litellm.aresponses(
-    model="github_copilot/gpt-5.1-codex",
+    model="github_copilot/gpt-5.6-terra",
     input="Write a Python hello world",
     max_output_tokens=500
 )
@@ -91,14 +91,14 @@ Add the following to your LiteLLM Proxy configuration file:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: github_copilot/gpt-4o
+  - model_name: github_copilot/gpt-5.6-terra
     litellm_params:
-      model: github_copilot/gpt-4o
-  - model_name: github_copilot/gpt-5.1-codex
+      model: github_copilot/gpt-5.6-terra
+  - model_name: github_copilot/gpt-5.6-terra
     model_info:
       mode: responses
     litellm_params:
-      model: github_copilot/gpt-5.1-codex
+      model: github_copilot/gpt-5.6-terra
   - model_name: github_copilot/text-embedding-ada-002
     model_info:
       mode: embedding
@@ -128,7 +128,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.chat.completions.create(
-    model="github_copilot/gpt-4o",
+    model="github_copilot/gpt-5.6-terra",
     messages=[{"role": "user", "content": "How do I optimize this SQL query?"}]
 )
 
@@ -144,7 +144,7 @@ import litellm
 
 # Configure LiteLLM to use your proxy
 response = litellm.completion(
-    model="litellm_proxy/github_copilot/gpt-4o",
+    model="litellm_proxy/github_copilot/gpt-5.6-terra",
     messages=[{"role": "user", "content": "Review this code for bugs"}],
     api_base="http://localhost:4000",
     api_key="your-proxy-api-key"
@@ -162,7 +162,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "github_copilot/gpt-4o",
+    "model": "github_copilot/gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Explain this error message"}]
   }'
 ```

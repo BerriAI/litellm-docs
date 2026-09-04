@@ -95,13 +95,13 @@ Route `qwen-code` requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-20250514
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
-  model_group_alias: {"qwen-code": "claude-sonnet-4-20250514"}
+  model_group_alias: {"qwen-code": "claude-sonnet-5"}
 ```
 
 </TabItem>
@@ -113,7 +113,7 @@ Route `qwen-code` requests to GPT-4o:
 model_list:
   - model_name: gpt-4o-model
     litellm_params:
-      model: gpt-4o
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
@@ -147,7 +147,7 @@ All deployments with model_name=`anthropic-claude` will be load balanced. In thi
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY  
   - model_name: anthropic-claude
     litellm_params:

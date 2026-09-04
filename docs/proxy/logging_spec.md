@@ -50,7 +50,7 @@ The `cost_breakdown` field provides detailed cost breakdown for completion reque
 - **`output_cost`**: Cost of output/completion tokens (including reasoning tokens if applicable)
 - **`tool_usage_cost`**: Cost of built-in tools usage (e.g., web search, code interpreter)
 - **`total_cost`**: Total cost of input + output + tool usage
-- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `gemini-2.5-flash`, `o3`)
+- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `gemini-3.8-flash`, `o3`)
 - **`cache_read_cost`**: Cost of cache-read tokens, reported as a subset of `input_cost` (populated when cached tokens are present in the response)
 - **`cache_creation_cost`**: Cost of cache-creation tokens, reported as a subset of `input_cost` (populated when prompt caching is used, e.g. Anthropic models)
 

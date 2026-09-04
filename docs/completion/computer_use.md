@@ -59,7 +59,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -74,9 +74,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
+  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
@@ -106,7 +106,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet-latest",
+    model="claude-sonnet-5",
     messages=[
         {
             "role": "user", 
@@ -151,11 +151,11 @@ Use `litellm.supports_computer_use(model="")` -> returns `True` if model support
 ```python
 import litellm
 
-assert litellm.supports_computer_use(model="anthropic/claude-3-5-sonnet-latest") == True
-assert litellm.supports_computer_use(model="anthropic/claude-3-7-sonnet-20250219") == True
+assert litellm.supports_computer_use(model="anthropic/claude-sonnet-5") == True
+assert litellm.supports_computer_use(model="anthropic/claude-sonnet-5") == True
 assert litellm.supports_computer_use(model="bedrock/anthropic.claude-haiku-4-5-20251001:0") == True
-assert litellm.supports_computer_use(model="vertex_ai/claude-3-5-sonnet") == True
-assert litellm.supports_computer_use(model="openai/gpt-4") == False
+assert litellm.supports_computer_use(model="vertex_ai/claude-sonnet-5") == True
+assert litellm.supports_computer_use(model="openai/gpt-5.6-terra") == False
 ```
 </TabItem>
 
@@ -165,9 +165,9 @@ assert litellm.supports_computer_use(model="openai/gpt-4") == False
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
+  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
@@ -200,7 +200,7 @@ Expected Response
 {
   "data": [
     {
-      "model_group": "claude-3-5-sonnet-latest",
+      "model_group": "claude-sonnet-5",
       "providers": ["anthropic"],
       "max_input_tokens": 200000,
       "max_output_tokens": 8192,
@@ -270,7 +270,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -304,7 +304,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -338,7 +338,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-5",
     messages=messages,
     tools=tools,
 )
@@ -396,7 +396,7 @@ messages = [
     ]
     
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-5",
             messages=messages,
             tools=tools,
 )

@@ -25,7 +25,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-haiku-4-5
+          SIMPLE:    claude-sonnet-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-4-8

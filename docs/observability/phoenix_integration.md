@@ -41,7 +41,7 @@ litellm.callbacks = ["arize_phoenix"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o",
+  model="gpt-5.6-terra",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -55,9 +55,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -86,7 +86,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "messages": [
     {
       "role": "user",
@@ -175,7 +175,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer $TEAM_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hello"}]}'
+  -d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "hello"}]}'
 ```
 
 </TabItem>

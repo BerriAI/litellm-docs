@@ -86,13 +86,13 @@ model_list:
     litellm_params:
       model: openai/o3-mini
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: claude-3-7-sonnet-latest
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-3-7-sonnet-latest
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: gemini-2.0-flash
+  - model_name: gemini-3.8-flash
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/gemini-3.8-flash
       api_key: os.environ/GEMINI_API_KEY
   - model_name: gpt-5.6-luna
     litellm_params:
@@ -178,10 +178,10 @@ You can use any model configured in your LiteLLM proxy:
 
 ```bash
 # Use Claude models
-codex --model claude-3-7-sonnet-latest
+codex --model claude-sonnet-5
 
 # Use Google AI Studio Gemini models
-codex --model gemini/gemini-2.0-flash
+codex --model gemini/gemini-3.8-flash
 ```
 
 ## Troubleshooting

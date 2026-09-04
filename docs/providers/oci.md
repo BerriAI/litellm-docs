@@ -44,9 +44,9 @@ For model lifecycle, retirement dates, and recommended replacements, see [OCI's 
 - `cohere.command-r-08-2024`
 
 #### Google Gemini Models (via OCI)
-- `google.gemini-2.5-pro` (multimodal)
-- `google.gemini-2.5-flash` (multimodal)
-- `google.gemini-2.5-flash-lite` (multimodal)
+- `google.gemini-3.1-pro-preview` (multimodal)
+- `google.gemini-3.8-flash` (multimodal)
+- `google.gemini-3.8-flash` (multimodal)
 
 #### OpenAI Open-Source Models (via OCI)
 - `openai.gpt-oss-120b`
@@ -644,7 +644,7 @@ Vision-capable models on OCI include:
 - `meta.llama-3.2-11b-vision-instruct`
 - `meta.llama-3.2-90b-vision-instruct`
 - `cohere.command-a-vision-07-2025`
-- `google.gemini-2.5-pro`, `google.gemini-2.5-flash`, `google.gemini-2.5-flash-lite`
+- `google.gemini-3.1-pro-preview`, `google.gemini-3.8-flash`, `google.gemini-3.8-flash`
 
 Both URL and base64-encoded data URIs are supported.
 
@@ -696,7 +696,7 @@ print(response.choices[0].message.content)
 </Tabs>
 
 :::note
-`reasoning_effort` is only honored on Generic-vendor reasoning models (e.g., `xai.grok-3-mini`, `xai.grok-4`, `google.gemini-2.5-pro`). It is silently ignored for OCI Cohere models, which are not reasoning models.
+`reasoning_effort` is only honored on Generic-vendor reasoning models (e.g., `xai.grok-3-mini`, `xai.grok-4`, `google.gemini-3.1-pro-preview`). It is silently ignored for OCI Cohere models, which are not reasoning models.
 :::
 
 ## Optional Parameters

@@ -162,7 +162,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=[
         {
             "role": "system",
@@ -240,7 +240,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 response = completion(
-    model="anthropic/claude-sonnet-4-5",
+    model="anthropic/claude-sonnet-5",
     messages=[
         {
             "role": "user",
@@ -319,7 +319,7 @@ You can configure cache control injection in the proxy configuration file.
 model_list:
   - model_name: anthropic-auto-inject-cache-system-message
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
       cache_control_injection_points:
         - location: message

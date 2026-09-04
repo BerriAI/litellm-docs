@@ -46,7 +46,7 @@ litellm.success_callback = ["wandb"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]

@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 
 # Manage Routing Groups
 
-Routing groups let you apply different routing strategies to different models in the same router, for example latency-based routing for `gpt-4o` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
+Routing groups let you apply different routing strategies to different models in the same router, for example latency-based routing for `gpt-5.6-terra` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
 
 For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-and-callable-virtual-models).
 

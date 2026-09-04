@@ -375,7 +375,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",
@@ -403,7 +403,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",
@@ -474,7 +474,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",
@@ -503,7 +503,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",
@@ -568,7 +568,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",
@@ -597,7 +597,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "tools": [
         {
             "type": "mcp",

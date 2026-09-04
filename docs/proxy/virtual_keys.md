@@ -40,10 +40,10 @@ You can then generate keys by hitting the `/key/generate` endpoint.
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
         model: ollama/llama2
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.6-luna
     litellm_params:
         model: ollama/llama2
 
@@ -64,7 +64,7 @@ litellm --config /path/to/config.yaml
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
---data-raw '{"models": ["gpt-4o-mini", "gpt-4o"], "metadata": {"user": "ishaan@berri.ai"}}'
+--data-raw '{"models": ["gpt-5.6-luna", "gpt-5.6-terra"], "metadata": {"user": "ishaan@berri.ai"}}'
 ```
 
 ## What a key inherits from its owner
@@ -119,12 +119,12 @@ This is automatically updated (in USD) when calls are made to /completions, /cha
         "spend": 0.0001065, # 👈 SPEND
         "expires": "2023-11-24T23:19:11.131000Z",
         "models": [
-            "gpt-4o-mini",
-            "gpt-4o",
-            "claude-sonnet-4-5"
+            "gpt-5.6-luna",
+            "gpt-5.6-terra",
+            "claude-sonnet-5"
         ],
         "aliases": {
-            "mistral-7b": "gpt-4o-mini"
+            "mistral-7b": "gpt-5.6-luna"
         },
         "config": {}
     }
@@ -160,7 +160,7 @@ curl --location 'http://localhost:4000/user/new' \
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
---data-raw '{"models": ["gpt-4o-mini", "gpt-4o"], "user_id": "my-unique-id"}'
+--data-raw '{"models": ["gpt-5.6-luna", "gpt-5.6-terra"], "user_id": "my-unique-id"}'
 ```
 
 Returns a key - `sk-...`.
@@ -213,7 +213,7 @@ curl --location 'http://localhost:4000/team/new' \
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
---data-raw '{"models": ["gpt-4o-mini", "gpt-4o"], "team_id": "my-unique-id"}'
+--data-raw '{"models": ["gpt-5.6-luna", "gpt-5.6-terra"], "team_id": "my-unique-id"}'
 ```
 
 Returns a key - `sk-...`.
@@ -266,7 +266,7 @@ model_list:
         api_base: http://0.0.0.0:8003
   - model_name: my-paid-tier
     litellm_params:
-        model: gpt-4o
+        model: gpt-5.6-terra
         api_key: my-api-key
 ```
 
@@ -278,7 +278,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 -H "Content-Type: application/json" \
 -d '{
 	"models": ["my-free-tier"], 
-	"aliases": {"gpt-4o-mini": "my-free-tier"}, # 👈 KEY CHANGE
+	"aliases": {"gpt-5.6-luna": "my-free-tier"}, # 👈 KEY CHANGE
 	"duration": "30min"
 }'
 ```
@@ -292,7 +292,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 -H "Authorization: Bearer <user-key>" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "gpt-4o-mini", 
+    "model": "gpt-5.6-luna", 
     "messages": [
         {
             "role": "user",
@@ -349,7 +349,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 Expect to see a successful response from the litellm proxy since the key passed in `X-Litellm-Key` is valid
 ```shell
-{"id":"chatcmpl-f9b2b79a7c30477ab93cd0e717d1773e","choices":[{"finish_reason":"stop","index":0,"message":{"content":"\n\nHello there, how may I assist you today?","role":"assistant","tool_calls":null,"function_call":null}}],"created":1677652288,"model":"gpt-4o-mini","object":"chat.completion","system_fingerprint":"fp_44709d6fcb","usage":{"completion_tokens":12,"prompt_tokens":9,"total_tokens":21}
+{"id":"chatcmpl-f9b2b79a7c30477ab93cd0e717d1773e","choices":[{"finish_reason":"stop","index":0,"message":{"content":"\n\nHello there, how may I assist you today?","role":"assistant","tool_calls":null,"function_call":null}}],"created":1677652288,"model":"gpt-5.6-luna","object":"chat.completion","system_fingerprint":"fp_44709d6fcb","usage":{"completion_tokens":12,"prompt_tokens":9,"total_tokens":21}
 ```
 
 </TabItem>
@@ -395,7 +395,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-your-virtual-key" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "hi"}],
     "user": "anything-the-client-sends"
   }'
@@ -526,7 +526,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_auth.py`, t
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-4o-mini"
+      model: "gpt-5.6-luna"
 
 litellm_settings:
   drop_params: True
@@ -639,8 +639,8 @@ curl 'http://localhost:4000/key/sk-1234/regenerate' \
       "team": "core-infra"
     },
     "models": [
-      "gpt-4o",
-      "gpt-4o-mini"
+      "gpt-5.6-terra",
+      "gpt-5.6-luna"
     ],
     "grace_period": "48h"
   }'
@@ -682,7 +682,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <your-master-key>' \
   -H 'Content-Type: application/json' \
   -d '{
-        "models": ["gpt-4o"],
+        "models": ["gpt-5.6-terra"],
         "auto_rotate": true,
         "rotation_interval": "30d"
       }'

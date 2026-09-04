@@ -30,9 +30,9 @@ Haiku, Sonnet, Opus, then Opus at high reasoning effort.
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-haiku-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -53,7 +53,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-haiku-4-5
+          SIMPLE:    claude-sonnet-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5-high
@@ -110,9 +110,9 @@ Flash Lite 2.5, Flash Lite 3.1, Flash 3.7, then Pro 3.1.
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gemini-2.5-flash-lite
+  - model_name: gemini-3.8-flash
     litellm_params:
-      model: gemini/gemini-2.5-flash-lite
+      model: gemini/gemini-3.8-flash
       api_key: os.environ/GEMINI_API_KEY
   - model_name: gemini-3.1-flash-lite
     litellm_params:
@@ -132,7 +132,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gemini-2.5-flash-lite
+          SIMPLE:    gemini-3.8-flash
           MEDIUM:    gemini-3.1-flash-lite
           COMPLEX:   gemini-3.7-flash
           REASONING: gemini-3.1-pro-preview
@@ -235,9 +235,9 @@ model_list:
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-haiku-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -257,7 +257,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-haiku-4-5
+          SIMPLE:    claude-sonnet-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5
@@ -282,9 +282,9 @@ The classifier context window is the knob to revisit for your own traffic:
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-haiku-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -300,11 +300,11 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-haiku-4-5
-          MEDIUM:    claude-haiku-4-5
+          SIMPLE:    claude-sonnet-5
+          MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-5
-      complexity_router_default_model: claude-haiku-4-5
+      complexity_router_default_model: claude-sonnet-5
 ```
 
 ## Coding agents with load balancing
@@ -315,9 +315,9 @@ model_list:
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-haiku-4-5
+  - model_name: claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -340,7 +340,7 @@ model_list:
           role: system
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-haiku-4-5
+          SIMPLE:    claude-sonnet-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-5

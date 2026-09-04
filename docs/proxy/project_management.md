@@ -43,7 +43,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "flight-search-assistant",
     "team_id": "ad898803-c8a3-4f4a-976a-a3c372cffa45",
-    "models": ["gpt-4o", "gpt-4o-mini"],
+    "models": ["gpt-5.6-terra", "gpt-5.6-luna"],
     "max_budget": 100,
     "metadata": {
         "use_case_id": "SNOW-12345",
@@ -58,7 +58,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
   "project_id": "e402a141-725a-4437-bff5-d47459189716",
   "project_alias": "flight-search-assistant",
   "team_id": "ad898803-c8a3-4f4a-976a-a3c372cffa45",
-  "models": ["gpt-4o", "gpt-4o-mini"],
+  "models": ["gpt-5.6-terra", "gpt-5.6-luna"],
   "max_budget": 100,
   ...
 }
@@ -71,7 +71,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "models": ["gpt-4o-mini", "gpt-4o"],
+    "models": ["gpt-5.6-luna", "gpt-5.6-terra"],
     "metadata": {"user": "ishaan@berri.ai"},
     "project_id": "e402a141-725a-4437-bff5-d47459189716"
 }' | jq
@@ -94,7 +94,7 @@ curl http://localhost:4000/v1/chat/completions \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-W8VbscpfuyvHm5TkxRYiXA' \
 --data '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "What is litellm?"}]
 }' | jq
 ```
@@ -138,7 +138,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "hotel-recommendations",
     "team_id": "team-123",
-    "models": ["claude-sonnet-4-5"],
+    "models": ["claude-sonnet-5"],
     "max_budget": 200,
     "tpm_limit": 100000,
     "metadata": {
@@ -155,7 +155,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
     "project_id": "project-def",
     "project_alias": "hotel-recommendations",
     "team_id": "team-123",
-    "models": ["claude-sonnet-4-5"],
+    "models": ["claude-sonnet-5"],
     "spend": 0.0,
     "budget_id": "budget-xyz",
     "metadata": {
@@ -221,11 +221,11 @@ curl --location 'http://0.0.0.0:4000/project/info?project_id=project-abc' \
     "project_id": "project-abc",
     "project_alias": "flight-search-assistant",
     "team_id": "team-123",
-    "models": ["gpt-4o", "gpt-4o-mini"],
+    "models": ["gpt-5.6-terra", "gpt-5.6-luna"],
     "spend": 45.67,
     "model_spend": {
-        "gpt-4o": 42.30,
-        "gpt-4o-mini": 3.37
+        "gpt-5.6-terra": 42.30,
+        "gpt-5.6-luna": 3.37
     },
     "litellm_budget_table": {
         "budget_id": "budget-xyz",
@@ -302,18 +302,18 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "multi-model-project",
     "team_id": "team-123",
-    "models": ["gpt-4o", "gpt-4o-mini", "claude-sonnet-4-5"],
+    "models": ["gpt-5.6-terra", "gpt-5.6-luna", "claude-sonnet-5"],
     "max_budget": 500,
     "metadata": {
         "model_tpm_limit": {
-            "gpt-4o": 50000,
-            "gpt-4o-mini": 200000,
-            "claude-sonnet-4-5": 100000
+            "gpt-5.6-terra": 50000,
+            "gpt-5.6-luna": 200000,
+            "claude-sonnet-5": 100000
         },
         "model_rpm_limit": {
-            "gpt-4o": 50,
-            "gpt-4o-mini": 500,
-            "claude-sonnet-4-5": 100
+            "gpt-5.6-terra": 50,
+            "gpt-5.6-luna": 500,
+            "claude-sonnet-5": 100
         }
     }
 }'

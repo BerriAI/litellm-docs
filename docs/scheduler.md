@@ -32,9 +32,9 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-4o-mini",
+            "model_name": "gpt-5.6-luna",
             "litellm_params": {
-                "model": "gpt-4o-mini",
+                "model": "gpt-5.6-luna",
                 "mock_response": "Hello world this is Macintosh!", # fakes the LLM API call
                 "rpm": 1,
             },
@@ -47,7 +47,7 @@ router = Router(
 
 try:
     _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
-        model="gpt-4o-mini",
+        model="gpt-5.6-luna",
         messages=[{"role": "user", "content": "Hey!"}],
         priority=0, # 👈 LOWER IS BETTER
     )
@@ -89,7 +89,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.6-luna",
     messages = [
         {
             "role": "user",
@@ -118,9 +118,9 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-4o-mini",
+            "model_name": "gpt-5.6-luna",
             "litellm_params": {
-                "model": "gpt-4o-mini",
+                "model": "gpt-5.6-luna",
                 "mock_response": "Hello world this is Macintosh!", # fakes the LLM API call
                 "rpm": 1,
             },
@@ -134,7 +134,7 @@ router = Router(
 
 try:
     _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
-        model="gpt-4o-mini",
+        model="gpt-5.6-luna",
         messages=[{"role": "user", "content": "Hey!"}],
         priority=0, # 👈 LOWER IS BETTER
     )
@@ -148,7 +148,7 @@ except Exception as e:
 model_list:
     - model_name: gpt-3.5-turbo-fake-model
       litellm_params:
-        model: gpt-4o-mini
+        model: gpt-5.6-luna
         mock_response: "hello world!" 
         api_key: my-good-key
 

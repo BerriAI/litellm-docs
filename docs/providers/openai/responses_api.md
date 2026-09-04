@@ -42,7 +42,7 @@ for event in response:
 import litellm
 
 response = litellm.responses(
-    model="openai/gpt-5",
+    model="openai/gpt-5.6-terra",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview",
@@ -62,7 +62,7 @@ import base64
 
 # Streaming image generation with partial images
 stream = litellm.responses(
-    model="gpt-4.1",  # Use an actual image generation model
+    model="gpt-5.6-terra",  # Use an actual image generation model
     input="Generate a gorgeous image of a river made of white owl feathers",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -200,7 +200,7 @@ import base64
 client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
 
 stream = client.responses.create(
-    model="gpt-4.1",
+    model="gpt-5.6-terra",
     input="Draw a gorgeous image of a river made of white owl feathers, snaking its way through a serene winter landscape",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -453,7 +453,7 @@ MCP_TOOLS = [
 
 # Step 1: Make initial request - OpenAI will use MCP LIST and return MCP calls for approval
 response = litellm.responses(
-    model="openai/gpt-4.1",
+    model="openai/gpt-5.6-terra",
     tools=MCP_TOOLS,
     input="What transport protocols does the 2025-03-26 version of the MCP spec support?"
 )
@@ -467,7 +467,7 @@ for output in response.output:
 
 # Step 2: Send followup with approval for the MCP call
 response_with_mcp_call = litellm.responses(
-    model="openai/gpt-4.1",
+    model="openai/gpt-5.6-terra",
     tools=MCP_TOOLS,
     input=[
         {
@@ -489,9 +489,9 @@ print(response_with_mcp_call)
 
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/gpt-4.1
+  - model_name: openai/gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -527,7 +527,7 @@ MCP_TOOLS = [
 
 # Step 1: Make initial request - OpenAI will use MCP LIST and return MCP calls for approval
 response = client.responses.create(
-    model="openai/gpt-4.1",
+    model="openai/gpt-5.6-terra",
     tools=MCP_TOOLS,
     input="What transport protocols does the 2025-03-26 version of the MCP spec support?"
 )
@@ -541,7 +541,7 @@ for output in response.output:
 
 # Step 2: Send followup with approval for the MCP call
 response_with_mcp_call = client.responses.create(
-    model="openai/gpt-4.1",
+    model="openai/gpt-5.6-terra",
     tools=MCP_TOOLS,
     input=[
         {
@@ -574,7 +574,7 @@ question = "Write a poem about a boy and his first pet dog."
 
 for verbosity in ["low", "medium", "high"]:
     response = responses(
-        model="gpt-5-mini",
+        model="gpt-5.6-luna",
         input=question,
         text={"verbosity": verbosity}
     )
@@ -601,7 +601,7 @@ data = []
 
 for verbosity in ["low", "medium", "high"]:
     response = client.responses.create(
-        model="gpt-5-mini",
+        model="gpt-5.6-luna",
         input=question,
         text={"verbosity": verbosity}
     )
@@ -664,7 +664,7 @@ tools = [
 
 # Step 1: Request with tools (parallel_tool_calls=True allows multiple calls)
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/gpt-5.6-terra",
     input=[{"role": "user", "content": "What's the weather in Paris and Tokyo?"}],
     tools=tools,
     parallel_tool_calls=True, # Defaults = True
@@ -683,7 +683,7 @@ for output in response.output:
 
 # Step 3: Send results back
 final_response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/gpt-5.6-terra",
     input=tool_results,
     tools=tools,
 )
@@ -933,7 +933,7 @@ curl http://localhost:4000/v1/chat/completions \
 import litellm
 
 response = litellm.responses(
-    model="gpt-5-mini",
+    model="gpt-5.6-luna",
     input="Please use the code_exec tool to calculate the area of a circle with radius equal to the number of 'r's in strawberry",
     text={"format": {"type": "text"}},
     tools=[
@@ -959,7 +959,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5-mini",
+    model="gpt-5.6-luna",
     input="Please use the code_exec tool to calculate the area of a circle with radius equal to the number of 'r's in strawberry",
     text={"format": {"type": "text"}},
     tools=[
@@ -1027,7 +1027,7 @@ sql_prompt_mssql = (
 
 
 response = litellm.responses(
-    model="gpt-5",
+    model="gpt-5.6-terra",
     input=sql_prompt_mssql,
     text={"format": {"type": "text"}},
     tools=[
@@ -1102,7 +1102,7 @@ sql_prompt_mssql = (
 
 
 response = client.responses.create(
-    model="gpt-5",
+    model="gpt-5.6-terra",
     input=sql_prompt_mssql,
     text={"format": {"type": "text"}},
     tools=[
@@ -1137,7 +1137,7 @@ print(response_mssql.output[1].input)
 import litellm
 
 response = litellm.responses(
-    model="gpt-5",
+    model="gpt-5.6-terra",
     input= [{ 'role': 'developer', 'content': prompt }, 
             { 'role': 'user', 'content': 'The food that the restaurant was great! I recommend it to everyone.' }],
     reasoning = {
@@ -1163,7 +1163,7 @@ prompt = "Classify sentiment of the review as positive|neutral|negative. Return 
 
 
 response = client.responses.create(
-    model="gpt-5",
+    model="gpt-5.6-terra",
     input= [{ 'role': 'developer', 'content': prompt }, 
             { 'role': 'user', 'content': 'The food that the restaurant was great! I recommend it to everyone.' }],
     reasoning = {

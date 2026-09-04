@@ -17,7 +17,7 @@ curl -L -X POST 'http://0.0.0.0:4000/model/new' \
 -d '{
   "model_name": "my-team-model", # 👈 Call LiteLLM with this model name
   "litellm_params": {
-    "model": "openai/gpt-4o",
+    "model": "openai/gpt-5.6-terra",
     "custom_llm_provider": "openai",
     "api_key": "******ccb07",
     "api_base": "https://my-azure-endpoint.openai.azure.com",

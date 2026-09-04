@@ -29,7 +29,7 @@ Include `/fine_tuning` in the `supported_endpoints` list. Tells developers this 
 model_list:
   - model_name: "gpt-4.1-openai"
     litellm_params:
-      model: gpt-4.1
+      model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       supported_endpoints: ["/chat/completions", "/fine_tuning"]

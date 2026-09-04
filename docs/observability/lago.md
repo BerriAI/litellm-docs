@@ -38,7 +38,7 @@ litellm.success_callback = ["lago"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-4o-mini",
+  model="gpt-5.6-luna",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -99,7 +99,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-4o-mini", messages = [
+response = client.chat.completions.create(model="gpt-5.6-luna", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -125,7 +125,7 @@ os.environ["OPENAI_API_KEY"] = "anything"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-4o-mini",
+    model = "gpt-5.6-luna",
     temperature=0.1,
     extra_body={
         "user": "my_customer_id"  # 👈 whatever your customer id is

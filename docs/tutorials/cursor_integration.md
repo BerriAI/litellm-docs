@@ -81,7 +81,7 @@ Cursor rejects a custom model whose name matches one of its built-in models with
 model_list:
   - model_name: litellm-claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/claude-sonnet-5
 ```
 :::
 

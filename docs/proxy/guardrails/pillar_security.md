@@ -28,9 +28,9 @@ Create or update your `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -65,7 +65,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Hello, how are you?"}]
   }'
 ```
@@ -138,9 +138,9 @@ These parameters are passed via `additional_provider_specific_params`:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -174,9 +174,9 @@ litellm_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -207,9 +207,9 @@ general_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -239,9 +239,9 @@ general_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: gpt-5.6-terra
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -337,7 +337,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-key" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Hello!"}],
     "user": "user-123",
     "metadata": {
@@ -368,7 +368,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "Hello! Can you tell me a joke?"}],
     "max_tokens": 100
   }'
@@ -381,7 +381,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   "id": "chatcmpl-BvQhm0VZpiDSEbrssSzO7GLHgHCkW",
   "object": "chat.completion",
   "created": 1753027050,
-  "model": "gpt-4o",
+  "model": "gpt-5.6-terra",
   "choices": [
     {
       "index": 0,
@@ -405,7 +405,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {
         "role": "user",
@@ -456,7 +456,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-terra",
     "messages": [
       {
         "role": "user",

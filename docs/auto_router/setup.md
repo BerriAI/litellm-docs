@@ -46,25 +46,25 @@ run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instruc
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4o-mini
-    litellm_params: {model: openai/gpt-4o-mini, api_key: os.environ/OPENAI_API_KEY}
-  - model_name: gpt-4o
-    litellm_params: {model: openai/gpt-4o, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: gpt-5.6-luna
+    litellm_params: {model: openai/gpt-5.6-luna, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: gpt-5.6-terra
+    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
   - model_name: claude-sonnet-5
     litellm_params: {model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY}
-  - model_name: gpt-5.5
-    litellm_params: {model: openai/gpt-5.5, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: gpt-5.6-terra
+    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
 
   - model_name: smart-router
     litellm_params:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-4o-mini
-          MEDIUM:    gpt-4o
+          SIMPLE:    gpt-5.6-luna
+          MEDIUM:    gpt-5.6-terra
           COMPLEX:   claude-sonnet-5
-          REASONING: gpt-5.5
-      complexity_router_default_model: gpt-4o
+          REASONING: gpt-5.6-terra
+      complexity_router_default_model: gpt-5.6-terra
 ```
 
 - Tiers name other `model_name` entries in the same file, so every tier is a deployment the proxy already knows.
