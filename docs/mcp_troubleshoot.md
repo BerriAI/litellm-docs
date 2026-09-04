@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 When LiteLLM acts as an MCP proxy, traffic normally flows `Client → LiteLLM Proxy → MCP Server`, while OAuth-enabled setups add an authorization server for metadata discovery.
 
-For provisioning steps, transport options, and configuration fields, refer to [mcp.md](./mcp.md).
+For provisioning steps, transport options, and configuration fields, refer to [mcp.md](./mcp.md). For smoke-tested client setups (Cursor, Claude Code, Responses API, Chat Completions, FastMCP), see [MCP Client Recipes](./mcp_usage.md).
 
 ## Quick Start: Debug with One Command
 
@@ -38,6 +38,10 @@ claude mcp add --transport http my_server http://localhost:4000/my_mcp/mcp \
   --header "x-litellm-api-key: Bearer sk-..." \
   --header "x-litellm-mcp-debug: true"
 ```
+
+### Claude Code: "Incompatible auth server: does not support dynamic client registration"
+
+This error means Claude Code attempted OAuth discovery against the gateway because no API key header was supplied. Re-add the server with your LiteLLM key: `claude mcp add --transport http <name> <proxy-base-url>/{server_name}/mcp --header "x-litellm-api-key: Bearer sk-..."`. If you want the OAuth flow instead, the server must be configured with `auth_type: oauth2` in LiteLLM; see [Debugging OAuth](./mcp_oauth#debugging-oauth).
 
 ## Locate the Error Source
 

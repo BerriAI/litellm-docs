@@ -66,7 +66,7 @@ model_list:
 
 If `supported_db_objects` is not set, all object types are loaded from the database (default behavior).
 
-For diagnosing connectivity problems after setup, see the [MCP Troubleshooting Guide](./mcp_troubleshoot.md).
+For diagnosing connectivity problems after setup, see the [MCP Troubleshooting Guide](./mcp_troubleshoot.md). For verified end-to-end client setups (Cursor, Claude Code, Responses API, Chat Completions, FastMCP), see [MCP Client Recipes](./mcp_usage.md).
 
 <Tabs>
 <TabItem value="ui" label="LiteLLM UI">
@@ -756,7 +756,7 @@ asyncio.run(main())
 When calling your LiteLLM Proxy's `/v1/responses` endpoint to use MCP tools, **always use `server_url: "litellm_proxy"`** in the tools array. This tells the proxy to use its configured MCP servers.
 
 :::important Do not use the full proxy URL
-Using `server_url: "https://your-proxy.com/mcp"` is incorrect when the request is already going to the proxy. The proxy needs the literal value `litellm_proxy` to route to its configured MCP servers.
+Using `server_url: "https://your-proxy.com/mcp"` is incorrect when the request is already going to the proxy. The proxy needs the literal value `litellm_proxy` to route to its configured MCP servers. To scope the request to a single server, use `litellm_proxy/mcp/{server_name}`.
 :::
 
 ```bash title="Correct: Using litellm_proxy" showLineNumbers
@@ -834,6 +834,8 @@ You can also specify your MCP auth token using the header `x-mcp-auth`. This wil
 
 Use the OpenAI Responses API and include server-specific auth headers:
 
+When calling OpenAI's API directly, `server_url` must be your proxy's public MCP endpoint, since OpenAI connects to it over the network. The literal `litellm_proxy` value only works for requests that already go to your proxy.
+
 ```bash title="cURL Example with Server-Specific Auth" showLineNumbers
 curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
@@ -844,7 +846,7 @@ curl --location 'https://api.openai.com/v1/responses' \
         {
             "type": "mcp",
             "server_label": "litellm",
-            "server_url": "litellm_proxy",
+            "server_url": "https://your-proxy.example.com/mcp",
             "require_approval": "never",
             "headers": {
                 "x-litellm-api-key": "Bearer YOUR_LITELLM_API_KEY",
@@ -872,7 +874,7 @@ curl --location 'https://api.openai.com/v1/responses' \
         {
             "type": "mcp",
             "server_label": "litellm",
-            "server_url": "litellm_proxy",
+            "server_url": "https://your-proxy.example.com/mcp",
             "require_approval": "never",
             "headers": {
                 "x-litellm-api-key": "Bearer YOUR_LITELLM_API_KEY",
@@ -962,7 +964,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include server-specific 
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "https://your-proxy.example.com/mcp",
       "headers": {
         "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
         "x-mcp-github-authorization": "Bearer $GITHUB_TOKEN",
@@ -987,7 +989,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include your MCP authent
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "https://your-proxy.example.com/mcp",
       "headers": {
         "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
         "x-mcp-auth": "$MCP_AUTH_TOKEN"
@@ -1007,7 +1009,7 @@ Connect to LiteLLM MCP using HTTP transport with server-specific authentication:
 
 **Server URL:**
 ```text showLineNumbers
-litellm_proxy
+https://your-proxy.example.com/mcp
 ```
 
 **Headers:**
@@ -1023,7 +1025,7 @@ Connect to LiteLLM MCP using HTTP transport with MCP authentication:
 
 **Server URL:**
 ```text showLineNumbers
-litellm_proxy
+https://your-proxy.example.com/mcp
 ```
 
 **Headers:**
@@ -1050,7 +1052,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
 # Create the transport with your LiteLLM MCP server URL and server-specific auth headers
-server_url = "litellm_proxy"
+server_url = "https://your-proxy.example.com/mcp"
 transport = StreamableHttpTransport(
     server_url,
     headers={
@@ -1103,7 +1105,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
 # Create the transport with your LiteLLM MCP server URL and auth headers
-server_url = "litellm_proxy"
+server_url = "https://your-proxy.example.com/mcp"
 transport = StreamableHttpTransport(
     server_url,
     headers={
@@ -1216,13 +1218,15 @@ curl --location '<your-litellm-proxy-base-url>/v1/chat/completions' \
   "tools": [
     {
       "type": "mcp",
-      "server_url": "litellm_proxy/github/mcp",
+      "server_url": "litellm_proxy/mcp/github_mcp",
       "server_label": "github_mcp",
       "require_approval": "never"
     }
   ]
 }'
 ```
+
+Use `litellm_proxy/mcp/{server_name}` to scope the request to one configured server, or bare `litellm_proxy` to expose every server the key can access. See [MCP Client Recipes](./mcp_usage.md) for a smoke-tested end-to-end example.
 
 If you omit `require_approval` or set it to any value other than `"never"`, the MCP tool calls are returned to the client so that you can review and execute them manually, matching the upstream OpenAI behavior.
 
