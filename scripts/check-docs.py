@@ -7,7 +7,7 @@ Every check here is deterministic and fails the build:
   fence-unclosed      a ``` fence that is never closed (the rest of the page renders as code)
   fence-info          unexpected text on the ``` line (code written there is silently dropped)
   yaml-invalid        a ```yaml block that PyYAML cannot parse
-  json-invalid        a ```json block that is not valid JSON or JSON Lines (comments and `...` are tolerated)
+  json-invalid        a ```json block that is not valid JSON or JSON Lines (comments, `...`, and object fragments are tolerated)
   python-invalid      a ```python block that does not compile with ast.parse
   bash-comment        a comment after, or on a line between, backslash line continuations in a shell block
   link-missing        a relative or /docs/ link whose target page does not exist
@@ -297,7 +297,7 @@ def check_page(page, site, page_cache):
                 err("yaml-invalid", line_no, f"YAML does not parse: {summarize_yaml_error(e)}")
         elif lang in JSON_LANGS:
             if not valid_json(content):
-                err("json-invalid", start, "JSON does not parse (comments and `...` are tolerated; trailing commas, unquoted placeholders, and non-JSON text are not)")
+                err("json-invalid", start, "JSON does not parse (comments, `...`, and object fragments are tolerated; trailing commas, unquoted placeholders, and non-JSON text are not)")
         elif lang in PYTHON_LANGS:
             if any(l.lstrip().startswith(">>>") for l in buf):
                 continue
@@ -443,6 +443,15 @@ def valid_json(content):
         return True
     except ValueError:
         pass
+    # A fragment of a larger object: `"key": {...}, "other": [...]` without the
+    # enclosing braces. Common when a page shows one field of a response.
+    stripped = content.strip().rstrip(",")
+    if stripped.startswith('"'):
+        try:
+            json.loads("{" + stripped + "}")
+            return True
+        except ValueError:
+            pass
     lines = [l for l in content.split("\n") if l.strip()]
     if not lines:
         return True
