@@ -172,7 +172,7 @@ curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 
 When the guardrail detects PII, it redacts the sensitive content before returning the response to the user:
 
-```text
+```json
 {
   "choices": [
     {
@@ -186,7 +186,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -207,7 +207,7 @@ curl -sSLX POST http://localhost:4000/v1/chat/completions \
 
 The above request should not be blocked, and you should receive a regular LLM response (simplified for brevity):
 
-```text
+```json
 {
   "choices": [
     {
@@ -221,7 +221,7 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>

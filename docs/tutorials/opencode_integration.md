@@ -382,7 +382,7 @@ model_list:
 - OpenCode defaults custom OpenAI-compatible provider models to text-only input and strips image
   attachments before sending, so the request reaching LiteLLM contains no image. Declare
   `modalities` on the model in your OpenCode config:
-  ```text
+  ```json
   "claude-3-5-sonnet-20241022": {
     "name": "Claude 3.5 Sonnet",
     "modalities": { "input": ["text", "image"], "output": ["text"] }
