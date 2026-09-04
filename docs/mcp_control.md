@@ -930,3 +930,65 @@ If you want other systems (for example external agent frameworks such as MCP-cap
 :::note Permissions still apply
 The registry only advertises server URLs. Actual access control is still enforced by LiteLLM when the client connects to `/mcp` or `/{server}/mcp`, so publishing the registry does not bypass per-key permissions.
 :::
+
+## Control MCP Access for End Users
+
+Control which MCP servers end users of your AI application can access (e.g. users of an internal chat UI). Pass the customer ID in the `x-litellm-end-user-id` header to:
+- Enforce object permissions (limit which MCP servers they can access)
+- Apply customer-specific budgets
+- Track spend per customer
+
+**FastMCP Client Example:**
+
+```python title="Track customer spend with x-litellm-end-user-id" showLineNumbers
+from fastmcp import Client
+import asyncio
+
+# MCP client configuration with customer tracking
+config = {
+    "mcpServers": {
+        "github": {
+            "url": "http://localhost:4000/github_mcp/mcp",
+            "headers": {
+                "x-litellm-api-key": "Bearer sk-1234",
+                "x-litellm-end-user-id": "customer_123",  # 👈 CUSTOMER ID
+                "Authorization": "Bearer gho_token"
+            }
+        }
+    }
+}
+
+client = Client(config)
+
+async def main():
+    async with client:
+        # All MCP calls will be tracked under customer_123
+        tools = await client.list_tools()
+        result = await client.call_tool(tools[0].name, {})
+        print(f"Tool result: {result}")
+
+asyncio.run(main())
+```
+
+**Cursor IDE Example:**
+
+```json title="Cursor config with customer tracking" showLineNumbers
+{
+  "mcpServers": {
+    "GitHub": {
+      "url": "http://localhost:4000/github_mcp/mcp",
+      "headers": {
+        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-end-user-id": "customer_123"
+      }
+    }
+  }
+}
+```
+
+**What happens:**
+- Customer-specific object permissions are enforced (only allowed MCP servers are accessible)
+- Customer budgets are applied
+- All tool calls are tracked under `customer_123`
+
+[Learn more about customer management →](./proxy/customers)
