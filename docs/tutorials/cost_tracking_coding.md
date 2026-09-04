@@ -36,7 +36,7 @@ Configure your coding tool to send requests through the LiteLLM proxy with appro
 **Setup guides:**
 - [Use LiteLLM with Claude Code](../../docs/tutorials/claude_responses_api)
 - [Use LiteLLM with Gemini CLI](../../docs/tutorials/litellm_gemini_cli)
-- [Use LiteLLM with OpenAI Codex](../../docs/tutorials/openai_codex)
+- [Use LiteLLM with OpenAI Codex](../../docs/proxy/client_setup/codex_cli)
 
 ### 2. Send Requests with User-Agent Headers
 
