@@ -1145,7 +1145,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 **Verify Model Rate Limits set correctly for this key**
 
-**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-4o` returned**
+**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-5.6-terra` returned**
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
@@ -1163,14 +1163,14 @@ curl -i http://localhost:4000/v1/chat/completions \
 **Expected headers**
 
 ```shell
-x-litellm-key-remaining-requests-gpt-4o: 1
-x-litellm-key-remaining-tokens-gpt-4o: 179
+x-litellm-key-remaining-requests-gpt-5.6-terra: 1
+x-litellm-key-remaining-tokens-gpt-5.6-terra: 179
 ```
 
 These headers indicate:
 
-- 1 request remaining for the gpt-4o model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
-- 179 tokens remaining for the gpt-4o model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 1 request remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 179 tokens remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
 
 </TabItem>
 <TabItem value="per-agent" label="Per Agent">

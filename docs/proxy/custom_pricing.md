@@ -163,14 +163,14 @@ This ensures your free/on-premises models remain accessible regardless of budget
 
 ## Set 'base_model' for Cost Tracking (e.g. Azure deployments)
 
-**Problem**: Azure returns `gpt-5.6-terra` in the response when `azure/gpt-5.6-terra` is used. This leads to inaccurate cost tracking
+**Problem**: Azure returns `gpt-4` in the response when `azure/gpt-4-1106-preview` is used. This leads to inaccurate cost tracking {/* keep-model-ids */}
 
 **Solution** ✅ :  Set `base_model` on your config so litellm uses the correct model for calculating azure cost
 
 Get the base model name from [here](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
 
 Example config with `base_model`
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: azure-gpt-3.5
     litellm_params:
@@ -179,7 +179,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-5.6-terra
+      base_model: azure/gpt-4-1106-preview
 ```
 
 ### OpenAI Models with Dated Versions

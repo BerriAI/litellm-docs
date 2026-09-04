@@ -134,7 +134,7 @@ print(formatted_string)
 ```
 ### 7. `get_max_tokens`
 
-Input: Accepts a model name - e.g., gpt-3.5-turbo (to get a complete list, call litellm.model_list).
+Input: Accepts a model name - e.g., gpt-5.6-luna (to get a complete list, call litellm.model_list).
 Output: Returns the maximum number of tokens allowed for the given model
 
 ```python 
@@ -142,7 +142,7 @@ from litellm import get_max_tokens
 
 model = "gpt-5.6-luna"
 
-print(get_max_tokens(model)) # Output: 4097
+print(get_max_tokens(model)) # Output: 128000
 ```
 
 ### 8. `model_cost`
@@ -152,7 +152,7 @@ print(get_max_tokens(model)) # Output: 4097
 ```python 
 from litellm import model_cost 
 
-print(model_cost) # {'gpt-5.6-luna': {'max_tokens': 4000, 'input_cost_per_token': 1.5e-06, 'output_cost_per_token': 2e-06}, ...}
+print(model_cost) # {'gpt-5.6-luna': {'max_tokens': 128000, 'input_cost_per_token': 2e-07, 'output_cost_per_token': 1.2e-06}, ...}
 ```
 
 ### 9. `register_model`
@@ -166,9 +166,9 @@ import litellm
 
 litellm.register_model({
         "gpt-5.6-terra": {
-        "max_tokens": 8192, 
-        "input_cost_per_token": 0.00002, 
-        "output_cost_per_token": 0.00006, 
+        "max_tokens": 128000, 
+        "input_cost_per_token": 0.000002, 
+        "output_cost_per_token": 0.000012, 
         "litellm_provider": "openai", 
         "mode": "chat"
     },

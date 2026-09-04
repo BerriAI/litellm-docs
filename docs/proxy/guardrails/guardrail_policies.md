@@ -202,12 +202,12 @@ Run guardrails only for specific models:
 
 ```yaml showLineNumbers title="config.yaml"
 policies:
-  gpt4-safety:
+  gpt-safety:
     guardrails:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-5.6-terra.*"  # regex - matches gpt-5.6-terra, gpt-5.6-terra, gpt-5.6-terra
+      model: "gpt-5.6.*"  # regex - matches gpt-5.6-luna, gpt-5.6-terra
 
   bedrock-compliance:
     guardrails:
@@ -215,8 +215,8 @@ policies:
         - audit_logger
     condition:
       model:  # exact match list
-        - bedrock/claude-3
-        - bedrock/claude-sonnet-5
+        - bedrock/anthropic.claude-sonnet-5
+        - bedrock/anthropic.claude-opus-5
 ```
 
 ## Attachments

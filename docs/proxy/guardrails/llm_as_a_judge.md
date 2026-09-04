@@ -31,7 +31,7 @@ Define your guardrails under the `guardrails` section:
 model_list:
   - model_name: chat-model
     litellm_params:
-      model: anthropic/claude-sonnet-4-6
+      model: anthropic/claude-opus-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: my-judge-model
     litellm_params:

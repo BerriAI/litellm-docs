@@ -162,7 +162,7 @@ Set fallbacks in the `.completion()` call for SDK and client-side for proxy.
 In this request the following will occur:
 1. The request to `model="zephyr-beta"` will fail
 2. litellm proxy will loop through all the model_groups specified in `fallbacks=["gpt-5.6-luna"]`
-3. The request to `model="gpt-5.6-luna"` will succeed and the client making the request will get a response from gpt-4o-mini 
+3. The request to `model="gpt-5.6-luna"` will succeed and the client making the request will get a response from gpt-5.6-luna 
 
 👉 Key Change: `"fallbacks": ["gpt-5.6-luna"]`
 
@@ -733,23 +733,25 @@ For azure deployments, set the base model. Pick the base model from [this list](
 
 Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
 
-```yaml
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: gpt-4o-mini
     litellm_params:
     model: azure/chatgpt-v-2
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-5.6-terra # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
 
-  - model_name: gpt-5.6-luna
+  - model_name: gpt-4o-mini
     litellm_params:
-    model: gpt-5.6-luna
+    model: gpt-4o-mini
     api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -763,7 +765,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -774,7 +776,7 @@ text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="gpt-4o-mini",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -790,7 +792,9 @@ print(response)
 
 Fallback to larger models if current model is too small.
 
-```yaml
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -802,16 +806,16 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-5.6-terra # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
-      model: gpt-5.6-terra
+      model: gpt-4.1
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
     litellm_params:
-      model: claude-opus-5
+      model: claude-opus-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -828,7 +832,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",

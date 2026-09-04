@@ -159,7 +159,7 @@ After onboarding, OpenClaw stores the LiteLLM provider config in `~/.openclaw/op
         "models": [
           {
             "id": "gpt-5.6-terra",
-            "name": "GPT-4o via LiteLLM"
+            "name": "GPT-5.6 Terra via LiteLLM"
           }
         ]
       }

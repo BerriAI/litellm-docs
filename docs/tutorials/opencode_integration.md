@@ -82,10 +82,10 @@ Create `~/.config/opencode/opencode.json` (global config):
       },
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4"
+          "name": "GPT-5.6 Terra"
         },
         "claude-sonnet-5": {
-          "name": "Claude 3.5 Sonnet"
+          "name": "Claude Sonnet 5"
         },
         "deepseek-chat": {
           "name": "DeepSeek Chat"
@@ -97,7 +97,7 @@ Create `~/.config/opencode/opencode.json` (global config):
 ```
 
 :::tip
-The keys in the "models" object (e.g., "gpt-4", "claude-3-5-sonnet-20241022") should match the `model_name` values from your LiteLLM configuration. The "name" field provides a friendly display name that will appear as an alias in OpenCode.
+The keys in the "models" object (e.g., "gpt-5.6-terra", "claude-sonnet-5") should match the `model_name` values from your LiteLLM configuration. The "name" field provides a friendly display name that will appear as an alias in OpenCode.
 
 If a model accepts images, it also needs a `modalities` entry; see [Enabling image and vision input](#enabling-image-and-vision-input).
 :::
@@ -148,17 +148,17 @@ You can customize model parameters like context limits:
       },
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4",
+          "name": "GPT-5.6 Terra",
           "limit": {
-            "context": 128000,
-            "output": 4096
+            "context": 922000,
+            "output": 128000
           }
         },
         "claude-sonnet-5": {
-          "name": "Claude 3.5 Sonnet",
+          "name": "Claude Sonnet 5",
           "limit": {
-            "context": 200000,
-            "output": 8192
+            "context": 1000000,
+            "output": 128000
           }
         }
       }
@@ -191,11 +191,11 @@ Declare `modalities` on every vision-capable model in your OpenCode config:
       },
       "models": {
         "claude-sonnet-5": {
-          "name": "Claude 3.5 Sonnet",
+          "name": "Claude Sonnet 5",
           "modalities": { "input": ["text", "image"], "output": ["text"] }
         },
         "gpt-5.6-terra": {
-          "name": "GPT-4o",
+          "name": "GPT-5.6 Terra",
           "modalities": { "input": ["text", "image"], "output": ["text"] }
         },
         "deepseek-chat": {
@@ -255,7 +255,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
       },
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4 (Production)"
+          "name": "GPT-5.6 Terra (Production)"
         }
       }
     },
@@ -267,7 +267,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
       },
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4 (Development)"
+          "name": "GPT-5.6 Terra (Development)"
         }
       }
     }
@@ -290,10 +290,10 @@ You can configure multiple LiteLLM instances or mix with other providers:
       },
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4 via LiteLLM"
+          "name": "GPT-5.6 Terra via LiteLLM"
         },
         "claude-sonnet-5": {
-          "name": "Claude 3.5 Sonnet via LiteLLM"
+          "name": "Claude Sonnet 5 via LiteLLM"
         }
       }
     },
@@ -302,7 +302,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
       "name": "OpenAI Direct",
       "models": {
         "gpt-5.6-terra": {
-          "name": "GPT-4o (Direct)"
+          "name": "GPT-5.6 Terra (Direct)"
         }
       }
     }
@@ -325,9 +325,9 @@ model_list:
       model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-5.6-terra
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 
   # Anthropic models
@@ -384,7 +384,7 @@ model_list:
   `modalities` on the model in your OpenCode config:
   ```json
   "claude-sonnet-5": {
-    "name": "Claude 3.5 Sonnet",
+    "name": "Claude Sonnet 5",
     "modalities": { "input": ["text", "image"], "output": ["text"] }
   }
   ```

@@ -10,7 +10,7 @@ LiteLLM supports Claude models deployed via Microsoft Azure Foundry, including C
 Azure Foundry supports the following Claude models:
 
 - `claude-sonnet-5` - Anthropic's most capable model for building real-world agents and handling complex, long-horizon tasks
-- `claude-sonnet-5` - Near-frontier performance with the right speed and cost for high-volume use cases
+- `claude-haiku-4-5` - Near-frontier performance with the right speed and cost for high-volume use cases {/* keep-model-ids */}
 - `claude-opus-5` - Industry leader for coding, delivering sustained performance on long-running tasks
 
 | Property | Details |

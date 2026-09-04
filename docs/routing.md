@@ -1761,7 +1761,7 @@ model_list = [
 			{
 				"model_name": "gemini-3.1-pro-preview",
 				"litellm_params": {
-					"model": "vertex_ai/gemini-pro-1.5", 
+					"model": "vertex_ai/gemini-3.1-pro-preview", 
 					"vertex_project": "adroit-crow-1234",
 					"vertex_location": "us-east1" # 👈 AUTOMATICALLY INFERS 'region_name'
 				}
@@ -1778,9 +1778,11 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 <Tabs>
 <TabItem value="context-window-check" label="Context Window Check">
 
-```python
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 """
-- Give a gpt-5.6-luna model group with different context windows (4k vs. 16k)
+- Give a gpt-3.5-turbo model group with different context windows (4k vs. 16k)
 - Send a 5k prompt
 - Assert it works
 """
@@ -1789,22 +1791,22 @@ import os
 
 model_list = [
 	{
-		"model_name": "gpt-5.6-luna",  # model group name
+		"model_name": "gpt-3.5-turbo",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
 			"model": "azure/chatgpt-v-2",
 			"api_key": os.getenv("AZURE_API_KEY"),
 			"api_version": os.getenv("AZURE_API_VERSION"),
 			"api_base": os.getenv("AZURE_API_BASE"),
-			"base_model": "azure/gpt-5.6-luna",
+			"base_model": "azure/gpt-35-turbo",
 		},
 		"model_info": {
-			"base_model": "azure/gpt-5.6-luna", 
+			"base_model": "azure/gpt-35-turbo", 
 		}
 	},
 	{
-		"model_name": "gpt-5.6-luna",  # model group name
+		"model_name": "gpt-3.5-turbo",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
-			"model": "gpt-5.6-luna",
+			"model": "gpt-3.5-turbo-1106",
 			"api_key": os.getenv("OPENAI_API_KEY"),
 		},
 	},
@@ -1815,7 +1817,7 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 text = "What is the meaning of 42?" * 5000
 
 response = router.completion(
-	model="gpt-5.6-luna",
+	model="gpt-3.5-turbo",
 	messages=[
 		{"role": "system", "content": text},
 		{"role": "user", "content": "Who was Alexander?"},
@@ -1998,13 +2000,13 @@ asyncio.run(main())
 
 ## Track cost for Azure Deployments
 
-**Problem**: Azure returns `gpt-5.6-terra` in the response when `azure/gpt-5.6-terra` is used. This leads to inaccurate cost tracking
+**Problem**: Azure returns `gpt-4` in the response when `azure/gpt-4-1106-preview` is used. This leads to inaccurate cost tracking {/* keep-model-ids */}
 
 **Solution** ✅ :  Set `model_info["base_model"]` on your router init so litellm uses the correct model for calculating azure cost
 
 Step 1. Router Setup
 
-```python
+```python keep-model-ids
 from litellm import Router
 
 model_list = [
@@ -2017,11 +2019,11 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-5.6-terra" # azure/gpt-5.6-terra will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/gpt-4-1106-preview" # azure/gpt-4-1106-preview will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}, 
 	{
-		"model_name": "gpt-5.6-terra", 
+		"model_name": "gpt-4-32k", 
 		"litellm_params": { # params for litellm completion/embedding call 
 			"model": "azure/chatgpt-functioncalling", 
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -2029,7 +2031,7 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-5.6-terra" # azure/gpt-5.6-terra will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/gpt-4-32k" # azure/gpt-4-32k will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}
 ]
@@ -2040,7 +2042,7 @@ router = Router(model_list=model_list)
 
 Step 2. Access `response_cost` in the custom callback, **litellm calculates the response cost for you**
 
-```python
+```python keep-model-ids
 import litellm
 from litellm.integrations.custom_logger import CustomLogger
 
@@ -2055,7 +2057,7 @@ litellm.callbacks = [customHandler]
 
 # router completion call
 response = router.completion(
-	model="gpt-5.6-terra", 
+	model="gpt-4-32k", 
 	messages=[{ "role": "user", "content": "Hi who are you"}]
 )
 ```
@@ -2065,10 +2067,12 @@ response = router.completion(
 
 You can also set default params for litellm completion/embedding calls. Here's how to do that: 
 
-```python 
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 from litellm import Router
 
-fallback_dict = {"gpt-5.6-luna": "gpt-5.6-terra"}
+fallback_dict = {"gpt-4o-mini": "gpt-4.1"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})
@@ -2077,7 +2081,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-5.6-luna", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```

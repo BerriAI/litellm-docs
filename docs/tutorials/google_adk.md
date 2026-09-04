@@ -59,7 +59,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"  # For Claude models
 
 # Define model constants for cleaner code
 MODEL_GEMINI_PRO = "gemini-3.1-pro-preview"
-MODEL_GPT_4O = "openai/gpt-5.6-terra"
+MODEL_GPT = "openai/gpt-5.6-terra"
 MODEL_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
 ```
 
@@ -133,9 +133,9 @@ async def call_agent_async(query: str, runner, user_id, session_id):
 # Create an agent powered by OpenAI's GPT model
 weather_agent_gpt = Agent(
     name="weather_agent_gpt",
-    model=LiteLlm(model=MODEL_GPT_4O),  # Use OpenAI's GPT model
+    model=LiteLlm(model=MODEL_GPT),  # Use OpenAI's GPT model
     description="Provides weather information using OpenAI's GPT.",
-    instruction="You are a helpful weather assistant powered by GPT-4o. "
+    instruction="You are a helpful weather assistant powered by gpt-5.6-terra. "
                 "Use the 'get_weather' tool for city weather requests. "
                 "Present information clearly.",
     tools=[get_weather],

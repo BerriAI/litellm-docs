@@ -1926,9 +1926,9 @@ On Success
     Messages: [{'role': 'user', 'content': 'good morning good sir'}],
     User: ishaan-app,
     Usage: {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21},
-    Cost: 7.65e-06,
+    Cost: 1.42e-05,
     Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': 'gpt-5.6-luna', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
-    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': 'gpt-5.6-luna', 'deployment': 'gpt-4o-mini-ModelID-gpt-4o-mini'}
+    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': 'gpt-5.6-luna', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
 ```
 
 #### Logging Proxy Request Object, Header, Url

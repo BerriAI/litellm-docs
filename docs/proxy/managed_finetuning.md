@@ -25,11 +25,11 @@ Here's how to give developers access to your Finetuning models.
 
 Include `/fine_tuning` in the `supported_endpoints` list. Tells developers this model supports the `/fine_tuning` endpoint.
 
-```yaml showLineNumbers title="litellm_config.yaml"
+```yaml showLineNumbers title="litellm_config.yaml" keep-model-ids
 model_list:
   - model_name: "gpt-4.1-openai"
     litellm_params:
-      model: gpt-5.6-terra
+      model: gpt-4.1
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       supported_endpoints: ["/chat/completions", "/fine_tuning"]

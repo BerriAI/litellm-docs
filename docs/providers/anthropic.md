@@ -4,18 +4,22 @@ import TabItem from '@theme/TabItem';
 # Anthropic
 LiteLLM supports all anthropic models.
 
-- `claude-opus-5` (`claude-opus-5`)
+{/* keep-model-ids:start */}
+- `claude-sonnet-5`
+- `claude-opus-5`
+- `claude-opus-4-6` (`claude-opus-4-6-20260205`)
 - `claude-sonnet-4-6`
-- `claude-sonnet-5`
-- `claude-opus-5`
-- `claude-opus-5`
-- `claude-4` (`claude-opus-5`, `claude-sonnet-5`)
-- `claude-3.7` (`claude-sonnet-5`)
+- `claude-sonnet-4-5-20250929`
+- `claude-opus-4-5-20251101`
+- `claude-opus-4-1-20250805`
+- `claude-4` (`claude-opus-4-20250514`, `claude-sonnet-4-20250514`)
+- `claude-3.7` (`claude-3-7-sonnet-20250219`)
 - `claude-3.5` (`claude-3-5-sonnet-20240620`)
-- `claude-3` (`claude-sonnet-5`, `claude-sonnet-5`, `claude-sonnet-5`)
-- `claude-sonnet-5`
-- `claude-sonnet-5`
-- `claude-sonnet-5`
+- `claude-3` (`claude-3-haiku-20240307`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`)
+- `claude-2`
+- `claude-2.1`
+- `claude-instant-1.2`
+{/* keep-model-ids:end */}
 
 
 | Property | Details |
@@ -287,7 +291,7 @@ litellm --config /path/to/config.yaml
 </TabItem>
 <TabItem value="config-all" label="config - default all Anthropic Model">
 
-Use this if you want to make requests to `claude-sonnet-5`,`claude-sonnet-5`,`claude-opus-5` without defining them on the config.yaml
+Use this if you want to make requests to `claude-sonnet-5`,`claude-opus-5` without defining them on the config.yaml
 
 #### Required env variables
 ```
@@ -1136,7 +1140,7 @@ response = completion(
 <Tabs>
 <TabItem value="computer" label="Computer">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [
@@ -1152,7 +1156,7 @@ tools = [
         },
     }
 ]
-model = "claude-sonnet-5"
+model = "claude-3-5-sonnet-20241022"
 messages = [{"role": "user", "content": "Save a picture of a cat to my desktop."}]
 
 resp = completion(
@@ -1171,14 +1175,14 @@ print(resp)
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [{
     "type": "text_editor_20250124",
     "name": "str_replace_editor"
 }]
-model = "claude-sonnet-5"
+model = "claude-3-5-sonnet-20241022"
 messages = [{"role": "user", "content": "There's a syntax error in my primes.py file. Can you help me fix it?"}]
 
 resp = completion(
@@ -1195,10 +1199,10 @@ print(resp)
 
 1. Setup config.yaml
 
-```yaml
-- model_name: claude-sonnet-5
+```yaml keep-model-ids
+- model_name: claude-3-5-sonnet-latest
   litellm_params:
-    model: anthropic/claude-sonnet-5
+    model: anthropic/claude-3-5-sonnet-latest
     api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1210,12 +1214,12 @@ litellm --config /path/to/config.yaml
 
 3. Test it! 
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "claude-3-5-sonnet-latest",
     "messages": [{"role": "user", "content": "There's a syntax error in my primes.py file. Can you help me fix it?"}],
     "tools": [{"type": "text_editor_20250124", "name": "str_replace_editor"}]
   }'
@@ -1479,7 +1483,7 @@ LiteLLM translates OpenAI's `reasoning_effort` to Anthropic's `thinking` paramet
 | "high"           | "budget_tokens": 4096 |
 
 :::note
-`reasoning_effort` maps to Anthropic's [adaptive thinking](https: //docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-5`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route:
+`reasoning_effort` maps to Anthropic's [adaptive thinking](https: //docs.claude.com/en/docs/build-with-claude/extended-thinking/adaptive-thinking) plus the `output_config.effort` parameter on Claude 4.6 and 4.7 models (including `claude-opus-4-6`, `claude-opus-4-7`, `claude-sonnet-4-6`, etc. ), **not** `budget_tokens`. In particular, LiteLLM will inject the following into the underlying Anthropic request on the OpenAI-compatible `/chat/completions` route: {/* keep-model-ids */}
 
 ```json
 {
@@ -1492,7 +1496,7 @@ This means **any value other than `"none"` for `reasoning_effort` will automatic
 
 You can disable thinking either by omitting `reasoning_effort` entirely or setting it to `"none"`. LiteLLM will not send a `thinking` field in that case. You can still pass the native `thinking` parameter directly if you wish to explicitly control thinking with a fixed budget on prior models:
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Disable thinking on Claude 4.6/4.7
@@ -1504,7 +1508,7 @@ resp = completion(
 
 # Explicit budget (pre-4.6 models; deprecated on 4.6, rejected on Opus 4.7)
 resp = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-sonnet-4-5-20250929",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -1629,9 +1633,9 @@ You can also pass the `thinking` parameter to Anthropic models.
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 response = litellm.completion(
-  model="anthropic/claude-sonnet-5",
+  model="anthropic/claude-3-7-sonnet-20250219",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -1640,12 +1644,12 @@ response = litellm.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-sonnet-5",
+    "model": "anthropic/claude-3-7-sonnet-20250219",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -1689,9 +1693,9 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 response = litellm.completion(
-  model="anthropic/claude-opus-5",
+  model="anthropic/claude-opus-4-6",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 5000},
 )
@@ -1700,12 +1704,12 @@ response = litellm.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-opus-5",
+    "model": "anthropic/claude-opus-4-6",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 5000}
   }'
@@ -1738,7 +1742,7 @@ The returned completion will _not_ include your "pre-fill" text, since it is par
 
 :::
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1749,7 +1753,7 @@ messages = [
     {"role": "user", "content": "How do you say 'Hello' in German? Return your answer as a JSON object, like this:\n\n{ \"Hello\": \"Hallo\" }"},
     {"role": "assistant", "content": "{"},
 ]
-response = completion(model="claude-sonnet-5", messages=messages)
+response = completion(model="claude-2.1", messages=messages)
 print(response)
 ```
 
@@ -1767,7 +1771,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1778,7 +1782,7 @@ messages = [
     {"role": "system", "content": "You are a snarky assistant."},
     {"role": "user", "content": "How do I boil water?"},
 ]
-response = completion(model="claude-sonnet-5", messages=messages)
+response = completion(model="claude-2.1", messages=messages)
 ```
 
 #### Example prompt sent to Claude

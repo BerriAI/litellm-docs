@@ -586,15 +586,15 @@ Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not sup
 
 Use `litellm.supports_reasoning(model="")` -> returns `True` if model supports reasoning and `False` if not.
 
-```python showLineNumbers title="litellm.supports_reasoning() usage"
+```python showLineNumbers title="litellm.supports_reasoning() usage" keep-model-ids
 import litellm 
 
 # Example models that support reasoning
-assert litellm.supports_reasoning(model="anthropic/claude-sonnet-5") == True
+assert litellm.supports_reasoning(model="anthropic/claude-3-7-sonnet-20250219") == True
 assert litellm.supports_reasoning(model="deepseek/deepseek-chat") == True 
 
 # Example models that do not support reasoning
-assert litellm.supports_reasoning(model="openai/gpt-5.6-luna") == False 
+assert litellm.supports_reasoning(model="openai/gpt-4o-mini") == False 
 ```
 </TabItem>
 
@@ -753,7 +753,7 @@ model_list:
     model_info:
       mode: responses  # if using Responses API bridge
 
-  - model_name: gpt-5.1-with-summary
+  - model_name: gpt-5.6-terra-with-summary
     litellm_params:
       model: openai/gpt-5.6-terra
       # Dict format - explicit control over effort and summary

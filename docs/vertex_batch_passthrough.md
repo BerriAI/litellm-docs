@@ -76,10 +76,6 @@ When configuring models for batch operations, use these naming conventions:
 
 - `gemini-3.8-flash` / `vertex_ai/gemini-3.8-flash`
 - `gemini-3.1-pro-preview` / `vertex_ai/gemini-3.1-pro-preview`
-- `gemini-3.8-flash` / `vertex_ai/gemini-3.8-flash`
-- `gemini-3.1-pro-preview` / `vertex_ai/gemini-3.1-pro-preview`
-- `gemini-3.8-flash` / `vertex_ai/gemini-3.8-flash`
-- `gemini-3.1-pro-preview` / `vertex_ai/gemini-3.1-pro-preview`
 
 ## Advanced Usage
 

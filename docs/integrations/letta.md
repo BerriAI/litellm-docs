@@ -232,7 +232,7 @@ print(f"Agent response: {response.messages[-1].text}")
 from letta import LLMConfig, EmbeddingConfig
 
 # Create different LLM configurations pointing to your proxy
-gpt4_config = LLMConfig(
+gpt_config = LLMConfig(
     model="gpt-5.6-terra",
     model_endpoint_type="openai",
     model_endpoint="http://localhost:4000",
@@ -256,7 +256,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt4_config  # Use gpt-5.6-terra for creative tasks
+    llm_config=gpt_config  # Use gpt-5.6-terra for creative tasks
 )
 ```
 
@@ -273,7 +273,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-key"
 os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
 
 # Create different LLM configurations for direct SDK usage
-gpt4_config = LLMConfig(
+gpt_config = LLMConfig(
     model="openai/gpt-5.6-terra",  # Using LiteLLM model format
     model_endpoint_type="openai",
     context_window=8192
@@ -295,7 +295,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt4_config  # Use gpt-5.6-terra for creative tasks
+    llm_config=gpt_config  # Use gpt-5.6-terra for creative tasks
 )
 ```
 
@@ -772,8 +772,8 @@ print(article)
 
 1. **Model Selection**: Use appropriate models for different tasks:
    - Claude for analysis and reasoning
-   - gpt-4o for creative tasks
-   - gpt-4o-mini for simple interactions
+   - gpt-5.6-terra for creative tasks
+   - gpt-5.6-luna for simple interactions
 
 2. **Proxy Configuration**:
    - Set appropriate rate limits and timeouts

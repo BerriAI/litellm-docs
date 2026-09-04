@@ -73,17 +73,17 @@ curl 'http://0.0.0.0:4000/key/generate' \
   --header 'Content-Type: application/json' \
   --data '{
     "model_max_budget": {
-      "gpt-5.6-terra":         {"budget_limit": 5.0,  "time_period": "1d"},
-      "gpt-5.6-luna":    {"budget_limit": 2.0,  "time_period": "1d"},
+      "gpt-5.6-terra":   {"budget_limit": 5.0,  "time_period": "1d"},
+      "claude-sonnet-5": {"budget_limit": 2.0,  "time_period": "1d"},
       "gpt-5.6-luna":    {"budget_limit": 1.0,  "time_period": "1d"}
     },
     "budget_fallbacks": {
-      "gpt-5.6-terra": ["gpt-5.6-luna", "gpt-5.6-luna"]
+      "gpt-5.6-terra": ["claude-sonnet-5", "gpt-5.6-luna"]
     }
   }'
 ```
 
-A request for `gpt-5.6-terra` stays on `gpt-5.6-terra` until it exhausts $5/day, then rolls to `gpt-5.6-luna` until that key hits $2/day, then rolls to `gpt-5.6-luna`. If `gpt-5.6-luna` is also over its $1/day cap the request finally returns `budget_exceeded`.
+A request for `gpt-5.6-terra` stays on `gpt-5.6-terra` until it exhausts $5/day, then rolls to `claude-sonnet-5` until that key hits $2/day, then rolls to `gpt-5.6-luna`. If `gpt-5.6-luna` is also over its $1/day cap the request finally returns `budget_exceeded`.
 
 Fallbacks that are not present in `model_max_budget` are treated as unlimited from the budget check's point of view and will always be selected if reached.
 

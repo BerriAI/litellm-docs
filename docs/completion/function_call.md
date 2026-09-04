@@ -17,9 +17,9 @@ assert litellm.supports_function_calling(model="ollama/llama2") == False
 
 Use `litellm.supports_parallel_function_calling(model="")` -> returns `True` if model supports parallel function calling, `False` if not
 
-```python
+```python keep-model-ids
 assert litellm.supports_parallel_function_calling(model="gpt-5.6-terra") == True
-assert litellm.supports_parallel_function_calling(model="gpt-5.6-terra") == False
+assert litellm.supports_parallel_function_calling(model="gpt-4") == False
 ```
 ## Parallel Function calling
 Parallel function calling is the model's ability to perform multiple function calls together, allowing the effects and results of these function calls to be resolved in parallel
@@ -38,7 +38,7 @@ In this example we define a single function `get_current_weather`.
 
 ### Full Code - Parallel function calling with `gpt-3.5-turbo-1106`
 
-```python
+```python keep-model-ids
 import litellm
 import json
 # set openai api key
@@ -84,7 +84,7 @@ def test_parallel_function_call():
             }
         ]
         response = litellm.completion(
-            model="gpt-5.6-luna",
+            model="gpt-3.5-turbo-1106",
             messages=messages,
             tools=tools,
             tool_choice="auto",  # auto is default, but we'll be explicit
@@ -122,7 +122,7 @@ def test_parallel_function_call():
                     }
                 )  # extend conversation with function response
             second_response = litellm.completion(
-                model="gpt-5.6-luna",
+                model="gpt-3.5-turbo-1106",
                 messages=messages,
             )  # get a new response from the model where it can see the function response
             print("\nSecond LLM response:\n", second_response)
@@ -134,9 +134,9 @@ test_parallel_function_call()
 ```
 
 ### Explanation - Parallel function calling
-Below is an explanation of what is happening in the code snippet above for Parallel function calling with `gpt-5.6-luna`
+Below is an explanation of what is happening in the code snippet above for Parallel function calling with `gpt-3.5-turbo-1106` {/* keep-model-ids */}
 ### Step1: litellm.completion() with `tools` set to `get_current_weather`
-```python
+```python keep-model-ids
 import litellm
 import json
 # set openai api key
@@ -178,7 +178,7 @@ tools = [
 ]
 
 response = litellm.completion(
-    model="gpt-5.6-luna",
+    model="gpt-3.5-turbo-1106",
     messages=messages,
     tools=tools,
     tool_choice="auto",  # auto is default, but we'll be explicit
@@ -190,7 +190,7 @@ tool_calls = response.choices[0].message.tool_calls
 
 ##### Expected output
 In the output you can see the model calls the function multiple times - for San Francisco, Tokyo, Paris
-```python
+```python keep-model-ids
 ModelResponse(
   id='chatcmpl-8MHBKZ9t6bXuhBvUMzoKsfmmlv7xq', 
   choices=[
@@ -206,7 +206,7 @@ ModelResponse(
         ]))
     ], 
     created=1700319953, 
-    model='gpt-5.6-luna', 
+    model='gpt-3.5-turbo-1106', 
     object='chat.completion', 
     system_fingerprint='fp_eeff13170a',
     usage={'completion_tokens': 77, 'prompt_tokens': 88, 'total_tokens': 165}, 
@@ -253,16 +253,16 @@ if tool_calls:
 
 ### Step 3 - Second litellm.completion() call 
 Once the functions are executed, send the model the information for each function call and its response. This allows the model to generate a new response considering the effects of the function calls.
-```python
+```python keep-model-ids
 second_response = litellm.completion(
-    model="gpt-5.6-luna",
+    model="gpt-3.5-turbo-1106",
     messages=messages,
 )
 print("Second Response\n", second_response)
 ```
 
 #### Expected output
-```python
+```python keep-model-ids
 ModelResponse(
   id='chatcmpl-8MHBLh1ldADBP71OrifKap6YfAd4w', 
   choices=[
@@ -270,7 +270,7 @@ ModelResponse(
     message=Message(content="The current weather in San Francisco is 72°F, in Tokyo it's 10°C, and in Paris it's 22°C.", role='assistant'))
   ], 
   created=1700319955, 
-  model='gpt-5.6-luna', 
+  model='gpt-3.5-turbo-1106', 
   object='chat.completion', 
   system_fingerprint='fp_eeff13170a', 
   usage={'completion_tokens': 28, 'prompt_tokens': 169, 'total_tokens': 197}, 
@@ -509,7 +509,7 @@ print(response)
 For Models/providers without function calling support, LiteLLM allows you to add the function to the prompt set: `litellm.add_function_to_prompt = True`
 
 #### Usage
-```python
+```python keep-model-ids
 import os, litellm
 from litellm import completion
 
@@ -547,7 +547,7 @@ functions = [
     }
   ]
 
-response = completion(model="claude-sonnet-5", messages=messages, functions=functions)
+response = completion(model="claude-2", messages=messages, functions=functions)
 print(response)
 ```
 

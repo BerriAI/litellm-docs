@@ -23,7 +23,7 @@ Add `model_info.access_groups` to a deployment, either in `config.yaml` or throu
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: premium-haiku
+  - model_name: premium-sonnet
     litellm_params:
       model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
@@ -40,7 +40,7 @@ curl -X POST 'http://0.0.0.0:4000/model/new' \
      -H 'Authorization: Bearer sk-1234' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model_name": "premium-haiku",
+           "model_name": "premium-sonnet",
            "litellm_params": {"model": "anthropic/claude-sonnet-5", "api_key": "os.environ/ANTHROPIC_API_KEY"},
            "model_info": {"access_groups": ["premium"]}
          }'
@@ -95,7 +95,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-your-premium-key' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "premium-haiku",
+           "model": "premium-sonnet",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```

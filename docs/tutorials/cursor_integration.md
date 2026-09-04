@@ -79,7 +79,7 @@ Cursor rejects a custom model whose name matches one of its built-in models with
 
 ```yaml
 model_list:
-  - model_name: litellm-claude-haiku-4-5
+  - model_name: litellm-claude-sonnet-5
     litellm_params:
       model: anthropic/claude-sonnet-5
 ```

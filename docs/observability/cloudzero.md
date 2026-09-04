@@ -179,10 +179,10 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 ```json
 {
   "time/usage_start": "2024-01-15T14:00:00Z",
-  "cost/cost": 0.002,
+  "cost/cost": 0.0008,
   "usage/amount": 150,
   "usage/units": "tokens",
-  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-4o",
+  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-5.6-terra",
   "resource/service": "litellm",
   "resource/account": "team-123",
   "resource/region": "cross-region",

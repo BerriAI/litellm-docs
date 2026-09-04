@@ -74,11 +74,11 @@ class TenantPolicy:
 
 
 class BudgetPolicy:
-    COST_CAP_PER_TOKEN = 0.000005
+    COST_CAP_PER_TOKEN = 0.000001
     COST_BY_MODEL = {
-        "openai/gpt-5.6-luna": 0.00000015,
-        "anthropic/claude-sonnet-5": 0.000001,
-        "openai/gpt-5.6-terra": 0.00003,
+        "openai/gpt-5.6-luna": 0.0000002,
+        "anthropic/claude-sonnet-5": 0.000002,
+        "openai/gpt-5.6-terra": 0.000002,
     }
 
     async def run(self, context: RoutingContext) -> RoutingContext:
@@ -191,7 +191,7 @@ class CostCeilingPlugin:
 
 cost_ceiling_plugin = CostCeilingPlugin(
     max_cost_per_token=0.000001,
-    cost_by_model={"gpt-5.6-luna": 1.5e-07, "gpt-5.6-terra": 2.5e-06},
+    cost_by_model={"gpt-5.6-luna": 2e-07, "gpt-5.6-terra": 2e-06},
 )
 ```
 
@@ -258,7 +258,7 @@ model_list:
         classifier_plugin_timeout_ms: 3000
         tiers:
           SIMPLE: ["gpt-5.6-luna"]
-          REASONING: ["gpt-5.6-terra", "gpt-5.6-terra"]
+          REASONING: ["gpt-5.6-terra", "gpt-5.6-luna"]
         default_model: gpt-5.6-luna
 
   - model_name: gpt-5.6-luna

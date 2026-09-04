@@ -20,7 +20,7 @@ model_list:
     litellm_params:
       model: openai/gpt-5.6-terra
     model_info:
-      input_cost_per_token: 0.0000025
+      input_cost_per_token: 0.000002
       adaptive_router_preferences:
         quality_tier: 3        # 1=budget, 2=mid, 3=frontier
         strengths: ["code_generation", "analytical_reasoning"]
@@ -29,7 +29,7 @@ model_list:
     litellm_params:
       model: openai/gpt-5.6-luna
     model_info:
-      input_cost_per_token: 0.00000015
+      input_cost_per_token: 0.0000002
       adaptive_router_preferences:
         quality_tier: 2
         strengths: ["factual_lookup"]

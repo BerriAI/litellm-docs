@@ -228,7 +228,7 @@ LiteLLM will automatically set `temperature=1.0` if not specified for Gemini 3+ 
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-sonnet-5',
+    model='gemini-3.8-flash',
     object='chat.completion',
     system_fingerprint=None,
     choices=[

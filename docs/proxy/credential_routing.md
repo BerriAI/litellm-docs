@@ -183,7 +183,7 @@ curl -X PATCH 'http://0.0.0.0:4000/project/update' \
 ### Full Example: Hotel Team with Two Projects
 
 **Setup:**
-- **Hotel Team**: default `hotel-azure-eastus`, GPT-4 override to `hotel-azure-westus`
+- **Hotel Team**: default `hotel-azure-eastus`, `gpt-5.6-terra` override to `hotel-azure-westus`
 - **Hotel Rec App** (project): default `hotel-rec-azure`, GPT-4-Vision override to `hotel-rec-vision`
 - **Hotel Review App** (project): no overrides, inherits team config
 
@@ -191,10 +191,10 @@ curl -X PATCH 'http://0.0.0.0:4000/project/update' \
 
 | Request | Resolved Credential | Why |
 |---|---|---|
-| Hotel Rec App → `gpt-4` | `hotel-rec-azure` | Project default (no project model-specific match for gpt-4) |
+| Hotel Rec App → `gpt-5.6-terra` | `hotel-rec-azure` | Project default (no project model-specific match for gpt-5.6-terra) |
 | Hotel Rec App → `gpt-4-vision` | `hotel-rec-vision` | Project model-specific |
 | Hotel Review App → `gpt-3.5` | `hotel-azure-eastus` | Team default (no project config) |
-| Hotel Review App → `gpt-4` | `hotel-azure-westus` | Team model-specific |
+| Hotel Review App → `gpt-5.6-terra` | `hotel-azure-westus` | Team model-specific |
 
 ## `model_config` Schema
 

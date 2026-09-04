@@ -59,7 +59,7 @@ flowchart TD
 
 ## Model Compatibility
 
-The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-5`.
+The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-4-6`. {/* keep-model-ids */}
 
 | Executor | Advisor |
 |----------|---------|
@@ -75,7 +75,7 @@ The executor and advisor models must form a valid pair. Currently the only suppo
 
 #### Basic Example
 
-```python showLineNumbers title="Advisor Tool — litellm.completion()"
+```python showLineNumbers title="Advisor Tool — litellm.completion()" keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -87,7 +87,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-5",
+            "model": "claude-opus-4-6",
         }
     ],
     max_tokens=4096,
@@ -98,7 +98,7 @@ print(response.choices[0].message.content)
 
 #### With Optional Parameters
 
-```python showLineNumbers title="Advisor Tool with max_uses and caching"
+```python showLineNumbers title="Advisor Tool with max_uses and caching" keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -110,7 +110,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-5",
+            "model": "claude-opus-4-6",
             "max_uses": 3,                             # cap advisor calls per request
             "caching": {"type": "ephemeral", "ttl": "5m"},  # enable for 3+ calls per conversation
         }
@@ -121,7 +121,7 @@ response = litellm.completion(
 
 #### Streaming
 
-```python showLineNumbers title="Streaming with Advisor Tool"
+```python showLineNumbers title="Streaming with Advisor Tool" keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -133,7 +133,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-5",
+            "model": "claude-opus-4-6",
         }
     ],
     max_tokens=4096,
@@ -153,14 +153,14 @@ The advisor sub-inference does not stream. The executor's stream pauses while th
 
 #### Multi-Turn Conversation
 
-```python showLineNumbers title="Multi-Turn with Advisor Tool"
+```python showLineNumbers title="Multi-Turn with Advisor Tool" keep-model-ids
 import litellm
 
 tools = [
     {
         "type": "advisor_20260301",
         "name": "advisor",
-        "model": "claude-opus-5",
+        "model": "claude-opus-4-6",
     }
 ]
 
@@ -209,7 +209,7 @@ model_list:
 
 #### Client Request via Proxy
 
-```python showLineNumbers title="Advisor Tool via AI Gateway"
+```python showLineNumbers title="Advisor Tool via AI Gateway" keep-model-ids
 from openai import OpenAI
 
 client = OpenAI(
@@ -226,7 +226,7 @@ response = client.chat.completions.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-5",
+            "model": "claude-opus-4-6",
         }
     ],
     max_tokens=4096,
@@ -241,7 +241,7 @@ response = client.chat.completions.create(
 
 #### Basic Example
 
-```python showLineNumbers title="Advisor Tool — litellm.anthropic.messages"
+```python showLineNumbers title="Advisor Tool — litellm.anthropic.messages" keep-model-ids
 import asyncio
 import litellm
 
@@ -255,7 +255,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-5",
+                "model": "claude-opus-4-6",
             }
         ],
         max_tokens=4096,
@@ -267,7 +267,7 @@ asyncio.run(main())
 
 #### Streaming
 
-```python showLineNumbers title="Messages API Streaming with Advisor Tool"
+```python showLineNumbers title="Messages API Streaming with Advisor Tool" keep-model-ids
 import asyncio
 import json
 import litellm
@@ -282,7 +282,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-5",
+                "model": "claude-opus-4-6",
             }
         ],
         max_tokens=4096,
@@ -315,7 +315,7 @@ model_list:
 
 #### Client Request via Proxy (Anthropic SDK)
 
-```python showLineNumbers title="Advisor Tool via AI Gateway (Anthropic SDK)"
+```python showLineNumbers title="Advisor Tool via AI Gateway (Anthropic SDK)" keep-model-ids
 import anthropic
 
 client = anthropic.Anthropic(
@@ -334,7 +334,7 @@ response = client.beta.messages.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-5",
+            "model": "claude-opus-4-6",
         }
     ],
 )
@@ -343,12 +343,12 @@ print(response)
 
 #### Non-Anthropic Provider (LiteLLM orchestration loop)
 
-```python showLineNumbers title="Advisor Tool with OpenAI executor"
+```python showLineNumbers title="Advisor Tool with OpenAI executor" keep-model-ids
 import asyncio
 import litellm
 
 async def main():
-    # executor: openai/gpt-5.6-luna  |  advisor: claude-opus-5
+    # executor: openai/gpt-5.6-luna  |  advisor: claude-opus-4-6
     # LiteLLM runs the orchestration loop automatically
     response = await litellm.anthropic.messages.acreate(
         model="openai/gpt-5.6-luna",
@@ -359,7 +359,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-5",
+                "model": "claude-opus-4-6",
                 "max_uses": 3,
             }
         ],
@@ -416,7 +416,7 @@ Pass the full assistant content, including advisor blocks, back on subsequent tu
 
 Advisor calls run as a separate sub-inference billed at the advisor model's rates. Usage is reported in `usage.iterations[]`:
 
-```json title="Usage with advisor sub-inference"
+```json title="Usage with advisor sub-inference" keep-model-ids
 {
   "usage": {
     "input_tokens": 412,
@@ -429,7 +429,7 @@ Advisor calls run as a separate sub-inference billed at the advisor model's rate
       },
       {
         "type": "advisor_message",
-        "model": "claude-opus-5",
+        "model": "claude-opus-4-6",
         "input_tokens": 823,
         "output_tokens": 1612
       },

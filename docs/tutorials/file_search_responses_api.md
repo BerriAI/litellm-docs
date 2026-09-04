@@ -103,8 +103,8 @@ print(response.output)
 
 | Path | SDK model | Proxy model | Behavior |
 | --- | --- | --- | --- |
-| Native passthrough | `openai/gpt-4.1` | `gpt-4.1` | Provider executes native `file_search` |
-| Emulated fallback | `anthropic/claude-sonnet-4-5` | `claude-sonnet` | LiteLLM converts to function tool and synthesizes OpenAI-format output |
+| Native passthrough | `openai/gpt-5.6-terra` | `gpt-5.6-terra` | Provider executes native `file_search` |
+| Emulated fallback | `anthropic/claude-sonnet-5` | `claude-sonnet` | LiteLLM converts to function tool and synthesizes OpenAI-format output |
 
 
 

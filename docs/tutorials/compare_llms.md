@@ -31,9 +31,9 @@ In `benchmark/benchmark.py` select your LLMs, LLM API Key and questions
 
 Supported LLMs: https://docs.litellm.ai/docs/providers
 
-```python
+```python keep-model-ids
 # Define the list of models to benchmark
-models = ['gpt-5.6-luna', 'claude-sonnet-5']
+models = ['gpt-3.5-turbo', 'claude-2']
 
 # Enter LLM API keys
 os.environ['OPENAI_API_KEY'] = ""
@@ -53,14 +53,14 @@ python3 benchmark.py
 ```
 
 ## Expected Output
-```
-Running question: When will BerriAI IPO? for model: claude-sonnet-5: 100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:13<00:00,  4.41s/it]
+```text keep-model-ids
+Running question: When will BerriAI IPO? for model: claude-2: 100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:13<00:00,  4.41s/it]
 
 Benchmark Results for 'When will BerriAI IPO?':
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
 | Model           | Response                                                                         | Response Time (seconds)   | Cost ($)   |
 +=================+==================================================================================+===========================+============+
-| gpt-5.6-luna   | As an AI language model, I cannot provide up-to-date information or predict      | 1.55 seconds              | $0.000122  |
+| gpt-3.5-turbo   | As an AI language model, I cannot provide up-to-date information or predict      | 1.55 seconds              | $0.000122  |
 |                 | future events. It is best to consult a reliable financial source or contact      |                           |            |
 |                 | BerriAI directly for information regarding their IPO plans.                      |                           |            |
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
@@ -75,7 +75,7 @@ Benchmark Results for 'When will BerriAI IPO?':
 |                 | their official social media accounts, subscribe to their newsletter, or visit    |                           |            |
 |                 | their website periodically for updates.                                          |                           |            |
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
-| claude-sonnet-5        | I do not have any information about when or if BerriAI will have an initial      | 3.17 seconds              | $0.002084  |
+| claude-2        | I do not have any information about when or if BerriAI will have an initial      | 3.17 seconds              | $0.002084  |
 |                 | public offering (IPO). As an AI assistant created by Anthropic to be helpful,    |                           |            |
 |                 | harmless, and honest, I do not have insider knowledge about Anthropic's business |                           |            |
 |                 | plans or strategies.                                                             |                           |            |
@@ -130,7 +130,7 @@ questions = [
 
 ### Select from 100+ LLMs here: <https://docs.litellm.ai/docs/providers> {#select-from-100-llms-here-httpsdocslitellmaidocsproviders}
 
-``` python
+``` python keep-model-ids
 import litellm
 from litellm import completion, completion_cost
 import os
@@ -151,7 +151,7 @@ os.environ['ANTHROPIC_API_KEY'] = ""
 # using https://api.together.xyz/playground for llama2
 # try any supported LLM here: https://docs.litellm.ai/docs/providers
 
-models = ['togethercomputer/llama-2-70b-chat', 'gpt-5.6-luna', 'claude-sonnet-5']
+models = ['togethercomputer/llama-2-70b-chat', 'gpt-3.5-turbo', 'claude-instant-1.2']
 data = []
 
 for question in questions: # group by question
@@ -262,7 +262,7 @@ questions = [
 
 ### Run Questions
 
-``` python
+``` python keep-model-ids
 import litellm
 from litellm import completion, completion_cost
 import os
@@ -276,7 +276,7 @@ os.environ['TOGETHERAI_API_KEY'] = ""
 os.environ['OPENAI_API_KEY'] = ""
 os.environ['ANTHROPIC_API_KEY'] = ""
 
-models = ['togethercomputer/llama-2-70b-chat', 'gpt-5.6-luna', 'claude-sonnet-5'] # enter llms to benchmark
+models = ['togethercomputer/llama-2-70b-chat', 'gpt-3.5-turbo', 'claude-instant-1.2'] # enter llms to benchmark
 data_2 = []
 
 for question in questions: # group by question

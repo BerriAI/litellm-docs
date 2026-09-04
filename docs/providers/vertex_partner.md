@@ -110,11 +110,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 resp = completion(
-    model="vertex_ai/claude-sonnet-5",
+    model="vertex_ai/claude-3-7-sonnet-20250219",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -127,10 +127,10 @@ resp = completion(
 
 1. Setup config.yaml
 
-```yaml
-- model_name: claude-sonnet-5
+```yaml keep-model-ids
+- model_name: claude-3-7-sonnet-20250219
   litellm_params:
-    model: vertex_ai/claude-sonnet-5
+    model: vertex_ai/claude-3-7-sonnet-20250219
     vertex_ai_project: "my-test-project"
     vertex_ai_location: "us-west-1"
 ```
@@ -143,12 +143,12 @@ litellm --config /path/to/config.yaml
 
 3. Test it! 
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "claude-3-7-sonnet-20250219",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -160,11 +160,11 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 **Expected Response**
 
-```python
+```python keep-model-ids
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-sonnet-5',
+    model='claude-3-7-sonnet-20250219',
     object='chat.completion',
     system_fingerprint=None,
     choices=[

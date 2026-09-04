@@ -19,22 +19,12 @@ uv add claude-agent-sdk
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: bedrock-claude-sonnet-3.5
+  - model_name: bedrock-claude-sonnet-5
     litellm_params:
       model: "bedrock/us.anthropic.claude-sonnet-5"
       aws_region_name: "us-east-1"
 
-  - model_name: bedrock-claude-sonnet-4
-    litellm_params:
-      model: "bedrock/us.anthropic.claude-sonnet-5"
-      aws_region_name: "us-east-1"
-
-  - model_name: bedrock-claude-sonnet-4.5
-    litellm_params:
-      model: "bedrock/us.anthropic.claude-sonnet-5"
-      aws_region_name: "us-east-1"
-
-  - model_name: bedrock-claude-opus-4.5
+  - model_name: bedrock-claude-opus-5
     litellm_params:
       model: "bedrock/us.anthropic.claude-opus-5"
       aws_region_name: "us-east-1"
@@ -67,7 +57,7 @@ os.environ["ANTHROPIC_API_KEY"] = "sk-1234"  # Your LiteLLM key
 # Configure agent with any model from your config
 options = ClaudeAgentOptions(
     system_prompt="You are a helpful AI assistant.",
-    model="bedrock-claude-sonnet-4",  # Use any model from config.yaml
+    model="bedrock-claude-sonnet-5",  # Use any model from config.yaml
     max_turns=20,
 )
 

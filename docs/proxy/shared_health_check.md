@@ -7,7 +7,7 @@ This feature enables coordination of health checks across multiple LiteLLM proxy
 When running multiple LiteLLM proxy pods (e.g., in Kubernetes), each pod typically runs its own independent health checks on every model. This can result in:
 
 - **Duplicate health checks** across pods
-- **Increased costs** for expensive models (e.g., Gemini 2.5-pro)
+- **Increased costs** for expensive models (e.g., Gemini 3.1 Pro)
 - **Redundant monitoring/logging noise**
 - **Inefficient resource usage**
 

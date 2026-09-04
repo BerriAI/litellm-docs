@@ -134,14 +134,14 @@ Use AssemblyAI's [LLM Gateway](https://www.assemblyai.com/docs/llm-gateway) as a
 
 #### LiteLLM Python SDK
 
-```python
+```python keep-model-ids
 import litellm
 import os
 
 os.environ["ASSEMBLYAI_API_KEY"] = "your-assemblyai-api-key"
 
 response = litellm.completion(
-    model="assemblyai/claude-sonnet-5",
+    model="assemblyai/claude-sonnet-4-5-20250929",
     messages=[{"role": "user", "content": "What is the capital of France?"}]
 )
 
@@ -170,7 +170,7 @@ litellm --config config.yaml
 
 3. Test it!
 
-```python
+```python keep-model-ids
 import requests
 
 headers = {
@@ -181,7 +181,7 @@ response = requests.post(
     "http://0.0.0.0:4000/v1/chat/completions",
     headers=headers,
     json={
-        "model": "assemblyai/claude-sonnet-5",
+        "model": "assemblyai/claude-sonnet-4-5-20250929",
         "messages": [
             {"role": "user", "content": "What is the capital of France?"}
         ],

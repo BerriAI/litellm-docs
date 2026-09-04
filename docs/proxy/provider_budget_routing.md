@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 # Budget Routing
 LiteLLM Supports setting the following budgets:
 - Provider budget - $100/day for OpenAI, $100/day for Azure.
-- Model budget - $100/day for gpt-4  https://api-base-1, $100/day for gpt-4o https://api-base-2
+- Model budget - $100/day for gpt-5.6-terra  https://api-base-1, $100/day for gpt-5.6-luna https://api-base-2
 - Tag budget - $10/day for tag=`product:chat-bot`, $100/day for tag=`product:chat-bot-2`
 
 
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -81,7 +81,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -191,7 +191,7 @@ litellm_provider_remaining_budget_metric{api_provider="openai"} 10
 
 ## Model Budgets
 
-Use this to set budgets for models - example $10/day for openai/gpt-4o, $100/day for openai/gpt-4o-mini
+Use this to set budgets for models - example $10/day for openai/gpt-5.6-terra, $100/day for openai/gpt-5.6-luna
 
 ### Quick Start
 

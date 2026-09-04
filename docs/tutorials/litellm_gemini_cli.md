@@ -105,17 +105,17 @@ router_settings:
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route `gemini-3.1-pro-preview` requests to GPT-4o:
+Route `gemini-3.1-pro-preview` requests to `gpt-5.6-terra`:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: gpt-4o-model
+  - model_name: openai-gpt
     litellm_params:
       model: gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-3.1-pro-preview": "gpt-4o-model"}
+  model_group_alias: {"gemini-3.1-pro-preview": "openai-gpt"}
 ```
 
 </TabItem>
@@ -127,7 +127,7 @@ Route `gemini-3.1-pro-preview` requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-sonnet-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
@@ -149,7 +149,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY  
   - model_name: anthropic-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-sonnet-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1

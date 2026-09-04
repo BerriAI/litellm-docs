@@ -129,7 +129,7 @@ Example litellm config.yaml:
 
 ```yaml
 model_list:
-  - model_name: thinking-anthropic-claude-3-7-sonnet # Bedrock Anthropic
+  - model_name: thinking-anthropic-claude-sonnet-5 # Bedrock Anthropic
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-5
       thinking: {"type": "enabled", "budget_tokens": 1024}
@@ -144,7 +144,7 @@ model_list:
 
 ### Test it on Open WebUI
 
-On the models dropdown select `thinking-anthropic-claude-3-7-sonnet`
+On the models dropdown select `thinking-anthropic-claude-sonnet-5`
 
 <Image img={require('../../img/litellm_thinking_openweb.gif')} />
 

@@ -384,7 +384,7 @@ model_list:
 
 LiteLLM supports using Azure GPT-5 models in one of the two ways:
 1. Explicit Routing: `model = azure/gpt5_series/<deployment-name>`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt5_series/<deployment-name>`.
-2. Inferred Routing (If the azure deployment name contains `gpt-5.6-terra` in the name): `model = azure/gpt-5.6-luna`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt-5.6-luna`.
+2. Inferred Routing (If the azure deployment name contains `gpt-5` in the name): `model = azure/gpt-5.6-luna`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt-5.6-luna`. {/* keep-model-ids */}
 
 #### Explicit Routing
 Use `azure/gpt5_series/<deployment-name>` for explicit GPT-5 model routing. 
@@ -416,15 +416,15 @@ model_list:
 </Tabs>
 
 #### Inferred Routing (gpt-5 in the deployment name)
-If your Azure deployment name contains `gpt-5.6-terra`, LiteLLM automatically recognizes it as a GPT-5 model.
+If your Azure deployment name contains `gpt-5`, LiteLLM automatically recognizes it as a GPT-5 model. {/* keep-model-ids */}
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 import litellm
 
-# Deployment name contains 'gpt-5.6-terra' - automatically inferred
+# Deployment name contains 'gpt-5' - automatically inferred
 response = litellm.completion(
     model="azure/my-gpt-5-deployment", 
     messages=[{"role": "user", "content": "Hello, world!"}]
@@ -434,11 +434,11 @@ response = litellm.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-5.6-luna
     litellm_params:
-      model: azure/my-gpt-5-deployment  # deployment name contains 'gpt-5.6-terra'
+      model: azure/my-gpt-5-deployment  # deployment name contains 'gpt-5'
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
 ```
@@ -1314,14 +1314,14 @@ model_list:
 
 #### Chat Completions / Embeddings
 
-**Problem**: Azure returns `gpt-5.6-terra` in the response when `azure/gpt-5.6-terra` is used. This leads to inaccurate cost tracking
+**Problem**: Azure returns `gpt-4` in the response when `azure/gpt-4-1106-preview` is used. This leads to inaccurate cost tracking {/* keep-model-ids */}
 
 **Solution** ✅ :  Set `base_model` on your config so litellm uses the correct model for calculating azure cost
 
 Get the base model name from [here](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
 
 Example config with `base_model`
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: azure-gpt-3.5
     litellm_params:
@@ -1330,5 +1330,5 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-5.6-terra
+      base_model: azure/gpt-4-1106-preview
 ```

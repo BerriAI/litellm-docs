@@ -117,10 +117,10 @@ response = client.chat.completions.create(
 
 Use `litellm.supports_vision(model="")` -> returns `True` if model supports `vision` and `False` if not
 
-```python
+```python keep-model-ids
 assert litellm.supports_vision(model="openai/gpt-5.6-terra") == True
 assert litellm.supports_vision(model="vertex_ai/gemini-3.1-pro-preview") == True
-assert litellm.supports_vision(model="openai/gpt-5.6-luna") == False
+assert litellm.supports_vision(model="openai/gpt-3.5-turbo") == False
 assert litellm.supports_vision(model="xai/grok-2-vision-latest") == True
 assert litellm.supports_vision(model="xai/grok-2-latest") == False
 ```
@@ -169,11 +169,11 @@ Expected Response
     {
       "model_group": "gpt-5.6-terra",
       "providers": ["openai"],
-      "max_input_tokens": 128000,
-      "max_output_tokens": 4096,
+      "max_input_tokens": 922000,
+      "max_output_tokens": 128000,
       "mode": "chat",
       "supports_vision": true, # 👈 supports_vision is true
-      "supports_function_calling": false
+      "supports_function_calling": true
     },
     {
       "model_group": "llava-hf",

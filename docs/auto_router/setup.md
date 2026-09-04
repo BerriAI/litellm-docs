@@ -52,8 +52,8 @@ model_list:
     litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
   - model_name: claude-sonnet-5
     litellm_params: {model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY}
-  - model_name: gpt-5.6-terra
-    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: claude-opus-5
+    litellm_params: {model: anthropic/claude-opus-5, api_key: os.environ/ANTHROPIC_API_KEY}
 
   - model_name: smart-router
     litellm_params:
@@ -63,7 +63,7 @@ model_list:
           SIMPLE:    gpt-5.6-luna
           MEDIUM:    gpt-5.6-terra
           COMPLEX:   claude-sonnet-5
-          REASONING: gpt-5.6-terra
+          REASONING: claude-opus-5
       complexity_router_default_model: gpt-5.6-terra
 ```
 

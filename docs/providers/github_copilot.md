@@ -30,11 +30,11 @@ GitHub Copilot uses OAuth device flow for authentication. On first use, you'll b
 
 ### Chat Completion
 
-```python showLineNumbers title="GitHub Copilot Chat Completion"
+```python showLineNumbers title="GitHub Copilot Chat Completion" keep-model-ids
 from litellm import completion
 
 response = completion(
-    model="github_copilot/gpt-5.6-terra",
+    model="github_copilot/gpt-4o",
     messages=[
         {"role": "system", "content": "You are a helpful coding assistant"},
         {"role": "user", "content": "Write a Python function to calculate fibonacci numbers"}
@@ -43,11 +43,11 @@ response = completion(
 print(response)
 ```
 
-```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming"
+```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming" keep-model-ids
 from litellm import completion
 
 stream = completion(
-    model="github_copilot/gpt-5.6-terra",
+    model="github_copilot/gpt-4o",
     messages=[{"role": "user", "content": "Explain async/await in Python"}],
     stream=True
 )
@@ -61,11 +61,11 @@ for chunk in stream:
 
 For GPT Codex models, only responses API is supported.
 
-```python showLineNumbers title="GitHub Copilot Responses"
+```python showLineNumbers title="GitHub Copilot Responses" keep-model-ids
 import litellm
 
 response = await litellm.aresponses(
-    model="github_copilot/gpt-5.6-terra",
+    model="github_copilot/gpt-5.1-codex",
     input="Write a Python hello world",
     max_output_tokens=500
 )
@@ -89,16 +89,16 @@ print(response)
 
 Add the following to your LiteLLM Proxy configuration file:
 
-```yaml showLineNumbers title="config.yaml"
+```yaml showLineNumbers title="config.yaml" keep-model-ids
 model_list:
-  - model_name: github_copilot/gpt-5.6-terra
+  - model_name: github_copilot/gpt-4o
     litellm_params:
-      model: github_copilot/gpt-5.6-terra
-  - model_name: github_copilot/gpt-5.6-terra
+      model: github_copilot/gpt-4o
+  - model_name: github_copilot/gpt-5.1-codex
     model_info:
       mode: responses
     litellm_params:
-      model: github_copilot/gpt-5.6-terra
+      model: github_copilot/gpt-5.1-codex
   - model_name: github_copilot/text-embedding-ada-002
     model_info:
       mode: embedding
@@ -117,7 +117,7 @@ litellm --config config.yaml
 <Tabs>
 <TabItem value="openai-sdk" label="OpenAI SDK">
 
-```python showLineNumbers title="GitHub Copilot via Proxy - Non-streaming"
+```python showLineNumbers title="GitHub Copilot via Proxy - Non-streaming" keep-model-ids
 from openai import OpenAI
 
 # Initialize client with your proxy URL
@@ -128,7 +128,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.chat.completions.create(
-    model="github_copilot/gpt-5.6-terra",
+    model="github_copilot/gpt-4o",
     messages=[{"role": "user", "content": "How do I optimize this SQL query?"}]
 )
 
@@ -139,12 +139,12 @@ print(response.choices[0].message.content)
 
 <TabItem value="litellm-sdk" label="LiteLLM SDK">
 
-```python showLineNumbers title="GitHub Copilot via Proxy - LiteLLM SDK"
+```python showLineNumbers title="GitHub Copilot via Proxy - LiteLLM SDK" keep-model-ids
 import litellm
 
 # Configure LiteLLM to use your proxy
 response = litellm.completion(
-    model="litellm_proxy/github_copilot/gpt-5.6-terra",
+    model="litellm_proxy/github_copilot/gpt-4o",
     messages=[{"role": "user", "content": "Review this code for bugs"}],
     api_base="http://localhost:4000",
     api_key="your-proxy-api-key"
@@ -157,12 +157,12 @@ print(response.choices[0].message.content)
 
 <TabItem value="curl" label="cURL">
 
-```bash showLineNumbers title="GitHub Copilot via Proxy - cURL"
+```bash showLineNumbers title="GitHub Copilot via Proxy - cURL" keep-model-ids
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "github_copilot/gpt-5.6-terra",
+    "model": "github_copilot/gpt-4o",
     "messages": [{"role": "user", "content": "Explain this error message"}]
   }'
 ```

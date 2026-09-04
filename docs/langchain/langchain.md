@@ -454,7 +454,7 @@ model_list:
 # Tag-based routing rules
 tag_routing:
   - tags: ["premium", "high-priority"]
-    models: ["gpt-5.6-terra", "claude-sonnet-5"]
+    models: ["gpt-5.6-terra", "claude-opus-5"]
   - tags: ["standard"]
     models: ["gpt-5.6-luna", "claude-sonnet-5"]
 ```

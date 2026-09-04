@@ -23,7 +23,7 @@ Fine tuned models on vertex have a numerical model/endpoint id.
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import completion
 import os
 
@@ -34,7 +34,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 response = completion(
   model="vertex_ai/<your-finetuned-model>",  # e.g. vertex_ai/4965075652664360960
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  base_model="vertex_ai/gemini-3.1-pro-preview" # the base model - used for routing
+  base_model="vertex_ai/gemini-2.5-pro" # the base model - used for routing
 )
 ```
 
@@ -49,14 +49,14 @@ response = completion(
 
 2. Setup config.yaml 
 
-```yaml
+```yaml keep-model-ids
 - model_name: finetuned-gemini
   litellm_params:
     model: vertex_ai/<ENDPOINT_ID>
     vertex_project: <PROJECT_ID>
     vertex_location: <LOCATION>
   model_info:
-    base_model: vertex_ai/gemini-3.1-pro-preview # IMPORTANT
+    base_model: vertex_ai/gemini-2.5-pro # IMPORTANT
 ```
 
 3. Test it! 

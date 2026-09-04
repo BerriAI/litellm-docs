@@ -99,7 +99,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret"
 os.environ["AWS_REGION_NAME"] = "us-east-1"
 
 response = completion(
-  model="bedrock/anthropic.claude-haiku-4-5-20251001:0",
+  model="bedrock/us.anthropic.claude-sonnet-5",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)

@@ -16,7 +16,7 @@ Use CopilotKit SDK with any LLM provider through LiteLLM Proxy.
 model_list:
   - model_name: claude-sonnet-5
     litellm_params:
-      model: "anthropic/claude-sonnet-4-5-20250514-v1:0"
+      model: "anthropic/claude-sonnet-5"
       api_key: "os.environ/ANTHROPIC_API_KEY"
 ```
 

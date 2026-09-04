@@ -56,7 +56,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-5.6-terra`, `gpt-5.6-luna` , `gpt-5.6-terra` will all go through this route 
+This means requests to `gpt-5.6-terra`, `gpt-5.6-luna` will all go through this route 
 
 ```yaml
 model_list:

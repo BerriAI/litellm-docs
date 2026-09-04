@@ -71,7 +71,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-5.6-terra`, `gpt-5.6-luna` , `gpt-5.6-terra` will all go through this route 
+This means requests to `gpt-5.6-terra`, `gpt-5.6-luna` will all go through this route 
 
 ```yaml
 model_list:
@@ -603,7 +603,7 @@ Expected Response:
 
 ### Advanced: Using `reasoning_effort` with `summary` field
 
-By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.6-terra` and `gpt-5.6-terra` models) and only sets the effort level without including a reasoning summary.
+By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary. {/* keep-model-ids */}
 
 To opt-in to the `summary` feature, you can pass `reasoning_effort` as a dictionary. **Note:** The `summary` field requires your OpenAI organization to have verification status. Using `summary` without verification will result in a 400 error from OpenAI.
 
@@ -678,10 +678,12 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 | `gpt-5-pro` | `high` | `high` only |
 
 **Note:**
+{/* keep-model-ids:start */}
 - GPT-5.1 introduced a new `reasoning_effort="none"` setting for faster, lower-latency responses. This replaces the `"minimal"` setting from GPT-5.
-- `gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-terra`, and `gpt-5.6-terra` support `reasoning_effort="xhigh"`. Models outside this set will reject the value.
-- `gpt-5.6-terra` only accepts `reasoning_effort="high"`. Other values will return an error.
+- `gpt-5.1-codex-max`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.5`, and `gpt-5.5-pro` support `reasoning_effort="xhigh"`. Models outside this set will reject the value.
+- `gpt-5-pro` only accepts `reasoning_effort="high"`. Other values will return an error.
 - When `reasoning_effort` is not set (None), OpenAI defaults to the value shown in the "Default" column.
+{/* keep-model-ids:end */}
 
 See [OpenAI Reasoning documentation](https://platform.openai.com/docs/guides/reasoning) for more details on organization verification requirements.
 
@@ -773,9 +775,9 @@ response2 = litellm.completion(
 
 The `verbosity` parameter controls the length and detail of responses from GPT-5 family models. It accepts three values: `"low"`, `"medium"`, or `"high"`.
 
-**Supported models:** `gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.6-luna`, `gpt-5.6-terra`
+**Supported models:** `gpt-5`, `gpt-5.1`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-pro` {/* keep-model-ids */}
 
-**Note:** GPT-5-Codex models (`gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.6-terra`) do **not** support the `verbosity` parameter.
+**Note:** GPT-5-Codex models (`gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`) do **not** support the `verbosity` parameter. {/* keep-model-ids */}
 
 **Use cases:**
 - **`"low"`**: Best for concise answers or simple code generation (e.g., SQL queries)
@@ -826,7 +828,7 @@ This is useful when you want to use [Responses API](https://platform.openai.com/
 
 :::tip gpt-5.4+ + reasoning_effort + function tools
 
-LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.6-terra`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API.
+LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API. {/* keep-model-ids */}
 
 If you need reasoning **and** tools together, use the responses bridge instead (LiteLLM also auto-routes these requests to `/v1/responses` when both `tools` and `reasoning_effort` are set):
 
@@ -849,15 +851,17 @@ Each model has a `mode` property defined in [`model_prices_and_context_window.js
 - **`mode: chat`** - Model defaults to the Chat Completions API
 
 **Models with `mode: responses`** (automatic Responses API):
+{/* keep-model-ids:start */}
 - `o3-deep-research`, `o4-mini-deep-research`
 - `o1-pro`, `o3-pro`
-- `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.6-terra`
+- `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`
 - `codex-mini-latest`
 
 **Models with `mode: chat`** (require `openai/responses/` prefix for built-in tools):
-- `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.6-terra`, `gpt-5.6-luna`
-- `gpt-5.6-terra`, `gpt-5.6-luna`
+- `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`
+- `gpt-5`, `gpt-5-mini`, `gpt-5.6-terra`, `gpt-5.6-luna`
 - `o3`, `o4-mini`
+{/* keep-model-ids:end */}
 
 To use built-in tools like `web_search_preview` with `mode: chat` models, add the `openai/responses/` prefix:
 
@@ -1329,10 +1333,10 @@ GPT-5 Pro is OpenAI's most advanced reasoning model with unique characteristics:
 - **Tools**: Supports Web Search, File Search, Image Generation, MCP (but not Code Interpreter or Computer Use)
 - **Modalities**: Text and Image input, Text output only
 
-```python
+```python keep-model-ids
 # GPT-5 Pro usage example
 response = completion(
-    model="gpt-5.6-terra", 
+    model="gpt-5-pro", 
     messages=[{"role": "user", "content": "Solve this complex reasoning problem..."}]
 )
 ```

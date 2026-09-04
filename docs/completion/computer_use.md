@@ -23,7 +23,7 @@ LiteLLM will standardize the computer use tools across all supported providers.
 <Tabs>
 <TabItem value="sdk" label="LiteLLM Python SDK">
 
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -59,7 +59,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-3-5-sonnet-latest",
     messages=messages,
     tools=tools,
 )
@@ -72,15 +72,15 @@ print(response)
 
 1. Define computer use models on config.yaml
 
-```yaml
+```yaml keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
+  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-3-5-sonnet-latest
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -96,7 +96,7 @@ litellm --config config.yaml
 
 3. Test it using the OpenAI Python SDK
 
-```python
+```python keep-model-ids
 import os 
 from openai import OpenAI
 
@@ -106,7 +106,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-5",
+    model="claude-3-5-sonnet-latest",
     messages=[
         {
             "role": "user", 
@@ -152,8 +152,8 @@ Use `litellm.supports_computer_use(model="")` -> returns `True` if model support
 import litellm
 
 assert litellm.supports_computer_use(model="anthropic/claude-sonnet-5") == True
-assert litellm.supports_computer_use(model="anthropic/claude-sonnet-5") == True
-assert litellm.supports_computer_use(model="bedrock/anthropic.claude-haiku-4-5-20251001:0") == True
+assert litellm.supports_computer_use(model="anthropic/claude-opus-5") == True
+assert litellm.supports_computer_use(model="bedrock/us.anthropic.claude-sonnet-5") == True
 assert litellm.supports_computer_use(model="vertex_ai/claude-sonnet-5") == True
 assert litellm.supports_computer_use(model="openai/gpt-5.6-terra") == False
 ```
@@ -163,15 +163,15 @@ assert litellm.supports_computer_use(model="openai/gpt-5.6-terra") == False
 
 1. Define computer use models on config.yaml
 
-```yaml
+```yaml keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
+  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-3-5-sonnet-latest
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -196,11 +196,11 @@ curl -X 'GET' \
 
 Expected Response 
 
-```json
+```json keep-model-ids
 {
   "data": [
     {
-      "model_group": "claude-sonnet-5",
+      "model_group": "claude-3-5-sonnet-latest",
       "providers": ["anthropic"],
       "max_input_tokens": 200000,
       "max_output_tokens": 8192,
@@ -235,7 +235,7 @@ Computer use supports several different tool types for various interaction modes
 
 The `computer_20241022` tool provides direct screen interaction capabilities.
 
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -270,7 +270,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-3-5-sonnet-latest",
     messages=messages,
     tools=tools,
 )
@@ -283,7 +283,7 @@ print(response)
 
 The `bash_20241022` tool provides command line interface access.
 
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -304,7 +304,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-3-5-sonnet-latest",
     messages=messages,
     tools=tools,
 )
@@ -317,7 +317,7 @@ print(response)
 
 The `text_editor_20250124` tool provides text file editing capabilities.
 
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -338,7 +338,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-3-5-sonnet-latest",
     messages=messages,
     tools=tools,
 )
@@ -353,7 +353,7 @@ print(response)
 
 You can combine different computer use tools in a single request:
 
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -396,7 +396,7 @@ messages = [
     ]
     
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/claude-3-5-sonnet-latest",
             messages=messages,
             tools=tools,
 )

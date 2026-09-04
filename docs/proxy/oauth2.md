@@ -43,7 +43,7 @@ general_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "gpt-5.6-terra",
     "messages": [
         {
         "role": "user",

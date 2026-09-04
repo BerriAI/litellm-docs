@@ -89,7 +89,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "models": ["claude-sonnet-5", "claude-sonnet-5"],
+    "models": ["claude-sonnet-5", "claude-opus-5"],
     "max_budget": 50.0,
     "budget_duration": "30d",
     "rpm_limit": 100,
@@ -143,7 +143,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -H 'Content-Type: application/json' \
   -d '{
     "team_alias": "engineering",
-    "models": ["claude-sonnet-5", "claude-sonnet-5"]
+    "models": ["claude-sonnet-5", "claude-opus-5"]
   }'
 ```
 
@@ -155,7 +155,7 @@ Each developer is a virtual key plus a mapping from their JWT claim to that key.
 # Alice: senior eng, higher budget
 ALICE_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
-  -d '{"team_id": "engineering", "models": ["claude-sonnet-5", "claude-sonnet-5"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
+  -d '{"team_id": "engineering", "models": ["claude-sonnet-5", "claude-opus-5"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
   | jq -r '.key')
 
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
@@ -199,9 +199,9 @@ Or in `~/.claude/settings.json`:
 
 **4. Developers authenticate with SSO as usual**
 
-When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits: her $200/month budget, 200 RPM cap, and access to Sonnet and Haiku only.
+When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits: her $200/month budget, 200 RPM cap, and access to Sonnet and Opus only.
 
-Bob's token maps to his own key: $20/month, Haiku only, 30 RPM.
+Bob's token maps to his own key: $20/month, Sonnet only, 30 RPM.
 
 No API keys distributed. No shared limits. Full per-developer spend visibility in the LiteLLM dashboard.
 

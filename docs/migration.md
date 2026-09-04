@@ -17,8 +17,8 @@ When we have breaking changes (i.e. going from 1.x.x to 2.x.x), we will document
 - response objects now inherit from `BaseModel` (prev. `OpenAIObject`)
 - *NEW* default exception - `APIConnectionError` (prev. `APIError`)
 - litellm.get_max_tokens() now returns an int not a dict
-    ```python
-    max_tokens = litellm.get_max_tokens("gpt-5.6-luna") # returns an int not a dict 
+    ```python keep-model-ids
+    max_tokens = litellm.get_max_tokens("gpt-3.5-turbo") # returns an int not a dict 
     assert max_tokens==4097
     ```
 - Streaming - OpenAI Chunks now return `None` for empty stream chunks. This is how to process stream chunks with content

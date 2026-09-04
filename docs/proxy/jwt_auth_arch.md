@@ -59,7 +59,7 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: claude-sonnet-5
     - model: openai-gpt-4o
       litellm_params:
         model: gpt-5.6-terra
@@ -83,7 +83,7 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: claude-sonnet-5
     - model: openai-gpt-4o
       litellm_params:
         model: gpt-5.6-terra

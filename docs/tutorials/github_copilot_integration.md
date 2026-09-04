@@ -119,7 +119,7 @@ general_settings:
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route requests to GPT-4o:
+Route requests to `gpt-5.6-terra`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -141,7 +141,7 @@ Route requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-sonnet-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1

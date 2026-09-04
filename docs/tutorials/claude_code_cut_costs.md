@@ -24,7 +24,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **Budget fallbacks** decide what happens once a per-model budget is exhausted. Instead of erroring at the developer's terminal, attach `model_max_budget` per model and a `budget_fallbacks` chain naming the cheaper models to reroute to. The request silently falls to the first fallback still under its own budget:
 
-```bash
+```bash keep-model-ids
 curl -X POST http://localhost:4000/key/generate \
   -H "Authorization: Bearer $ADMIN_KEY" \
   -H "Content-Type: application/json" \
@@ -32,11 +32,11 @@ curl -X POST http://localhost:4000/key/generate \
     "model_max_budget": {
       "claude-opus-4-8":   {"budget_limit": 20.0, "time_period": "1d"},
       "claude-sonnet-5":   {"budget_limit": 10.0, "time_period": "1d"},
-      "claude-sonnet-5":  {"budget_limit": 5.0,  "time_period": "1d"}
+      "claude-haiku-4-5":  {"budget_limit": 5.0,  "time_period": "1d"}
     },
     "budget_fallbacks": {
-      "claude-opus-4-8":  ["claude-sonnet-5", "claude-sonnet-5"],
-      "claude-sonnet-5":  ["claude-sonnet-5"]
+      "claude-opus-4-8":  ["claude-sonnet-5", "claude-haiku-4-5"],
+      "claude-sonnet-5":  ["claude-haiku-4-5"]
     }
   }'
 ```
@@ -67,7 +67,7 @@ for automatically injecting this in all requests, do this
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4.5-20250929
+  - model_name: claude-sonnet-5
     litellm_params:
       model: vertex_ai/claude-sonnet-5
       # ...

@@ -24,7 +24,7 @@ curl -X GET "http://0.0.0.0:4000/daily_metrics" -H "Authorization: Bearer sk-123
         {
             "daily_spend": 7.938489251309491e+16,
             "day": "2024-02-02T00:00:00",
-            "spend_per_model": {"gpt-3.5": 7.938489251309491e+16},
+            "spend_per_model": {"gpt-5.6-luna": 7.938489251309491e+16},
             "spend_per_api_key": {
                 "91": 896805036036000.0,
                 "78": 889692646082000.0,
@@ -36,7 +36,7 @@ curl -X GET "http://0.0.0.0:4000/daily_metrics" -H "Authorization: Bearer sk-123
 
     ],
     "total_spend": 200,
-    "top_models": {"gpt4": 0.2, "vertexai/gemini-3.8-flash":10},
+    "top_models": {"gpt-5.6-terra": 0.2, "vertexai/gemini-3.8-flash":10},
     "top_api_keys": {"899922": 0.9, "838hcjd999seerr88": 20}
 
 }

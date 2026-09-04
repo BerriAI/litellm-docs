@@ -134,7 +134,7 @@ The configuration below is only an example. You should adjust the permissions an
 
 Permissions:
 
-```json
+```json keep-model-ids
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -146,7 +146,7 @@ Permissions:
                 "bedrock:InvokeModelWithResponseStream"
             ],
             "Resource": [
-                "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-5",
+                "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
                 "arn:aws:bedrock:*::foundation-model/cohere.command-r-v1:0"
             ]
         }

@@ -18,14 +18,14 @@ Discovery is a convenience for populating the picker automatically, not a gate o
 
 The one place a family word still costs you something is the allowlist in the next section, not the client: `opus-auto` counts there as a specific Opus entry, which disables the `opus` family wildcard and leaves every other Opus version you still want selectable to be listed by hand. Building the name on `claude` avoids that.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-auto
     litellm_params:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-4-8

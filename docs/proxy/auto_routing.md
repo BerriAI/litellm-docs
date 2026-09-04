@@ -40,8 +40,8 @@ model_list:
     litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
   - model_name: claude-sonnet-5
     litellm_params: {model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY}
-  - model_name: gpt-5.6-terra
-    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: claude-opus-5
+    litellm_params: {model: anthropic/claude-opus-5, api_key: os.environ/ANTHROPIC_API_KEY}
 
   - model_name: smart-router
     litellm_params:
@@ -51,7 +51,7 @@ model_list:
           SIMPLE:    gpt-5.6-luna
           MEDIUM:    gpt-5.6-terra
           COMPLEX:   claude-sonnet-5
-          REASONING: gpt-5.6-terra
+          REASONING: claude-opus-5
       complexity_router_default_model: gpt-5.6-terra
 ```
 
@@ -84,10 +84,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     drop_params: true
     complexity_router_config:
       tiers:
-        SIMPLE:    ["gpt-5.6-luna", "claude-sonnet-5"]   # random-pick pool
+        SIMPLE:    ["gpt-5.6-luna", "gemini-3.8-flash"]   # random-pick pool
         MEDIUM:    gpt-5.6-terra                                 # single pin
         COMPLEX:   claude-sonnet-5
-        REASONING: gpt-5.6-terra
+        REASONING: claude-opus-5
 
       # Optional display names; omit to keep SIMPLE/MEDIUM/COMPLEX/REASONING everywhere
       # tier_labels:
@@ -185,7 +185,7 @@ Four ways to pick a tier. Pick one; the router falls back to the heuristic score
 
 Two or more reasoning markers auto-routes to `REASONING` regardless of the weighted score.
 
-**LLM classifier.** Uses a small fast model (Haiku, gpt-4o-mini, whatever you point it at) with structured output. Goes through the same `Router` instance, so credentials, budgets, and fallbacks apply. Timeout, empty content, or schema mismatch falls back to the heuristic scorer, or to `complexity_router_default_model` with `classifier_fallback: default_model`, which is what a classifier grading something other than complexity wants since a complexity score would produce a tier unrelated to its taxonomy.
+**LLM classifier.** Uses a small fast model (gpt-5.6-luna, Claude Sonnet 5, whatever you point it at) with structured output. Goes through the same `Router` instance, so credentials, budgets, and fallbacks apply. Timeout, empty content, or schema mismatch falls back to the heuristic scorer, or to `complexity_router_default_model` with `classifier_fallback: default_model`, which is what a classifier grading something other than complexity wants since a complexity score would produce a tier unrelated to its taxonomy.
 
 ```yaml
 classifier_type: llm
@@ -370,10 +370,10 @@ Recommended shape for a coding-agent workload, pinning the tier for the session 
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
+      model: openai/gpt-5.6-luna
+      api_key: os.environ/OPENAI_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
       model: anthropic/claude-sonnet-5
@@ -383,9 +383,9 @@ model_list:
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-5
       aws_region_name: us-east-1
-  - model_name: claude-opus-4-8
+  - model_name: claude-opus-5
     litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/claude-opus-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-auto
@@ -396,10 +396,10 @@ model_list:
           role: system
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    gpt-5.6-luna
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
-          REASONING: claude-opus-4-8
+          REASONING: claude-opus-5
         session_affinity: true
         session_affinity_ttl_seconds: 3600
       complexity_router_default_model: claude-sonnet-5
@@ -650,7 +650,7 @@ Anthropic-family rungs use `thinking` the same way, since it is an ordinary `lit
       thinking: {type: enabled, budget_tokens: 8192}
 ```
 
-Effort levels are per-model capabilities, so check the model supports the rung you are asking for: `gpt-5.6-luna` rejects `xhigh` while `gpt-5.4-mini` accepts it, and `drop_params: true` on the router alias turns that rejection into a silently dropped parameter, which reads as a ladder that changed nothing. Two more things to keep in mind. Cost tracking prices each rung under its underlying model, so a ladder built this way shows up in spend as one model at several effort levels rather than as separate models. And `session_affinity` pins the rung's `model_name`; the TTL is refreshed on cache hits, and an escalation request can move the pin up a tier rather than leaving it on a hard fixed-duration lock
+Effort levels are per-model capabilities, so check the model supports the rung you are asking for: `gpt-5-mini` rejects `xhigh` while `gpt-5.4-mini` accepts it, and `drop_params: true` on the router alias turns that rejection into a silently dropped parameter, which reads as a ladder that changed nothing. Two more things to keep in mind. Cost tracking prices each rung under its underlying model, so a ladder built this way shows up in spend as one model at several effort levels rather than as separate models. And `session_affinity` pins the rung's `model_name`; the TTL is refreshed on cache hits, and an escalation request can move the pin up a tier rather than leaving it on a hard fixed-duration lock {/* keep-model-ids */}
 
 ## Python SDK
 

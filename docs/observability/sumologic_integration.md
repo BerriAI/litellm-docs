@@ -140,7 +140,7 @@ Example payload:
     "completion_tokens": 5,
     "total_tokens": 15
   },
-  "response_cost": 0.0001,
+  "response_cost": 0.000008,
   "start_time": "2024-01-01T00:00:00",
   "end_time": "2024-01-01T00:00:01"
 }

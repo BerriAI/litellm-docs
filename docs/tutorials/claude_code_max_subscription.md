@@ -46,9 +46,9 @@ model_list:
     litellm_params:
       model: anthropic/claude-sonnet-5
 
-  - model_name: claude-3-5-haiku-20241022
+  - model_name: claude-opus-5
     litellm_params:
-      model: anthropic/claude-3-5-haiku-20241022
+      model: anthropic/claude-opus-5
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -193,7 +193,7 @@ Click on a request to see detailed information including tokens, cost, duration,
 
 The logs show:
 - **Key Name**: `claude-code-test` (the virtual key you created)
-- **Model**: `anthropic/claude-sonnet-5`
+- **Model**: `anthropic/claude-sonnet-4-20250514` {/* keep-model-ids */}
 - **Tokens**: 65012 (64679 prompt + 333 completion)
 - **Cost**: $0.249754
 - **Status**: Success
@@ -269,9 +269,9 @@ model_list:
     litellm_params:
       model: anthropic/claude-sonnet-5
 
-  - model_name: claude-3-5-haiku-20241022
+  - model_name: claude-opus-5
     litellm_params:
-      model: anthropic/claude-3-5-haiku-20241022
+      model: anthropic/claude-opus-5
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -280,7 +280,7 @@ litellm_settings:
   model_group_settings:
     forward_client_headers_to_llm_api:
       - anthropic-claude
-      - claude-3-5-haiku-20241022
+      - claude-opus-5
 ```
 
 ### Budget Controls

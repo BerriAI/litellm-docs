@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Prompt Management
 
-Run experiments or change the specific model (e.g. from gpt-4o to gpt4o-mini finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
+Run experiments or change the specific model (e.g. from gpt-5.6-terra to a gpt-5.6-luna finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
 
 | Supported Integrations | Link |
 |------------------------|------|
@@ -111,7 +111,7 @@ Create `.prompt` files in your prompt directory:
 ```yaml nolint
 # prompts/hello.prompt
 ---
-model: gpt-4o
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -166,7 +166,7 @@ Your BitBucket repository should contain `.prompt` files:
 ```yaml nolint
 # prompts/my_bitbucket_prompt.prompt
 ---
-model: gpt-4o
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -201,7 +201,7 @@ Your GitLab repository should contain `.prompt` files:
 ```yaml nolint
 # prompts/my_gitlab_prompt.prompt
 ---
-model: gpt-4o
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.

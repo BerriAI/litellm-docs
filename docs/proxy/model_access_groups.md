@@ -93,7 +93,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::info
 
-Expect this to fail since gpt-4o is not in the `beta-models` access group
+Expect this to fail since gpt-5.6-luna is not in the `beta-models` access group
 
 :::
 
@@ -102,7 +102,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -159,7 +159,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::info
 
-Expect this to fail since gpt-4o is not in the `beta-models` access group
+Expect this to fail since gpt-5.6-luna is not in the `beta-models` access group
 
 :::
 
@@ -168,7 +168,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -478,12 +478,12 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
 If you try to access a model not in the access group, the request will be rejected:
 
 ```bash showLineNumbers title="Test Rejected Request"
-# This fails - gpt-5.6-terra is not in production-models
+# This fails - gpt-5.6-luna is not in production-models
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-...' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```

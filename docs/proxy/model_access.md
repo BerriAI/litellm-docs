@@ -44,7 +44,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::info
 
-Expect this to fail since gpt-4o is not in the `models` for the key generated
+Expect this to fail since claude-sonnet-5 is not in the `models` for the key generated
 
 :::
 
@@ -53,7 +53,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "claude-sonnet-5",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -196,7 +196,7 @@ When `include_metadata=true` is specified, the response includes fallback inform
       "owned_by": "openai",
       "fallbacks": {
         "general": ["gpt-5.6-luna", "claude-sonnet-5"],
-        "context_window": ["gpt-5.6-terra", "claude-sonnet-5"],
+        "context_window": ["gpt-5.6-luna", "claude-sonnet-5"],
         "content_policy": ["claude-sonnet-5"]
       }
     }

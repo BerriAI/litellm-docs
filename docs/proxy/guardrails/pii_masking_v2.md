@@ -631,7 +631,7 @@ Make a chat completions request, example:
 
 ```json title="Custom PII Request" showLineNumbers
 {
-  "model": "azure-gpt-3.5",
+  "model": "gpt-5.6-luna",
   "messages": [{"role": "user", "content": "John Smith AHV number is 756.3026.0705.92. Zip code: 1334023"}]
 }
 ```

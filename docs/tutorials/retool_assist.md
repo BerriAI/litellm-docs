@@ -33,7 +33,7 @@ This guide walks you through connecting [Retool Assist](https://docs.retool.com/
 | Provider Schema | OpenAI |
 | Base URL | Your ngrok URL (e.g. `https://abc123.ngrok-free.app`) or deployed proxy URL |
 | API Key | Your LiteLLM Virtual Key |
-| Model | Public model name from LiteLLM (e.g. `openai/gpt-4o-mini`, `openai/gpt-5.2-2025-12-11`) |
+| Model | Public model name from LiteLLM (e.g. `openai/gpt-5.6-luna`, `openai/gpt-5.6-terra`) |
 
 ---
 

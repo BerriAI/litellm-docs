@@ -36,13 +36,13 @@ Create a configuration file with your preferred non-Anthropic models:
 
 ```yaml
 model_list:
-  # OpenAI GPT-4o
+  # OpenAI gpt-5.6-terra
   - model_name: gpt-5.6-terra
     litellm_params:
       model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
   
-  # OpenAI GPT-4o-mini
+  # OpenAI gpt-5.6-luna
   - model_name: gpt-5.6-luna
     litellm_params:
       model: openai/gpt-5.6-luna
@@ -81,7 +81,7 @@ export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
 ```yaml
 model_list:
   # Google Gemini
-  - model_name: vertex-gemini-3-flash-preview
+  - model_name: vertex-gemini-3.8-flash
     litellm_params:
       model: vertex_ai/gemini-3.8-flash
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
@@ -110,7 +110,7 @@ export LITELLM_MASTER_KEY="sk-1234567890"
 ```yaml
 model_list:
   # Azure OpenAI
-  - model_name: azure-gpt-4o
+  - model_name: azure-gpt-5.6-terra
     litellm_params:
       model: azure/gpt-5.6-terra
       api_key: os.environ/AZURE_API_KEY
@@ -191,7 +191,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "azure-gpt-4o",
+    "model": "azure-gpt-5.6-terra",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -218,23 +218,23 @@ The `LITELLM_MASTER_KEY` gives Claude Code access to all proxy models. You can a
 Start Claude Code and specify which model to use:
 
 ```bash
-# Use OpenAI GPT-4o
+# Use OpenAI gpt-5.6-terra
 claude --model gpt-5.6-terra
 
-# Use OpenAI GPT-4o-mini for faster responses
+# Use OpenAI gpt-5.6-luna for faster responses
 claude --model gpt-5.6-luna
 
 # Use Google Gemini
 claude --model gemini-3.0-flash-exp
 
 # Use Vertex AI Gemini
-claude --model vertex-gemini-3-flash-preview
+claude --model vertex-gemini-3.8-flash
 
 # Use Vertex AI Anthropic Claude
 claude --model anthropic-vertex
 
 # Use Azure OpenAI
-claude --model azure-gpt-4o
+claude --model azure-gpt-5.6-terra
 ```
 
 ### 6. Switch Models at Runtime with `/model`
@@ -358,8 +358,8 @@ Access the UI at `http://0.0.0.0:4000/ui` to:
 
 LiteLLM supports 100+ providers. Here are some popular ones for use with Claude Code:
 
-- **OpenAI**: GPT-4o, GPT-4o-mini, o1, o3-mini
-- **Google**: Gemini 2.0 Flash, Gemini 1.5 Pro/Flash
+- **OpenAI**: gpt-5.6-terra, gpt-5.6-luna, o1, o3-mini
+- **Google**: Gemini 3.8 Flash, Gemini 3.1 Pro
 - **Azure OpenAI**: All OpenAI models via Azure
 - **AWS Bedrock**: Llama, Mistral, and other models
 - **Vertex AI**: Gemini, Claude, and other models on Google Cloud

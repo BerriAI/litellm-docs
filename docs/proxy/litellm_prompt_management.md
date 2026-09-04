@@ -26,7 +26,7 @@ Click the **+ Add New Prompt** button to create a new prompt.
 
 ### Step 1: Select Your Model
 
-Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-sonnet-4-5`, `gpt-5.6-terra`, etc.).
+Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-sonnet-5`, `gpt-5.6-terra`, etc.).
 
 ### Step 2: Set the Developer Message 
 

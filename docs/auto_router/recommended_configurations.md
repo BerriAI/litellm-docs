@@ -28,11 +28,11 @@ Recommended ladders, matching the dashboard's Auto Router templates. Every tier 
 
 Haiku, Sonnet, Opus, then Opus at high reasoning effort.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -53,7 +53,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5-high
@@ -108,11 +108,11 @@ model_list:
 
 Flash Lite 2.5, Flash Lite 3.1, Flash 3.7, then Pro 3.1.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: gemini-3.8-flash
+  - model_name: gemini-2.5-flash-lite
     litellm_params:
-      model: gemini/gemini-3.8-flash
+      model: gemini/gemini-2.5-flash-lite
       api_key: os.environ/GEMINI_API_KEY
   - model_name: gemini-3.1-flash-lite
     litellm_params:
@@ -132,7 +132,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gemini-3.8-flash
+          SIMPLE:    gemini-2.5-flash-lite
           MEDIUM:    gemini-3.1-flash-lite
           COMPLEX:   gemini-3.7-flash
           REASONING: gemini-3.1-pro-preview
@@ -233,11 +233,11 @@ model_list:
 - [Terminal-Bench](/blog/auto-router-terminal-bench-benchmark): Opus-5 solve rate at 27% lower cost, this config, gpt-5.4-mini classifier reading only the current message.
 - [Cost and quality](/blog/auto-router-cost-quality-benchmark) and [prompt caching](/blog/auto-router-prompt-caching-benchmark): same tiers, heuristic classifier.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -257,7 +257,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5
@@ -280,11 +280,11 @@ The classifier context window is the knob to revisit for your own traffic:
 - Haiku serves both SIMPLE and MEDIUM; Opus is reserved for REASONING.
 - 95% of requests never reached the flagship tier.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -300,11 +300,11 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
-          MEDIUM:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
+          MEDIUM:    claude-haiku-4-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-5
-      complexity_router_default_model: claude-sonnet-5
+      complexity_router_default_model: claude-haiku-4-5
 ```
 
 ## Coding agents with load balancing
@@ -313,11 +313,11 @@ model_list:
 - `session_affinity` pins the tier for the session; `deployment_affinity` plus the `prompt_caching` pre-call check pins the deployment holding the cache.
 - Both matter on agent traffic. Details: [Session affinity](/docs/proxy/auto_routing#session-affinity).
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -340,7 +340,7 @@ model_list:
           role: system
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-sonnet-5
           REASONING: claude-opus-5

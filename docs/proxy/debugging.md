@@ -69,7 +69,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 This will emit the raw request sent by LiteLLM to the API Provider and raw response received from the API Provider for **just** this request in the logs. 
 
 
-```bash showLineNumbers
+```bash showLineNumbers keep-model-ids
 INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
 20:14:06 - LiteLLM:WARNING: litellm_logging.py:938 - 
 
@@ -81,7 +81,7 @@ https://exampleopenaiendpoint-production.up.railway.app/chat/completions \
 
 
 20:14:06 - LiteLLM:WARNING: litellm_logging.py:1015 - RAW RESPONSE:
-{"id":"chatcmpl-817fc08f0d6c451485d571dab39b26a1","object":"chat.completion","created":1677652288,"model":"gpt-5.6-luna","system_fingerprint":"fp_44709d6fcb","choices":[{"index":0,"message":{"role":"assistant","content":"\n\nHello there, how may I assist you today?"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":12,"total_tokens":21}}
+{"id":"chatcmpl-817fc08f0d6c451485d571dab39b26a1","object":"chat.completion","created":1677652288,"model":"gpt-3.5-turbo-0301","system_fingerprint":"fp_44709d6fcb","choices":[{"index":0,"message":{"role":"assistant","content":"\n\nHello there, how may I assist you today?"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":12,"total_tokens":21}}
 
 
 INFO:     127.0.0.1:56155 - "POST /chat/completions HTTP/1.1" 200 OK

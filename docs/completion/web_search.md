@@ -30,7 +30,7 @@ For OpenAI, only dedicated search models support the `web_search_options` parame
 - `gpt-4o-mini-search-preview`
 - `gpt-5-search-api`
 
-**Regular models like `gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-terra` do not support `web_search_options`**
+**Regular models like `gpt-5.6-terra` and `gpt-5.6-luna` do not support `web_search_options`**
 :::
 
 :::tip The `web_search_options` parameter is optional
@@ -42,7 +42,7 @@ Use `web_search_options` when you need to:
 :::
 
 :::info
-**Anthropic Web Search Models**: Claude models that support web search: `claude-sonnet-5`, `claude-sonnet-5`, `claude-3-5-haiku-latest`, `claude-3-5-haiku-20241022`, `claude-sonnet-5`
+**Anthropic Web Search Models**: Claude models that support web search: `claude-3-5-sonnet-latest`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-latest`, `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219` {/* keep-model-ids */}
 :::
 
 ## OpenAI Web Search: Two Approaches
@@ -294,7 +294,7 @@ response = client.chat.completions.create(
 
 ## `/responses` (litellm.responses)
 
-Use the `web_search_preview` tool with models like `gpt-5.6-terra`, `gpt-5.6-terra`, `gpt-5.6-terra`, etc.
+Use the `web_search_preview` tool with models like `gpt-5.6-terra`, `gpt-5.6-luna`, etc.
 
 :::info
 Search-dedicated models like `gpt-5-search-api` and `gpt-4o-search-preview` do **not** support the `/responses` endpoint. Use them with `/chat/completions` + `web_search_options` instead (see above).
@@ -329,9 +329,9 @@ model_list:
       model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-5.6-terra
+  - model_name: gpt-5.6-luna
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -632,9 +632,9 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
 - **`search_context_cost_per_query`**: the cost per billable unit (per search context size tier).
 - **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default; flat fee per API call that uses search).
 
-```json
+```json keep-model-ids
 {
-    "gemini/gemini-3.8-flash": {
+    "gemini/gemini-3-flash-preview": {
         "web_search_billing_unit": "per_query",
         "search_context_cost_per_query": {
             "search_context_size_low": 0.014,
@@ -642,7 +642,7 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
             "search_context_size_high": 0.014
         }
     },
-    "gemini/gemini-3.8-flash": {
+    "gemini/gemini-2.5-flash": {
         "search_context_cost_per_query": {
             "search_context_size_low": 0.035,
             "search_context_size_medium": 0.035,

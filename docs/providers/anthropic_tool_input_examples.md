@@ -248,9 +248,13 @@ Examples add to your prompt tokens:
 
 Input examples work with all Claude models that support the `advanced-tool-use-2025-11-20` beta header:
 
-- Claude Opus 4.5 (`claude-opus-5`)
-- Claude Sonnet 4.5 (`claude-sonnet-5`)
-- Claude Opus 4.1 (`claude-opus-5`)
+- Claude Sonnet 5 (`claude-sonnet-5`)
+{/* keep-model-ids:start */}
+- Claude Opus 5 (`claude-opus-5`)
+- Claude Opus 4.5 (`claude-opus-4-5-20251101`)
+- Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`)
+- Claude Opus 4.1 (`claude-opus-4-1-20250805`)
+{/* keep-model-ids:end */}
 
 :::note
 On Google Cloud's Vertex AI and Amazon Bedrock, only Claude Opus 4.5 supports tool input examples.
@@ -388,7 +392,7 @@ LiteLLM supports input examples across the following Anthropic-compatible provid
 
 - **Standard Anthropic API** (`anthropic/claude-sonnet-5`) ✅
 - **Azure Anthropic / Microsoft Foundry** (`azure/claude-sonnet-5`) ✅
-- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-5`) ✅ (Opus 4.5 only)
+- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only) {/* keep-model-ids */}
 - **Google Cloud Vertex AI** (`vertex_ai/claude-sonnet-5`) ❌ Not supported
 
 The beta header (`advanced-tool-use-2025-11-20`) is automatically added when LiteLLM detects tools with the `input_examples` field.

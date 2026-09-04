@@ -916,7 +916,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-sonnet-5',
+    model='gemini-3.8-flash',
     object='chat.completion',
     system_fingerprint=None,
     choices=[
@@ -1920,7 +1920,7 @@ curl --location 'https://0.0.0.0:4000/v1/chat/completions' \
 ## Gemini Pro Vision
 | Model Name       | Function Call                        |
 |------------------|--------------------------------------|
-| gemini-2.5-pro-vision   | `completion('gemini-2.5-pro-vision', messages)`, `completion('vertex_ai/gemini-2.5-pro-vision', messages)`|
+| gemini-3.1-pro-preview   | `completion('gemini-3.1-pro-preview', messages)`, `completion('vertex_ai/gemini-3.1-pro-preview', messages)`|
 
 ## Gemini 1.5 Pro (and Vision)
 | Model Name       | Function Call                        |
@@ -1934,7 +1934,7 @@ curl --location 'https://0.0.0.0:4000/v1/chat/completions' \
 
 #### Using Gemini Pro Vision
 
-Call `gemini-2.5-pro-vision` in the same input/output format as OpenAI [`gpt-4-vision`](https://docs.litellm.ai/docs/providers/openai#openai-vision-models)
+Call `gemini-3.1-pro-preview` in the same input/output format as OpenAI [`gpt-4-vision`](https://docs.litellm.ai/docs/providers/openai#openai-vision-models)
 
 LiteLLM Supports the following image types passed in `url`
 - Images with Cloud Storage URIs - gs://cloud-samples-data/generative-ai/image/boats.jpeg
@@ -1952,7 +1952,7 @@ LiteLLM Supports the following image types passed in `url`
 import litellm
 
 response = litellm.completion(
-  model = "vertex_ai/gemini-2.5-pro-vision",
+  model = "vertex_ai/gemini-3.1-pro-preview",
   messages=[
       {
           "role": "user",
@@ -1990,7 +1990,7 @@ image_path = "cached_logo.jpg"
 # Getting the base64 string
 base64_image = encode_image(image_path)
 response = litellm.completion(
-    model="vertex_ai/gemini-2.5-pro-vision",
+    model="vertex_ai/gemini-3.1-pro-preview",
     messages=[
         {
             "role": "user",
@@ -2046,7 +2046,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="vertex_ai/gemini-2.5-pro-vision",
+    model="vertex_ai/gemini-3.1-pro-preview",
     messages=messages,
     tools=tools,
 )
@@ -2169,7 +2169,7 @@ LiteLLM supports fine-grained video processing control through the `video_metada
 :::
 
 :::tip
-Video clipping (`start_offset`/`end_offset`) and frame rate control (`fps`) are supported by all Gemini models, but analysis quality is significantly higher with the **Gemini 2.5 series** (e.g., `gemini-3.8-flash`, `gemini-3.1-pro-preview`).
+Video clipping (`start_offset`/`end_offset`) and frame rate control (`fps`) are supported by all Gemini models, but analysis quality is significantly higher with the **Gemini 2.5 series and later** (e.g., `gemini-3.8-flash`, `gemini-3.1-pro-preview`).
 :::
 
 :::warning
@@ -3046,9 +3046,9 @@ finetune_settings:
 <Tabs>
 <TabItem value="openai" label="OpenAI Python SDK">
 
-```python
+```python keep-model-ids
 ft_job = await client.fine_tuning.jobs.create(
-    model="gemini-3.1-pro-preview",                  # Vertex model you want to fine-tune
+    model="gemini-1.0-pro-002",                  # Vertex model you want to fine-tune
     training_file="gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",                 # file_id from create file response
     extra_headers={"custom-llm-provider": "vertex_ai"}, # tell litellm proxy which provider to use
 )
@@ -3057,13 +3057,13 @@ ft_job = await client.fine_tuning.jobs.create(
 
 <TabItem value="curl" label="curl">
 
-```shell
+```shell keep-model-ids
 curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
-    "model": "gemini-3.1-pro-preview",
+    "model": "gemini-1.0-pro-002",
     "training_file": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl"
     }'
 ```
@@ -3080,10 +3080,10 @@ Set hyper_parameters, such as `n_epochs`, `learning_rate_multiplier` and `adapte
 <Tabs>
 <TabItem value="openai" label="OpenAI Python SDK">
 
-```python
+```python keep-model-ids
 
 ft_job = client.fine_tuning.jobs.create(
-    model="gemini-3.1-pro-preview",                  # Vertex model you want to fine-tune
+    model="gemini-1.0-pro-002",                  # Vertex model you want to fine-tune
     training_file="gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",                 # file_id from create file response
     hyperparameters={
         "n_epochs": 3,                      # epoch_count on Vertex
@@ -3097,13 +3097,13 @@ ft_job = client.fine_tuning.jobs.create(
 
 <TabItem value="curl" label="curl">
 
-```shell
+```shell keep-model-ids
 curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
-    "model": "gemini-3.1-pro-preview",
+    "model": "gemini-1.0-pro-002",
     "training_file": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",
     "hyperparameters": {
         "n_epochs": 3,

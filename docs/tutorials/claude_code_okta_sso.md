@@ -42,11 +42,6 @@ model_list:
       model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: claude-sonnet-5
-    litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: true

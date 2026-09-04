@@ -35,7 +35,7 @@ uv tool install 'litellm[proxy]'
 
 Create a secure configuration using environment variables:
 
-```yaml
+```yaml keep-model-ids
 model_list:
   # Configure the models you want to use
   - model_name: claude-opus-4-7
@@ -48,9 +48,9 @@ model_list:
       model: anthropic/claude-sonnet-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5-20251001
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5-20251001
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -159,13 +159,13 @@ This value will be sent as `Authorization` and `X-Api-Key` headers. The `apiKeyH
 
 Start Claude Code with the model you want to use:
 
-```bash
+```bash keep-model-ids
 # Specify model at startup (Opus 4.7 — newest Claude Code model)
 claude --model claude-opus-4-7
 
 # Or specify a different model
 claude --model claude-sonnet-4-6
-claude --model claude-sonnet-5
+claude --model claude-haiku-4-5-20251001
 
 # Or change model during a session
 claude
@@ -174,10 +174,10 @@ claude
 
 Alternatively, set default models with environment variables:
 
-```bash
+```bash keep-model-ids
 export ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-7
 export ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6
-export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5
+export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-5-20251001
 claude
 ```
 
@@ -246,7 +246,7 @@ Compatibility between Claude Code features and each provider (Anthropic, Bedrock
 <Tabs>
 <TabItem value="multi-provider" label="Multi-Provider Setup">
 
-```yaml
+```yaml keep-model-ids
 model_list:
   # Anthropic models
   - model_name: claude-opus-4-7
@@ -276,7 +276,7 @@ model_list:
 
   - model_name: claude-bedrock-haiku
     litellm_params:
-      model: bedrock/invoke/us.anthropic.claude-sonnet-5
+      model: bedrock/invoke/us.anthropic.claude-haiku-4-5-20251001-v1:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2

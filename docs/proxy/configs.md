@@ -61,7 +61,7 @@ model_list:
     model_info: 
       version: 2
   
-  # Use this if you want to make requests to `claude-sonnet-5`,`claude-sonnet-5`,`claude-opus-5` without defining them on the config.yaml
+  # Use this if you want to make requests to `claude-sonnet-5`,`claude-opus-5` without defining them on the config.yaml
   # Default models
   # Works for ALL Providers and needs the default provider credentials in .env
   - model_name: "*" 
@@ -383,7 +383,9 @@ LiteLLM supports
 When `tpm/rpm` is set + `routing_strategy==simple-shuffle` litellm will use a weighted pick based on set tpm/rpm. **In our load tests setting tpm/rpm for all deployments + `routing_strategy==simple-shuffle` maximized throughput**
 - When using multiple LiteLLM Servers / Kubernetes set redis settings `router_settings:redis_host` etc
 
-```yaml
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```yaml keep-model-ids
 model_list:
   - model_name: zephyr-beta
     litellm_params:
@@ -401,27 +403,27 @@ model_list:
         model: huggingface/HuggingFaceH4/zephyr-7b-beta
         api_base: http://0.0.0.0:8003
         rpm: 60000      
-  - model_name: gpt-5.6-terra
+  - model_name: gpt-4o
     litellm_params:
-        model: gpt-5.6-terra
+        model: gpt-4o
         api_key: <my-openai-key>
         rpm: 200      
-  - model_name: gpt-5.6-terra
+  - model_name: gpt-4.1
     litellm_params:
-        model: gpt-5.6-terra
+        model: gpt-4.1
         api_key: <my-openai-key>
         rpm: 100      
 
 litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
-  fallbacks: [{"zephyr-beta": ["gpt-5.6-terra"]}] # fallback to gpt-5.6-terra if call fails num_retries 
-  context_window_fallbacks: [{"zephyr-beta": ["gpt-5.6-terra"]}, {"gpt-5.6-terra": ["gpt-5.6-terra"]}] # fallback to gpt-5.6-terra if context window error
+  fallbacks: [{"zephyr-beta": ["gpt-4o"]}] # fallback to gpt-4o if call fails num_retries 
+  context_window_fallbacks: [{"zephyr-beta": ["gpt-4.1"]}, {"gpt-4o": ["gpt-4.1"]}] # fallback to gpt-4.1 if context window error
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
 
 router_settings: # router_settings are optional
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
-  model_group_alias: {"gpt-5.6-terra": "gpt-5.6-terra"} # all requests with `gpt-5.6-terra` will be routed to models with `gpt-5.6-terra`
+  model_group_alias: {"gpt-4": "gpt-4o"} # all requests with `gpt-4` will be routed to models with `gpt-4o`
   num_retries: 2
   timeout: 30                                  # 30 seconds
   redis_host: <your redis host>                # set this when using multiple litellm proxy deployments, load balancing state stored in redis
@@ -515,10 +517,10 @@ model_list:
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["production", "staging"]
- - model_name: gpt-5.6-terra
+ - model_name: claude-sonnet-5
    litellm_params:
-     model: openai/gpt-5.6-terra
-     api_key: os.environ/OPENAI_API_KEY
+     model: anthropic/claude-sonnet-5
+     api_key: os.environ/ANTHROPIC_API_KEY
    model_info:
      supported_environments: ["production"]
 ```

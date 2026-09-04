@@ -276,7 +276,7 @@ os.environ["DATABRICKS_API_KEY"] = "databricks key"
 os.environ["DATABRICKS_API_BASE"] = "databricks base url"
 
 resp = completion(
-    model="databricks/databricks-claude-3-7-sonnet",
+    model="databricks/databricks-claude-sonnet-5",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -292,7 +292,7 @@ resp = completion(
 ```yaml
 - model_name: claude-sonnet-5
   litellm_params:
-    model: databricks/databricks-claude-3-7-sonnet
+    model: databricks/databricks-claude-sonnet-5
     api_key: os.environ/DATABRICKS_API_KEY
     api_base: os.environ/DATABRICKS_API_BASE
 ```

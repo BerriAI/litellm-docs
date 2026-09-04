@@ -765,7 +765,7 @@ LiteLLM supports Anthropic's beta features on AWS Bedrock through the `anthropic
 
 **Single Beta Feature**
 
-```python
+```python keep-model-ids
 from litellm import completion
 import os
 
@@ -776,7 +776,7 @@ os.environ["AWS_REGION_NAME"] = ""
 
 # Use 1M context window with Claude Sonnet 4
 response = completion(
-    model="bedrock/anthropic.claude-sonnet-4-20250115-v1:0",
+    model="bedrock/anthropic.claude-sonnet-4-20250514-v1:0",
     messages=[{"role": "user", "content": "Hello! Testing 1M context window."}],
     max_tokens=100,
     extra_headers={
@@ -787,12 +787,12 @@ response = completion(
 
 **Multiple Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Combine multiple beta features (comma-separated)
 response = completion(
-    model="bedrock/converse/anthropic.claude-sonnet-5",
+    model="bedrock/converse/anthropic.claude-3-5-sonnet-20241022-v2:0",
     messages=[{"role": "user", "content": "Testing multiple beta features"}],
     max_tokens=100,
     extra_headers={
@@ -803,13 +803,13 @@ response = completion(
 
 **Computer Use Tools with Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Computer use tools automatically add computer-use-2024-10-22
 # You can add additional beta features
 response = completion(
-    model="bedrock/converse/anthropic.claude-sonnet-5",
+    model="bedrock/converse/anthropic.claude-3-5-sonnet-20241022-v2:0",
     messages=[{"role": "user", "content": "Take a screenshot"}],
     tools=[{
         "type": "computer_20241022",
@@ -828,17 +828,17 @@ response = completion(
 
 **Set on YAML Config**
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: claude-sonnet-4-1m
     litellm_params:
-      model: bedrock/anthropic.claude-sonnet-4-20250115-v1:0
+      model: bedrock/anthropic.claude-sonnet-4-20250514-v1:0
       extra_headers:
         anthropic-beta: "context-1m-2025-08-07"  # 👈 Enable 1M context
 
   - model_name: claude-computer-use
     litellm_params:
-      model: bedrock/converse/anthropic.claude-sonnet-5
+      model: bedrock/converse/anthropic.claude-3-5-sonnet-20241022-v2:0
       extra_headers:
         anthropic-beta: "computer-use-2024-10-22,context-1m-2025-08-07"
 
@@ -1289,7 +1289,7 @@ The returned completion will _**not**_ include your "pre-fill" text, since it is
 
 :::
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1301,7 +1301,7 @@ messages = [
     {"role": "user", "content": "How do you say 'Hello' in German? Return your answer as a JSON object, like this:\n\n{ \"Hello\": \"Hallo\" }"},
     {"role": "assistant", "content": "{"},
 ]
-response = completion(model="bedrock/anthropic.claude-sonnet-5", messages=messages)
+response = completion(model="bedrock/anthropic.claude-v2", messages=messages)
 ```
 
 ### Example prompt sent to Claude
@@ -1318,7 +1318,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1 with Bedrock, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1330,7 +1330,7 @@ messages = [
     {"role": "system", "content": "You are a snarky assistant."},
     {"role": "user", "content": "How do I boil water?"},
 ]
-response = completion(model="bedrock/anthropic.claude-sonnet-5", messages=messages)
+response = completion(model="bedrock/anthropic.claude-v2:1", messages=messages)
 ```
 
 ### Example prompt sent to Claude
@@ -1421,7 +1421,7 @@ print("Final Response: {}".format(response))
 
 ```yaml
 model_list:
-  - model_name: bedrock-claude-haiku
+  - model_name: bedrock-claude-sonnet
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
@@ -1446,7 +1446,7 @@ litellm --config /path/to/config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "bedrock-claude-haiku",
+      "model": "bedrock-claude-sonnet",
       "messages": [
         {
           "role": "user",
@@ -1467,7 +1467,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="bedrock-claude-haiku", messages = [
+response = client.chat.completions.create(model="bedrock-claude-sonnet", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -1491,7 +1491,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "bedrock-claude-haiku",
+    model = "bedrock-claude-sonnet",
     temperature=0.1
 )
 
@@ -1990,14 +1990,14 @@ print(response.choices[0].message.content)
 
 ## Provisioned throughput models
 To use provisioned throughput Bedrock models pass 
-- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.claude-sonnet-5`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models)
+- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.claude-v2`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models) {/* keep-model-ids */}
 - `model_id=provisioned-model-arn` 
 
 Completion
-```python
+```python keep-model-ids
 import litellm
 response = litellm.completion(
-    model="bedrock/anthropic.claude-sonnet-5",
+    model="bedrock/anthropic.claude-instant-v1",
     model_id="provisioned-model-arn",
     messages=[{"content": "Hello, how are you?", "role": "user"}]
 )

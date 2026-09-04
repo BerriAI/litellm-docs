@@ -180,7 +180,7 @@ model_list:
       model: bedrock/us.anthropic.claude-sonnet-5
       aws_region_name: us-east-1
 
-  - model_name: azure-gpt4
+  - model_name: azure-gpt
     litellm_params:
       model: azure/gpt-5.6-terra
       api_base: https://my-azure.openai.azure.com

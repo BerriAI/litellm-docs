@@ -64,10 +64,10 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-```python
+```python keep-model-ids
 # Also works with Claude Opus 4.5 (beta header auto-injected)
 response = litellm.completion(
-    model="anthropic/claude-opus-5",
+    model="anthropic/claude-opus-4-5-20251101",
     messages=[{
         "role": "user",
         "content": "Analyze the trade-offs between microservices and monolithic architectures"
@@ -148,7 +148,7 @@ curl https://api.anthropic.com/v1/messages \
 </TabItem>
 <TabItem value="45" label="Claude Opus 4.5 (beta)">
 
-```bash
+```bash keep-model-ids
 # Claude Opus 4.5 — requires beta header
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -156,7 +156,7 @@ curl https://api.anthropic.com/v1/messages \
   --header "anthropic-beta: effort-2025-11-24" \
   --header "content-type: application/json" \
   --data '{
-    "model": "claude-opus-5",
+    "model": "claude-opus-4-5-20251101",
     "max_tokens": 4096,
     "messages": [{
       "role": "user",
@@ -174,9 +174,11 @@ curl https://api.anthropic.com/v1/messages \
 ## Model Compatibility
 
 The effort parameter is supported by:
-- **Claude Opus 4.6** (`claude-opus-5`): supports `high`, `medium`, `low`, and `max`
+{/* keep-model-ids:start */}
+- **Claude Opus 4.6** (`claude-opus-4-6`): supports `high`, `medium`, `low`, and `max`
 - **Claude Sonnet 4.6** (`claude-sonnet-4-6`): supports `high`, `medium`, `low`
-- **Claude Opus 4.5** (`claude-opus-5`): supports `high`, `medium`, `low`
+- **Claude Opus 4.5** (`claude-opus-4-5-20251101`): supports `high`, `medium`, `low`
+{/* keep-model-ids:end */}
 
 :::info
 `effort="max"` is only available on Claude Opus 4.6. Using it with other models will raise a validation error.
@@ -301,7 +303,7 @@ If you're not seeing the header for Opus 4.5:
 
 Accepted values: `"high"`, `"medium"`, `"low"`, and `"max"` (Opus 4.6 only). Any other value will raise a validation error:
 
-```python
+```python keep-model-ids
 # ❌ This will raise an error
 output_config={"effort": "very_low"}
 
@@ -312,7 +314,7 @@ output_config={"effort": "low"}
 litellm.completion(model="anthropic/claude-sonnet-4-6", messages=messages, reasoning_effort="max")
 
 # ✅ max is only for Opus 4.6
-litellm.completion(model="anthropic/claude-opus-5", messages=messages, reasoning_effort="max")
+litellm.completion(model="anthropic/claude-opus-4-6", messages=messages, reasoning_effort="max")
 ```
 
 ### Model not supported

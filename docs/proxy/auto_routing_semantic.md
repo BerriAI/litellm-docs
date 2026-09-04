@@ -145,7 +145,7 @@ Navigate to the LiteLLM UI and go to **Models+Endpoints** > **Add Model** > **Au
 Configure the following required fields:
 
 - **Auto Router Name** - The model name that developers will use when making LLM API requests to LiteLLM
-- **Default Model** - The fallback model used when no route is matched (e.g., if set to "gpt-4o-mini", unmatched requests will be routed to gpt-4o-mini)
+- **Default Model** - The fallback model used when no route is matched (e.g., if set to "gpt-5.6-luna", unmatched requests will be routed to gpt-5.6-luna)
 - **Embedding Model** - The model used to generate embeddings for input messages. These embeddings are used to semantically match input against the utterances defined in your routes
 
 #### Route Configuration

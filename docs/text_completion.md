@@ -35,15 +35,15 @@ response = text_completion(
 
 1. Define models on config.yaml
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
       model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-luna
+  - model_name: text-davinci-003
     litellm_params:
-      model: text-completion-openai/gpt-5.6-luna
+      model: text-completion-openai/text-davinci-003
       api_key: os.environ/OPENAI_API_KEY
 ```
 

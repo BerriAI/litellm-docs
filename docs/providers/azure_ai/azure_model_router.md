@@ -299,7 +299,7 @@ model_list:
 
 When you use Azure Model Router, the total cost includes:
 
-- **Model Cost**: Based on the actual model that handled your request (e.g., `gpt-5.6-luna`, `gpt-5.6-luna`)
+- **Model Cost**: Based on the actual model that handled your request (e.g., `gpt-5.6-luna`, `gpt-5.6-terra`)
 - **Router Flat Cost**: $0.14 per million input tokens (Azure AI Foundry infrastructure fee)
 
 ### Example Response with Cost

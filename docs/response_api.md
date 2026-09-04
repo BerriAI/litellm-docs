@@ -1349,7 +1349,7 @@ model_list:
       rpm: 600
       tpm: 100000
     model_info:
-      id: "gpt-5.1-codex-eastus"
+      id: "gpt-5.6-terra-eastus"
 
   - model_name: gpt-5.6-terra
     litellm_params:
@@ -1359,7 +1359,7 @@ model_list:
       rpm: 600
       tpm: 100000
     model_info:
-      id: "gpt-5.1-codex-westeurope"
+      id: "gpt-5.6-terra-westeurope"
 
 router_settings:
   routing_strategy: usage-based-routing-v2

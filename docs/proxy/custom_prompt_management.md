@@ -125,7 +125,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gemini-3.1-pro-preview",
+    model="gpt-5.6-terra",
     messages=[{"role": "user", "content": "hi"}],
     extra_body={
         "prompt_id": "1234"
@@ -165,7 +165,7 @@ curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gemini-3.1-pro-preview",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }'
@@ -198,7 +198,7 @@ response = litellm.completion(
 The request will be transformed from:
 ```json
 {
-    "model": "gemini-3.1-pro-preview",
+    "model": "gpt-5.6-terra",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }
@@ -207,7 +207,7 @@ The request will be transformed from:
 To:
 ```json
 {
-    "model": "gemini-3.1-pro-preview",
+    "model": "gpt-5.6-terra",
     "messages": [
         {"role": "system", "content": "Be a good Bot!"},
         {"role": "user", "content": "hi"}

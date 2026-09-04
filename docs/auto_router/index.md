@@ -44,11 +44,11 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **Agent:** tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`.
 - **config.yaml:** one router entry whose tiers name other models in the same file.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: claude-haiku-4-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-haiku-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-sonnet-5
     litellm_params:
@@ -64,7 +64,7 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    claude-sonnet-5
+          SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5

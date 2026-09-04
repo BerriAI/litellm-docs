@@ -43,7 +43,9 @@ Implement model fallbacks based on context window exceptions.
 
 LiteLLM also exposes a `get_max_tokens()` function, which you can use to identify the context window limit that's been exceeded. 
 
-```python 
+The model ids in the fallback list below are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 import litellm
 from litellm import completion, ContextWindowExceededError, get_max_tokens
 
@@ -55,7 +57,7 @@ os.environ["AZURE_API_KEY"] = ""
 os.environ["AZURE_API_BASE"] = ""
 os.environ["AZURE_API_VERSION"] = ""
 
-context_window_fallback_list = [{"model":"gpt-5.6-luna", "max_tokens": 16385}, {"model":"gpt-5.6-terra", "max_tokens": 32768}, {"model": "claude-sonnet-5", "max_tokens":100000}]
+context_window_fallback_list = [{"model":"gpt-3.5-turbo-16k", "max_tokens": 16385}, {"model":"gpt-4-32k", "max_tokens": 32768}, {"model": "claude-instant-1", "max_tokens":100000}]
 
 user_message = "Hello, how are you?"
 messages = [{ "content": user_message,"role": "user"}]

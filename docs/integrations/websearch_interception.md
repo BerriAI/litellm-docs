@@ -210,7 +210,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # Azure OpenAI
-  - model_name: azure-gpt4
+  - model_name: azure-gpt
     litellm_params:
       model: azure/gpt-5.6-terra
       api_base: https://my-azure.openai.azure.com

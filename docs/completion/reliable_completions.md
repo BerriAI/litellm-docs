@@ -40,13 +40,16 @@ response = completion(
 :::
 
 ### Context Window Fallbacks (SDK)
-```python 
+
+The ids below are illustrative and kept for their context window sizes: a 4k model falling back to its 16k variant.
+
+```python keep-model-ids
 from litellm import completion
 
-fallback_dict = {"gpt-5.6-luna": "gpt-5.6-luna"}
+fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}
 messages = [{"content": "how does a court case get to the Supreme Court?" * 500, "role": "user"}]
 
-completion(model="gpt-5.6-luna", messages=messages, context_window_fallback_dict=fallback_dict)
+completion(model="gpt-3.5-turbo", messages=messages, context_window_fallback_dict=fallback_dict)
 ```
 
 ### Fallbacks - Switch Models/API Keys/API Bases (SDK)

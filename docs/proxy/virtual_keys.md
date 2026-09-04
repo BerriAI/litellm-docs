@@ -241,9 +241,9 @@ Expected Response
 
 ## Model Aliases
 
-If a user is expected to use a given model (i.e. gpt-4o-mini), and you want to:
+If a user is expected to use a given model (i.e. gpt-5.6-luna), and you want to:
 
-- try to upgrade the request (i.e. gpt-4o)
+- try to upgrade the request (i.e. gpt-5.6-terra)
 - or downgrade it (i.e. Mistral)
 
 Here's how you can do that: 

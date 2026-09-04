@@ -31,7 +31,7 @@ model_list:
 
   - model_name: gemini-3.1-pro-preview
     litellm_params:
-      model: "gemini/gemini-3.8-flash"
+      model: "gemini/gemini-3.1-pro-preview"
       api_key: "os.environ/GEMINI_API_KEY"
 ```
 

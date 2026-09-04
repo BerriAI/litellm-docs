@@ -146,7 +146,7 @@ $ litellm --config /path/to/config.yaml
 
 ### Test - Simple Call
 
-Here requests with model=gpt-4o-mini will be routed across multiple instances of azure/gpt-4o-mini
+Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
 👉 Key Change: `model="gpt-5.6-luna"`
 
@@ -296,7 +296,7 @@ model_list:
 
 router_settings:
   model_group_alias:
-    "GPT-4o-mini": # alias
+    "GPT-5.6-luna": # alias
       model: "gpt-5.6-luna"  # Actual model name in 'model_list'
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
