@@ -4,7 +4,7 @@ title: "One-click setup for Auto Router"
 date: 2026-09-03T10:00:00
 authors:
   - moe
-description: "Auto Setup checks which models you can use, chooses the model family, and assigns all four Auto Router tiers for you."
+description: "Auto Setup checks which models you can use and assigns all four Auto Router tiers for you."
 keywords: [auto router, auto setup, complexity router, heuristic v2, model routing, litellm]
 tags: [routing, complexity-router, product]
 hide_table_of_contents: false
@@ -30,9 +30,9 @@ The existing **Template** dropdown asks you to choose Anthropic, OpenAI, or Cust
 
 **Configure automatically** makes that choice for you. It checks your available chat model groups across providers and:
 
-- builds each tier from the preferred models used in LiteLLM's presets
+- builds each tier from current low, medium, and flagship model families
 - mixes model families when that produces the best match for the models you have
-- includes a small curated list of common models beyond the presets
+- falls back to the models used in LiteLLM's existing presets
 
 The existing presets remain available when you want direct control. Auto Setup uses their tier assignments as a shared catalog, so a complete family preset does not override a better match from another preset.
 
@@ -40,7 +40,9 @@ The existing presets remain available when you want direct control. Auto Setup u
 
 Open **Add Model → Auto Router** in the LiteLLM Dashboard. The new **Configure automatically** button checks the chat models available to you and builds the four Auto Router tiers.
 
-LiteLLM checks the model assignments in the 1M Context, Anthropic, OpenAI, Gemini, and Lite presets, plus a small list of common OpenAI, Anthropic, Gemini, DeepSeek, and xAI models. For each tier, it uses a preferred model that your proxy serves. It can use an OpenAI model for a simple request, an Anthropic model for a complex request, and another family in between. If no preferred model is available for one tier, it reuses the closest tier match.
+LiteLLM starts with current model ladders from OpenAI, Anthropic, Google, DeepSeek, and xAI. For providers with a model family, that means the efficient model for **Simple**, the balanced model for **Medium**, and the flagship for **Complex**. **Reasoning** reuses the flagship with its strongest supported reasoning effort. If one provider does not cover every tier, Auto Setup can mix families; if no preferred model is available for one tier, it reuses the closest tier match.
+
+For example, if your proxy serves the current OpenAI ladder, Auto Setup selects GPT-5.6 Luna, GPT-5.6 Terra, and GPT-6 Astra, then uses GPT-6 Astra again at `max` reasoning effort for the final tier. It only selects models your proxy actually serves.
 
 The setup uses your own model-group names, so the generated router points at deployments you can call.
 
@@ -60,7 +62,12 @@ complexity_router_config:
     SIMPLE: [your-simple-model-group]
     MEDIUM: [your-medium-model-group]
     COMPLEX: [your-complex-model-group]
-    REASONING: [your-reasoning-model-group]
+    REASONING: [your-complex-model-group]
+  tier_model_configs:
+    REASONING:
+      - model_name: your-complex-model-group
+        litellm_params:
+          reasoning_effort: max
 ```
 
 At runtime, [Heuristic v2](/blog/heuristic-v2) classifies each request and sends it to the matching tier. Auto Setup affects the initial configuration only. It does not add another model call or change the runtime router.
