@@ -44,6 +44,7 @@ Nine values. The MCP server's outbound `Authorization` header (or per-request Si
 | `api_key` / `bearer_token` / `basic` / `authorization` / `token` | Static header, sent verbatim per call | [MCP Overview](./mcp) |
 | `oauth2` | PKCE (interactive) or M2M `client_credentials`. Discriminated by `oauth2_flow`. | [MCP OAuth](./mcp_oauth) |
 | `oauth2_token_exchange` | RFC 8693 On-Behalf-Of (OBO) — exchange the caller's bearer token for a scoped MCP token | [MCP OBO Auth](./mcp_obo_auth) |
+| `oauth2_id_jag` | Identity Assertion Authorization Grant: two-leg exchange of the user's identity token (inbound or captured at SSO login) for an MCP access token | [MCP ID-JAG Auth](./mcp_id_jag) |
 | `aws_sigv4` | Per-request SigV4 signature using a dedicated MCP-side credential chain | [MCP AWS SigV4](./mcp_aws_sigv4) |
 
 ### A2A: auth mode inferred from `litellm_params`

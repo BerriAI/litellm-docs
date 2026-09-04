@@ -170,7 +170,9 @@ Authorization: Bearer access-token-for-mcp-server
 
 ## Calling an ID-JAG MCP Server
 
-The inbound request must include the user's `id_token` so LiteLLM has a `subject_token` for leg 1. Keep the LiteLLM key in `x-litellm-api-key` and reserve `Authorization` for the user token:
+Leg 1 needs an identity token to assert. LiteLLM takes it from one of two places. If the request carries the user's `id_token` in `Authorization`, that token is the subject. Otherwise LiteLLM uses the identity assertion it captured for the authenticated user when they signed in through LiteLLM SSO, which is what lets an agent holding only a LiteLLM virtual key reach the MCP server as the user that key belongs to. The user is always the one the virtual key resolves to; no request field can select whose identity is asserted upstream.
+
+When sending the `id_token` yourself, keep the LiteLLM key in `x-litellm-api-key` and reserve `Authorization` for the user token:
 
 ```bash title="Direct MCP call" showLineNumbers
 curl -X POST "https://litellm.example.com/internal_tools/mcp" \
@@ -184,6 +186,54 @@ curl -X POST "https://litellm.example.com/internal_tools/mcp" \
 If the MCP client can only send one `Authorization` header, use `x-litellm-api-key` for the LiteLLM key and reserve `Authorization` for the user's `id_token`. LiteLLM needs the `id_token` as the leg-1 `subject_token`.
 :::
 
+### Store-sourced subject with a virtual key only
+
+With no `Authorization` header, the same call works for any user who has signed in through LiteLLM SSO at least once and whose assertion has not expired:
+
+```bash title="Virtual key only" showLineNumbers
+curl -X POST "https://litellm.example.com/internal_tools/mcp" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-api-key: Bearer <litellm-api-key>" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+Assertion reads are cached per process for `MCP_SSO_ASSERTION_CACHE_TTL_SECONDS` (default 60), so a fresh SSO login on one pod becomes visible to the others within one TTL.
+
+## Credential Errors at Connect Time
+
+On a single-server route such as `/internal_tools/mcp` or `/mcp/internal_tools`, LiteLLM resolves the ID-JAG credential before it opens the MCP session, so a failure comes back as an HTTP status the client can act on rather than as a session that appears to have no tools. This runs for the store-sourced flow (no `Authorization` header), which is exactly where the failures below are decided before any authorization server is called.
+
+| Status | Meaning | What fixes it |
+|--------|---------|---------------|
+| `412 Precondition Failed` | No identity assertion is stored for this user, or the stored one has expired. The body names which. | The user signs in through LiteLLM SSO so the gateway captures a current assertion. |
+| `503 Service Unavailable` | The assertion store (the LiteLLM database) is unreachable. | Nothing on the user's side; check database connectivity. |
+
+The 412 is a plain status with a JSON body, not an OAuth challenge. There is no `WWW-Authenticate` header, because the client cannot resolve it by fetching authorization server metadata and retrying; only a LiteLLM SSO login fixes it.
+
+```bash
+$ curl -s -i -X POST https://litellm.example.com/mcp/internal_tools \
+    -H "x-litellm-api-key: Bearer <litellm-api-key>" \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+HTTP/1.1 412 Precondition Failed
+content-type: application/json
+
+{"detail":"precondition required: ID-JAG requires an IdP identity assertion for this user and none is stored. Sign in through LiteLLM SSO so the gateway captures one."}
+```
+
+A `tools/call` on the same route returns the same 412 rather than reporting that the tool does not exist.
+
+On the aggregate `/mcp` route that serves several servers at once, one server's credential failure must not fail the whole connection, so it is reported per server instead. `tools/list` succeeds, the failing server contributes no tools, and the reason lands in the response's `_meta`:
+
+```json
+{"_meta":{"litellm.ai/server_outcomes":{"internal_tools":{"status":"internal","http_status":412}}},"tools":[]}
+```
+
+If you see that shape and want the status and message directly, call the server on its single-server route.
+
+Known limitation: when the request carries an `Authorization` bearer, `tools/list` currently still resolves the subject from the stored assertion while `tools/call` uses the bearer. A caller with a valid `id_token` but no stored assertion therefore gets the empty list with the `_meta` 412 above rather than a connect-time status, and the pre-flight does not run for that request so it cannot reject a credential the tool call would accept. Signing in through LiteLLM SSO once removes the mismatch.
+
 ## Caching Behavior
 
 LiteLLM caches the leg-2 access token by subject token and MCP server ID, so two different users get separate tokens while repeated calls from the same user to the same MCP server reuse the cached token until it expires. The cache TTL is based on the leg-2 `expires_in` minus LiteLLM's OAuth expiry buffer. If `expires_in` is missing or invalid, LiteLLM uses the default OAuth token cache TTL.
@@ -193,6 +243,9 @@ LiteLLM caches the leg-2 access token by subject token and MCP server ID, so two
 | Symptom | Check |
 |---------|-------|
 | MCP server receives the LiteLLM key | Move the LiteLLM key to `x-litellm-api-key` and use `Authorization` for the user `id_token`. |
+| `412 Precondition Failed` on connect | No stored SSO assertion for this user, or it has expired. Have the user sign in through LiteLLM SSO, then retry. See [Credential Errors at Connect Time](#credential-errors-at-connect-time). |
+| `503 Service Unavailable` on connect | The assertion store is unreachable. Check the LiteLLM database connection. |
+| `tools/list` returns no tools and `_meta` shows `http_status: 412` | You are on the aggregate `/mcp` route. Call the single-server route to get the status and message directly. |
 | Leg 1 returns 400 or 403 | Confirm the cross-app access policy authorizes the gateway app for the resource and scopes, and that `audience` matches the resource authorization server identifier. |
 | Leg 1 returns 401 | Confirm `client_id`, `client_private_key`, and `client_private_key_id` match the gateway app's registered JWKS. |
 | Leg 2 rejects the assertion | Confirm `id_jag_resource_token_endpoint` points at the resource authorization server that trusts the org authorization server, and that its clock and the ID-JAG `exp` agree. |

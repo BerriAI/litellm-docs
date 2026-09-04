@@ -247,6 +247,7 @@ mcp_servers:
   | `token` | `Authorization: token <auth_value>` (GitHub-style) |
   | `oauth2` | `Authorization: Bearer <resolved_token>` — PKCE or M2M `client_credentials`. See [MCP OAuth](./mcp_oauth.md) |
   | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>` — RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
+  | `oauth2_id_jag` | `Authorization: Bearer <access_token>` — Identity Assertion Authorization Grant (two legs). See [MCP ID-JAG Auth](./mcp_id_jag.md) |
   | `aws_sigv4` | Per-request AWS SigV4 signature. See [MCP AWS SigV4](./mcp_aws_sigv4.md) |
 
   The header shown above is the default. Set `upstream_token_header` on the server to send the resolved token somewhere other than `Authorization`, which is what an MCP server behind an API gateway usually needs. See [MCP OAuth](./mcp_oauth.md#sending-the-token-on-a-different-header)
