@@ -23,7 +23,7 @@ items={[
 ![Auto Router templates in the Add Model form](../../blog/autorouter_setup_and_testing/presets.png)
 
 - Models + Endpoints, Add Model, Auto Router tab.
-- Templates: Anthropic Family, OpenAI Family, Gemini Family, Lite. Each fills all four tiers from models your proxy already serves.
+- Templates: 1M Context, Anthropic Family, OpenAI Family, Gemini Family, Lite. Each fills all four tiers from models your proxy already serves.
 - A template whose models are not deployed is greyed out with the missing names listed.
 - **Test Routing** sends one prompt through the classifier and shows the model it would pick. Nothing is created and the picked model is not called.
 - **Test Connection** runs a minimal request per tier model group. Green means reachable with your credentials.
