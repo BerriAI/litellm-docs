@@ -38,7 +38,9 @@ LiteLLM first looks for a complete match with one of the configurations we use i
 
 LiteLLM only chooses a template when you have access to every model it requires. The setup uses your own model-group names, so the generated router points at deployments you can call.
 
-If none of the templates fit, LiteLLM still creates a starting configuration from your available chat models. It orders model groups using their configured or published input and output token prices, then spreads them across the SIMPLE, MEDIUM, COMPLEX, and REASONING tiers. With four or more available model groups, each tier gets a different group. Smaller inventories reuse models where needed.
+If none of the complete templates fit, LiteLLM checks the preferred models configured for each tier across those templates. It uses the preferred models you have and fills any gap with the closest matched tier. This covers users who have a useful mix of models without every model required by one family template.
+
+The last fallback runs only when you have none of the preferred models. LiteLLM orders your available chat model groups using their configured or published input and output token prices, then selects one group for each tier. Even with hundreds of models, the generated router still has four tier assignments rather than splitting the whole inventory across the tiers.
 
 ## Review it before saving
 
@@ -61,7 +63,7 @@ At runtime, [Heuristic v2](/blog/heuristic-v2) classifies each request and sends
 
 ## Start now, tune from your traffic
 
-The first version solves the setup problem with a small, predictable rule: reuse a configuration we trust when your model inventory supports it, then fall back to a price-ordered ladder when it does not. Users have seen 42% savings without changing the generated configuration. You can see every choice Auto Setup made and tune it after the fact.
+The first version solves the setup problem with a small, predictable rule: reuse a complete configuration we trust, then use the preferred tier models you have, and keep price ranking as the last fallback. Users have seen 42% savings without changing the generated configuration. You can see every choice Auto Setup made and tune it after the fact.
 
 Open **Add Model → Auto Router**, click **Configure automatically**, and inspect the four tiers. You can get started right away and tune the setup later from your own traffic, spend, and quality data.
 
