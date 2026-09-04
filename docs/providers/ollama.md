@@ -10,7 +10,7 @@ LiteLLM supports all models from [Ollama](https://github.com/ollama/ollama)
 
 :::info 
 
-We recommend using [ollama_chat](#using-ollama-apichat) for chat models. The `ollama/` prefix flattens your messages into a single text prompt and replaces the model's own chat template, which usually lowers response quality. See [Prompt templates and the `ollama/` prefix](#prompt-templates).
+We recommend using [`ollama_chat/`](#using-ollama-apichat) for chat models. The `ollama/` prefix flattens your messages into a single text prompt and replaces the model's own chat template, which usually lowers response quality. See [Prompt templates and the `ollama/` prefix](#prompt-templates).
 
 :::
 
