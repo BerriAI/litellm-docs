@@ -1,4 +1,4 @@
-# Native /v1/messages Passthrough for OpenAI-Compatible Providers
+# Native /v1/messages and /v1/responses Passthrough for OpenAI-Compatible Providers
 
 When a deployment's provider has no native Anthropic Messages support, LiteLLM translates each `/v1/messages` request into the provider's own API: `openai/` deployments go through the OpenAI Responses API (see [the parameter mapping](./messages_to_responses_mapping.md)) and everything else goes through `/v1/chat/completions`. That translation only keeps what the target API can express: `cache_control` blocks are dropped, `thinking` is mapped to the provider's own reasoning parameter, and other Anthropic-only request details are approximated or lost
 
@@ -62,18 +62,37 @@ The response comes back in the provider's native Anthropic shape, including its 
 
 The opt-in only matters for providers LiteLLM would otherwise translate, such as `openai/` and `custom_openai/` deployments. Providers with built-in Anthropic Messages support (`anthropic/`, `bedrock/`, `vertex_ai/`, and others) already forward natively and ignore it
 
-## `/v1/responses` is not part of the opt-in
+## Native `/v1/responses` passthrough
 
-`supported_endpoints` does not change how `/v1/responses` is routed. Whether a `/v1/responses` request reaches the provider natively depends on the provider prefix of the deployment's `model`, not on `model_info`:
+A deployment whose `litellm_params.model` is prefixed `openai/` already sends `/v1/responses` natively to `{api_base}/responses`. A generic OpenAI-compatible deployment such as `custom_openai/` has no Responses API config of its own, so by default LiteLLM bridges `/v1/responses` through `/v1/chat/completions`: the input is converted to messages, the chat completion is converted back into a Responses object, and Responses-only request fields are approximated or dropped. When the server serves `/responses` itself, add `/v1/responses` to `model_info.supported_endpoints` to forward the request untranslated. Available from v1.102.0
 
-- A deployment whose `litellm_params.model` is prefixed `openai/` sends `/v1/responses` natively to `{api_base}/responses`. No `supported_endpoints` entry is needed
-- A generic OpenAI-compatible deployment, such as one prefixed `custom_openai/`, is bridged through `/v1/chat/completions` instead, even when `/v1/responses` is listed in `supported_endpoints`
+```yaml
+model_list:
+  - model_name: my-open-model
+    litellm_params:
+      model: custom_openai/some-open-model
+      api_base: https://inference.example.com/v1
+      api_key: os.environ/EXAMPLE_API_KEY
+    model_info:
+      supported_endpoints: ["/v1/chat/completions", "/v1/responses"]
+```
 
-So for an OpenAI-compatible server that natively serves chat completions, the Anthropic Messages API, and the Responses API, use the `openai/` prefix with your `api_base` and add the `/v1/messages` opt-in:
+With the opt-in, a request to the proxy's `/v1/responses` is POSTed to `{api_base}/responses` (`https://inference.example.com/v1/responses` here) with `Authorization: Bearer <api_key>`, for streaming and non-streaming requests alike. Deployments with `mode: responses` in `model_info` behave the same way. Without the opt-in the deployment keeps bridging through `/v1/chat/completions`, and `/v1/chat/completions` calls to the deployment are not affected either way. The `/v1/messages` and `/v1/responses` opt-ins are independent: list both when the server serves both
 
-| Deployment `model` | `/v1/messages` with the opt-in | `/v1/messages` without it | `/v1/responses` |
-|---|---|---|---|
-| `openai/<model>` | Native passthrough | Translated via the Responses API | Native |
-| `custom_openai/<model>` | Native passthrough | Translated via `/v1/chat/completions` | Bridged via `/v1/chat/completions` |
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Authorization: Bearer sk-1234" \
+  -H "content-type: application/json" \
+  -d '{"model": "my-open-model", "input": "Say hi in three words"}'
+```
 
-Some named OpenAI-compatible providers (for example `hosted_vllm/`) ship their own Responses API support and also send `/v1/responses` natively. Check the provider's page for that
+### `previous_response_id` on stateless backends
+
+The native path forwards `previous_response_id` to the backend as sent, so the backend is what resolves it. OpenAI-compatible servers that do not store responses reject it, typically with a 400, and that error is returned to the caller unchanged. Against such a backend either send the full conversation history in `input` on every turn, or leave the opt-in off and use the bridged path with `store_prompts_in_spend_logs: true`, which lets LiteLLM resolve `previous_response_id` from its own spend logs
+
+| Deployment `model` | `/v1/messages` with the opt-in | `/v1/messages` without it | `/v1/responses` with the opt-in | `/v1/responses` without it |
+|---|---|---|---|---|
+| `openai/<model>` | Native passthrough | Translated via the Responses API | Native | Native |
+| `custom_openai/<model>` | Native passthrough | Translated via `/v1/chat/completions` | Native passthrough | Bridged via `/v1/chat/completions` |
+
+Some named OpenAI-compatible providers (for example `hosted_vllm/`) ship their own Responses API support and also send `/v1/responses` natively without the opt-in. Check the provider's page for that
