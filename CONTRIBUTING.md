@@ -53,6 +53,15 @@ npm run lint:writing
 
 It covers `docs/`, `blog/`, and `release_notes/`. It fails on em dashes used as prose punctuation (see CLAUDE.md) and, with `--warnings`, lists inflated wording such as "utilize", "leverage", or "seamless".
 
+Also run the structural check, which CI enforces on every PR:
+
+```bash
+pip install pyyaml   # once
+npm run lint:docs
+```
+
+It parses every fenced `yaml`, `json`, and `python` block in `docs/`, and fails on blocks that do not parse, unclosed fences, code written on the ``` line, comments after a `\` line continuation in shell blocks, relative links and heading anchors that do not resolve, missing images, GitHub-style `> [!NOTE]` alerts, and pages with more than one H1. The rule names in its output are explained at the top of `scripts/check-docs.py`. Comments and `...` placeholders inside JSON blocks are tolerated. If a block is deliberately a fragment that cannot be made valid, add `nolint` to the fence line (```yaml nolint); use that sparingly.
+
 ## 6. Submit a PR
 
 Create a branch:
