@@ -292,6 +292,9 @@ router_settings:
 | custom_auth | string | Write your own custom authentication logic [Doc Custom Auth](./custom_auth) |
 | max_parallel_requests | integer | The max parallel requests allowed per deployment |
 | global_max_parallel_requests | integer | The max parallel requests allowed on the proxy overall |
+| max_in_flight_requests_per_worker | integer | Per worker process cap on concurrently admitted requests. Requests above it wait in a bounded queue, and the rest get a `503` with `retry-after: 1`. Off unless set. See [Per-worker admission control](./server_tuning#per-worker-admission-control) |
+| max_queued_requests_per_worker | integer | How many requests may wait for a slot per worker before new arrivals are rejected. Defaults to `max_in_flight_requests_per_worker` |
+| admission_queue_timeout_seconds | float | Default `1.0`. A queued request that gets no slot within this time is rejected with a `503` |
 | cancel_on_disconnect | boolean | If true, cancels the in-flight upstream LLM request (non-streaming) when the client disconnects, freeing backend capacity (e.g. a vLLM GPU slot). The cancelled request is logged as a 499 failure. Default `false` |
 | infer_model_from_keys | boolean | If true, infers the model from the provided keys |
 | background_health_checks | boolean | If true, enables background health checks. [Doc on health checks](health) |
