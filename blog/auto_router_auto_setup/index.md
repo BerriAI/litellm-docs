@@ -42,9 +42,9 @@ The existing presets remain available when you want direct control. Auto Setup u
 
 Open **Add Model → Auto Router** in the LiteLLM Dashboard. The new **Configure automatically** button checks the chat models available to you and builds the four Auto Router tiers.
 
-LiteLLM starts with current model ladders from OpenAI, Anthropic, Google, DeepSeek, and xAI. For providers with a model family, that means the efficient model for **Simple**, the balanced model for **Medium**, and the flagship for **Complex**. **Reasoning** reuses the flagship with its strongest supported reasoning effort. If one provider does not cover every tier, Auto Setup can mix families; if no preferred model is available for one tier, it reuses the closest tier match.
+LiteLLM starts with current model ladders from OpenAI, Anthropic, Google, DeepSeek, and xAI. For providers with a model family, that means the efficient model for **Simple**, the balanced model for **Medium**, and the flagship for **Complex**. **Reasoning** reuses the flagship. When your proxy reports the model group's supported reasoning efforts, Auto Setup selects the strongest value from that list; otherwise, it leaves the setting at the provider default. If one provider does not cover every tier, Auto Setup can mix families; if no preferred model is available for one tier, it reuses the closest tier match.
 
-For example, if your proxy serves the current OpenAI ladder, Auto Setup selects GPT-5.6 Luna, GPT-5.6 Terra, and GPT-6 Astra, then uses GPT-6 Astra again at `max` reasoning effort for the final tier. It only selects models your proxy actually serves.
+For example, if your proxy serves the current OpenAI ladder, Auto Setup selects GPT-5.6 Luna, GPT-5.6 Terra, and GPT-6 Astra, then uses GPT-6 Astra again for the final tier. If that model group advertises `max`, Auto Setup applies it. It only selects models and reasoning efforts your proxy reports as available.
 
 The setup uses your own model-group names, so the generated router points at deployments you can call.
 
@@ -65,11 +65,6 @@ complexity_router_config:
     MEDIUM: [your-medium-model-group]
     COMPLEX: [your-complex-model-group]
     REASONING: [your-complex-model-group]
-  tier_model_configs:
-    REASONING:
-      - model_name: your-complex-model-group
-        litellm_params:
-          reasoning_effort: max
 ```
 
 At runtime, [Heuristic v2](/blog/heuristic-v2) classifies each request and sends it to the matching tier. Auto Setup affects the initial configuration only. It does not add another model call or change the runtime router.
