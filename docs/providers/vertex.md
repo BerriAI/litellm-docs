@@ -151,7 +151,7 @@ print(completion(**data))
 
 ### **JSON Schema**
 
-From v`1.40.1+` LiteLLM supports sending `response_schema` as a param for Gemini-1.5-Pro on Vertex AI. For other models (e.g. `gemini-1.5-flash` or `claude-3-5-sonnet`), LiteLLM adds the schema to the message list with a user-controlled prompt.
+From v`1.40.1+` LiteLLM supports sending `response_schema` as a param for Gemini models on Vertex AI (e.g. `gemini-2.5-pro`). For models that don't support it natively, LiteLLM adds the schema to the message list with a user-controlled prompt.
 
 **Response Schema**
 <Tabs>

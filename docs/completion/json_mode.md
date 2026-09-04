@@ -236,7 +236,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ## Validate JSON Schema 
 
 
-Not all vertex models support passing the json_schema to them (e.g. `gemini-1.5-flash`). To solve this, LiteLLM supports client-side validation of the json schema. 
+Not all models support passing the json_schema to them natively. To solve this, LiteLLM supports client-side validation of the json schema. 
 
 ```
 litellm.enable_json_schema_validation=True

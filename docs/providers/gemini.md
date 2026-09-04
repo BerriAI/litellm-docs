@@ -525,7 +525,7 @@ asyncio.run(main())
 
 ## Passing Gemini Specific Params
 ### Response schema 
-LiteLLM supports sending `response_schema` as a param for Gemini-1.5-Pro on Google AI Studio. 
+LiteLLM supports sending `response_schema` as a param for Gemini models on Google AI Studio (e.g. `gemini-2.5-pro`). 
 
 **Response Schema**
 <Tabs>

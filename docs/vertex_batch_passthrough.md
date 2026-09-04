@@ -74,6 +74,8 @@ When configuring models for batch operations, use these naming conventions:
 
 ## Supported Models
 
+- `gemini-2.5-flash` / `vertex_ai/gemini-2.5-flash`
+- `gemini-2.5-pro` / `vertex_ai/gemini-2.5-pro`
 - `gemini-1.5-flash` / `vertex_ai/gemini-1.5-flash`
 - `gemini-1.5-pro` / `vertex_ai/gemini-1.5-pro`
 - `gemini-2.0-flash` / `vertex_ai/gemini-2.0-flash`

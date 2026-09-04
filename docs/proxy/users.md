@@ -1169,8 +1169,8 @@ x-litellm-key-remaining-tokens-gpt-4o: 179
 
 These headers indicate:
 
-- 1 request remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
-- 179 tokens remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 1 request remaining for the gpt-4o model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 179 tokens remaining for the gpt-4o model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
 
 </TabItem>
 <TabItem value="per-agent" label="Per Agent">

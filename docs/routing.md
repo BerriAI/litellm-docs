@@ -2068,7 +2068,7 @@ You can also set default params for litellm completion/embedding calls. Here's h
 ```python 
 from litellm import Router
 
-fallback_dict = {"gpt-4o-mini": "gpt-4o"}
+fallback_dict = {"gpt-4o-mini": "gpt-4.1"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})

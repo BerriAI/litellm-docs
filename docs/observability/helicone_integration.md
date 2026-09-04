@@ -190,7 +190,7 @@ Log requests to Helicone while using any LLM provider directly.
       litellm_params:
         model: gpt-4o
         api_key: os.environ/OPENAI_API_KEY
-    - model_name: claude-3
+    - model_name: claude-sonnet-4-5
       litellm_params:
         model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY

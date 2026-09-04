@@ -145,7 +145,7 @@ The mock-testing flags are deprecated for Proxy requests. To validate Proxy fall
 
 ### Explanation
 
-Fallbacks are done in-order - ["gpt-3.5-turbo, "gpt-4", "gpt-4-32k"], will do 'gpt-3.5-turbo' first, then 'gpt-4', etc.
+Fallbacks are done in-order - ["gpt-4o-mini", "gpt-4o", "gpt-4.1"], will do 'gpt-4o-mini' first, then 'gpt-4o', etc.
 
 You can also set [`default_fallbacks`](#default-fallbacks), in case a specific model group is misconfigured / bad.
 
@@ -162,7 +162,7 @@ Set fallbacks in the `.completion()` call for SDK and client-side for proxy.
 In this request the following will occur:
 1. The request to `model="zephyr-beta"` will fail
 2. litellm proxy will loop through all the model_groups specified in `fallbacks=["gpt-4o-mini"]`
-3. The request to `model="gpt-4o-mini"` will succeed and the client making the request will get a response from gpt-3.5-turbo 
+3. The request to `model="gpt-4o-mini"` will succeed and the client making the request will get a response from gpt-4o-mini 
 
 👉 Key Change: `"fallbacks": ["gpt-4o-mini"]`
 
@@ -731,7 +731,7 @@ For azure deployments, set the base model. Pick the base model from [this list](
 <Tabs>
 <TabItem value="same-group" label="Same Group">
 
-Filter older instances of a model (e.g. gpt-3.5-turbo) with smaller context windows
+Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
 
 ```yaml
 router_settings:
@@ -745,7 +745,7 @@ model_list:
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
 
   - model_name: gpt-4o-mini
     litellm_params:
@@ -770,7 +770,7 @@ client = openai.OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 5000
+text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
@@ -806,12 +806,12 @@ model_list:
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
-      model: gpt-4o-mini
+      model: gpt-4.1
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
     litellm_params:
-      model: claude-sonnet-4-5
+      model: claude-opus-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -835,11 +835,11 @@ client = openai.OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 5000
+text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-3.5-turbo-small",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -868,7 +868,7 @@ model_list:
 
     - model_name: claude-opus
       litellm_params:
-        model: claude-sonnet-4-5
+        model: claude-opus-4-6
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -893,7 +893,7 @@ model_list:
 
     - model_name: claude-opus
       litellm_params:
-        model: claude-sonnet-4-5
+        model: claude-opus-4-6
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -934,7 +934,7 @@ model_list:
 
 - model_name: gemini-2.5-flash
   litellm_params:
-    model: vertex_ai/gemini-pro-1.5
+    model: vertex_ai/gemini-2.5-flash
     vertex_project: adroit-crow-1234
     vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
 ```

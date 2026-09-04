@@ -287,7 +287,7 @@ litellm --config /path/to/config.yaml
 </TabItem>
 <TabItem value="config-all" label="config - default all Anthropic Model">
 
-Use this if you want to make requests to `claude-3-haiku-20240307`,`claude-3-opus-20240229`,`claude-2.1` without defining them on the config.yaml
+Use this if you want to make requests to `claude-haiku-4-5`,`claude-sonnet-4-5`,`claude-opus-4-6` without defining them on the config.yaml
 
 #### Required env variables
 ```

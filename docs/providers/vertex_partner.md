@@ -23,6 +23,7 @@ import TabItem from '@theme/TabItem';
 
 | Model Name       | Function Call                        |
 |------------------|--------------------------------------|
+| claude-sonnet-4-5@20250929   | `completion('vertex_ai/claude-sonnet-4-5@20250929', messages)` |
 | claude-3-opus@20240229   | `completion('vertex_ai/claude-3-opus@20240229', messages)` |
 | claude-3-5-sonnet@20240620  | `completion('vertex_ai/claude-3-5-sonnet@20240620', messages)` |
 | claude-3-sonnet@20240229   | `completion('vertex_ai/claude-3-sonnet@20240229', messages)` |

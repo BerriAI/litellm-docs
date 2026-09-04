@@ -279,7 +279,7 @@ This tutorial shows how to create an access group, view its details, attach it t
 First, add some models to the database:
 
 ```bash showLineNumbers title="Add Models to Database"
-# Add GPT-4 to database
+# Add gpt-4o to database
 curl -X POST 'http://localhost:4000/model/new' \
   -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \

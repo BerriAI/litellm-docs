@@ -252,7 +252,7 @@ The batch output file is in JSONL format with each line containing:
   "modelOutput": {
     "content": [...],
     "id": "msg_abc123",
-    "model": "claude-sonnet-4-5-20250929-v1:0",
+    "model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "role": "assistant",
     "stop_reason": "end_turn",
     "usage": {

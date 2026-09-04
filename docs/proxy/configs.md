@@ -406,9 +406,9 @@ model_list:
         model: gpt-4o
         api_key: <my-openai-key>
         rpm: 200      
-  - model_name: gpt-4o-mini
+  - model_name: gpt-4.1
     litellm_params:
-        model: gpt-4o-mini
+        model: gpt-4.1
         api_key: <my-openai-key>
         rpm: 100      
 
@@ -416,7 +416,7 @@ litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
   fallbacks: [{"zephyr-beta": ["gpt-4o"]}] # fallback to gpt-4o if call fails num_retries 
-  context_window_fallbacks: [{"zephyr-beta": ["gpt-4o-mini"]}, {"gpt-4o": ["gpt-4o-mini"]}] # fallback to gpt-4o-mini if context window error
+  context_window_fallbacks: [{"zephyr-beta": ["gpt-4.1"]}, {"gpt-4o": ["gpt-4.1"]}] # fallback to gpt-4.1 if context window error
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
 
 router_settings: # router_settings are optional

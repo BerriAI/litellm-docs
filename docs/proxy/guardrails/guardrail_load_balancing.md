@@ -214,7 +214,7 @@ flowchart TB
 
 ```yaml showLineNumbers title="config.yaml - Multi-account Bedrock"
 model_list:
-  - model_name: claude-3
+  - model_name: claude-sonnet-4-5
     litellm_params:
       model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
 
@@ -262,7 +262,7 @@ for i in {1..10}; do
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer sk-1234" \
     -d '{
-      "model": "claude-3",
+      "model": "claude-sonnet-4-5",
       "messages": [{"role": "user", "content": "Hello"}],
       "guardrails": ["bedrock-content-filter"]
     }' &

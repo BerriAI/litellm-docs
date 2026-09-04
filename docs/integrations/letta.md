@@ -256,7 +256,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt4_config  # Use GPT-4 for creative tasks
+    llm_config=gpt4_config  # Use gpt-4o for creative tasks
 )
 ```
 
@@ -295,7 +295,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt4_config  # Use GPT-4 for creative tasks
+    llm_config=gpt4_config  # Use gpt-4o for creative tasks
 )
 ```
 
@@ -649,7 +649,7 @@ agents['researcher'] = client.create_agent(
     )
 )
 
-# Writer agent using GPT-4 for content creation
+# Writer agent using gpt-4o for content creation
 agents['writer'] = client.create_agent(
     name="writer",
     system="You are a content writer. Create engaging, well-structured content.",
@@ -711,7 +711,7 @@ agents['researcher'] = client.create_agent(
     )
 )
 
-# Writer agent using GPT-4 for content creation
+# Writer agent using gpt-4o for content creation
 agents['writer'] = client.create_agent(
     name="writer",
     system="You are a content writer. Create engaging, well-structured content.",
@@ -721,7 +721,7 @@ agents['writer'] = client.create_agent(
     )
 )
 
-# Cost-conscious agent using GPT-3.5
+# Cost-conscious agent using gpt-4o-mini
 agents['reviewer'] = client.create_agent(
     name="reviewer",
     system="You are an editor. Review and improve content quality.",
@@ -772,8 +772,8 @@ print(article)
 
 1. **Model Selection**: Use appropriate models for different tasks:
    - Claude for analysis and reasoning
-   - GPT-4 for creative tasks
-   - GPT-3.5-turbo for simple interactions
+   - gpt-4o for creative tasks
+   - gpt-4o-mini for simple interactions
 
 2. **Proxy Configuration**:
    - Set appropriate rate limits and timeouts

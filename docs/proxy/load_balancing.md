@@ -146,7 +146,7 @@ $ litellm --config /path/to/config.yaml
 
 ### Test - Simple Call
 
-Here requests with model=gpt-3.5-turbo will be routed across multiple instances of azure/gpt-3.5-turbo
+Here requests with model=gpt-4o-mini will be routed across multiple instances of azure/gpt-4o-mini
 
 👉 Key Change: `model="gpt-4o-mini"`
 

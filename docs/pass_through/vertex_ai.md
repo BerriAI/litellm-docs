@@ -469,7 +469,7 @@ When using Anthropic models via Vertex AI passthrough (e.g., Claude on Vertex), 
 The `anthropic-beta` header is automatically forwarded to Vertex AI when calling Anthropic models.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "anthropic-beta: context-1m-2025-08-07" \
@@ -491,7 +491,7 @@ For example:
 This is useful when you need to send provider-specific headers that aren't in the default allowlist.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "x-pass-anthropic-beta: context-1m-2025-08-07" \
