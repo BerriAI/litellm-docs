@@ -1432,6 +1432,7 @@ router_settings:
 | SENDGRID_API_KEY | API key for SendGrid email service
 | RESEND_API_KEY | API key for Resend email service
 | SENDGRID_SENDER_EMAIL | Email address used as the sender in SendGrid email transactions 
+| SENDGRID_REPLY_TO_EMAIL | Optional Reply-To address for SendGrid emails. When unset, replies go to the sender address
 | SPEND_LOGS_URL | URL for retrieving spend logs
 | SPEND_LOG_CLEANUP_BATCH_SIZE | Number of logs deleted per batch during cleanup. Default is 1000
 | STALE_OBJECT_CLEANUP_BATCH_SIZE | Max number of stale managed objects updated per cleanup cycle. Default is 1000
