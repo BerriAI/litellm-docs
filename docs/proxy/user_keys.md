@@ -24,7 +24,7 @@ LiteLLM Proxy is **Anthropic-compatible**:
 * /messages 
 
 LiteLLM Proxy is **Vertex AI compatible**:
-- [Supports ALL Vertex Endpoints](../vertex_ai)
+- [Supports ALL Vertex Endpoints](/docs/pass_through/vertex_ai)
 
 This doc covers:
 

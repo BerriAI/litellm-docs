@@ -11,9 +11,9 @@ import Image from '@theme/IdealImage';
 
 <Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
 
-**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
+**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 
-- Call any provider using the same `completion()` interface — no re-learning the API for each one
+- Call any provider using the same `completion()` interface, with no API to re-learn for each one
 - Consistent output format regardless of which provider or model you use
 - Built-in retry / fallback logic across multiple deployments via the [Router](./routing.md)
 - Self-hosted [LLM Gateway (Proxy)](./simple_proxy) with virtual keys, cost tracking, and an admin UI
@@ -203,7 +203,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 
 ## New to LiteLLM?
 
-**Want to get started fast?** Head to [Tutorials](/docs/tutorials) for step-by-step walkthroughs — AI coding tools, agent SDKs, proxy setup, and more.
+**Want to get started fast?** Head to [Tutorials](/docs/tutorials) for step-by-step walkthroughs of AI coding tools, agent SDKs, proxy setup, and more.
 
 **Need to understand a specific feature?** Check [Guides](/docs/guides) for streaming, function calling, prompt caching, and other how-tos.
 
@@ -265,7 +265,7 @@ for chunk in completion(
 
 ### Exception Handling
 
-LiteLLM maps every provider's errors to the OpenAI exception types — your existing error handling works out of the box:
+LiteLLM maps every provider's errors to the OpenAI exception types, so your existing error handling keeps working:
 
 ```python
 import litellm
@@ -325,11 +325,11 @@ litellm.completion(
 
 ## LiteLLM Proxy Server (LLM Gateway)
 
-The proxy is a self-hosted OpenAI-compatible gateway. Any client that works with OpenAI works with the proxy — no code changes needed.
+The proxy is a self-hosted OpenAI-compatible gateway. Any client that works with OpenAI works with the proxy, with no code changes.
 
 ![LiteLLM Proxy Dashboard](https://github.com/BerriAI/litellm/assets/29436595/47c97d5e-b9be-4839-b28c-43d7f4f10033)
 
-#### Step 1 — Start the proxy
+#### Step 1: Start the proxy
 
 <Tabs>
 <TabItem value="cli" label="LiteLLM CLI">
@@ -365,7 +365,7 @@ docker run \
 </TabItem>
 </Tabs>
 
-#### Step 2 — Call it with the OpenAI client
+#### Step 2: Call it with the OpenAI client
 
 ```python
 import openai
@@ -382,7 +382,7 @@ print(response.choices[0].message.content)
 👉 [Full proxy quickstart →](./proxy/docker_quick_start)
 
 :::tip Debugging tool
-Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exactly what LiteLLM sends to any provider — useful for debugging prompt formatting, header issues, and provider-specific parameters.
+Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
 🔗 [Interactive API explorer (Swagger) →](https://litellm-api.up.railway.app/)
@@ -391,7 +391,7 @@ Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exact
 
 ## Agent & MCP Gateway
 
-LiteLLM is a unified gateway for **LLMs, agents, and MCP** — you don't need a separate agent or MCP gateway. One endpoint for 100+ models, A2A agents, and MCP tools.
+LiteLLM is a unified gateway for **LLMs, agents, and MCP**, so you don't need a separate agent or MCP gateway. One endpoint for 100+ models, A2A agents, and MCP tools.
 
 <NavigationCards
 columns={3}
@@ -411,7 +411,7 @@ to: "/docs/mcp",
 {
 icon: "✨",
 title: "✨ Enterprise Quickstart",
-description: "Quickstart guide for trial customers — LLM, MCP, and Agent gateway.",
+      description: "Quickstart guide for trial customers: LLM, MCP, and Agent gateway.",
 to: "/docs/learn/enterprise_quickstart",
 },
 ]}

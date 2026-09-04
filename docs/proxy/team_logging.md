@@ -151,7 +151,7 @@ To disable logging for a specific team, you can use the following endpoint:
 
 `POST /team/{team_id}/disable_logging`
 
-This endpoint removes all success and failure callbacks for the specified team, effectively disabling logging.
+This endpoint removes all success and failure callbacks for the specified team, effectively disabling logging. To remove a single integration and leave the team's other callbacks running, use `DELETE /team/{team_id}/callback/{callback_name}` instead, documented below
 
 #### Step 1. Disable logging for team
 
@@ -202,16 +202,30 @@ curl -X GET 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/cal
         -H 'Authorization: Bearer sk-1234'
 ```
 
+### Remove a Single Callback from a Team
+
+To deregister one integration while the team's other callbacks keep running, use:
+
+`DELETE /team/{team_id}/callback/{callback_name}`
+
+Every entry registered under that `callback_name` is removed, across callback types, so an integration registered for both `success` and `failure` is deregistered by one call. The response lists the callbacks that survive, and a `callback_name` the team has not registered returns `404` without changing anything
+
 ### Team Logging Endpoints
 
 - [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
 - [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://litellm-api.up.railway.app/#/team%20management/get_team_callbacks_team__team_id__callback_get)
+- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://litellm-api.up.railway.app/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
+- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://litellm-api.up.railway.app/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
 
 
 
 ## Team Logging - `config.yaml`
 
 Turn on/off logging and caching for a specific team id. 
+
+This section is team-scoped only: `litellm_settings.default_team_settings` configures callbacks for every key that belongs to a team id. There is no `config.yaml` surface for declaring individual virtual keys; per-key callbacks are provisioned through the `/key/generate` or `/key/update` API, documented in [Key Based Logging](#beta-key-based-logging).
+
+Because `config.yaml` is trusted operator-controlled configuration, `os.environ/...` references are supported here and are resolved from the proxy's environment at startup. The same references are rejected when sent through the management API (see [Secret handling for API-provisioned callbacks](#secret-handling-for-api-provisioned-callbacks)).
 
 **Example:**
 
@@ -310,8 +324,8 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
             "callback_name": "langfuse", # "otel", "gcs_bucket"
             "callback_type": "success", # "success", "failure", "success_and_failure"
             "callback_vars": {
-                "langfuse_public_key": "os.environ/LANGFUSE_PUBLIC_KEY", # [RECOMMENDED] reference key in proxy environment
-                "langfuse_secret_key": "os.environ/LANGFUSE_SECRET_KEY", # [RECOMMENDED] reference key in proxy environment
+                "langfuse_public_key": "pk-lf-...", # pass the resolved value, not an os.environ/ reference
+                "langfuse_secret_key": "sk-lf-...", # pass the resolved value, not an os.environ/ reference
                 "langfuse_host": "https://cloud.langfuse.com"
             }
         }]
@@ -319,6 +333,12 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 }'
 
 ```
+
+Each key can point at a different Langfuse project: generate one key per project and pass that project's credentials in `callback_vars`.
+
+#### Secret handling for API-provisioned callbacks
+
+`os.environ/...` references inside API-supplied `callback_vars` are rejected (since v1.84). Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
 
 <iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
@@ -343,7 +363,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
               "callback_type": "success", # "success", "failure", "success_and_failure"
               "callback_vars": {
                   "gcs_bucket_name": "my-gcs-bucket", # Name of your GCS Bucket to log to
-                  "gcs_path_service_account": "os.environ/GCS_SERVICE_ACCOUNT" # environ variable for this service account
+                  "gcs_path_service_account": "/path/to/service-account.json" # path to the service account json, not an os.environ/ reference
               }
           }]
       }
@@ -386,7 +406,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
               "callback_name": "langsmith", # "otel", "gcs_bucket"
               "callback_type": "success", # "success", "failure", "success_and_failure"
               "callback_vars": {
-                  "langsmith_api_key": "os.environ/LANGSMITH_API_KEY", # API Key for Langsmith logging
+                  "langsmith_api_key": "lsv2_pt_...", # resolved Langsmith API key, not an os.environ/ reference
                   "langsmith_project": "pr-brief-resemblance-72", # project name on langsmith
                   "langsmith_base_url": "https://api.smith.langchain.com"
               }

@@ -1,6 +1,6 @@
 # Passthrough Managed IDs
 
-When you use LiteLLM's passthrough endpoints (e.g. `/openai/v1/files`, `/azure/openai/batches`) the upstream provider returns its own raw IDs such as `file-abc123` or `batch_xyz`. By default those IDs are returned directly to your client, which means:
+When you use LiteLLM's passthrough endpoints (e.g. `/openai_passthrough/v1/files`, `/azure/openai/batches`) the upstream provider returns its own raw IDs such as `file-abc123` or `batch_xyz`. By default those IDs are returned directly to your client, which means:
 
 - Any user who guesses or intercepts another user's `file-abc123` can use it.
 - You have no proxy-level record of who owns what.
@@ -12,7 +12,7 @@ When you use LiteLLM's passthrough endpoints (e.g. `/openai/v1/files`, `/azure/o
 2. **Stores** the `managed_id → raw_id` mapping in the proxy database, tagged with the creating user/team.
 3. **Resolves** a managed ID back to the raw provider ID just before forwarding any request upstream, after running an ownership/permission check.
 
-Your clients never see raw provider IDs and can never access resources they do not own — even if they guess or forge a managed ID string.
+Your clients never see raw provider IDs and can never access resources they do not own, even if they guess or forge a managed ID string.
 
 ## How to enable
 
@@ -27,18 +27,24 @@ The feature requires:
 - A database configured for the proxy (Prisma / PostgreSQL).
 - The `managed_files` enterprise hook to be available.
 
-The feature is active only for **OpenAI** and **Azure OpenAI** passthrough routes.
+The feature is active only for **OpenAI** (`/openai_passthrough/...`) and **Azure OpenAI** (`/azure/openai/...`) passthrough routes.
+
+:::info `/openai/v1/files`, `/openai/v1/batches`, and `/openai/v1/responses` are not passthrough routes
+
+Those three paths are served by LiteLLM's native endpoints, exactly like `/v1/files`, `/v1/batches`, and `/v1/responses`, so `passthrough_managed_object_ids` never sees them. To isolate tenants there, use [`require_managed_files`](./litellm_managed_files) for files and batches and the built-in Responses API ownership checks for responses. The passthrough prefix for OpenAI is `/openai_passthrough`.
+
+:::
 
 ## Native managed endpoints vs passthrough
 
 | | Native managed endpoints | Passthrough with managed IDs |
 |---|---|---|
-| **URL prefix** | `/v1/files`, `/v1/batches` | `/openai/v1/files`, `/azure/openai/batches` |
+| **URL prefix** | `/v1/files`, `/v1/batches` | `/openai_passthrough/v1/files`, `/azure/openai/batches` |
 | **Routing** | LiteLLM internal logic; model-based routing | Direct forward to upstream provider |
 | **Credential resolution** | Via `model_list` router | Via `PassthroughEndpointRouter` / env vars |
 | **Use when** | You want LiteLLM to pick the right deployment automatically, or you need cross-provider batching | You want to call a provider API directly (e.g. fine-tuning, responses, custom endpoints) but still need proxy-level access control |
 | **ID management** | Always managed by LiteLLM | Managed IDs only when `passthrough_managed_object_ids: true` |
-| **Streaming ID minting** | Supported | **Not yet supported** (output IDs in streaming responses are not rewritten) |
+| **Streaming ID minting** | Supported | Supported for `POST /v1/responses` with `stream: true` (the `response.id` in every event is rewritten) |
 
 ## Supported endpoints
 
@@ -67,6 +73,8 @@ These are the specific routes where LiteLLM will mint a managed ID for raw provi
 | Azure | `GET` | `/v1/responses/{response_id}` | `id` (`resp_`) |
 | Azure | `DELETE` | `/v1/responses/{response_id}` | `id` (`resp_`) |
 
+`POST /v1/responses` with `stream: true` is covered as well. The proxy records the response as the caller's own from the first `response.created` event and rewrites the `response.id` inside every event as the stream is relayed, so a streamed response is owned and protected exactly like a non-streamed one.
+
 ### Managed ID resolution (INPUT)
 
 This is **not route-specific**. For every OpenAI or Azure passthrough request, LiteLLM scans the entire request before forwarding it upstream:
@@ -77,9 +85,9 @@ This is **not route-specific**. For every OpenAI or Azure passthrough request, L
 | **Query params** | Every string-valued parameter |
 | **Request body** | All string values, recursively (works in nested objects and arrays) |
 
-This means any endpoint that accepts a file ID, batch ID, or response ID in path, query, or body will automatically resolve managed IDs — including endpoints not listed in the output table above, such as fine-tuning jobs (`/v1/fine_tuning/jobs`), assistants, or any custom endpoint.
+This means any endpoint that accepts a file ID, batch ID, or response ID in path, query, or body will automatically resolve managed IDs, including endpoints not listed in the output table above, such as fine-tuning jobs (`/v1/fine_tuning/jobs`), assistants, or any custom endpoint.
 
-**Example — fine-tuning job:**
+**Example, fine-tuning job:**
 
 ```python
 # Client sends managed IDs for training_file and validation_file
@@ -96,7 +104,7 @@ response = client.post("/azure/openai/v1/fine_tuning/jobs", json={
 
 ## Request flow - any endpoint
 
-This applies to **any** OpenAI or Azure passthrough endpoint — not just fine-tuning. The same path/query/body scan runs on every request; the example below uses a fine-tuning job with a managed file ID in the body.
+This applies to **any** OpenAI or Azure passthrough endpoint, not just fine-tuning. The same path/query/body scan runs on every request; the example below uses a fine-tuning job with a managed file ID in the body.
 
 ```mermaid
 sequenceDiagram
@@ -119,7 +127,7 @@ sequenceDiagram
     Passthrough->>Azure: POST { training_file: file-2dbc7561... }
 ```
 
-On the **response** path, `rewrite_response_ids()` mints managed IDs for raw provider IDs — but only on routes listed in the output map (files, batches, responses). Other endpoints (e.g. fine-tuning) return upstream IDs as-is unless they appear in that map.
+On the **response** path, `rewrite_response_ids()` mints managed IDs for raw provider IDs, but only on routes listed in the output map (files, batches, responses). Other endpoints (e.g. fine-tuning) return upstream IDs as-is unless they appear in that map.
 
 ## Permission checks
 
@@ -159,10 +167,10 @@ The managed ID must map to a real row in the proxy database. A guessed, forged, 
 
 ## How list endpoints work
 
-`GET /openai/v1/files` and `GET /openai/v1/batches` (and their Azure equivalents) are **fully intercepted**. The request is never forwarded to the upstream provider. Instead, the proxy queries its own database and returns only the rows the caller owns:
+`GET /openai_passthrough/v1/files` and `GET /openai_passthrough/v1/batches` (and their Azure equivalents) are **fully intercepted**. The request is never forwarded to the upstream provider. Instead, the proxy queries its own database and returns only the rows the caller owns:
 
 ```
-GET /openai/v1/files
+GET /openai_passthrough/v1/files
                                      ┌─────────────────────────────┐
                          admin key?  │  WHERE {}                   │
                                      │  (all rows)                 │
@@ -180,17 +188,23 @@ GET /openai/v1/files
 
 Pagination parameters `limit`, `after`, and `before` are supported and map directly to a cursor on `created_at`.
 
-A caller with no `user_id` and no `team_id` always receives an empty list — the proxy never falls back to an unscoped query.
+A caller with no `user_id` and no `team_id` always receives an empty list; the proxy never falls back to an unscoped query.
+
+## Objects the proxy never saw
+
+Ownership is recorded when an object is created through the passthrough route with the feature on. A file, batch, or response created before you enabled it, or created straight against the provider with the same API key, has no owner on the proxy side, so any key allowed on the passthrough route can still reach it by its raw provider ID (see the limitation below). LiteLLM deliberately does not try to claim those objects for anyone.
+
+When those pre-existing objects must be isolated too, the strict option is to stop sharing one provider key across tenants: define one [custom passthrough endpoint](./pass_through) per team, each carrying that team's own provider API key in its `headers`, and restrict every team to its endpoint with `allowed_passthrough_routes` in the team's metadata. The provider then scopes visibility itself, and managed IDs keep working on top of that.
 
 ## Limitations
 
-### Streaming responses - output ID minting not supported
+### Streaming is only rewritten for responses
 
-When the upstream returns a **streaming** (SSE) response, managed IDs are **not minted** for raw provider IDs in the stream chunks. The client receives the raw upstream IDs.
+`POST /v1/responses` streams are the only SSE responses that carry a mintable ID, so those are the only streams the proxy rewrites. Every other streaming passthrough response is relayed untouched.
 
-### Raw IDs are passed through unchanged
+### Raw IDs only work for their owner
 
-If you send a raw provider ID (e.g. `file-abc123`) instead of a managed ID, the proxy passes it through without any ownership check. The permission system only applies to strings that decode as passthrough managed IDs.
+If you send a raw provider ID (e.g. `file-abc123`) instead of a managed ID, the proxy checks whether it belongs to a managed resource before forwarding it. A raw ID that maps to another caller's resource is refused with **404** (the same answer as an unknown managed ID, so callers cannot probe which IDs exist). The owner's own raw ID is forwarded. A raw ID the proxy has never recorded is forwarded without an ownership check, which is what makes the objects above reachable.
 
 ### IDs are provider-scoped
 

@@ -669,6 +669,26 @@ Use a test request that the primary provider rejects with a content-policy error
 Enable pre-call checks and send a test request that exceeds the primary model's configured context window.
 
 
+### Track Fallbacks in Spend Logs
+
+Every spend log row records whether the request was served by the model group the client asked for, or by a fallback. The proxy writes two keys into the `metadata` column of `LiteLLM_SpendLogs`:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `attempted_fallbacks` | int | Number of fallback attempts made. `0` means the requested model group served the request |
+| `original_model_group` | str | The model group the client originally requested |
+
+For example, a request to `gpt-3.5-turbo` that fails over to `claude-fable-5` produces a row with `model_group=claude-fable-5`, `attempted_fallbacks=1`, and `original_model_group=gpt-3.5-turbo`, so fallback-served and directly-served requests stay distinguishable after the fact:
+
+```sql
+SELECT model_group,
+       metadata->>'attempted_fallbacks' AS attempted_fallbacks,
+       metadata->>'original_model_group' AS original_model_group
+FROM "LiteLLM_SpendLogs";
+```
+
+Both keys are set by the proxy and overwrite any client-supplied values of the same name. Rows written before this feature read `null` for both keys.
+
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
 **Before call is made** check if a call is within model context window with  **`enable_pre_call_checks: true`**.
@@ -686,7 +706,7 @@ You can override the default context limit for a deployment by setting `max_inpu
 **Both** of the following are required:
 
 1. **`router_settings.enable_pre_call_checks: true`** — enables pre-call checks
-2. **`model_info.max_input_tokens`** on the deployment — overrides the limit for that model
+2. **`model_info.max_input_tokens`** on the deployment, which overrides the limit for that model
 
 ```yaml
 router_settings:
@@ -995,6 +1015,38 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     "max_tokens": 300
 }'
 ```
+
+### Enforce Key Model Access on Fallbacks
+
+By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `claude-sonnet-5` whenever `gpt-5.6` fails and `claude-sonnet-5` is its fallback.
+
+Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      access_groups: ["openai-only"]
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks:
+    - gpt-5.6: ["claude-sonnet-5"]
+
+general_settings:
+  master_key: sk-1234
+  enforce_fallback_model_access: true
+```
+
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `claude-sonnet-5`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `claude-sonnet-5` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "claude-sonnet-5"]` still falls back.
+
+Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
 
 ### Disable Fallbacks (Per Request/Key)
 

@@ -8,7 +8,7 @@ Check the [OCI Models List](https://docs.oracle.com/en-us/iaas/Content/generativ
 
 ## Supported Models
 
-For model lifecycle, retirement dates, and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm) — Oracle is the authoritative source.
+For model lifecycle, retirement dates, and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm). Oracle is the authoritative source.
 
 ### Chat / Text Generation
 
@@ -81,7 +81,7 @@ This is the default method for LiteLLM AI Gateway (LLM Proxy) access to OCI GenA
 
 **Environment Variables**
 
-Instead of passing credentials in code, you can set the following environment variables — LiteLLM will read them automatically:
+Instead of passing credentials in code, you can set the following environment variables and LiteLLM will read them automatically:
 
 ```bash
 export OCI_REGION="us-chicago-1"
@@ -96,7 +96,7 @@ export OCI_KEY_FILE="/path/to/oci_api_key.pem"
 
 ### Method 2: OCI SDK Signer
 Use an OCI SDK `Signer` object for authentication. This method:
-- Leverages the official [OCI SDK for signing](https://docs.oracle.com/en-us/iaas/tools/python/latest/api/signing.html)
+- Uses the official [OCI SDK for signing](https://docs.oracle.com/en-us/iaas/tools/python/latest/api/signing.html)
 - Supports additional authentication methods (instance principals, workload identity, etc.)
 
 To use this method, install the OCI SDK:
@@ -602,7 +602,7 @@ print(response.choices[0].message.tool_calls)
 </TabItem>
 </Tabs>
 
-Tool calling works with both Cohere (`cohere.command-*`) and Generic (`xai.grok-*`, `meta.llama-*`, `google.gemini-*`) model families — LiteLLM adapts the OpenAI tool schema to each vendor's native format internally.
+Tool calling works with both Cohere (`cohere.command-*`) and Generic (`xai.grok-*`, `meta.llama-*`, `google.gemini-*`) model families. LiteLLM adapts the OpenAI tool schema to each vendor's native format internally.
 
 ## Usage - Vision / Multimodal
 
@@ -650,7 +650,7 @@ Both URL and base64-encoded data URIs are supported.
 
 ## Usage - Reasoning / Thinking
 
-OCI Generic-vendor models (xAI Grok reasoning variants, Google Gemini, etc.) support a reasoning step. LiteLLM exposes this via the OpenAI-compatible `reasoning_effort` parameter — accepted values are `"low"`, `"medium"`, `"high"`, and `"disable"` (mapped to OCI's `NONE`).
+OCI Generic-vendor models (xAI Grok reasoning variants, Google Gemini, etc.) support a reasoning step. LiteLLM exposes this via the OpenAI-compatible `reasoning_effort` parameter; accepted values are `"low"`, `"medium"`, `"high"`, and `"disable"` (mapped to OCI's `NONE`).
 
 Returned reasoning tokens are surfaced on `usage.completion_tokens_details.reasoning_tokens`, matching the OpenAI shape.
 

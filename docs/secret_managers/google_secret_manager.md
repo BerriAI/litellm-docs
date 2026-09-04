@@ -43,5 +43,5 @@ You can now test this by starting your proxy:
 litellm --config /path/to/config.yaml
 ```
 
-[Quick Test Proxy](../proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain-langchain-js)
+[Quick Test Proxy](/docs/proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain)
 

@@ -37,7 +37,7 @@ v1 picks a vendor attribute flavor from the callback name through a branch in it
 
 ### Identity stamping
 
-v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](./opentelemetry_v2#identity-baggage).
+v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](/docs/observability/opentelemetry_v2).
 
 ### Success status
 

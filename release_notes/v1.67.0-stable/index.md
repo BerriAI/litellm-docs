@@ -65,7 +65,7 @@ This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google
     2. o4 - correctly map o4 to openai o_series model
 - **Azure AI**
     1. Phi-4 output cost per token fix - [PR](https://github.com/BerriAI/litellm/pull/9880)
-    2. Responses API support [Get Started](../../docs/providers/azure#azure-responses-api),[PR](https://github.com/BerriAI/litellm/pull/10116)
+    2. Responses API support [Get Started](/docs/providers/azure/azure_responses),[PR](https://github.com/BerriAI/litellm/pull/10116)
 - **Anthropic**
     1. redacted message thinking support - [Get Started](../../docs/providers/anthropic#usage---thinking--reasoning_content),[PR](https://github.com/BerriAI/litellm/pull/10129)
 - **Cohere**

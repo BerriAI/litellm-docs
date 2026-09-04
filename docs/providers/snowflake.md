@@ -25,7 +25,7 @@ Tip : We support ALL Snowflake Cortex models. Use `model=snowflake/<model-name>`
 
 Snowflake Cortex REST API supports three authentication methods.
 
-### Programmatic Access Token (PAT) — Recommended
+### Programmatic Access Token (PAT), recommended
 
 The simplest approach. Generate a PAT in Snowsight under **User Menu → My Profile → Programmatic Access Tokens**.
 

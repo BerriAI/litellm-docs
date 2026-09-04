@@ -58,14 +58,16 @@ Create `handler.py` that inherits from `BaseTranslation`:
 This module provides guardrail translation support for {Provider}'s {Endpoint} format.
 """
 
-import asyncio
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 from litellm._logging import verbose_proxy_logger
 from litellm.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
+from litellm.types.utils import GenericGuardrailAPIInputs
 
 if TYPE_CHECKING:
     from litellm.integrations.custom_guardrail import CustomGuardrail
+    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from litellm.proxy._types import UserAPIKeyAuth
     from litellm.types.utils import ModelResponse  # Or appropriate response type
 
 
@@ -82,14 +84,16 @@ class MyEndpointHandler(BaseTranslation):
         self,
         data: dict,
         guardrail_to_apply: "CustomGuardrail",
+        litellm_logging_obj: Optional["LiteLLMLoggingObj"] = None,
     ) -> Any:
         """
         Process input by applying guardrails to text content.
-        
+
         Args:
             data: Request data dictionary
             guardrail_to_apply: The guardrail instance to apply
-            
+            litellm_logging_obj: Logging object for the call, forwarded to the guardrail
+
         Returns:
             Modified data with guardrails applied
         """
@@ -100,14 +104,20 @@ class MyEndpointHandler(BaseTranslation):
         self,
         response: Any,  # Use appropriate response type
         guardrail_to_apply: "CustomGuardrail",
+        litellm_logging_obj: Optional["LiteLLMLoggingObj"] = None,
+        user_api_key_dict: Optional["UserAPIKeyAuth"] = None,
+        request_data: dict | None = None,
     ) -> Any:
         """
         Process output response by applying guardrails to text content.
-        
+
         Args:
             response: API response object
             guardrail_to_apply: The guardrail instance to apply
-            
+            litellm_logging_obj: Logging object for the call, forwarded to the guardrail
+            user_api_key_dict: Caller identity, passed separately since the response has none
+            request_data: The originating request body
+
         Returns:
             Modified response with guardrails applied
         """
@@ -126,6 +136,7 @@ async def process_input_messages(
     self,
     data: dict,
     guardrail_to_apply: "CustomGuardrail",
+    litellm_logging_obj: Optional["LiteLLMLoggingObj"] = None,
 ) -> Any:
     """Process input messages by applying guardrails to text content."""
     # 1. Get input data from request
@@ -133,32 +144,40 @@ async def process_input_messages(
     if messages is None:
         return data
 
-    # 2. Extract text and create tasks
-    tasks = []
+    # 2. Extract text into a flat list, remembering where each item came from
+    texts_to_check: List[str] = []
     task_mappings: List[Tuple[int, Optional[int]]] = []
-    
+
     for msg_idx, message in enumerate(messages):
-        await self._extract_input_text_and_create_tasks(
+        self._extract_input_texts(
             message=message,
             msg_idx=msg_idx,
-            tasks=tasks,
+            texts_to_check=texts_to_check,
             task_mappings=task_mappings,
-            guardrail_to_apply=guardrail_to_apply,
         )
 
-    # 3. Run all guardrail tasks in parallel
-    if tasks:
-        responses = await asyncio.gather(*tasks)
+    # 3. Apply the guardrail to everything in one call
+    if texts_to_check:
+        guardrailed_inputs = await guardrail_to_apply.apply_guardrail(
+            inputs=GenericGuardrailAPIInputs(texts=texts_to_check),
+            request_data=data,
+            input_type="request",
+            logging_obj=litellm_logging_obj,
+        )
 
-        # 4. Map responses back to original structure
+        # 4. Map the returned texts back to the original structure
         await self._apply_guardrail_responses_to_input(
             messages=messages,
-            responses=responses,
+            responses=guardrailed_inputs.get("texts", []),
             task_mappings=task_mappings,
         )
 
     return data
 ```
+
+`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model`. Populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
+
+Send everything in one call rather than one call per message. The guardrail provider gets to see the whole conversation, and you pay one round trip instead of many.
 
 #### B. Process Output Response
 
@@ -169,33 +188,40 @@ async def process_output_response(
     self,
     response: "ModelResponse",
     guardrail_to_apply: "CustomGuardrail",
+    litellm_logging_obj: Optional["LiteLLMLoggingObj"] = None,
+    user_api_key_dict: Optional["UserAPIKeyAuth"] = None,
+    request_data: dict | None = None,
 ) -> Any:
     """Process output response by applying guardrails to text content."""
     # 1. Check if response has text to process
     if not self._has_text_content(response):
         return response
 
-    # 2. Extract text and create tasks
-    tasks = []
+    # 2. Extract text into a flat list, remembering where each item came from
+    texts_to_check: List[str] = []
     task_mappings: List[Tuple[int, Optional[int]]] = []
-    
+
     for idx, item in enumerate(response.choices):  # or appropriate field
-        await self._extract_output_text_and_create_tasks(
+        self._extract_output_texts(
             item=item,
             idx=idx,
-            tasks=tasks,
+            texts_to_check=texts_to_check,
             task_mappings=task_mappings,
-            guardrail_to_apply=guardrail_to_apply,
         )
 
-    # 3. Run all guardrail tasks in parallel
-    if tasks:
-        responses = await asyncio.gather(*tasks)
+    # 3. Apply the guardrail to everything in one call
+    if texts_to_check:
+        guardrailed_inputs = await guardrail_to_apply.apply_guardrail(
+            inputs=GenericGuardrailAPIInputs(texts=texts_to_check),
+            request_data=request_data or {},
+            input_type="response",
+            logging_obj=litellm_logging_obj,
+        )
 
         # 4. Update response with guardrailed text
         await self._apply_guardrail_responses_to_output(
             response=response,
-            responses=responses,
+            responses=guardrailed_inputs.get("texts", []),
             task_mappings=task_mappings,
         )
 
@@ -207,22 +233,21 @@ async def process_output_response(
 Implement helper methods for text extraction and mapping:
 
 ```python
-async def _extract_input_text_and_create_tasks(
+def _extract_input_texts(
     self,
     message: Dict[str, Any],
     msg_idx: int,
-    tasks: List,
+    texts_to_check: List[str],
     task_mappings: List[Tuple[int, Optional[int]]],
-    guardrail_to_apply: "CustomGuardrail",
 ) -> None:
-    """Extract text content from a message and create guardrail tasks."""
+    """Extract text content from a message and record where each piece came from."""
     content = message.get("content")
     if content is None:
         return
 
     if isinstance(content, str):
         # Simple string content
-        tasks.append(guardrail_to_apply.apply_guardrail(text=content))
+        texts_to_check.append(content)
         task_mappings.append((msg_idx, None))
     elif isinstance(content, list):
         # List content (e.g., multimodal)
@@ -230,7 +255,7 @@ async def _extract_input_text_and_create_tasks(
             if isinstance(content_item, dict):
                 text_str = content_item.get("text")
                 if text_str:
-                    tasks.append(guardrail_to_apply.apply_guardrail(text=text_str))
+                    texts_to_check.append(text_str)
                     task_mappings.append((msg_idx, int(content_idx)))
 
 async def _apply_guardrail_responses_to_input(
@@ -330,14 +355,14 @@ curl -X POST 'http://localhost:4000/{my_endpoint}' \
 ## Extension
 
 Override these methods to customize behavior:
-- `_extract_input_text_and_create_tasks()`: Custom text extraction
+- `_extract_input_texts()`: Custom text extraction
 - `_apply_guardrail_responses_to_input()`: Custom response mapping
 - `_has_text_content()`: Custom content detection
 ```
 
 ### Step 6: Add Unit Tests
 
-Create comprehensive tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
+Create thorough tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
 
 ```python
 """
@@ -346,6 +371,8 @@ Unit tests for {Provider} {Endpoint} Guardrail Translation Handler
 
 import os
 import sys
+from typing import TYPE_CHECKING, Literal, Optional
+
 import pytest
 
 sys.path.insert(0, os.path.abspath("../../../../../.."))
@@ -355,14 +382,24 @@ from litellm.llms import get_guardrail_translation_mapping
 from litellm.llms.{provider}.{endpoint}.guardrail_translation.handler import (
     MyEndpointHandler,
 )
-from litellm.types.utils import CallTypes
+from litellm.types.utils import CallTypes, GenericGuardrailAPIInputs
+
+if TYPE_CHECKING:
+    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
 
 
 class MockGuardrail(CustomGuardrail):
     """Mock guardrail for testing"""
-    
-    async def apply_guardrail(self, text: str) -> str:
-        return f"{text} [GUARDRAILED]"
+
+    async def apply_guardrail(
+        self,
+        inputs: GenericGuardrailAPIInputs,
+        request_data: dict,
+        input_type: Literal["request", "response"],
+        logging_obj: Optional["LiteLLMLoggingObj"] = None,
+    ) -> GenericGuardrailAPIInputs:
+        inputs["texts"] = [f"{text} [GUARDRAILED]" for text in inputs.get("texts", [])]
+        return inputs
 
 
 class TestHandlerDiscovery:

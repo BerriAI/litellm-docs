@@ -121,6 +121,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
+## config.yaml vs database settings
+
+Once `store_model_in_db` is enabled (via `general_settings.store_model_in_db: true` or `STORE_MODEL_IN_DB="True"`), the Admin UI and the `/config/update` API write settings into the `LiteLLM_Config` table, and the database becomes the source of truth for whatever they wrote. On startup and on every config refresh, the proxy loads your `config.yaml` first and then overlays the database rows for `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables`. The overlay is a deep merge in which the database value wins on any key that exists in both places, so editing that key in the YAML and restarting your pods will not change the running value. Treat the YAML as bootstrap for these four sections, and change UI-written keys in the UI (or delete the row from `LiteLLM_Config`) rather than in the file
+
+A few specifics are worth knowing. Database values of `null` and empty lists are treated as "no value" and do not overwrite what the YAML provides, so a key you never set in the UI still comes from the file. The overlay also applies to those four settings sections only; `model_list` is not merged this way, since models added through the UI or API are stored in `LiteLLM_ProxyModelTable` and served alongside your YAML models, meaning a database model never replaces a same-named YAML entry but becomes an additional deployment that gets load balanced with it (see [Model Management](./model_management.md)). And with `store_model_in_db` off, the database is never read for config, so your `config.yaml` is fully authoritative
+
 ## LLM configs `model_list`
 
 ### Model-specific params (API Base, Keys, Temperature, Max Tokens, Organization, Headers etc.)
@@ -622,7 +628,29 @@ general_settings:
 **Notes:**
 - `database_socket_timeout` is the main knob for capping idle DB connections from LiteLLM.
 - `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
-- `database_extra_connection_params` is an untyped passthrough — any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- `database_extra_connection_params` is an untyped passthrough: any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- To verify the database server certificate against a custom CA (e.g. AWS RDS), set `sslmode: "verify-full"` and `sslrootcert: "/certs/global-bundle.pem"` here or on the URL; LiteLLM translates them into Prisma's `sslcert` + `sslaccept=strict`. See [Verify the database server certificate](./prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds).
+
+### Bounding Statement and Lock Time
+
+`database_connect_timeout` and `database_socket_timeout` bound the *connection*. Neither bounds a statement that is already running, so a slow write can keep executing on the server long after the Prisma client has stopped waiting for it, holding its row locks the whole time. Later writes to the same rows queue behind those locks, and under sustained traffic that queue is what exhausts database sessions.
+
+Set the two Postgres-side bounds to cap it:
+
+```yaml
+general_settings:
+  database_statement_timeout: 60 # seconds; cancels any statement running longer than this
+  database_lock_timeout: 15      # seconds; fails a statement that waits this long for someone else's lock
+```
+
+LiteLLM delivers both through the standard libpq `options` parameter on `DATABASE_URL` (`options=-c statement_timeout=60000 -c lock_timeout=15000`); Postgres has no Prisma URL parameter of its own for them. A cancelled statement surfaces to LiteLLM as SQLSTATE `57014`, `canceling statement due to statement timeout`.
+
+**Notes:**
+- Both are **opt-in**. Leave them unset and nothing changes.
+- Keep `database_lock_timeout` well below `database_statement_timeout`, so a write blocked behind another transaction's lock fails fast instead of consuming the whole statement budget.
+- Neither is applied to `DIRECT_URL`, which Prisma uses for migrations. Migrations legitimately run long and are never cancelled by these settings.
+- Any `options` value you pinned on `DATABASE_URL` yourself is preserved, and a setting you pinned there wins over the configured one. `database_extra_connection_params` wins over both.
+- These are the same bounds you would set on the server or in an RDS parameter group. Setting them here scopes them to LiteLLM's own connections instead of every client of that database.
 
 ### Disable Server-Side Prepared Statements
 
@@ -678,6 +706,28 @@ NO_REDOC="True"
 
 in your environment, and restart the proxy. 
 
+### Disable OpenAPI schema
+
+To disable the raw OpenAPI schema (defaults to `<your-proxy-url>/openapi.json`), set 
+
+```env
+NO_OPENAPI="True"
+```
+
+in your environment, and restart the proxy. 
+
+### Restrict all API documentation for production/air-gapped deployments
+
+Swagger, Redoc and the raw OpenAPI schema are three independent surfaces, each disabled by its own env var. To fully lock down a production or air-gapped deployment, set all three: 
+
+```env
+NO_DOCS="True"
+NO_REDOC="True"
+NO_OPENAPI="True"
+```
+
+Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` then all 404 with no schema in the response, while inference and management routes are unaffected.
+
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 
 1. Setup config.yaml
@@ -730,7 +780,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest --detailed_debug
+   docker.litellm.ai/berriai/litellm:latest --detailed_debug
 ```
 
 </TabItem>
@@ -751,7 +801,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 </TabItem>
 </Tabs>

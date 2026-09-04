@@ -8,7 +8,7 @@ Route requests from your LiteLLM proxy to any external API. Perfect for custom m
 
 **Key Benefits:**
 - Onboard third-party endpoints like Bria API and Mistral OCR
-- Set custom pricing per request
+- Set custom pricing per request, or let a target that fans out to several models [report its own cost and usage](./pass_through_cost_tracking.md)
 - Proxy Admins don't need to give developers api keys to upstream llm providers like Bria, Mistral OCR, etc.
 - Maintain centralized authentication, spend tracking, budgeting
 
@@ -72,6 +72,7 @@ Configure the required authentication and pricing:
 **Pricing Configuration:**
 - Set a cost per request (e.g., $12.00 in this example)
 - This enables cost tracking and billing for your users
+- A flat cost per request suits a target whose price does not vary. If the target invokes several models internally and knows its own totals, have it report them instead, see [Pass-Through Cost & Usage Tracking](./pass_through_cost_tracking.md)
 
 <Image 
   img={require('../../img/pt_2.png')}
@@ -420,6 +421,16 @@ general_settings:
   litellm_jwtauth:
     team_ids_jwt_field: "team_ids"
     team_allowed_routes: ["openai_routes","info_routes","mapped_pass_through_routes"]
+```
+
+For your own pass-through endpoints, `mapped_pass_through_routes` only covers the provider prefixes LiteLLM ships with. If your endpoints share a custom prefix, grant that prefix once with a trailing `*` and every endpoint you register under it later is allowed without another config change.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes","info_routes","/internal-models/*"]
 ```
 
 ### Getting Help

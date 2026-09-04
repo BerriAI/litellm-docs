@@ -53,7 +53,7 @@ model_list:
       model: anthropic/claude-haiku-4-5-20251001
       api_key: os.environ/ANTHROPIC_API_KEY
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
@@ -229,13 +229,17 @@ Common issues and solutions:
 - Use `--model` flag or environment variables to specify the model
 - Check LiteLLM logs for detailed error messages
 
+**MCP tools filling the context window:**
+- Claude Code turns its tool search off when `ANTHROPIC_BASE_URL` is not a first-party Anthropic host, so `/context` shows every MCP tool schema inlined instead of `loaded on-demand`
+- Set the `ENABLE_TOOL_SEARCH=true` environment variable, ideally in the `env` block of `.claude/settings.json`; see [Keep MCP tools out of the context window](./claude_mcp.md#keep-mcp-tools-out-of-the-context-window-tool-search)
+
 ## Using Bedrock/Vertex AI/Azure Foundry Models
 
 Expand your configuration to support multiple providers and models:
 
 :::tip Check live compatibility before you wire up a provider
 
-Compatibility between Claude Code features and each provider (Anthropic, Bedrock, Vertex AI, Azure) changes as Claude Code and LiteLLM ship updates. The [Claude Code × LiteLLM compatibility matrix](https://docs.litellm.ai/docs/claude_code_compatibility) is regenerated daily against the latest stable LiteLLM proxy across Haiku 4.5, Sonnet 4.6, and Opus 4.7 — check it first to see which `(feature, provider)` cells are currently green.
+Compatibility between Claude Code features and each provider (Anthropic, Bedrock, Vertex AI, Azure) changes as Claude Code and LiteLLM ship updates. The [Claude Code × LiteLLM compatibility matrix](https://docs.litellm.ai/docs/claude_code_compatibility) is regenerated daily against the latest stable LiteLLM proxy across Haiku 4.5, Sonnet 4.6, and Opus 4.7. Check it first to see which `(feature, provider)` cells are currently green.
 
 :::
 
@@ -292,11 +296,11 @@ model_list:
       vertex_ai_location: "us-east5"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json"
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-Switch between models seamlessly:
+Switch between models without code changes:
 
 ```bash
 # Use Anthropic API directly (newest Claude Code model)
@@ -327,7 +331,7 @@ The Invoke preference and the beta-header flag below are temporary. LiteLLM alre
 
 #### 1. Prefer Bedrock Invoke
 
-In the config above, Bedrock models use the `bedrock/invoke/<model-id>` prefix — currently the smoother path for Claude Code traffic. If you'd like to try Converse, swap the prefix from `bedrock/invoke/` to `bedrock/converse/` and check the matrix for the feature you need.
+In the config above, Bedrock models use the `bedrock/invoke/<model-id>` prefix, currently the smoother path for Claude Code traffic. If you'd like to try Converse, swap the prefix from `bedrock/invoke/` to `bedrock/converse/` and check the matrix for the feature you need.
 
 #### 2. Disable Claude Code's experimental beta headers for Bedrock
 

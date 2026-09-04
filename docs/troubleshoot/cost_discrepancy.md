@@ -44,7 +44,7 @@ With the same time range on both sides, fill in:
 | Cache read tokens | — | — | — |
 | Cache write tokens | — | — | — |
 
-LiteLLM surfaces per-category token usage for the selected model—for example prompt, completion, and cache-related tokens.
+LiteLLM surfaces per-category token usage for the selected model, for example prompt, completion, and cache-related tokens.
 
 ![LiteLLM usage breakdown by token category](/img/cost-discrepancy-debug/token-categories.png)
 
@@ -125,7 +125,7 @@ Provider dashboards and LiteLLM do not bucket requests on identical timestamps. 
 
 ## Path A: Token quantity mismatch
 
-If any category is off by more than about 10%, LiteLLM may not be ingesting that category correctly (or the provider dashboard is categorizing tokens differently—recheck Step 3 first).
+If any category is off by more than about 10%, LiteLLM may not be ingesting that category correctly (or the provider dashboard is categorizing tokens differently, so recheck Step 3 first).
 
 **What to send the LiteLLM team:**
 
@@ -185,7 +185,7 @@ On the issue, it helps to clarify:
 
 ### For LiteLLM maintainers
 
-If Path A and Path B do not close the case after triage, **you** should reach out and **schedule a call with the customer** (support or engineering), with the Step 3 table and screenshots—before treating the issue.
+If Path A and Path B do not close the case after triage, **you** should reach out and **schedule a call with the customer** (support or engineering), with the Step 3 table and screenshots, before treating the issue.
 
 ## Checklist
 

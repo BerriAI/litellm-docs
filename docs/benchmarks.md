@@ -17,8 +17,9 @@ Each machine deploying LiteLLM had the following specs:
 
 ## Configuration
 
-- Database: PostgreSQL
-- Redis: Not used
+- Database: PostgreSQL. See [Database Sizing](./proxy/db_sizing.md) for how to size yours
+- Redis: Not used. Recommended in production; see [Redis Sizing](./proxy/redis_sizing.md)
+- Load generator: Locust, 1000 users, each with 0.5s to 1s of think time between requests. See [Locust Settings](#locust-settings) before comparing these numbers against your own run.
 
 
 ### 2 Instance LiteLLM Proxy
@@ -130,63 +131,28 @@ End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake
 
 | Category | Specification |
 |----------|---------------|
-| **Load Testing** | Locust: 1,000 concurrent users, 500 ramp-up |
+| **Load Testing** | Locust: 1,000 users with 0.5s to 1s think time, 500 ramp-up |
 | **System** | 4 vCPUs, 8 GB RAM, 4 workers, 4 instances |
 | **Database** | PostgreSQL (Redis unused) |
 
 
 ## Infrastructure Recommendations
 
-Recommended specifications based on benchmark results and industry standards for API gateway deployments.
-
-### PostgreSQL
-
-Required for authentication, key management, and usage tracking.
-
-| Workload | CPU | RAM | Storage | Connections |
-|----------|-----|-----|---------|-------------|
-| 1-2K RPS | 4-8 cores | 16GB | 200GB SSD (3000+ IOPS) | 100-200 |
-| 2-5K RPS | 8 cores | 16-32GB | 500GB SSD (5000+ IOPS) | 200-500 |
-| 5K+ RPS | 16+ cores | 32-64GB | 1TB+ SSD (10000+ IOPS) | 500+ |
-
-**Configuration:** Set `proxy_batch_write_at: 60` to batch writes and reduce DB load. Total connections = pool limit × instances.
-
-### Redis (Recommended)
-
-Redis was not used in these benchmarks but provides significant production benefits: 60-80% reduced DB load.
-
-| Workload | CPU | RAM |
-|----------|-----|-----|
-| 1-2K RPS | 2-4 cores | 8GB |
-| 2-5K RPS | 4 cores | 16GB |
-| 5K+ RPS | 8+ cores | 32GB+ |
-
-**Requirements:** Redis 7.0+, AOF persistence enabled, `allkeys-lru` eviction policy.
-
-**Configuration:**
-```yaml
-router_settings:
-  redis_host: os.environ/REDIS_HOST
-  redis_port: os.environ/REDIS_PORT
-  redis_password: os.environ/REDIS_PASSWORD
-
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
-    host: os.environ/REDIS_HOST
-    port: os.environ/REDIS_PORT
-    password: os.environ/REDIS_PASSWORD
-```
-
-**Scaling:** DB connections scale linearly with instances. Consider PostgreSQL read replicas beyond 5K RPS.
-
-See [Production Configuration](./proxy/prod) for detailed best practices.
+The runs above used a single PostgreSQL instance and no Redis, which is a benchmark configuration rather than a production one. For instance sizes at each request rate, the connection math that decides whether a deployment survives a scale-out, and concrete managed-service picks on AWS, Azure, and GCP, see [Database Sizing](./proxy/db_sizing.md) and [Redis Sizing](./proxy/redis_sizing.md). For the gateway-side configuration that goes with it, see [Production Best Practices](./proxy/prod.md).
 
 ## Locust Settings
 
 - 1000 Users
 - 500 user Ramp Up
+- `wait_time = between(0.5, 1)`, so every user sleeps 0.5s to 1s between requests
+
+### Why the think time matters when you reproduce these numbers
+
+A Locust user spends its time either waiting on a response or sleeping. With a 0.75s mean think time and ~110ms responses, each of the 1000 users completes a request about every 0.86s, so the run offers ~1160 RPS and holds roughly **130 requests in flight** at any instant. That in-flight depth, not the user count, is what the latency columns above describe.
+
+A closed-loop client with no think time is measuring something else. 1000 concurrent workers that send the next request the moment the previous one returns hold **1000 requests in flight**, about 8x the queue depth of these runs. Once a gateway is saturated its throughput is fixed, and by Little's Law the latency each client observes is just `requests in flight / throughput`. So the same deployment, at the same RPS, reports roughly 8x the latency purely because the client queued 8x as much work into it. Latency and concurrency are not independent, and neither number means anything without the other.
+
+To compare against the tables above, either keep the 0.5s to 1s think time, or hold your client's in-flight request count near 130 and report it alongside the latency. It is also worth reporting RPS first: if your run shows higher RPS and higher latency than these tables, your gateway is faster than this benchmark and your client is simply queueing deeper.
 
 ## How to measure LiteLLM Overhead
 
@@ -284,7 +250,7 @@ class MyUser(HttpUser):
 
 **Pros**
 
-* Fully utilizes available CPU capacity
+* Fully uses available CPU capacity
 * Strong connection handling and low latency after initial warm-up spikes
 
 **Cons**

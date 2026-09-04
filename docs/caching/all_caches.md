@@ -686,6 +686,9 @@ def __init__(
     valkey_semantic_cache_embedding_model: str = "text-embedding-ada-002",
     valkey_semantic_cache_index_name: Optional[str] = None,
 
+    # semantic cache tenant scope: "key" (key/team/org) or "end_user" (also per end user)
+    semantic_cache_scope: str = "key",
+
     # s3 Bucket, boto3 configuration
     s3_bucket_name: Optional[str] = None,
     s3_region_name: Optional[str] = None,

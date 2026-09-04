@@ -496,6 +496,17 @@ article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='code
   margin-bottom: 0.25rem !important;
 }
 
+/* Auto Router sidebar: top-level pages read like top-level category labels */
+.autorouter-nav-item > .menu__link {
+  color: #111827;
+  font-weight: 600 !important;
+  font-size: 14px;
+}
+
+[data-theme='dark'] .autorouter-nav-item > .menu__link {
+  color: #f9fafb;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {
@@ -1043,4 +1054,18 @@ div[class*='announcementBar'] a:hover {
 .contact-card__desc {
   color: var(--ifm-color-emphasis-700);
   font-size: 0.9rem;
+}
+
+/* Blog tables: Docusaurus defaults tables to display:block with overflow, so each
+   shrinks to its own content and no two line up. Render them as real tables at a
+   common width, still scrollable on narrow screens via the wrapper. */
+.blog-wrapper .markdown table {
+  display: table;
+  width: 100%;
+  table-layout: auto;
+}
+
+.blog-wrapper .markdown table th,
+.blog-wrapper .markdown table td {
+  text-align: left;
 }

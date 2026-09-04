@@ -18,6 +18,10 @@ Create a vector store which can be used to store and search document chunks for 
 
 The proxy also supports **retrieve**, **list**, **update**, and **delete** for vector stores (OpenAI-compatible). See [Vector store management and routing on the proxy](#vector-store-management-and-routing-on-the-proxy) for `curl` examples and provider routing.
 
+:::info Creating vs registering
+`POST /v1/vector_stores` (this page) creates a **new** store on the provider and only works for providers with a create implementation (see the [overview matrix](./index.md#provider-support)). If your store **already exists** on the provider (a Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, ...), you want `POST /vector_store/new` instead, which registers it with LiteLLM so it can be searched through the unified API. See [Managed Vector Stores](./managed_vector_stores.md).
+:::
+
 ## Usage
 
 ### LiteLLM Python SDK
@@ -253,7 +257,7 @@ Use your LiteLLM proxy virtual key with either:
 
 ### Provider routing
 
-LiteLLM automatically selects the vector store provider from the request context — no extra query parameters needed:
+LiteLLM automatically selects the vector store provider from the request context, with no extra query parameters needed:
 
 - **LiteLLM-managed stores** — If `vector_store_id` is a LiteLLM-managed store, the proxy resolves the provider from the registry (`litellm_params` stored in the database).
 - **Model-based routing** — If the request includes a `model` matching a configured deployment/model group, credentials come from that deployment.

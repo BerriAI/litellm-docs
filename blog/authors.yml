@@ -53,10 +53,16 @@ mateo:
   url: https://www.linkedin.com/in/mateo-wang
   image_url: /img/mateo.jpeg
 
+misbah:
+  name: Misbah Syed
+  title: DevRel Engineer, LiteLLM
+  url: https://github.com/misbahsy
+  image_url: https://avatars.githubusercontent.com/u/35427888?v=4
+
 tin:
   name: Tin Lo
-  title: MCP Eng, LiteLLM
-  image_url: https://media.licdn.com/dms/image/v2/D4E03AQH0K2Tx1GzBhQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1677601930841?e=1785369600&v=beta&t=-r46FiQh1uny60kMPAbGDtnINzyc3CZ72u6xt2UvMrc
+  title: AI Engineer, LiteLLM
+  image_url: /img/authors/tin.png
 
 mubashir:
   name: Mubashir Osmani

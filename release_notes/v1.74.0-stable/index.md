@@ -241,9 +241,9 @@ This release brings significant performance improvements to the Python SDK with 
   - Remove hardcoded model name on streaming - [PR](https://github.com/BerriAI/litellm/pull/12131)
   - Support lowest latency routing - [PR](https://github.com/BerriAI/litellm/pull/12180)
   - Non-anthropic models token usage returned - [PR](https://github.com/BerriAI/litellm/pull/12184)
-- **[/chat/completions](../../docs/providers/anthropic_unified)**
+- **[/chat/completions](/docs/anthropic_unified)**
   - Support Cursor IDE tool_choice format `{"type": "auto"}` - [PR](https://github.com/BerriAI/litellm/pull/12168)
-- **[/generateContent](../../docs/generate_content)**
+- **[/generateContent](/docs/generateContent)**
   - Allow passing litellm_params - [PR](https://github.com/BerriAI/litellm/pull/12177)
   - Only pass supported params when using OpenAI models - [PR](https://github.com/BerriAI/litellm/pull/12297)
   - Fix using gemini-cli with Vertex Anthropic Models - [PR](https://github.com/BerriAI/litellm/pull/12246)
@@ -295,12 +295,12 @@ This release brings significant performance improvements to the Python SDK with 
 #### Features
 - Guardrails 
   - All guardrails are now supported on the UI - [PR](https://github.com/BerriAI/litellm/pull/12349)
-- **[Azure Content Safety](../../docs/guardrails/azure_content_safety)**
+- **[Azure Content Safety](/docs/proxy/guardrails/azure_content_guardrail)**
   - Add Azure Content Safety Guardrails to LiteLLM proxy - [PR](https://github.com/BerriAI/litellm/pull/12268)
   - Add azure content safety guardrails to the UI - [PR](https://github.com/BerriAI/litellm/pull/12309)
 - **[DeepEval](../../docs/observability/deepeval_integration)**
   - Fix DeepEval logging format for failure events - [PR](https://github.com/BerriAI/litellm/pull/12303)
-- **[Arize](../../docs/proxy/logging#arize)**
+- **[Arize](/docs/observability/arize_integration)**
   - Add Arize Team Based Logging - [PR](https://github.com/BerriAI/litellm/pull/12264)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
   - Langfuse prompt_version support - [PR](https://github.com/BerriAI/litellm/pull/12301)

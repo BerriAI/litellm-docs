@@ -300,7 +300,7 @@ This mirrors the [MCP static and extra headers](/docs/mcp#forwarding-custom-head
 
 ### Example: Pillar Security
 
-[Pillar Security](https://pillar.security) uses the Generic Guardrail API to provide comprehensive AI security scanning including prompt injection protection, PII/PCI detection, secret detection, and content moderation.
+[Pillar Security](https://pillar.security) uses the Generic Guardrail API to provide AI security scanning, including prompt injection protection, PII/PCI detection, secret detection, and content moderation.
 
 ```yaml
 guardrails:

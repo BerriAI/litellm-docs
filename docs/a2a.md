@@ -47,7 +47,9 @@ You can add A2A-compatible agents through the LiteLLM Admin UI.
 
 The URL should be the invocation URL for your A2A agent (e.g., `http://localhost:10001`).
 
-Set `protocolVersion` in `agent_card_params` when registering via API or config:
+#### Define agents in config.yaml
+
+Agents can also be declared in `config.yaml` under the top-level `agents` key, which is useful when the gateway is deployed from a ConfigMap or another read-only source. `agent_name` and `agent_card_params` are both required; entries missing either one are skipped at startup.
 
 ```yaml title="config.yaml"
 agents:
@@ -58,6 +60,24 @@ agents:
       protocolVersion: "1.0"  # or "0.3"
 ```
 
+`protocolVersion` can be set the same way when registering through the API.
+
+Config-defined agents show up in the Agents tab and in `GET /v1/agents` alongside agents created in the UI, and they survive the periodic reload from the database. Verify them with:
+
+```shell
+curl -s http://localhost:4000/v1/agents \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+If an agent created in the UI already uses a name you then declare in `config.yaml`, the database record wins and the config entry with that name is skipped, so the name always resolves to the record you can edit. Delete the database agent and the config entry takes the name back on the next reload.
+
+:::info
+
+Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
+
+The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+
+:::
 
 ### Add Azure AI Foundry Agents
 
@@ -73,7 +93,7 @@ Follow [this guide, to add your bedrock agentcore agent to LiteLLM Agent Gateway
 
 ### Add LangGraph Agents
 
-Follow [this guide to register a LangGraph agent and configure its agent card](./providers/langgraph#register-a-langgraph-platform-agent)
+Follow [this guide to register a LangGraph agent and configure its agent card](/docs/providers/langgraph)
 
 ### Add Pydantic AI Agents
 
@@ -294,7 +314,7 @@ See [Supported A2A methods](./a2a_agent_card#supported-a2a-methods) for examples
 
 ### Authentication
 
-Include your LiteLLM Virtual Key in either of two headers — `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3--convention-based-forwarding) to forward the caller's identity).
+Include your LiteLLM Virtual Key in either of two headers. `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3-convention-based-forwarding) to forward the caller's identity).
 
 ```
 Authorization: Bearer sk-your-litellm-key
@@ -323,7 +343,7 @@ curl -X POST http://localhost:4000/v1/agents \
   }'
 ```
 
-The reverse direction — enforcing trace ID on **outbound** calls made by a key owned by an agent — is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
+Enforcing a trace ID on **outbound** calls made by a key owned by an agent is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
 
 #### Sub-agent identity propagation
 
@@ -436,3 +456,48 @@ curl -X POST "http://localhost:4000/a2a/my-agent" \
 Want to create a central registry so your team can discover what agents are available within your company?
 
 Use the [AI Hub](./proxy/ai_hub) to make agents public and discoverable across your organization. This allows developers to browse available agents without needing to rebuild them.
+
+### Search the registry
+
+`GET /v1/agents` lists every agent the key can reach. Add `query=<task>` to rank those same agents by semantic similarity between the task and each agent's name, description, and skills. Pick the embedding model first:
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  agent_search_embedding_model: text-embedding-3-small
+```
+
+```console title="Rank agents for a task" showLineNumbers
+$ curl -s "http://localhost:4000/v1/agents?query=translate+a+pdf+document&top_k=3" \
+    -H "Authorization: Bearer $LITELLM_KEY" | jq -c '.[] | {agent_name, search_score}'
+{"agent_name":"document-translator","search_score":0.6732403392080719}
+{"agent_name":"trip-planner","search_score":0.1121043964671429}
+{"agent_name":"warehouse-sql-analyst","search_score":0.0946962275274791}
+```
+
+`top_k` defaults to 5 and caps at 100. Each result is the normal agent object plus a `search_score` (cosine similarity, higher is better). Ranking only ever covers agents the key is allowed to see, so a key restricted to two agents gets those two back whatever the query. Without `agent_search_embedding_model` a `query` returns `400 agent_search_not_configured`; if the embedding call fails, the request returns `503 agent_search_unavailable`. Agent embeddings are computed once per process and reused until the agent card changes.
+
+MCP clients get the same search as a virtual tool. A key with `mcp_tool_search_enabled: true` on its `object_permission` sees `agent_search(query, top_k)` next to `mcp_tool_search` and `mcp_tool_call` on `tools/list`, over both `/mcp/` and `/mcp-rest`:
+
+```console title="agent_search over /mcp-rest" showLineNumbers
+$ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
+    -H "Authorization: Bearer $KEY" \
+    -d '{"name":"agent_search","arguments":{"query":"check how many units are left in stock","top_k":1}}' \
+  | jq -r '.content[0].text | fromjson'
+[
+  {
+    "agent_id": "b21b8787-8b9e-4c5f-a45c-3f5e4061d70e",
+    "agent_name": "warehouse-sql-analyst",
+    "description": "Answers questions about stock by running SQL queries against the inventory database",
+    "skills": [{"name": "Query stock levels", "description": "Run a SQL query against the inventory database and summarize the stock levels it returns", "tags": ["sql", "analytics"]}],
+    "score": 0.37912064119364597
+  }
+]
+```
+
+See [MCP Tool Search](./mcp_tool_search.md) for how to enable the virtual tools on a key.

@@ -258,8 +258,8 @@ and select any LiteLLM-managed model (`gpt-4o`, `gemini-3.0-flash-exp`, `anthrop
 :::info Requirements
 
 - Claude Code **v2.1.129** or later.
-- `ANTHROPIC_BASE_URL` must point at a gateway that serves the Anthropic Messages API format — LiteLLM does this on `/v1/messages`.
-- Discovery is opt-in. Without `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Claude Code will not query your proxy's `/v1/models`.
+- `ANTHROPIC_BASE_URL` must point at a gateway that serves the Anthropic Messages API format. LiteLLM does this on `/v1/messages`.
+- Discovery is opt-in. Without `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Claude Code will not query your proxy's `/v1/models` and the `/model` picker only shows the built-in Anthropic models. Verified against Claude Code v2.1.247: the picker only labels models **From gateway** once the variable is set. Like `ENABLE_TOOL_SEARCH`, you can persist it in the `env` block of `.claude/settings.json`.
 
 :::
 
@@ -270,6 +270,28 @@ If you only want a subset of your LiteLLM models to show up in the `/model` pick
 You can also add individual model entries manually via `ANTHROPIC_CUSTOM_MODEL_OPTION` instead of (or in addition to) enabling discovery.
 
 :::
+
+### 7. Show a Clean Name in the Picker with `display_name`
+
+The `/model` picker only keeps gateway models whose id contains `claude` or `anthropic`, so a non-Anthropic model needs a claude-flavored name like `kimi-k3-claude-compatible` to appear at all; the picker then shows that raw id as the label. To keep the id for routing but show a friendlier label, set `display_name` under the model's `model_info`:
+
+```yaml
+model_list:
+  - model_name: kimi-k3-claude-compatible
+    litellm_params:
+      model: moonshot/kimi-k3
+      api_key: os.environ/MOONSHOT_API_KEY
+    model_info:
+      display_name: Kimi K3
+```
+
+The Anthropic-shaped `GET /v1/models` response now returns `"display_name": "Kimi K3"` for that entry, so the picker lists **Kimi K3** (labeled From gateway) while every request keeps using the `kimi-k3-claude-compatible` id. Models without a `display_name` keep showing their id, and the OpenAI-shaped listing is unaffected; nothing gets duplicated in other harnesses.
+
+### 8. Context Window Reported for a Gateway Model
+
+Claude Code applies its own default context window to a model name it does not recognize as one of Anthropic's, and every gateway-served name falls into that category. Declaring `max_input_tokens` under a model's `model_info` changes what `GET /v1/models`, `/model/info`, and the LiteLLM UI report, and it drives the proxy's own [context-window pre-call checks](../proxy/reliability.md#context-window-fallbacks-pre-call-checks--fallbacks), but it does not change the figure the client shows or when the client compacts.
+
+Set that side in Claude Code with `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, or `autoCompactWindow` in `.claude/settings.json`; see [model configuration](https://code.claude.com/docs/en/model-config). A model whose real window is smaller than what the client assumes is the case worth checking, since the client will keep filling context the provider will then reject. Routers have the same split, covered in [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md#context-window-shown-in-the-client).
 
 ## How It Works
 
@@ -313,11 +335,9 @@ router_settings:
 Track usage and set budgets through the LiteLLM UI:
 
 ```yaml
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: "postgresql://..."  # Enable database for tracking
-  
-general_settings:
   store_model_in_db: true
 ```
 

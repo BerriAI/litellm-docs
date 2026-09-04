@@ -6,6 +6,7 @@ import styles from './styles.module.css';
 
 const TABS = [
   {id: 'all', label: 'All'},
+  {id: 'autorouter', label: 'Auto Router'},
   {id: 'engineering', label: 'Engineering'},
   {id: 'ideas', label: 'Ideas'},
   {id: 'security', label: 'Security'},
@@ -15,6 +16,7 @@ const TABS = [
 const SECURITY_TAGS = ['security', 'incident-report'];
 const INFRA_TAGS = ['performance', 'reliability', 'infrastructure'];
 const IDEAS_TAGS = ['ideas', 'thesis'];
+const AUTOROUTER_TAGS = ['complexity-router', 'auto-router'];
 
 function hasTag(item, tagSet) {
   const tags = item.content?.metadata?.tags || [];
@@ -23,6 +25,7 @@ function hasTag(item, tagSet) {
 
 function filterItems(items, tab) {
   if (tab === 'all') return items;
+  if (tab === 'autorouter') return items.filter(i => hasTag(i, AUTOROUTER_TAGS));
   if (tab === 'security') return items.filter(i => hasTag(i, SECURITY_TAGS));
   if (tab === 'infrastructure') return items.filter(i => hasTag(i, INFRA_TAGS));
   if (tab === 'ideas') return items.filter(i => hasTag(i, IDEAS_TAGS));

@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # MCP Server Submissions
 
-LiteLLM supports a submission and approval workflow for MCP servers. Team members can submit MCP servers for admin review — the server is held in a `pending_review` state until an admin approves or rejects it.
+LiteLLM supports a submission and approval workflow for MCP servers. Team members can submit MCP servers for admin review, and the server is held in a `pending_review` state until an admin approves or rejects it.
 
 This lets organizations give team members self-service MCP registration without immediately exposing unapproved servers to all users.
 
@@ -39,7 +39,7 @@ general_settings:
 
 ## User: Submit an MCP Server
 
-Use a team-scoped API key. Admin keys are rejected at this endpoint — admins should use `POST /v1/mcp/server` directly.
+Use a team-scoped API key. Admin keys are rejected at this endpoint; admins should use `POST /v1/mcp/server` directly.
 
 <Tabs>
 <TabItem value="curl" label="curl">
@@ -81,7 +81,7 @@ print(response.json())
 </TabItem>
 </Tabs>
 
-**Response** — the server is created in `pending_review` state:
+**Response.** The server is created in `pending_review` state:
 
 ```json
 {
@@ -129,7 +129,7 @@ After approval, the card badge changes to **Active** and the counters update:
   style={{width: '100%', display: 'block', margin: '1rem 0'}}
 />
 
-**Rejecting** opens a dialog with an optional review notes field — useful for explaining why the submission was declined:
+**Rejecting** opens a dialog with an optional review notes field, where you can explain why the submission was declined:
 
 <Image
   img={require('../static/img/mcp/03_reject_dialog.png')}
@@ -209,11 +209,11 @@ curl -X PUT http://localhost:4000/v1/mcp/server/{server_id}/reject \
 
 **Can an admin re-approve a rejected server?**
 
-Yes. Call `PUT /v1/mcp/server/{id}/approve` — the endpoint accepts servers in both `pending_review` and `rejected` status.
+Yes. Call `PUT /v1/mcp/server/{id}/approve`; the endpoint accepts servers in both `pending_review` and `rejected` status.
 
 **What happens if a previously-active server is rejected?**
 
-It is evicted from the runtime registry immediately — clients will no longer see its tools.
+It is evicted from the runtime registry immediately, so clients will no longer see its tools.
 
 **Do I need a special config flag to enable submissions?**
 

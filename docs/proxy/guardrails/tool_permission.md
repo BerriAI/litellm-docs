@@ -246,4 +246,4 @@ guardrails:
       on_disallowed_action: "block"
 ```
 
-In this example the LLM can still call `send_email`, but the guardrail blocks the invocation (or rewrites it, depending on `on_disallowed_action`) if it tries to email anyone outside `@berri.ai` or produce a subject that fails the regex. Use this pattern for any tool where argument values matter—mail senders, escalation workflows, ticket creation, etc.
+In this example the LLM can still call `send_email`, but the guardrail blocks the invocation (or rewrites it, depending on `on_disallowed_action`) if it tries to email anyone outside `@berri.ai` or produce a subject that fails the regex. Use this pattern for any tool where argument values matter: mail senders, escalation workflows, ticket creation, etc.

@@ -12,7 +12,7 @@ Search a vector store for relevant chunks based on a query and file attributes f
 | Cost Tracking | ✅ | Tracked per search operation |
 | Logging | ✅ | Works across all integrations |
 | End-user Tracking | ✅ | |
-| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Gemini** | Full vector stores API support across providers |
+| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Valkey, Gemini** | Full vector stores API support across providers |
 
 For **retrieve, list, update, and delete** over HTTP (including `custom_llm_provider` / `model` routing), see [Create vector store](./create.md#vector-store-management-and-routing-on-the-proxy).
 
@@ -168,6 +168,28 @@ print(response)
 
 </TabItem>
 
+<TabItem value="valkey-provider" label="Valkey Provider">
+
+#### Using Valkey
+```python showLineNumbers title="Search Vector Store - Valkey Provider"
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="my-search-index",  # name of the FT index in Valkey
+    query="What is the capital of France?",
+    custom_llm_provider="valkey",
+    valkey_host="my-valkey.example.com",
+    valkey_port=6379,
+    litellm_embedding_model="openai/text-embedding-3-small",
+    max_num_results=3,
+)
+print(response)
+```
+
+[See full Valkey vector store documentation](../providers/valkey_vector_stores.md)
+
+</TabItem>
+
 <TabItem value="gemini-provider" label="Gemini Provider">
 
 #### Using Gemini File Search
@@ -273,7 +295,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 
 ## Setting Up Vector Stores
 
-To use vector store search, configure your vector stores in the `vector_store_registry`. See the [Vector Store Configuration Guide](../completion/knowledgebase.md) for:
+To search a store that already exists on a provider, register it with LiteLLM first via `config.yaml`, `POST /vector_store/new`, or the Admin UI; see [Managed Vector Stores](./managed_vector_stores.md). For provider-specific configuration, see the [Vector Store Configuration Guide](../completion/knowledgebase.md):
 
 - Provider-specific configuration (Bedrock, OpenAI, Azure, Vertex AI, PG Vector)
 - Python SDK and Proxy setup examples  

@@ -126,6 +126,7 @@ transcript = client.audio.transcriptions.create(
 - [Fireworks AI](./providers/fireworks_ai.md#audio-transcription)
 - [Groq](./providers/groq.md#speech-to-text---whisper)
 - [Deepgram](./providers/deepgram.md)
+- [Google AI Studio (Gemini)](./providers/gemini.md#audio-transcription-speech-to-text)
 - [Mistral (Voxtral)](./providers/mistral.md#audio-transcription)
 - [OVHcloud AI Endpoints](./providers/ovhcloud.md)
 

@@ -26,7 +26,7 @@ mcp_servers:
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
 
-[**See Claude Code Tutorial**](./tutorials/claude_responses_api#connecting-mcp-servers)
+[**See Claude Code Tutorial**](/docs/tutorials/claude_responses_api)
 
 ### How It Works
 
@@ -147,7 +147,7 @@ This is for first-party OAuth clients you control. For the standard ingress case
 
 #### Why the same-origin check exists
 
-The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates that the caller's `redirect_uri` shares scheme + host + port with the proxy's own public origin (or with one of the loopback / allowlisted entries above). The check exists to stop an attacker from phishing a logged-in admin into a link that bounces an authorization code — for an upstream OAuth-protected MCP server such as GitHub or Slack — through an attacker-controlled host. Same-origin (plus an explicit ops allowlist) is the threat-model-safe equivalent of the loopback-only rule used for native MCP clients.
+The MCP proxy's `/v1/mcp/server/oauth/<server_id>/authorize` endpoint validates that the caller's `redirect_uri` shares scheme + host + port with the proxy's own public origin (or with one of the loopback / allowlisted entries above). The check exists to stop an attacker from phishing a logged-in admin into a link that bounces an authorization code, for an upstream OAuth-protected MCP server such as GitHub or Slack, through an attacker-controlled host. Same-origin (plus an explicit ops allowlist) is the threat-model-safe equivalent of the loopback-only rule used for native MCP clients.
 
 `PROXY_BASE_URL` is the right escape hatch for ingressed deployments because the operator is declaring the proxy's true public origin out of band, rather than asking the proxy to infer it from headers an attacker might be able to set. The check itself is not relaxed.
 
@@ -179,7 +179,7 @@ Under **Authentication**, select **OAuth**.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/f6ea5694-f28a-4bc3-9c9a-bb79f199bd65/ascreenshot_9be839f55b1b4f96bfe24030ba2c7f8d_text_export.jpeg)
 
-Choose **Machine-to-Machine (M2M)** as the OAuth flow type. This is for server-to-server authentication using the `client_credentials` grant — no browser interaction required.
+Choose **Machine-to-Machine (M2M)** as the OAuth flow type. This is for server-to-server authentication using the `client_credentials` grant, with no browser interaction.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/9853310c-1d86-4628-bad1-7a391eca0e4d/ascreenshot_f302a286fa264fdd8d56db53b8f9395c_text_export.jpeg)
 
@@ -189,7 +189,7 @@ Fill in the **Client ID** and **Client Secret** provided by your OAuth provider.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/0de5a7bd-9898-4fc7-8843-b23dd5aac47f/ascreenshot_b9087aaa81a14b5b9c199929efc4a563_text_export.jpeg)
 
-Enter the **Token URL** — this is the endpoint LiteLLM will call to fetch access tokens using `client_credentials`.
+Enter the **Token URL**, the endpoint LiteLLM will call to fetch access tokens using `client_credentials`.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-10/0aea70f1-558c-4dca-91bc-1175fe1ddc89/ascreenshot_b3fcf8a1287e4e2d9a3d67c4a29f7bff_text_export.jpeg)
 
@@ -234,6 +234,45 @@ mcp_servers:
     token_url: "https://auth.example.com/oauth/token"
     scopes: ["mcp:read", "mcp:write"]  # optional
 ```
+
+### Sending the token on a different header
+
+By default the token LiteLLM resolves goes out as `Authorization: Bearer <token>`, which is what
+almost every MCP server expects. Some deployments put the MCP server behind an API gateway that
+reads its own credential from a private header, and the server behind the gateway still wants its
+own bearer on `Authorization`. That needs two credentials on the same request.
+
+Set `upstream_token_header` to name the header the resolved token should use. Anything you configure
+under `static_headers` is then left alone, so a second credential reaches the server behind the
+gateway untouched.
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  my_mcp_server:
+    url: "https://my-mcp-server.com/mcp"
+    auth_type: oauth2
+    oauth2_flow: client_credentials
+    client_id: os.environ/MCP_CLIENT_ID
+    client_secret: os.environ/MCP_CLIENT_SECRET
+    token_url: "https://auth.example.com/oauth/token"
+    upstream_token_header: "esb-oauth"
+    static_headers:
+      Authorization: "Bearer os.environ/UPSTREAM_MCP_TOKEN"
+```
+
+Each request to the MCP server then carries both:
+
+```
+esb-oauth: Bearer <the token LiteLLM minted>
+Authorization: Bearer <the token you configured>
+```
+
+Leaving `upstream_token_header` unset keeps the default, so existing servers are unaffected. The
+value must be a valid HTTP header name; the proxy refuses to start on a malformed one, and the
+management API rejects it with a 400.
+
+In the UI the same setting is the **Token Header** field in the OAuth section of the MCP server
+form, and it applies to the interactive flow and the token-exchange modes as well as M2M.
 
 ### How It Works
 
@@ -355,7 +394,7 @@ The response includes these headers (all sensitive values are masked):
 | `x-mcp-debug-outbound-url` | The upstream MCP server URL. |
 | `x-mcp-debug-server-auth-type` | The `auth_type` configured on the server. |
 
-**Example — healthy OAuth2 passthrough:**
+**Example, healthy OAuth2 passthrough:**
 
 ```
 x-mcp-debug-inbound-auth: x-litellm-api-key=Bearer****1234; authorization=Bearer****ef01
@@ -365,7 +404,7 @@ x-mcp-debug-outbound-url: https://mcp.atlassian.com/v1/mcp
 x-mcp-debug-server-auth-type: oauth2
 ```
 
-**Example — LiteLLM key leaking (misconfigured):**
+**Example, LiteLLM key leaking (misconfigured):**
 
 ```
 x-mcp-debug-inbound-auth: authorization=Bearer****1234

@@ -8,10 +8,14 @@ All image variants published to `ghcr.io/berriai/` are signed with the same cosi
 
 | Image | Description |
 |---|---|
-| `ghcr.io/berriai/litellm` | Core proxy |
-| `ghcr.io/berriai/litellm-database` | Proxy with Postgres dependencies |
+| `ghcr.io/berriai/litellm` | Core proxy, including the Prisma toolchain for Postgres |
 | `ghcr.io/berriai/litellm-non_root` | Non-root variant |
 | `ghcr.io/berriai/litellm-spend_logs` | Spend-logs sidecar |
+| `ghcr.io/berriai/litellm-database` | Legacy alias of `litellm`, kept for existing deployments |
+
+:::note `litellm-database` is a legacy alias
+`ghcr.io/berriai/litellm-database` used to be the image to pick when the proxy needed Postgres, because it bundled the Prisma toolchain that the core image lacked. `ghcr.io/berriai/litellm` now ships the same toolchain, entrypoint and migrations, so there is no longer a reason to choose between them. `litellm-database` is still published and signed with the same key, so deployments that pin it keep working and verify with the same commands. Use `ghcr.io/berriai/litellm` for new deployments; the examples on this page use it throughout.
+:::
 
 The signing key was introduced in [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub).
 
@@ -36,11 +40,6 @@ cosign verify \
 Replace the image reference with any signed variant:
 
 ```bash
-# litellm-database
-cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.89.4
-
 # litellm-non_root
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
@@ -54,7 +53,7 @@ Tags are protected in this repository and resolve to the same key:
 ```bash
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/v1.89.4/cosign.pub \
-  ghcr.io/berriai/litellm-database:v1.89.4
+  ghcr.io/berriai/litellm:v1.89.4
 ```
 
 ### Expected output
@@ -67,7 +66,7 @@ The following checks were performed on each of these signatures:
 
 ## Enforce verification in CI/CD
 
-### Kubernetes — Sigstore Policy Controller
+### Kubernetes: Sigstore Policy Controller
 
 The [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) rejects pods whose images fail cosign verification.
 
@@ -106,7 +105,7 @@ kubectl label namespace litellm policy.sigstore.dev/include=true
 
 Any pod in that namespace using an unsigned `ghcr.io/berriai/litellm*` image will be rejected at admission.
 
-### GCP — Binary Authorization
+### GCP: Binary Authorization
 
 [Binary Authorization](https://cloud.google.com/binary-authorization/docs) can enforce cosign signatures on Cloud Run and GKE.
 
@@ -123,7 +122,7 @@ Any pod in that namespace using an unsigned `ghcr.io/berriai/litellm*` image wil
 
 Refer to the [GCP Binary Authorization docs](https://cloud.google.com/binary-authorization/docs/setting-up) for full setup steps.
 
-### AWS — ECS / ECR
+### AWS: ECS / ECR
 
 AWS does not natively verify cosign signatures at deploy time. Common approaches:
 
@@ -139,7 +138,7 @@ Add a verification step before any deployment job:
   run: |
     cosign verify \
       --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-      ghcr.io/berriai/litellm-database:${{ env.LITELLM_VERSION }}
+      ghcr.io/berriai/litellm:${{ env.LITELLM_VERSION }}
 ```
 
 ## Recommended deployment patterns
@@ -149,14 +148,14 @@ Add a verification step before any deployment job:
 Digest pinning guarantees the exact image content regardless of tag mutations:
 
 ```yaml
-image: ghcr.io/berriai/litellm-database@sha256:<digest>
+image: ghcr.io/berriai/litellm@sha256:<digest>
 ```
 
 Get the digest after pulling:
 
 ```bash
 docker inspect --format='{{index .RepoDigests 0}}' \
-  ghcr.io/berriai/litellm-database:v1.89.4
+  ghcr.io/berriai/litellm:v1.89.4
 ```
 
 Cosign verification works with digests too:
@@ -164,7 +163,7 @@ Cosign verification works with digests too:
 ```bash
 cosign verify \
   --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-database@sha256:<digest>
+  ghcr.io/berriai/litellm@sha256:<digest>
 ```
 
 ### Use stable release tags

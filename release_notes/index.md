@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.93.0 — GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API](/release_notes/v1.93.0/v1-93-0)
+### [v1.99.0: Dark Mode, CLI OAuth Login & Batch Billing](/release_notes/v1.99.0/v1-99-0)
 
-_July 18, 2026_
+_September 1, 2026_
 
-Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure plus xAI Grok-4.5, OpenAI Realtime 2.1, and Google Cloud Chirp 3 speech-to-text; a new OpenAI-compatible Meta Model API provider serving `muse-spark-1.1` across Chat Completions, `/v1/messages`, and Responses; client-forwarded MCP credentials via `true_passthrough`, `oauth_delegate`, and a `dcr_bridge` sealed-envelope path with PKCE S256 enforced on both authorize arms; the shadcn / Base UI dashboard migration covering the shared DataTable, charts, and the full-height sidebar shell; and a smarter complexity auto router with keyword tier overrides, semantic keyword matching, and an optional LLM-based classifier.
+The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, `antd` and `@ant-design/icons` dropped from the dashboard's dependencies and the dashboard now on React 19; dark mode ships with a light/dark/system toggle, semantic status tokens, and theme-aware logos, surfaces and code blocks; `lite login` becomes a real OAuth flow with authorization code plus PKCE, storing the credential and refresh token in the OS keychain, and `lite login --config-claude` wires up Claude Code at login; batch spend is accounted for end to end, with enqueued-token rate limiting that refunds on completion, atomic cost claims so multi-pod polling cannot double-bill, and billing for cancelled and failed batches that still produced output; provisioned throughput can be declared in `config.yaml`; and the complexity router becomes operator-configurable with custom classifier plugins, tier sets, and per-model reasoning effort. This stable also folds in the v1.99.0-rc.2 fixes.
 
 ---
 
@@ -22,6 +22,12 @@ Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on Open
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |

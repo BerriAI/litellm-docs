@@ -2,13 +2,13 @@
 
 Pair a faster executor model with a higher-intelligence advisor model that provides strategic guidance mid-generation.
 
-The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consult a high-intelligence advisor model (Opus 4.6) mid-generation. The advisor reads the full conversation and produces a plan or course correction — typically 400–700 text tokens — and the executor continues with the task.
+The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consult a high-intelligence advisor model (Opus 4.6) mid-generation. The advisor reads the full conversation and produces a plan or course correction, typically 400–700 text tokens, and the executor continues with the task.
 
 This pattern is well-suited for long-horizon agentic workloads (coding agents, computer use, multi-step research) where most turns are mechanical but having an excellent plan is crucial. You get close to advisor-solo quality while the bulk of token generation happens at executor-model rates.
 
 :::info Beta
 
-The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests — LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
+The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests; LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
 
 :::
 
@@ -24,7 +24,7 @@ The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` i
 
 ## How it works (LiteLLM native orchestration)
 
-For non-Anthropic providers, LiteLLM implements the advisor loop itself. The API you call is identical — LiteLLM handles everything transparently.
+For non-Anthropic providers, LiteLLM implements the advisor loop itself. The API you call is identical; LiteLLM runs the loop for you.
 
 When a request arrives with an `advisor_20260301` tool and a non-Anthropic provider, `AdvisorOrchestrationHandler` intercepts it. It translates the advisor tool into a regular function tool the provider understands, then runs an orchestration loop:
 
@@ -51,11 +51,11 @@ flowchart TD
 
 **What LiteLLM does for you:**
 
-- Strips `advisor_20260301` from the outgoing request — the provider only sees a standard function tool named `advisor`
+- Strips `advisor_20260301` from the outgoing request, so the provider only sees a standard function tool named `advisor`
 - When the executor calls it, intercepts before the result reaches you, runs the advisor sub-call, and injects the advice
 - Strips any `advisor_tool_result` / `server_tool_use` blocks from message history on re-send so non-Anthropic providers never see Anthropic-specific types
 - Wraps the final response in an SSE stream if you requested `stream=True`
-- Enforces `max_uses` as a hard cap — `AdvisorMaxIterationsError` is raised if exceeded; `max_uses=0` disables the advisor entirely
+- Enforces `max_uses` as a hard cap; `AdvisorMaxIterationsError` is raised if exceeded, and `max_uses=0` disables the advisor entirely
 
 ## Model Compatibility
 

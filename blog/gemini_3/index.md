@@ -194,7 +194,7 @@ print()  # New line
 **Key Points:**
 - ✅ `stream_chunk_builder()` now preserves `provider_specific_fields` including thought signatures
 - ✅ Thought signatures are automatically included when appending `assistant_msg` to conversation history
-- ✅ Multi-turn conversations work seamlessly with streaming
+- ✅ Multi-turn conversations work with streaming
 
 </TabItem>
 <TabItem value="sdk" label="Non-Streaming SDK">
@@ -378,7 +378,7 @@ When you switch from a model that doesn't use thought signatures (e.g., `gemini-
 
 1. **Detects missing signatures**: Identifies assistant messages with tool calls that lack thought signatures
 2. **Adds dummy signature**: Automatically injects a dummy thought signature (`skip_thought_signature_validator`) for compatibility
-3. **Maintains conversation flow**: Your conversation history continues to work seamlessly
+3. **Maintains conversation flow**: Your conversation history keeps working
 
 #### Example: Switching Models Mid-Conversation
 
@@ -460,7 +460,7 @@ The dummy signature used is: `base64("skip_thought_signature_validator")`
 
 This is the recommended approach by Google for handling conversation history from models that don't support thought signatures. It allows Gemini 3 to:
 - Accept the conversation history without validation errors
-- Continue the conversation seamlessly
+- Continue the conversation
 - Maintain context across model switches
 
 ## Thinking Level Parameter
@@ -546,7 +546,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ## Cost Tracking: Prompt Caching & Context Window
 
-LiteLLM provides comprehensive cost tracking for Gemini 3 Pro Preview, including support for prompt caching and tiered pricing based on context window size.
+LiteLLM provides full cost tracking for Gemini 3 Pro Preview, including support for prompt caching and tiered pricing based on context window size.
 
 ### Prompt Caching Cost Tracking
 
@@ -682,7 +682,7 @@ model_list:
       model: gemini/gemini-3-pro-preview
       api_key: os.environ/GEMINI_API_KEY
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
@@ -732,7 +732,7 @@ $ claude --model gemini-3-pro-preview
 - ✅ **Native Claude Code Experience**: Use Gemini 3 Pro Preview with Claude Code's familiar CLI interface
 - ✅ **Unified Authentication**: Single API key for all models through LiteLLM proxy
 - ✅ **Cost Tracking**: All usage tracked through LiteLLM's centralized logging
-- ✅ **Seamless Model Switching**: Easily switch between Claude and Gemini models
+- ✅ **Model Switching**: Easily switch between Claude and Gemini models
 - ✅ **Full Feature Support**: All Gemini 3 features (thought signatures, function calling, etc.) work through Claude Code
 
 ### Troubleshooting
@@ -832,7 +832,7 @@ print("\n" + response.output_text)
 
 **Key Points:**
 - ✅ Thought signatures are automatically preserved in function calls
-- ✅ Works seamlessly with multi-turn conversations
+- ✅ Works with multi-turn conversations
 - ✅ All Gemini 3-specific features are fully supported
 
 </TabItem>
@@ -899,7 +899,7 @@ for chunk in response:
 
 - ✅ **Structured Output**: Responses API provides a clear structure for handling function calls and multi-turn conversations
 - ✅ **Thought Signature Preservation**: LiteLLM automatically preserves thought signatures in both streaming and non-streaming modes
-- ✅ **Seamless Integration**: Works with existing OpenAI SDK patterns
+- ✅ **Integration**: Works with existing OpenAI SDK patterns
 - ✅ **Full Feature Support**: All Gemini 3 features (thought signatures, function calling, reasoning) are fully supported
 
 
@@ -938,7 +938,7 @@ For Gemini 3 models, always use `temperature=1.0` (default). Lower temperatures 
 When switching from non-Gemini-3 to Gemini-3:
 - ✅ LiteLLM automatically handles missing thought signatures
 - ✅ No manual intervention needed
-- ✅ Conversation history continues seamlessly
+- ✅ Conversation history continues to work
 
 
 ## Troubleshooting

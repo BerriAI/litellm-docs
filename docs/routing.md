@@ -846,15 +846,25 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
-## Routing Groups - Per-Model Strategies
+## Routing Groups - Per-Model Strategies and Callable Virtual Models
 
 Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
+
+A group is also **callable as a model**: request `model: <group_name>` and LiteLLM picks among the union of every member's deployments using the group's strategy. Group names appear in `/v1/models`, so clients that discover models from the gateway (Claude Code with `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Codex) surface them in their pickers.
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{"model": "anthropic-latency", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Access control treats a group as its own model name: grant `<group_name>` on a key or team to let it list and call the group. Membership is not expanded in either direction, so a key granted only the group cannot call members directly and a key granted a member cannot call the group. A group name must not collide with an existing `model_name` or `model_group_alias`; config load rejects it. Requests keep the group name as `model_group` in spend logs, with each row recording the member deployment that actually served it. Fallbacks and `model_group_retry_policy` are keyed by name, so give the group its own entries if you need them. Claude Code and Claude Desktop only auto-discover gateway models whose name contains `claude` or `anthropic`, so name groups like `claude-quality` if you want them to appear in the picker without setting `ANTHROPIC_CUSTOM_MODEL_OPTION` by hand.
 
 :::tip
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
 :::
 
-**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models — without spinning up a second router.
+**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models, without spinning up a second router.
 
 #### Rules
 
@@ -950,6 +960,102 @@ router_settings:
 
 Routing groups can be updated via `Router.update_settings(routing_groups=[...])` or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
 
+## Session Affinity (Sticky Sessions)
+
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+
+Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+<Tabs>
+<TabItem value="proxy" label="Proxy">
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: gpt-4.1
+    litellm_params:
+      model: azure/gpt-4.1
+      api_key: os.environ/AZURE_API_KEY_EASTUS
+      api_base: https://eastus.openai.azure.com
+  - model_name: gpt-4.1
+    litellm_params:
+      model: azure/gpt-4.1
+      api_key: os.environ/AZURE_API_KEY_WESTUS
+      api_base: https://westus.openai.azure.com
+
+router_settings:
+  routing_strategy: simple-shuffle          # any strategy
+  optional_pre_call_checks: ["session_affinity"]
+  deployment_affinity_ttl_seconds: 3600     # optional, default 3600
+```
+
+Send a session id with every request of the conversation. The proxy reads it from the `x-litellm-session-id` header (`x-litellm-trace-id` is interchangeable), from any `x-<vendor>-session-id` header such as `x-claude-code-session-id`, or from `metadata.session_id` in the request body.
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-session-id: 7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21" \
+  -d '{"model": "gpt-4.1", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+The `x-litellm-model-id` response header shows which deployment served the request. It stays the same for every request that carries the same session id.
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {
+            "model_name": "gpt-4.1",
+            "litellm_params": {"model": "azure/gpt-4.1", "api_key": "...", "api_base": "https://eastus.openai.azure.com"},
+        },
+        {
+            "model_name": "gpt-4.1",
+            "litellm_params": {"model": "azure/gpt-4.1", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
+        },
+    ],
+    routing_strategy="simple-shuffle",                 # any strategy
+    optional_pre_call_checks=["session_affinity"],
+    deployment_affinity_ttl_seconds=3600,              # optional, default 3600
+)
+
+response = await router.acompletion(
+    model="gpt-4.1",
+    messages=[{"role": "user", "content": "hi"}],
+    metadata={"session_id": "7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21"},
+)
+print(response._hidden_params["model_id"])  # same deployment for every call with this session_id
+```
+
+</TabItem>
+</Tabs>
+
+#### How it works
+
+- The first request with a new session id is routed by the strategy as usual. The deployment it lands on becomes the pin for that model group and session id (on the proxy the pin is also scoped to the caller: the virtual key, or the authenticated user id under JWT auth).
+- Every later request with the same session id is narrowed to the pinned deployment before the strategy runs.
+- Every request refreshes the pin, so `deployment_affinity_ttl_seconds` bounds the idle time between turns, not the length of a conversation.
+- Pins live in the router cache. With Redis configured they are shared across proxy instances; without Redis each instance keeps its own.
+- If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
+- Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
+
+#### Settings
+
+| Setting | Description |
+|---|---|
+| `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
+| `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
+| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
+
+These settings are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy.
+
+:::info
+The `session_affinity` option inside `complexity_router_config` on the [Auto Router](./proxy/auto_routing.md) page is a different setting. It pins the auto router's model choice for a session; the pre-call check on this page pins a deployment inside a model group.
+:::
+
 ## Traffic Mirroring / Silent Experiments
 
 Traffic mirroring allows you to "mimic" production traffic to a secondary (silent) model for evaluation purposes. The silent model's response is gathered in the background and does not affect the latency or result of the primary request.
@@ -962,7 +1068,7 @@ Traffic mirroring allows you to "mimic" production traffic to a secondary (silen
 
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
-When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured [fallbacks](#fallbacks).
+When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1084,7 +1190,7 @@ This is useful when you have multiple regional copies of the same model (e.g. Az
 - On a retryable failure, the failing deployment ID is excluded and a new deployment is picked from the remaining peers in the same model group, respecting `weight` / `rpm` / `tpm`.
 - Exclusions accumulate across hops: each retry adds the previous failure to the exclusion set, so a deployment that just failed is never picked again in the same request chain.
 - Capped by `max_fallbacks` (default `5`).
-- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError` — those keep their dedicated fallback paths.
+- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError`, which keep their dedicated fallback paths.
 - Async-only: honored by `router.acompletion()` and other async entrypoints. The sync `router.completion()` path falls through to regular fallbacks.
 - Cooldowns still apply: a deployment that crosses `allowed_fails` is cooled down independently of weighted failover.
 
@@ -1243,6 +1349,8 @@ Defaults:
 
 **Set Per Model**
 
+`allowed_fails` and `cooldown_time` can also be set on a single deployment instead of the whole router. A deployment-level value overrides the router-level one for that deployment only, so a flaky third-party endpoint can get a shorter fuse than the rest of your fleet without affecting them.
+
 ```yaml
 model_list:
 - model_name: fake-openai-endpoint
@@ -1251,8 +1359,12 @@ model_list:
     api_key: os.environ/PREDIBASE_API_KEY
     tenant_id: os.environ/PREDIBASE_TENANT_ID
     max_new_tokens: 256
-    cooldown_time: 0 # 👈 KEY CHANGE
+  model_info:
+    allowed_fails: 1 # cool this deployment down after 1 fail, instead of the router default
+    cooldown_time: 0 # disable cooldowns for this deployment
 ```
+
+`allowed_fails` must be set under `model_info`, not `litellm_params`: unlike `model_info`, `litellm_params` is copied into the actual request sent to the LLM provider, so a router-only setting placed there would leak into that request. `cooldown_time` can be set under either location (`model_info` takes priority if both are set), matching its pre-existing behavior on the router's primary failure path.
 
 </TabItem>
 </Tabs>
@@ -1428,6 +1540,26 @@ response = router.completion(model="gpt-3.5-turbo", messages=messages)
 print(f"response: {response}")
 ```
 
+#### Where `num_retries` can be set, and which one wins
+
+`num_retries` can come from four places. They are ranked, highest first:
+
+1. the `x-litellm-num-retries` request header (proxy only)
+2. `num_retries` in the request body
+3. `num_retries` in a deployment's `litellm_params` in `model_list`
+4. `num_retries` in `litellm_settings` (the router-wide default)
+
+So a caller can always raise or lower the retry count for one request, including setting it to `0` to
+disable retries, no matter what the deployment or the global setting says. A deployment value applies
+whenever the request carries none, and it overrides the global default.
+
+`num_retries` is not the same knob as `max_retries`. `num_retries` is LiteLLM's own retry loop, while
+`max_retries` is the provider SDK's internal retry count. For a call that goes through the router,
+LiteLLM owns retries and pins the provider client to `max_retries: 0`, so a `max_retries` in the
+request body or in `litellm_params` has no effect on a proxy request. That is deliberate: it is what
+stops a deployment `num_retries: N` from being applied twice and turning one request into
+`(1 + N) ** 2` upstream calls. Use `num_retries` to control how many attempts a request gets.
+
 ### [Advanced]: Custom Retries, Cooldowns based on Error Type
 
 - Use `RetryPolicy` if you want to set a `num_retries` based on the Exception received
@@ -1519,6 +1651,24 @@ router_settings:
 
 </TabItem>
 </Tabs>
+
+`AllowedFailsPolicy` also supports `ServiceUnavailableErrorAllowedFails`, `BadGatewayErrorAllowedFails`, and `NotFoundErrorAllowedFails`.
+
+#### Per-deployment allowed_fails_policy
+
+`allowed_fails_policy` can be scoped to a single deployment by setting it under that deployment's `model_info` instead of `router_settings`. A deployment-level policy takes full precedence over the router-level one for that deployment, so a rate-limited third-party endpoint can cool down after its first `RateLimitError` while the rest of your fleet keeps the router-wide tolerance.
+
+```yaml
+model_list:
+- model_name: gpt-4
+  litellm_params:
+    model: openai/gpt-4
+    api_key: os.environ/OPENAI_API_KEY
+  model_info:
+    allowed_fails_policy:
+      RateLimitErrorAllowedFails: 0 # cool down after the first RateLimitError
+      InternalServerErrorAllowedFails: 5
+```
 
 ### Caching
 
@@ -1728,7 +1878,7 @@ print(f"response id: {response._hidden_params['model_id']}")
 <TabItem value="proxy" label="Proxy">
 
 :::info
-Go [here](./proxy/reliability.md#advanced---context-window-fallbacks) for how to do this on the proxy
+Go [here](./proxy/reliability.md#context-window-fallbacks) for how to do this on the proxy
 :::
 </TabItem>
 </Tabs>
@@ -1975,7 +2125,7 @@ response = router.completion(
 
 ## Deploy Router 
 
-If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](./simple_proxy#load-balancing---multiple-instances-of-1-model)
+If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](/docs/simple_proxy)
 
 
 

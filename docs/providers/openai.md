@@ -175,6 +175,53 @@ os.environ["OPENAI_ORGANIZATION"] = "your-org-id"       # OPTIONAL
 os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 ```
 
+### Workload Identity Federation (no API key)
+
+Instead of a static `OPENAI_API_KEY`, the proxy can authenticate to OpenAI with workload identity federation: it reads an OIDC token from a file (for example a Kubernetes projected service account token), exchanges it for a short-lived OpenAI bearer token, and refreshes that token before it expires. This needs `openai>=2.32.0`.
+
+You need three values from the OpenAI platform: the identity provider id (`idp_...`), the service account id (`user-...`) the workload authenticates as, and the path of the token file inside the pod.
+
+<Tabs>
+<TabItem value="wif-env" label="Environment (proxy-wide default)">
+
+```bash
+export OPENAI_IDENTITY_PROVIDER_ID="idp_..."
+export OPENAI_SERVICE_ACCOUNT_ID="user-..."
+export OPENAI_IDENTITY_TOKEN_FILE="/var/run/secrets/tokens/openai"
+```
+
+Every `openai/` deployment that has no `api_key` then uses federation.
+
+</TabItem>
+<TabItem value="wif-config" label="config.yaml (per deployment)">
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      openai_identity_provider_id: idp_...
+      openai_service_account_id: user-...
+      openai_identity_token_file: /var/run/secrets/tokens/openai
+```
+
+Values set on a deployment take precedence over the environment variables, so different deployments can federate as different service accounts.
+
+</TabItem>
+<TabItem value="wif-ui" label="Admin UI (credential)">
+
+1. Open Models + Endpoints, go to the Credentials tab and click Add Credential
+2. Pick OpenAI as the provider, then Workload Identity Federation (token file) as the authentication method
+3. Fill in the identity provider id, the service account id and the token file path, then save
+4. In Add Model, pick OpenAI, choose the model, and select the credential under Existing Credentials. The API key field disappears because the credential carries the federation settings
+
+</TabItem>
+</Tabs>
+
+A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
+
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+
 ### OpenAI Chat Completion Models
 
 | Model Name            | Function Call                                                   |
@@ -196,6 +243,7 @@ os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 | gpt-5.4-2026-03-05 | `response = completion(model="gpt-5.4-2026-03-05", messages=messages)` |
 | gpt-5.5 | `response = completion(model="gpt-5.5", messages=messages)` |
 | gpt-5.5-2026-04-23 | `response = completion(model="gpt-5.5-2026-04-23", messages=messages)` |
+| gpt-6-astra | `response = completion(model="gpt-6-astra", messages=messages)` |
 | gpt-5.2-pro | `response = completion(model="gpt-5.2-pro", messages=messages)` |
 | gpt-5.2-pro-2025-12-11 | `response = completion(model="gpt-5.2-pro-2025-12-11", messages=messages)` |
 | gpt-5.4-pro | `response = completion(model="gpt-5.4-pro", messages=messages)` |
@@ -441,9 +489,9 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 You can opt in globally or per request:
 
-**Option A — per-request prefix:** Use the `openai/responses/` model prefix.
+**Option A, per-request prefix:** Use the `openai/responses/` model prefix.
 
-**Option B — global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
+**Option B, global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
 
 <Tabs>
 <TabItem value="sdk-global" label="SDK - Global Flag">
@@ -469,7 +517,7 @@ litellm_settings:
   route_all_chat_openai_to_responses: true
 ```
 
-Then call normally — no model prefix needed:
+Then call normally, with no model prefix:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
@@ -488,7 +536,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 `route_all_chat_openai_to_responses` only applies to the `openai` provider. Azure OpenAI is unaffected. You can also set it via env var: `LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true`.
 :::
 
-**Option A — per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
+**Option A, per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -555,7 +603,7 @@ Expected Response:
 
 ### Advanced: Using `reasoning_effort` with `summary` field
 
-By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`—`"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
+By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
 
 To opt-in to the `summary` feature, you can pass `reasoning_effort` as a dictionary. **Note:** The `summary` field requires your OpenAI organization to have verification status. Using `summary` without verification will result in a 400 error from OpenAI.
 
@@ -607,7 +655,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 **Summary field options:**
 - `"auto"`: System automatically determines the appropriate summary level based on the model
 - `"concise"`: Provides a shorter summary (not supported by GPT-5 series models)
-- `"detailed"`: Offers a comprehensive reasoning summary
+- `"detailed"`: Offers a fuller reasoning summary
 
 **Note:** GPT-5 series models support `"auto"` and `"detailed"`, but do not support `"concise"`. O-series models (o3-pro, o4-mini, o3) support all three options. Some models like o3-mini and o1 do not support reasoning summaries at all.
 

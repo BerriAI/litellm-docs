@@ -1076,6 +1076,28 @@ general_settings:
 
 This allows any user to access any response ID.
 
+### Response IDs this proxy did not issue
+
+The proxy can only tell who owns a response when it issued that response's ID itself. An ID in any other shape, a raw provider ID or one handed out before response ID encryption was on, carries no owner, so the proxy refuses it with 403 on retrieve, cancel, delete, input items, and on `previous_response_id`:
+
+```json
+{
+  "error": {
+    "message": "Forbidden. This response id was not issued by this proxy, so the proxy cannot tell who owns it.",
+    "code": 403
+  }
+}
+```
+
+Deployments that pass provider response IDs straight through on purpose, or that still have clients holding older IDs, turn the refusal off with `allow_unmanaged_response_ids`:
+
+```yaml
+general_settings:
+  allow_unmanaged_response_ids: true
+```
+
+IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
+
 ## Supported Responses API Parameters
 
 | Provider | Supported Parameters |
@@ -1257,7 +1279,7 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
 - ✅ **No quota reduction**: Unlike `deployment_affinity`, only pins requests that contain encrypted items
 - ✅ **Bypasses rate limits**: When encrypted content requires a specific deployment, RPM/TPM limits are bypassed (the request would fail on any other deployment anyway)
 - ✅ **No `previous_response_id` required**: Works by encoding `model_id` directly into item IDs
-- ✅ **No cache required**: `model_id` is decoded on-the-fly — no Redis dependency, no TTL to manage
+- ✅ **No cache required**: `model_id` is decoded on-the-fly, so there is no Redis dependency and no TTL to manage
 - ✅ **Globally safe**: Can be enabled for all models; non-Responses-API calls (chat, embeddings) are unaffected
 
 ### How It Works
@@ -1366,7 +1388,7 @@ litellm --config config.yaml
 
 ## Per-Model-Group Affinity Configuration
 
-By default, `optional_pre_call_checks` applies globally to all model groups. Use `model_group_affinity_config` when you want different affinity behavior per model group — for example, enabling stickiness only for models spread across providers (Azure + Bedrock) while leaving single-provider groups free to load-balance.
+By default, `optional_pre_call_checks` applies globally to all model groups. Use `model_group_affinity_config` when you want different affinity behavior per model group, for example enabling stickiness only for models spread across providers (Azure + Bedrock) while leaving single-provider groups free to load-balance.
 
 Groups not listed fall back to the global `optional_pre_call_checks` settings.
 
@@ -1585,7 +1607,7 @@ This is particularly useful when connecting clients that hardcode the `/response
 
 ## Server-side compaction
 
-For long-running conversations, you can enable **server-side compaction** so that when the rendered context size crosses a threshold, the server automatically runs compaction in-stream and emits a compaction item—no separate `POST /v1/responses/compact` call is required.
+For long-running conversations, you can enable **server-side compaction** so that when the rendered context size crosses a threshold, the server automatically runs compaction in-stream and emits a compaction item. No separate `POST /v1/responses/compact` call is required.
 
 Supported on the OpenAI Responses API when using the `openai` or `azure` provider. Pass `context_management` with a compaction entry and `compact_threshold` (token count; minimum 1000). When the context crosses the threshold, the server compacts in-stream and continues. Chain turns with `previous_response_id` or by appending output items to your next input array. See [OpenAI Compaction guide](https://developers.openai.com/api/docs/guides/compaction) for details.
 
@@ -1717,7 +1739,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
 
 For full `file_search` usage (native + emulated fallback), SDK/Proxy examples, architecture diagram, and Q&A, see:
 
-- [`File Search in the Responses API — E2E Testing Guide`](/docs/tutorials/file_search_responses_api)
+- [`File Search in the Responses API: E2E Testing Guide`](/docs/tutorials/file_search_responses_api)
 
 ## Session Management
 

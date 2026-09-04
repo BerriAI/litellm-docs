@@ -27,7 +27,7 @@ View Spend, Token Usage, Key, Team Name for Each Request to LiteLLM
 
 If you want to view request and response content on LiteLLM Logs, you can enable it in either place:
 
-- **From the UI (no restart):** Use [UI Spend Log Settings](./ui_spend_log_settings.md) — open Logs → Settings → enable "Store Prompts in Spend Logs" → Save. Takes effect immediately and overrides config.
+- **From the UI (no restart):** Use [UI Spend Log Settings](./ui_spend_log_settings.md), then open Logs → Settings → enable "Store Prompts in Spend Logs" → Save. Takes effect immediately and overrides config.
 - **From config:** Add this to your `proxy_config.yaml` (requires restart):
 
 ```yaml
@@ -96,7 +96,7 @@ If you're storing spend logs, it might be a good idea to delete them regularly t
 
 You can set the retention period in either place:
 
-- **From the UI (no restart):** [UI Spend Log Settings](./ui_spend_log_settings.md) — Logs → Settings → set Retention Period → Save.
+- **From the UI (no restart):** [UI Spend Log Settings](./ui_spend_log_settings.md), then Logs → Settings → set Retention Period → Save.
 - **From config:** Add the following to your `proxy_config.yaml` (requires restart):
 
 ```yaml
@@ -107,13 +107,9 @@ general_settings:
   maximum_spend_logs_retention_interval: "1d"  # Run once per day
 ```
 
-You can control how many logs are deleted per run using this environment variable:
+Cleanup only runs when a retention period is set, and each run is bounded by how many rows it deletes per statement, how many statements it issues per table, and a wall-clock budget for the run as a whole. Defaults are 1000 rows per statement, 500 statements per table, and 5 minutes. A run that hits a bound stops there and resumes from the same cutoff on the next tick, so a large backlog drains over several runs
 
-`SPEND_LOG_RUN_LOOPS=200  # Deletes up to 200,000 logs in one run`
-
-Set `SPEND_LOG_CLEANUP_BATCH_SIZE` to control how many logs are deleted per batch (default `1000`).
-
-For detailed architecture and how it works, see [Spend Logs Deletion](../proxy/spend_logs_deletion).
+For the full set of knobs, the default schedule, and guidance for large tables, see [Spend Logs Deletion](../proxy/spend_logs_deletion)
 
 
 ## What gets logged? 

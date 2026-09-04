@@ -147,7 +147,7 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --run_granian
    - **Default:** `False`
    - **Type:** `bool` (Flag)
-   - **Status:** Beta — opt in when you want higher gateway throughput; uvicorn remains the default.
+   - **Status:** Beta. Opt in when you want higher gateway throughput; uvicorn remains the default.
    - Starts the proxy via [Granian](https://github.com/emmett-framework/granian) (Rust-backed ASGI server) instead of uvicorn. Supports HTTP/1 and HTTP/2.
    - **Why use it:** Granian moves the HTTP layer off Python into a Rust runtime, which tends to handle concurrent proxy traffic more predictably than uvicorn alone. In LiteLLM load tests, Granian showed a **10–20 RPS improvement** over an equivalent uvicorn multi-worker setup, with **better stability under sustained load and fewer request failures**.
    - **Requirements:** Python 3.9+ and the `granian` package (included in `litellm[proxy]`).
@@ -325,8 +325,9 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --iam_token_db_auth
    - **Default:** `False`
    - **Type:** `bool` (Flag)
-   - Connects to an RDS database using IAM token authentication instead of a password. This is useful for AWS RDS instances that are configured to use IAM database authentication.
-   - When enabled, LiteLLM will generate an IAM authentication token to connect to the database.
+   - Authenticates to PostgreSQL on Amazon RDS or Amazon Aurora with a short-lived IAM token instead of a stored password.
+   - LiteLLM generates the token with boto3 and refreshes it before it expires.
+   - This option supports AWS only. For Azure Database for PostgreSQL, use [`--azure_postgresql_auth`](#--azure_postgresql_auth) instead. For Google Cloud SQL, run the Cloud SQL Auth Proxy with `--auto-iam-authn`, then configure `DATABASE_URL` to use the local proxy connection. Do not enable this flag for Cloud SQL.
    - **Required Environment Variables:**
      - `DATABASE_HOST` - The RDS database host
      - `DATABASE_PORT` - The database port
@@ -346,6 +347,91 @@ This page documents all command-line interface (CLI) arguments available for the
      export DATABASE_NAME=mydb
      litellm
      ```
+
+#### Amazon ECS setup
+
+For LiteLLM running on Amazon ECS:
+
+1. Enable IAM database authentication on the Amazon RDS or Aurora PostgreSQL instance.
+2. Configure the PostgreSQL user for IAM authentication.
+3. Grant the ECS task role permission to connect to the database as that user.
+4. Set `IAM_TOKEN_DB_AUTH=True` and the required `DATABASE_*` variables in the ECS task definition.
+
+LiteLLM uses the task role's AWS credentials to generate and refresh the database token. A static database password is not required.
+
+These settings are read from the task environment when LiteLLM starts. To change the flag or connection parameters, deploy a new task definition or restart the proxy tasks. Token refreshes do not require a restart.
+
+### --azure_postgresql_auth
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Authenticates to Azure Database for PostgreSQL Flexible Server with a short-lived Microsoft Entra ID access token instead of a stored password.
+   - LiteLLM requests the token for the `https://ossrdbms-aad.database.windows.net/.default` scope through the Azure Identity library and refreshes it before it expires.
+   - This option supports Azure only, and it cannot be combined with `--iam_token_db_auth`. The proxy exits at startup when both are enabled.
+   - **Required Environment Variables:**
+     - `DATABASE_HOST` - The server host, such as `myserver.postgres.database.azure.com`
+     - `DATABASE_USER` - The Microsoft Entra principal that exists as a PostgreSQL role, such as a managed identity name or a user principal name
+     - `DATABASE_NAME` - The database name
+     - `DATABASE_PORT` (optional) - The database port, `5432` by default
+     - `DATABASE_SCHEMA` (optional) - The database schema
+   - **Usage:**
+     ```shell
+     litellm --azure_postgresql_auth
+     ```
+   - **Usage - set Environment Variable:** `AZURE_POSTGRESQL_AUTH`
+     ```shell
+     export AZURE_POSTGRESQL_AUTH=True
+     export DATABASE_HOST=myserver.postgres.database.azure.com
+     export DATABASE_USER=litellm-proxy
+     export DATABASE_NAME=litellm
+     litellm
+     ```
+
+#### Choosing the Azure identity
+
+LiteLLM reads the credential from the environment, so one flag covers every hosting model.
+
+| Identity | How to select it |
+| --- | --- |
+| User-assigned managed identity | Set `AZURE_CLIENT_ID` to the identity's client ID. |
+| System-assigned managed identity | Set nothing extra when the host has one attached. |
+| Workload identity on AKS | Let the workload identity webhook inject `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_AUTHORITY_HOST`, and `AZURE_FEDERATED_TOKEN_FILE` into the pod. |
+| Service principal | Set `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_CLIENT_SECRET`. |
+| Local development | Run `az login` and LiteLLM uses that session. |
+
+#### Setting DATABASE_USER
+
+Put the principal in `DATABASE_USER` exactly as PostgreSQL knows it, including any `@`. A user principal name such as `litellm@contoso.onmicrosoft.com` goes in as it is, and LiteLLM percent-encodes it while assembling the connection URL. A value that is already percent-encoded, such as `litellm%40contoso.onmicrosoft.com`, is passed through unchanged, so a deployment carried over from RDS IAM authentication keeps working.
+
+#### Azure Kubernetes Service setup
+
+For LiteLLM running on AKS with workload identity:
+
+1. Enable Microsoft Entra authentication on the Azure Database for PostgreSQL Flexible Server.
+2. Create the PostgreSQL role for the workload identity, either by adding it as a Microsoft Entra administrator or by having an existing administrator run `pgaadauth_create_principal`.
+3. Grant that role the privileges LiteLLM needs on the database.
+4. Annotate the LiteLLM service account with the identity's client ID and label the pod for workload identity.
+5. Set `AZURE_POSTGRESQL_AUTH=True` and the required `DATABASE_*` variables on the deployment.
+
+LiteLLM uses the pod's federated token to request and refresh the database token. A static database password is not required, so the server can keep password authentication disabled.
+
+These settings are read from the environment when LiteLLM starts. To change the flag or the connection parameters, restart the proxy. Token refreshes do not require a restart.
+
+#### Deploying with the Helm chart
+
+The chart turns the flag on per database endpoint. Setting `database.writer.useAzureEntraAuth` emits `AZURE_POSTGRESQL_AUTH=true` and omits `DATABASE_PASSWORD`, so the writer needs no password in its Secret. The username still comes from `passwordSecret.usernameKey`.
+
+```yaml
+database:
+  writer:
+    host: myserver.postgres.database.azure.com
+    dbname: litellm
+    useAzureEntraAuth: true
+    passwordSecret:
+      name: litellm-writer-secret
+      usernameKey: username
+```
+
+A read replica takes the same key under `database.reader`, and it requires the writer to use Entra authentication as well because the proxy reads one global toggle. Setting `useIAMAuth` and `useAzureEntraAuth` on the same endpoint fails the render with a message naming both.
 
 ### --use_prisma_db_push
    - **Default:** `False`
