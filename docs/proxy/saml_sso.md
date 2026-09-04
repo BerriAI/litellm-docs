@@ -4,9 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # SAML 2.0 SSO
 
-:::info
-SSO is free for up to 5 users. After that, an enterprise license is required. [Get Started with Enterprise here](https://www.litellm.ai/enterprise).
-:::
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 LiteLLM supports SAML 2.0 single sign-on for the admin UI alongside its existing OIDC providers (Google, Microsoft, Generic OAuth). SAML can be configured from the admin UI (**Admin Settings -> SSO Settings**) or through environment variables; no changes to `config.yaml` are needed. When SAML is configured and no OIDC provider is set, the existing **SSO** login button on the admin UI automatically redirects to the SAML Identity Provider.
 

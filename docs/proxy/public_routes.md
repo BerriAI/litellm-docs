@@ -3,11 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Control Public & Private Routes
 
-:::info
-
-Requires a LiteLLM Enterprise License. [Get a free trial](https://enterprise.litellm.ai/demo).
-
-:::
+<EnterpriseFeature />
 
 Control which routes require authentication and which routes are publicly accessible.
 

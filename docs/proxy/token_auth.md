@@ -5,16 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use JWT's to auth admins / users / projects into the proxy.
 
-:::info
-
-✨ JWT-based Auth  is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature feature="JWT-based Auth" />
 
 :::tip JWT → Virtual Key Mapping
 

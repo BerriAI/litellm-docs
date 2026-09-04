@@ -623,16 +623,7 @@ litellm_settings:
 
 ### ✨ Key Rotations 
 
-:::info
-
-This is an Enterprise feature.
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-
-:::
+<EnterpriseFeature />
 
 Rotate an existing API Key, while optionally updating its parameters.
 

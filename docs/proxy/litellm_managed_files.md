@@ -7,14 +7,7 @@ import Image from '@theme/IdealImage';
 - Reuse the same file across different providers.
 - Prevent users from seeing files they don't have access to on `list` and `retrieve` calls. 
 
-:::info
-
-This is a free LiteLLM Enterprise feature.
-
-Available via the `litellm` docker image. If you are using the pip package, you must install [`litellm-enterprise`](https://pypi.org/project/litellm-enterprise/).
-
-:::
-
+<EnterpriseFeature free />
 
 | Property | Value | Comments |
 | --- | --- | --- |

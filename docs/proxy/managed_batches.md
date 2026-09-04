@@ -1,10 +1,6 @@
 # [BETA] LiteLLM Managed Files with Batches
 
-:::info
-
-Available with the `litellm[proxy]` package or any `litellm` docker image. No Enterprise license is required.
-
-:::
+<EnterpriseFeature free />
 
 | Feature | Supported | Comments |
 | --- | --- | --- |

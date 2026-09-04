@@ -235,11 +235,7 @@ After regenerating the key, the user will receive an email notification with:
 
 ## Email Customization
 
-:::info
-
-Customizing Email Branding is an Enterprise Feature [Get in touch with us for a Free Trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature feature="Customizing Email Branding" />
 
 LiteLLM allows you to customize various aspects of your email notifications. Below is a complete reference of all customizable fields:
 

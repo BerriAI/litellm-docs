@@ -2,15 +2,7 @@ import Image from '@theme/IdealImage';
 
 # PagerDuty Alerting
 
-:::info
-
-✨ PagerDuty Alerting is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature feature="PagerDuty Alerting" />
 
 Handles two types of alerts:
 - High LLM API Failure Rate. Configure X fails in Y seconds to trigger an alert.

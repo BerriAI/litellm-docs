@@ -4,16 +4,7 @@ Define tiers with rate limits. Assign them to keys.
 
 Use this to control access and budgets across a lot of keys.
 
-:::info 
-
-This is a LiteLLM Enterprise feature.
-
-Get a 30 day free trial + get in touch [here](https://litellm.ai/#trial).
-
-See pricing [here](https://litellm.ai/#pricing).
-
-:::
-
+<EnterpriseFeature />
 
 ## 1. Create a budget 
 

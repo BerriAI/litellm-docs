@@ -264,13 +264,7 @@ LiteLLM.Info: "no-log request, skipping logging"
 
 ### ✨ Dynamically Disable specific callbacks
 
-:::info
-
-This is an enterprise feature.
-
-[Proceed with LiteLLM Enterprise](https://www.litellm.ai/enterprise)
-
-:::
+<EnterpriseFeature />
 
 For some use cases, you may want to disable specific callbacks for a request. You can do this by passing `x-litellm-disable-callbacks: <callback_name>` in the request headers.
 
@@ -1113,12 +1107,7 @@ litellm_settings:
 
 Log LLM Logs to [Google Cloud Storage Buckets](https://cloud.google.com/storage?hl=en)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property                     | Details                                                        |
 | ---------------------------- | -------------------------------------------------------------- |
@@ -1198,12 +1187,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Log LLM Logs/SpendLogs to [Google Cloud Storage PubSub Topic](https://cloud.google.com/pubsub/docs/reference/rest)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property    | Details                                                            |
 | ----------- | ------------------------------------------------------------------ |
@@ -1503,12 +1487,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Log LLM Logs to [Azure Data Lake Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property                        | Details                                                                                                         |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -2087,11 +2066,7 @@ ModelResponse(
   Send LiteLLM logs to a custom API endpoint
 </p>
 
-:::info
-
-This is an Enterprise only feature [Get Started with Enterprise here](https://github.com/BerriAI/litellm/tree/main/enterprise)
-
-:::
+<EnterpriseFeature />
 
 | Property       | Details                                                                                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |

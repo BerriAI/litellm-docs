@@ -24,11 +24,7 @@ Team 3 -> Disabled Logging (for GDPR compliance)
 
 ## [BETA] Team Logging
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 ### UI Usage
 
@@ -260,11 +256,7 @@ All requests made with these keys will log data to their team-specific logging.
 
 Use the `/key/generate` or `/key/update` endpoints to add logging callbacks to a specific key.
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 **How key based logging works:**
 

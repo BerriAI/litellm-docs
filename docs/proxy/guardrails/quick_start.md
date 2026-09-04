@@ -373,11 +373,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### 4. ✨ Pass Dynamic Parameters to Guardrail
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](/docs/proxy/guardrails/quick_start#guardrails-request-parameter)**
 
@@ -472,11 +468,7 @@ Monitor which guardrails were executed and whether they passed or failed. e.g. g
 
 ### ✨ Control Guardrails per API Key
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 Use this to control what guardrails run per API Key. In this tutorial we only want the following guardrails to run for 1 API Key
 
@@ -528,11 +520,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ### ✨ Tag-based Guardrail Modes
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 Run guardrails based on the user-agent header. This is useful for running pre-call checks on OpenWebUI but only masking in logs for Claude CLI.
 
@@ -608,11 +596,7 @@ guardrails:
 
 ### ✨ Model-level Guardrails
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 This is great for cases when you have an on-prem and hosted model, and just want to run prevent sending PII to the hosted model.
 
@@ -646,11 +630,7 @@ guardrails:
 
 ### ✨ Disable team from turning on/off guardrails
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 #### 1. Disable team from modifying guardrails
 

@@ -1,13 +1,6 @@
 # ✨ [Beta] Project Management
 
-:::info
-
-This is an Enterprise feature.
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Projects in LiteLLM sit between teams and keys in the organizational hierarchy, enabling fine-grained access control and budget management for specific use cases or applications.
 

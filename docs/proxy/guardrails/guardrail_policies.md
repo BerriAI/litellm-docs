@@ -79,9 +79,7 @@ x-litellm-applied-guardrails: pii_masking,prompt_injection
 
 ## Add guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have a global baseline, but want to add extra guardrails for a specific team.
 
@@ -139,9 +137,7 @@ Now the `finance` team gets `pii_masking` + `strict_compliance_check` + `audit_l
 
 ## Remove guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have guardrails running globally, but want to disable some for a specific team (e.g., internal testing).
 

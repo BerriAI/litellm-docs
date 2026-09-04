@@ -438,11 +438,7 @@ Set a separate budget for each model available to a virtual key. For example, on
 - A $0.0000001 daily budget for `gpt-4o`
 - A $10 budget every 30 days for `gpt-4o-mini`
 
-:::info
-
-✨ This feature is available with LiteLLM Enterprise. [Get started with Enterprise](https://www.litellm.ai/#pricing).
-
-:::
+<EnterpriseFeature />
 
 `model_max_budget` uses the **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema.
 
@@ -566,11 +562,7 @@ By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is
 
 Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
 
-:::info
-
-✨ This feature is available with LiteLLM Enterprise. [Get started with Enterprise](https://www.litellm.ai/#pricing).
-
-:::
+<EnterpriseFeature />
 
 `model_max_budget` uses the same **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema as the key-level setting. You can configure it with either `/user/new` or `/user/update`.
 

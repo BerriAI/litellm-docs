@@ -4,15 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Control Model Access with OIDC (Azure AD/Keycloak/etc.)
 
-:::info
-
-✨ JWT Auth is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature feature="JWT Auth" />
 
 <Image img={require('../../img/control_model_access_jwt.png')} style={{ width: '100%', maxWidth: '4000px' }} />
 

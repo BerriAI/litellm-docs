@@ -3,12 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # /fine_tuning
 
-
-:::info
-
-This is an Enterprise only endpoint [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|

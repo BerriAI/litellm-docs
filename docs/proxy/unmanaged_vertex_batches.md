@@ -1,10 +1,6 @@
 # Unmanaged Vertex AI Batches
 
-:::info
-
-This is a LiteLLM Enterprise feature.
-
-:::
+<EnterpriseFeature />
 
 LiteLLM supports two paths for Vertex AI batch jobs. The managed path handles file upload and format conversion automatically. The unmanaged path lets you upload batch files directly to GCS in Vertex AI's native format; LiteLLM skips transformation but tracks cost when enabled.
 

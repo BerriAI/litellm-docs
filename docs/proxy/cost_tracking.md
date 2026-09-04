@@ -936,11 +936,7 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 
 Log specific key,value pairs as part of the metadata for a spend log
 
-:::info
-
-Logging specific key,value pairs in spend logs metadata is an enterprise feature.
-
-:::
+<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 

@@ -157,9 +157,7 @@ An internal user viewer can view their own information but cannot create or dele
 
 ## Organization/Team Specific Roles
 
-:::info 
-Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 30 day trial here](https://www.litellm.ai/#trial).
-:::
+<EnterpriseFeature />
 
 These roles are scoped to specific organizations or teams. Users with these roles can only manage resources within their assigned organization or team.
 
