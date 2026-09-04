@@ -4,15 +4,15 @@ title: "One-click setup for Auto Router"
 date: 2026-09-03T10:00:00
 authors:
   - moe
-description: "Auto Setup checks which models you can use and creates an editable Auto Router configuration based on setups that have worked well for us."
+description: "Auto Setup checks which models you can use, chooses the model family, and assigns all four Auto Router tiers for you."
 keywords: [auto router, auto setup, complexity router, heuristic v2, model routing, litellm]
 tags: [routing, complexity-router, product]
 hide_table_of_contents: false
 ---
 
-Setting up an Auto Router takes a few decisions: which model should handle simple requests, which one should handle reasoning, and what belongs between them. Most users want a good starting point before they spend time tuning those choices.
+LiteLLM already includes one-click Anthropic and OpenAI presets for Auto Router. Those presets save you from writing the configuration, but you still need to choose a model family and make sure your proxy serves every model in that preset.
 
-Auto Setup gives you that starting point. Enter a router name, click **Configure automatically**, review the result, and save it.
+Enter a router name and click **Configure automatically**. LiteLLM checks the models your proxy already serves, chooses the best configuration it can build, and fills the form for you. Review the four tiers and save.
 
 Users have seen 42% lower model spend from the generated setup before making any manual changes. Your savings will depend on your models and traffic, but Auto Setup gives you a useful baseline from the first request.
 
@@ -23,6 +23,18 @@ Users have seen 42% lower model spend from the generated setup before making any
 Auto Setup is introduced in [LiteLLM PR #39693](https://github.com/BerriAI/litellm/pull/39693). It changes setup in the Dashboard. Requests continue to use the existing Auto Router runtime.
 
 :::
+
+## How this differs from the existing presets
+
+The existing **Template** dropdown asks you to choose Anthropic, OpenAI, or Custom. A family preset works when your proxy serves every model it requires.
+
+**Configure automatically** makes that choice for you. It checks your available chat model groups across providers and:
+
+- applies the first complete preset your proxy can support
+- builds a four-tier configuration from the preferred models you do have when no complete preset fits
+- uses price-based ranking only when your proxy has none of those preferred models
+
+The existing presets remain available when you want direct control. Auto Setup uses them as trusted starting points, then handles partial and mixed-family model inventories that a single preset cannot cover.
 
 ## One click, using your models
 
