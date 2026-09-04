@@ -1,14 +1,6 @@
 # Google Secret Manager
 
-:::info
-
-✨ **This is an Enterprise Feature**
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Support for [Google Secret Manager](https://cloud.google.com/security/products/secret-manager)
 

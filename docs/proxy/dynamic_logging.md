@@ -5,13 +5,7 @@ import TabItem from '@theme/TabItem';
 
 # Dynamic Callback Management
 
-:::info
-
-✨ This is an enterprise feature.
-
-[Get started with LiteLLM Enterprise](https://www.litellm.ai/enterprise)
-
-:::
+<EnterpriseFeature />
 
 LiteLLM's dynamic callback management enables teams to control logging behavior on a per-request basis without requiring central infrastructure changes. This is essential for organizations managing large-scale service ecosystems where:
 

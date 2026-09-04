@@ -250,14 +250,7 @@ This path also enforces end-user budgets and per-model end-user budgets when `en
 
 Supported from v1.72.2+
 
-:::info 
-
-✨ Supporting Custom Auth + LiteLLM Virtual Keys is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Using Custom Auth with LiteLLM Virtual Keys" />
 
 ### Usage
 

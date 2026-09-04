@@ -57,11 +57,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## ✨ Control Guardrails per Project (API Key)
 
-:::info
-
-✨ This is an Enterprise only feature [Contact us to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Use this to control what guardrails run per project. In this tutorial we only want the following guardrails to run for 1 project (API Key)
 - `guardrails`: ["aporia-pre-guard", "aporia-post-guard"]

@@ -1,12 +1,6 @@
 # JWT → Virtual Key Mapping
 
-:::info Enterprise
-
-JWT → Virtual Key Mapping is an Enterprise feature.
-
-[Get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature feature="JWT → Virtual Key Mapping" />
 
 Map JWT tokens to LiteLLM virtual keys, so every JWT client gets the same granular controls as a virtual key: model restrictions, spend limits, rate limits, guardrails, and full spend tracking.
 

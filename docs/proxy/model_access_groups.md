@@ -190,15 +190,7 @@ Control access to all models with a specific prefix (e.g. `openai/*`).
 
 Use this to also give users access to all models, except for a few that you don't want them to use (e.g. `openai/o1-*`). 
 
-:::info
-
-Setting model access groups on wildcard models is an Enterprise feature. 
-
-See pricing [here](https://litellm.ai/#pricing)
-
-Get a trial key [here](https://litellm.ai/#trial)
-:::
-
+<EnterpriseFeature feature="Setting model access groups on wildcard models" />
 
 1. Setup config.yaml
 

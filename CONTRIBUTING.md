@@ -35,6 +35,8 @@ Custom standalone pages live in `src/pages/`.
 
 If you add, remove, or move docs pages, check whether `sidebars.js` needs to be updated.
 
+To mark a page or section as Enterprise-gated, put `<EnterpriseFeature />` on its own line with a blank line before and after it, instead of writing the admonition by hand. It is registered globally in `src/theme/MDXComponents.js`, so no import is needed. Pass `feature="SSO"` to name the feature in the first sentence, use `<EnterpriseFeature free />` for features that ship in `litellm[proxy]` without a license, and put a one-line note between `<EnterpriseFeature>` and `</EnterpriseFeature>` when the page needs an extra sentence, such as a user limit. The component lives in `src/components/EnterpriseFeature/`.
+
 ## 5. Verify your changes
 
 Before opening a PR, run:

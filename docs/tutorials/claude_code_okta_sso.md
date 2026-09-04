@@ -2,11 +2,7 @@
 
 Route Claude Code through LiteLLM using each developer's Okta identity. Claude Code sends the developer's own Okta access token with every request, LiteLLM validates it against your Okta authorization server and creates the user automatically on first request, and usage, spend, and logs are attributed to that user. There are no per-user API keys to issue and no manual provisioning, so the setup works the same for 10 developers or 10,000.
 
-:::info
-
-JWT authentication is a LiteLLM Enterprise feature. [Get in touch](https://www.litellm.ai/enterprise) for a license key.
-
-:::
+<EnterpriseFeature feature="JWT authentication" />
 
 This guide uses Okta, but any OIDC provider that issues JWT access tokens (Azure AD, Keycloak, Auth0, etc.) works the same way; only the issuer URLs and app setup differ.
 

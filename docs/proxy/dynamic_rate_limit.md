@@ -113,10 +113,7 @@ Reserve TPM/RPM capacity for different environments or use cases. This ensures c
 - Real-time applications vs batch processing
 - Critical services vs experimental features
 
-:::tip
-
-Reserving TPM/RPM on keys based on priority is a premium feature. Please [get an enterprise license](/docs/enterprise) for it.
-:::
+<EnterpriseFeature feature="Reserving TPM/RPM on keys based on priority" />
 
 ### How Priority Reservation Works
 

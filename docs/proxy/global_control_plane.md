@@ -4,15 +4,7 @@ import { ControlPlaneArchitecture } from '@site/src/components/ControlPlaneArchi
 
 Deploy a single LiteLLM UI that manages multiple independent LiteLLM proxy instances, each with its own database, Redis, and master key.
 
-:::info
-
-This is an Enterprise feature.
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 ## When to use this
 
