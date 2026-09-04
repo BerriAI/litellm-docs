@@ -426,6 +426,11 @@ def normalize_json(content):
             in_value_position = prev.endswith(":") or (stack and stack[-1] == "[")
             out.append("null" if in_value_position else '"...": null')
             i += 3
+            # `...` at the top of an object or array, followed by more members
+            # on the next line, needs the comma the author left out.
+            rest = content[i:].lstrip()
+            if rest and rest[0] not in ",]}":
+                out.append(",")
         else:
             if ch in "[{":
                 stack.append(ch)
