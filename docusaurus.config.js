@@ -136,6 +136,14 @@ const config = {
             from: '/docs/observability/telemetry',
             to: '/docs/observability/opentelemetry_v2',
           },
+          {
+            from: '/docs/providers/aleph_alpha',
+            to: '/docs/providers',
+          },
+          {
+            from: '/docs/providers/anyscale',
+            to: '/docs/providers',
+          },
         ],
       },
     ],
