@@ -57,7 +57,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Autherization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -946,8 +946,8 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
   "tpm_limit": 1000000,
   "default_estimated_output_tokens": 2048,
   "default_estimated_output_tokens_per_model": {
-    "gpt-4": 4096,
-    "gpt-3.5-turbo": 1024
+    "gpt-4o": 4096,
+    "gpt-4o-mini": 1024
   }
 }'
 ```
@@ -961,7 +961,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "default_estimated_output_tokens": 4096,
-  "default_estimated_output_tokens_per_model": {"gpt-4": 8192}
+  "default_estimated_output_tokens_per_model": {"gpt-4o": 8192}
 }'
 ```
 
@@ -1030,8 +1030,8 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
+  "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
 }'
 ```
 
@@ -1043,8 +1043,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
+  "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
 }'
 ```
 
@@ -1059,8 +1059,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "metadata": {
-    "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-    "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+    "model_rpm_limit": {"gpt-4o": 100, "gpt-4o-mini": 200},
+    "model_tpm_limit": {"gpt-4o": 10000, "gpt-4o-mini": 20000}
   }
 }'
 ```
@@ -1125,13 +1125,13 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 Set `model_rpm_limit` and `model_tpm_limit` to set rate limits per model per api key
 
-Here `gpt-4` is the `model_name` set on the [litellm config.yaml](configs.md)
+Here `gpt-4o` is the `model_name` set on the [litellm config.yaml](configs.md)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"gpt-4": 2}, "model_tpm_limit": {"gpt-4":}}' 
+--data '{"model_rpm_limit": {"gpt-4o": 2}, "model_tpm_limit": {"gpt-4o":}}' 
 ```
 
 **Expected Response**
@@ -1145,14 +1145,14 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 **Verify Model Rate Limits set correctly for this key**
 
-**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-4` returned**
+**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-4o` returned**
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-ulGNRXWtv7M0lFnnsQk0wQ" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [
       {"role": "user", "content": "Hello, Claude!ss eho ares"}
     ]
@@ -1163,8 +1163,8 @@ curl -i http://localhost:4000/v1/chat/completions \
 **Expected headers**
 
 ```shell
-x-litellm-key-remaining-requests-gpt-4: 1
-x-litellm-key-remaining-tokens-gpt-4: 179
+x-litellm-key-remaining-requests-gpt-4o: 1
+x-litellm-key-remaining-tokens-gpt-4o: 179
 ```
 
 These headers indicate:
@@ -1274,9 +1274,9 @@ This will NOT apply if a key has a team_id (team budgets will apply then). [Tell
 
 ```yaml
 model_list: 
-  - model_name: "gpt-3.5-turbo"
+  - model_name: "gpt-4o-mini"
     litellm_params:
-      model: gpt-3.5-turbo
+      model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -1309,7 +1309,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-X53RdxnDhzamRwjKXR4IHg' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```

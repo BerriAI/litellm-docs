@@ -72,7 +72,7 @@ litellm.success_callback = ["langfuse"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="gpt-4o-mini",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -103,7 +103,7 @@ litellm.success_callback = ["langfuse"]
  
 # openai call
 response = completion(
-  model="gpt-3.5-turbo",
+  model="gpt-4o-mini",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -139,7 +139,7 @@ litellm.success_callback = ["langfuse"]
 
 # set custom langfuse trace params and generation params
 response = completion(
-  model="gpt-3.5-turbo",
+  model="gpt-4o-mini",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -180,7 +180,7 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
     --header 'langfuse_trace_user_id: user-id2' \
     --header 'langfuse_trace_metadata: {"key":"value"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -241,7 +241,7 @@ litellm.failure_callback = ["langfuse"]
 
 # Request 1 → Langfuse Project A
 response_a = completion(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Hello from team A"}],
     langfuse_public_key="pk-lf-project-a...",
     langfuse_secret_key="sk-lf-project-a...",
@@ -250,7 +250,7 @@ response_a = completion(
 
 # Request 2 → Langfuse Project B (different project)
 response_b = completion(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Hello from team B"}],
     langfuse_public_key="pk-lf-project-b...",
     langfuse_secret_key="sk-lf-project-b...",
@@ -268,7 +268,7 @@ litellm.success_callback = ["langfuse"]
 litellm.failure_callback = ["langfuse"]
 
 response = await acompletion(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Hi"}],
     langfuse_public_key="pk-lf-...",
     langfuse_secret_key="sk-lf-...",
@@ -307,7 +307,7 @@ os.environ['OPENAI_API_KEY']="sk-..."
 litellm.success_callback = ["langfuse"] 
 
 chat = ChatLiteLLM(
-  model="gpt-3.5-turbo",
+  model="gpt-4o-mini",
   model_kwargs={
       "metadata": {
         "trace_user_id": "user-id2", # set langfuse Trace User ID

@@ -457,7 +457,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages = [
         {
             "role": "user",
@@ -489,7 +489,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
@@ -521,7 +521,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -546,7 +546,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "gpt-4o-mini",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -996,7 +996,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages = [
         {
             "role": "user",
@@ -1026,7 +1026,7 @@ client = openai.OpenAI(
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages = [
         {
             "role": "user",
@@ -1057,7 +1057,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'user',
@@ -1094,7 +1094,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'user',
@@ -1127,7 +1127,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -1154,7 +1154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -1178,7 +1178,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "gpt-4o-mini",
     temperature=0.1,
     extra_body={
         "metadata": {

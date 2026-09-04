@@ -24,7 +24,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['OPENAI_API_KEY'] = ""
-chat = ChatLiteLLM(model="gpt-3.5-turbo")
+chat = ChatLiteLLM(model="gpt-4o-mini")
 messages = [
     HumanMessage(
         content="what model are you"
@@ -49,7 +49,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['ANTHROPIC_API_KEY'] = ""
-chat = ChatLiteLLM(model="claude-2", temperature=0.3)
+chat = ChatLiteLLM(model="claude-sonnet-4-5", temperature=0.3)
 messages = [
     HumanMessage(
         content="what model are you"
@@ -211,7 +211,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 os.environ['ANTHROPIC_API_KEY'] = "sk-ant-your-key-here"
 
 chat = ChatOpenAI(
-    model="claude-3-sonnet-20240229",
+    model="claude-sonnet-4-5",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -454,9 +454,9 @@ model_list:
 # Tag-based routing rules
 tag_routing:
   - tags: ["premium", "high-priority"]
-    models: ["gpt-4o", "claude-3-opus"]
+    models: ["gpt-4o", "claude-sonnet-4-5"]
   - tags: ["standard"]
-    models: ["gpt-3.5-turbo", "claude-3-haiku"]
+    models: ["gpt-4o-mini", "claude-haiku-4-5"]
 ```
 
 ### Monitoring and Analytics

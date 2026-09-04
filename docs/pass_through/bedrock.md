@@ -25,7 +25,7 @@ Define your Bedrock models in `config.yaml` and reference them by name. The prox
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-west-2
       custom_llm_provider: bedrock
 ```
@@ -70,7 +70,7 @@ Let's call the Bedrock [`/converse` endpoint](https://docs.aws.amazon.com/bedroc
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-west-2
       custom_llm_provider: bedrock
 ```
@@ -121,7 +121,7 @@ Use config.yaml to define Bedrock models and use them via passthrough endpoints.
 model_list:
   - model_name: my-claude-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-west-2
       custom_llm_provider: bedrock
   
@@ -208,14 +208,14 @@ model_list:
   # First deployment - us-west-2
   - model_name: my-claude-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-west-2
       custom_llm_provider: bedrock
   
   # Second deployment - us-east-1 (load balanced)
   - model_name: my-claude-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-east-1
       custom_llm_provider: bedrock
 ```

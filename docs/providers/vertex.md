@@ -138,7 +138,7 @@ tools = [
 ]
 
 data = {
-    "model": "vertex_ai/gemini-1.5-pro-preview-0514",
+    "model": "vertex_ai/gemini-2.5-pro",
     "messages": messages,
     "tools": tools,
     "tool_choice": "required",
@@ -186,7 +186,7 @@ response_schema = {
 
 
 completion(
-    model="vertex_ai/gemini-1.5-pro", 
+    model="vertex_ai/gemini-2.5-pro", 
     messages=messages, 
     response_format={"type": "json_object", "response_schema": response_schema} # 👈 KEY CHANGE
     )
@@ -210,9 +210,9 @@ model_list:
 or
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/gemini-2.5-pro
       litellm_credential_name: vertex-global
       vertex_project: project-name-here
       vertex_location: global
@@ -268,7 +268,7 @@ To validate the response_schema, set `enforce_validation: true`.
 from litellm import completion, JSONSchemaValidationError
 try: 
 	completion(
-    model="vertex_ai/gemini-1.5-pro", 
+    model="vertex_ai/gemini-2.5-pro", 
     messages=messages, 
     response_format={
         "type": "json_object", 
@@ -368,7 +368,7 @@ Return a `list[Recipe]`
     }
 ]
 
-completion(model="vertex_ai/gemini-1.5-flash-preview-0514", messages=messages, response_format={ "type": "json_object" })
+completion(model="vertex_ai/gemini-2.5-flash", messages=messages, response_format={ "type": "json_object" })
 ```
 
 ### **Google Hosted Tools (Web Search, Code Execution, etc.)**
@@ -801,7 +801,7 @@ from vertexai.generative_models import GenerativeModel, GenerationConfig, Tool, 
 
 vertexai.init(project=project_id, location="us-central1")
 
-model = GenerativeModel("gemini-1.5-flash-001")
+model = GenerativeModel("gemini-2.5-flash")
 
 # Use Google Search for grounding
 tool = Tool.from_google_search_retrieval(grounding.GoogleSearchRetrieval())
@@ -1387,9 +1387,9 @@ response = completion(
 
 ```yaml
 model_list:
-    - model_name: gemini-1.5-pro
+    - model_name: gemini-2.5-pro
       litellm_params:
-        model: gemini-1.5-pro
+        model: gemini-2.5-pro
         vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
         vertex_project: "my-special-project"
         vertex_location: "my-special-location"
@@ -1414,7 +1414,7 @@ To use Workload Identity Federation, pass the path to your WIF credentials confi
 from litellm import completion
 
 response = completion(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/gemini-2.5-pro",
     messages=[{"role": "user", "content": "Hello!"}],
     vertex_credentials="/path/to/wif-credentials.json",  # 👈 WIF credentials file
     vertex_project="your-gcp-project-id",
@@ -1429,7 +1429,7 @@ response = completion(
 model_list:
   - model_name: gemini-model
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/gemini-2.5-pro
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
       vertex_credentials: /path/to/wif-credentials.json  # 👈 WIF credentials file
@@ -1441,7 +1441,7 @@ Alternatively, you can create credentials in **LLM Credentials** in the LiteLLM 
 model_list:
   - model_name: gemini-model
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/gemini-2.5-pro
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
       litellm_credential_name: my-vertex-wif-credential  # 👈 Reference credential stored in UI
@@ -1522,7 +1522,7 @@ Add the `aws_*` keys at the **top level** of your WIF credential JSON (alongside
 from litellm import completion
 
 response = completion(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/gemini-2.5-pro",
     messages=[{"role": "user", "content": "Hello!"}],
     vertex_credentials="/path/to/wif-credentials-with-aws.json",  # WIF JSON with aws_* keys
     vertex_project="your-gcp-project-id",
@@ -1537,7 +1537,7 @@ response = completion(
 model_list:
   - model_name: gemini-model
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/gemini-2.5-pro
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
       vertex_credentials: /path/to/wif-credentials-with-aws.json  # WIF JSON with aws_* keys
@@ -2324,7 +2324,7 @@ Base64 Encoded Local Files
 from litellm import completion
 
 response = completion(
-    model="vertex_ai/gemini-1.5-flash",
+    model="vertex_ai/gemini-2.5-flash",
     messages=[
         {
             "role": "user",
@@ -2362,7 +2362,7 @@ file_data = response.content
 encoded_file = base64.b64encode(file_data).decode("utf-8")
 
 response = completion(
-    model="vertex_ai/gemini-1.5-flash",
+    model="vertex_ai/gemini-2.5-flash",
     messages=[
         {
             "role": "user",
@@ -2394,9 +2394,9 @@ print(response.choices[0])
 1. Add model to config 
 
 ```yaml
-- model_name: gemini-1.5-flash
+- model_name: gemini-2.5-flash
   litellm_params:
-    model: vertex_ai/gemini-1.5-flash
+    model: vertex_ai/gemini-2.5-flash
     vertex_credentials: "/path/to/service_account.json"
 ```
 
@@ -2414,7 +2414,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-1.5-flash",
+    "model": "gemini-2.5-flash",
     "messages": [
       {
         "role": "user",
@@ -2445,7 +2445,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-1.5-flash",
+    "model": "gemini-2.5-flash",
     "messages": [
       {
         "role": "user",
@@ -3027,7 +3027,7 @@ print(response)
 #### 1. Add `finetune_settings` to your config.yaml
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/fake
       api_key: fake-key

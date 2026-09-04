@@ -242,7 +242,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -261,7 +261,7 @@ Send tags by including them in the `extra_body` parameter of your completion req
 import litellm
 
 response = litellm.completion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000",
     api_key="sk-1234",
@@ -275,7 +275,7 @@ response = litellm.completion(
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000", 
     api_key="sk-1234",

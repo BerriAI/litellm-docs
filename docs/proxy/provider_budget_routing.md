@@ -17,9 +17,9 @@ Set provider budgets in your `proxy_config.yaml` file
 #### Proxy Config setup
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
-        model: openai/gpt-3.5-turbo
+        model: openai/gpt-4o-mini
         api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
@@ -362,9 +362,9 @@ If you are using a multi-instance setup, you will need to set the Redis host, po
 
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
-        model: openai/gpt-3.5-turbo
+        model: openai/gpt-4o-mini
         api_key: os.environ/OPENAI_API_KEY
 
 router_settings:

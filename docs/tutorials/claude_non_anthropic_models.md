@@ -91,7 +91,7 @@ model_list:
   # Anthropic Claude
   - model_name: anthropic-vertex
     litellm_params:
-      model: vertex_ai/claude-3-sonnet@20240229
+      model: vertex_ai/claude-sonnet-4-5@20250929
       vertex_ai_project: "my-test-project"
       vertex_ai_location: "us-east-1"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
@@ -110,9 +110,9 @@ export LITELLM_MASTER_KEY="sk-1234567890"
 ```yaml
 model_list:
   # Azure OpenAI
-  - model_name: azure-gpt-4
+  - model_name: azure-gpt-4o
     litellm_params:
-      model: azure/gpt-4
+      model: azure/gpt-4o
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: "2024-02-01"
@@ -191,7 +191,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "azure-gpt-4",
+    "model": "azure-gpt-4o",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -234,7 +234,7 @@ claude --model vertex-gemini-3-flash-preview
 claude --model anthropic-vertex
 
 # Use Azure OpenAI
-claude --model azure-gpt-4
+claude --model azure-gpt-4o
 ```
 
 ### 6. Switch Models at Runtime with `/model`

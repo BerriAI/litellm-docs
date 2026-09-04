@@ -313,7 +313,7 @@ Example Request for this config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "anthropic/claude-3-haiku-20240307",
+      "model": "anthropic/claude-sonnet-4-5",
       "messages": [
         {
           "role": "user",
@@ -450,7 +450,7 @@ POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.anthropic.com/v1/messages \
 -H 'accept: application/json' -H 'anthropic-version: 2023-06-01' -H 'content-type: application/json' -H 'x-api-key: sk-...' \
--d '{'model': 'claude-3-5-sonnet-20240620', [
+-d '{'model': 'claude-sonnet-4-5', [
     {
       "role": "user",
       "content": [
@@ -492,7 +492,7 @@ This example demonstrates basic Prompt Caching usage, caching the full text of t
 
 ```python 
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         {
             "role": "system",
@@ -525,7 +525,7 @@ LiteLLM Proxy is OpenAI compatible
 
 This is an example using the OpenAI Python SDK sending a request to LiteLLM Proxy
 
-Assuming you have a model=`anthropic/claude-3-5-sonnet-20240620` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
+Assuming you have a model=`anthropic/claude-sonnet-4-5` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
 
 :::
 
@@ -538,7 +538,7 @@ client = openai.AsyncOpenAI(
 
 
 response = await client.chat.completions.create(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         {
             "role": "system",
@@ -579,7 +579,7 @@ The cache_control parameter is placed on the final tool
 import litellm
 
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages = [{"role": "user", "content": "What's the weather like in Boston today?"}],
     tools = [
         {
@@ -613,7 +613,7 @@ LiteLLM Proxy is OpenAI compatible
 
 This is an example using the OpenAI Python SDK sending a request to LiteLLM Proxy
 
-Assuming you have a model=`anthropic/claude-3-5-sonnet-20240620` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
+Assuming you have a model=`anthropic/claude-sonnet-4-5` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
 
 :::
 
@@ -625,7 +625,7 @@ client = openai.AsyncOpenAI(
 )
 
 response = await client.chat.completions.create(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages = [{"role": "user", "content": "What's the weather like in Boston today?"}],
     tools = [
         {
@@ -670,7 +670,7 @@ The conversation history (previous messages) is included in the messages array. 
 import litellm
 
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         # System Message
         {
@@ -722,7 +722,7 @@ LiteLLM Proxy is OpenAI compatible
 
 This is an example using the OpenAI Python SDK sending a request to LiteLLM Proxy
 
-Assuming you have a model=`anthropic/claude-3-5-sonnet-20240620` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
+Assuming you have a model=`anthropic/claude-sonnet-4-5` on the [litellm proxy config.yaml](#usage-with-litellm-proxy)
 
 :::
 
@@ -734,7 +734,7 @@ client = openai.AsyncOpenAI(
 )
 
 response = await client.chat.completions.create(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         # System Message
         {
@@ -812,7 +812,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="anthropic/claude-3-opus-20240229",
+    model="anthropic/claude-sonnet-4-5",
     messages=messages,
     tools=tools,
     tool_choice="auto",
@@ -834,7 +834,7 @@ If you want Claude to use a specific tool to answer the user’s question
 You can do this by specifying the tool in the `tool_choice` field like so:
 ```python
 response = completion(
-    model="anthropic/claude-3-opus-20240229",
+    model="anthropic/claude-sonnet-4-5",
     messages=messages,
     tools=tools,
     tool_choice={"type": "tool", "name": "get_weather"},
@@ -852,7 +852,7 @@ You can disable tool calling by setting the `tool_choice` to `"none"`.
 from litellm import completion
 
 response = completion(
-    model="anthropic/claude-3-opus-20240229",
+    model="anthropic/claude-sonnet-4-5",
     messages=messages,
     tools=tools,
     tool_choice="none",
@@ -868,7 +868,7 @@ response = completion(
 model_list:
   - model_name: anthropic-claude-model
     litellm_params:
-        model: anthropic/claude-3-opus-20240229
+        model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1064,7 +1064,7 @@ messages = [
 try:
     # test without max tokens
     response = completion(
-        model="anthropic/claude-3-opus-20240229",
+        model="anthropic/claude-sonnet-4-5",
         messages=messages,
         tools=tools,
         tool_choice="auto",
@@ -1094,7 +1094,7 @@ try:
     ### 2ND FUNCTION CALL ###
     # In the second response, Claude should deduce answer from tool results
     second_response = completion(
-        model="anthropic/claude-3-opus-20240229",
+        model="anthropic/claude-sonnet-4-5",
         messages=messages,
         tools=tools,
         tool_choice="auto",
@@ -1249,7 +1249,7 @@ LiteLLM maps OpenAI's `search_context_size` param to Anthropic's `max_uses` para
 ```python
 from litellm import completion
 
-model = "claude-3-5-sonnet-20241022"
+model = "claude-sonnet-4-5"
 messages = [{"role": "user", "content": "What's the weather like today?"}]
 
 resp = completion(
@@ -1279,7 +1279,7 @@ tools = [{
     "name": "web_search",
     "max_uses": 5
 }]
-model = "claude-3-5-sonnet-20241022"
+model = "claude-sonnet-4-5"
 messages = [{"role": "user", "content": "There's a syntax error in my primes.py file. Can you help me fix it?"}]
 
 resp = completion(
@@ -1300,9 +1300,9 @@ print(resp)
 1. Setup config.yaml
 
 ```yaml
-- model_name: claude-3-5-sonnet-latest
+- model_name: claude-sonnet-4-5
   litellm_params:
-    model: anthropic/claude-3-5-sonnet-latest
+    model: anthropic/claude-sonnet-4-5
     api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1323,7 +1323,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet-latest",
+    "model": "claude-sonnet-4-5",
     "messages": [{"role": "user", "content": "What's the weather like today?"}],
     "web_search_options": {
         "search_context_size": "medium",
@@ -1344,7 +1344,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet-latest",
+    "model": "claude-sonnet-4-5",
     "messages": [{"role": "user", "content": "What's the weather like today?"}],
     "tools": [{
         "type": "web_search_20250305",
@@ -1449,7 +1449,7 @@ image_path = "../proxy/cached_logo.jpg"
 # Getting the base64 string
 base64_image = encode_image(image_path)
 resp = litellm.completion(
-    model="anthropic/claude-3-opus-20240229",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         {
             "role": "user",
@@ -1902,7 +1902,7 @@ Note: This interface is in BETA. If you have feedback on how citations should be
 from litellm import completion
 
 resp = completion(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5",
     messages=[
         {
             "role": "user",
@@ -1941,7 +1941,7 @@ assert citations is not None
 model_list:
     - model_name: anthropic-claude
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20241022
+        model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -2090,7 +2090,7 @@ LiteLLM translates the OpenAI `user` param to Anthropic's `metadata[user_id]` pa
 
 ```python
 response = completion(
-    model="claude-3-5-sonnet-20240620",
+    model="claude-sonnet-4-5",
     messages=messages,
     user="user_123",
 )
@@ -2102,9 +2102,9 @@ response = completion(
 
 ```yaml
 model_list:
-    - model_name: claude-3-5-sonnet-20240620
+    - model_name: claude-sonnet-4-5
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20240620
+        model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -2121,7 +2121,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-5-sonnet-20240620",
+    "model": "claude-sonnet-4-5",
     "messages": [{"role": "user", "content": "What is Anthropic?"}],
     "user": "user_123"
   }'

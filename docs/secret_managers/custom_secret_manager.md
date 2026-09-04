@@ -56,9 +56,9 @@ general_settings:
     custom_secret_manager: my_secret_manager.InMemorySecretManager  # 👈 KEY CHANGE
 
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
-      model: openai/gpt-4
+      model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY  # Read from custom secret manager
 ```
 

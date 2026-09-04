@@ -106,9 +106,9 @@ If you are tempted to use oidc/env_path/AZURE_FEDERATED_TOKEN_FILE, don't do tha
 
 ```yaml
 model_list:
-  - model_name: claude-3-haiku-20240307
+  - model_name: claude-sonnet-4-5
     litellm_params:
-      model: bedrock/anthropic.claude-3-haiku-20240307-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_region_name: us-west-2
       aws_session_name: "litellm"
       aws_role_name: "arn:aws:iam::YOUR_THING_HERE:role/litellm-google-demo"
@@ -285,7 +285,7 @@ Please contact us for paid enterprise support if you need help setting up Azure 
 ### Azure AD -> Amazon Bedrock
 ```yaml
 model list:
-  - model_name: aws/claude-3-5-sonnet
+  - model_name: aws/claude-sonnet-4-5
     litellm_params:
       model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
       aws_region_name: "eu-central-1"

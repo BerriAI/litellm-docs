@@ -9,18 +9,18 @@ import TabItem from '@theme/TabItem';
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["free"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
       tags: ["paid"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
@@ -41,7 +41,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-3.5-turbo-0125",
+  "model": "gpt-4o",
   "object": "chat.completion",
   "usage": {"completion_tokens": 12, "prompt_tokens": 9, "total_tokens": 21}
 }
@@ -77,7 +77,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -114,7 +114,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer sk-1234' \
 -H 'x-litellm-tags: free,my-custom-tag' \
 -d '{
-  "model": "gpt-4",
+  "model": "gpt-4o",
   "messages": [
     {
       "role": "user",
@@ -171,7 +171,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["!provider:anthropic"]}
   }'

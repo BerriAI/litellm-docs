@@ -63,7 +63,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="anthropic/claude-3-5-sonnet-20241022",
+  model="anthropic/claude-sonnet-4-5",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -81,7 +81,7 @@ os.environ["VERTEXAI_PROJECT"] = "your-project-id"
 os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 response = completion(
-  model="vertex_ai/gemini-1.5-pro",
+  model="vertex_ai/gemini-2.5-pro",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -272,7 +272,7 @@ import litellm
 
 try:
     litellm.completion(
-      model="anthropic/claude-instant-1",
+      model="anthropic/claude-sonnet-4-5",
       messages=[{"role": "user", "content": "Hey!"}]
     )
 except litellm.AuthenticationError as e:
@@ -344,7 +344,7 @@ litellm --model huggingface/bigcode/starcoder
 
 ```yaml title="litellm_config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
       model: azure/your-deployment
       api_base: os.environ/AZURE_API_BASE
@@ -373,7 +373,7 @@ import openai
 client = openai.OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="gpt-4o-mini",
   messages=[{"role": "user", "content": "Write a short poem"}]
 )
 print(response.choices[0].message.content)

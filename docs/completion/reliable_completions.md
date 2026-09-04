@@ -25,7 +25,7 @@ messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
 response = completion(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=messages,
             num_retries=2
         )
@@ -61,7 +61,7 @@ The `fallbacks` list should include the primary model you want to use, followed 
 #### switch models 
 ```python
 response = completion(model="bad-model", messages=messages, 
-    fallbacks=["gpt-3.5-turbo" "command-nightly"])
+    fallbacks=["gpt-4o-mini" "command-nightly"])
 ```
 
 #### switch api keys/bases (E.g. azure deployment)
@@ -69,7 +69,7 @@ Switch between different keys for the same azure deployment, or use another depl
 
 ```python
 api_key="bad-key"
-response = completion(model="azure/gpt-4", messages=messages, api_key=api_key,
+response = completion(model="azure/gpt-4o", messages=messages, api_key=api_key,
     fallbacks=[{"api_key": "good-key-1"}, {"api_key": "good-key-2", "api_base": "good-api-base-2"}])
 ```
 
@@ -84,12 +84,12 @@ Completion with 'bad-model': got exception Unable to map your input to a model. 
 
 
 
-completion call gpt-3.5-turbo
+completion call gpt-4o-mini
 {
   "id": "chatcmpl-7qTmVRuO3m3gIBg4aTmAumV1TmQhB",
   "object": "chat.completion",
   "created": 1692741891,
-  "model": "gpt-3.5-turbo-0613",
+  "model": "gpt-4o-mini",
   "choices": [
     {
       "index": 0,

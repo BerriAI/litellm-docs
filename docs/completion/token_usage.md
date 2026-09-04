@@ -7,7 +7,7 @@ LiteLLM returns `response_cost` in all calls.
 from litellm import completion 
 
 response = litellm.completion(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": "Hey, how's it going?"}],
             mock_response="Hello world",
         )
@@ -49,7 +49,7 @@ from litellm import encode, decode
 
 sample_text = "Hellö World, this is my input string!"
 # openai encoding + decoding
-openai_tokens = encode(model="gpt-3.5-turbo", text=sample_text)
+openai_tokens = encode(model="gpt-4o-mini", text=sample_text)
 print(openai_tokens)
 ```
 
@@ -62,8 +62,8 @@ from litellm import encode, decode
 
 sample_text = "Hellö World, this is my input string!"
 # openai encoding + decoding
-openai_tokens = encode(model="gpt-3.5-turbo", text=sample_text)
-openai_text = decode(model="gpt-3.5-turbo", tokens=openai_tokens)
+openai_tokens = encode(model="gpt-4o-mini", text=sample_text)
+openai_text = decode(model="gpt-4o-mini", tokens=openai_tokens)
 print(openai_text)
 ```
 
@@ -73,7 +73,7 @@ print(openai_text)
 from litellm import token_counter
 
 messages = [{"user": "role", "content": "Hey, how's it going"}]
-print(token_counter(model="gpt-3.5-turbo", messages=messages))
+print(token_counter(model="gpt-4o-mini", messages=messages))
 ```
 
 ### 4. `create_pretrained_tokenizer` and `create_tokenizer`
@@ -100,7 +100,7 @@ from litellm import cost_per_token
 
 prompt_tokens =  5
 completion_tokens = 10
-prompt_tokens_cost_usd_dollar, completion_tokens_cost_usd_dollar = cost_per_token(model="gpt-3.5-turbo", prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+prompt_tokens_cost_usd_dollar, completion_tokens_cost_usd_dollar = cost_per_token(model="gpt-4o-mini", prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
 
 print(prompt_tokens_cost_usd_dollar, completion_tokens_cost_usd_dollar)
 ```
@@ -115,7 +115,7 @@ print(prompt_tokens_cost_usd_dollar, completion_tokens_cost_usd_dollar)
 from litellm import completion, completion_cost
 
 response = completion(
-            model="bedrock/anthropic.claude-v2",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=messages,
             request_timeout=200,
         )
@@ -128,7 +128,7 @@ print(formatted_string)
 **prompt + completion string**
 ```python
 from litellm import completion_cost
-cost = completion_cost(model="bedrock/anthropic.claude-v2", prompt="Hey!", completion="How's it going?")
+cost = completion_cost(model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0", prompt="Hey!", completion="How's it going?")
 formatted_string = f"${float(cost):.10f}"
 print(formatted_string)
 ```

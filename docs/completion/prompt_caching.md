@@ -365,7 +365,7 @@ litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         {
             "role": "system",
@@ -397,9 +397,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: claude-3-5-sonnet-20240620
+    - model_name: claude-sonnet-4-5
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20240620
+        model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -421,7 +421,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet-20240620",
+    model="claude-sonnet-4-5",
     messages=[
         {
             "role": "system",
@@ -482,7 +482,7 @@ Prompts below the minimum are processed without caching, and no error is returne
 import litellm
 
 response = litellm.completion(
-    model="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[
         {
             "role": "system",
@@ -512,7 +512,7 @@ print(response.usage)
 model_list:
   - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
 ```
 
 2. Start proxy
@@ -854,7 +854,7 @@ import os
 
 litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
-model = "anthropic/claude-3-5-sonnet-20240620"
+model = "anthropic/claude-sonnet-4-5"
 response = completion(
     model=model,
     messages=[
@@ -903,7 +903,7 @@ response = client.chat.completions.with_raw_response.create(
         "role": "user",
         "content": "Say this is a test",
     }],
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
 )
 print(response.headers.get('x-litellm-response-cost'))
 
@@ -924,7 +924,7 @@ Check if a model supports prompt caching with `supports_prompt_caching()`
 ```python
 from litellm.utils import supports_prompt_caching
 
-supports_pc: bool = supports_prompt_caching(model="anthropic/claude-3-5-sonnet-20240620")
+supports_pc: bool = supports_prompt_caching(model="anthropic/claude-sonnet-4-5")
 
 assert supports_pc
 ```
@@ -938,9 +938,9 @@ Use the `/model/info` endpoint to check if a model on the proxy supports prompt 
 
 ```yaml
 model_list:
-    - model_name: claude-3-5-sonnet-20240620
+    - model_name: claude-sonnet-4-5
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20240620
+        model: anthropic/claude-sonnet-4-5
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -963,12 +963,12 @@ curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
 {
     "data": [
         {
-            "model_name": "claude-3-5-sonnet-20240620",
+            "model_name": "claude-sonnet-4-5",
             "litellm_params": {
-                "model": "anthropic/claude-3-5-sonnet-20240620"
+                "model": "anthropic/claude-sonnet-4-5"
             },
             "model_info": {
-                "key": "claude-3-5-sonnet-20240620",
+                "key": "claude-sonnet-4-5",
                 ...
                 "supports_prompt_caching": true # 👈 LOOK FOR THIS!
             }

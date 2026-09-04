@@ -50,13 +50,13 @@ a. Setup config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/claude-sonnet-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -80,7 +80,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "gpt-4o-mini",
   "messages": [
     {
       "role": "system",

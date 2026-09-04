@@ -23,7 +23,7 @@ When we have breaking changes (i.e. going from 1.x.x to 2.x.x), we will document
     ```
 - Streaming - OpenAI Chunks now return `None` for empty stream chunks. This is how to process stream chunks with content
     ```python
-    response = litellm.completion(model="gpt-3.5-turbo", messages=messages, stream=True)
+    response = litellm.completion(model="gpt-4o-mini", messages=messages, stream=True)
     for part in response:
         print(part.choices[0].delta.content or "")
     ```

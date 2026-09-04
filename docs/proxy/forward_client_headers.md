@@ -133,9 +133,9 @@ curl -X POST "http://localhost:4000/v1/messages" \
 
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       # No api_key configured
 
 general_settings:
@@ -149,7 +149,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Authorization: Bearer sk-proxy-auth-123" \
   -H "x-goog-api-key: AIza..." \
   -d '{
-    "model": "gemini-pro",
+    "model": "gemini-2.5-pro",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -214,7 +214,7 @@ The configuration supports various model matching patterns:
 ```yaml
 forward_client_headers_to_llm_api:
   - gpt-4o-mini
-  - claude-3-sonnet
+  - claude-sonnet-4-5
 ```
 
 ### 2. Wildcard Patterns
@@ -293,7 +293,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "Authorization: Bearer your-key" \
   -H "anthropic-beta: tools-2024-04-04" \
   -d '{
-    "model": "claude-3-sonnet",
+    "model": "claude-sonnet-4-5",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -317,9 +317,9 @@ model_list:
       api_key: "your-api-key"
       
   # Standard model without header forwarding
-  - model_name: standard-gpt-4
+  - model_name: standard-gpt-4o
     litellm_params:
-      model: openai/gpt-4
+      model: openai/gpt-4o
       api_key: "your-api-key"
 
 litellm_settings:
@@ -330,7 +330,7 @@ litellm_settings:
     forward_client_headers_to_llm_api:
       - byok-fixed-gpt-4o-mini
       - byok-wildcard/*
-      # Note: standard-gpt-4 is NOT included, so no headers forwarded
+      # Note: standard-gpt-4o is NOT included, so no headers forwarded
 
 general_settings:
   # Enable OpenAI organization header forwarding (optional)

@@ -51,7 +51,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "user",
@@ -71,7 +71,7 @@ except openai.APITimeoutError as e:
 import litellm
 try:
     response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "user",
@@ -100,7 +100,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "user",
@@ -130,7 +130,7 @@ from litellm.exceptions import ContentPolicyViolationError
 
 try:
     response = litellm.completion(
-        model="azure/gpt-4",
+        model="azure/gpt-4o",
         messages=[
             {
                 "role": "user", 

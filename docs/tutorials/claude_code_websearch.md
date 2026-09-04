@@ -182,7 +182,7 @@ model_list:
 
   - model_name: azure-gpt4
     litellm_params:
-      model: azure/gpt-4
+      model: azure/gpt-4o
       api_base: https://my-azure.openai.azure.com
       api_key: os.environ/AZURE_API_KEY
 

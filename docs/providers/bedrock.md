@@ -47,7 +47,7 @@ Option 2: use the api_key parameter to pass in API key for completion, embedding
 <TabItem value="sdk" label="SDK">
 ```python
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   api_key="your-api-key"
 )
@@ -56,9 +56,9 @@ response = completion(
 <TabItem value="proxy" label="PROXY">
 ```yaml
 model_list:
-  - model_name: bedrock-claude-3-sonnet
+  - model_name: bedrock-claude-sonnet-4-5
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
 ```
 </TabItem>
@@ -80,7 +80,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -93,7 +93,7 @@ Here's how to call Bedrock with the LiteLLM Proxy Server
 
 ```yaml
 model_list:
-  - model_name: bedrock-claude-3-5-sonnet
+  - model_name: bedrock-claude-sonnet-4-5
     litellm_params:
       model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
@@ -209,7 +209,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   temperature=0.7,
   top_p=1
@@ -224,7 +224,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       temperature: <your-temp>
       top_p: <your-top-p>
 ```
@@ -273,7 +273,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
 )
@@ -287,7 +287,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
 ```
 
@@ -418,7 +418,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=messages,
     tools=tools,
     tool_choice="auto",
@@ -517,7 +517,7 @@ image_path = "../proxy/cached_logo.jpg"
 # Getting the base64 string
 base64_image = encode_image(image_path)
 resp = litellm.completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[
         {
             "role": "user",
@@ -1065,7 +1065,7 @@ from litellm import completion
 
 # Using OpenAI-style service_tier parameter
 response = completion(
-    model="bedrock/converse/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/converse/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[{"role": "user", "content": "Hello!"}],
     service_tier="priority"  # Automatically translated to serviceTier={"type": "priority"}
 )
@@ -1151,7 +1151,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-    model="anthropic.claude-v2",
+    model="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[
         {
             "content": "where do i buy coffee from? ",
@@ -1168,7 +1168,7 @@ response = completion(
 
 # Selective guardrail usage with guarded_text - only specific content is evaluated
 response_guard = completion(
-    model="anthropic.claude-v2",
+    model="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[
         {
             "role": "user",
@@ -1196,7 +1196,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="anthropic.claude-v2", messages = [
+response = client.chat.completions.create(model="us.anthropic.claude-sonnet-4-5-20250929-v1:0", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -1223,7 +1223,7 @@ print(response)
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_access_key_id: os.environ/CUSTOM_AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/CUSTOM_AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/CUSTOM_AWS_REGION_NAME
@@ -1355,7 +1355,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-instant-v1",
+  model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   stream=True
 )
@@ -1376,7 +1376,7 @@ for chunk in response:
     }
   ],
   "created": null,
-  "model": "anthropic.claude-instant-v1",
+  "model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   "usage": {
     "prompt_tokens": null,
     "completion_tokens": null,
@@ -1405,7 +1405,7 @@ os.environ["AWS_REGION_NAME"] = ""
 litellm.set_verbose = True #  👈 SEE RAW REQUEST 
 
 response = completion(
-    model="bedrock/us.anthropic.claude-3-haiku-20240307-v1:0",
+    model="bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0",
     messages=messages,
     max_tokens=10,
     temperature=0.1,
@@ -1423,7 +1423,7 @@ print("Final Response: {}".format(response))
 model_list:
   - model_name: bedrock-claude-haiku
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-haiku-20240307-v1:0
+      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -1560,7 +1560,7 @@ Use `user_continue_message` to add a default user message, for cases (e.g. Autog
 model_list:
   - model_name: "bedrock-claude"
     litellm_params:
-      model: "bedrock/anthropic.claude-instant-v1"
+      model: "bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
       user_continue_message: {"role": "user", "content": "Please continue"}
 ```
 
@@ -1572,7 +1572,7 @@ just set `litellm.modify_params=True` and LiteLLM will automatically handle this
 model_list:
   - model_name: "bedrock-claude"
     litellm_params:
-      model: "bedrock/anthropic.claude-instant-v1"
+      model: "bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 litellm_settings:
    modify_params: true
@@ -2151,7 +2151,7 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: anthropic-claude-3-5-sonnet
+  - model_name: anthropic-claude-sonnet-4-5
     litellm_params:
       model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
       # You have to set the ARN application inference profile in the model_id parameter
@@ -2171,7 +2171,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
-  "model": "anthropic-claude-3-5-sonnet",
+  "model": "anthropic-claude-sonnet-4-5",
   "messages": [
     {
       "role": "user",
@@ -2198,7 +2198,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_access_key_id="",
             aws_secret_access_key="",
@@ -2221,7 +2221,7 @@ from litellm import completion
 litellm.set_verbose = True # 👈 SEE RAW REQUEST
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_access_key_id="",
             aws_secret_access_key="",
@@ -2240,7 +2240,7 @@ response = completion(
 model_list:
     - model_name: bedrock-model
       litellm_params:
-        model: bedrock/anthropic.claude-instant-v1
+        model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
         aws_access_key_id: ""
         aws_secret_access_key: ""
         aws_region_name: ""
@@ -2288,7 +2288,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -2300,7 +2300,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_profile_name="dev-profile",
 )
@@ -2343,7 +2343,7 @@ credential_process = aws_signing_helper credential-process \
 from litellm import completion
 
 response = completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[{"role": "user", "content": "Hello!"}],
     aws_profile_name="litellm-roles-anywhere",
 )
@@ -2356,7 +2356,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       aws_profile_name: "litellm-roles-anywhere"
 ```
 
@@ -2409,7 +2409,7 @@ Replace `<TARGET_ROLE_ARN>` with the ARN of the role you want to assume (e.g., `
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=messages,
             max_tokens=10,
             temperature=0.1,
@@ -2424,7 +2424,7 @@ If you also need to dynamically set the aws user accessing the role, add the add
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=messages,
             max_tokens=10,
             temperature=0.1,
@@ -2486,7 +2486,7 @@ bedrock = boto3.client(
 )
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_bedrock_client=bedrock,
 )
@@ -2504,7 +2504,7 @@ bedrock = dev_session.client(
 )
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_bedrock_client=bedrock,
 )

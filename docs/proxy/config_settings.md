@@ -11,7 +11,7 @@ model_list:
       input_cost_per_token: 0
       output_cost_per_token: 0
       max_tokens: 2048
-      base_model: gpt-4-1106-preview
+      base_model: gpt-4o
       additionalProp1: {}
 
 litellm_settings:
@@ -197,8 +197,8 @@ router_settings:
     "ContentPolicyViolationErrorAllowedFails": 15, # int 
     "InternalServerErrorAllowedFails": 20, # int 
   }
-  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
-  fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
+  content_policy_fallbacks: [{"claude-sonnet-4-5": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
+  fallbacks: [{"claude-sonnet-4-5": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
 
 ```
 
@@ -440,8 +440,8 @@ router_settings:
     "ContentPolicyViolationErrorAllowedFails": 15, # int
     "InternalServerErrorAllowedFails": 20, # int
   }
-  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
-  fallbacks: [{"claude-2": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
+  content_policy_fallbacks: [{"claude-sonnet-4-5": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
+  fallbacks: [{"claude-sonnet-4-5": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
 ```
 
 | Name | Type | Description |

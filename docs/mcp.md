@@ -766,7 +766,7 @@ curl --location 'https://your-proxy.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "tools": [
         {
             "type": "mcp",
@@ -1345,7 +1345,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=messages,
             tools=tools
         )
@@ -1471,7 +1471,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=messages,
             tools=tools
         )
@@ -1496,7 +1496,7 @@ async with stdio_client(server_params) as (read, write):
         })
 
         final_response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=messages,
             tools=tools
         )

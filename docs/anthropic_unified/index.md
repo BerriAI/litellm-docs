@@ -33,7 +33,7 @@ import litellm
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
-    model="anthropic/claude-3-haiku-20240307",
+    model="anthropic/claude-sonnet-4-5",
     max_tokens=100,
 )
 ```
@@ -44,7 +44,7 @@ import litellm
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
-    model="anthropic/claude-3-haiku-20240307",
+    model="anthropic/claude-sonnet-4-5",
     max_tokens=100,
     stream=True,
 )
@@ -66,7 +66,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="openai/gpt-4",
+    model="openai/gpt-4o",
     max_tokens=100,
 )
 ```
@@ -81,7 +81,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="openai/gpt-4",
+    model="openai/gpt-4o",
     max_tokens=100,
     stream=True,
 )
@@ -183,7 +183,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     max_tokens=100,
 )
 ```
@@ -200,7 +200,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     max_tokens=100,
     stream=True,
 )
@@ -284,7 +284,7 @@ response = client.messages.create(
 model_list:
     - model_name: openai-gpt4
       litellm_params:
-        model: openai/gpt-4
+        model: openai/gpt-4o
         api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -399,7 +399,7 @@ response = client.messages.create(
 model_list:
     - model_name: bedrock-claude
       litellm_params:
-        model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+        model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
         aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
         aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
         aws_region_name: us-west-2

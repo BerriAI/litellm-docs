@@ -243,9 +243,9 @@ Here's a complete example for an organization requiring guaranteed logging:
 ```yaml showLineNumbers title="config.yaml"
 # config.yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
-      model: openai/gpt-4
+      model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:

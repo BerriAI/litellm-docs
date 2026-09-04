@@ -214,7 +214,7 @@ client = OpenAI(
 
 # First request in session
 response1 = client.responses.create(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/claude-sonnet-4-5",
     input="Write a short story about a robot"
 )
 
@@ -228,7 +228,7 @@ Make a follow-up request using the previous response ID to maintain the conversa
 ```python showLineNumbers
 # Second request using previous response ID
 response2 = client.responses.create(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/claude-sonnet-4-5",
     input="Now write a poem about that robot",
     previous_response_id=response_id  # Link to previous request
 )
@@ -249,7 +249,7 @@ curl http://localhost:4000/v1/responses \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-        "model": "anthropic/claude-3-sonnet-20240229-v1:0",
+        "model": "anthropic/claude-sonnet-4-5",
         "input": "Write a short story about a robot"
     }'
 
@@ -265,7 +265,7 @@ curl http://localhost:4000/v1/responses \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-        "model": "anthropic/claude-3-sonnet-20240229-v1:0",
+        "model": "anthropic/claude-sonnet-4-5",
         "input": "Now write a poem about that robot",
         "previous_response_id": "resp_abc123..."  # Replace with actual response ID from previous request
     }'
@@ -282,7 +282,7 @@ import litellm
 
 # First request in session
 response1 = litellm.responses(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/claude-sonnet-4-5",
     input="Write a short story about a robot",
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>"
@@ -298,7 +298,7 @@ Make a follow-up request using the previous response ID to maintain the conversa
 ```python showLineNumbers
 # Second request using previous response ID
 response2 = litellm.responses(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/claude-sonnet-4-5",
     input="Now write a poem about that robot",
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>",

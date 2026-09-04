@@ -58,9 +58,9 @@ export OPENAI_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: openai/gpt-3.5-turbo                          # The `openai/` prefix will call openai.chat.completions.create
+      model: openai/gpt-4o-mini                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
@@ -71,7 +71,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-4`, `gpt-3.5-turbo` , `gpt-4-turbo-preview` will all go through this route 
+This means requests to `gpt-4o`, `gpt-4o-mini` , `gpt-4.1` will all go through this route 
 
 ```yaml
 model_list:
@@ -84,7 +84,7 @@ model_list:
 <TabItem value="cli" label="CLI">
 
 ```bash
-$ litellm --model gpt-3.5-turbo
+$ litellm --model gpt-4o-mini
 
 # Server running on http://0.0.0.0:4000
 ```
@@ -102,7 +102,7 @@ $ litellm --model gpt-3.5-turbo
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-3.5-turbo",
+      "model": "gpt-4o-mini",
       "messages": [
         {
           "role": "user",
@@ -123,7 +123,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="gpt-4o-mini", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -147,7 +147,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-3.5-turbo",
+    model = "gpt-4o-mini",
     temperature=0.1
 )
 
@@ -1181,7 +1181,7 @@ tools = [
 ]
 
 response = litellm.completion(
-    model="gpt-3.5-turbo-1106",
+    model="gpt-4o-mini",
     messages=messages,
     tools=tools,
     tool_choice="auto",  # auto is default, but we'll be explicit
@@ -1199,7 +1199,7 @@ from litellm import completion
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model = "gpt-3.5-turbo", 
+    model = "gpt-4o-mini", 
     messages=[{ "content": "Hello, how are you?","role": "user"}],
     extra_headers={"AI-Resource Group": "ishaan-resource"}
 )
@@ -1218,7 +1218,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 os.environ["OPENAI_ORGANIZATION"] = "your-org-id" # OPTIONAL
 
 response = completion(
-    model = "gpt-3.5-turbo", 
+    model = "gpt-4o-mini", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -1235,14 +1235,14 @@ import litellm, httpx
 # for completion
 litellm.client_session = httpx.Client(verify=False)
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages=messages,
 )
 
 # for acompletion
 litellm.aclient_session = httpx.AsyncClient(verify=False)
 response = litellm.acompletion(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages=messages,
 )
 ```
@@ -1280,9 +1280,9 @@ Forward openai Org ID's from the client to OpenAI with `forward_openai_org_id` p
 
 ```yaml
 model_list:
-  - model_name: "gpt-3.5-turbo"
+  - model_name: "gpt-4o-mini"
     litellm_params:
-      model: gpt-3.5-turbo
+      model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1307,7 +1307,7 @@ client = OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-client.chat.completions.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello world"}])
+client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": "Hello world"}])
 ```
 
 In your logs you should see the forwarded org id

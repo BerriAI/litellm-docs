@@ -178,7 +178,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite models list
-  lite models add gpt-4 \
+  lite models add gpt-4o \
     --param api_key=sk-123 \
     --param max_tokens=2048
   lite models update <model-id> -p temperature=0.7
@@ -211,7 +211,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   ```bash
   lite keys list
   lite keys generate \
-    --models=gpt-4 \
+    --models=gpt-4o \
     --spend=100 \
     --duration=24h \
     --key-alias=my-key
@@ -270,7 +270,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 - Example:
 
   ```bash
-  lite chat completions gpt-4 -m "user:Hello, how are you?"
+  lite chat completions gpt-4o -m "user:Hello, how are you?"
   ```
 
   [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
@@ -283,7 +283,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   ```bash
   lite http request \
     POST /chat/completions \
-    --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+    --json '{"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
   [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
@@ -317,7 +317,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 2. **Add a new model:**
 
    ```bash
-   lite models add gpt-4 \
+   lite models add gpt-4o \
      --param api_key=sk-123 \
      --param max_tokens=2048
    ```
@@ -334,7 +334,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
    ```bash
    lite keys generate \
-     --models=gpt-4 \
+     --models=gpt-4o \
      --spend=100 \
      --duration=24h \
      --key-alias=my-key
@@ -343,7 +343,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 5. **Chat completion:**
 
    ```bash
-   lite chat completions gpt-4 \
+   lite chat completions gpt-4o \
      -m "user:Write a story"
    ```
 
@@ -352,7 +352,7 @@ lite logout             # clear the keychain entry and the token file, and revok
    ```bash
    lite http request \
      POST /chat/completions \
-     --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+     --json '{"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}'
    ```
 
 ## Error Handling

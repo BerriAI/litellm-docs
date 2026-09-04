@@ -80,7 +80,7 @@ router = Router(
         {
             "model_name": "litellm-claude-35",
             "litellm_params": {
-                "model": "claude-3-5-sonnet-latest",
+                "model": "claude-sonnet-4-5",
             },
             "model_info": {"id": "claude-id"},
         },
@@ -109,7 +109,7 @@ response = await router.acompletion(
     messages=[{"role": "user", "content": "litellm is great"}],
 )
 
-# This request will be routed to claude-3-5-sonnet-latest for coding queries
+# This request will be routed to claude-sonnet-4-5 for coding queries
 response = await router.acompletion(
     model="auto_router1",
     messages=[{"role": "user", "content": "how to code a program in python"}],

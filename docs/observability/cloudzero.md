@@ -199,7 +199,7 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 LiteLLM automatically creates resource tags for cost attribution:
 
 - **Provider Tags**: `openai`, `anthropic`, `azure`, etc.
-- **Model Tags**: Specific model names like `gpt-4o`, `claude-3-sonnet`
+- **Model Tags**: Specific model names like `gpt-4o`, `claude-sonnet-4-5`
 - **Team/User Tags**: Team IDs and user IDs for cost allocation
 - **Token Breakdown**: Separate tracking of prompt and completion tokens
 - **Usage Metrics**: Total tokens consumed per request

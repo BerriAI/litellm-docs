@@ -19,9 +19,9 @@ Use policies to group guardrails and control which ones run for specific teams, 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
-      model: openai/gpt-4
+      model: openai/gpt-4o
 
 # 1. Define your guardrails
 guardrails:
@@ -283,7 +283,7 @@ curl -X POST "http://localhost:4000/policies/resolve" \
     -H "Content-Type: application/json" \
     -d '{
         "tags": ["healthcare"],
-        "model": "gpt-4"
+        "model": "gpt-4o"
     }'
 ```
 

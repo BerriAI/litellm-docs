@@ -46,7 +46,7 @@ Here's what an example response looks like
       }
     ],
  'created': 1691429984.3852863,
- 'model': 'claude-instant-1',
+ 'model': 'claude-sonnet-4-5',
  'usage': {'prompt_tokens': 18, 'completion_tokens': 23, 'total_tokens': 41}
 }
 ```
@@ -84,7 +84,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 messages=[{"role": "user", "content": "Hey!"}]
 
-response = completion(model="claude-2", messages=messages)
+response = completion(model="claude-sonnet-4-5", messages=messages)
 
 print(response.response_ms) # 616.25# 616.25
 ```

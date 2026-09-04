@@ -40,7 +40,7 @@ model_list:
       rpm: 6      # [OPTIONAL] Rate limit for this deployment: in requests per minute (rpm)
   - model_name: bedrock-claude-v1 
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
   - model_name: gpt-4o
     litellm_params:
       model: azure/gpt-4o-ca
@@ -49,7 +49,7 @@ model_list:
       rpm: 6
   - model_name: anthropic-claude
     litellm_params: 
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
       ### [OPTIONAL] SET AWS REGION ###
       aws_region_name: us-east-1
   - model_name: vllm-models
@@ -61,7 +61,7 @@ model_list:
     model_info: 
       version: 2
   
-  # Use this if you want to make requests to `claude-3-haiku-20240307`,`claude-3-opus-20240229`,`claude-2.1` without defining them on the config.yaml
+  # Use this if you want to make requests to `claude-haiku-4-5`,`claude-sonnet-4-5`,`claude-opus-4-6` without defining them on the config.yaml
   # Default models
   # Works for ALL Providers and needs the default provider credentials in .env
   - model_name: "*" 
@@ -147,7 +147,7 @@ model_list:
       max_tokens: 20
   - model_name: gpt-4-team2
     litellm_params:
-      model: azure/gpt-4
+      model: azure/gpt-4o
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
@@ -406,9 +406,9 @@ model_list:
         model: gpt-4o
         api_key: <my-openai-key>
         rpm: 200      
-  - model_name: gpt-3.5-turbo-16k
+  - model_name: gpt-4o-mini
     litellm_params:
-        model: gpt-3.5-turbo-16k
+        model: gpt-4o-mini
         api_key: <my-openai-key>
         rpm: 100      
 
@@ -416,7 +416,7 @@ litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
   fallbacks: [{"zephyr-beta": ["gpt-4o"]}] # fallback to gpt-4o if call fails num_retries 
-  context_window_fallbacks: [{"zephyr-beta": ["gpt-3.5-turbo-16k"]}, {"gpt-4o": ["gpt-3.5-turbo-16k"]}] # fallback to gpt-3.5-turbo-16k if context window error
+  context_window_fallbacks: [{"zephyr-beta": ["gpt-4o-mini"]}, {"gpt-4o": ["gpt-4o-mini"]}] # fallback to gpt-4o-mini if context window error
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
 
 router_settings: # router_settings are optional
@@ -503,15 +503,15 @@ Supported Environments:
 2. For each model set the list of supported environments in `model_info.supported_environments`
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo-16k
+ - model_name: gpt-4o-mini
    litellm_params:
-     model: openai/gpt-3.5-turbo-16k
+     model: openai/gpt-4o-mini
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["development", "production", "staging"]
- - model_name: gpt-4
+ - model_name: gpt-4.1
    litellm_params:
-     model: openai/gpt-4
+     model: openai/gpt-4.1
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["production", "staging"]

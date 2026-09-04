@@ -50,7 +50,7 @@ Loadbalance across multiple [azure](./providers/azure)/[bedrock](./providers/bed
 from litellm import Router
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias -> loadbalance between models with same `model_name`
+	"model_name": "gpt-4o-mini", # model alias -> loadbalance between models with same `model_name`
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -58,7 +58,7 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE")
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -66,23 +66,23 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE")
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "gpt-4o-mini", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 }, {
-    "model_name": "gpt-4", 
+    "model_name": "gpt-4o", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "azure/gpt-4", 
+		"model": "azure/gpt-4o", 
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_base": os.getenv("AZURE_API_BASE"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
 	}
 }, {
-    "model_name": "gpt-4", 
+    "model_name": "gpt-4o", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-4", 
+		"model": "gpt-4o", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 },
@@ -92,15 +92,15 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list)
 
 # openai.ChatCompletion.create replacement
-# requests with model="gpt-3.5-turbo" will pick a deployment where model_name="gpt-3.5-turbo"
-response = await router.acompletion(model="gpt-3.5-turbo", 
+# requests with model="gpt-4o-mini" will pick a deployment where model_name="gpt-4o-mini"
+response = await router.acompletion(model="gpt-4o-mini", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 
 # openai.ChatCompletion.create replacement
-# requests with model="gpt-4" will pick a deployment where model_name="gpt-4"
-response = await router.acompletion(model="gpt-4", 
+# requests with model="gpt-4o" will pick a deployment where model_name="gpt-4o"
+response = await router.acompletion(model="gpt-4o", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
@@ -117,17 +117,17 @@ See detailed proxy loadbalancing/fallback docs [here](./proxy/reliability.md)
 1. Setup model_list with multiple deployments
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: <your-azure-api-key>
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
       model: azure/gpt-turbo-large
       api_base: https://openai-france-1234.openai.azure.com/
@@ -147,7 +147,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "gpt-4o-mini",
   "messages": [
         {"role": "user", "content": "Hi there!"}
     ],
@@ -190,14 +190,14 @@ You can also set a `weight` param, to specify which model should get picked when
 
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
         model: azure/chatgpt-v-2
         api_key: os.environ/AZURE_API_KEY
         api_version: os.environ/AZURE_API_VERSION
         api_base: os.environ/AZURE_API_BASE
         rpm: 900 
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
         model: azure/chatgpt-functioncalling
         api_key: os.environ/AZURE_API_KEY
@@ -213,7 +213,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "gpt-4o-mini", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -222,7 +222,7 @@ model_list = [{ # list of model deployments
 		"rpm": 900,			# requests per minute for this API
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -236,7 +236,7 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="gpt-4o-mini", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -252,14 +252,14 @@ asyncio.run(router_acompletion())
 
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
         model: azure/chatgpt-v-2
         api_key: os.environ/AZURE_API_KEY
         api_version: os.environ/AZURE_API_VERSION
         api_base: os.environ/AZURE_API_BASE
         weight: 9
-    - model_name: gpt-3.5-turbo
+    - model_name: gpt-4o-mini
       litellm_params:
         model: azure/chatgpt-functioncalling
         api_key: os.environ/AZURE_API_KEY
@@ -275,7 +275,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "gpt-4o-mini", # model alias 
 	"litellm_params": { 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -284,7 +284,7 @@ model_list = [{
 		"weight": 9, # pick this 90% of the time
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -298,7 +298,7 @@ model_list = [{
 router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="gpt-4o-mini", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -338,7 +338,7 @@ from litellm import Router
 
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "gpt-4o-mini", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -348,7 +348,7 @@ model_list = [{ # list of model deployments
 		"rpm": 10000,
 	}, 
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -358,9 +358,9 @@ model_list = [{ # list of model deployments
 		"rpm": 1000,
 	},
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "gpt-4o-mini", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 		"tpm": 100000,
 		"rpm": 1000,
@@ -374,7 +374,7 @@ router = Router(model_list=model_list,
 				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
-response = await router.acompletion(model="gpt-3.5-turbo", 
+response = await router.acompletion(model="gpt-4o-mini", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
@@ -386,7 +386,7 @@ print(response)
 
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo # model alias 
+    - model_name: gpt-4o-mini # model alias 
       litellm_params: # params for litellm completion/embedding call 
         model: azure/chatgpt-v-2 # actual model name
         api_key: os.environ/AZURE_API_KEY
@@ -394,9 +394,9 @@ model_list:
         api_base: os.environ/AZURE_API_BASE
       tpm: 100000
       rpm: 10000
-    - model_name: gpt-3.5-turbo 
+    - model_name: gpt-4o-mini 
       litellm_params: # params for litellm completion/embedding call 
-        model: gpt-3.5-turbo 
+        model: gpt-4o-mini 
         api_key: os.getenv(OPENAI_API_KEY)
       tpm: 100000
       rpm: 1000
@@ -425,7 +425,7 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data '{
-    "model": "gpt-3.5-turbo", 
+    "model": "gpt-4o-mini", 
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```
@@ -543,7 +543,7 @@ from litellm import Router
 
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "gpt-4o-mini", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -553,7 +553,7 @@ model_list = [{ # list of model deployments
     "tpm": 100000,
 	"rpm": 10000,
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -563,9 +563,9 @@ model_list = [{ # list of model deployments
     "tpm": 100000,
 	"rpm": 1000,
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "gpt-4o-mini", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	},
     "tpm": 100000,
@@ -579,7 +579,7 @@ router = Router(model_list=model_list,
 				enable_pre_call_check=True, # enables router rate limits for concurrent calls
 				)
 
-response = await router.acompletion(model="gpt-3.5-turbo", 
+response = await router.acompletion(model="gpt-4o-mini", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
@@ -599,7 +599,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "gpt-4o-mini", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -607,7 +607,7 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE"),
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -615,9 +615,9 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE"),
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "gpt-4o-mini", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "gpt-4o-mini", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 }]
@@ -626,7 +626,7 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list, routing_strategy="least-busy")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="gpt-4o-mini", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -769,12 +769,12 @@ import asyncio
 
 model_list =  [
 	{
-		"model_name": "gpt-3.5-turbo",
-		"litellm_params": {"model": "gpt-4"},
-		"model_info": {"id": "openai-gpt-4"},
+		"model_name": "gpt-4o-mini",
+		"litellm_params": {"model": "gpt-4o"},
+		"model_info": {"id": "openai-gpt-4o"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "gpt-4o-mini",
 		"litellm_params": {"model": "groq/llama3-8b-8192"},
 		"model_info": {"id": "groq-llama"},
 	},
@@ -784,7 +784,7 @@ model_list =  [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="gpt-4o-mini", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -804,7 +804,7 @@ Set `litellm_params["input_cost_per_token"]` and `litellm_params["output_cost_pe
 ```python
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "gpt-4o-mini",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-2",
 			"input_cost_per_token": 0.00003,
@@ -813,7 +813,7 @@ model_list = [
 		"model_info": {"id": "chatgpt-v-experimental"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "gpt-4o-mini",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-1",
 			"input_cost_per_token": 0.000000001,
@@ -822,7 +822,7 @@ model_list = [
 		"model_info": {"id": "chatgpt-v-1"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "gpt-4o-mini",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-5",
 			"input_cost_per_token": 10,
@@ -835,7 +835,7 @@ model_list = [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="gpt-4o-mini", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -1081,7 +1081,7 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-4",
+        "model_name": "gpt-4o",
         "litellm_params": {
             "model": "azure/gpt-4-primary",
             "api_key": os.getenv("AZURE_API_KEY"),
@@ -1089,7 +1089,7 @@ model_list = [
         },
     },
     {
-        "model_name": "gpt-4",
+        "model_name": "gpt-4o",
         "litellm_params": {
             "model": "azure/gpt-4-fallback",
             "api_key": os.getenv("AZURE_API_KEY_2"),
@@ -1106,13 +1106,13 @@ router = Router(model_list=model_list)
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
       order: 1  # 👈 Highest priority
 
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
@@ -1156,7 +1156,7 @@ model_list = [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 
 response = await router.acompletion(
-	model="gpt-3.5-turbo", 
+	model="gpt-4o-mini", 
 	messages=[{"role": "user", "content": "Hey, how's it going?"}]
 )
 print(response)
@@ -1291,9 +1291,9 @@ If tpm/rpm is set, and no max parallel request limit given, we use the RPM or ca
 from litellm import Router 
 
 model_list = [{
-	"model_name": "gpt-4",
+	"model_name": "gpt-4o",
 	"litellm_params": {
-		"model": "azure/gpt-4",
+		"model": "azure/gpt-4o",
 		# ...
 		"max_parallel_requests": 10 # 👈 SET PER DEPLOYMENT
 	}
@@ -1330,7 +1330,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1375,7 +1375,7 @@ model_list:
 **Expected Response**
 
 ```
-No deployments available for selected model, Try again in 60 seconds. Passed model=claude-3-5-sonnet. pre-call-checks=False, allowed_model_region=n/a.
+No deployments available for selected model, Try again in 60 seconds. Passed model=claude-sonnet-4-5. pre-call-checks=False, allowed_model_region=n/a.
 ```
 
 #### **Disable cooldowns**
@@ -1519,7 +1519,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1538,7 +1538,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1609,7 +1609,7 @@ allowed_fails_policy = AllowedFailsPolicy(
 router = litellm.Router(
 	model_list=[
 		{
-			"model_name": "gpt-3.5-turbo",  # openai model name
+			"model_name": "gpt-4o-mini",  # openai model name
 			"litellm_params": {  # params for litellm completion/embedding call
 				"model": "azure/chatgpt-v-2",
 				"api_key": os.getenv("AZURE_API_KEY"),
@@ -1663,9 +1663,9 @@ router_settings:
 
 ```yaml
 model_list:
-- model_name: gpt-4
+- model_name: gpt-4o
   litellm_params:
-    model: openai/gpt-4
+    model: openai/gpt-4o
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     allowed_fails_policy:
@@ -1741,7 +1741,7 @@ For 'eu-region' filtering, Set 'region_name' of deployment.
 ```python
 model_list = [
             {
-                "model_name": "gpt-3.5-turbo", # model group name
+                "model_name": "gpt-4o-mini", # model group name
                 "litellm_params": {  # params for litellm completion/embedding call
                     "model": "azure/chatgpt-v-2",
                     "api_key": os.getenv("AZURE_API_KEY"),
@@ -1752,9 +1752,9 @@ model_list = [
                 },
             },
             {
-                "model_name": "gpt-3.5-turbo", # model group name
+                "model_name": "gpt-4o-mini", # model group name
                 "litellm_params": {  # params for litellm completion/embedding call
-                    "model": "gpt-3.5-turbo-1106",
+                    "model": "gpt-4o-mini",
                     "api_key": os.getenv("OPENAI_API_KEY"),
                 },
             },
@@ -1829,7 +1829,7 @@ print(f"response: {response}")
 
 ```python
 """
-- Give 2 gpt-3.5-turbo deployments, in eu + non-eu regions
+- Give 2 gpt-4o-mini deployments, in eu + non-eu regions
 - Make a call
 - Assert it picks the eu-region model
 """
@@ -1839,7 +1839,7 @@ import os
 
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "gpt-4o-mini",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
 			"model": "azure/chatgpt-v-2",
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1852,9 +1852,9 @@ model_list = [
 		}
 	},
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "gpt-4o-mini",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
-			"model": "gpt-3.5-turbo-1106",
+			"model": "gpt-4o-mini",
 			"api_key": os.getenv("OPENAI_API_KEY"),
 		},
 		"model_info": {
@@ -1866,7 +1866,7 @@ model_list = [
 router = Router(model_list=model_list, enable_pre_call_checks=True) 
 
 response = router.completion(
-	model="gpt-3.5-turbo",
+	model="gpt-4o-mini",
 	messages=[{"role": "user", "content": "Who was Alexander?"}],
 )
 
@@ -1906,14 +1906,14 @@ async def test_acompletion_caching_on_router_caching_groups():
 		litellm.set_verbose = True
 		model_list = [
 			{
-				"model_name": "openai-gpt-3.5-turbo",
+				"model_name": "openai-gpt-4o-mini",
 				"litellm_params": {
-					"model": "gpt-3.5-turbo-0613",
+					"model": "gpt-4o-mini",
 					"api_key": os.getenv("OPENAI_API_KEY"),
 				},
 			},
 			{
-				"model_name": "azure-gpt-3.5-turbo",
+				"model_name": "azure-gpt-4o-mini",
 				"litellm_params": {
 					"model": "azure/chatgpt-v-2",
 					"api_key": os.getenv("AZURE_API_KEY"),
@@ -1929,11 +1929,11 @@ async def test_acompletion_caching_on_router_caching_groups():
 		start_time = time.time()
 		router = Router(model_list=model_list, 
 				cache_responses=True, 
-				caching_groups=[("openai-gpt-3.5-turbo", "azure-gpt-3.5-turbo")])
-		response1 = await router.acompletion(model="openai-gpt-3.5-turbo", messages=messages, temperature=1)
+				caching_groups=[("openai-gpt-4o-mini", "azure-gpt-4o-mini")])
+		response1 = await router.acompletion(model="openai-gpt-4o-mini", messages=messages, temperature=1)
 		print(f"response1: {response1}")
 		await asyncio.sleep(1) # add cache is async, async sleep for cache to get set
-		response2 = await router.acompletion(model="azure-gpt-3.5-turbo", messages=messages, temperature=1)
+		response2 = await router.acompletion(model="azure-gpt-4o-mini", messages=messages, temperature=1)
 		assert response1.id == response2.id
 		assert len(response1.choices[0].message.content) > 0
 		assert response1.choices[0].message.content == response2.choices[0].message.content
@@ -1964,9 +1964,9 @@ import asyncio
 router = Router(
 	model_list=[
 		{
-			"model_name": "gpt-3.5-turbo",
+			"model_name": "gpt-4o-mini",
 			"litellm_params": {
-				"model": "gpt-3.5-turbo",
+				"model": "gpt-4o-mini",
 				"api_key": "bad_key",
 			},
 		}
@@ -1983,7 +1983,7 @@ async def main():
 	
 	try:
 		await router.acompletion(
-			model="gpt-3.5-turbo",
+			model="gpt-4o-mini",
 			messages=[{"role": "user", "content": "Hey, how's it going?"}],
 		)
 	except Exception as e:
@@ -2068,7 +2068,7 @@ You can also set default params for litellm completion/embedding calls. Here's h
 ```python 
 from litellm import Router
 
-fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}
+fallback_dict = {"gpt-4o-mini": "gpt-4o"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})
@@ -2077,7 +2077,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -2121,7 +2121,7 @@ router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 
 # router completion call
 response = router.completion(
-	model="gpt-3.5-turbo", 
+	model="gpt-4o-mini", 
 	messages=[{ "role": "user", "content": "Hi who are you"}]
 )
 ```

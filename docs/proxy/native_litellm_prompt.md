@@ -22,7 +22,7 @@ Create `prompts/hello.prompt`:
 
 ```yaml nolint
 ---
-model: gpt-4
+model: gpt-4o
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -39,7 +39,7 @@ import litellm
 litellm.global_prompt_directory = "prompts/"
 
 response = litellm.completion(
-    model="dotprompt/gpt-4",
+    model="dotprompt/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -54,7 +54,7 @@ Create `prompts/hello.prompt` in your BitBucket repository:
 
 ```yaml nolint
 ---
-model: gpt-4
+model: gpt-4o
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -83,7 +83,7 @@ litellm.set_global_bitbucket_config(bitbucket_config)
 
 ```python
 response = litellm.completion(
-    model="bitbucket/gpt-4",
+    model="bitbucket/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -98,7 +98,7 @@ Create `prompts/hello.prompt` in your gitlab repository:
 
 ```yaml nolint
 ---
-model: gpt-4
+model: gpt-4o
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -127,7 +127,7 @@ litellm.set_global_gitlab_config(gitlab_config)
 
 ```python
 response = litellm.completion(
-    model="gitlab/gpt-4",
+    model="gitlab/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -143,7 +143,7 @@ Create `prompts/hello.prompt`:
 
 ```yaml nolint
 ---
-model: gpt-4
+model: gpt-4o
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -157,7 +157,7 @@ User: {{user_message}}
 model_list:
   - model_name: my-dotprompt-model
     litellm_params:
-      model: dotprompt/gpt-4
+      model: dotprompt/gpt-4o
       prompt_id: "hello"
       api_key: os.environ/OPENAI_API_KEY
 
@@ -207,7 +207,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```yaml nolint
 ---
-model: gpt-4                    # Model to use
+model: gpt-4o                    # Model to use
 temperature: 0.7                # Optional parameters
 max_tokens: 1000
 input:
@@ -225,7 +225,7 @@ User: {{user_message}}
 
 ```yaml nolint
 ---
-model: gpt-4
+model: gpt-4o
 temperature: 0.3
 ---
 System: You are a helpful coding assistant.
@@ -251,14 +251,14 @@ For prompt integrations, use these parameters:
 
 **File System (dotprompt):**
 ```
-model: dotprompt/<base_model>     # required (e.g., dotprompt/gpt-4)
+model: dotprompt/<base_model>     # required (e.g., dotprompt/gpt-4o)
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 ```
 
 **BitBucket:**
 ```
-model: bitbucket/<base_model>     # required (e.g., bitbucket/gpt-4)
+model: bitbucket/<base_model>     # required (e.g., bitbucket/gpt-4o)
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 bitbucket_config: Optional[dict]  # optional - BitBucket configuration (if not set globally)
@@ -266,7 +266,7 @@ bitbucket_config: Optional[dict]  # optional - BitBucket configuration (if not s
 
 **Gitlab:**
 ```
-model: gitlab/<base_model>        # required (e.g., gitlab/gpt-4)
+model: gitlab/<base_model>        # required (e.g., gitlab/gpt-4o)
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 gitlab_config: Optional[dict]     # optional - Gitlab configuration (if not set globally)
@@ -277,7 +277,7 @@ gitlab_config: Optional[dict]     # optional - Gitlab configuration (if not set 
 ```python
 # File system integration
 response = litellm.completion(
-    model="dotprompt/gpt-4",
+    model="dotprompt/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     messages=[{"role": "user", "content": "This will be ignored"}]
@@ -285,7 +285,7 @@ response = litellm.completion(
 
 # BitBucket integration
 response = litellm.completion(
-    model="bitbucket/gpt-4",
+    model="bitbucket/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     bitbucket_config={
@@ -297,7 +297,7 @@ response = litellm.completion(
 
 # Gitlab integration
 response = litellm.completion(
-    model="gitlab/gpt-4",
+    model="gitlab/gpt-4o",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     gitlab_config={

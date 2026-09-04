@@ -26,7 +26,7 @@ model_list:
 
   - model_name: claude-sonnet
     litellm_params:
-      model: "anthropic/claude-3-5-sonnet-20241022"
+      model: "anthropic/claude-sonnet-4-5"
       api_key: "os.environ/ANTHROPIC_API_KEY"
 
   - model_name: gemini-pro
@@ -77,7 +77,7 @@ agent = Agent(
     name="Assistant",
     instructions="You are a helpful assistant.",
     model=LitellmModel(
-        model="anthropic/claude-3-5-sonnet-20241022",
+        model="anthropic/claude-sonnet-4-5",
         api_key="your-anthropic-key"
     )
 )

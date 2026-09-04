@@ -119,7 +119,7 @@ curl http://0.0.0.0:4000/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-Nb5eCf427iewOlbxXIH4Ow" \
 -d '{
-  "model": "openai/gpt-4",
+  "model": "openai/gpt-4o",
   "messages": [
     {
       "role": "user",
@@ -206,7 +206,7 @@ Set `alert_to_webhook_url` on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -240,7 +240,7 @@ Provide multiple slack channels for a given alert type
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -278,7 +278,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]

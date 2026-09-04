@@ -74,13 +74,13 @@ You can override [our model cost map](https://github.com/BerriAI/litellm/blob/ma
 
 Just add a `model_info` key to your model in the config, and override the desired keys.
 
-Example: Override Anthropic's model cost map for the `prod/claude-3-5-sonnet-20241022` model.
+Example: Override Anthropic's model cost map for the `prod/claude-sonnet-4-5` model.
 
 ```yaml
 model_list:
-  - model_name: "prod/claude-3-5-sonnet-20241022"
+  - model_name: "prod/claude-sonnet-4-5"
     litellm_params:
-      model: "anthropic/claude-3-5-sonnet-20241022"
+      model: "anthropic/claude-sonnet-4-5"
       api_key: os.environ/ANTHROPIC_PROD_API_KEY
     model_info:
       input_cost_per_token: 0.000006
@@ -144,9 +144,9 @@ model_list:
       output_cost_per_token: 0  # 👈 Explicitly set to 0
   
   # Paid cloud model - budget checks apply
-  - model_name: gpt-4
+  - model_name: gpt-4o
     litellm_params:
-      model: gpt-4
+      model: gpt-4o
       api_key: os.environ/OPENAI_API_KEY
     # No model_info - uses default pricing from cost map
 ```
@@ -155,9 +155,9 @@ model_list:
 
 With the above configuration:
 
-- **User over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
-- **Team over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
-- **End-user over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
+- **User over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4o` ❌
+- **Team over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4o` ❌
+- **End-user over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4o` ❌
 
 This ensures your free/on-premises models remain accessible regardless of budget constraints, while paid models are still properly governed.
 

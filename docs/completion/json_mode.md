@@ -73,7 +73,7 @@ This is used to check if you can pass
 ```python
 from litellm import supports_response_schema
 
-assert supports_response_schema(model="gemini-1.5-pro-preview-0215", custom_llm_provider="bedrock")
+assert supports_response_schema(model="gemini-2.5-pro", custom_llm_provider="bedrock")
 ```
 
 Check out [model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) for a full list of models and their support for `response_schema`.
@@ -270,7 +270,7 @@ class CalendarEvent(BaseModel):
   participants: list[str]
 
 resp = completion(
-    model="gemini/gemini-1.5-pro",
+    model="gemini/gemini-2.5-pro",
     messages=messages,
     response_format=CalendarEvent,
 )
@@ -283,9 +283,9 @@ print("Received={}".format(resp))
 1. Create config.yaml
 ```yaml
 model_list:
-  - model_name: "gemini-1.5-flash"
+  - model_name: "gemini-2.5-flash"
     litellm_params:
-      model: "gemini/gemini-1.5-flash"
+      model: "gemini/gemini-2.5-flash"
       api_key: os.environ/GEMINI_API_KEY
 
 litellm_settings:
@@ -305,7 +305,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gemini-1.5-flash",
+    "model": "gemini-2.5-flash",
     "messages": [
         {"role": "system", "content": "Extract the event information."},
         {"role": "user", "content": "Alice and Bob are going to a science fair on Friday."},

@@ -12,9 +12,9 @@ Set your guardrails under the `guardrails` section
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -160,7 +160,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -199,7 +199,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -235,7 +235,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ]
@@ -269,7 +269,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -347,7 +347,7 @@ Add selected guardrails to your chat completion request:
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [{"role": "user", "content": "your message"}],
     "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
   }'
@@ -362,7 +362,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -393,7 +393,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages = [
         {
             "role": "user",
@@ -423,7 +423,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -508,7 +508,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-jNm1Zar7XfNdZXp49Z1kSQ' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [
         {
         "role": "user",
@@ -530,9 +530,9 @@ Both `default` and tag values can be a single mode string or a list of modes.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: gpt-3.5-turbo
+      model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -552,9 +552,9 @@ guardrails:
 
 ```yaml
 Per guardrailmodel_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: gpt-3.5-turbo
+      model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -574,9 +574,9 @@ guardrails:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-      model: gpt-3.5-turbo
+      model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -651,7 +651,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer $LITELLM_VIRTUAL_KEY' \
 --data '{
-"model": "gpt-3.5-turbo",
+"model": "gpt-4o-mini",
     "messages": [
       {
         "role": "user",

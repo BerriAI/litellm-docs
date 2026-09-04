@@ -56,7 +56,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_auth.py`, t
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "gpt-4o-mini"
 
 litellm_settings:
   drop_params: True
@@ -185,7 +185,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -d '{
     "team_id": "eng-team",
     "max_budget": 100,
-    "models": ["gpt-4o-mini", "claude-3-haiku"]
+    "models": ["gpt-4o-mini", "claude-sonnet-4-5"]
   }'
 ```
 
@@ -198,8 +198,8 @@ For project per-model rate limits, set `model_tpm_limit` / `model_rpm_limit` on 
 
 ```python
 # On the project record (via /project/new or the UI):
-#   model_tpm_limit = {"gpt-4o": 100000, "claude-3-haiku": 50000}
-#   model_rpm_limit = {"gpt-4o": 100,    "claude-3-haiku": 200}
+#   model_tpm_limit = {"gpt-4o": 100000, "claude-sonnet-4-5": 50000}
+#   model_rpm_limit = {"gpt-4o": 100,    "claude-sonnet-4-5": 200}
 ```
 
 :::note
@@ -290,7 +290,7 @@ Key change set `mode: auto`. This will check both litellm api key auth + custom 
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "gpt-4o-mini"
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:

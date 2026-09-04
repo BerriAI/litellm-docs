@@ -58,9 +58,9 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"  # For OpenAI models
 os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"  # For Claude models
 
 # Define model constants for cleaner code
-MODEL_GEMINI_PRO = "gemini-1.5-pro"
+MODEL_GEMINI_PRO = "gemini-2.5-pro"
 MODEL_GPT_4O = "openai/gpt-4o"
-MODEL_CLAUDE_SONNET = "anthropic/claude-3-sonnet-20240229"
+MODEL_CLAUDE_SONNET = "anthropic/claude-sonnet-4-5"
 ```
 
 ## 2. Define a Simple Tool

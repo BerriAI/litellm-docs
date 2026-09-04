@@ -36,7 +36,7 @@ litellm.api_base = "https://my-proxy.example.com"
 
 # All requests now include Authorization headers automatically
 response = litellm.completion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -64,7 +64,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -93,7 +93,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```

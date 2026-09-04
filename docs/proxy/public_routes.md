@@ -72,7 +72,7 @@ curl --request POST \
   --url 'http://localhost:4000/spend/calculate' \
   --header 'Content-Type: application/json' \
   --data '{
-    "model": "gpt-4",
+    "model": "gpt-4o",
     "messages": [{"role": "user", "content": "Hey, how'\''s it going?"}]
   }'
 ```

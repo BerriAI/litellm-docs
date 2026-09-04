@@ -206,7 +206,7 @@ model_list:
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/gpt-4
+      model: azure/gpt-4o
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"

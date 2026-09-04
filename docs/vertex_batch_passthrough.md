@@ -26,9 +26,9 @@ LiteLLM supports Vertex AI batch prediction jobs through passthrough endpoints, 
 
 ```yaml
 model_list:
-  - model_name: gemini-1.5-flash
+  - model_name: gemini-2.5-flash
     litellm_params:
-      model: vertex_ai/gemini-1.5-flash
+      model: vertex_ai/gemini-2.5-flash
       vertex_project: your-project-id
       vertex_location: us-central1
       vertex_credentials: path/to/service-account.json
@@ -42,7 +42,7 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
   -H "Content-Type: application/json" \
   -d '{
     "displayName": "my-batch-job",
-    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-1.5-flash",
+    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-2.5-flash",
     "inputConfig": {
       "gcsSource": {
         "uris": ["gs://my-bucket/input.jsonl"]
@@ -69,8 +69,8 @@ curl -X GET "http://localhost:4000/v1/projects/your-project/locations/us-central
 
 When configuring models for batch operations, use these naming conventions:
 
-- **`model_name`**: Base model name (e.g., `gemini-1.5-flash`)
-- **`model`**: Full LiteLLM identifier (e.g., `vertex_ai/gemini-1.5-flash`)
+- **`model_name`**: Base model name (e.g., `gemini-2.5-flash`)
+- **`model`**: Full LiteLLM identifier (e.g., `vertex_ai/gemini-2.5-flash`)
 
 ## Supported Models
 
@@ -89,7 +89,7 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
   -H "Content-Type: application/json" \
   -d '{
     "displayName": "advanced-batch-job",
-    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-1.5-pro",
+    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-2.5-pro",
     "inputConfig": {
       "gcsSource": {
         "uris": ["gs://my-bucket/advanced-input.jsonl"]

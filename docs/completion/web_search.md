@@ -107,9 +107,9 @@ model_list:
       api_key: os.environ/XAI_API_KEY
 
   # Anthropic
-  - model_name: claude-3-5-sonnet-latest
+  - model_name: claude-sonnet-4-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # VertexAI
@@ -210,7 +210,7 @@ from litellm import completion
 
 # Customize search context size for Anthropic
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/claude-sonnet-4-5",
     messages=[
         {
             "role": "user",
@@ -495,7 +495,7 @@ assert litellm.supports_web_search(model="openai/gpt-4o-search-preview") == True
 assert litellm.supports_web_search(model="xai/grok-3") == True
 
 # Check Anthropic models
-assert litellm.supports_web_search(model="anthropic/claude-3-5-sonnet-latest") == True
+assert litellm.supports_web_search(model="anthropic/claude-sonnet-4-5") == True
 
 # Check VertexAI models
 assert litellm.supports_web_search(model="gemini-2.0-flash") == True
@@ -535,9 +535,9 @@ model_list:
       supports_web_search: True
   
   # Anthropic
-  - model_name: claude-3-5-sonnet-latest
+  - model_name: claude-sonnet-4-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
     model_info:
       supports_web_search: True

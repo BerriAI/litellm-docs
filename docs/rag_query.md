@@ -221,7 +221,7 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
     -H "Authorization: Bearer sk-1234" \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+        "model": "bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
         "messages": [{"role": "user", "content": "What is LiteLLM?"}],
         "retrieval_config": {
             "vector_store_id": "KNOWLEDGE_BASE_ID",
@@ -238,7 +238,7 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
     -H "Authorization: Bearer sk-1234" \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "vertex_ai/gemini-1.5-pro",
+        "model": "vertex_ai/gemini-2.5-pro",
         "messages": [{"role": "user", "content": "What is LiteLLM?"}],
         "retrieval_config": {
             "vector_store_id": "your-corpus-id",

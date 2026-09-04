@@ -42,7 +42,7 @@ import os
 
 os.environ['GEMINI_API_KEY'] = ""
 response = completion(
-    model="gemini/gemini-pro", 
+    model="gemini/gemini-2.5-flash", 
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}]
 )
 ```
@@ -560,7 +560,7 @@ response_schema = {
 
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/gemini-2.5-pro", 
     messages=messages, 
     response_format={"type": "json_object", "response_schema": response_schema} # 👈 KEY CHANGE
     )
@@ -574,9 +574,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -593,7 +593,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "gemini-2.5-pro",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -627,7 +627,7 @@ To validate the response_schema, set `enforce_validation: true`.
 from litellm import completion, JSONSchemaValidationError
 try: 
 	completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/gemini-2.5-pro", 
     messages=messages, 
     response_format={
         "type": "json_object", 
@@ -645,9 +645,9 @@ except JSONSchemaValidationError as e:
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -664,7 +664,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "gemini-2.5-pro",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -721,7 +721,7 @@ messages = [
 ]
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/gemini-2.5-pro", 
     messages=messages, 
     topK=1 # 👈 KEY CHANGE
 )
@@ -735,9 +735,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -754,7 +754,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "gemini-2.5-pro",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -777,7 +777,7 @@ To validate the response_schema, set `enforce_validation: true`.
 from litellm import completion, JSONSchemaValidationError
 try: 
 	completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/gemini-2.5-pro", 
     messages=messages, 
     response_format={
         "type": "json_object", 
@@ -795,9 +795,9 @@ except JSONSchemaValidationError as e:
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -814,7 +814,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "gemini-2.5-pro",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -844,7 +844,7 @@ In certain use-cases you may need to make calls to the models and pass [safety s
 
 ```python
 response = completion(
-    model="gemini/gemini-pro", 
+    model="gemini/gemini-2.5-flash", 
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}],
     safety_settings=[
         {
@@ -898,7 +898,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/gemini-2.5-flash",
     messages=messages,
     tools=tools,
 )
@@ -1728,7 +1728,7 @@ messages = [
 
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/gemini-2.5-pro", 
     messages=messages, 
     response_format={"type": "json_object"} # 👈 KEY CHANGE
 )
@@ -1742,9 +1742,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1761,7 +1761,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "gemini-2.5-pro",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -2145,7 +2145,7 @@ litellm.set_verbose = True # 👈 See Raw call
 audio_bytes = Path("speech_vertex.mp3").read_bytes()
 encoded_data = base64.b64encode(audio_bytes).decode("utf-8")
 print("Audio Bytes = {}".format(audio_bytes))
-model = "gemini/gemini-1.5-flash"
+model = "gemini/gemini-2.5-flash"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2169,7 +2169,7 @@ response = litellm.completion(
 
 ```python
 # Initialize a Gemini model appropriate for your use case.
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+model = genai.GenerativeModel('models/gemini-2.5-flash')
 
 # Create the prompt.
 prompt = "Please summarize the audio."
@@ -2198,7 +2198,7 @@ os.environ["GEMINI_API_KEY"] = ""
 
 litellm.set_verbose = True # 👈 See Raw call 
 
-model = "gemini/gemini-1.5-flash"
+model = "gemini/gemini-2.5-flash"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2229,7 +2229,7 @@ os.environ["GEMINI_API_KEY"] = ""
 
 litellm.set_verbose = True # 👈 See Raw call 
 
-model = "gemini/gemini-1.5-flash"
+model = "gemini/gemini-2.5-flash"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2332,7 +2332,7 @@ You can now specify a custom Time-To-Live (TTL) for your cached content using th
 - The raw request to Gemini's `/generateContent` endpoint looks like this: 
 
 ```bash
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=$GOOGLE_API_KEY" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$GOOGLE_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
       "contents": [
@@ -2358,7 +2358,7 @@ from litellm import completion
 
 for _ in range(2): 
     resp = completion(
-        model="gemini/gemini-1.5-pro",
+        model="gemini/gemini-2.5-pro",
         messages=[
         # System Message
             {
@@ -2395,7 +2395,7 @@ from litellm import completion
 
 # Cache for 2 hours (7200 seconds)
 resp = completion(
-    model="gemini/gemini-1.5-pro",
+    model="gemini/gemini-2.5-pro",
     messages=[
         {
             "role": "system",
@@ -2436,9 +2436,9 @@ print(resp.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-1.5-pro
+    - model_name: gemini-2.5-pro
       litellm_params:
-        model: gemini/gemini-1.5-pro
+        model: gemini/gemini-2.5-pro
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -2459,7 +2459,7 @@ litellm --config /path/to/config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gemini-1.5-pro",
+    "model": "gemini-2.5-pro",
     "messages": [
         # System Message
             {
@@ -2492,7 +2492,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gemini-1.5-pro",
+    "model": "gemini-2.5-pro",
     "messages": [
         {
             "role": "system",
@@ -2535,7 +2535,7 @@ client = openai.AsyncOpenAI(
 
 
 response = await client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-pro",
     messages=[
         {
             "role": "system",
@@ -2567,7 +2567,7 @@ client = openai.AsyncOpenAI(
 )
 
 response = await client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-pro",
     messages=[
         {
             "role": "system",

@@ -279,7 +279,7 @@ LiteLLM Proxy Server supports two methods of authentication to Vertex AI:
 
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.5-flash-001:generateContent \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -d '{"contents":[{"role": "user", "parts":[{"text": "hi"}]}]}'
@@ -311,7 +311,7 @@ curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-cent
 ### Count Tokens API
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.5-flash-001:countTokens \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:countTokens \
   -H "Content-Type: application/json" \
   -H "x-litellm-api-key: Bearer sk-1234" \
   -d '{"contents":[{"role": "user", "parts":[{"text": "hi"}]}]}'
@@ -322,7 +322,7 @@ Create Fine Tuning Job
 
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-1.5-flash-001:tuningJobs \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:tuningJobs \
       -H "Content-Type: application/json" \
       -H "x-litellm-api-key: Bearer sk-1234" \
       -d '{
@@ -469,7 +469,7 @@ When using Anthropic models via Vertex AI passthrough (e.g., Claude on Vertex), 
 The `anthropic-beta` header is automatically forwarded to Vertex AI when calling Anthropic models.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "anthropic-beta: context-1m-2025-08-07" \
@@ -491,7 +491,7 @@ For example:
 This is useful when you need to send provider-specific headers that aren't in the default allowlist.
 
 ```bash
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet:rawPredict \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5:rawPredict \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "x-pass-anthropic-beta: context-1m-2025-08-07" \

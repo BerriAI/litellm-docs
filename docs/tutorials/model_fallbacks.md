@@ -24,7 +24,7 @@ os.environ["AZURE_API_KEY"] = ""
 os.environ["AZURE_API_BASE"] = ""
 os.environ["AZURE_API_VERSION"] = ""
 
-model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "chatgpt-test"]
+model_fallback_list = ["claude-sonnet-4-5", "gpt-4o-mini", "chatgpt-test"]
 
 user_message = "Hello, how are you?"
 messages = [{ "content": user_message,"role": "user"}]

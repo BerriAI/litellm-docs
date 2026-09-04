@@ -346,7 +346,7 @@ curl -X POST 'http://localhost:4000/{my_endpoint}' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer your-api-key' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["test"]
 }'

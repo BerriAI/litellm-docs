@@ -44,7 +44,7 @@ async def main():
 
     # Anthropic
     result = await litellm.acount_tokens(
-        model="anthropic/claude-3-5-sonnet-20241022",
+        model="anthropic/claude-sonnet-4-5",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
     print(f"Token count: {result.total_tokens}")
@@ -166,7 +166,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "claude-sonnet-4-5",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]
@@ -182,8 +182,8 @@ model_list:
       model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: claude-3-5-sonnet
+  - model_name: claude-sonnet-4-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/claude-sonnet-4-5
       api_key: os.environ/ANTHROPIC_API_KEY
 ```

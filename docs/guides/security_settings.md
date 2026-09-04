@@ -196,7 +196,7 @@ You can pass `ssl_verify` directly in the `completion` call.
 import litellm
 
 response = litellm.completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     messages=[{"role": "user", "content": "hi"}],
     ssl_verify="path/to/bedrock_cert.pem" # Or False to disable
 )
