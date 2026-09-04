@@ -514,6 +514,8 @@ This allows you to use different authentication for different MCP servers.
 - `x-mcp-zapier-x-api-key: sk-xxxxxxxxx` - Zapier MCP server with API key
 - `x-mcp-deepwiki-authorization: Basic base64_encoded_creds` - DeepWiki MCP server with Basic auth
 
+If every server in an access group takes the same credential, send it once as `x-mcp-{access_group}-{header_name}` and LiteLLM forwards it to each server whose `access_groups` contains that group. A server-specific `x-mcp-{server_alias}-{header_name}` header still wins for that server, and servers outside the group never receive the group credential. When a server belongs to several groups and those groups carry different credentials, LiteLLM forwards none of them.
+
 ```python title="Python Client with Server-Specific Auth" showLineNumbers
 from fastmcp import Client
 import asyncio
@@ -822,6 +824,19 @@ You can specify MCP auth tokens using server-specific headers in the format `x-m
 - **Better security**: No need to share the same auth token across all servers
 - **Flexible header names**: Support for different auth header types (authorization, x-api-key, etc.)
 - **Clean separation**: Each server's auth is clearly identified
+
+### Group-Level Auth Headers
+
+When the servers in an access group share one credential, pass `x-mcp-{access_group}-{header_name}` once instead of repeating it per server. LiteLLM uses it as the default for every server whose `access_groups` includes that group. A server-specific `x-mcp-{server_alias}-{header_name}` header overrides it for that server, servers outside the group never receive it, and if a server is in several groups that carry different credentials none of them is forwarded. Server aliases and access group names share the `x-mcp-` header namespace, so a server whose alias equals a group name keeps receiving `x-mcp-{alias}-*` as its own credential; avoid naming a server after an access group it does not belong to.
+
+```bash title="cURL Example with Group-Level Auth" showLineNumbers
+curl -X POST http://localhost:4000/mcp/dev_group \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-mcp-dev_group-authorization: Bearer SHARED_TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
 
 ### Legacy Auth Header (Deprecated)
 
