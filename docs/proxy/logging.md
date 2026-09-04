@@ -1548,9 +1548,22 @@ AZURE_STORAGE_TENANT_ID="985efd7cxxxxxxxxxx" # The Application Tenant ID to use 
 AZURE_STORAGE_CLIENT_ID="abe66585xxxxxxxxxx" # The Application Client ID to use for Authentication
 AZURE_STORAGE_CLIENT_SECRET="uMS8Qxxxxxxxxxx" # The Application Client Secret to use for Authentication
 
+# Option 3: Use the identity the deployment already runs as
+# Leave the AZURE_STORAGE_* service principal variables unset. LiteLLM authenticates with
+# Workload Identity Federation or with a managed identity, and with nothing else: a developer
+# sign-in such as the Azure CLI is never used, and neither is the AZURE_CLIENT_SECRET service
+# principal you may have configured for Azure OpenAI. Assign Storage Blob Data Contributor to
+# the identity on the storage account, container, or resource group.
+# Workload Identity Federation reads AZURE_CLIENT_ID, AZURE_TENANT_ID and
+# AZURE_FEDERATED_TOKEN_FILE, which the AKS webhook injects into the pod. A user assigned
+# managed identity reads AZURE_CLIENT_ID. AZURE_AUTHORITY_HOST selects a sovereign cloud.
+# AZURE_CLIENT_ID names one identity for the whole proxy, so if the identity that holds Storage
+# Blob Data Contributor is not the one you use for Azure OpenAI, or if you authenticate with a
+# plain service principal rather than a federated or managed identity, use Option 2 instead
+
 # Sovereign Clouds (optional, defaults to the Azure commercial cloud)
 AZURE_STORAGE_ENDPOINT_SUFFIX="core.usgovcloudapi.net" # The storage endpoint suffix to use. Defaults to core.windows.net
-AZURE_AUTHORITY_HOST="https://login.microsoftonline.us" # The Entra ID login authority to use. Only needed with Option 2
+AZURE_AUTHORITY_HOST="https://login.microsoftonline.us" # The Entra ID login authority to use. Needed with Option 2 and Option 3
 ```
 
 3. Start Proxy
