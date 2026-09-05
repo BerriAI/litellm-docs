@@ -56,6 +56,23 @@ Here's the full specification with all available fields:
 }
 ```
 
+### Batch pricing keys
+
+Batch API lines bill from the `*_batches` keys when the entry carries them. An entry without them bills half its standard rate
+
+| Key | Bills |
+| --- | --- |
+| `input_cost_per_token_batches` | prompt tokens |
+| `output_cost_per_token_batches` | completion tokens |
+| `cache_read_input_token_cost_batches` | cached prompt tokens |
+| `cache_creation_input_token_cost_batches` | cache write tokens |
+| `input_cost_per_token_above_272k_tokens_batches` | prompt tokens, prompt over 272K |
+| `output_cost_per_token_above_272k_tokens_batches` | completion tokens, prompt over 272K |
+| `cache_read_input_token_cost_above_272k_tokens_batches` | cached prompt tokens, prompt over 272K |
+| `cache_creation_input_token_cost_above_272k_tokens_batches` | cache write tokens, prompt over 272K |
+
+The `above_272k` keys apply to a batch line whose prompt exceeds 272K tokens, the long-context threshold OpenAI prices from. Any tier key the entry leaves out falls back to that entry's flat `*_batches` rate for the same tokens
+
 ### Examples
 
 #### Anthropic Claude
