@@ -349,3 +349,80 @@ curl http://0.0.0.0:4000/rerank \
 
 </TabItem>
 </Tabs>
+
+## Parse (OCR)
+
+[Cohere Parse](https://docs.cohere.com/reference/parse) turns a document image into markdown. LiteLLM serves it through the [`/ocr` endpoint](../ocr), so requests and responses use the same shape as every other OCR provider and each call is cost tracked per billed page.
+
+Parse accepts `image_url` documents only: an image URL or a base64 `data:image/...` URI. PDFs and `document_url` inputs are rejected with a 400 before anything is sent to Cohere.
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM SDK Usage">
+
+```python showLineNumbers
+import os
+from litellm import ocr
+
+os.environ["COHERE_API_KEY"] = ""
+
+response = ocr(
+    model="cohere/parse-v5.0",
+    document={
+        "type": "image_url",
+        "image_url": "https://raw.githubusercontent.com/mistralai/cookbook/refs/heads/main/mistral/ocr/receipt.png",
+    },
+)
+
+for page in response.pages:
+    print(page.markdown)
+print(response.usage_info.pages_processed)
+```
+</TabItem>
+
+<TabItem value="proxy" label="LiteLLM Proxy Usage">
+
+**Setup**
+
+Add this to your litellm proxy config.yaml
+
+```yaml
+model_list:
+  - model_name: cohere-parse
+    litellm_params:
+      model: cohere/parse-v5.0
+      api_key: os.environ/COHERE_API_KEY
+```
+
+Start litellm
+
+```bash
+litellm --config /path/to/config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+Test request
+
+```bash
+curl http://0.0.0.0:4000/v1/ocr \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "cohere-parse",
+    "document": {
+      "type": "image_url",
+      "image_url": "https://raw.githubusercontent.com/mistralai/cookbook/refs/heads/main/mistral/ocr/receipt.png"
+    }
+  }'
+```
+</TabItem>
+</Tabs>
+
+### Supported Parameters
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `output_format` | `markdown` (default), `blocks` | Cohere's output layout. With `blocks`, each page carries Cohere's `blocks` array and `markdown` is empty |
+| `req_format` | `litellm` (default), `native` | `native` returns Cohere's own response body instead of the LiteLLM OCR shape |
+
+Cohere Parse deployed on Azure AI Foundry is covered in [Azure AI OCR](./azure_ocr#cohere-parse).
