@@ -445,7 +445,13 @@ This protection requires the proxy layer. A direct SDK `Router` call that bypass
 
 Tag-based routing infers "is this tag meant for routing" by checking whether some deployment's literal tag string happens to match. That heuristic is usually right, but a caller-invented `&`/`!` tag that matches nothing is treated as suspicious noise and can block `allow_fail_open`'s fallback (see above) even when the caller genuinely wanted an honest, if unsatisfiable, request. Configure `router_settings.tag_routing_prefix` to let a caller mark specific tags as trusted, unambiguous routing directives, removing that ambiguity entirely for the tags that use it.
 
-Any request tag starting with the configured prefix is stripped of the prefix and matched using the usual `!`/`&`/plain-tag logic, with no vocabulary check needed since the caller already declared routing intent explicitly. An unprefixed tag keeps going through today's existing handling unchanged, so adopting the prefix requires no migration.
+Any request tag starting with the configured prefix is stripped of the prefix and matched using the usual `!`/`&`/plain-tag logic, with no vocabulary check needed since the caller already declared routing intent explicitly. Once the prefix is configured, an unprefixed tag is a complete no-op: it is never matched, required, or excluded, and can never cause `no_deployments_with_tag_routing`. Key/team/project policy tags (`metadata.inherited_tags`) are the one exception; they are not caller-controlled, so they keep applying regardless of prefix (see [Fail-Open Fallback](#fail-open-fallback-allow_fail_open)).
+
+:::caution
+
+Configuring `tag_routing_prefix` on a model group that already relies on plain, unprefixed tags for routing stops that routing immediately. Migrate every caller to prefix their routing tags at the same time you turn this on, or their requests fall through to the default-tagged pool (or the full unfiltered set, if there is no default pool) instead of the deployment their tag used to select.
+
+:::
 
 ### Quick example
 
@@ -517,7 +523,7 @@ curl http://localhost:4000/v1/chat/completions \
 | Default | `""`. `str.startswith("")` matches every string, so the mechanism is a full no-op until configured |
 | Matching | Exact literal prefix, no delimiter auto-appended. Configure a trailing delimiter yourself (e.g. `"route:"`, not `"route"`) — a prefix with no delimiter can coincidentally match an unrelated tag that happens to start with the same characters |
 | Stripping order | The prefix is stripped first, before `!`/`&` parsing, so `route:!provider:x` and `route:&provider:x` both work |
-| Unprefixed tags | Keep going through today's existing handling unchanged: the known-tag-vocabulary heuristic for plain tags, and the unknown-tag fail-open guard for `!`/`&` tags |
+| Unprefixed tags | A complete no-op once the prefix is configured: never matched, required, or excluded, and never a cause of `no_deployments_with_tag_routing`. `metadata.inherited_tags` (key/team/project policy) is exempt and keeps applying regardless of prefix |
 | Interaction with fail-open | A prefixed `&`/`!` tag counts as known to `allow_fail_open`'s unknown-tag guard regardless of deployment tag vocabulary |
 
 ## Per-Model-Group Tag Filtering (`enable_tag_filtering`)
