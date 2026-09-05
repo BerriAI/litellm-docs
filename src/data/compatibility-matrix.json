@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-31T06:14:29Z",
-  "litellm_version": "v1.98.0",
+  "generated_at": "2026-09-05T06:41:15Z",
+  "litellm_version": "v1.99.1",
   "claude_code_version": "2.1.228",
   "providers": [
     "anthropic",
@@ -22,7 +22,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -43,7 +44,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -64,7 +66,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -85,7 +88,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -106,7 +110,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -127,7 +132,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -148,7 +154,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -169,7 +176,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -190,7 +198,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -211,7 +220,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -232,7 +242,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -253,7 +264,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -295,7 +307,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] tool_search probe failed: status 500: {\"error\":{\"message\":\"litellm.APIConnectionError: 'NoneType' object has no attribute 'access_key'\\nTraceback (most recent call last):\\n  File \\\"/home/mateo/litellm-cron-worktree/litellm/main.py\\\", line 5735, in completion\\n    response = _complete_bedrock(_dispatch_ctx)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/mateo/litellm-cron-worktree/litellm/main.py\\\", line 4006, in _com"
         },
         "vertex_ai": {
           "status": "pass"
@@ -316,7 +329,8 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; api_status=500; text=API Error: 500 litellm.APIConnectionError: 'NoneType' object has no attribute 'access_key'\nTraceback (most recent call last):\n  File \"/home/mateo/litellm-cron-worktree/litellm/main.py\", line 5735, in completion\n    response = _complete_bedrock(_dispatch_ctx)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/mateo/litellm-cron-worktree/litellm/main.py\", line 4006, in _complete_bedrock\n    response = bedrock_converse_chat_completion.completion(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/mateo/litellm-cron-worktree/litellm/llms/bedrock/chat/converse_handler.py\", line 377, in completion\n    (\"aws_access_key_id\", credentials.access_key),\n                          ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'access_key'\n. R...(truncated); stderr=\u26a0 claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login \u00b7 Unset it to load your organization's connectors"
         },
         "vertex_ai": {
           "status": "pass"
