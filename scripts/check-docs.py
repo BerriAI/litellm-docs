@@ -16,6 +16,7 @@ Every check here is deterministic and fails the build:
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
   model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
+  model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
@@ -29,6 +30,9 @@ substitution before parsing a block, and the model-literal rule fails a block
 that writes the current id itself, because that block would not follow the
 next bump. Add `keep-model-ids` to the fence line when the exact id is the
 point of the block (a price map key, a cache key, a printed log).
+A placeholder that looks like a role but is not one (a typo, or a role removed
+from docs-models.json) fails model-role-unknown, since the build would print it
+as written.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -45,8 +49,6 @@ try:
 except ImportError:  # pragma: no cover
     print("PyYAML is required: pip install pyyaml", file=sys.stderr)
     sys.exit(2)
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS_ROOT = os.path.join(REPO_ROOT, "docs")
@@ -291,6 +293,10 @@ def check_page(page, site, page_cache):
     if page.unclosed_fence_line:
         err("fence-unclosed", page.unclosed_fence_line, "code fence is never closed")
 
+    for line_no, raw in enumerate(page.lines, 1):
+        for name in unknown_model_roles(raw):
+            err("model-role-unknown", line_no, f"unknown model placeholder `{{{{{name}}}}}`; docs-models.json defines {', '.join(sorted(ROLE_TO_ID))}")
+
     for lang, meta, start, buf in page.blocks:
         unknown_meta = [t for t in split_meta(meta) if not is_known_meta(t)]
         if unknown_meta:
@@ -422,6 +428,17 @@ ROLE_TO_ID = {role: model_id for model_id, role in MODEL_ROLES.items()}
 def substitute_models(text):
     """Fill {{role}} placeholders the way the site build does; other {{tokens}} are left alone."""
     return MODEL_TOKEN_RE.sub(lambda m: ROLE_TO_ID.get(m.group(1), m.group(0)), text)
+
+
+ROLE_PREFIXES = frozenset(role.split("_", 1)[0] for role in ROLE_TO_ID)
+
+
+def unknown_model_roles(text):
+    return [
+        m.group(1)
+        for m in MODEL_TOKEN_RE.finditer(text)
+        if m.group(1) not in ROLE_TO_ID and m.group(1).split("_", 1)[0] in ROLE_PREFIXES
+    ]
 
 
 def split_meta(meta):
