@@ -1376,6 +1376,7 @@ const sidebars = {
       items: [
         "troubleshoot/ui_issues",
         "troubleshoot/cost_discrepancy",
+        "troubleshoot/missing_model",
         "mcp_troubleshoot",
         {
           type: "category",

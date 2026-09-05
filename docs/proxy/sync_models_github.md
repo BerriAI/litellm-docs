@@ -44,6 +44,8 @@ curl -X POST "https://your-proxy-url/schedule/model_cost_map_reload?hours=6" \
 
 **Authentication:** Requires admin role or master key
 
+If a reload succeeds but a newly added model still does not show up, work through [Model missing after Reload Price Data](../troubleshoot/missing_model) before changing anything on the deployment.
+
 ## Python Example
 
 ```python
