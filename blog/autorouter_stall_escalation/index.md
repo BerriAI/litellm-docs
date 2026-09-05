@@ -27,7 +27,9 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
-The router classifies each turn on how the newest message reads, and that misses one case: a cheap model stuck mid-task, calling the same tool with the same arguments three times, or hitting the same error over and over, while the newest message still reads as a harmless follow-up like "can you try a different approach?" Read on its own, that turn classifies SIMPLE every time, so the router sends it right back to the model that was already failing.
+The classifier scores the human ask. An agent client resends the whole conversation every turn, and the router pulls the last real human ask out of it; the tool calls underneath are not part of what gets scored.
+
+That works until a cheap model gets stuck. The agent calls the same tool with the same arguments three times, or the same call keeps erroring, and the human ask sitting above all of it hasn't changed since the task started. Turn one and turn fifteen hand the classifier the same string, so a deterministic classifier returns the same tier, and the task goes back to the model that is failing it. The part of the conversation that was changing was the part nothing looked at.
 
 `stall_escalation_enabled: true` gives the router that judgment on its own.
 
