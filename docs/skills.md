@@ -169,7 +169,7 @@ Define multiple models in your config and use the `model` parameter to specify w
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -249,12 +249,12 @@ If you have multiple Anthropic accounts, you can use model-based routing to spec
 model_list:
   - model_name: claude-team-a
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY_TEAM_A
   
   - model_name: claude-team-b
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY_TEAM_B
 ```
 

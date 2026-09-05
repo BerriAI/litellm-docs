@@ -56,7 +56,7 @@ $ litellm --model openai/<model_name> --api_base <your-api-base>
 
 ```shell
 $ export HUGGINGFACE_API_KEY=my-api-key #[OPTIONAL]
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -64,7 +64,7 @@ $ litellm --model claude-instant-1
 
 ```shell
 $ export ANTHROPIC_API_KEY=my-api-key
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -148,7 +148,7 @@ openai.api_key = "any-string-here"
 openai.api_base = "http://0.0.0.0:4000" # your proxy url
 
 # call openai
-response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hey"}])
+response = openai.ChatCompletion.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hey"}])
 
 print(response)
 
@@ -409,8 +409,8 @@ import openai
 openai.api_key = "any-string-here"
 openai.api_base = "http://0.0.0.0:4000" # your proxy url
 
-# call gpt-3.5-turbo
-response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hey"}])
+# call {{openai_small}}
+response = openai.ChatCompletion.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hey"}])
 
 print(response)
 
@@ -639,7 +639,7 @@ import guidance
 
 # set api_base to your proxy
 # set api_key to anything
-gpt4 = guidance.llms.OpenAI("gpt-4", api_base="http://0.0.0.0:4000", api_key="anything")
+gpt4 = guidance.llms.OpenAI("{{openai_large}}", api_base="http://0.0.0.0:4000", api_key="anything")
 
 experts = guidance('''
 {{#system~}}

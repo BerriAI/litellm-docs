@@ -44,7 +44,7 @@ Claude uses natural language queries to search for tools using the BM25 algorith
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What is the weather in San Francisco?"}
     ],
@@ -86,7 +86,7 @@ print(response.choices[0].message.content)
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Search for Python files containing 'authentication'"}
     ],
@@ -123,7 +123,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="azure_anthropic/claude-sonnet-4-5",
+    model="azure_anthropic/{{anthropic}}",
     api_base="https://<your-resource>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[
@@ -159,7 +159,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="vertex_ai/claude-sonnet-4-5",
+    model="vertex_ai/{{anthropic}}",
     vertex_project="your-project-id",
     vertex_location="us-central1",
     messages=[
@@ -181,7 +181,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Get the weather"}
     ],
@@ -224,7 +224,7 @@ Tool search works automatically through the LiteLLM proxy.
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5-20250929
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -279,7 +279,7 @@ The Messages API provides native Anthropic-style tool search support via the `li
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="anthropic/claude-sonnet-4-20250514",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -320,7 +320,7 @@ print(response)
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="azure_anthropic/claude-sonnet-4-20250514",
+    model="azure_anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -359,7 +359,7 @@ response = await litellm.anthropic.messages.acreate(
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="vertex_ai/claude-sonnet-4@20250514",
+    model="vertex_ai/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -398,7 +398,7 @@ response = await litellm.anthropic.messages.acreate(
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="bedrock/invoke/anthropic.claude-opus-4-20250514-v1:0",
+    model="bedrock/invoke/anthropic.{{anthropic_large}}",
     messages=[
         {
             "role": "user",
@@ -435,7 +435,7 @@ import litellm
 import json
 
 response = await litellm.anthropic.messages.acreate(
-    model="anthropic/claude-sonnet-4-20250514",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -487,7 +487,7 @@ Configure the proxy to use Messages API endpoints.
 model_list:
   - model_name: claude-sonnet-messages
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 

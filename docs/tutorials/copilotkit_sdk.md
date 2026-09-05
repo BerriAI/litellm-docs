@@ -14,9 +14,9 @@ Use CopilotKit SDK with any LLM provider through LiteLLM Proxy.
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: "anthropic/claude-sonnet-4-5-20250514-v1:0"
+      model: "anthropic/{{anthropic}}"
       api_key: "os.environ/ANTHROPIC_API_KEY"
 ```
 
@@ -37,7 +37,7 @@ import {
 } from "@copilotkit/runtime";
 import { NextRequest } from "next/server";
 
-const model = "claude-sonnet-4-5";
+const model = "{{anthropic}}";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "sk-12345",

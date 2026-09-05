@@ -13,7 +13,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "prompt_id": "my-responses-prompt",
     "prompt_variables": {"topic": "large language models"},
     "input": []
@@ -29,7 +29,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "prompt_id": "my-responses-prompt",
     "prompt_variables": {"topic": "large language models"},
     "input": [

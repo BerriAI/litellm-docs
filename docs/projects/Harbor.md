@@ -10,7 +10,7 @@ uv add harbor
 # Run a benchmark with any LiteLLM-supported model
 harbor run --dataset terminal-bench@2.0 \
    --agent claude-code \
-   --model anthropic/claude-opus-4-1 \
+   --model anthropic/{{anthropic_large}} \
    --n-concurrent 4
 ```
 

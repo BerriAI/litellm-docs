@@ -94,7 +94,7 @@ messages = [{"role": "user", "content": "Fetch my last 5 unread emails and summa
 
 while True:
     response = litellm.completion(
-        model="anthropic/claude-sonnet-4-20250514",  # swap to any litellm-supported model
+        model="anthropic/{{anthropic}}",  # swap to any litellm-supported model
         tools=llm_tools,
         messages=messages,
     )
@@ -133,7 +133,7 @@ import scalekit.client
 from google.protobuf.json_format import MessageToDict
 
 # --- Configuration ---
-MODEL = os.getenv("MODEL", "anthropic/claude-sonnet-4-20250514")
+MODEL = os.getenv("MODEL", "anthropic/{{anthropic}}")
 CONNECTION_NAME = os.getenv("GMAIL_CONNECTION_NAME", "gmail")
 USER_ID = "user_123"
 
@@ -207,16 +207,16 @@ Switch models by changing the `MODEL` environment variable:
 
 ```bash
 # OpenAI
-MODEL=gpt-4o python scalekit_agent.py
+MODEL={{openai_large}} python scalekit_agent.py
 
 # Anthropic
-MODEL=anthropic/claude-sonnet-4-20250514 python scalekit_agent.py
+MODEL=anthropic/{{anthropic}} python scalekit_agent.py
 
 # AWS Bedrock
-MODEL=bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0 python scalekit_agent.py
+MODEL=bedrock/us.anthropic.{{anthropic}} python scalekit_agent.py
 
 # Via LiteLLM Proxy
-OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL=claude-sonnet-4 python scalekit_agent.py
+OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL={{anthropic}} python scalekit_agent.py
 ```
 
 ## Route Through LiteLLM Proxy for Cost Tracking and Rate Limits
@@ -228,7 +228,7 @@ import litellm
 
 # Point litellm at your proxy
 response = litellm.completion(
-    model="claude-sonnet-4",                          # model name from your proxy config
+    model="{{anthropic}}",                          # model name from your proxy config
     api_base="http://localhost:4000",                  # proxy URL
     api_key="sk-1234",                                 # proxy virtual key
     tools=llm_tools,

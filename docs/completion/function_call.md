@@ -5,8 +5,8 @@
 Use `litellm.supports_function_calling(model="")` -> returns `True` if model supports Function calling, `False` if not
 
 ```python
-assert litellm.supports_function_calling(model="gpt-3.5-turbo") == True
-assert litellm.supports_function_calling(model="azure/gpt-4-1106-preview") == True
+assert litellm.supports_function_calling(model="{{openai_small}}") == True
+assert litellm.supports_function_calling(model="azure/{{openai_large}}") == True
 assert litellm.supports_function_calling(model="palm/chat-bison") == False
 assert litellm.supports_function_calling(model="xai/grok-2-latest") == True
 assert litellm.supports_function_calling(model="ollama/llama2") == False
@@ -17,8 +17,8 @@ assert litellm.supports_function_calling(model="ollama/llama2") == False
 
 Use `litellm.supports_parallel_function_calling(model="")` -> returns `True` if model supports parallel function calling, `False` if not
 
-```python
-assert litellm.supports_parallel_function_calling(model="gpt-4-turbo-preview") == True
+```python keep-model-ids
+assert litellm.supports_parallel_function_calling(model="gpt-5.6-terra") == True
 assert litellm.supports_parallel_function_calling(model="gpt-4") == False
 ```
 ## Parallel Function calling
@@ -415,7 +415,7 @@ functions = [
     }
   ]
 
-response = completion(model="gpt-3.5-turbo-0613", messages=messages, functions=functions)
+response = completion(model="{{openai_small}}", messages=messages, functions=functions)
 print(response)
 ```
 
@@ -499,7 +499,7 @@ def get_current_weather(location: str, unit: str):
 
 functions = [litellm.utils.function_to_dict(get_current_weather)]
 
-response = completion(model="gpt-3.5-turbo-0613", messages=messages, functions=functions)
+response = completion(model="{{openai_small}}", messages=messages, functions=functions)
 print(response)
 ```
 

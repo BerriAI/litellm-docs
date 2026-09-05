@@ -36,7 +36,7 @@ litellm.api_base = "https://my-proxy.example.com"
 
 # All requests now include Authorization headers automatically
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -64,7 +64,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -93,7 +93,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -327,7 +327,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 
 # This request goes through the proxy with automatic JWT auth
 response = litellm.completion(
-    model="vertex_ai/gemini-2.0-flash-001",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```

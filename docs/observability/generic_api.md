@@ -6,9 +6,9 @@ Send LiteLLM logs to any HTTP endpoint.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -74,7 +74,7 @@ Logs are sent as `StandardLoggingPayload` [objects](https://docs.litellm.ai/docs
   {
     "id": "chatcmpl-123",
     "call_type": "litellm.completion",
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [...],
     "response": {...},
     "usage": {...},

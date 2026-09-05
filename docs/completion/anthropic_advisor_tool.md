@@ -30,7 +30,7 @@ When a request arrives with an `advisor_20260301` tool and a non-Anthropic provi
 
 ```mermaid
 flowchart TD
-    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/gpt-4.1-mini"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
+    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/{{openai_small}}"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
 
     B --> C["EXECUTOR CALL\nopenai / bedrock / vertex / etc."]
 
@@ -343,15 +343,15 @@ print(response)
 
 #### Non-Anthropic Provider (LiteLLM orchestration loop)
 
-```python showLineNumbers title="Advisor Tool with OpenAI executor"
+```python showLineNumbers title="Advisor Tool with OpenAI executor" keep-model-ids
 import asyncio
 import litellm
 
 async def main():
-    # executor: openai/gpt-4.1-mini  |  advisor: claude-opus-4-6
+    # executor: openai/gpt-5.6-luna  |  advisor: claude-opus-4-6
     # LiteLLM runs the orchestration loop automatically
     response = await litellm.anthropic.messages.acreate(
-        model="openai/gpt-4.1-mini",
+        model="openai/gpt-5.6-luna",
         messages=[
             {"role": "user", "content": "Implement a Python LRU cache with O(1) get and put."}
         ],

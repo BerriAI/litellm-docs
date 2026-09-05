@@ -32,19 +32,14 @@ Enable JWT auth in your proxy config:
 
 ```yaml
 model_list:
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: claude-haiku-4-5
-    litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -90,7 +85,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
   -H "Authorization: Bearer $OKTA_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 100,
     "messages": [{"role": "user", "content": "Hello"}]
   }'

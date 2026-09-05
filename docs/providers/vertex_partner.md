@@ -23,6 +23,7 @@ import TabItem from '@theme/TabItem';
 
 | Model Name       | Function Call                        |
 |------------------|--------------------------------------|
+| claude-sonnet-4-5@20250929   | `completion('vertex_ai/claude-sonnet-4-5@20250929', messages)` |
 | claude-3-opus@20240229   | `completion('vertex_ai/claude-3-opus@20240229', messages)` |
 | claude-3-5-sonnet@20240620  | `completion('vertex_ai/claude-3-5-sonnet@20240620', messages)` |
 | claude-3-sonnet@20240229   | `completion('vertex_ai/claude-3-sonnet@20240229', messages)` |
@@ -40,7 +41,7 @@ import os
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
 
-model = "claude-3-sonnet@20240229"
+model = "{{anthropic}}"
 
 vertex_ai_project = "your-vertex-project" # can also set this as os.environ["VERTEXAI_PROJECT"]
 vertex_ai_location = "your-vertex-location" # can also set this as os.environ["VERTEXAI_LOCATION"]
@@ -63,12 +64,12 @@ print("\nModel Response", response)
 model_list:
     - model_name: anthropic-vertex
       litellm_params:
-        model: vertex_ai/claude-3-sonnet@20240229
+        model: vertex_ai/{{anthropic}}
         vertex_ai_project: "my-test-project"
         vertex_ai_location: "us-east-1"
     - model_name: anthropic-vertex
       litellm_params:
-        model: vertex_ai/claude-3-sonnet@20240229
+        model: vertex_ai/{{anthropic}}
         vertex_ai_project: "my-test-project"
         vertex_ai_location: "us-west-1"
 ```

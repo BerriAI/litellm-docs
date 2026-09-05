@@ -11,9 +11,9 @@ Write custom guardrail logic using Python-like code that runs in a sandboxed env
 
 ```yaml
 model_list:
-    - model_name: gpt-4
+    - model_name: {{openai_large}}
       litellm_params:
-        model: gpt-4
+        model: {{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -42,7 +42,7 @@ curl -X POST http://localhost:4000/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "My SSN is 123-45-6789"}],
     "guardrails": ["block-ssn"]
   }'
@@ -308,7 +308,7 @@ curl -X POST http://localhost:4000/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["block-ssn"]
   }'

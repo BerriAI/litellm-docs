@@ -350,7 +350,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 -d '{
     "team_alias": "my-app",
     "team_id": "my-app",
-    "models": ["gpt-4", "claude-sonnet-4-20250514"]
+    "models": ["{{openai_large}}", "{{anthropic}}"]
 }'
 ```
 
@@ -364,7 +364,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_TOKEN" \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello!"}]
 }'
 ```
@@ -610,7 +610,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer <your-jwt-token>' \
 -H 'x-litellm-team-id: team_id_2' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```
@@ -1079,11 +1079,11 @@ Control which models a JWT can access. Set `enforce_scope_based_access: true` to
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: gpt-3.5-turbo-testing
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1259,7 +1259,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <JWT_WITH_ADMIN_ROLE>' \
 -d '{
-  "model": "claude-sonnet-4-20250514",
+  "model": "{{anthropic}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```

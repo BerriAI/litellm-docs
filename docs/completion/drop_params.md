@@ -128,7 +128,7 @@ Drop nested fields within complex objects using JSONPath-like notation:
 import litellm
 
 response = litellm.completion(
-    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello"}],
     tools=[{
         "name": "search",
@@ -147,7 +147,7 @@ response = litellm.completion(
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       additional_drop_params: ["tools[*].input_examples"]  # Remove from all tools
 ```
 
@@ -210,7 +210,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",

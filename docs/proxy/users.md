@@ -57,7 +57,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Autherization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -435,8 +435,8 @@ Each window shows the reset schedule below the input so it's always clear when s
 
 Set a separate budget for each model available to a virtual key. For example, one key can have:
 
-- A $0.0000001 daily budget for `gpt-4o`
-- A $10 budget every 30 days for `gpt-4o-mini`
+- A $0.0000001 daily budget for `{{openai_large}}`
+- A $10 budget every 30 days for `{{openai_small}}`
 
 <EnterpriseFeature />
 
@@ -447,7 +447,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "model_max_budget": {"gpt-4o": {"budget_limit": "0.0000001", "time_period": "1d"}}
+  "model_max_budget": {"{{openai_large}}": {"budget_limit": "0.0000001", "time_period": "1d"}}
 }'
 ```
 
@@ -484,9 +484,9 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
 ```json
 {
   "info": {
-    "model_max_budget": {"gpt-4o": {"budget_limit": 0.0001, "time_period": "30d"}},
+    "model_max_budget": {"{{openai_large}}": {"budget_limit": 0.0001, "time_period": "30d"}},
     "model_max_budget_usage": {
-      "gpt-4o": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+      "{{openai_large}}": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
     }
   }
 }
@@ -496,7 +496,7 @@ If a model's `time_period` is missing or invalid, the model is omitted from `mod
 
 #### Test the budget
 
-With the small `gpt-4o` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
+With the small `{{openai_large}}` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
 
 **[LangChain and OpenAI SDK usage examples](../proxy/user_keys#request-format)**
 
@@ -508,7 +508,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "messages": [
         {
           "role": "user",
@@ -522,14 +522,14 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 </TabItem>
 <TabItem label="Rejected call" value="not-allowed">
 
-Send the same request again. LiteLLM rejects it after the key exceeds its `gpt-4o` budget.
+Send the same request again. LiteLLM rejects it after the key exceeds its `{{openai_large}}` budget.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "messages": [
         {
           "role": "user",
@@ -545,7 +545,7 @@ Expected response:
 ```json
 {
     "error": {
-        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model=gpt-4o",
+        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model={{openai_large}}",
         "type": "budget_exceeded",
         "param": null,
         "code": "400"
@@ -946,8 +946,8 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
   "tpm_limit": 1000000,
   "default_estimated_output_tokens": 2048,
   "default_estimated_output_tokens_per_model": {
-    "gpt-4": 4096,
-    "gpt-3.5-turbo": 1024
+    "{{openai_large}}": 4096,
+    "{{openai_small}}": 1024
   }
 }'
 ```
@@ -961,7 +961,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "default_estimated_output_tokens": 4096,
-  "default_estimated_output_tokens_per_model": {"gpt-4": 8192}
+  "default_estimated_output_tokens_per_model": {"{{openai_large}}": 8192}
 }'
 ```
 
@@ -1030,8 +1030,8 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+  "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
 }'
 ```
 
@@ -1043,8 +1043,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+  "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
 }'
 ```
 
@@ -1059,8 +1059,8 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 --data '{
   "team_id": "my-prod-team",
   "metadata": {
-    "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-    "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+    "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+    "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
   }
 }'
 ```
@@ -1125,13 +1125,13 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 Set `model_rpm_limit` and `model_tpm_limit` to set rate limits per model per api key
 
-Here `gpt-4` is the `model_name` set on the [litellm config.yaml](configs.md)
+Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](configs.md)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"gpt-4": 2}, "model_tpm_limit": {"gpt-4":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
 ```
 
 **Expected Response**
@@ -1145,14 +1145,14 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 **Verify Model Rate Limits set correctly for this key**
 
-**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-4` returned**
+**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-5.6-terra` returned**
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-ulGNRXWtv7M0lFnnsQk0wQ" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude!ss eho ares"}
     ]
@@ -1163,14 +1163,14 @@ curl -i http://localhost:4000/v1/chat/completions \
 **Expected headers**
 
 ```shell
-x-litellm-key-remaining-requests-gpt-4: 1
-x-litellm-key-remaining-tokens-gpt-4: 179
+x-litellm-key-remaining-requests-gpt-5.6-terra: 1
+x-litellm-key-remaining-tokens-gpt-5.6-terra: 179
 ```
 
 These headers indicate:
 
-- 1 request remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
-- 179 tokens remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 1 request remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 179 tokens remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
 
 </TabItem>
 <TabItem value="per-agent" label="Per Agent">
@@ -1274,9 +1274,9 @@ This will NOT apply if a key has a team_id (team budgets will apply then). [Tell
 
 ```yaml
 model_list: 
-  - model_name: "gpt-3.5-turbo"
+  - model_name: "{{openai_small}}"
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -1309,7 +1309,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-X53RdxnDhzamRwjKXR4IHg' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```

@@ -22,7 +22,7 @@ ANTHROPIC_API_KEY=sk-1234
 model_list:
   - model_name: claude-opus
     litellm_params:
-      model: anthropic/claude-opus-4-20250514
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 

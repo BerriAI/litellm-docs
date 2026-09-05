@@ -415,7 +415,7 @@ response = completion(
 # call gemini 
 os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 response = completion(
-    model="gemini/gemini-1.5-flash", # pass the gemini model name
+    model="gemini/{{gemini_flash}}", # pass the gemini model name
     messages=messages,
 )
 
@@ -435,7 +435,7 @@ model_list:
         api_base: https://hosted-vllm-api.co      # add api base for OpenAI compatible provider
     - model_name: my-gemini-model
       litellm_params:
-        model: gemini/gemini-1.5-flash  # add gemini/ prefix to route as Google AI Studio provider
+        model: gemini/{{gemini_flash}}  # add gemini/ prefix to route as Google AI Studio provider
         api_key: os.environ/GEMINI_API_KEY
 ```
 

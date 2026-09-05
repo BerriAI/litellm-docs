@@ -20,7 +20,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 
@@ -37,7 +37,7 @@ if `stream_options={"include_usage": True}` is set, an additional chunk will be 
 from litellm import completion 
 
 completion = completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}
@@ -89,7 +89,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello!"}],
     "stream": true
   }'

@@ -36,7 +36,7 @@ $ export AWS_SECRET_ACCESS_KEY=""
 ```
 
 ```shell
-$ litellm --model bedrock/anthropic.claude-v2
+$ litellm --model bedrock/us.anthropic.{{anthropic}}
 ```
 </TabItem>
 <TabItem value="huggingface" label="Huggingface (TGI)">
@@ -55,7 +55,7 @@ $ litellm --model huggingface/<your model name> --api_base https://k58ory32yinf1
 $ export ANTHROPIC_API_KEY=my-api-key
 ```
 ```shell
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -248,7 +248,7 @@ import litellm
 # litellm completion call
 question = "which country has the highest population"
 response = litellm.completion(
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     messages = [
         {
             "role": "user",

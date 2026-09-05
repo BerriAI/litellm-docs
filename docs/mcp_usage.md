@@ -28,7 +28,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -67,7 +67,7 @@ client = openai.OpenAI(
 print("Making API request to Responses API with MCP tools")
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",
@@ -108,7 +108,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -142,7 +142,7 @@ client = openai.OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",

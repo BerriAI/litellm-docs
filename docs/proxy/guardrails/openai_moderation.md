@@ -26,9 +26,9 @@ Define your guardrails under the `guardrails` section:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -83,7 +83,7 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "I hate all people and want to hurt them"}
     ],
@@ -125,7 +125,7 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the capital of France?"}
     ],
@@ -139,7 +139,7 @@ Expected response:
 {
   "id": "chatcmpl-4a1c1a4a-3e1d-4fa4-ae25-7ebe84c9a9a2",
   "created": 1741082354,
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "choices": [
     {

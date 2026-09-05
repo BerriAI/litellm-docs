@@ -59,10 +59,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: {{openai_large}}
 ```
 
 </TabItem>
@@ -83,10 +83,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: {{openai_large}}
 ```
 
 </TabItem>

@@ -25,7 +25,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Method 1: Using environment variable (recommended)
 response = completion(
-    model="cometapi/gpt-5", 
+    model="cometapi/{{openai_large}}", 
     messages=messages
 )
 
@@ -45,7 +45,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Method 2: Explicitly passing API key
 response = completion(
-    model="cometapi/gpt-4o", 
+    model="cometapi/{{openai_large}}", 
     messages=messages, 
     api_key="your_comet_api_key_here"
 )
@@ -66,7 +66,7 @@ os.environ["COMETAPI_KEY"] = "your_comet_api_key_here"
 messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 response = completion(
-    model="cometapi/gpt-5",
+    model="cometapi/{{openai_large}}",
     messages=messages,
     stream=True
 )
@@ -137,7 +137,7 @@ try:
     messages = [{"content": "Hello, how are you?", "role": "user"}]
     
     response = completion(
-        model="cometapi/gpt-5",
+        model="cometapi/{{openai_large}}",
         messages=messages
     )
     

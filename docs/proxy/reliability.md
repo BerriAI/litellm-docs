@@ -37,7 +37,7 @@ Fallbacks are typically done from one `model_name` to another `model_name`.
 Key change: 
 
 ```python
-fallbacks=[{"gpt-3.5-turbo": ["gpt-4"]}]
+fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}]
 ```
 
 <Tabs>
@@ -48,7 +48,7 @@ from litellm import Router
 router = Router(
   model_list=[
     {
-      "model_name": "gpt-3.5-turbo",
+      "model_name": "{{openai_small}}",
       "litellm_params": {
         "model": "azure/<your-deployment-name>",
         "api_base": "<your-azure-endpoint>",
@@ -57,7 +57,7 @@ router = Router(
       }
     },
     {
-      "model_name": "gpt-4",
+      "model_name": "{{openai_large}}",
       "litellm_params": {
         "model": "azure/gpt-4-ca",
         "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/",
@@ -66,7 +66,7 @@ router = Router(
       }
     }
   ],
-  fallbacks=[{"gpt-3.5-turbo": ["gpt-4"]}] # 👈 KEY CHANGE
+  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # 👈 KEY CHANGE
 )
 
 ```
@@ -77,13 +77,13 @@ router = Router(
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
       rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -91,7 +91,7 @@ model_list:
       rpm: 6
 
 router_settings:
-  fallbacks: [{"gpt-3.5-turbo": ["gpt-4"]}]
+  fallbacks: [{"{{openai_small}}": ["{{openai_large}}"]}]
 ```
 
 
@@ -145,7 +145,7 @@ The mock-testing flags are deprecated for Proxy requests. To validate Proxy fall
 
 ### Explanation
 
-Fallbacks are done in-order - ["gpt-3.5-turbo, "gpt-4", "gpt-4-32k"], will do 'gpt-3.5-turbo' first, then 'gpt-4', etc.
+Fallbacks are done in-order - ["gpt-4o-mini", "gpt-4o", "gpt-4.1"], will do 'gpt-4o-mini' first, then 'gpt-4o', etc.
 
 You can also set [`default_fallbacks`](#default-fallbacks), in case a specific model group is misconfigured / bad.
 
@@ -161,10 +161,10 @@ Set fallbacks in the `.completion()` call for SDK and client-side for proxy.
 
 In this request the following will occur:
 1. The request to `model="zephyr-beta"` will fail
-2. litellm proxy will loop through all the model_groups specified in `fallbacks=["gpt-3.5-turbo"]`
-3. The request to `model="gpt-3.5-turbo"` will succeed and the client making the request will get a response from gpt-3.5-turbo 
+2. litellm proxy will loop through all the model_groups specified in `fallbacks=["{{openai_small}}"]`
+3. The request to `model="{{openai_small}}"` will succeed and the client making the request will get a response from gpt-5.6-luna 
 
-👉 Key Change: `"fallbacks": ["gpt-3.5-turbo"]`
+👉 Key Change: `"fallbacks": ["{{openai_small}}"]`
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -175,12 +175,12 @@ from litellm import Router
 router = Router(model_list=[...]) # defined in Step 1.
 
 resp = router.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hey, how's it going?"}],
     mock_testing_fallbacks=True, # 👈 trigger fallbacks
     fallbacks=[
         {
-            "model": "claude-3-haiku",
+            "model": "{{anthropic}}",
             "messages": [{"role": "user", "content": "What is LiteLLM?"}],
         }
     ],
@@ -211,7 +211,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-        "fallbacks": ["gpt-3.5-turbo"]
+        "fallbacks": ["{{openai_small}}"]
     }
 )
 
@@ -232,7 +232,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "what llm are you"
         }
     ],
-    "fallbacks": ["gpt-3.5-turbo"]
+    "fallbacks": ["{{openai_small}}"]
 }'
 ```
 </TabItem>
@@ -254,7 +254,7 @@ chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model="zephyr-beta",
     extra_body={
-        "fallbacks": ["gpt-3.5-turbo"]
+        "fallbacks": ["{{openai_small}}"]
     }
 )
 
@@ -303,12 +303,12 @@ from litellm import Router
 router = Router(model_list=[...]) # defined in Step 1.
 
 resp = router.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hey, how's it going?"}],
     mock_testing_fallbacks=True, # 👈 trigger fallbacks
     fallbacks=[
         {
-            "model": "claude-3-haiku",
+            "model": "{{anthropic}}",
             "messages": [{"role": "user", "content": "What is LiteLLM?"}],
         }
     ],
@@ -340,7 +340,7 @@ response = client.chat.completions.create(
     ],
     extra_body={
       "fallbacks": [{
-          "model": "claude-3-haiku",
+          "model": "{{anthropic}}",
           "messages": [{"role": "user", "content": "What is LiteLLM?"}]
       }]
     }
@@ -357,7 +357,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -370,7 +370,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
       }
     ],
     "fallbacks": [{
-        "model": "claude-3-haiku",
+        "model": "{{anthropic}}",
         "messages": [{"role": "user", "content": "What is LiteLLM?"}]
     }]
 }'
@@ -396,7 +396,7 @@ chat = ChatOpenAI(
     model="zephyr-beta",
     extra_body={
       "fallbacks": [{
-          "model": "claude-3-haiku",
+          "model": "{{anthropic}}",
           "messages": [{"role": "user", "content": "What is LiteLLM?"}]
       }]
     }
@@ -427,7 +427,7 @@ print(response)
 Key change: 
 
 ```python
-content_policy_fallbacks=[{"claude-2": ["my-fallback-model"]}]
+content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}]
 ```
 
 <Tabs>
@@ -439,9 +439,9 @@ from litellm import Router
 router = Router(
   model_list=[
     {
-      "model_name": "claude-2",
+      "model_name": "{{anthropic}}",
       "litellm_params": {
-        "model": "claude-2",
+        "model": "{{anthropic}}",
         "api_key": "",
         "mock_response": Exception("content filtering policy"),
       },
@@ -449,19 +449,19 @@ router = Router(
     {
       "model_name": "my-fallback-model",
       "litellm_params": {
-        "model": "claude-2",
+        "model": "{{anthropic}}",
         "api_key": "",
         "mock_response": "This works!",
       },
     },
   ],
-  content_policy_fallbacks=[{"claude-2": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # context_window_fallbacks=[..], # [OPTIONAL]
 )
 
 response = router.completion(
-  model="claude-2",
+  model="{{anthropic}}",
   messages=[{"role": "user", "content": "Hey, how's it going?"}],
 )
 ```
@@ -472,7 +472,7 @@ In your proxy config.yaml just add this line 👇
 
 ```yaml
 router_settings:
-  content_policy_fallbacks: [{"claude-2": ["my-fallback-model"]}]
+  content_policy_fallbacks: [{"{{anthropic}}": ["my-fallback-model"]}]
 ```
 
 Start proxy 
@@ -491,7 +491,7 @@ litellm --config /path/to/config.yaml
 Key change: 
 
 ```python
-context_window_fallbacks=[{"claude-2": ["my-fallback-model"]}]
+context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}]
 ```
 
 <Tabs>
@@ -503,9 +503,9 @@ from litellm import Router
 router = Router(
   model_list=[
     {
-      "model_name": "claude-2",
+      "model_name": "{{anthropic}}",
       "litellm_params": {
-        "model": "claude-2",
+        "model": "{{anthropic}}",
         "api_key": "",
         "mock_response": Exception("prompt is too long"),
       },
@@ -513,19 +513,19 @@ router = Router(
     {
       "model_name": "my-fallback-model",
       "litellm_params": {
-        "model": "claude-2",
+        "model": "{{anthropic}}",
         "api_key": "",
         "mock_response": "This works!",
       },
     },
   ],
-  context_window_fallbacks=[{"claude-2": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # content_policy_fallbacks=[..], # [OPTIONAL]
 )
 
 response = router.completion(
-  model="claude-2",
+  model="{{anthropic}}",
   messages=[{"role": "user", "content": "Hey, how's it going?"}],
 )
 ```
@@ -536,7 +536,7 @@ In your proxy config.yaml just add this line 👇
 
 ```yaml
 router_settings:
-  context_window_fallbacks: [{"claude-2": ["my-fallback-model"]}]
+  context_window_fallbacks: [{"{{anthropic}}": ["my-fallback-model"]}]
 ```
 
 Start proxy 
@@ -557,7 +557,7 @@ To set fallbacks, just do:
 
 ```
 litellm_settings:
-  fallbacks: [{"zephyr-beta": ["gpt-3.5-turbo"]}] 
+  fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] 
 ```
 
 **Covers all errors (429, 500, etc.)**
@@ -577,19 +577,19 @@ model_list:
     litellm_params:
         model: huggingface/HuggingFaceH4/zephyr-7b-beta
         api_base: http://0.0.0.0:8003
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-        model: gpt-3.5-turbo
+        model: {{openai_small}}
         api_key: <my-openai-key>
-  - model_name: gpt-3.5-turbo-16k
+  - model_name: {{openai_large}}
     litellm_params:
-        model: gpt-3.5-turbo-16k
+        model: {{openai_large}}
         api_key: <my-openai-key>
 
 litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
-  fallbacks: [{"zephyr-beta": ["gpt-3.5-turbo"]}] # fallback to gpt-3.5-turbo if call fails num_retries 
+  fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] # fallback to {{openai_small}} if call fails num_retries 
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
   cooldown_time: 30 # how long to cooldown model if fails/min > allowed_fails
 ```
@@ -603,29 +603,29 @@ This skips any cooldown check for the fallback model.
 1. Specify the model ID in `model_info`
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
     model_info:
       id: my-specific-model-id # 👈 KEY CHANGE
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-opus-20240229
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
-**Note:** This will only fallback to the model with the specific model ID. If you want to fallback to another model group, you can set `fallbacks=[{"gpt-4": ["anthropic-claude"]}]`
+**Note:** This will only fallback to the model with the specific model ID. If you want to fallback to another model group, you can set `fallbacks=[{"{{openai_large}}": ["anthropic-claude"]}]`
 
 2. Set fallbacks in config
 
 ```yaml
 litellm_settings:
-  fallbacks: [{"gpt-4": ["my-specific-model-id"]}]
+  fallbacks: [{"{{openai_large}}": ["my-specific-model-id"]}]
 ```
 
 3. Test it while the primary deployment is unavailable.
@@ -635,7 +635,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -678,7 +678,7 @@ Every spend log row records whether the request was served by the model group th
 | `attempted_fallbacks` | int | Number of fallback attempts made. `0` means the requested model group served the request |
 | `original_model_group` | str | The model group the client originally requested |
 
-For example, a request to `gpt-3.5-turbo` that fails over to `claude-fable-5` produces a row with `model_group=claude-fable-5`, `attempted_fallbacks=1`, and `original_model_group=gpt-3.5-turbo`, so fallback-served and directly-served requests stay distinguishable after the fact:
+For example, a request to `{{openai_small}}` that fails over to `claude-fable-5` produces a row with `model_group=claude-fable-5`, `attempted_fallbacks=1`, and `original_model_group={{openai_small}}`, so fallback-served and directly-served requests stay distinguishable after the fact:
 
 ```sql
 SELECT model_group,
@@ -713,15 +713,15 @@ router_settings:
   enable_pre_call_checks: true  # Required for enforcement
 
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       max_input_tokens: 10  # Override: reject prompts > 10 tokens
 ```
 
-If a request exceeds the limit, LiteLLM raises `ContextWindowExceededError` with details like `Model=gpt-4o, Max Input Tokens=10, Got=306`.
+If a request exceeds the limit, LiteLLM raises `ContextWindowExceededError` with details like `Model={{openai_large}}, Max Input Tokens=10, Got=306`.
 
 **1. Setup config**
 
@@ -731,25 +731,27 @@ For azure deployments, set the base model. Pick the base model from [this list](
 <Tabs>
 <TabItem value="same-group" label="Same Group">
 
-Filter older instances of a model (e.g. gpt-3.5-turbo) with smaller context windows
+Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
+
+The model ids in this example are illustrative and kept for their context window sizes.
 
 ```yaml
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
     model: azure/chatgpt-v-2
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4-1106-preview # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
 
-  - model_name: gpt-3.5-turbo
+  - model_name: gpt-4o-mini
     litellm_params:
-    model: gpt-3.5-turbo-1106
+    model: gpt-4o-mini
     api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -770,11 +772,11 @@ client = openai.OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 5000
+text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o-mini",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -790,6 +792,8 @@ print(response)
 
 Fallback to larger models if current model is too small.
 
+The model ids in this example are illustrative and kept for their context window sizes.
+
 ```yaml
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
@@ -802,16 +806,16 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4-1106-preview # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
-      model: gpt-3.5-turbo-1106
+      model: gpt-4.1
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
     litellm_params:
-      model: claude-3-opus-20240229
+      model: claude-opus-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -835,11 +839,11 @@ client = openai.OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 5000
+text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-3.5-turbo-small",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -868,7 +872,7 @@ model_list:
 
     - model_name: claude-opus
       litellm_params:
-        model: claude-3-opus-20240229
+        model: {{anthropic_large}}
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -893,7 +897,7 @@ model_list:
 
     - model_name: claude-opus
       litellm_params:
-        model: claude-3-opus-20240229
+        model: {{anthropic_large}}
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -919,7 +923,7 @@ router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-- model_name: gpt-3.5-turbo
+- model_name: {{openai_small}}
   litellm_params:
     model: azure/chatgpt-v-2
     api_base: os.environ/AZURE_API_BASE
@@ -927,14 +931,14 @@ model_list:
     api_version: "2023-07-01-preview"
     region_name: "eu" # 👈 SET EU-REGION
 
-- model_name: gpt-3.5-turbo
+- model_name: {{openai_small}}
   litellm_params:
-    model: gpt-3.5-turbo-1106
+    model: {{openai_small}}
     api_key: os.environ/OPENAI_API_KEY
 
-- model_name: gemini-pro
+- model_name: {{gemini_flash}}
   litellm_params:
-    model: vertex_ai/gemini-pro-1.5
+    model: vertex_ai/{{gemini_flash}}
     vertex_project: adroit-crow-1234
     vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
 ```
@@ -958,7 +962,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.with_raw_response.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [{"role": "user", "content": "Who was Alexander?"}]
 )
 
@@ -974,9 +978,9 @@ You can set fallbacks for wildcard models (e.g. `azure/*`) in your config file.
 1. Setup config
 ```yaml
 model_list:
-  - model_name: "gpt-4o"
+  - model_name: "{{openai_large}}"
     litellm_params:
-      model: "openai/gpt-4o"
+      model: "openai/{{openai_large}}"
       api_key: os.environ/OPENAI_API_KEY
   - model_name: "azure/*"
     litellm_params:
@@ -985,7 +989,7 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
 
 litellm_settings:
-  fallbacks: [{"gpt-4o": ["azure/gpt-4o"]}]
+  fallbacks: [{"{{openai_large}}": ["azure/{{openai_large}}"]}]
 ```
 
 2. Start Proxy
@@ -1000,7 +1004,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {
         "role": "user",
@@ -1018,7 +1022,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### Enforce Key Model Access on Fallbacks
 
-By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `claude-sonnet-5` whenever `gpt-5.6` fails and `claude-sonnet-5` is its fallback.
+By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `{{anthropic}}` whenever `gpt-5.6` fails and `{{anthropic}}` is its fallback.
 
 Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
@@ -1030,21 +1034,21 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       access_groups: ["openai-only"]
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
   fallbacks:
-    - gpt-5.6: ["claude-sonnet-5"]
+    - gpt-5.6: ["{{anthropic}}"]
 
 general_settings:
   master_key: sk-1234
   enforce_fallback_model_access: true
 ```
 
-A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `claude-sonnet-5`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `claude-sonnet-5` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "claude-sonnet-5"]` still falls back.
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
 
@@ -1068,7 +1072,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
             "content": "List 5 important events in the XIX century"
         }
     ],
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "disable_fallbacks": true # 👈 DISABLE FALLBACKS
 }'
 ```

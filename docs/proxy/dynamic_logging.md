@@ -81,7 +81,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "{{anthropic}}",
     "messages": [
         {
         "role": "user",
@@ -103,7 +103,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -134,7 +134,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-disable-callbacks: langfuse,datadog,prometheus' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "{{anthropic}}",
     "messages": [
         {
         "role": "user",
@@ -156,7 +156,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -243,9 +243,9 @@ Here's a complete example for an organization requiring guaranteed logging:
 ```yaml showLineNumbers title="config.yaml"
 # config.yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:

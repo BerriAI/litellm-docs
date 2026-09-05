@@ -17,7 +17,7 @@ Call Bedrock's `/invoke` endpoint through LiteLLM Proxy.
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID  # reads from environment
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
@@ -86,7 +86,7 @@ model_list:
   # Deployment 1 - us-west-2
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
@@ -95,7 +95,7 @@ model_list:
   # Deployment 2 - us-east-1
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY

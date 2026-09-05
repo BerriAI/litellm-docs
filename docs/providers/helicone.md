@@ -50,7 +50,7 @@ messages = [{"content": "What is the capital of France?", "role": "user"}]
 
 # Helicone call - routes through Helicone gateway to OpenAI
 response = completion(
-    model="helicone/gpt-4",
+    model="helicone/{{openai_large}}",
     messages=messages
 )
 
@@ -70,7 +70,7 @@ messages = [{"content": "Write a short poem about AI", "role": "user"}]
 
 # Helicone call with streaming
 response = completion(
-    model="helicone/gpt-4",
+    model="helicone/{{openai_large}}",
     messages=messages,
     stream=True
 )
@@ -89,7 +89,7 @@ from litellm import completion
 os.environ["HELICONE_API_KEY"] = ""  # your Helicone API key
 
 response = completion(
-    model="helicone/gpt-4o-mini",
+    model="helicone/{{openai_small}}",
     messages=[{"role": "user", "content": "What's the weather like?"}],
     metadata={
         "Helicone-Property-Environment": "production",
@@ -110,7 +110,7 @@ import litellm
 os.environ["HELICONE_API_KEY"] = ""  # your Helicone API key
 
 response = litellm.completion(
-    model="helicone/gpt-4o-mini",  # text completion model
+    model="helicone/{{openai_small}}",  # text completion model
     prompt="Once upon a time"
 )
 
@@ -131,7 +131,7 @@ litellm.metadata = {
 }
 
 response = litellm.completion(
-    model="helicone/gpt-4o-mini/openai,claude-3-5-sonnet-20241022/anthropic", # Try OpenAI first, then fallback to Anthropic, then continue with other models,
+    model="helicone/{{openai_small}}/openai,{{anthropic}}/anthropic", # Try OpenAI first, then fallback to Anthropic, then continue with other models,
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -176,7 +176,7 @@ Example with headers:
 import litellm
 
 response = litellm.completion(
-    model="helicone/gpt-4",
+    model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     metadata={
         "Helicone-Cache-Enabled": "true",
@@ -214,7 +214,7 @@ Enable caching to reduce costs and latency:
 import litellm
 
 response = litellm.completion(
-    model="helicone/gpt-4",
+    model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "What is 2+2?"}],
     metadata={
         "Helicone-Cache-Enabled": "true"
@@ -223,7 +223,7 @@ response = litellm.completion(
 
 # Subsequent identical requests will be served from cache
 response2 = litellm.completion(
-    model="helicone/gpt-4",
+    model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "What is 2+2?"}],
     metadata={
         "Helicone-Cache-Enabled": "true"

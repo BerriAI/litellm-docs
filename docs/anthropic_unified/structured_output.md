@@ -134,7 +134,7 @@ curl http://localhost:4000/v1/messages \
 model_list:
   - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/global.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -189,7 +189,7 @@ curl http://localhost:4000/v1/messages \
 model_list:
   - model_name: bedrock-claude-invoke
     litellm_params:
-      model: bedrock/invoke/global.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/invoke/global.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2

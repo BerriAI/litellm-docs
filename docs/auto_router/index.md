@@ -44,7 +44,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **Agent:** tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`.
 - **config.yaml:** one router entry whose tiers name other models in the same file.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-haiku-4-5
     litellm_params:

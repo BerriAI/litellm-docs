@@ -35,7 +35,7 @@ model_list:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: azure-gpt-4o-realtime-audio
     litellm_params:
       model: azure/gpt-4o-realtime-preview
       api_key: os.environ/AZURE_SWEDEN_API_KEY

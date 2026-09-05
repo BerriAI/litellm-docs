@@ -36,7 +36,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
       "anthropic-haiku-4-5": {"budget_limit": 0.01, "time_period": "1d"}
     },
     "budget_fallbacks": {
-      "anthropic-haiku-4-5": ["gpt-5.5"]
+      "anthropic-haiku-4-5": ["{{openai_large}}"]
     }
   }'
 ```
@@ -57,11 +57,11 @@ curl 'http://0.0.0.0:4000/v1/chat/completions' \
   }'
 ```
 
-While the key is under its `anthropic-haiku-4-5` cap the request runs on `anthropic-haiku-4-5`. Once the cap is crossed subsequent requests are transparently served by `gpt-5.5` without any `budget_exceeded` error surfacing to the caller.
+While the key is under its `anthropic-haiku-4-5` cap the request runs on `anthropic-haiku-4-5`. Once the cap is crossed subsequent requests are transparently served by `{{openai_large}}` without any `budget_exceeded` error surfacing to the caller.
 
 ### 3. Confirm the reroute
 
-`/spend/logs?api_key=<sk-generated-key>` will attribute the post-fallback usage to `gpt-5.5` (both the deployment and the `model_group`), so cost tracking, tagging, and per-model budgets remain accurate.
+`/spend/logs?api_key=<sk-generated-key>` will attribute the post-fallback usage to `{{openai_large}}` (both the deployment and the `model_group`), so cost tracking, tagging, and per-model budgets remain accurate.
 
 ## Chained fallbacks
 
@@ -73,17 +73,17 @@ curl 'http://0.0.0.0:4000/key/generate' \
   --header 'Content-Type: application/json' \
   --data '{
     "model_max_budget": {
-      "gpt-5":         {"budget_limit": 5.0,  "time_period": "1d"},
-      "gpt-5-mini":    {"budget_limit": 2.0,  "time_period": "1d"},
-      "gpt-5-nano":    {"budget_limit": 1.0,  "time_period": "1d"}
+      "{{openai_large}}":   {"budget_limit": 5.0,  "time_period": "1d"},
+      "{{anthropic}}": {"budget_limit": 2.0,  "time_period": "1d"},
+      "{{openai_small}}":    {"budget_limit": 1.0,  "time_period": "1d"}
     },
     "budget_fallbacks": {
-      "gpt-5": ["gpt-5-mini", "gpt-5-nano"]
+      "{{openai_large}}": ["{{anthropic}}", "{{openai_small}}"]
     }
   }'
 ```
 
-A request for `gpt-5` stays on `gpt-5` until it exhausts $5/day, then rolls to `gpt-5-mini` until that key hits $2/day, then rolls to `gpt-5-nano`. If `gpt-5-nano` is also over its $1/day cap the request finally returns `budget_exceeded`.
+A request for `{{openai_large}}` stays on `{{openai_large}}` until it exhausts $5/day, then rolls to `{{anthropic}}` until that key hits $2/day, then rolls to `{{openai_small}}`. If `{{openai_small}}` is also over its $1/day cap the request finally returns `budget_exceeded`.
 
 Fallbacks that are not present in `model_max_budget` are treated as unlimited from the budget check's point of view and will always be selected if reached.
 
@@ -97,7 +97,7 @@ curl 'http://0.0.0.0:4000/key/update' \
   --header 'Content-Type: application/json' \
   --data '{
     "key": "sk-generated-key",
-    "budget_fallbacks": {"anthropic-haiku-4-5": ["gpt-5.5", "gpt-5-nano"]}
+    "budget_fallbacks": {"anthropic-haiku-4-5": ["{{openai_large}}", "{{openai_small}}"]}
   }'
 ```
 

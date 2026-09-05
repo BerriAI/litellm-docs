@@ -14,7 +14,7 @@ Add WebSearch interception to your `litellm_config.yaml`:
 model_list:
   - model_name: bedrock-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
 
 # Enable WebSearch interception for providers
@@ -45,7 +45,7 @@ Create `config.yaml`:
 model_list:
   - model_name: bedrock-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
 
 litellm_settings:
@@ -177,12 +177,12 @@ Use these values in `enabled_providers`:
 model_list:
   - model_name: bedrock-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
 
-  - model_name: azure-gpt4
+  - model_name: azure-gpt
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_base: https://my-azure.openai.azure.com
       api_key: os.environ/AZURE_API_KEY
 

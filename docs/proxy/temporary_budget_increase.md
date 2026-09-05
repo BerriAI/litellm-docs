@@ -51,7 +51,7 @@ curl -L -X POST 'http://localhost:4000/chat/completions' \
 -H 'Authorization: Bearer sk-your-new-key' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, world!"}]
 }'
 ```

@@ -69,9 +69,9 @@ prompt_management = MyCustomPromptManagement()
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -125,7 +125,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     extra_body={
         "prompt_id": "1234"
@@ -143,7 +143,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
 chat = ChatOpenAI(
-    model="gpt-4",
+    model="{{openai_large}}",
     openai_api_key="sk-1234",
     openai_api_base="http://0.0.0.0:4000",
     extra_body={
@@ -165,7 +165,7 @@ curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }'
@@ -186,7 +186,7 @@ litellm.callbacks = [prompt_management]
 litellm.use_litellm_proxy = True
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     prompt_id="1234",
     prompt_variables={"user_message": "hi"},
@@ -198,7 +198,7 @@ response = litellm.completion(
 The request will be transformed from:
 ```json
 {
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }
@@ -207,7 +207,7 @@ The request will be transformed from:
 To:
 ```json
 {
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [
         {"role": "system", "content": "Be a good Bot!"},
         {"role": "user", "content": "hi"}

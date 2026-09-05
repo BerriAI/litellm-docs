@@ -96,7 +96,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-<your-virtual-key>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.5",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Say hello in five words."}]
   }'
 ```
@@ -106,7 +106,7 @@ Expected response:
 ```json
 {
   "id": "chatcmpl-DzGKiNRbQ4fe9Mgt8HSHFQ6ApfRJi",
-  "model": "gpt-5.5",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "choices": [
     {
@@ -138,7 +138,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.5",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Say hello in five words."}],
 )
 print(response.choices[0].message.content)
@@ -156,7 +156,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "gpt-5.5",
+  model: "{{openai_large}}",
   messages: [{ role: "user", content: "Say hello in five words." }],
 });
 console.log(response.choices[0].message.content);
@@ -176,9 +176,9 @@ If you only need the OpenAI-compatible API (no Admin UI model management, virtua
 ```yaml
 # litellm_config.yaml
 model_list:
-  - model_name: gpt-5.5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 

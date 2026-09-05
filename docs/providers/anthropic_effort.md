@@ -274,7 +274,7 @@ Token usage with different effort levels is tracked in the standard usage object
 
 ```python
 response = litellm.completion(
-    model="anthropic/claude-opus-4-5-20251101",
+    model="anthropic/{{anthropic_large}}",
     messages=[{"role": "user", "content": "Analyze this"}],
     output_config={"effort": "low"}
 )

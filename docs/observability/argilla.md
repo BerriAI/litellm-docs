@@ -73,7 +73,7 @@ litellm.argilla_transformation_object = {
 
 ## LLM CALL ## 
 response = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 ```

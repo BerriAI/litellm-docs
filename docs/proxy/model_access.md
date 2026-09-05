@@ -12,12 +12,12 @@ Set allowed models for a key using the `models` param
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
---data-raw '{"models": ["gpt-3.5-turbo", "gpt-4"]}'
+--data-raw '{"models": ["{{openai_small}}", "{{openai_large}}"]}'
 ```
 
 :::info
 
-This key can only make requests to `models` that are `gpt-3.5-turbo` or `gpt-4`
+This key can only make requests to `models` that are `{{openai_small}}` or `{{openai_large}}`
 
 :::
 
@@ -31,7 +31,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -44,7 +44,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 :::info
 
-Expect this to fail since gpt-4o is not in the `models` for the key generated
+Expect this to fail since claude-sonnet-5 is not in the `models` for the key generated
 
 :::
 
@@ -53,7 +53,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -190,14 +190,14 @@ When `include_metadata=true` is specified, the response includes fallback inform
 {
   "data": [
     {
-      "id": "gpt-4",
+      "id": "{{openai_large}}",
       "object": "model",
       "created": 1677610602,
       "owned_by": "openai",
       "fallbacks": {
-        "general": ["gpt-3.5-turbo", "claude-3-sonnet"],
-        "context_window": ["gpt-4-turbo", "claude-3-opus"],
-        "content_policy": ["claude-3-haiku"]
+        "general": ["{{openai_small}}", "{{anthropic}}"],
+        "context_window": ["{{openai_small}}", "{{anthropic}}"],
+        "content_policy": ["{{anthropic}}"]
       }
     }
   ]

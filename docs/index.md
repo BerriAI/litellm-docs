@@ -47,7 +47,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -63,7 +63,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="anthropic/claude-3-5-sonnet-20241022",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -81,7 +81,7 @@ os.environ["VERTEXAI_PROJECT"] = "your-project-id"
 os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 response = completion(
-  model="vertex_ai/gemini-1.5-pro",
+  model="vertex_ai/{{gemini_pro}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -99,7 +99,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret"
 os.environ["AWS_REGION_NAME"] = "us-east-1"
 
 response = completion(
-  model="bedrock/anthropic.claude-haiku-4-5-20251001:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -151,7 +151,7 @@ Non-streaming responses return a `ModelResponse` object:
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -177,7 +177,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
   "id": "chatcmpl-abc123",
   "object": "chat.completion.chunk",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -256,7 +256,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 for chunk in completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{"role": "user", "content": "Write a short poem"}],
   stream=True,
 ):
@@ -272,7 +272,7 @@ import litellm
 
 try:
     litellm.completion(
-      model="anthropic/claude-instant-1",
+      model="anthropic/{{anthropic}}",
       messages=[{"role": "user", "content": "Hey!"}]
     )
 except litellm.AuthenticationError as e:
@@ -293,7 +293,7 @@ import litellm
 litellm.success_callback = ["langfuse", "mlflow", "helicone"]
 
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[{"role": "user", "content": "Hi!"}]
 )
 ```
@@ -313,7 +313,7 @@ def track_cost(kwargs, completion_response, start_time, end_time):
 litellm.success_callback = [track_cost]
 
 litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[{"role": "user", "content": "Hello!"}],
   stream=True
 )
@@ -344,7 +344,7 @@ litellm --model huggingface/bigcode/starcoder
 
 ```yaml title="litellm_config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/your-deployment
       api_base: os.environ/AZURE_API_BASE
@@ -373,7 +373,7 @@ import openai
 client = openai.OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[{"role": "user", "content": "Write a short poem"}]
 )
 print(response.choices[0].message.content)

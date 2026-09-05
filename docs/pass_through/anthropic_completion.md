@@ -27,7 +27,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-anything" \
   --data '{
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "max_tokens": 1024,
         "messages": [
             {"role": "user", "content": "Hello, world"}
@@ -49,7 +49,7 @@ client = Anthropic(
 
 # Make a completion request
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="{{anthropic}}",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "Hello, world"}
@@ -95,7 +95,7 @@ curl http://0.0.0.0:4000/anthropic/v1/messages \
      --header "content-type: application/json" \
      --data \
     '{
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "max_tokens": 1024,
         "messages": [
             {"role": "user", "content": "Hello, world"}
@@ -127,7 +127,7 @@ curl --request POST \
     --header "anthropic-version: 2023-06-01" \
     --header "content-type: application/json" \
   --data '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
         {"role": "user", "content": "Hello, world"}
@@ -144,7 +144,7 @@ curl https://api.anthropic.com/v1/messages \
      --header "content-type: application/json" \
      --data \
     '{
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "max_tokens": 1024,
         "messages": [
             {"role": "user", "content": "Hello, world"}
@@ -165,7 +165,7 @@ curl --request POST \
     --header "content-type: application/json" \
     --data \
     '{
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "messages": [
             {"role": "user", "content": "Hello, world"}
         ]
@@ -182,7 +182,7 @@ curl https://api.anthropic.com/v1/messages/count_tokens \
      --header "content-type: application/json" \
      --data \
 '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "messages": [
         {"role": "user", "content": "Hello, world"}
     ]
@@ -207,7 +207,7 @@ curl --request POST \
         {
             "custom_id": "my-first-request",
             "params": {
-                "model": "claude-3-5-sonnet-20241022",
+                "model": "{{anthropic}}",
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": "Hello, world"}
@@ -217,7 +217,7 @@ curl --request POST \
         {
             "custom_id": "my-second-request",
             "params": {
-                "model": "claude-3-5-sonnet-20241022",
+                "model": "{{anthropic}}",
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": "Hi again, friend"}
@@ -242,7 +242,7 @@ curl https://api.anthropic.com/v1/messages/batches \
         {
             "custom_id": "my-first-request",
             "params": {
-                "model": "claude-3-5-sonnet-20241022",
+                "model": "{{anthropic}}",
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": "Hello, world"}
@@ -252,7 +252,7 @@ curl https://api.anthropic.com/v1/messages/batches \
         {
             "custom_id": "my-second-request",
             "params": {
-                "model": "claude-3-5-sonnet-20241022",
+                "model": "{{anthropic}}",
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": "Hi again, friend"}
@@ -268,9 +268,9 @@ For batch passthrough cost tracking to work properly, you need to define the Ant
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-4-5-20250929  # or any alias
+  - model_name: {{anthropic}}  # or any alias
     litellm_params:
-      model: anthropic/claude-sonnet-4-5-20250929
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -328,7 +328,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-1234ewknldferwedojwojw" \
   --data '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
         {"role": "user", "content": "Hello, world"}
@@ -349,7 +349,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-anything" \
   --data '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
         {"role": "user", "content": "Hello, world"}
@@ -373,7 +373,7 @@ client = Anthropic(
 )
 
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="{{anthropic}}",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "Hello, world"}

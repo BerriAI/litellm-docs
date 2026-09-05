@@ -70,7 +70,7 @@ curl -X POST "http://0.0.0.0:4000/model/new" \
     -d '{
       "model_name": "azure-gpt-4o",
       "litellm_params": {
-        "model": "azure/gpt-4o",
+        "model": "azure/{{openai_large}}",
         "api_key": "os.environ/AZURE_API_KEY",
         "api_base": "https://my-endpoint.openai.azure.com/"
       }

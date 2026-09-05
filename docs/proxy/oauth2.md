@@ -26,7 +26,7 @@ Set this on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -43,7 +43,7 @@ general_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",

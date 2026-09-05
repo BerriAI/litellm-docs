@@ -55,7 +55,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "user": "hi",
       "messages": [
         {
@@ -80,7 +80,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "user": "hi",
       "messages": [
         {

@@ -23,7 +23,7 @@ Just replace `https://generativelanguage.googleapis.com` with `LITELLM_PROXY_BAS
 <TabItem value="curl" label="curl">
 
 ```bash
-curl 'http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:countTokens?key=sk-anything' \
+curl 'http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-anything' \
 -H 'Content-Type: application/json' \
 -d '{
     "contents": [{
@@ -50,7 +50,7 @@ const ai = new GoogleGenAI({
 async function main() {
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "{{gemini_flash}}",
             contents: "Explain how AI works",
         });
         console.log(response.text);
@@ -63,7 +63,7 @@ async function main() {
 async function main_streaming() {
     try {
         const response = await ai.models.generateContentStream({
-            model: "gemini-2.5-flash",
+            model: "{{gemini_flash}}",
             contents: "Explain how AI works",
         });
         for await (const chunk of response) {
@@ -108,7 +108,7 @@ litellm
 Let's call the Google AI Studio token counting endpoint
 
 ```bash
-http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:countTokens?key=anything' \
+http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=anything' \
 -H 'Content-Type: application/json' \
 -d '{
     "contents": [{
@@ -137,7 +137,7 @@ Key Changes:
 #### LiteLLM Proxy Call 
 
 ```bash
-curl http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:countTokens?key=anything \
+curl http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=anything \
     -H 'Content-Type: application/json' \
     -X POST \
     -d '{
@@ -152,7 +152,7 @@ curl http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:countTokens?key=a
 #### Direct Google AI Studio Call 
 
 ```bash
-curl https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:countTokens?key=$GOOGLE_API_KEY \
+curl https://generativelanguage.googleapis.com/v1beta/models/{{gemini_flash}}:countTokens?key=$GOOGLE_API_KEY \
     -H 'Content-Type: application/json' \
     -X POST \
     -d '{
@@ -169,7 +169,7 @@ curl https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:co
 #### LiteLLM Proxy Call 
 
 ```bash
-curl "http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:generateContent?key=anything" \
+curl "http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=anything" \
     -H 'Content-Type: application/json' \
     -X POST \
     -d '{
@@ -182,7 +182,7 @@ curl "http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:generateContent?
 #### Direct Google AI Studio Call 
 
 ```bash
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GOOGLE_API_KEY" \
+curl "https://generativelanguage.googleapis.com/v1beta/models/{{gemini_flash}}:generateContent?key=$GOOGLE_API_KEY" \
     -H 'Content-Type: application/json' \
     -X POST \
     -d '{
@@ -196,7 +196,7 @@ curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:g
 
 
 ```bash
-curl -X POST "http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash-001:generateContent?key=anything" \
+curl -X POST "http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=anything" \
 -H 'Content-Type: application/json' \
 -d '{
       "contents": [
@@ -214,7 +214,7 @@ curl -X POST "http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash-001:gene
 #### Direct Google AI Studio Call 
 
 ```bash
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=$GOOGLE_API_KEY" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/{{gemini_flash}}:generateContent?key=$GOOGLE_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
       "contents": [
@@ -282,7 +282,7 @@ Expected Response
 
 
 ```bash
-http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:countTokens?key=sk-1234ewknldferwedojwojw' \
+http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-1234ewknldferwedojwojw' \
 -H 'Content-Type: application/json' \
 -d '{
     "contents": [{
@@ -308,7 +308,7 @@ tags: ["gemini-js-sdk", "pass-through-endpoint"]
 <TabItem value="curl" label="curl">
 
 ```bash
-curl 'http://0.0.0.0:4000/gemini/v1beta/models/gemini-1.5-flash:generateContent?key=sk-anything' \
+curl 'http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=sk-anything' \
 -H 'Content-Type: application/json' \
 -H 'tags: gemini-js-sdk,pass-through-endpoint' \
 -d '{
@@ -339,7 +339,7 @@ const ai = new GoogleGenAI({
 async function main() {
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "{{gemini_flash}}",
             contents: "Explain how AI works",
         });
         console.log(response.text);

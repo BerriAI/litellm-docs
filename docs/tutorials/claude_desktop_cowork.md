@@ -77,13 +77,13 @@ general_settings:
         team_ids_jwt_field: groups
 
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-haiku-4-5
     litellm_params:
@@ -108,13 +108,13 @@ general_settings:
         team_ids_jwt_field: groups
 
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-haiku-4-5
     litellm_params:
@@ -160,7 +160,7 @@ curl https://your-litellm-proxy.com/v1/models \
 
 curl -N https://your-litellm-proxy.com/v1/messages \
   -H "Authorization: Bearer $ID_TOKEN" -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
-  -d '{"model":"claude-sonnet-5","max_tokens":64,"stream":true,"messages":[{"role":"user","content":"hello"}]}'
+  -d '{"model":"{{anthropic}}","max_tokens":64,"stream":true,"messages":[{"role":"user","content":"hello"}]}'
 ```
 
 The first returns the Anthropic-shaped model list the picker is built from; the second streams a reply. A `401` with `Audience doesn't match` means the token was issued to a different client id than the one in `audience`; `Missing JWT Public Key URL from environment.` means the token's `iss` matched no `issuers` entry; `Token Expired` is the state the app resolves on its own by refreshing the token, or by prompting **Sign in again** when the refresh fails.
@@ -185,17 +185,17 @@ The exported form is `inferenceProvider: gateway`, `inferenceGatewayBaseUrl`, an
 
 ## Models in the picker
 
-Claude Desktop builds the picker from `GET /v1/models` and keeps only ids that contain `claude` or `anthropic`, case-insensitively, so the `model_name` values in your `model_list` are what matter, not the upstream ids behind them: `claude-sonnet-5` served from Bedrock or Vertex AI passes, `smart-router` does not. LiteLLM does not return the `anthropic_family_tier` field that would let an opaque alias through the filter, so either put `claude` in the name or list the model in `inferenceModels`, which replaces discovery with exactly the entries you give (the first is the default):
+Claude Desktop builds the picker from `GET /v1/models` and keeps only ids that contain `claude` or `anthropic`, case-insensitively, so the `model_name` values in your `model_list` are what matter, not the upstream ids behind them: `{{anthropic}}` served from Bedrock or Vertex AI passes, `smart-router` does not. LiteLLM does not return the `anthropic_family_tier` field that would let an opaque alias through the filter, so either put `claude` in the name or list the model in `inferenceModels`, which replaces discovery with exactly the entries you give (the first is the default):
 
 ```json
 [
-  {"name": "claude-sonnet-5", "supports1m": true},
-  {"name": "claude-opus-5", "labelOverride": "Opus 5 via LiteLLM"},
+  {"name": "{{anthropic}}", "supports1m": true},
+  {"name": "{{anthropic_large}}", "labelOverride": "Opus 5 via LiteLLM"},
   {"name": "claude-haiku-4-5"}
 ]
 ```
 
-`supports1m` adds a second, 1M-context picker entry for that model (the string shorthand `"claude-sonnet-5[1m]"` means the same); set it only on a `name` that exactly matches the id your proxy returns and only for deployments that accept 1M-token requests. `anthropicFamilyTier` (`sonnet`, `opus`, `haiku`, `fable`, `mythos`) with `isFamilyDefault: true` tells the app which entry a bare tier alias resolves to. Organizations on Claude for Teams or Enterprise also need each gateway model name on their `availableModels` allowlist, or it shows greyed out; [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers the allowlist rules and how to put an auto router behind a name the picker accepts. Non-Claude models behind LiteLLM work the same way once their `model_name` contains `claude`; add `drop_params: true` to those entries so the Anthropic-specific request fields Cowork and Code sessions send are dropped where the provider has no equivalent instead of failing the request.
+`supports1m` adds a second, 1M-context picker entry for that model (the string shorthand `"{{anthropic}}[1m]"` means the same); set it only on a `name` that exactly matches the id your proxy returns and only for deployments that accept 1M-token requests. `anthropicFamilyTier` (`sonnet`, `opus`, `haiku`, `fable`, `mythos`) with `isFamilyDefault: true` tells the app which entry a bare tier alias resolves to. Organizations on Claude for Teams or Enterprise also need each gateway model name on their `availableModels` allowlist, or it shows greyed out; [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers the allowlist rules and how to put an auto router behind a name the picker accepts. Non-Claude models behind LiteLLM work the same way once their `model_name` contains `claude`; add `drop_params: true` to those entries so the Anthropic-specific request fields Cowork and Code sessions send are dropped where the provider has no equivalent instead of failing the request.
 
 ## MCP servers through the LiteLLM MCP gateway
 
@@ -219,7 +219,7 @@ Access to a server is granted rather than assumed: a signed-in user sees only th
 curl -X POST https://your-litellm-proxy.com/team/new \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "content-type: application/json" \
   -d '{"team_id": "GROUP_ID_FROM_THE_TOKEN", "team_alias": "Claude Desktop users",
-       "models": ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5"], "max_budget": 500,
+       "models": ["{{anthropic}}", "{{anthropic_large}}", "claude-haiku-4-5"], "max_budget": 500,
        "object_permission": {"mcp_servers": ["deepwiki", "github"]}}'
 ```
 

@@ -40,9 +40,9 @@ All you need is a LiteLLM build that includes the `compresr` guardrail and an AP
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 guardrails:
@@ -92,7 +92,7 @@ litellm --config config.yaml
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "Which filing discusses Q3 revenue?"},
       {"role": "assistant", "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "search_filings", "arguments": "{\"query\": \"Q3 revenue\"}"}}]},
@@ -110,7 +110,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
       {"role": "user", "content": "Which filing discusses Q3 revenue?"}
@@ -153,7 +153,7 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [...],
     "guardrails": ["compresr-compression"]
   }'
@@ -169,7 +169,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [...],
     "litellm_metadata": {"guardrails": ["compresr-compression"]}
@@ -196,7 +196,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -d '{
         "key_alias": "support-agent-alice",
         "guardrails": ["compresr-compression"],
-        "models": ["claude-sonnet-5"],
+        "models": ["{{anthropic}}"],
         "metadata": {"team": "compression-rollout"}
       }'
 ```
