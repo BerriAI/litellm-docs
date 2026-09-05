@@ -151,7 +151,6 @@
 /* ── Search ───────────────────────────────────────────────────────────── */
 .searchRow {
   margin-top: 2rem;
-  max-width: 420px;
 }
 
 .searchInput {
@@ -367,10 +366,6 @@
   .pagination {
     padding: 1rem 0 3rem;
     gap: 1rem;
-  }
-
-  .searchRow {
-    max-width: none;
   }
 
   .searchInput {
