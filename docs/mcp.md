@@ -238,16 +238,21 @@ mcp_servers:
 - **Description**: Optional description for the server
 - **Auth Type**: Optional authentication type. Supported values:
 
+  See [MCP Non-OAuth Authentication](./mcp_authentication.md) for a choice guide, exact credential inputs, and upstream request examples.
+
   | Value | Header sent (managed SSE/HTTP transport) |
   |-------|-------------|
   | `none` | No auth header added |
   | `api_key` | `X-API-Key: <auth_value>` |
   | `bearer_token` | `Authorization: Bearer <auth_value>` |
-  | `basic` | `Authorization: Basic <auth_value>` |
+  | `basic` | `Authorization: Basic <base64(auth_value)>`; enter `auth_value` as raw `username:password` |
   | `authorization` | `Authorization: <auth_value>` (verbatim, no prefix) |
   | `token` | `Authorization: token <auth_value>` (GitHub-style) |
   | `oauth2` | `Authorization: Bearer <resolved_token>` — PKCE or M2M `client_credentials`. See [MCP OAuth](./mcp_oauth.md) |
   | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>` — RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
+  | `oauth2_id_jag` | `Authorization: Bearer <exchanged_token>` — Okta Cross App Access ID-JAG |
+  | `true_passthrough` | The client's upstream `Authorization`, forwarded verbatim. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
+  | `oauth_delegate` | A distinct client-supplied upstream bearer, after LiteLLM admission. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
   | `aws_sigv4` | Per-request AWS SigV4 signature. See [MCP AWS SigV4](./mcp_aws_sigv4.md) |
 
   The header shown above is the default. Set `upstream_token_header` on the server to send the resolved token somewhere other than `Authorization`, which is what an MCP server behind an API gateway usually needs. See [MCP OAuth](./mcp_oauth.md#sending-the-token-on-a-different-header)
@@ -286,7 +291,7 @@ mcp_servers:
   basic_example:
     url: "https://my-mcp-server.com/mcp"
     auth_type: "basic"
-    auth_value: "dXNlcjpwYXNz"  # headers={"Authorization": "Basic dXNlcjpwYXNz"}
+    auth_value: "user:pass"  # headers={"Authorization": "Basic dXNlcjpwYXNz"}
 
   custom_auth_example:
     url: "https://my-mcp-server.com/mcp"
