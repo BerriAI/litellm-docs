@@ -21,6 +21,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 <AutoRouterDiagram />
 
+- **One-click setup.** Pick a preset in the dashboard, check what it would route with Test Routing, save.
 - **One model name in your clients.** The gateway classifies each request and picks the model.
 - **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
 - **Three classifiers.** Sub-millisecond heuristic scorer, a small LLM, or keyword rules.
