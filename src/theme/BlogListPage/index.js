@@ -36,6 +36,25 @@ function filterItems(items, tab) {
   );
 }
 
+function searchableText(item) {
+  const metadata = item.content?.metadata || {};
+  return [
+    metadata.title,
+    metadata.description,
+    metadata.keywords,
+    ...(metadata.tags || []).map(tag => tag.label),
+    ...(metadata.authors || []).map(author => author.name),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function queryTokens(query) {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+function matchesQuery(text, tokens) {
+  return tokens.every(token => text.includes(token));
+}
+
 // ── Provider marquee ──────────────────────────────────────────────────────
 const PROVIDERS = [
   { name: 'OpenAI',        img: 'https://www.google.com/s2/favicons?domain=openai.com&sz=64' },
@@ -135,7 +154,11 @@ export default function BlogListPage(props) {
   const items = props.items || [];
   const metadata = props.metadata || {};
   const [activeTab, setActiveTab] = useState('all');
-  const filtered = filterItems(items, activeTab);
+  const [query, setQuery] = useState('');
+  const tokens = queryTokens(query);
+  const filtered = filterItems(items, activeTab).filter(item =>
+    matchesQuery(searchableText(item), tokens)
+  );
 
   return (
     <Layout
@@ -162,6 +185,21 @@ export default function BlogListPage(props) {
 
         <ProviderMarquee />
 
+        <div className={styles.searchRow}>
+          <input
+            type="search"
+            className={styles.searchInput}
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Escape') setQuery('');
+            }}
+            placeholder="Search posts"
+            aria-label="Search posts"
+            autoComplete="off"
+          />
+        </div>
+
         {/* Tabs */}
         <nav className={styles.tabs} aria-label="Filter posts by category">
           {TABS.map(tab => (
@@ -176,10 +214,16 @@ export default function BlogListPage(props) {
           ))}
         </nav>
 
+        <p className={styles.resultCount} role="status" aria-live="polite">
+          {query ? `${filtered.length} of ${items.length} posts` : ''}
+        </p>
+
         {/* Post list */}
         <main className={styles.list}>
           {filtered.length === 0 && (
-            <p className={styles.emptyMsg}>No posts on this page match the selected filter.</p>
+            <p className={styles.emptyMsg}>
+              {query ? `No posts match "${query}".` : 'No posts on this page match the selected filter.'}
+            </p>
           )}
           {filtered.map(({content}) => (
             <PostRow key={content.metadata.permalink} post={content.metadata} />
