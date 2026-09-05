@@ -19,7 +19,7 @@ import os
 
 os.environ['DEEPSEEK_API_KEY'] = ""
 response = completion(
-    model="deepseek/deepseek-chat", 
+    model="deepseek/deepseek-v4-pro",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -34,7 +34,7 @@ import os
 
 os.environ['DEEPSEEK_API_KEY'] = ""
 response = completion(
-    model="deepseek/deepseek-chat", 
+    model="deepseek/deepseek-v4-pro",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -51,7 +51,7 @@ We support ALL Deepseek models, just set `deepseek/` as a prefix when sending co
 
 | Model Name               | Function Call                                                                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| deepseek-chat | `completion(model="deepseek/deepseek-chat", messages)` | 
+| deepseek-v4-pro | `completion(model="deepseek/deepseek-v4-pro", messages)` |
 | deepseek-coder | `completion(model="deepseek/deepseek-coder", messages)` | 
 
 

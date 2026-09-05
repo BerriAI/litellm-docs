@@ -53,7 +53,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Moonshot call
 response = completion(
-    model="moonshot/moonshot-v1-8k", 
+    model="moonshot/kimi-k3",
     messages=messages
 )
 
@@ -73,7 +73,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Moonshot call with streaming
 response = completion(
-    model="moonshot/moonshot-v1-8k", 
+    model="moonshot/kimi-k3",
     messages=messages,
     stream=True
 )
@@ -88,9 +88,9 @@ Add the following to your LiteLLM Proxy configuration file:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: moonshot-v1-8k
+  - model_name: kimi-k3
     litellm_params:
-      model: moonshot/moonshot-v1-8k
+      model: moonshot/kimi-k3
       api_key: os.environ/MOONSHOT_API_KEY
 
   - model_name: moonshot-v1-32k
@@ -126,7 +126,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.chat.completions.create(
-    model="moonshot-v1-8k",
+    model="kimi-k3",
     messages=[{"role": "user", "content": "hello from litellm"}]
 )
 
@@ -144,7 +144,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.chat.completions.create(
-    model="moonshot-v1-8k",
+    model="kimi-k3",
     messages=[{"role": "user", "content": "hello from litellm"}],
     stream=True
 )
@@ -163,7 +163,7 @@ import litellm
 
 # Configure LiteLLM to use your proxy
 response = litellm.completion(
-    model="litellm_proxy/moonshot-v1-8k",
+    model="litellm_proxy/kimi-k3",
     messages=[{"role": "user", "content": "hello from litellm"}],
     api_base="http://localhost:4000",
     api_key="your-proxy-api-key"
@@ -177,7 +177,7 @@ import litellm
 
 # Configure LiteLLM to use your proxy with streaming
 response = litellm.completion(
-    model="litellm_proxy/moonshot-v1-8k",
+    model="litellm_proxy/kimi-k3",
     messages=[{"role": "user", "content": "hello from litellm"}],
     api_base="http://localhost:4000",
     api_key="your-proxy-api-key",
@@ -198,7 +198,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "moonshot-v1-8k",
+    "model": "kimi-k3",
     "messages": [{"role": "user", "content": "hello from litellm"}]
   }'
 ```
@@ -208,7 +208,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "moonshot-v1-8k",
+    "model": "kimi-k3",
     "messages": [{"role": "user", "content": "hello from litellm"}],
     "stream": true
   }'

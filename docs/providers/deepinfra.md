@@ -29,7 +29,7 @@ import os
 
 os.environ['DEEPINFRA_API_KEY'] = ""
 response = completion(
-    model="deepinfra/meta-llama/Llama-2-70b-chat-hf", 
+    model="deepinfra/moonshotai/Kimi-K3",
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}]
 )
 ```
@@ -41,7 +41,7 @@ import os
 
 os.environ['DEEPINFRA_API_KEY'] = ""
 response = completion(
-    model="deepinfra/meta-llama/Llama-2-70b-chat-hf", 
+    model="deepinfra/moonshotai/Kimi-K3",
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}],
     stream=True
 )
@@ -51,16 +51,14 @@ for chunk in response:
 ```
 
 ## Chat Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| meta-llama/Meta-Llama-3-8B-Instruct  | `completion(model="deepinfra/meta-llama/Meta-Llama-3-8B-Instruct", messages)` | 
-| meta-llama/Meta-Llama-3-70B-Instruct  | `completion(model="deepinfra/meta-llama/Meta-Llama-3-70B-Instruct", messages)` | 
-| meta-llama/Llama-2-70b-chat-hf  | `completion(model="deepinfra/meta-llama/Llama-2-70b-chat-hf", messages)` | 
-| meta-llama/Llama-2-7b-chat-hf  | `completion(model="deepinfra/meta-llama/Llama-2-7b-chat-hf", messages)` | 
-| meta-llama/Llama-2-13b-chat-hf | `completion(model="deepinfra/meta-llama/Llama-2-13b-chat-hf", messages)` | 
-| codellama/CodeLlama-34b-Instruct-hf | `completion(model="deepinfra/codellama/CodeLlama-34b-Instruct-hf", messages)` |
-| mistralai/Mistral-7B-Instruct-v0.1 | `completion(model="deepinfra/mistralai/Mistral-7B-Instruct-v0.1", messages)` | 
-| jondurbin/airoboros-l2-70b-gpt4-1.4.1 | `completion(model="deepinfra/jondurbin/airoboros-l2-70b-gpt4-1.4.1", messages)` |
+
+Use `deepinfra/<model-id>` with a model from the [DeepInfra catalog](https://deepinfra.com/models). These are representative chat models:
+
+| Model | LiteLLM model ID |
+|-------|------------------|
+| GLM-5.3 | `deepinfra/zai-org/GLM-5.3` |
+| Kimi K3 | `deepinfra/moonshotai/Kimi-K3` |
+| GPT OSS 120B | `deepinfra/openai/gpt-oss-120b` |
 
 ## Rerank Endpoint
 

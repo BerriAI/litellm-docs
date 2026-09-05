@@ -32,19 +32,18 @@ import os
 
 os.environ['NVIDIA_NIM_API_KEY'] = ""
 response = completion(
-    model="nvidia_nim/meta/llama3-70b-instruct",
+    model="nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
     messages=[
         {
             "role": "user",
             "content": "What's the weather like in Boston today in Fahrenheit?",
         }
     ],
-    temperature=0.2,        # optional
-    top_p=0.9,              # optional
+    temperature=1.0,        # optional
+    top_p=0.95,             # optional
     frequency_penalty=0.1,  # optional
     presence_penalty=0.1,   # optional
-    max_tokens=10,          # optional
-    stop=["\n\n"],          # optional
+    max_tokens=4096,        # optional
 )
 print(response)
 ```
@@ -56,7 +55,7 @@ import os
 
 os.environ['NVIDIA_NIM_API_KEY'] = ""
 response = completion(
-    model="nvidia_nim/meta/llama3-70b-instruct",
+    model="nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
     messages=[
         {
             "role": "user",
@@ -64,12 +63,11 @@ response = completion(
         }
     ],
     stream=True,
-    temperature=0.2,        # optional
-    top_p=0.9,              # optional
+    temperature=1.0,        # optional
+    top_p=0.95,             # optional
     frequency_penalty=0.1,  # optional
     presence_penalty=0.1,   # optional
-    max_tokens=10,          # optional
-    stop=["\n\n"],          # optional
+    max_tokens=4096,        # optional
 )
 
 for chunk in response:
@@ -168,39 +166,11 @@ Here's how to call an Nvidia NIM Endpoint with the LiteLLM Proxy Server
 
 
 
-## Supported Models - 💥 ALL Nvidia NIM Models Supported!
-We support ALL `nvidia_nim` models, just set `nvidia_nim/` as a prefix when sending completion requests
+## Supported Models
 
-| Model Name | Function Call |
-|------------|---------------|
-| nvidia/nemotron-4-340b-reward | `completion(model="nvidia_nim/nvidia/nemotron-4-340b-reward", messages)` |
-| 01-ai/yi-large | `completion(model="nvidia_nim/01-ai/yi-large", messages)` |
-| aisingapore/sea-lion-7b-instruct | `completion(model="nvidia_nim/aisingapore/sea-lion-7b-instruct", messages)` |
-| databricks/dbrx-instruct | `completion(model="nvidia_nim/databricks/dbrx-instruct", messages)` |
-| google/gemma-7b | `completion(model="nvidia_nim/google/gemma-7b", messages)` |
-| google/gemma-2b | `completion(model="nvidia_nim/google/gemma-2b", messages)` |
-| google/codegemma-1.1-7b | `completion(model="nvidia_nim/google/codegemma-1.1-7b", messages)` |
-| google/codegemma-7b | `completion(model="nvidia_nim/google/codegemma-7b", messages)` |
-| google/recurrentgemma-2b | `completion(model="nvidia_nim/google/recurrentgemma-2b", messages)` |
-| ibm/granite-34b-code-instruct | `completion(model="nvidia_nim/ibm/granite-34b-code-instruct", messages)` |
-| ibm/granite-8b-code-instruct | `completion(model="nvidia_nim/ibm/granite-8b-code-instruct", messages)` |
-| mediatek/breeze-7b-instruct | `completion(model="nvidia_nim/mediatek/breeze-7b-instruct", messages)` |
-| meta/codellama-70b | `completion(model="nvidia_nim/meta/codellama-70b", messages)` |
-| meta/llama2-70b | `completion(model="nvidia_nim/meta/llama2-70b", messages)` |
-| meta/llama3-8b | `completion(model="nvidia_nim/meta/llama3-8b", messages)` |
-| meta/llama3-70b | `completion(model="nvidia_nim/meta/llama3-70b", messages)` |
-| microsoft/phi-3-medium-4k-instruct | `completion(model="nvidia_nim/microsoft/phi-3-medium-4k-instruct", messages)` |
-| microsoft/phi-3-mini-128k-instruct | `completion(model="nvidia_nim/microsoft/phi-3-mini-128k-instruct", messages)` |
-| microsoft/phi-3-mini-4k-instruct | `completion(model="nvidia_nim/microsoft/phi-3-mini-4k-instruct", messages)` |
-| microsoft/phi-3-small-128k-instruct | `completion(model="nvidia_nim/microsoft/phi-3-small-128k-instruct", messages)` |
-| microsoft/phi-3-small-8k-instruct | `completion(model="nvidia_nim/microsoft/phi-3-small-8k-instruct", messages)` |
-| mistralai/codestral-22b-instruct-v0.1 | `completion(model="nvidia_nim/mistralai/codestral-22b-instruct-v0.1", messages)` |
-| mistralai/mistral-7b-instruct | `completion(model="nvidia_nim/mistralai/mistral-7b-instruct", messages)` |
-| mistralai/mistral-7b-instruct-v0.3 | `completion(model="nvidia_nim/mistralai/mistral-7b-instruct-v0.3", messages)` |
-| mistralai/mixtral-8x7b-instruct | `completion(model="nvidia_nim/mistralai/mixtral-8x7b-instruct", messages)` |
-| mistralai/mixtral-8x22b-instruct | `completion(model="nvidia_nim/mistralai/mixtral-8x22b-instruct", messages)` |
-| mistralai/mistral-large | `completion(model="nvidia_nim/mistralai/mistral-large", messages)` |
-| nvidia/nemotron-4-340b-instruct | `completion(model="nvidia_nim/nvidia/nemotron-4-340b-instruct", messages)` |
-| seallms/seallm-7b-v2.5 | `completion(model="nvidia_nim/seallms/seallm-7b-v2.5", messages)` |
-| snowflake/arctic | `completion(model="nvidia_nim/snowflake/arctic", messages)` |
-| upstage/solar-10.7b-instruct | `completion(model="nvidia_nim/upstage/solar-10.7b-instruct", messages)` |
+Use `nvidia_nim/<model-id>` with a chat model available on your NVIDIA endpoint. These are representative models from the [NVIDIA model catalog](https://build.nvidia.com/models):
+
+| Model | LiteLLM model ID |
+|-------|------------------|
+| Nemotron 3 Super | `nvidia_nim/nvidia/nemotron-3-super-120b-a12b` |
+| Nemotron 3.5 Lightning | `nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b` |

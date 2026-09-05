@@ -23,19 +23,18 @@ import os
 
 os.environ['CEREBRAS_API_KEY'] = ""
 response = completion(
-    model="cerebras/llama3-70b-instruct",
+    model="cerebras/gpt-oss-120b",
     messages=[
         {
             "role": "user",
             "content": "What's the weather like in Boston today in Fahrenheit? (Write in JSON)",
         }
     ],
-    max_tokens=10,
+    max_tokens=4096,
         
     # The prompt should include JSON if 'json_object' is selected; otherwise, you will get error code 400.
     response_format={ "type": "json_object" },
     seed=123,
-    stop=["\n\n"],
     temperature=0.2,
     top_p=0.9,
     tool_choice="auto",
@@ -52,7 +51,7 @@ import os
 
 os.environ['CEREBRAS_API_KEY'] = ""
 response = completion(
-    model="cerebras/llama3-70b-instruct",
+    model="cerebras/gpt-oss-120b",
     messages=[
         {
             "role": "user",
@@ -60,12 +59,11 @@ response = completion(
         }
     ],
     stream=True,
-    max_tokens=10,
+    max_tokens=4096,
 
     # The prompt should include JSON if 'json_object' is selected; otherwise, you will get error code 400.
     response_format={ "type": "json_object" }, 
     seed=123,
-    stop=["\n\n"],
     temperature=0.2,
     top_p=0.9,
     tool_choice="auto",
