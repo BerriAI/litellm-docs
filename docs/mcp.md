@@ -340,7 +340,7 @@ curl -s http://localhost:4000/v1/mcp/server \
   -H "Authorization: Bearer sk-1234"
 ```
 
-`server_id` must be a non-empty string. Config entries cannot reuse an id or another entry's name or alias. If it conflicts with a database-backed server, LiteLLM logs a warning and the database server takes precedence.
+`server_id` must be a non-empty string. Config entries cannot reuse an id or another entry's name or alias. Clashes with a database-backed server only log a warning: if the id matches, the database server wins and the config one is unreachable, and if it matches that server's name or alias, permissions naming it reach the config server instead.
 
 If `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` is enabled, changing the id also changes the server's tool prefix. Servers added through the UI or `/v1/mcp/server` already have stable ids.
 
