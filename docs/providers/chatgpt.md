@@ -17,7 +17,7 @@ Notes:
 
 ## Authentication
 
-ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you open the URL, sign in, and enter the code, and the tokens are stored in `~/.config/litellm/chatgpt/auth.json` for reuse. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt and fail with `ChatGPT device-code login needs a human` instead, so for the proxy you sign in first and mount the resulting file, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
+ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you open the URL, sign in, and enter the code, and the tokens are stored in `~/.config/litellm/chatgpt/auth.json` for reuse. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt (older releases block on it, newer ones fail with `ChatGPT device-code login needs a human`), so for the proxy you sign in first and mount the resulting file, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ## Usage - LiteLLM Python SDK
 
@@ -51,18 +51,32 @@ print(response)
 
 ### Sign in before starting the proxy
 
-The proxy never runs the device code flow. It looks for a token while it creates each `chatgpt/` deployment at startup, and with no `auth.json` on disk every one of them fails to initialize (the startup log shows `ChatGPT device-code login needs a human and cannot run inside a running event loop or a worker thread` for each, in every worker), after which every request to those models returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal on the machine or in the image you build the proxy from:
+The proxy cannot complete the device code flow: it runs in worker processes with no terminal to hand the code to. With no `auth.json` on disk, older releases print the code from a worker and hold startup on each `chatgpt/` deployment while they wait for someone to enter it, and newer releases refuse to initialize the deployment, logging `ChatGPT device-code login needs a human and cannot run inside a running event loop or a worker thread` once per deployment in every worker. Either way, every request to those models then returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal instead:
 
 ```bash showLineNumbers title="Sign in once, outside the proxy"
 python -c "from litellm.llms.chatgpt.authenticator import Authenticator; Authenticator().get_access_token()"
 ```
 
-Open the printed URL, sign in, and enter the code. The tokens land in `~/.config/litellm/chatgpt/auth.json` (`CHATGPT_TOKEN_DIR` and `CHATGPT_AUTH_FILE` change the location). Put that file at the same path on the proxy host, or set `CHATGPT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: a proxy started without the file needs a restart after it appears. The access token lasts about ten days and the proxy refreshes it on its own, writing the refreshed tokens back into `auth.json`, so the file must be writable; a read-only copy logs `Failed to write ChatGPT auth file` on every refresh.
+Open the printed URL, sign in, and enter the code. The tokens land in `~/.config/litellm/chatgpt/auth.json` (`CHATGPT_TOKEN_DIR` and `CHATGPT_AUTH_FILE` change the location); a second run within five minutes of an abandoned attempt waits out the rest of that window before it prints a new code. Put the file at the same path on the proxy host, or set `CHATGPT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: `model_list` deployments are created at startup, so a proxy started without the file needs a restart after it appears.
 
-On Kubernetes, keep `auth.json` in a Secret and copy it into a writable `emptyDir` that `CHATGPT_TOKEN_DIR` points at, since Secret volumes are read-only. Every worker in every pod reads the same login, so you sign in once for the whole deployment.
+The access token lasts about ten days. When it expires, the proxy trades the refresh token for a new pair and writes it back into `auth.json`, and each refresh token works only once, so the file must be writable: a read-only copy logs `Failed to write ChatGPT auth file` and stops working at the first refresh. For the same reason every proxy process has to share one copy of the file. The proxy re-reads it on every request, so whichever worker or pod refreshes first serves the rest, while separate copies diverge at the first refresh and all but one of them stop working until you sign in again. Two workers that hit the expiry at the same moment both try the same refresh token, and the loser logs `ChatGPT refresh token failed, re-login required`: newer releases fail that one request and pick up the new pair on the next one, older releases block that worker in the device-code poll for up to fifteen minutes first.
+
+On Kubernetes, give the proxy one writable copy of the file that survives restarts and is shared by every replica: a PersistentVolumeClaim (`ReadWriteMany` for more than one replica) mounted at `CHATGPT_TOKEN_DIR`, seeded from a Secret by an init container the first time the volume is empty. A Secret volume is read-only, and a per-pod `emptyDir` is re-seeded from the original login on every restart, so both break at the first refresh. The proxy rewrites the file in place rather than atomically, so a replica that reads it in the middle of another replica's write logs `Invalid ChatGPT auth file` and behaves as if it had no login at all; restart that replica. The `chown` hands the file to the user the official `litellm-non_root` image runs as (65534); the root image needs no chown, and a custom image uses its own uid.
 
 ```bash showLineNumbers title="Create the Secret from your local login"
 kubectl create secret generic litellm-chatgpt-auth --from-file=auth.json=$HOME/.config/litellm/chatgpt/auth.json
+```
+
+```yaml showLineNumbers title="Shared token volume"
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: litellm-chatgpt-tokens
+spec:
+  accessModes: ["ReadWriteMany"]
+  resources:
+    requests:
+      storage: 1Mi
 ```
 
 ```yaml showLineNumbers title="Pod spec excerpt"
@@ -70,7 +84,10 @@ spec:
   initContainers:
     - name: chatgpt-token
       image: busybox
-      command: ["cp", "/secrets/chatgpt/auth.json", "/tokens/chatgpt/auth.json"]
+      command:
+        - sh
+        - -c
+        - "test -f /tokens/chatgpt/auth.json || cp /secrets/chatgpt/auth.json /tokens/chatgpt/auth.json && chown 65534 /tokens/chatgpt/auth.json"
       volumeMounts:
         - name: chatgpt-secret
           mountPath: /secrets/chatgpt
@@ -90,7 +107,8 @@ spec:
       secret:
         secretName: litellm-chatgpt-auth
     - name: chatgpt-tokens
-      emptyDir: {}
+      persistentVolumeClaim:
+        claimName: litellm-chatgpt-tokens
 ```
 
 ### Configure and start the proxy

@@ -20,7 +20,7 @@ https://docs.github.com/en/copilot
 
 ## Authentication
 
-GitHub Copilot uses the OAuth device flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you visit the URL and enter the code, and the GitHub token is stored in `~/.config/litellm/github_copilot/access-token` for future use. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt and fail with `GitHub Copilot device-code login needs a human` instead, so for the proxy you sign in first and mount the token, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
+GitHub Copilot uses the OAuth device flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you visit the URL and enter the code, and the GitHub token is stored in `~/.config/litellm/github_copilot/access-token` for future use. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt (older releases block on it, newer ones fail with `GitHub Copilot device-code login needs a human`), so for the proxy you sign in first and mount the token, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ## Usage - LiteLLM Python SDK
 
@@ -85,13 +85,13 @@ print(response)
 
 ### Sign in before starting the proxy
 
-The proxy never runs the device flow. It looks for a token while it creates each `github_copilot/` deployment at startup, and with no `access-token` on disk every one of them fails to initialize (the startup log shows `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` for each, in every worker), after which every request to those models returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal on the machine or in the image you build the proxy from:
+The proxy cannot complete the device flow: it runs in worker processes with no terminal to hand the code to. With no `access-token` on disk, older releases print the code from a worker and hold startup on each `github_copilot/` deployment while they wait for someone to enter it, and newer releases refuse to initialize the deployment, logging `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` once per deployment in every worker. Either way, every request to those models then returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal instead:
 
 ```bash showLineNumbers title="Sign in once, outside the proxy"
 python -c "from litellm.llms.github_copilot.authenticator import Authenticator; Authenticator().get_access_token()"
 ```
 
-Visit the printed URL and enter the code. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: a proxy started without the file needs a restart after it appears. The directory must be writable, because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, requests fail with `Failed to save API key`.
+Visit the printed URL and enter the code. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: `model_list` deployments are created at startup, so a proxy started without the file needs a restart after it appears. The directory must be writable, because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, the deployment fails at startup the same way a missing token does, with `Failed to save API key` inside the `Error creating deployment` log line.
 
 On Kubernetes, keep `access-token` in a Secret and copy it into a writable `emptyDir` that `GITHUB_COPILOT_TOKEN_DIR` points at, since Secret volumes are read-only. The GitHub token is long-lived and holds no per-process state, so every worker in every pod shares the same one and each derives its own `api-key.json`.
 
