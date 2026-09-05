@@ -191,37 +191,6 @@
   font-weight: 500;
 }
 
-.chartLegend {
-  display: flex;
-  justify-content: center;
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
-  color: var(--mw-text-secondary);
-  font-size: 0.8rem;
-}
-
-.chartLegend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.legendSwatch {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 2px;
-}
-
-.pythonSwatch,
-.pythonBar {
-  background: var(--mw-warning-accent);
-}
-
-.rustSwatch,
-.rustBar {
-  background: var(--mw-success-accent);
-}
-
 .comparisonChart {
   display: grid;
   gap: 1rem;
@@ -229,16 +198,6 @@
   background: var(--mw-column-bg);
   border: 1px solid var(--mw-column-border);
   border-radius: 12px;
-}
-
-.profileGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.profileGrid > :last-child:nth-child(odd) {
-  grid-column: 1 / -1;
 }
 
 .profileHeader {
@@ -296,79 +255,86 @@
   font-size: 0.85rem;
 }
 
-.profileChart {
-  display: grid;
-  gap: 1rem;
-}
-
-.profileRow {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.profileLabel {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--mw-text-primary);
-  font-size: 0.85rem;
-}
-
-.profileLabel span {
+.matrixLegend {
   color: var(--mw-text-secondary);
   font-size: 0.75rem;
-  text-align: right;
+  text-align: center;
 }
 
-.chartMetric {
+.benchmarkMatrix {
   display: grid;
-  gap: 0.45rem;
+  grid-template-columns: minmax(7rem, 1fr) repeat(3, minmax(5rem, 1fr));
+  gap: 0.4rem;
+  align-items: stretch;
 }
 
-.chartMetricHeader {
+.matrixCorner,
+.matrixColumnHeader,
+.matrixRowHeader {
+  color: var(--mw-text-secondary);
+  font-size: 0.75rem;
+}
+
+.matrixCorner,
+.matrixRowHeader {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+}
+
+.matrixColumnHeader {
+  display: grid;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.matrixColumnHeader strong {
   color: var(--mw-text-primary);
-  font-size: 0.9rem;
+}
+
+.matrixColumnHeader span {
+  font-size: 0.7rem;
+}
+
+.matrixRowHeader {
+  color: var(--mw-text-primary);
   font-weight: 700;
 }
 
-.chartMetricHeader strong {
-  color: var(--mw-success-accent);
-  font-size: 0.8rem;
-}
-
-.chartSeries {
-  display: grid;
-  grid-template-columns: 3.5rem minmax(0, 1fr) 6.5rem;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.chartSeriesLabel,
-.chartValue {
-  color: var(--mw-text-secondary);
-  font-size: 0.75rem;
-}
-
-.chartValue {
+.matrixCell {
+  min-height: 3rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: var(--mw-text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  font-weight: 700;
 }
 
-.chartTrack {
-  height: 0.75rem;
-  background: var(--mw-progress-bg);
-  border-radius: 999px;
-  overflow: hidden;
+.matrixImprovement {
+  background: var(--mw-stage-green-active-bg);
+  color: var(--mw-success-accent);
 }
 
-.chartBar {
-  height: 100%;
-  min-width: 0.25rem;
-  border-radius: inherit;
+.matrixParity {
+  background: var(--mw-stage-bg);
+  color: var(--mw-text-secondary);
+}
+
+.matrixRegression {
+  background: var(--mw-layer-warning-bg);
+  color: var(--mw-warning-accent);
+}
+
+.matrixCellSelected {
+  border-color: currentColor;
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.matrixDetail {
+  margin: 0;
+  color: var(--mw-text-primary);
+  font-size: 0.8rem;
 }
 
 .benchmarkColumns {
@@ -667,12 +633,16 @@
     flex-direction: column;
   }
 
-  .profileGrid {
-    grid-template-columns: 1fr;
+  .benchmarkMatrix {
+    grid-template-columns: minmax(4.75rem, 1.2fr) repeat(3, minmax(3.5rem, 1fr));
   }
 
-  .profileGrid > :last-child:nth-child(odd) {
-    grid-column: auto;
+  .matrixColumnHeader span {
+    display: none;
+  }
+
+  .matrixCell {
+    font-size: 0.8rem;
   }
 
   .summaryStats {

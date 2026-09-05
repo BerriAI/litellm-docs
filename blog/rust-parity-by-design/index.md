@@ -31,6 +31,7 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
     {
       label: 'Input PDF size',
       description: 'Response fixed at one page',
+      takeaway: 'Rust keeps latency lower as the PDF grows, with the clearest gains at 256 KiB and 2 MiB.',
       profiles: [
         {
           name: '32 KiB PDF',
@@ -67,6 +68,7 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
     {
       label: 'Response size',
       description: 'Input fixed at a 32 KiB PDF',
+      takeaway: 'Rust leads on latency at every response size; at 128 pages, CPU time and memory remain near Python parity.',
       profiles: [
         {
           name: '1 response page',
