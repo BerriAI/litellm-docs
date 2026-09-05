@@ -21,11 +21,12 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 <AutoRouterDiagram />
 
+- **One-click setup.** Pick a preset in the dashboard, check what it would route with Test Routing, save.
 - **One model name in your clients.** The gateway classifies each request and picks the model.
 - **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
 - **Three classifiers.** Sub-millisecond heuristic scorer, a small LLM, or keyword rules.
 - **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
-- **Agent-safe.** Prompt caching, context-window escalation, modality routing, and optional session pinning.
+- **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
 
 ## Results
 
@@ -123,6 +124,7 @@ items={[
 
 ## Release posts
 
+- [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation): bumps a request one tier when it's stuck in a retry loop
 - [Auto Router v2](/blog/autorouter-v2): one router for complexity, semantic, and adaptive routing
 - [1-click presets and Test Routing](/blog/auto-router-setup-and-testing)
 - [Savings tab and per-request classifier cost](/blog/auto-router-spend-visibility)
