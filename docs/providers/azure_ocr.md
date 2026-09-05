@@ -201,6 +201,10 @@ curl http://0.0.0.0:4000/v1/ocr \
 
 `output_format` accepts `markdown` (default) or `blocks`, and `req_format: native` returns Cohere's own response body instead of the LiteLLM OCR shape. Cost tracking bills `usage_info.pages_processed` at the per-page price in the model cost map.
 
+The model cost map prices `azure_ai/Cohere-parse-v5` at Cohere's published rate of $1.50 per 1,000 pages, the price the Foundry catalog links to for this model.
+
+Health checks (`/health` and the Admin UI's Test Connection button) send Parse a small PNG instead of the PDF used for Mistral OCR. The `ocr` probe is picked from the model cost map for `Cohere-parse-v5`; a deployment under any other name needs `model_info: {mode: ocr}` in its `model_list` entry, like every other non-chat model.
+
 ## Supported Models
 
 - `mistral-document-ai-2505` - Latest Mistral OCR model on Azure AI
