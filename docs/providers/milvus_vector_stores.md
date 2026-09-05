@@ -123,6 +123,29 @@ vector_store_registry:
         limit: 10
 ```
 
+### gRPC transport
+
+Milvus deployments that only expose the gRPC port (19530 by default) can be searched over gRPC instead of the REST API. Set `milvus_transport: grpc` and point `api_base` at the gRPC endpoint:
+
+```yaml
+vector_store_registry:
+  - vector_store_name: "milvus-grpc-knowledgebase"
+    litellm_params:
+        vector_store_id: "my-collection-name"
+        custom_llm_provider: "milvus"
+        milvus_transport: grpc
+        api_key: os.environ/MILVUS_API_KEY
+        api_base: https://your-milvus-host:19530
+        litellm_embedding_model: "azure/text-embedding-3-large"
+        milvus_text_field: "book_intro"
+        milvus_db_name: "default"
+        milvus_partition_names: ["books"]
+```
+
+The gRPC transport uses the `pymilvus` client, which ships with the `milvus` extra (`pip install 'litellm[milvus]'`). It covers vector store search, including the search that runs when a chat completions, responses, or messages request names the store. Create, retrieve, update, delete, and file routes on `/v1/vector_stores` still use the REST API. Over gRPC the `filters`, `ranking_options`, and `rewrite_query` search options return a 400 instead of being ignored, and `max_num_results` must be between 1 and 50
+
+Only a proxy admin can save a gRPC connection through `/vector_store/new` or `/vector_store/update`, and changing any store's provider, credential name, or `litellm_params` through `/vector_store/update` needs a proxy admin as well. A gRPC store saved before this check existed returns a 403 asking for an admin re-save until a proxy admin saves it again
+
 ### Start Proxy
 
 ```bash
@@ -159,6 +182,9 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-collection-name/search' \
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
+| `milvus_transport` | string | `"grpc"` to search over the Milvus gRPC port with PyMilvus; omit to use the REST API |
+| `milvus_db_name` | string | Database name for either transport (default: "default") |
+| `milvus_partition_names` | list | Partition names to search, for either transport |
 | `dbName` | string | Database name (default: "default") |
 | `annsField` | string | Vector field name to search (default: "book_intro_vector") |
 | `limit` | integer | Maximum number of results to return |
