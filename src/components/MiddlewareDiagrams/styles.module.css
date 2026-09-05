@@ -191,6 +191,97 @@
   font-weight: 500;
 }
 
+.chartLegend {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  color: var(--mw-text-secondary);
+  font-size: 0.8rem;
+}
+
+.chartLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legendSwatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+}
+
+.pythonSwatch,
+.pythonBar {
+  background: var(--mw-warning-accent);
+}
+
+.rustSwatch,
+.rustBar {
+  background: var(--mw-success-accent);
+}
+
+.comparisonChart {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--mw-column-bg);
+  border: 1px solid var(--mw-column-border);
+  border-radius: 12px;
+}
+
+.chartMetric {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.chartMetricHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--mw-text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.chartMetricHeader strong {
+  color: var(--mw-success-accent);
+  font-size: 0.8rem;
+}
+
+.chartSeries {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) 6.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.chartSeriesLabel,
+.chartValue {
+  color: var(--mw-text-secondary);
+  font-size: 0.75rem;
+}
+
+.chartValue {
+  color: var(--mw-text-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.chartTrack {
+  height: 0.75rem;
+  background: var(--mw-progress-bg);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chartBar {
+  height: 100%;
+  min-width: 0.25rem;
+  border-radius: inherit;
+}
+
 .benchmarkColumns {
   display: flex;
   gap: 1.5rem;

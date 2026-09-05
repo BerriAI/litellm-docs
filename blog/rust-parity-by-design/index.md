@@ -25,52 +25,14 @@ For the large-request fixture, Rust completed nearly three times as many calls p
 
 <BenchmarkVisualization
   configLabel="Mistral OCR SDK benchmark · recorded large-request fixture · macOS arm64 · concurrency 1"
-  totalRequests={100}
-  columns={[
-    {
-      title: 'Python SDK',
-      accent: 'before',
-      durationMs: 10000,
-      layers: [
-        { label: 'Recorded OCR fixture' },
-        { label: 'Python request transformation' },
-        { label: 'Local isolated provider' },
-      ],
-      metrics: [
-        { label: 'Calls/s', value: 101.5 },
-        { label: 'P50', value: 9.739, suffix: 'ms' },
-      ],
-    },
-    {
-      title: 'Rust SDK path',
-      accent: 'after',
-      durationMs: 3300,
-      layers: [
-        { label: 'Recorded OCR fixture' },
-        { label: 'Rust request transformation' },
-        { label: 'Local isolated provider' },
-      ],
-      metrics: [
-        { label: 'Calls/s', value: 306.2 },
-        { label: 'P50', value: 3.291, suffix: 'ms' },
-      ],
-    },
+  pythonLabel="Existing Python code"
+  rustLabel="Rust core"
+  metrics={[
+    { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
+    { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
+    { label: 'Throughput', unit: 'calls/s', python: 101.5, rust: 306.2, lowerIsBetter: false },
+    { label: 'Peak RSS', unit: 'MiB', python: 457.6, rust: 390.6, lowerIsBetter: true },
   ]}
-  summaryStats={[
-    { value: '2.96x', label: 'Throughput on large requests' },
-    { value: '-66%', label: 'Median SDK latency' },
-  ]}
-  table={{
-    title: 'Synchronous OCR results',
-    headers: ['Fixture', 'Python calls/s', 'Rust calls/s', 'Rust speedup'],
-    rows: [
-      ['Small', '506.6', '589.4', '1.24x'],
-      ['Medium request', '56.1', '496.0', '4.19x'],
-      ['Large request', '101.5', '306.2', '2.96x'],
-      ['Medium response', '494.9', '1,798.4', '3.84x'],
-      ['Large response', '465.5', '603.4', '1.31x'],
-    ],
-  }}
 />
 
 These results are early, not a broad production capacity claim. They come from one macOS arm64 host, one concurrent caller, 100 timed calls per worker, and one paired repeat. The job now is to keep measuring, widen the workload, and make sure the gains hold.
