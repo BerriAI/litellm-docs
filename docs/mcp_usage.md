@@ -204,6 +204,8 @@ When server_url="litellm_proxy", LiteLLM bridges non-MCP providers to your MCP t
 
 This enables MCP tool usage with any LiteLLM-supported provider, regardless of native MCP support.
 
+If tool calls are missing from the response or fail, see [Responses and Chat Completions failures](./mcp_troubleshoot.md#responsescompletions-with-embedded-mcp-calls) in the troubleshooting runbook.
+
 #### Auto-execution for require_approval: "never"
 
 Setting require_approval: "never" triggers automatic tool execution, returning the final response in a single API call without additional user interaction.
