@@ -776,6 +776,8 @@ router_settings:
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
 | OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
+| OPENZOO_API_BASE | Base URL for OpenZoo. Default is http://localhost:8402/v1, the local `npx openzoo` proxy. The hosted https://api.openzoo.fun/v1 needs an ozk_live_ subscription key
+| OPENZOO_API_KEY | API key for OpenZoo. Any non-empty value works with the local proxy, which ignores it and pays per call over x402. Must be an ozk_live_ subscription key when OPENZOO_API_BASE is the hosted endpoint
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
