@@ -192,8 +192,9 @@ model_list:
       api_key: os.environ/GEMINI_API_KEY
 
 litellm_settings:
-  # Required for tool calling with Gemini Live:
-  # defer setup until client sends session.update (with tools)
+  # Optional. session.update events sent before any content already build the Gemini
+  # setup (with tools); this buffers audio and text sent before session.update so that
+  # update still applies
   gemini_live_defer_setup: true
 ```
 
@@ -205,13 +206,13 @@ python test_realtime_tool_calling.py
 ## Limitations 
 
 - Does not support audio transcription.
-- Session config updates after the first `session.update` are ignored (Gemini setup is one-time per connection).
+- Every `session.update` sent before the first content frame is merged into the Gemini setup; a `session.update` sent after content is ignored (Gemini setup is one-time per connection).
 
 ## Precaution
 
 - Tool calling will not work unless you send `session.update` first with your `tools`.
 - Send it as the first config message for that websocket session.
-- `gemini_live_defer_setup` defaults to `false` for backward compatibility.
+- `gemini_live_defer_setup` defaults to `false`. It is only needed when the client sends audio or text before its `session.update`.
 
 ## Supported OpenAI Realtime Events
 
