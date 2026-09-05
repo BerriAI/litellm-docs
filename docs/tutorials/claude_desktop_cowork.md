@@ -125,10 +125,10 @@ model_list:
 </TabItem>
 </Tabs>
 
-`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
+`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. LiteLLM adds the user to the team the first time a token carries that group, so they also show up under the team's members, and a user who belongs to exactly one team keeps resolving to it even when a later token omits the claim. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
 
 :::warning `public_key_url` and `audience` are not `litellm_jwtauth` keys
-Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `audience` directly under it. LiteLLM has no such keys and refuses to start with `Invalid arguments provided: audience, public_key_url`. Put them in an `issuers` entry as above, or set `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` as environment variables.
+Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `audience` directly under it. LiteLLM has no such keys and refuses to start with `Invalid arguments provided: public_key_url, audience`. Put them in an `issuers` entry as above, or set `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` as environment variables.
 :::
 
 ### 3. Configure Claude Desktop
@@ -256,7 +256,7 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **`Authentication Error, Missing JWT Public Key URL from environment.` on every request.** The token's `iss` matched no `issuers` entry (compare the `iss` claim in the token with the `issuer` value; Entra tokens carry `/v2.0` at the end) and no `JWT_PUBLIC_KEY_URL` fallback is set.
 
-**`Invalid arguments provided: audience, public_key_url` at startup.** The config followed Anthropic's snippet. Move those values into an `issuers` entry.
+**`Invalid arguments provided: public_key_url, audience` at startup.** The config followed Anthropic's snippet. Move those values into an `issuers` entry.
 
 **`Authentication Error, Validation fails: Audience doesn't match`.** The token was issued to a different client id; `audience` must be the client id of the Claude Desktop app registration, and `bearerTokenType` must be left at `id_token`, since an access token's audience is the API it was requested for.
 
