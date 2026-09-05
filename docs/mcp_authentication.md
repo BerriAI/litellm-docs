@@ -29,8 +29,6 @@ For a fixed, non-OAuth credential, choose the type that matches the header requi
 | `authorization` | Complete header value, including its scheme | `Authorization: <auth_value>` | A custom authorization scheme; available in config and API |
 | `aws_sigv4` | AWS credentials or an IAM role | A new AWS SigV4 signature for each request | AWS Bedrock AgentCore MCP servers |
 
-OAuth-based modes are summarized in [When to use OAuth instead](#when-to-use-oauth-instead).
-
 ## What the client sends
 
 Static upstream credentials are stored on the MCP server configuration. The client does not send the upstream username, password, or API key on each tool request.
@@ -48,7 +46,7 @@ Content-Type: application/json
 
 LiteLLM authenticates the client, selects the `inventory` MCP server, and builds the upstream request from that server's `auth_type`. The following sections show the resulting upstream credential.
 
-The client does supply the upstream token for `true_passthrough` and `oauth_delegate`. See [None compared with passthrough](#none-compared-with-passthrough).
+The client does supply the upstream token for `true_passthrough` and `oauth_delegate`. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md).
 
 ## Non-OAuth auth types
 
@@ -136,7 +134,7 @@ If the upstream expects a different header name, use [`static_headers`](#custom-
 
 - **Authentication value:** enter only the token. Do not add the `Bearer` prefix.
 - **Behavior:** LiteLLM sends `Authorization: Bearer <token>` on each upstream request.
-- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, choose an [OAuth auth type](#when-to-use-oauth-instead).
+- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, see [MCP OAuth](./mcp_oauth.md).
 
 ```yaml title="config.yaml"
 mcp_servers:
@@ -236,27 +234,3 @@ mcp_servers:
 The `none` resolver still contributes no credential in this example. `X-Custom-Auth` is present because it was declared separately in `static_headers`.
 
 For a caller-owned OAuth bearer in `Authorization`, use `true_passthrough` or `oauth_delegate` instead of treating it as a generic extra header.
-
-## When to use OAuth instead
-
-OAuth modes decide who obtains the upstream token and whether LiteLLM admits the caller first:
-
-| `auth_type` | Behavior | Guide |
-|---|---|---|
-| `oauth2` | LiteLLM manages an interactive authorization-code token per user or a machine-to-machine client-credentials token | [MCP OAuth](./mcp_oauth.md) |
-| `oauth2_token_exchange` | LiteLLM exchanges the caller's subject token for an upstream-scoped token | [MCP On-Behalf-Of Auth](./mcp_obo_auth.md) |
-| `oauth2_id_jag` | LiteLLM exchanges the user's identity token for an ID-JAG assertion, then exchanges that assertion for the upstream access token | — |
-| `true_passthrough` | LiteLLM forwards the caller's upstream `Authorization` value verbatim and skips LiteLLM admission when every target uses this mode | [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
-| `oauth_delegate` | LiteLLM admits the caller and forwards a separate upstream bearer supplied by the client | [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
-
-### None compared with passthrough
-
-These modes all avoid a LiteLLM-managed upstream token, but their request behavior differs:
-
-| Mode | LiteLLM admission | Caller sends an upstream token | Credential forwarded upstream |
-|---|---|---|---|
-| `none` | Required by the normal MCP gateway path | No | None |
-| `true_passthrough` | Skipped when all targeted servers use this mode | Yes, in `Authorization` | The caller's value, unchanged |
-| `oauth_delegate` | Required, using `x-litellm-api-key` | Yes, separately in `Authorization` | The caller's upstream bearer, unchanged |
-
-Choose `none` only when the upstream needs no credential. Choose a passthrough mode when the client already holds a token minted for the upstream MCP server.
