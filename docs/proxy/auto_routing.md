@@ -165,6 +165,12 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
         questionComplexity: 0.02
 
     complexity_router_default_model: {{anthropic}}
+
+    # Compression guardrail per hop; a guardrail name, or `none`. Both unset (the
+    # default) keeps whatever compression the key, team, or request already applies
+    # on both hops
+    # auto_router_routing_compression: headroom-compression
+    # auto_router_model_compression: none
 ```
 
 ## Classification
@@ -539,6 +545,25 @@ writes = 0 if warm else cache_creation
     complexity_router_config: {...}
 ```
 
+## Compression
+
+From v1.101.0 an auto router can name a compression guardrail for each of the two hops a routed request makes: the classifier call that decides the tier, and the call to the model it routes to. Both fields sit on the marker's `litellm_params` next to `complexity_router_default_model`, take the name of a [Headroom](./headroom.md) or [Compresr](./guardrails/compresr.md) guardrail, and accept `none`, case-insensitive, for a hop that should not be compressed at all.
+
+```yaml title="config.yaml"
+- model_name: smart-router
+  litellm_params:
+    model: auto_router/complexity_router
+    complexity_router_config: {...}
+    auto_router_routing_compression: headroom-compression
+    auto_router_model_compression: none
+```
+
+Leaving both unset preserves what every existing router does today: a single compression pass, whichever one the key, team, or request already selected, feeding both hops. Setting either field makes the router authoritative for the requests it serves instead, and every other compression guardrail is suppressed for them, including one marked `default_on` and one the caller named in the request body. Ordinary deployments on the same proxy are untouched. Naming the same guardrail on both hops runs it once and reuses the result rather than compressing the same text twice.
+
+A name that does not resolve to an active compression guardrail costs a warning in the proxy logs and an uncompressed hop rather than a failed request. Errors from a guardrail that does resolve still behave as that guardrail is configured to behave, so a compression service that is unreachable and set to fail closed still fails the request before any provider call.
+
+Two things are worth knowing before rolling this out. Compressing the routing hop only saves tokens when the LLM classifier is what runs, since that is the only classifier that sends the text to a model; the heuristic scorers read it locally for free, and the deprecated semantic router embeds only the last user message, which compression leaves alone. And when the two hops name different guardrails, the model hop compresses first, so the classifier reads the model-compressed text rather than the original. Routing deliberately reads the live messages: the only uncompressed copy available is the one taken before the pre-call guardrails run, and handing that to a compression service would ship a masking guardrail's own input to a third party.
+
 ## Context window
 
 An auto router entry is a marker rather than a callable model, so it carries no provider metadata of its own and advertises no context window until you declare one. The number is not derived from the tier models: not the minimum across them, not the maximum, and not the window of `complexity_router_default_model`. Tiers hold model names the proxy resolves at request time, and nothing in the model-info path walks that list. Until you declare a window, `GET /v1/models` omits `max_input_tokens` and `max_output_tokens` for the router entirely, and `/model_group/info` reports `null` for both.
@@ -699,6 +724,8 @@ Tier and classifier dropdowns exclude embedding-mode models; the semantic embedd
 Selecting **LLM Classifier** reveals, alongside the classifier model and timeout, a **Classifier Prompt** editor (`classifier_llm_config.system_prompt`, prefilled with the built-in rubric for the router's context window size and tier names, and sent only once you edit it), an **If the classifier fails** choice between scoring with the heuristic and routing to the default model (`classifier_fallback`, the second option available only once the router has a default model), and the classifier context settings: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
+
+**Advanced > Compression** picks the compression guardrail for the routing decision, then either reuses it for the model call or takes a different one, `None` included. Editing a router back to *not configured* does not clear a policy that was already saved, because a model update merges the fields it is given and never deletes a key, so picking **None** for both hops is how you turn compression off from the modal. Legacy semantic auto routers (`auto_router/<name>`) accept both fields through `config.yaml` and the model-management API but have no control for them in the UI yet.
 
 ## Claude Code and Claude Desktop
 

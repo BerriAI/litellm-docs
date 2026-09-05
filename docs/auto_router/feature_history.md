@@ -19,6 +19,7 @@ Merged after the v1.100.0 release candidate was cut. Available in `v1.101.0-dev`
 - **1M context preset.** [#39490](https://github.com/BerriAI/litellm/pull/39490).
 - **Mid-task stall escalation.** `stall_escalation_enabled: true` reads the assistant's own recent tool calls and bumps a request one tier when it's stuck in a retry loop, the same ladder `escalation_keywords` uses. Off by default. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation).
 - **One-click Auto Router setup.** Configure automatically checks the chat model groups your proxy already serves and fills all four tiers, mixing providers when needed, without picking a template first. [#39693](https://github.com/BerriAI/litellm/pull/39693).
+- **Per-hop compression.** `auto_router_routing_compression` and `auto_router_model_compression` name a compression guardrail for the routing decision and for the model call separately, or `none` for either hop. Naming the same guardrail on both compresses once. [#39823](https://github.com/BerriAI/litellm/pull/39823).
 
 Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation).
 
