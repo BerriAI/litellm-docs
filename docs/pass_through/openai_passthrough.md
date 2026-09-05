@@ -34,7 +34,7 @@ general_settings:
   enable_openai_websocket_passthrough: true
 ```
 
-While it is off, a WebSocket client receives one `error` event that names this setting and the connection closes with code `1008`. Keys with model restrictions are refused on these routes even when it is on. If you only need the Realtime API for models in your `model_list`, use the proxy's own `/v1/realtime` route instead, which needs no opt-in and enforces the key's model access
+While it is off, a WebSocket client receives one `error` event that names this setting and the connection closes with code `1008`. Even when it is on, a request is refused the same way if any model restriction applies to it, whether that restriction sits on the key, its team, the caller's team membership, the internal user, or the project. The setting can also be stored in the database with `store_model_in_db: true`, through `POST /config/field/update` or the Admin UI settings page, and each proxy instance picks it up on its next config reload; a value set in the YAML wins over the stored one. If you only need the Realtime API for models in your `model_list`, use the proxy's own `/v1/realtime` route instead, which needs no opt-in and enforces the key's model access
 
 ## When to use this?
 
