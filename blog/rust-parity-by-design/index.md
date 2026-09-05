@@ -1,75 +1,104 @@
 ---
-slug: rust-parity-by-design
-title: "Rust Parity by Design: Keeping a Gateway Migration Boring"
+slug: rust-ocr-benchmark
+title: "Early Results: Rust Makes LiteLLM OCR Faster on Larger Payloads"
 date: 2026-09-05T09:00:00
 authors:
   - yujonglee
-description: "How LiteLLM is moving gateway work into Rust without changing the contracts customers depend on."
-keywords: [rust, ai gateway, llm gateway, api compatibility, streaming, engineering]
-tags: [rust, ai-gateway, engineering, reliability]
+description: "An early Python and Rust SDK comparison for LiteLLM OCR, measured against recorded OCR fixtures on a local provider."
+keywords: [rust, ocr, mistral ocr, ai gateway, python sdk, performance benchmark]
+tags: [rust, ocr, performance, benchmarks, engineering]
 ---
 
-Moving a gateway hot path to Rust is the easy part. Preserving the behavior that has accumulated around it is the real engineering work.
+import { BenchmarkVisualization } from '@site/src/components/MiddlewareDiagrams';
 
-LiteLLM accepts requests from many client libraries, speaks to many providers, and exposes more than a successful JSON response. Clients rely on error shapes, streaming events, usage fields, headers, retries, and configuration behavior. A faster implementation is only useful if those contracts remain stable.
+The first Rust migration surface in LiteLLM is OCR. It is a narrow API with a useful mix of request sizes, response sizes, sync calls, and async calls, which makes it the right place to establish a performance baseline before moving larger endpoints.
 
-This is the principle behind the Rust migration: make the internal boundary explicit, then prove the Rust path behaves like the existing path before it becomes the default.
+Our early measurements show the Rust OCR path is faster for every synchronous fixture we tested. The largest gain came from medium requests, where the Rust path completed `4.19x` as many calls per second. Async results are also faster for four of five fixtures, while the smallest async call is currently slower and needs more investigation.
+
+These are early, single-repeat measurements on one macOS arm64 host at concurrency one. They describe this workload, not a production capacity claim.
 
 {/* truncate */}
 
-## Define the boundary before moving code
+## The early result
 
-The first decision is what belongs in Rust and what stays in the host layer. The Rust core is a good fit for deterministic request and response work:
+For the large-request OCR fixture, Rust reduced median SDK latency from `9.739ms` to `3.291ms` and increased throughput from `101.5` to `306.2` calls per second.
 
-- transforming a normalized request into a provider request
-- parsing provider responses and stream chunks
-- normalizing errors and usage data
-- token accounting and routing decisions that do not need host-specific I/O
+<BenchmarkVisualization
+  configLabel="Mistral OCR SDK benchmark · recorded large-request fixture · macOS arm64 · concurrency 1"
+  totalRequests={100}
+  columns={[
+    {
+      title: 'Python SDK',
+      accent: 'before',
+      durationMs: 10000,
+      layers: [
+        { label: 'Recorded OCR fixture' },
+        { label: 'Python request transformation' },
+        { label: 'Local isolated provider' },
+      ],
+      metrics: [
+        { label: 'Calls/s', value: 101.5 },
+        { label: 'P50', value: 9.739, suffix: 'ms' },
+      ],
+    },
+    {
+      title: 'Rust SDK path',
+      accent: 'after',
+      durationMs: 3300,
+      layers: [
+        { label: 'Recorded OCR fixture' },
+        { label: 'Rust request transformation' },
+        { label: 'Local isolated provider' },
+      ],
+      metrics: [
+        { label: 'Calls/s', value: 306.2 },
+        { label: 'P50', value: 3.291, suffix: 'ms' },
+      ],
+    },
+  ]}
+  summaryStats={[
+    { value: '2.96x', label: 'Throughput on large requests' },
+    { value: '-66%', label: 'Median SDK latency' },
+  ]}
+  table={{
+    title: 'Synchronous OCR results',
+    headers: ['Fixture', 'Python calls/s', 'Rust calls/s', 'Rust speedup'],
+    rows: [
+      ['Small', '506.6', '589.4', '1.24x'],
+      ['Medium request', '56.1', '496.0', '4.19x'],
+      ['Large request', '101.5', '306.2', '2.96x'],
+      ['Medium response', '494.9', '1,798.4', '3.84x'],
+      ['Large response', '465.5', '603.4', '1.31x'],
+    ],
+  }}
+/>
 
-The host layer continues to own environment-specific concerns such as credentials, network I/O, database access, and Python extensions. This keeps the Rust core small and testable. It also avoids making every existing integration migrate at once.
+## What we measured
 
-```text
-client request
-      |
-      v
-host: auth, configuration, network I/O
-      |
-      v
-Rust core: transforms, streaming, normalized responses
-      |
-      v
-host: callbacks, persistence, response delivery
-```
+The benchmark replays recorded Mistral OCR request and response shapes through a local isolated provider. It measures SDK latency percentiles, process CPU time, calls per second, and sampled RSS separately for the Python and Rust implementations.
 
-## Treat compatibility as data
+| Fixture | Python p50 | Rust p50 | Rust throughput speedup |
+|---|---:|---:|---:|
+| Small request and response | 1.576 ms | 1.269 ms | 1.24x |
+| Medium request | 5.714 ms | 1.363 ms | 4.19x |
+| Large request | 9.739 ms | 3.291 ms | 2.96x |
+| Medium response | 1.961 ms | 0.511 ms | 3.84x |
+| Large response | 2.125 ms | 1.628 ms | 1.31x |
 
-“The response looks right” is not a sufficient parity check. A gateway contract includes the fields that are present, fields that are absent, their types, ordering where streaming clients observe it, and error behavior for malformed or unsupported inputs.
+The async path shows the same direction on medium and large fixtures: `2.64x` faster for medium requests, `1.93x` for large requests, `1.27x` for medium responses, and `1.38x` for large responses. The small async fixture measured `0.56x`, so we are treating it as a regression to understand, not a result to average away.
 
-For each route, we can capture representative inputs and compare normalized outputs from the established path and the Rust path. The comparison should cover successful responses, provider errors, tool calls, optional parameters, and streaming sequences. When they differ, the difference needs a reason: either a bug, or a deliberate contract change that is documented and released as such.
+Memory was workload-dependent. On the large-request fixture, sampled peak RSS fell from `457.6 MiB` on Python to `390.6 MiB` on Rust. Smaller fixtures had similar resident memory, so this early report does not make a general memory claim.
 
-This turns a broad migration risk into focused mismatches that engineers can inspect and fix.
+## Why OCR first
 
-## Stream chunks are part of the API
+OCR is a focused way to verify the Rust boundary. The benchmark keeps provider latency out of the comparison and varies the request and response shapes that exercise serialization, parsing, and transformation work in the SDK.
 
-Streaming is often where compatibility work gets difficult. A stream is not one response. It is a sequence with its own contract: which event starts the stream, how partial content is emitted, how tool-call arguments are assembled, when usage is reported, and how errors terminate the connection.
+Correctness remains the gate. Each Python/Rust pair validates matching response digests before its performance numbers are accepted. That lets us distinguish a real speedup from an implementation that simply did less work.
 
-The safest approach is to make chunk normalization a first-class part of the core rather than rebuilding it inside each provider integration. One shared representation lets tests compare event sequences and keeps provider-specific parsing isolated at the edge.
+## How to read these numbers
 
-## Move one surface at a time
+This benchmark is deliberately local and controlled. It uses one host, a local provider, one concurrent caller, 100 timed calls per worker, and one paired repeat. The machine was not reserved, and sampled RSS can miss brief allocation peaks.
 
-Large migrations become risky when every variable changes together. A smaller route with a constrained schema is a better proving ground than the most feature-rich endpoint. Once a route has parity coverage and production confidence, the same approach can extend to streaming and larger request surfaces.
+Use the result as an early signal: Rust is already reducing SDK overhead for meaningful OCR payloads. We will repeat the workload on an idle host, add more repeats and concurrency levels, and extend coverage to streaming, additional providers, and proxy traffic before treating it as a broader performance claim.
 
-The rollout loop is straightforward:
-
-1. choose one bounded route and provider path
-2. add parity cases for normal, error, and streaming behavior
-3. run the Rust implementation behind a flag or alongside the existing path
-4. investigate every observed mismatch before expanding scope
-
-This pace is intentionally unglamorous. It makes regressions local, keeps rollback simple, and builds reusable compatibility tooling instead of a one-off rewrite.
-
-## Performance follows correctness
-
-Rust gives us tighter control over allocation, concurrency, and CPU-bound work. Those gains matter most under high concurrency and for endpoints where gateway work is a meaningful part of total latency. But the order matters: first preserve the contract, then measure and optimize the hot path.
-
-The destination is a lighter gateway implementation that still feels familiar to users. The same configuration, client API, and provider integrations should keep working while the implementation underneath becomes more efficient. That is how a migration becomes an upgrade rather than a fork.
+The benchmark harness and its full output are in [PR #39931](https://github.com/BerriAI/litellm/pull/39931).
