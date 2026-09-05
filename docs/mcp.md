@@ -224,6 +224,7 @@ mcp_servers:
 
 **Configuration Options:**
 - **Server Name**: Use any descriptive name for your MCP server (e.g., `zapier_mcp`, `deepwiki_mcp`, `circleci_mcp`)
+- **server_id**: Optional stable id for the server. See [Pinning `server_id`](#pinning-server_id)
 - **Alias**: This name will be prefilled with the server name with "_" replacing spaces, else edit it to be the prefix in tool names
 - **URL**: The endpoint URL for your MCP server (required for HTTP/SSE transports)
 - **Transport**: Optional transport type (defaults to `sse`)
@@ -317,6 +318,31 @@ mcp_servers:
       X-API-Key: "abc123"
       X-Custom-Header: "some-value"
 ```
+
+### Pinning `server_id`
+
+LiteLLM derives a config server's id from its name and connection settings. If you change those settings, the id changes and existing key or team permissions stop matching.
+
+Set `server_id` to keep the same id when the server changes:
+
+```yaml
+mcp_servers:
+  internal_docs:
+    server_id: "internal-docs"
+    url: "https://docs.internal.example/mcp"
+    transport: "http"
+```
+
+If the server already has permissions, use its current id from `GET /v1/mcp/server` or the Admin UI, then set that exact value as `server_id`:
+
+```bash
+curl -s http://localhost:4000/v1/mcp/server \
+  -H "Authorization: Bearer sk-1234"
+```
+
+`server_id` must be a non-empty string. Config entries cannot reuse an id or another entry's name or alias. Clashes with a database-backed server only log a warning: if the id matches, the database server wins and the config one is unreachable, and if it matches that server's name or alias, permissions naming it reach the config server instead.
+
+If `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` is enabled, changing the id also changes the server's tool prefix. Servers added through the UI or `/v1/mcp/server` already have stable ids.
 
 ### MCP Walkthroughs
 
