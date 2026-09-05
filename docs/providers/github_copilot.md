@@ -55,7 +55,7 @@ for chunk in stream:
 
 ### Responses
 
-For GPT Codex models, only responses API is supported.
+For GPT Codex models, only responses API is supported. This example is async, so it cannot run the first login itself: on a machine with no token yet, sign in first with the one-liner in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ```python showLineNumbers title="GitHub Copilot Responses"
 import litellm
@@ -85,13 +85,13 @@ print(response)
 
 ### Sign in before starting the proxy
 
-The proxy cannot complete the device flow: it runs in worker processes with no terminal to hand the code to. With no `access-token` on disk, older releases print the code from a worker and hold startup on each `github_copilot/` deployment while they wait for someone to enter it, and newer releases refuse to initialize the deployment, logging `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` once per deployment in every worker. Either way, every request to those models then returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal instead:
+The proxy cannot complete the device flow: it runs in worker processes with no terminal to hand the code to. With no `access-token` on disk, older releases print the code from a worker and hold startup on each `github_copilot/` deployment while they wait for someone to enter it (from a foreground terminal you can, once per worker, with startup held meanwhile; from a service or container log nobody can), and newer releases refuse to initialize the deployment, logging `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` once per deployment in every worker. Either way, every request to those models then returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal instead:
 
 ```bash showLineNumbers title="Sign in once, outside the proxy"
 python -c "from litellm.llms.github_copilot.authenticator import Authenticator; Authenticator().get_access_token()"
 ```
 
-Visit the printed URL and enter the code. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: `model_list` deployments are created at startup, so a proxy started without the file needs a restart after it appears. The directory must be writable, because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, the deployment fails at startup the same way a missing token does, with `Failed to save API key` inside the `Error creating deployment` log line.
+Visit the printed URL and enter the code: each code is good for about a minute (the SDK polls twelve times, five seconds apart) and after three codes it gives up with `Failed to get access token after 3 attempts`, so have GitHub open and signed in before you run it. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: `model_list` deployments are created at startup, so a proxy started without the file needs a restart after it appears. The directory must be writable by the proxy's user (uid 65534 in the `litellm-non_root` image), because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, the deployment fails at startup the same way a missing token does, with `Failed to save API key` inside the `Error creating deployment` log line.
 
 On Kubernetes, keep `access-token` in a Secret and copy it into a writable `emptyDir` that `GITHUB_COPILOT_TOKEN_DIR` points at, since Secret volumes are read-only. The GitHub token is long-lived and holds no per-process state, so every worker in every pod shares the same one and each derives its own `api-key.json`.
 
@@ -103,7 +103,7 @@ kubectl create secret generic litellm-copilot-auth --from-file=access-token=$HOM
 spec:
   initContainers:
     - name: copilot-token
-      image: busybox
+      image: busybox:1.37
       command: ["cp", "/secrets/copilot/access-token", "/tokens/copilot/access-token"]
       volumeMounts:
         - name: copilot-secret
