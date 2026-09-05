@@ -34,8 +34,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
       takeaway: 'Rust lowers median latency across all five measured request and response combinations.',
       profiles: [
         {
-          name: '32 KiB → 1 page',
-          description: 'Baseline fixture',
+          name: '32 KiB request',
+          description: '1-page response',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
@@ -44,8 +44,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '256 KiB → 1 page',
-          description: 'PDF padded; response fixed',
+          name: '256 KiB request',
+          description: '1-page response',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 5.714, rust: 1.363, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 3.814, rust: 1.438, lowerIsBetter: true },
@@ -54,8 +54,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '2 MiB → 1 page',
-          description: 'PDF padded; response fixed',
+          name: '2 MiB request',
+          description: '1-page response',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
@@ -64,8 +64,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '32 KiB → 16 pages',
-          description: 'PDF fixed; pages repeated',
+          name: '32 KiB request',
+          description: '16-page response',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 1.961, rust: 0.511, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 1.879, rust: 0.63, lowerIsBetter: true },
@@ -74,8 +74,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '32 KiB → 128 pages',
-          description: 'PDF fixed; pages repeated',
+          name: '32 KiB request',
+          description: '128-page response',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 2.125, rust: 1.628, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 2.059, rust: 2.082, lowerIsBetter: true },

@@ -318,8 +318,12 @@
 }
 
 .matrixImprovement {
-  background: var(--mw-stage-green-active-bg);
-  color: var(--mw-success-accent);
+  background: color-mix(
+    in srgb,
+    var(--mw-success-accent) var(--benchmark-cell-strength),
+    var(--mw-column-bg)
+  );
+  color: var(--mw-text-primary);
 }
 
 .matrixParity {
@@ -328,8 +332,12 @@
 }
 
 .matrixRegression {
-  background: var(--mw-layer-warning-bg);
-  color: var(--mw-warning-accent);
+  background: color-mix(
+    in srgb,
+    var(--mw-warning-accent) var(--benchmark-cell-strength),
+    var(--mw-column-bg)
+  );
+  color: var(--mw-text-primary);
 }
 
 .matrixCellSelected {

@@ -71,6 +71,10 @@ const formatRelativePerformance = (metric: BenchmarkMetric): string => {
     : `${relativePerformance.toFixed(relativePerformance >= 2 ? 1 : 2)}×`;
 };
 
+const getCellStyle = (relativePerformance: number): CSSProperties => ({
+  '--benchmark-cell-strength': `${Math.min(62, 12 + Math.abs(Math.log2(relativePerformance)) * 15)}%`,
+} as CSSProperties);
+
 export default function BenchmarkVisualization({
   configLabel = 'Measured locally against recorded traffic profiles',
   pythonLabel = 'Python implementation',
@@ -118,12 +122,12 @@ export default function BenchmarkVisualization({
         <p className={styles.chartInsight} aria-live="polite">
           {group.takeaway ?? `Compare ${rustLabel} with ${pythonLabel} across the measured workload.`}
         </p>
-        <div className={styles.matrixLegend}>1× is parity · above 1× favors Rust · below 1× favors Python</div>
+        <div className={styles.matrixLegend}>1× is parity · darker green means a larger Rust advantage · red favors Python</div>
         <div className={styles.matrixViewport}>
           <div className={styles.benchmarkMatrix} role="grid" aria-label={`${group.label} relative performance`} style={matrixStyle}>
             <div className={styles.matrixCorner} role="columnheader">Rust vs Python</div>
             {group.profiles.map((profile) => (
-              <div className={styles.matrixColumnHeader} key={profile.name} role="columnheader">
+              <div className={styles.matrixColumnHeader} key={`${profile.name}-${profile.description}`} role="columnheader">
                 <strong>{profile.name}</strong>
                 <span>{profile.description}</span>
               </div>
@@ -146,12 +150,13 @@ export default function BenchmarkVisualization({
                       aria-label={`${profile.name}, ${profileMetric.label}: Rust relative performance ${formatRelativePerformance(profileMetric)}`}
                       aria-pressed={selected}
                       className={`${styles.matrixCell} ${resultClass} ${selected ? styles.matrixCellSelected : ''}`}
-                      key={profile.name}
+                      key={`${profile.name}-${profile.description}`}
                       onClick={() => {
                         setSelectedMetricIndex(metricIndex);
                         setSelectedProfileIndex(profileIndex);
                       }}
                       role="gridcell"
+                      style={getCellStyle(relativePerformance)}
                       type="button"
                     >
                       {formatRelativePerformance(profileMetric)}
@@ -163,7 +168,7 @@ export default function BenchmarkVisualization({
           </div>
         </div>
         <p className={styles.matrixDetail} aria-live="polite">
-          <strong>{selectedProfile.name} · {selectedMetric.label}:</strong>{' '}
+          <strong>{selectedProfile.name} · {selectedProfile.description} · {selectedMetric.label}:</strong>{' '}
           {pythonLabel} {formatValue(selectedMetric.python, selectedMetric.unit)} →{' '}
           {rustLabel} {formatValue(selectedMetric.rust, selectedMetric.unit)}. Rust is {getDifference(selectedMetric)}.
         </p>
