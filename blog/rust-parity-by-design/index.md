@@ -21,21 +21,21 @@ The number matters, but how we got it matters more. We are moving one bounded su
 
 OCR is a practical first step. It exercises request transformation, response parsing, async behavior, and varied payload sizes without asking us to move the whole gateway at once. The work gives us a real Rust path to measure, a focused contract to preserve, and a repeatable way to decide what should move next.
 
-OCR SDK work happens in both directions: preparing the request and deserializing the response. The benchmark isolates them. The request profiles vary only the PDF payload, from `32 KiB` to `2 MiB`, while keeping the response at one page. The response profiles keep the request at `32 KiB` and vary the parsed OCR result from one to 128 pages.
+The benchmark measures one complete `litellm.ocr()` call, from invocation until the parsed OCR response returns. Each workload below pairs a PDF request size with a response page count. The local provider removes live model latency, but request transformation, loopback HTTP transfer, and response parsing all remain inside the measurement.
 
 <BenchmarkVisualization
-  configLabel="Mistral OCR SDK benchmark · recorded traffic profiles · macOS arm64 · concurrency 1"
+  configLabel="Mistral OCR SDK benchmark · controlled payload fixtures · macOS arm64 · concurrency 1"
   pythonLabel="Existing Python code"
   rustLabel="Rust core"
   groups={[
     {
-      label: 'Request size',
-      description: 'PDF payload varies; response fixed at one page',
-      takeaway: 'Rust keeps latency lower as the request grows, with the clearest gains at 256 KiB and 2 MiB.',
+      label: 'End-to-end OCR workloads',
+      description: 'Complete SDK calls through a local provider replay',
+      takeaway: 'Rust lowers median latency across all five measured request and response combinations.',
       profiles: [
         {
-          name: '32 KiB PDF',
-          description: '1 response page',
+          name: '32 KiB → 1 page',
+          description: 'Baseline fixture',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
@@ -44,8 +44,8 @@ OCR SDK work happens in both directions: preparing the request and deserializing
           ],
         },
         {
-          name: '256 KiB PDF',
-          description: '1 response page',
+          name: '256 KiB → 1 page',
+          description: 'PDF padded; response fixed',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 5.714, rust: 1.363, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 3.814, rust: 1.438, lowerIsBetter: true },
@@ -54,8 +54,8 @@ OCR SDK work happens in both directions: preparing the request and deserializing
           ],
         },
         {
-          name: '2 MiB PDF',
-          description: '1 response page',
+          name: '2 MiB → 1 page',
+          description: 'PDF padded; response fixed',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
@@ -63,26 +63,9 @@ OCR SDK work happens in both directions: preparing the request and deserializing
             { label: 'Peak RSS', unit: 'MiB', python: 457.6, rust: 390.6, lowerIsBetter: true },
           ],
         },
-      ],
-    },
-    {
-      label: 'Response size',
-      description: 'Request fixed at a 32 KiB PDF; parsed page count varies',
-      takeaway: 'Rust leads on latency at every response size; at 128 pages, CPU time and memory remain near Python parity.',
-      profiles: [
         {
-          name: '1 response page',
-          description: '32 KiB PDF',
-          metrics: [
-            { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
-            { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
-            { label: 'Throughput', unit: 'calls/s', python: 506.6, rust: 589.4, lowerIsBetter: false },
-            { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 223.1, lowerIsBetter: true },
-          ],
-        },
-        {
-          name: '16 response pages',
-          description: '32 KiB PDF',
+          name: '32 KiB → 16 pages',
+          description: 'PDF fixed; pages repeated',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 1.961, rust: 0.511, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 1.879, rust: 0.63, lowerIsBetter: true },
@@ -91,8 +74,8 @@ OCR SDK work happens in both directions: preparing the request and deserializing
           ],
         },
         {
-          name: '128 response pages',
-          description: '32 KiB PDF',
+          name: '32 KiB → 128 pages',
+          description: 'PDF fixed; pages repeated',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 2.125, rust: 1.628, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 2.059, rust: 2.082, lowerIsBetter: true },
@@ -107,7 +90,7 @@ OCR SDK work happens in both directions: preparing the request and deserializing
 
 These results are early, not a broad production capacity claim. They come from one macOS arm64 host, one concurrent caller, 100 timed calls per worker, and one paired repeat. The job now is to measure profiles that match real traffic mixes, widen the workload, and make sure the gains hold.
 
-The response-page profiles use synthetic repetitions to isolate deserialization and response parsing. They are useful for finding size sensitivity, but they are not a substitute for a production traffic distribution.
+These are controlled sensitivity fixtures, not five representative production requests. The larger PDFs use padding, and the larger responses use repeated synthetic pages. Because real OCR request and response sizes are related, the next step is to repeat the benchmark with naturally paired documents and OCR results from production-like traffic.
 
 ## Safe means proving parity before expanding scope
 
