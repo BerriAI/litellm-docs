@@ -42,7 +42,7 @@ os.environ["OPENAI_API_KEY"] = ""
 
 # Call LiteLLM as usual
 response = litellm.completion(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[
       {"role": "user", "content": "Hi 👋 - i'm openai"}
     ]
@@ -94,7 +94,7 @@ get_weather_tool = {
 
 # Call LiteLLM as usual
 response = litellm.completion(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[
       {"role": "user", "content": "What's the weather like in Paris today?"}
     ],
@@ -146,7 +146,7 @@ class CustomAgent:
 
         while i < self.max_turns:
             response = litellm.completion(
-                model="gpt-4o-mini",
+                model="{{openai_small}}",
                 messages=messages,
             )
 
@@ -212,7 +212,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'Authorization: Bearer sk-1234' \
     --data '{
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
         {
         "role": "user",
@@ -239,7 +239,7 @@ client = OpenAI(
 
 # Make a request with tags in metadata
 response = client.chat.completions.create(
-    model="gemini-2.5-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user", 

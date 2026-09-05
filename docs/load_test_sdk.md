@@ -40,7 +40,7 @@ router = litellm.Router(model_list=model_list)
 async def openai_completion():
   try:
     response = await client.chat.completions.create(
-              model="gpt-35-turbo",
+              model="{{openai_small}}",
               messages=[{"role": "user", "content": f"This is a test: {uuid.uuid4()}"}],
               stream=True
           )

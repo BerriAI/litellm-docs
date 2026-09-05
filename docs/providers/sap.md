@@ -108,7 +108,7 @@ export AICORE_BASE_URL="https://api.ai.<your-region>.aws.ml.hana.ondemand.com/v2
 from litellm import completion
 
 response = completion(
-    model="sap/gpt-4o",
+    model="sap/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello from LiteLLM!"}]
 )
 print(response.choices[0].message.content)
@@ -160,7 +160,7 @@ else:
 print("\n=== Testing API Connection ===\n")
 try:
     response = litellm.completion(
-        model="sap/gpt-4o",
+        model="sap/{{openai_large}}",
         messages=[{"role": "user", "content": "Say 'Connection successful!' and nothing else."}],
         max_tokens=20
     )
@@ -170,7 +170,7 @@ except Exception as e:
     print(f"✗ API Error: {e}")
     print("\nTroubleshooting tips:")
     print("  1. Verify your service key credentials are correct")
-    print("  2. Check that 'gpt-4o' is deployed in your resource group")
+    print("  2. Check that '{{openai_large}}' is deployed in your resource group")
     print("  3. Ensure your SAP AI Core instance is running")
 ```
 
@@ -222,12 +222,12 @@ When calling LiteLLM's SDK directly, you **must** include the `sap/` prefix in t
 
 ```python
 # Correct - includes sap/ prefix
-model="sap/gpt-4o"
+model="sap/{{openai_large}}"
 model="sap/anthropic--claude-4.5-sonnet"
-model="sap/gemini-2.5-pro"
+model="sap/{{gemini_pro}}"
 
 # Incorrect - missing prefix
-model="gpt-4o"  # ❌ Won't work
+model="{{openai_large}}"  # ❌ Won't work
 ```
 3. **Environment variables** - Set the following list of credentials in .env file
 <pre>
@@ -248,15 +248,15 @@ When using the LiteLLM Proxy, you use the **friendly `model_name`** defined in y
 ```yaml
 # In config.yaml, define the mapping
 model_list:
-  - model_name: gpt-4o          # ← Use this name in client requests
+  - model_name: {{openai_large}}          # ← Use this name in client requests
     litellm_params:
-      model: sap/gpt-4o         # ← Proxy handles the sap/ prefix
+      model: sap/{{openai_large}}         # ← Proxy handles the sap/ prefix
 ```
 
 ```python
 # Client request - no sap/ prefix needed
 client.chat.completions.create(
-    model="gpt-4o",  # ✓ Correct for proxy usage
+    model="{{openai_large}}",  # ✓ Correct for proxy usage
     messages=[...]
 )
 ```
@@ -308,9 +308,9 @@ Create a `config.yaml` file in your project directory with your model mappings a
 ```yaml showLineNumbers title="config.yaml"
 model_list:
   # OpenAI models
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: sap/gpt-5
+      model: sap/{{openai_large}}
 
   # Anthropic models (note the double-dash)
   - model_name: claude-sonnet
@@ -365,7 +365,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -382,7 +382,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}]
 )
 print(response.choices[0].message.content)
@@ -420,7 +420,7 @@ Stream responses in real-time for better user experience:
 from litellm import completion
 
 response = completion(
-    model="sap/gpt-4o",
+    model="sap/{{openai_large}}",
     messages=[{"role": "user", "content": "Count from 1 to 10"}],
     stream=True
 )
@@ -440,7 +440,7 @@ Use JSON Schema for structured output with strict validation:
 from litellm import completion
 
 response = completion(
-    model="sap/gpt-4o",
+    model="sap/{{openai_large}}",
     messages=[{
         "role": "user",
         "content": "Generate info about Tokyo"
@@ -476,7 +476,7 @@ For flexible JSON output without schema validation:
 from litellm import completion
 
 response = completion(
-    model="sap/gpt-4o",
+    model="sap/{{openai_large}}",
     messages=[{
         "role": "user",
         "content": "Generate a person object in JSON format with name and age"
@@ -499,7 +499,7 @@ Maintain conversation context across multiple turns:
 from litellm import completion
 
 response = completion(
-    model="sap/gpt-4o",
+    model="sap/{{openai_large}}",
     messages=[
         {"role": "user", "content": "My name is Alice"},
         {"role": "assistant", "content": "Hello Alice! Nice to meet you."},
@@ -563,7 +563,7 @@ grounding_config = {
     }
 }
 
-response = completion(model="sap/gpt-4o",
+response = completion(model="sap/{{openai_large}}",
                       messages=[
                           {"content":"""Facility Solutions Company provides services to luxury residential complexes, 
                           apartments, individual homes, and commercial properties such as office buildings, retail 
@@ -603,7 +603,7 @@ translation_config = {
          }
 }
 
-response = completion(model="sap/gpt-4o",
+response = completion(model="sap/{{openai_large}}",
                       messages=[{"role": "user", "content": "Hello world!"}],
                       translation=translation_config)
 
@@ -635,7 +635,7 @@ masking_config = {
 
 mock_cv = "some text with personal information"
 
-response = completion(model="sap/gpt-4o",
+response = completion(model="sap/{{openai_large}}",
                       messages=[{"role": "user", "content": "Give a one sentence summary of the CV. CV: {{?cv}}?"}],
                       placeholder_values={"cv": mock_cv},
                       masking=masking_config)
@@ -693,14 +693,14 @@ filtering_config_azure = {
         }
 }
 
-response = completion(model="sap/gpt-4o",
+response = completion(model="sap/{{openai_large}}",
                       messages=[{"role": "user", "content": "Hello world!"}],
                       filtering=filtering_config_azure)
 print(response.choices[0].message.content) 
 # The model responds normally because the content does not violate any safety rules.
 
 try:
-    response = completion(model="sap/gpt-4o",
+    response = completion(model="sap/{{openai_large}}",
                           messages=[{"role": "user", "content": "I hate you"}],
                           filtering=filtering_config_azure)
 except Exception as e:
@@ -745,16 +745,16 @@ translation_config = {
          }
 }
 
-response = completion(model="sap/gpt-4o",
+response = completion(model="sap/{{openai_large}}",
                       messages=[{"role": "user", "content": "Hello world!"}],
                       translation=translation_config,
                       fallback_sap_modules=[{
-                          "model":"sap/gemini-2.5-flash",
+                          "model":"sap/{{gemini_flash}}",
                           "messages":[{"role": "user", "content": "Hello world!"}],
                           "translation":translation_config
                       }])
 
-# In case of error with the first configuration (model gpt-4o), the fallback module is used.
+# In case of error with the first configuration (model {{openai_large}}), the fallback module is used.
 
 print(response.choices[0].message.content)
 

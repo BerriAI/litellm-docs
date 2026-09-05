@@ -153,7 +153,7 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
   "metadata": {
     "attempted_fallbacks": 0,                                                    # 0 = requested model group served the request
     "original_model_group": "llama3"                                             # Model group originally requested
-  },
+  }
 
 }
 ```
@@ -365,12 +365,13 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             },
             "breakdown": {
                 "models": {
-                    "gpt-4o-mini": {
-                        "spend": 1.095e-05,
+                    "{{openai_small}}": {
+                        "spend": 1.82e-05,
                         "prompt_tokens": 37,
                         "completion_tokens": 9,
                         "total_tokens": 46,
                         "api_requests": 1
+                    }
                 },
                 "providers": { "openai": { ... }, "azure_ai": { ... } },
                 "api_keys": { "3126b6eaf1...": { ... } }
@@ -456,7 +457,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -488,7 +489,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "{{openai_small}}",
       messages: [
         {
           role: "user",
@@ -520,7 +521,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -545,7 +546,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -935,11 +936,7 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 
 Log specific key,value pairs as part of the metadata for a spend log
 
-:::info
-
-Logging specific key,value pairs in spend logs metadata is an enterprise feature.
-
-:::
+<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
@@ -999,7 +996,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1029,7 +1026,7 @@ client = openai.OpenAI(
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1060,7 +1057,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1097,7 +1094,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1130,7 +1127,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1157,7 +1154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1181,7 +1178,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -1214,7 +1211,8 @@ print(response)
 #### `/spend/logs` Request Format 
 
 ```bash
-curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \ # e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+# request_id: e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
 -H "Authorization: Bearer sk-1234"
 ```
 

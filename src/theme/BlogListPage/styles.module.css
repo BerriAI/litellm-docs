@@ -148,6 +148,35 @@
   font-weight: 300;
 }
 
+/* ── Search ───────────────────────────────────────────────────────────── */
+.searchRow {
+  margin-top: 2rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.searchInput:focus-visible {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+.resultCount {
+  min-height: 1.2rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
 /* ── Tabs ─────────────────────────────────────────────────────────────── */
 .tabs {
   display: flex;
@@ -339,6 +368,10 @@
     gap: 1rem;
   }
 
+  .searchInput {
+    font-size: 1rem;
+  }
+
   .pageLink {
     font-size: 0.8rem;
   }
@@ -410,6 +443,25 @@
 [data-theme='dark'] .metaDash,
 [data-theme='dark'] .authorSep {
   color: #4b5563;
+}
+
+[data-theme='dark'] .searchInput {
+  color: #f9fafb;
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-theme='dark'] .searchInput::placeholder {
+  color: #6b7280;
+}
+
+[data-theme='dark'] .searchInput:focus-visible {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+[data-theme='dark'] .resultCount {
+  color: #9ca3af;
 }
 
 [data-theme='dark'] .tabs {

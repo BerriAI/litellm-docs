@@ -100,7 +100,7 @@ All models listed [here](https://github.com/BerriAI/litellm/blob/57f37f743886a02
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     input_type = "RETRIEVAL_DOCUMENT",
     dimensions=1,
 )
@@ -149,7 +149,7 @@ You can pass any vertex specific params to the embedding model. Just pass them t
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     task_type = "RETRIEVAL_DOCUMENT",
     title = "test",
     dimensions=1,

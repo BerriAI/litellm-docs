@@ -167,7 +167,7 @@ Here's the exact JSON output format you can expect from completion calls:
       "finish_reason": null
     }
   ],
-  "model": "gpt-3.5-turbo-instruct"
+  "model": "gpt-3.5-turbo-instruct",
   "system_fingerprint": "fp_44709d6fcb",
 }
 

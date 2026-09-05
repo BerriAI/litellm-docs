@@ -27,7 +27,7 @@ from agents.extensions.models.litellm_model import LitellmModel
 agent = Agent(
     name="Assistant",
     instructions="You are a helpful assistant.",
-    model=LitellmModel(model="anthropic/claude-sonnet-4-20250514"),
+    model=LitellmModel(model="anthropic/{{anthropic}}"),
 )
 
 result = Runner.run_sync(agent, "Hello!")
@@ -56,22 +56,22 @@ Configure and start the LiteLLM proxy with the models you want to use:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: bedrock-claude-sonnet-4
+  - model_name: bedrock-claude-sonnet-5
     litellm_params:
-      model: "bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0"
+      model: "bedrock/us.anthropic.{{anthropic}}"
       aws_region_name: "us-east-1"
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: "openai/gpt-4o"
+      model: "openai/{{openai_large}}"
 
-  - model_name: claude-sonnet-4
+  - model_name: {{anthropic}}
     litellm_params:
-      model: "anthropic/claude-sonnet-4-20250514"
+      model: "anthropic/{{anthropic}}"
 
-  - model_name: bedrock-claude-haiku
+  - model_name: bedrock-claude-opus
     litellm_params:
-      model: "bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0"
+      model: "bedrock/us.anthropic.{{anthropic_large}}"
       aws_region_name: "us-east-1"
 
   - model_name: bedrock-nova-premier
@@ -119,9 +119,9 @@ BASE_URL = os.getenv("LITELLM_BASE_URL") or "http://localhost:4000"
 API_KEY = os.getenv("LITELLM_API_KEY") or "sk-1234"
 
 # Define model constants for cleaner code
-MODEL_BEDROCK_SONNET = "bedrock-claude-sonnet-4"
-MODEL_BEDROCK_HAIKU = "bedrock-claude-haiku"
-MODEL_GPT_4O = "gpt-4o"
+MODEL_BEDROCK_SONNET = "bedrock-claude-sonnet-5"
+MODEL_BEDROCK_OPUS = "bedrock-claude-opus"
+MODEL_GPT = "{{openai_large}}"
 
 # Create the OpenAI client pointed at LiteLLM
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -198,7 +198,7 @@ async def test_bedrock_agent():
         "What's the weather in Tokyo?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="bedrock-claude-sonnet-4",  # Uses the model name from your LiteLLM config
+            model="bedrock-claude-sonnet-5",  # Uses the model name from your LiteLLM config
         ),
     )
     print(f"<<< Agent Response: {result.final_output}")
@@ -215,7 +215,7 @@ async def test_openai_agent():
 
     agent = Agent(
         name="weather_agent_gpt",
-        instructions="You are a helpful weather assistant powered by GPT-4o. "
+        instructions="You are a helpful weather assistant powered by {{openai_large}}. "
                      "Use the 'get_weather' tool for city weather requests. "
                      "Present information clearly.",
         tools=[get_weather],
@@ -226,7 +226,7 @@ async def test_openai_agent():
         "What's the weather in London?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="gpt-4o",  # Uses the model name from your LiteLLM config
+            model="{{openai_large}}",  # Uses the model name from your LiteLLM config
         ),
     )
     print(f"<<< Agent Response: {result.final_output}")
@@ -254,7 +254,7 @@ async def test_anthropic_agent():
         "What's the weather in New York?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="claude-sonnet-4",  # Uses the model name from your LiteLLM config
+            model="{{anthropic}}",  # Uses the model name from your LiteLLM config
         ),
     )
     print(f"<<< Agent Response: {result.final_output}")
@@ -289,7 +289,7 @@ from agents import (
 # Point to LiteLLM proxy
 BASE_URL = os.getenv("LITELLM_BASE_URL") or "http://localhost:4000"
 API_KEY = os.getenv("LITELLM_API_KEY") or "sk-1234"
-MODEL_NAME = os.getenv("MODEL_NAME") or "bedrock-claude-sonnet-4"
+MODEL_NAME = os.getenv("MODEL_NAME") or "bedrock-claude-sonnet-5"
 
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
 set_tracing_disabled(disabled=True)
@@ -333,7 +333,7 @@ async def main():
         tools=[get_weather],
     )
 
-    # Run with the default model (bedrock-claude-sonnet-4)
+    # Run with the default model (bedrock-claude-sonnet-5)
     result = await Runner.run(
         agent,
         "What's the weather in Tokyo?",
@@ -347,7 +347,7 @@ async def main():
         "What's the weather in London?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="gpt-4o",
+            model="{{openai_large}}",
         ),
     )
     print(result.final_output)

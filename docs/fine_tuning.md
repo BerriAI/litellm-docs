@@ -3,12 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # /fine_tuning
 
-
-:::info
-
-This is an Enterprise only endpoint [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
@@ -23,7 +18,7 @@ Add `finetune_settings` and `files_settings` to your litellm config.yaml to use 
 ## Example config.yaml for `finetune_settings` and `files_settings`
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key

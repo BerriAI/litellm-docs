@@ -16,20 +16,20 @@ The adaptive router does this automatically. It tracks which model performs best
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
     model_info:
-      input_cost_per_token: 0.0000025
+      input_cost_per_token: 0.000002
       adaptive_router_preferences:
         quality_tier: 3        # 1=budget, 2=mid, 3=frontier
         strengths: ["code_generation", "analytical_reasoning"]
 
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
     model_info:
-      input_cost_per_token: 0.00000015
+      input_cost_per_token: 0.0000002
       adaptive_router_preferences:
         quality_tier: 2
         strengths: ["factual_lookup"]
@@ -38,7 +38,7 @@ model_list:
     litellm_params:
       model: auto_router/adaptive_router
       adaptive_router_config:
-        available_models: ["gpt-4o", "gpt-4o-mini"]
+        available_models: ["{{openai_large}}", "{{openai_small}}"]
         weights:
           quality: 0.7   # raise this if quality complaints; lower if bill too high
           cost: 0.3      # must sum to 1.0 with quality
@@ -65,7 +65,7 @@ curl -X POST {{baseURL}}/v1/chat/completions \
 The response includes a header telling you which model was actually picked:
 
 ```
-x-litellm-adaptive-router-model: gpt-4o
+x-litellm-adaptive-router-model: {{openai_large}}
 ```
 
 The "thanks!" turn in the example above fires a satisfaction signal, and that's what moves the bandit.

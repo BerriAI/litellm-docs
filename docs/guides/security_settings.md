@@ -164,18 +164,14 @@ export SSL_ECDH_CURVE="X25519"
 
 ## 6. Use HTTP_PROXY environment variable
 
-Both httpx and aiohttp libraries use `urllib.request.getproxies` from environment variables. Before client initialization, you may set proxy (and optional SSL_CERT_FILE) by setting the environment variables:
+LiteLLM resolves `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` from the environment for every LLM request on both the default aiohttp transport and the httpx transport (`DISABLE_AIOHTTP_TRANSPORT=True`), with or without `force_ipv4`. No extra flag is needed; set the variables before the proxy or SDK starts:
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
-import litellm
-litellm.aiohttp_trust_env = True
-```
-
 ```bash
 export HTTPS_PROXY='http://username:password@proxy_uri:port'
+export NO_PROXY='localhost,127.0.0.1'
 ```
 </TabItem>
 
@@ -183,10 +179,12 @@ export HTTPS_PROXY='http://username:password@proxy_uri:port'
 
 ```bash
 export HTTPS_PROXY='http://username:password@proxy_uri:port'
-export AIOHTTP_TRUST_ENV='True'
+export NO_PROXY='localhost,127.0.0.1'
 ```
 </TabItem>
 </Tabs>
+
+Set `DISABLE_AIOHTTP_TRUST_ENV=True` (or `litellm.disable_aiohttp_trust_env = True`) to make the aiohttp transport ignore these variables. `AIOHTTP_TRUST_ENV` (or `litellm.aiohttp_trust_env`) is unrelated to proxy selection: it passes `trust_env=True` to the aiohttp session so aiohttp itself also reads `~/.netrc` and `SSL_CERT_FILE` / `SSL_CERT_DIR`.
 ## 7. Per-Service SSL Verification
 
 LiteLLM allows you to override SSL verification settings for specific services or provider calls. This is useful when different services (e.g., an internal guardrail vs. a public LLM provider) require different CA certificates.
@@ -198,7 +196,7 @@ You can pass `ssl_verify` directly in the `completion` call.
 import litellm
 
 response = litellm.completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "hi"}],
     ssl_verify="path/to/bedrock_cert.pem" # Or False to disable
 )

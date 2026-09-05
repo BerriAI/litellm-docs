@@ -23,7 +23,7 @@ POST /v1/chat/completions                  ← HTTP request (server span)
 │   ├── postgres get_key_object            ← DB lookups during auth
 │   └── postgres get_team_membership
 ├── execute_guardrail presidio-pii         ← each guardrail that runs
-├── chat gpt-4o                            ← the LLM call (model, tokens, cost)
+├── chat {{openai_large}}                     ← the LLM call (model, tokens, cost)
 └── batch_write_to_db                      ← spend/usage written to DB
 ```
 
@@ -524,6 +524,7 @@ Response, usage, cost, identity:
 | `litellm.call_id` | always |
 | `litellm.provider.model` | always (the model string actually sent to the provider) |
 | `litellm.request.streaming` | when true |
+| `litellm.request.route` | on the proxy (the same route the root span reports as `http.route`: the FastAPI route template, e.g. `/v1/responses/{response_id}`, or the literal path on a passthrough prefix such as `/openai/...`; when no server span exists, for example the route is in `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or the FastAPI instrumentation is not installed, it falls back to the route the proxy recorded at auth) |
 | `litellm.cost.total` | on success |
 | `litellm.cost.input`, `output`, `cache_read`, `cache_creation`, `tool_usage` | when the source reported the breakdown |
 | `litellm.cost.original`, `discount_amount`, `discount_percent`, `margin_fixed_amount`, `margin_percent`, `margin_total_amount` | when reported |

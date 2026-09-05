@@ -1,10 +1,6 @@
 # Unmanaged Vertex AI Batches
 
-:::info
-
-This is a LiteLLM Enterprise feature.
-
-:::
+<EnterpriseFeature />
 
 LiteLLM supports two paths for Vertex AI batch jobs. The managed path handles file upload and format conversion automatically. The unmanaged path lets you upload batch files directly to GCS in Vertex AI's native format; LiteLLM skips transformation but tracks cost when enabled.
 
@@ -42,9 +38,9 @@ Configure a `vertex_ai` deployment for the model you want to batch. The poller u
 
 ```yaml
 model_list:
-  - model_name: gemini-2.5-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: vertex_ai/gemini-2.5-flash
+      model: vertex_ai/{{gemini_flash}}
       vertex_project: my-gcp-project
       vertex_location: us-central1
       vertex_credentials: /path/to/service-account.json
@@ -55,7 +51,7 @@ model_list:
 The GCS path must include `publishers/google/models/<model-name>/` so LiteLLM can derive the model name for credential lookup.
 
 ```
-gs://my-bucket/<any-prefix>/publishers/google/models/gemini-2.5-flash/<filename>.jsonl
+gs://my-bucket/<any-prefix>/publishers/google/models/{{gemini_flash}}/<filename>.jsonl
 ```
 
 The bucket name and any prefix before `publishers/` can be anything.
@@ -65,8 +61,8 @@ The bucket name and any prefix before `publishers/` can be anything.
 Unmanaged batches must be in Vertex AI native JSONL format. The managed path accepts OpenAI format and converts it; the unmanaged path skips conversion entirely, so you must provide Vertex AI format directly:
 
 ```json
-{"custom_id": "1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gemini-2.5-flash", "messages": [{"role": "user", "content": "What is 2+2?"}]}}
-{"custom_id": "2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gemini-2.5-flash", "messages": [{"role": "user", "content": "What is 3+3?"}]}}
+{"custom_id": "1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{gemini_flash}}", "messages": [{"role": "user", "content": "What is 2+2?"}]}}
+{"custom_id": "2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{gemini_flash}}", "messages": [{"role": "user", "content": "What is 3+3?"}]}}
 ```
 
 ## Usage
@@ -74,7 +70,7 @@ Unmanaged batches must be in Vertex AI native JSONL format. The managed path acc
 ### 1. Upload to GCS
 
 ```bash
-gsutil cp batch.jsonl gs://my-bucket/batches/publishers/google/models/gemini-2.5-flash/batch.jsonl
+gsutil cp batch.jsonl gs://my-bucket/batches/publishers/google/models/{{gemini_flash}}/batch.jsonl
 ```
 
 ### 2. Create batch
@@ -86,7 +82,7 @@ curl -X POST http://localhost:4000/v1/batches \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "input_file_id": "gs://my-bucket/batches/publishers/google/models/gemini-2.5-flash/batch.jsonl",
+    "input_file_id": "gs://my-bucket/batches/publishers/google/models/{{gemini_flash}}/batch.jsonl",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h",
     "custom_llm_provider": "vertex_ai"
@@ -129,7 +125,7 @@ The polling interval is controlled by `proxy_batch_polling_interval` in `general
 **Batch not costed.** Check that `track_unmanaged_vertex_batch_cost: true` is set, that your GCS path contains `publishers/google/models/<model>/`, and that you have a `vertex_ai` deployment configured. Look for log lines like:
 
 ```
-Skipping unmanaged vertex batch 8823717160934178816: no vertex_ai deployment configured for model gemini-2.5-flash
+Skipping unmanaged vertex batch 8823717160934178816: no vertex_ai deployment configured for model {{gemini_flash}}
 ```
 
 **Cost is zero.** Vertex AI includes token usage in the response body only after the batch fully completes. If status is `completed` but cost is zero, manually download the output file to verify it contains response data with usage fields.

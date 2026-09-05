@@ -1,13 +1,14 @@
 ---
 title: Recommended Configurations
 sidebar_label: Recommended Configurations
-description: The bundled Anthropic, OpenAI, Gemini, and Lite presets as config.yaml, the configs the public benchmarks were run on, and how to choose between them.
+description: The bundled 1M Context, Anthropic, OpenAI, Gemini, and Lite presets as config.yaml, the configs the public benchmarks were run on, and how to choose between them.
 ---
 
-Recommended ladders per model family, matching the dashboard's Auto Router templates. Every tier must exist as a `model_name` in the same file; swap the provider prefix or credentials for your own deployments and the router entry stays the same.
+Recommended ladders, matching the dashboard's Auto Router templates. Every tier must exist as a `model_name` in the same file; swap the provider prefix or credentials for your own deployments and the router entry stays the same.
 
 | Ladder | SIMPLE | MEDIUM | COMPLEX | REASONING | Classifier |
 | --- | --- | --- | --- | --- | --- |
+| [1M Context](#1m-context) | gpt-5.6-luna | gpt-5.6-terra | gpt-5.6-sol | claude-opus-5, high effort | heuristic v2 |
 | [Anthropic Family](#anthropic-family) | claude-haiku-4-5 | claude-sonnet-5 | claude-opus-5 | claude-opus-5, high effort | heuristic |
 | [OpenAI Family](#openai-family) | gpt-5.6-luna | gpt-5.6-terra | gpt-5.6-sol | gpt-5.6-sol, xhigh effort | heuristic |
 | [Gemini Family](#gemini-family) | gemini-2.5-flash-lite | gemini-3.1-flash-lite | gemini-3.7-flash | gemini-3.1-pro-preview | heuristic |
@@ -19,6 +20,7 @@ Recommended ladders per model family, matching the dashboard's Auto Router templ
 
 - **One family** when clients depend on provider-specific behavior (Anthropic cache control, OpenAI reasoning params). Every tier stays on one API surface.
 - **Lite** when cost beats provider consistency and traffic is agentic. Mixed providers, LLM classifier with the `agentic` rubric.
+- **1M Context** for long prompts. Luna, Terra, Sol, then Opus 5 at high effort, with the heuristic v2 classifier.
 - **Same model, more effort** for the top rung. Costs more output tokens, not a higher per-token rate. Pattern: [effort ladders](/docs/proxy/auto_routing#effort-ladders).
 - All ladders leave `session_affinity` off (the default; see [prompt caching](/docs/auto_router/prompt_caching)) and set `escalation_keywords: ["LITELLM ESCALATE"]`, which bumps a request one tier when the exact phrase appears. Matching is case-sensitive.
 
@@ -26,7 +28,7 @@ Recommended ladders per model family, matching the dashboard's Auto Router templ
 
 Haiku, Sonnet, Opus, then Opus at high reasoning effort.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-haiku-4-5
     litellm_params:
@@ -69,13 +71,13 @@ Luna, Terra, Sol, then Sol at xhigh reasoning effort.
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-5.6-sol
     litellm_params:
@@ -92,21 +94,21 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    gpt-5.6-terra
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
           COMPLEX:   gpt-5.6-sol
           REASONING: gpt-5.6-sol-xhigh
         classifier_type: heuristic
         escalation_keywords: ["LITELLM ESCALATE"]
         session_affinity: false
-      complexity_router_default_model: gpt-5.6-terra
+      complexity_router_default_model: {{openai_large}}
 ```
 
 ## Gemini Family
 
 Flash Lite 2.5, Flash Lite 3.1, Flash 3.7, then Pro 3.1.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: gemini-2.5-flash-lite
     litellm_params:
@@ -160,9 +162,9 @@ model_list:
       model: moonshot/kimi-k3
       api_key: os.environ/MOONSHOT_API_KEY
       reasoning_effort: max
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: lite-router
@@ -173,7 +175,7 @@ model_list:
           SIMPLE:    deepseek-v4-flash
           MEDIUM:    muse-spark-1.2-xhigh
           COMPLEX:   kimi-k3-max
-          REASONING: claude-opus-5
+          REASONING: {{anthropic_large}}
         classifier_type: llm
         classifier_llm_config:
           model: deepseek-v4-flash
@@ -185,12 +187,53 @@ model_list:
       complexity_router_default_model: muse-spark-1.2-xhigh
 ```
 
+## 1M Context
+
+Luna, Terra, Sol, then Opus 5 at high reasoning effort. Uses the heuristic v2 classifier, so classification adds no LLM call.
+
+The GPT tiers accept up to 922K input tokens and Opus 5 accepts 1M. The router moves oversized prompts to the lowest higher tier with capacity. See [context-window escalation](/docs/proxy/auto_routing#context-window).
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: {{openai_small}}
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-5.6-sol
+    litellm_params:
+      model: openai/gpt-5.6-sol
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: claude-opus-5-high
+    litellm_params:
+      model: anthropic/{{anthropic_large}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+      reasoning_effort: high
+
+  - model_name: 1m-auto
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        tiers:
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
+          COMPLEX:   gpt-5.6-sol
+          REASONING: claude-opus-5-high
+        classifier_type: heuristic_v2
+        escalation_keywords: ["LITELLM ESCALATE"]
+        session_affinity: false
+      complexity_router_default_model: {{openai_large}}
+```
+
 ## The benchmark configuration
 
 - [Terminal-Bench](/blog/auto-router-terminal-bench-benchmark): Opus-5 solve rate at 27% lower cost, this config, gpt-5.4-mini classifier reading only the current message.
 - [Cost and quality](/blog/auto-router-cost-quality-benchmark) and [prompt caching](/blog/auto-router-prompt-caching-benchmark): same tiers, heuristic classifier.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-haiku-4-5
     litellm_params:
@@ -237,7 +280,7 @@ The classifier context window is the knob to revisit for your own traffic:
 - Haiku serves both SIMPLE and MEDIUM; Opus is reserved for REASONING.
 - 95% of requests never reached the flagship tier.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-haiku-4-5
     litellm_params:
@@ -270,7 +313,7 @@ model_list:
 - `session_affinity` pins the tier for the session; `deployment_affinity` plus the `prompt_caching` pre-call check pins the deployment holding the cache.
 - Both matter on agent traffic. Details: [Session affinity](/docs/proxy/auto_routing#session-affinity).
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-haiku-4-5
     litellm_params:

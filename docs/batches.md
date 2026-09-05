@@ -119,37 +119,37 @@ print("response from litellm.create_batch=", create_batch_response)
 **Retrieve the Specific Batch and File Content**
 
 ```python
-    # Maximum wait time before we give up
-    MAX_WAIT_TIME = 300  
+# Maximum wait time before we give up
+MAX_WAIT_TIME = 300  
 
-    # Time to wait between each status check
-    POLL_INTERVAL = 5
+# Time to wait between each status check
+POLL_INTERVAL = 5
+
+#Time waited till now 
+waited = 0
+
+# Wait for the batch to finish processing before trying to retrieve output
+# This loop checks the batch status every few seconds (polling)
+
+while True:
+    retrieved_batch = await litellm.aretrieve_batch(
+        batch_id=create_batch_response.id,
+        custom_llm_provider="openai"
+    )
     
-    #Time waited till now 
-    waited = 0
-
-    # Wait for the batch to finish processing before trying to retrieve output
-    # This loop checks the batch status every few seconds (polling)
-
-    while True:
-        retrieved_batch = await litellm.aretrieve_batch(
-            batch_id=create_batch_response.id,
-            custom_llm_provider="openai"
-        )
-        
-        status = retrieved_batch.status
-        print(f"⏳ Batch status: {status}")
-        
-        if status == "completed" and retrieved_batch.output_file_id:
-            print("✅ Batch complete. Output file ID:", retrieved_batch.output_file_id)
-            break
-        elif status in ["failed", "cancelled", "expired"]:
-            raise RuntimeError(f"❌ Batch failed with status: {status}")
-        
-        await asyncio.sleep(POLL_INTERVAL)
-        waited += POLL_INTERVAL
-        if waited > MAX_WAIT_TIME:
-            raise TimeoutError("❌ Timed out waiting for batch to complete.")
+    status = retrieved_batch.status
+    print(f"⏳ Batch status: {status}")
+    
+    if status == "completed" and retrieved_batch.output_file_id:
+        print("✅ Batch complete. Output file ID:", retrieved_batch.output_file_id)
+        break
+    elif status in ["failed", "cancelled", "expired"]:
+        raise RuntimeError(f"❌ Batch failed with status: {status}")
+    
+    await asyncio.sleep(POLL_INTERVAL)
+    waited += POLL_INTERVAL
+    if waited > MAX_WAIT_TIME:
+        raise TimeoutError("❌ Timed out waiting for batch to complete.")
 
 print("retrieved batch=", retrieved_batch)
 # just assert that we retrieved a non None batch
@@ -194,19 +194,19 @@ Route batch operations to different provider accounts using model-specific crede
 model_list:
   - model_name: gpt-4o-account-1
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-account-1-key
       api_base: https://api.openai.com/v1
   
   - model_name: gpt-4o-account-2
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-account-2-key
       api_base: https://api.openai.com/v1
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"

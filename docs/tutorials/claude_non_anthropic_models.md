@@ -36,16 +36,16 @@ Create a configuration file with your preferred non-Anthropic models:
 
 ```yaml
 model_list:
-  # OpenAI GPT-4o
-  - model_name: gpt-4o
+  # OpenAI {{openai_large}}
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  # OpenAI GPT-4o-mini
-  - model_name: gpt-4o-mini
+  # OpenAI {{openai_small}}
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -81,9 +81,9 @@ export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
 ```yaml
 model_list:
   # Google Gemini
-  - model_name: vertex-gemini-3-flash-preview
+  - model_name: vertex-gemini-3.8-flash
     litellm_params:
-      model: vertex_ai/gemini-3-flash-preview
+      model: vertex_ai/{{gemini_flash}}
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
       vertex_project: "my-test-project"
       vertex_location: "us-east-1"
@@ -91,7 +91,7 @@ model_list:
   # Anthropic Claude
   - model_name: anthropic-vertex
     litellm_params:
-      model: vertex_ai/claude-3-sonnet@20240229
+      model: vertex_ai/{{anthropic}}
       vertex_ai_project: "my-test-project"
       vertex_ai_location: "us-east-1"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
@@ -110,9 +110,9 @@ export LITELLM_MASTER_KEY="sk-1234567890"
 ```yaml
 model_list:
   # Azure OpenAI
-  - model_name: azure-gpt-4
+  - model_name: azure-gpt-5.6-terra
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: "2024-02-01"
@@ -149,7 +149,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -191,7 +191,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "azure-gpt-4",
+    "model": "azure-gpt-5.6-terra",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -218,23 +218,23 @@ The `LITELLM_MASTER_KEY` gives Claude Code access to all proxy models. You can a
 Start Claude Code and specify which model to use:
 
 ```bash
-# Use OpenAI GPT-4o
-claude --model gpt-4o
+# Use OpenAI {{openai_large}}
+claude --model {{openai_large}}
 
-# Use OpenAI GPT-4o-mini for faster responses
-claude --model gpt-4o-mini
+# Use OpenAI {{openai_small}} for faster responses
+claude --model {{openai_small}}
 
 # Use Google Gemini
 claude --model gemini-3.0-flash-exp
 
 # Use Vertex AI Gemini
-claude --model vertex-gemini-3-flash-preview
+claude --model vertex-gemini-3.8-flash
 
 # Use Vertex AI Anthropic Claude
 claude --model anthropic-vertex
 
 # Use Azure OpenAI
-claude --model azure-gpt-4
+claude --model azure-gpt-5.6-terra
 ```
 
 ### 6. Switch Models at Runtime with `/model`
@@ -253,7 +253,7 @@ On startup, Claude Code will call `GET /v1/models` against your `ANTHROPIC_BASE_
 /model
 ```
 
-and select any LiteLLM-managed model (`gpt-4o`, `gemini-3.0-flash-exp`, `anthropic-vertex`, etc.) to switch without restarting the session.
+and select any LiteLLM-managed model (`{{openai_large}}`, `gemini-3.0-flash-exp`, `anthropic-vertex`, etc.) to switch without restarting the session.
 
 :::info Requirements
 
@@ -313,14 +313,14 @@ Configure multiple deployments with automatic fallback:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o  # virtual model name
+  - model_name: {{openai_large}}  # virtual model name
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  - model_name: gpt-4o  # same virtual name
+  - model_name: {{openai_large}}  # same virtual name
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
 
@@ -335,11 +335,9 @@ router_settings:
 Track usage and set budgets through the LiteLLM UI:
 
 ```yaml
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: "postgresql://..."  # Enable database for tracking
-  
-general_settings:
   store_model_in_db: true
 ```
 
@@ -360,8 +358,8 @@ Access the UI at `http://0.0.0.0:4000/ui` to:
 
 LiteLLM supports 100+ providers. Here are some popular ones for use with Claude Code:
 
-- **OpenAI**: GPT-4o, GPT-4o-mini, o1, o3-mini
-- **Google**: Gemini 2.0 Flash, Gemini 1.5 Pro/Flash
+- **OpenAI**: gpt-5.6-terra, gpt-5.6-luna, o1, o3-mini
+- **Google**: Gemini 3.8 Flash, Gemini 3.1 Pro
 - **Azure OpenAI**: All OpenAI models via Azure
 - **AWS Bedrock**: Llama, Mistral, and other models
 - **Vertex AI**: Gemini, Claude, and other models on Google Cloud

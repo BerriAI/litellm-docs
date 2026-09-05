@@ -16,9 +16,9 @@ Create a config file (e.g., `config.yaml`):
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
 
 general_settings:
   master_key: sk-1234

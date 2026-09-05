@@ -53,7 +53,7 @@ model_list:
       model: anthropic/claude-haiku-4-5-20251001
       api_key: os.environ/ANTHROPIC_API_KEY
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
@@ -296,7 +296,7 @@ model_list:
       vertex_ai_location: "us-east5"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json"
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 

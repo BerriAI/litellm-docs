@@ -17,7 +17,7 @@ To use fallback models with `completion()`, specify a list of models in the `fal
 The `fallbacks` list should include the primary model you want to use, followed by additional models that can be used as backups in case the primary model fails to provide a response.
 
 ```python
-response = completion(model="bad-model", fallbacks=["gpt-3.5-turbo" "command-nightly"], messages=messages)
+response = completion(model="bad-model", fallbacks=["{{openai_small}}" "command-nightly"], messages=messages)
 ```
 
 ## How does `completion_with_fallbacks()` work
@@ -30,12 +30,12 @@ Completion with 'bad-model': got exception Unable to map your input to a model. 
 
 
 
-completion call gpt-3.5-turbo
+completion call {{openai_small}}
 {
   "id": "chatcmpl-7qTmVRuO3m3gIBg4aTmAumV1TmQhB",
   "object": "chat.completion",
   "created": 1692741891,
-  "model": "gpt-3.5-turbo-0613",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,
@@ -64,11 +64,14 @@ Allow `45seconds` for each request. In the 45s this function tries calling the p
 ```python
 while response == None and time.time() - start_time < 45:
         for model in fallbacks:
+            ...
 ```
 
 #### Cool-Downs for rate-limited models
 If a model API call leads to an error - allow it to cooldown for `60s`
 ```python
+try:
+  ...
 except Exception as e:
   print(f"got exception {e} for model {model}")
   rate_limited_models.add(model)

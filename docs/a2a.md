@@ -179,7 +179,8 @@ To enable these features, your A2A server must **forward these headers** to any 
 ### Implementation Steps
 
 **Step 1: Extract headers from incoming A2A request**
-```python def get_litellm_headers(request) -> dict:
+```python
+def get_litellm_headers(request) -> dict:
     """Extract X-LiteLLM-* headers from incoming A2A request."""
     all_headers = request.call_context.state.get('headers', {})
     return {
@@ -193,7 +194,8 @@ Pass the extracted headers when making calls back to LiteLLM:
 <Tabs>
 <TabItem value="openai" label="OpenAI SDK" default>
 
-```python from openai import OpenAI
+```python
+from openai import OpenAI
 
 headers = get_litellm_headers(request)
 
@@ -204,7 +206,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -218,7 +220,7 @@ from langchain_openai import ChatOpenAI
 headers = get_litellm_headers(request)
 
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="{{openai_large}}",
     openai_api_key="sk-your-litellm-key",
     base_url="http://localhost:4000",
     default_headers=headers,  # Forward headers
@@ -233,7 +235,7 @@ import litellm
 headers = get_litellm_headers(request)
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     api_base="http://localhost:4000",
     extra_headers=headers,  # Forward headers
@@ -251,7 +253,7 @@ headers["Authorization"] = "Bearer sk-your-litellm-key"
 response = httpx.post(
     "http://localhost:4000/v1/chat/completions",
     headers=headers,
-    json={"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}
+    json={"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}
 )
 ```
 </TabItem>

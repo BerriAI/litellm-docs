@@ -8,9 +8,9 @@ import TabItem from '@theme/TabItem';
 This can be set as env variables or passed as **params to litellm.embedding()**
 ```python
 import os
-os.environ['AZURE_API_KEY'] = 
-os.environ['AZURE_API_BASE'] = 
-os.environ['AZURE_API_VERSION'] = 
+os.environ['AZURE_API_KEY'] = ""
+os.environ['AZURE_API_BASE'] = ""
+os.environ['AZURE_API_VERSION'] = ""
 ```
 
 ### Usage

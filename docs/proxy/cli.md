@@ -215,7 +215,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - The model name to pass to LiteLLM.
    - **Usage:** 
      ```shell
-     litellm --model gpt-3.5-turbo
+     litellm --model {{openai_small}}
      ```
 
 ### --alias
@@ -263,7 +263,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - Save the model-specific config.
    - **Usage:** 
      ```shell
-     litellm --model gpt-3.5-turbo --save
+     litellm --model {{openai_small}} --save
      ```
 
 ## Model Parameters

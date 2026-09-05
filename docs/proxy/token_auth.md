@@ -5,16 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use JWT's to auth admins / users / projects into the proxy.
 
-:::info
-
-✨ JWT-based Auth  is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature feature="JWT-based Auth" />
 
 :::tip JWT → Virtual Key Mapping
 
@@ -74,9 +65,10 @@ curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 Create a JWT for your project on your OpenID provider (e.g. Keycloak).
 
 ```bash
+# client_id: 👈 project id
 curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'client_id={CLIENT_ID}' \ # 👈 project id
+--data-urlencode 'client_id={CLIENT_ID}' \
 --data-urlencode 'client_secret={CLIENT_SECRET}' \
 --data-urlencode 'grant_type=client_credential' \
 ```
@@ -300,7 +292,7 @@ general_settings:
   enable_jwt_auth: True
   litellm_jwtauth:  
     # Use namespace as team identifier (resolves via team_alias in DB)
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
 ```
 
 #### Step 3: Create ServiceAccount and Configure Pod
@@ -358,7 +350,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 -d '{
     "team_alias": "my-app",
     "team_id": "my-app",
-    "models": ["gpt-4", "claude-sonnet-4-20250514"]
+    "models": ["{{openai_large}}", "{{anthropic}}"]
 }'
 ```
 
@@ -372,7 +364,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_TOKEN" \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello!"}]
 }'
 ```
@@ -413,7 +405,7 @@ general_settings:
   litellm_jwtauth:
     user_id_jwt_field: "sub"
     # Map the namespace to team_alias in the database
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
     user_id_upsert: true
 ```
 
@@ -618,7 +610,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer <your-jwt-token>' \
 -H 'x-litellm-team-id: team_id_2' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```
@@ -744,7 +736,7 @@ general_settings:
   master_key: sk-1234
   enable_jwt_auth: True
   litellm_jwtauth:
-    ...
+    # ...
     team_id_jwt_field: "litellm-team" # 👈 Set field in the JWT token that stores the team ID
     team_allowed_routes: ["/v1/chat/completions"] # 👈 Set accepted routes
 ```
@@ -1087,11 +1079,11 @@ Control which models a JWT can access. Set `enforce_scope_based_access: true` to
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: gpt-3.5-turbo-testing
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1267,7 +1259,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <JWT_WITH_ADMIN_ROLE>' \
 -d '{
-  "model": "claude-sonnet-4-20250514",
+  "model": "{{anthropic}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```

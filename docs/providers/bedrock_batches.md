@@ -32,7 +32,7 @@ Here's how to give developers access to your Bedrock Batch models.
 model_list:
   - model_name: "bedrock-batch-claude"
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       #########################################################
       ########## batch specific params ########################
       s3_bucket_name: litellm-proxy
@@ -91,7 +91,7 @@ Here's how to create a LiteLLM managed file and execute Bedrock Batch CRUD opera
 
 Expectation:
 
-- LiteLLM translates this to the bedrock deployment specific value (e.g. `bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0`)
+- LiteLLM translates this to the bedrock deployment specific value (e.g. `bedrock/us.anthropic.{{anthropic}}`)
 
 ### 2. Upload File
 
@@ -112,7 +112,7 @@ client = OpenAI(
 
 # Upload file
 batch_input_file = client.files.create(
-    file=open("./bedrock_batch_completions.jsonl", "rb"), # {"model": "bedrock-batch-claude"} <-> {"model": "bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0"}
+    file=open("./bedrock_batch_completions.jsonl", "rb"), # {"model": "bedrock-batch-claude"} <-> {"model": "bedrock/us.anthropic.{{anthropic}}"}
     purpose="batch",
     extra_body={"target_model_names": "bedrock-batch-claude"}
 )
@@ -252,7 +252,7 @@ The batch output file is in JSONL format with each line containing:
   "modelOutput": {
     "content": [...],
     "id": "msg_abc123",
-    "model": "claude-3-5-sonnet-20240620-v1:0",
+    "model": "us.anthropic.{{anthropic}}",
     "role": "assistant",
     "stop_reason": "end_turn",
     "usage": {
@@ -286,7 +286,7 @@ You can set the encryption key in 2 ways:
 model_list:
   - model_name: "bedrock-batch-claude"
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       s3_encryption_key_id: arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012
       # ... other params
 ```

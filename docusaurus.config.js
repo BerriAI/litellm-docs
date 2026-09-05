@@ -319,6 +319,7 @@ const config = {
             : undefined,
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic

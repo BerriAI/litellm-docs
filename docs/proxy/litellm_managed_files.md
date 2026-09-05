@@ -7,14 +7,7 @@ import Image from '@theme/IdealImage';
 - Reuse the same file across different providers.
 - Prevent users from seeing files they don't have access to on `list` and `retrieve` calls. 
 
-:::info
-
-This is a free LiteLLM Enterprise feature.
-
-Available via the `litellm` docker image. If you are using the pip package, you must install [`litellm-enterprise`](https://pypi.org/project/litellm-enterprise/).
-
-:::
-
+<EnterpriseFeature free />
 
 | Property | Value | Comments |
 | --- | --- | --- |
@@ -29,14 +22,14 @@ Available via the `litellm` docker image. If you are using the pip package, you 
 
 ```yaml
 model_list:
-    - model_name: "gemini-2.0-flash"
+    - model_name: "{{gemini_flash}}"
       litellm_params:
-        model: vertex_ai/gemini-2.0-flash
+        model: vertex_ai/{{gemini_flash}}
         vertex_project: my-project-id
         vertex_location: us-central1
     - model_name: "gpt-4o-mini-openai"
       litellm_params:
-        model: gpt-4o-mini
+        model: {{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
@@ -60,7 +53,7 @@ When enabled, uploads without `target_model_names` return `400`. Existing manage
 
 ```python
 # String (comma-separated for multiple models)
-extra_body={"target_model_names": "gpt-4o-mini-openai, gemini-2.0-flash"}
+extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}
 
 # List (OpenAI Python SDK sends this as target_model_names[] in multipart form)
 extra_body={"target_model_names": ["gpt-4o-mini-openai"]}
@@ -77,7 +70,7 @@ litellm --config /path/to/config.yaml
 Specify `target_model_names` to use the same file id across different providers. This is the list of model_names set via config.yaml (or 'public_model_names' on UI). 
 
 ```python
-target_model_names="gpt-4o-mini-openai, gemini-2.0-flash" # 👈 Specify model_names
+target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # 👈 Specify model_names
 ```
 
 Check `/v1/models` to see the list of available model names for a key.
@@ -104,7 +97,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, gemini-2.0-flash"}, # 👈 Specify model_names
+    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # 👈 Specify model_names
 )
 
 print(f"file id={file.id}")
@@ -143,7 +136,7 @@ print(completion.choices[0].message)
 
 ```python
 completion = client.chat.completions.create(
-    model="gemini-2.0-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user",
@@ -192,14 +185,14 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/gemini-2.0-flash"},
+    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
 )
 
 print(f"file.id: {file.id}") # 👈 Unified file id
 
 ## GEMINI CALL ### 
 completion = client.chat.completions.create(
-    model="gemini-2.0-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user",
@@ -252,7 +245,7 @@ Prevent users from seeing files they don't have access to on `list` and `retriev
 model_list:
     - model_name: "gpt-4o-mini-openai"
       litellm_params:
-        model: gpt-4o-mini
+        model: {{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
@@ -335,7 +328,6 @@ print(file) # File retrieved successfully
 <TabItem value="no_access" label="User did not create file">
 
 ```python
-```python
 from openai import OpenAI
 
 ... # User created file (3b)
@@ -379,7 +371,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/gemini-2.0-flash"},
+    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
 )
 ```
 

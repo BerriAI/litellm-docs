@@ -11,9 +11,9 @@ Setup Prompt Injection Detection, Secret Detection on LiteLLM Proxy
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -27,7 +27,7 @@ litellm_settings:
     - hide_secrets_guard:
         callbacks: [hide_secrets]
         default_on: false
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```
@@ -56,7 +56,7 @@ curl --location 'http://localhost:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -139,7 +139,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -165,7 +165,7 @@ chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "llama3",
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -280,7 +280,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer $LITELLM_VIRTUAL_KEY' \
 --data '{
-"model": "gpt-3.5-turbo",
+"model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -348,7 +348,7 @@ litellm_settings:
         callback: ["presidio"]
         default_on: true
         logging_only: true
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```

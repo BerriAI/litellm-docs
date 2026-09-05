@@ -53,7 +53,7 @@ python3 benchmark.py
 ```
 
 ## Expected Output
-```
+```text
 Running question: When will BerriAI IPO? for model: claude-2: 100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:13<00:00,  4.41s/it]
 
 Benchmark Results for 'When will BerriAI IPO?':
@@ -87,8 +87,8 @@ Benchmark Results for 'When will BerriAI IPO?':
 
 <!-- 
 ## Pre-requisites:
-``` python
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 ## Example Use Case 1 - Code Generator
@@ -109,7 +109,7 @@ os.environ["OPENAI_API_KEY"] = "openai key"
 os.environ["COHERE_API_KEY"] = "cohere key"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages)
+response = completion(model="{{openai_small}}", messages=messages)
 # cohere call
 response = completion("command-nightly", messages)
 ```
@@ -130,7 +130,7 @@ questions = [
 
 ### Select from 100+ LLMs here: <https://docs.litellm.ai/docs/providers> {#select-from-100-llms-here-httpsdocslitellmaidocsproviders}
 
-``` python
+```python
 import litellm
 from litellm import completion, completion_cost
 import os
@@ -262,7 +262,7 @@ questions = [
 
 ### Run Questions
 
-``` python
+```python
 import litellm
 from litellm import completion, completion_cost
 import os

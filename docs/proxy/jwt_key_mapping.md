@@ -1,12 +1,6 @@
 # JWT → Virtual Key Mapping
 
-:::info Enterprise
-
-JWT → Virtual Key Mapping is an Enterprise feature.
-
-[Get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature feature="JWT → Virtual Key Mapping" />
 
 Map JWT tokens to LiteLLM virtual keys, so every JWT client gets the same granular controls as a virtual key: model restrictions, spend limits, rate limits, guardrails, and full spend tracking.
 
@@ -95,7 +89,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "models": ["claude-sonnet-4-5", "claude-haiku-4-5"],
+    "models": ["{{anthropic}}", "{{anthropic_large}}"],
     "max_budget": 50.0,
     "budget_duration": "30d",
     "rpm_limit": 100,
@@ -126,7 +120,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "claude-sonnet-4-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -149,7 +143,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -H 'Content-Type: application/json' \
   -d '{
     "team_alias": "engineering",
-    "models": ["claude-sonnet-4-5", "claude-haiku-4-5"]
+    "models": ["{{anthropic}}", "{{anthropic_large}}"]
   }'
 ```
 
@@ -161,7 +155,7 @@ Each developer is a virtual key plus a mapping from their JWT claim to that key.
 # Alice: senior eng, higher budget
 ALICE_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
-  -d '{"team_id": "engineering", "models": ["claude-sonnet-4-5", "claude-haiku-4-5"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
+  -d '{"team_id": "engineering", "models": ["{{anthropic}}", "{{anthropic_large}}"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
   | jq -r '.key')
 
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
@@ -171,7 +165,7 @@ curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
 # Bob: contractor, tighter limits
 BOB_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
-  -d '{"team_id": "engineering", "models": ["claude-haiku-4-5"], "max_budget": 20.0, "budget_duration": "30d", "rpm_limit": 30}' \
+  -d '{"team_id": "engineering", "models": ["{{anthropic}}"], "max_budget": 20.0, "budget_duration": "30d", "rpm_limit": 30}' \
   | jq -r '.key')
 
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
@@ -205,9 +199,9 @@ Or in `~/.claude/settings.json`:
 
 **4. Developers authenticate with SSO as usual**
 
-When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits: her $200/month budget, 200 RPM cap, and access to Sonnet and Haiku only.
+When Alice runs Claude Code, her JWT (issued by your IdP with `client_id: alice@corp.com`) goes to the proxy. LiteLLM looks up the mapping, finds her virtual key, and enforces her specific limits: her $200/month budget, 200 RPM cap, and access to Sonnet and Opus only.
 
-Bob's token maps to his own key: $20/month, Haiku only, 30 RPM.
+Bob's token maps to his own key: $20/month, Sonnet only, 30 RPM.
 
 No API keys distributed. No shared limits. Full per-developer spend visibility in the LiteLLM dashboard.
 

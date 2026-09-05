@@ -84,7 +84,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
         --header 'Authorization: Bearer sk-1234' \
         --data '{
-        "model": "claude-3-5-sonnet",
+        "model": "{{anthropic}}",
         "messages": [{"role": "user", "content": "what time is it"}],
         "litellm_metadata": {"user": "ishaan3"}
         }'
@@ -115,8 +115,10 @@ If the customer_id already exists, spend will be incremented.
 Call `/customer/info` to get a customer's all up spend
 
 ```bash showLineNumbers title="Get customer spend"
-curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \ # 👈 CUSTOMER ID
-        -H 'Authorization: Bearer sk-1234' \ # 👈 YOUR PROXY KEY
+# end_user_id: 👈 CUSTOMER ID
+# Authorization: 👈 YOUR PROXY KEY
+curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
+        -H 'Authorization: Bearer sk-1234'
 ```
 
 Expected Response:
@@ -432,7 +434,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "user": "my-customer-id"
 }'
@@ -559,7 +561,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}

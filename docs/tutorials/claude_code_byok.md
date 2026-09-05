@@ -20,9 +20,9 @@ Enable forwarding of LLM provider auth headers so your Anthropic key takes prece
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       # No api_key needed — client's key will be used
 
 litellm_settings:
@@ -54,7 +54,7 @@ Create a virtual key in the LiteLLM UI or via API.
 curl -X POST "http://localhost:4000/key/generate" \
   -H "Authorization: Bearer sk-your-master-key" \
   -H "Content-Type: application/json" \
-  -d '{"key_alias": "claude-code-byok", "models": ["claude-sonnet-4-5"]}'
+  -d '{"key_alias": "claude-code-byok", "models": ["{{anthropic}}"]}'
 ```
 
 ## Step 3: Configure Claude Code
@@ -66,7 +66,7 @@ Set environment variables so Claude Code uses LiteLLM and sends your LiteLLM key
 export ANTHROPIC_BASE_URL="http://localhost:4000"
 
 # Model name from your config
-export ANTHROPIC_MODEL="claude-sonnet-4-5"
+export ANTHROPIC_MODEL="{{anthropic}}"
 
 # LiteLLM proxy auth — this is added to every request
 # Use x-litellm-api-key so the proxy authenticates you; your Anthropic key goes via x-api-key from /login

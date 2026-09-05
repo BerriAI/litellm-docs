@@ -7,7 +7,7 @@ This feature enables coordination of health checks across multiple LiteLLM proxy
 When running multiple LiteLLM proxy pods (e.g., in Kubernetes), each pod typically runs its own independent health checks on every model. This can result in:
 
 - **Duplicate health checks** across pods
-- **Increased costs** for expensive models (e.g., Gemini 2.5-pro)
+- **Increased costs** for expensive models (e.g., Gemini 3.1 Pro)
 - **Redundant monitoring/logging noise**
 - **Inefficient resource usage**
 
@@ -224,9 +224,9 @@ general_settings:
 ```yaml
 # proxy_config.yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       health_check_timeout: 30  # 30 second timeout for health checks

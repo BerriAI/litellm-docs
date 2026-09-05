@@ -473,6 +473,7 @@ const sidebars = {
                 },
                 "mcp_rest_api",
                 "mcp_openapi",
+                "mcp_authentication",
                 "mcp_oauth",
                 "mcp_oauth_passthrough",
                 "mcp_obo_auth",
@@ -887,6 +888,7 @@ const sidebars = {
             },
             "mcp_rest_api",
             "mcp_openapi",
+            "mcp_authentication",
             "mcp_oauth",
             "mcp_oauth_passthrough",
             "mcp_obo_auth",
@@ -1378,6 +1380,7 @@ const sidebars = {
       items: [
         "troubleshoot/ui_issues",
         "troubleshoot/cost_discrepancy",
+        "troubleshoot/missing_model",
         "mcp_troubleshoot",
         {
           type: "category",

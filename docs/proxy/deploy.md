@@ -130,9 +130,9 @@ environmentSecrets:
 
 proxy_config:
   model_list:
-    - model_name: gpt-4o
+    - model_name: {{openai_large}}
       litellm_params:
-        model: openai/gpt-4o
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
   router_settings:
     redis_host: "<redis-endpoint>"
@@ -248,9 +248,9 @@ metadata:
 data:
   config.yaml: |
       model_list:
-        - model_name: gpt-4o
+        - model_name: {{openai_large}}
           litellm_params:
-            model: openai/gpt-4o
+            model: openai/{{openai_large}}
             api_key: os.environ/OPENAI_API_KEY
 ---
 apiVersion: v1
@@ -355,9 +355,9 @@ module "litellm" {
 
   proxy_config = {
     model_list = [{
-      model_name = "gpt-4o"
+      model_name = "{{openai_large}}"
       litellm_params = {
-        model   = "openai/gpt-4o"
+        model   = "openai/{{openai_large}}"
         api_key = "os.environ/OPENAI_API_KEY"
       }
     }]
@@ -435,8 +435,8 @@ module "litellm" {
 
   proxy_config = {
     model_list = [{
-      model_name = "gemini-2.5-pro"
-      litellm_params = { model = "vertex_ai/gemini-2.5-pro" }
+      model_name = "{{gemini_pro}}"
+      litellm_params = { model = "vertex_ai/{{gemini_pro}}" }
     }]
   }
 }

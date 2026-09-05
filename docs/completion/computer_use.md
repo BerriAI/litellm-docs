@@ -30,22 +30,22 @@ from litellm import completion
 os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 # Computer use tool
-    tools = [
-        {
-            "type": "computer_20241022",
-            "name": "computer",
-            "display_height_px": 768,
-            "display_width_px": 1024,
-            "display_number": 0,
-        }
-    ]
-    
-    messages = [
-        {
-            "role": "user", 
-            "content": [
-                {
-                    "type": "text",
+tools = [
+    {
+        "type": "computer_20241022",
+        "name": "computer",
+        "display_height_px": 768,
+        "display_width_px": 1024,
+        "display_number": 0,
+    }
+]
+
+messages = [
+    {
+        "role": "user", 
+        "content": [
+            {
+                "type": "text",
                 "text": "Take a screenshot and tell me what you see"
             },
             {
@@ -80,7 +80,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -151,11 +151,11 @@ Use `litellm.supports_computer_use(model="")` -> returns `True` if model support
 ```python
 import litellm
 
-assert litellm.supports_computer_use(model="anthropic/claude-3-5-sonnet-latest") == True
-assert litellm.supports_computer_use(model="anthropic/claude-3-7-sonnet-20250219") == True
-assert litellm.supports_computer_use(model="bedrock/anthropic.claude-haiku-4-5-20251001:0") == True
-assert litellm.supports_computer_use(model="vertex_ai/claude-3-5-sonnet") == True
-assert litellm.supports_computer_use(model="openai/gpt-4") == False
+assert litellm.supports_computer_use(model="anthropic/{{anthropic}}") == True
+assert litellm.supports_computer_use(model="anthropic/{{anthropic_large}}") == True
+assert litellm.supports_computer_use(model="bedrock/us.anthropic.{{anthropic}}") == True
+assert litellm.supports_computer_use(model="vertex_ai/{{anthropic}}") == True
+assert litellm.supports_computer_use(model="openai/{{openai_large}}") == False
 ```
 </TabItem>
 
@@ -171,7 +171,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2

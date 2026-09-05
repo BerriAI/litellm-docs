@@ -3,11 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Control Public & Private Routes
 
-:::info
-
-Requires a LiteLLM Enterprise License. [Get a free trial](https://enterprise.litellm.ai/demo).
-
-:::
+<EnterpriseFeature />
 
 Control which routes require authentication and which routes are publicly accessible.
 
@@ -76,7 +72,7 @@ curl --request POST \
   --url 'http://localhost:4000/spend/calculate' \
   --header 'Content-Type: application/json' \
   --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hey, how'\''s it going?"}]
   }'
 ```

@@ -1,8 +1,6 @@
 # ✨ Event Hooks for SSO Login
 
-:::info
-✨ SSO is free for up to 5 users. After that, an enterprise license is required. [Get Started with Enterprise here](https://www.litellm.ai/enterprise)
-:::
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 ## Overview
 
@@ -81,7 +79,7 @@ custom_ui_sso_sign_in_handler = MyCustomSSOLoginHandler()
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
 
 general_settings:
   custom_ui_sso_sign_in_handler: custom_sso_handler.custom_ui_sso_sign_in_handler
@@ -184,7 +182,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_sso.py`, th
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
 
 general_settings:
   custom_sso: custom_sso.custom_sso_handler

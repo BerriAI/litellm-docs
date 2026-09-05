@@ -2,15 +2,7 @@ import Image from '@theme/IdealImage';
 
 # PagerDuty Alerting
 
-:::info
-
-✨ PagerDuty Alerting is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature feature="PagerDuty Alerting" />
 
 Handles two types of alerts:
 - High LLM API Failure Rate. Configure X fails in Y seconds to trigger an alert.
@@ -63,7 +55,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "user": "hi",
       "messages": [
         {
@@ -88,7 +80,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "user": "hi",
       "messages": [
         {

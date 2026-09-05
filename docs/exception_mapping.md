@@ -51,7 +51,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -71,7 +71,7 @@ except openai.APITimeoutError as e:
 import litellm
 try:
     response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -100,7 +100,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -130,7 +130,7 @@ from litellm.exceptions import ContentPolicyViolationError
 
 try:
     response = litellm.completion(
-        model="azure/gpt-4",
+        model="azure/{{openai_large}}",
         messages=[
             {
                 "role": "user", 
@@ -192,6 +192,7 @@ When calling the LiteLLM proxy, content policy violations will return detailed f
     }
   }
 }
+```
 
 ## Details 
 

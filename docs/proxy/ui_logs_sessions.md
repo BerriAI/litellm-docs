@@ -35,7 +35,7 @@ client = openai.OpenAI(
 
 # First request in session
 response1 = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "user",
@@ -54,7 +54,7 @@ Make another request using the same session ID to link it with the previous requ
 ```python showLineNumbers
 # Second request using same session ID
 response2 = client.chat.completions.create(
-    model="gpt-4o", 
+    model="{{openai_large}}", 
     messages=[
         {
             "role": "user",
@@ -83,7 +83,7 @@ session_id = str(uuid.uuid4())
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>",
-    model="gpt-4o",
+    model="{{openai_large}}",
     extra_body={
         "litellm_session_id": session_id  # Pass the session ID
     }
@@ -119,7 +119,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -139,7 +139,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -165,7 +165,7 @@ session_id = str(uuid.uuid4())
 
 # First request in session
 response1 = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a short story about a robot"}],
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>",
@@ -181,7 +181,7 @@ Continue the conversation by making another request with the same session ID, li
 ```python showLineNumbers
 # Second request using same session ID
 response2 = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Now write a poem about that robot"}],
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>",
@@ -214,7 +214,7 @@ client = OpenAI(
 
 # First request in session
 response1 = client.responses.create(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/{{anthropic}}",
     input="Write a short story about a robot"
 )
 
@@ -228,7 +228,7 @@ Make a follow-up request using the previous response ID to maintain the conversa
 ```python showLineNumbers
 # Second request using previous response ID
 response2 = client.responses.create(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/{{anthropic}}",
     input="Now write a poem about that robot",
     previous_response_id=response_id  # Link to previous request
 )
@@ -249,7 +249,7 @@ curl http://localhost:4000/v1/responses \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-        "model": "anthropic/claude-3-sonnet-20240229-v1:0",
+        "model": "anthropic/{{anthropic}}",
         "input": "Write a short story about a robot"
     }'
 
@@ -265,7 +265,7 @@ curl http://localhost:4000/v1/responses \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $API_KEY" \
     --data '{
-        "model": "anthropic/claude-3-sonnet-20240229-v1:0",
+        "model": "anthropic/{{anthropic}}",
         "input": "Now write a poem about that robot",
         "previous_response_id": "resp_abc123..."  # Replace with actual response ID from previous request
     }'
@@ -282,7 +282,7 @@ import litellm
 
 # First request in session
 response1 = litellm.responses(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/{{anthropic}}",
     input="Write a short story about a robot",
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>"
@@ -298,7 +298,7 @@ Make a follow-up request using the previous response ID to maintain the conversa
 ```python showLineNumbers
 # Second request using previous response ID
 response2 = litellm.responses(
-    model="anthropic/claude-3-sonnet-20240229-v1:0",
+    model="anthropic/{{anthropic}}",
     input="Now write a poem about that robot",
     api_base="http://0.0.0.0:4000",
     api_key="<your litellm api key>",

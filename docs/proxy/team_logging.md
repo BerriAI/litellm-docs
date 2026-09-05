@@ -24,11 +24,7 @@ Team 3 -> Disabled Logging (for GDPR compliance)
 
 ## [BETA] Team Logging
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 ### UI Usage
 
@@ -135,7 +131,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -184,7 +180,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -260,11 +256,7 @@ All requests made with these keys will log data to their team-specific logging.
 
 Use the `/key/generate` or `/key/update` endpoints to add logging callbacks to a specific key.
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 **How key based logging works:**
 
@@ -505,9 +497,9 @@ Use this to enable prompt logging for specific keys when you have globally disab
 Example config.yaml with globally disabled prompt logging (message redaction)
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 litellm_settings:
   callbacks: ["datadog"]
   turn_off_message_logging: True # 👈 Globally logging prompt / response is disabled
@@ -562,7 +554,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-9v6I-jf9-eYtg_PwM8OKgQ" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is ishaan what key alias is this"}
     ]

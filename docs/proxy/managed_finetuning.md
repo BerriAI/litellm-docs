@@ -1,14 +1,6 @@
 # ✨ [BETA] LiteLLM Managed Files with Finetuning
 
-
-:::info
-
-This is a free LiteLLM Enterprise feature.
-
-Available via the `litellm[proxy]` package or any `litellm` docker image.
-
-:::
-
+<EnterpriseFeature free />
 
 | Property | Value | Comments |
 | --- | --- | --- |
