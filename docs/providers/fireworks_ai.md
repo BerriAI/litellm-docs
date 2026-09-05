@@ -284,6 +284,8 @@ curl http://0.0.0.0:4000/v1/responses \
 
 Multi-turn tool calling works the same way it does against Fireworks directly: send back the `function_call_output` items together with the `previous_response_id` Fireworks returned, and Fireworks continues the conversation server-side
 
+`developer` input items are sent to Fireworks as `system` messages, since Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. A model whose chat template needs the system message first (qwen3.8) still rejects a developer item placed after the first input item, the same way it does when called directly
+
 ## Document Inlining 
 
 LiteLLM supports document inlining for Fireworks AI models. This is useful for models that are not vision models, but still need to parse documents/images/etc.
