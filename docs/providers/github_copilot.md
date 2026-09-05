@@ -20,11 +20,7 @@ https://docs.github.com/en/copilot
 
 ## Authentication
 
-GitHub Copilot uses OAuth device flow for authentication. On first use, you'll be prompted to authenticate via GitHub:
-
-1. LiteLLM will display a device code and verification URL
-2. Visit the URL and enter the code to authenticate
-3. Your credentials will be stored locally for future use
+GitHub Copilot uses the OAuth device flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you visit the URL and enter the code, and the GitHub token is stored in `~/.config/litellm/github_copilot/access-token` for future use. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt and fail with `GitHub Copilot device-code login needs a human` instead, so for the proxy you sign in first and mount the token, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ## Usage - LiteLLM Python SDK
 
@@ -86,6 +82,52 @@ print(response)
 ```
 
 ## Usage - LiteLLM Proxy
+
+### Sign in before starting the proxy
+
+The proxy never runs the device flow. It looks for a token while it creates each `github_copilot/` deployment at startup, and with no `access-token` on disk every one of them fails to initialize (the startup log shows `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` for each, in every worker), after which every request to those models returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal on the machine or in the image you build the proxy from:
+
+```bash showLineNumbers title="Sign in once, outside the proxy"
+python -c "from litellm.llms.github_copilot.authenticator import Authenticator; Authenticator().get_access_token()"
+```
+
+Visit the printed URL and enter the code. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: a proxy started without the file needs a restart after it appears. The directory must be writable, because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, requests fail with `Failed to save API key`.
+
+On Kubernetes, keep `access-token` in a Secret and copy it into a writable `emptyDir` that `GITHUB_COPILOT_TOKEN_DIR` points at, since Secret volumes are read-only. The GitHub token is long-lived and holds no per-process state, so every worker in every pod shares the same one and each derives its own `api-key.json`.
+
+```bash showLineNumbers title="Create the Secret from your local login"
+kubectl create secret generic litellm-copilot-auth --from-file=access-token=$HOME/.config/litellm/github_copilot/access-token
+```
+
+```yaml showLineNumbers title="Pod spec excerpt"
+spec:
+  initContainers:
+    - name: copilot-token
+      image: busybox
+      command: ["cp", "/secrets/copilot/access-token", "/tokens/copilot/access-token"]
+      volumeMounts:
+        - name: copilot-secret
+          mountPath: /secrets/copilot
+          readOnly: true
+        - name: copilot-tokens
+          mountPath: /tokens/copilot
+  containers:
+    - name: litellm
+      env:
+        - name: GITHUB_COPILOT_TOKEN_DIR
+          value: /tokens/copilot
+      volumeMounts:
+        - name: copilot-tokens
+          mountPath: /tokens/copilot
+  volumes:
+    - name: copilot-secret
+      secret:
+        secretName: litellm-copilot-auth
+    - name: copilot-tokens
+      emptyDir: {}
+```
+
+### Configure and start the proxy
 
 Add the following to your LiteLLM Proxy configuration file:
 
@@ -173,9 +215,8 @@ curl http://localhost:4000/v1/chat/completions \
 ## Getting Started
 
 1. Ensure you have GitHub Copilot access (paid GitHub subscription required)
-2. Run your first LiteLLM request - you'll be prompted to authenticate
-3. Follow the device flow authentication process
-4. Start making requests to GitHub Copilot through LiteLLM
+2. Sign in once: a first request from a synchronous script walks you through the device flow, while the proxy needs the one-liner from [Sign in before starting the proxy](#sign-in-before-starting-the-proxy) run beforehand
+3. Start making requests to GitHub Copilot through LiteLLM
 
 ## Configuration
 

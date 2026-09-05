@@ -17,11 +17,7 @@ Notes:
 
 ## Authentication
 
-ChatGPT subscription access uses an OAuth device code flow:
-
-1. LiteLLM prints a device code and verification URL
-2. Open the URL, sign in, and enter the code
-3. Tokens are stored locally for reuse
+ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you open the URL, sign in, and enter the code, and the tokens are stored in `~/.config/litellm/chatgpt/auth.json` for reuse. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt and fail with `ChatGPT device-code login needs a human` instead, so for the proxy you sign in first and mount the resulting file, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ## Usage - LiteLLM Python SDK
 
@@ -52,6 +48,52 @@ print(response)
 ```
 
 ## Usage - LiteLLM Proxy
+
+### Sign in before starting the proxy
+
+The proxy never runs the device code flow. It looks for a token while it creates each `chatgpt/` deployment at startup, and with no `auth.json` on disk every one of them fails to initialize (the startup log shows `ChatGPT device-code login needs a human and cannot run inside a running event loop or a worker thread` for each, in every worker), after which every request to those models returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal on the machine or in the image you build the proxy from:
+
+```bash showLineNumbers title="Sign in once, outside the proxy"
+python -c "from litellm.llms.chatgpt.authenticator import Authenticator; Authenticator().get_access_token()"
+```
+
+Open the printed URL, sign in, and enter the code. The tokens land in `~/.config/litellm/chatgpt/auth.json` (`CHATGPT_TOKEN_DIR` and `CHATGPT_AUTH_FILE` change the location). Put that file at the same path on the proxy host, or set `CHATGPT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: a proxy started without the file needs a restart after it appears. The access token lasts about ten days and the proxy refreshes it on its own, writing the refreshed tokens back into `auth.json`, so the file must be writable; a read-only copy logs `Failed to write ChatGPT auth file` on every refresh.
+
+On Kubernetes, keep `auth.json` in a Secret and copy it into a writable `emptyDir` that `CHATGPT_TOKEN_DIR` points at, since Secret volumes are read-only. Every worker in every pod reads the same login, so you sign in once for the whole deployment.
+
+```bash showLineNumbers title="Create the Secret from your local login"
+kubectl create secret generic litellm-chatgpt-auth --from-file=auth.json=$HOME/.config/litellm/chatgpt/auth.json
+```
+
+```yaml showLineNumbers title="Pod spec excerpt"
+spec:
+  initContainers:
+    - name: chatgpt-token
+      image: busybox
+      command: ["cp", "/secrets/chatgpt/auth.json", "/tokens/chatgpt/auth.json"]
+      volumeMounts:
+        - name: chatgpt-secret
+          mountPath: /secrets/chatgpt
+          readOnly: true
+        - name: chatgpt-tokens
+          mountPath: /tokens/chatgpt
+  containers:
+    - name: litellm
+      env:
+        - name: CHATGPT_TOKEN_DIR
+          value: /tokens/chatgpt
+      volumeMounts:
+        - name: chatgpt-tokens
+          mountPath: /tokens/chatgpt
+  volumes:
+    - name: chatgpt-secret
+      secret:
+        secretName: litellm-chatgpt-auth
+    - name: chatgpt-tokens
+      emptyDir: {}
+```
+
+### Configure and start the proxy
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -95,7 +137,7 @@ litellm --config config.yaml
 
 ### Environment Variables
 
-- `CHATGPT_TOKEN_DIR`: Custom token storage directory
+- `CHATGPT_TOKEN_DIR`: Custom token storage directory (default: `~/.config/litellm/chatgpt`)
 - `CHATGPT_AUTH_FILE`: Auth file name (default: `auth.json`)
 - `CHATGPT_API_BASE`: Override API base (default: `https://chatgpt.com/backend-api/codex`)
 - `OPENAI_CHATGPT_API_BASE`: Alias for `CHATGPT_API_BASE`
