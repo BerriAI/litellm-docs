@@ -250,7 +250,7 @@ mcp_servers:
   | `token` | `Authorization: token <auth_value>` (GitHub-style) |
   | `oauth2` | `Authorization: Bearer <resolved_token>` — PKCE or M2M `client_credentials`. See [MCP OAuth](./mcp_oauth.md) |
   | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>` — RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
-  | `oauth2_id_jag` | `Authorization: Bearer <exchanged_token>` — Okta Cross App Access ID-JAG |
+  | `oauth2_id_jag` | `Authorization: Bearer <access_token>` — Identity Assertion Authorization Grant (two legs). See [MCP ID-JAG Auth](./mcp_id_jag.md) |
   | `true_passthrough` | The client's upstream `Authorization`, forwarded verbatim. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
   | `oauth_delegate` | A distinct client-supplied upstream bearer, after LiteLLM admission. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
   | `aws_sigv4` | Per-request AWS SigV4 signature. See [MCP AWS SigV4](./mcp_aws_sigv4.md) |
