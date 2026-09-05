@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 | Description | The fastest and most efficient inference engine to build production-ready, compound AI systems. |
 | Provider Route on LiteLLM | `fireworks_ai/` |
 | Provider Doc | [Fireworks AI ↗](https://docs.fireworks.ai/getting-started/introduction) |
-| Supported OpenAI Endpoints | `/chat/completions`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank` |
+| Supported OpenAI Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank` |
 
 
 ## Overview
@@ -211,6 +211,78 @@ print(response)
 ```
 </TabItem>
 </Tabs>
+
+## Responses API
+
+`fireworks_ai/` models on `/v1/responses` go straight to Fireworks' native `https://api.fireworks.ai/inference/v1/responses` endpoint, so server-side features such as MCP tools (`"type": "mcp"`), `previous_response_id`, and reasoning output items work the same as they do against Fireworks directly
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import os
+from litellm import responses
+
+os.environ["FIREWORKS_AI_API_KEY"] = "YOUR_API_KEY"
+
+response = responses(
+    model="fireworks_ai/accounts/fireworks/models/kimi-k3",
+    input="Use the deepwiki MCP server to tell me in one sentence what the BerriAI/litellm repository is.",
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": "deepwiki",
+            "server_url": "https://mcp.deepwiki.com/mcp",
+            "require_approval": "never",
+        }
+    ],
+)
+print(response.output)
+```
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+1. Setup config.yaml
+
+```yaml
+model_list:
+  - model_name: fireworks-kimi-k3
+    litellm_params:
+      model: fireworks_ai/accounts/fireworks/models/kimi-k3
+      api_key: "os.environ/FIREWORKS_AI_API_KEY"
+```
+
+2. Start proxy
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+3. Test it!
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "fireworks-kimi-k3",
+    "input": "Use the deepwiki MCP server to tell me in one sentence what the BerriAI/litellm repository is.",
+    "tools": [
+      {
+        "type": "mcp",
+        "server_label": "deepwiki",
+        "server_url": "https://mcp.deepwiki.com/mcp",
+        "require_approval": "never"
+      }
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Multi-turn tool calling works the same way it does against Fireworks directly: send back the `function_call_output` items together with the `previous_response_id` Fireworks returned, and Fireworks continues the conversation server-side
 
 ## Document Inlining 
 
