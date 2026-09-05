@@ -58,6 +58,32 @@ export PROMETHEUS_MULTIPROC_DIR="/prometheus_multiproc"
 
 This directory is used by the Prometheus client library to store metric files that can be shared across multiple worker processes. Make sure the directory exists and is writable by your LiteLLM process.
 
+### Serve `/metrics` from a separate process
+
+By default `/metrics` is served by the same uvicorn workers that serve inference. With many workers and high-cardinality labels a scrape can render several megabytes and aggregate every worker's sample files, and that CPU work competes with in-flight requests on the worker that received the scrape. To take scrapes off the inference path, start the proxy with `--prometheus_metrics_port` (or the `PROMETHEUS_METRICS_PORT` environment variable). LiteLLM then launches a small FastAPI application in its own process that reads `PROMETHEUS_MULTIPROC_DIR` and serves the aggregated metrics on that port.
+
+```shell
+litellm --config config.yaml --num_workers 4 --prometheus_metrics_port 4001
+```
+
+```shell
+curl http://localhost:4001/metrics   # aggregated metrics for all workers
+curl http://localhost:4001/health    # {"status":"healthy","multiproc_dir":"..."}
+```
+
+Point Prometheus at the metrics port instead of the proxy port:
+
+```yaml
+scrape_configs:
+  - job_name: litellm
+    static_configs:
+      - targets: ["litellm:4001"]
+```
+
+The metrics process binds to the same `--host` as the proxy, needs the `prometheus` callback to be configured (otherwise the flag is ignored with a warning), and exits together with the proxy. `PROMETHEUS_MULTIPROC_DIR` is created automatically when the flag is set, even with a single worker. The output is identical to the main `/metrics` endpoint, including `name[]` filtering, gzip and the label configuration below, and `/metrics` stays mounted on the proxy port for existing scrapers.
+
+The separate port does not run the proxy's authentication, so `require_auth_for_metrics_endpoint` does not apply to it. Keep it on the cluster network (do not route it through your public ingress). With Docker, pass `-e PROMETHEUS_METRICS_PORT=4001 -p 4001:4001`. With the Helm chart, set `extraEnvVars` to include `PROMETHEUS_METRICS_PORT` and scrape the pod IP on that port (for example via `podAnnotations` such as `prometheus.io/port: "4001"`); the chart's `Service` only exposes the proxy port.
+
 ## Virtual Keys, Teams, Internal Users
 
 Use this for tracking per [user, key, team, etc.](virtual_keys)
