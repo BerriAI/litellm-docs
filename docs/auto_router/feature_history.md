@@ -17,8 +17,10 @@ Merged after the v1.100.0 release candidate was cut. Available in `v1.101.0-dev`
 - **Shadow evals on teams and users.** Target a `key`, `team`, or `user`, so JWT-authenticated traffic can be evaluated. [#39015](https://github.com/BerriAI/litellm/pull/39015).
 - **Shadow evals across several routers.** Compare multiple router configs on one job's sampled traffic, paired. [#39028](https://github.com/BerriAI/litellm/pull/39028).
 - **1M context preset.** [#39490](https://github.com/BerriAI/litellm/pull/39490).
+- **Mid-task stall escalation.** `stall_escalation_enabled: true` reads the assistant's own recent tool calls and bumps a request one tier when it's stuck in a retry loop, the same ladder `escalation_keywords` uses. Off by default. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation).
+- **One-click Auto Router setup.** Configure automatically checks the chat model groups your proxy already serves and fills all four tiers, mixing providers when needed, without picking a template first. [#39693](https://github.com/BerriAI/litellm/pull/39693).
 
-Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations).
+Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation).
 
 ## v1.100.0 (release candidate)
 
