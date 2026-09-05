@@ -203,7 +203,7 @@ curl http://0.0.0.0:4000/v1/ocr \
 
 The model cost map prices `azure_ai/Cohere-parse-v5` at Cohere's published rate of $1.50 per 1,000 pages, the price the Foundry catalog links to for this model.
 
-Health checks (`/health` and the Admin UI's Test Connection button) send Parse a small PNG instead of the PDF used for Mistral OCR. The `ocr` probe is picked from the model cost map for `Cohere-parse-v5`; a deployment under any other name needs `model_info: {mode: ocr}` in its `model_list` entry, like every other non-chat model.
+Health checks (`/health` and the Admin UI's Test Connection button) send Parse a small PNG instead of the PDF used for Mistral OCR. Each probe is a real one-page Parse call, so it bills one page per deployment per check. The `ocr` probe mode and the per-page price are both looked up in the model cost map under `Cohere-parse-v5`; a deployment under any other name needs `model_info: {mode: ocr, base_model: azure_ai/Cohere-parse-v5}` in its `model_list` entry, the same `mode` and `base_model` convention every other Azure model uses, so health checks probe it as OCR and spend tracking finds the Parse price instead of recording $0.
 
 ## Supported Models
 
