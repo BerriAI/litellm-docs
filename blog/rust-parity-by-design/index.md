@@ -21,7 +21,7 @@ The number matters, but how we got it matters more. We are moving one bounded su
 
 OCR is a practical first step. It exercises request transformation, response parsing, async behavior, and varied payload sizes without asking us to move the whole gateway at once. The work gives us a real Rust path to measure, a focused contract to preserve, and a repeatable way to decide what should move next.
 
-The result changes with the shape of the OCR traffic. The input PDF ranges from `32 KiB` to `2 MiB`, while the response ranges from one to 128 pages. The profiles below keep one side fixed at a time, so they show where Rust is helping in this early run:
+OCR SDK work happens in both directions: preparing the request and deserializing the response. The benchmark isolates them. The request profiles vary only the PDF payload, from `32 KiB` to `2 MiB`, while keeping the response at one page. The response profiles keep the request at `32 KiB` and vary the parsed OCR result from one to 128 pages.
 
 <BenchmarkVisualization
   configLabel="Mistral OCR SDK benchmark · recorded traffic profiles · macOS arm64 · concurrency 1"
@@ -29,9 +29,9 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
   rustLabel="Rust core"
   groups={[
     {
-      label: 'Input PDF size',
-      description: 'Response fixed at one page',
-      takeaway: 'Rust keeps latency lower as the PDF grows, with the clearest gains at 256 KiB and 2 MiB.',
+      label: 'Request size',
+      description: 'PDF payload varies; response fixed at one page',
+      takeaway: 'Rust keeps latency lower as the request grows, with the clearest gains at 256 KiB and 2 MiB.',
       profiles: [
         {
           name: '32 KiB PDF',
@@ -67,7 +67,7 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
     },
     {
       label: 'Response size',
-      description: 'Input fixed at a 32 KiB PDF',
+      description: 'Request fixed at a 32 KiB PDF; parsed page count varies',
       takeaway: 'Rust leads on latency at every response size; at 128 pages, CPU time and memory remain near Python parity.',
       profiles: [
         {
@@ -107,7 +107,7 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
 
 These results are early, not a broad production capacity claim. They come from one macOS arm64 host, one concurrent caller, 100 timed calls per worker, and one paired repeat. The job now is to measure profiles that match real traffic mixes, widen the workload, and make sure the gains hold.
 
-The response-page profiles are synthetic repetitions that isolate response processing. They are useful for finding size sensitivity, but they are not a substitute for a production traffic distribution.
+The response-page profiles use synthetic repetitions to isolate deserialization and response parsing. They are useful for finding size sensitivity, but they are not a substitute for a production traffic distribution.
 
 ## Safe means proving parity before expanding scope
 
