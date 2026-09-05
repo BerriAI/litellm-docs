@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 """
-Rewrite retired model ids in the docs to the current id for their role.
+Rewrite model ids in the docs after docs-models.json changes.
 
-Reads docs-models.json (repo root), then rewrites every retired id inside
-fenced code blocks and inline backtick spans under the given paths. Skips
-fences marked `nolint` or `keep-model-ids`, markdown table rows (lines
+docs-models.json (repo root) maps a role to the id examples use today. Change
+an id there and run this script: it compares the file with the last commit
+(or --base REV) and rewrites every old id to the new one inside fenced code
+blocks and inline backtick spans under the given paths. Pass --from OLD
+--to NEW (repeatable, in pairs) to rewrite ids that are not in the file.
+
+Skips fences marked `nolint` or `keep-model-ids`, markdown table rows (lines
 starting with `|`), headings, and frontmatter. Prose outside backticks is
 never touched. Prints a per-file replacement count. Running it twice changes
 nothing the second time.
 
 Inline spans in prose have no fence line to mark, so a prose line that must
-keep a retired id (a supported-model list, a note about one model) carries an
+keep an old id (a supported-model list, a note about one model) carries an
 MDX comment: `{/* keep-model-ids */}` at the end of the line skips that line,
 and `{/* keep-model-ids:start */}` ... `{/* keep-model-ids:end */}` on their
 own lines skip the prose between them. Fences inside such a region still need
 their own `keep-model-ids` token; the linter only looks at fence lines.
 
 Usage:
-  python3 scripts/bump-docs-models.py [paths...]     defaults to docs/
-  python3 scripts/bump-docs-models.py --self-test    check the matching rule
+  python3 scripts/bump-docs-models.py [paths...]              rewrite what changed since HEAD
+  python3 scripts/bump-docs-models.py --base REV [paths...]   compare with another commit
+  python3 scripts/bump-docs-models.py --from gpt-4o --to gpt-5.6-terra [paths...]
+  python3 scripts/bump-docs-models.py --self-test             check the matching rule
 
 The matching rule is documented in scripts/docs_models.py and shared with
 the retired-model rule in scripts/check-docs.py.
@@ -158,10 +164,7 @@ SELF_TEST_EXPECTED = SELF_TEST_INPUT.replace(
 
 def self_test():
     n = docs_models.self_test()
-    model_map = docs_models.ModelMap({
-        "current": {"small": "gpt-5.6-luna", "large": "gpt-5.6-terra"},
-        "retired": {"gpt-4o": "large", "gpt-4o-mini": "small"},
-    })
+    model_map = docs_models.ModelMap({"gpt-4o": "gpt-5.6-terra", "gpt-4o-mini": "gpt-5.6-luna"})
     got, count = rewrite_lines(SELF_TEST_INPUT.split("\n"), model_map)
     got = "\n".join(got)
     assert got == SELF_TEST_EXPECTED, "rewrite_lines fixture mismatch:\n" + got
@@ -171,13 +174,50 @@ def self_test():
     return n + 4
 
 
+def parse_args(argv):
+    base = "HEAD"
+    pairs = []
+    roots = []
+    pending_from = None
+    it = iter(argv)
+    for a in it:
+        if a == "--base":
+            base = next(it, None) or sys.exit("--base needs a revision")
+        elif a == "--from":
+            pending_from = next(it, None) or sys.exit("--from needs a model id")
+        elif a == "--to":
+            new = next(it, None) or sys.exit("--to needs a model id")
+            if pending_from is None:
+                sys.exit("--to must follow --from")
+            pairs.append((pending_from, new))
+            pending_from = None
+        elif a.startswith("--"):
+            sys.exit(f"unknown option {a}")
+        else:
+            roots.append(a)
+    if pending_from is not None:
+        sys.exit("--from needs a matching --to")
+    return base, pairs, roots or ["docs"]
+
+
 def main(argv):
     if "--self-test" in argv:
         n = self_test()
         print(f"docs-models matcher and rewriter: {n} assertions passed")
         return 0
-    roots = [a for a in argv if not a.startswith("--")] or ["docs"]
-    model_map = docs_models.load()
+    base, pairs, roots = parse_args(argv)
+    mapping = dict(pairs)
+    if not pairs:
+        before = docs_models.current_at(base)
+        if before is None:
+            sys.exit(f"cannot read {docs_models.DOCS_MODELS_FILE} at {base}; pass --from/--to pairs instead")
+        mapping = docs_models.diff_mapping(before, docs_models.load_current())
+        if not mapping:
+            print(f"{docs_models.DOCS_MODELS_FILE} is unchanged since {base}; nothing to rewrite")
+            return 0
+    for old, new in mapping.items():
+        print(f"{old} -> {new}")
+    model_map = docs_models.ModelMap(mapping)
     files = []
     for root in roots:
         files.extend(collect_files(root if os.path.isabs(root) else os.path.join(docs_models.REPO_ROOT, root)))

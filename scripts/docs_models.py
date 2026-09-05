@@ -1,15 +1,17 @@
 """
 Shared model-id matching for the docs tooling.
 
-docs-models.json at the repo root is the source of truth for the model ids
-that examples use:
+docs-models.json at the repo root maps a role (openai_small, openai_large,
+anthropic, anthropic_large, gemini_pro, gemini_flash) to the model id that
+examples use today. There is no list of old ids: when a role changes, the
+previous id is whatever the file said before, which git remembers.
 
-  "current":  role -> the id examples should use today
-  "retired":  id (or id with a trailing *) -> role it belongs to
+  scripts/bump-docs-models.py  rewrites the ids that changed since the last
+                               commit (or explicit --from/--to pairs)
+  scripts/check-docs.py        the retired-model rule flags any id the file
+                               held in an earlier commit but no longer does
 
-Both scripts/bump-docs-models.py (rewrites retired ids) and
-scripts/check-docs.py (the retired-model rule) match ids with the rules in
-this module, so a rewrite and a lint finding always agree.
+Both use ModelMap, so a rewrite and a lint finding always agree.
 
 Matching rule. An id matches only at token boundaries. Id characters are
 [A-Za-z0-9._:@-]. A key must be preceded by the start of the text or by a
@@ -29,9 +31,11 @@ Run `python3 scripts/bump-docs-models.py --self-test` to check these rules.
 import json
 import os
 import re
+import subprocess
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOCS_MODELS_PATH = os.path.join(REPO_ROOT, "docs-models.json")
+DOCS_MODELS_FILE = "docs-models.json"
+DOCS_MODELS_PATH = os.path.join(REPO_ROOT, DOCS_MODELS_FILE)
 
 _BEFORE = r"(?<![A-Za-z0-9:@-])"
 _TAIL = r"(?:[A-Za-z0-9@-]|[.:](?=[0-9]))*"
@@ -39,17 +43,18 @@ _AFTER = r"(?![A-Za-z0-9@-]|[.:][0-9])"
 
 
 class ModelMap:
-    def __init__(self, data):
-        self.current = dict(data["current"])
-        self.retired = dict(data["retired"])
-        for key, role in self.retired.items():
-            if role not in self.current:
-                raise ValueError(f"docs-models.json: retired id {key!r} maps to unknown role {role!r}")
+    """Rewrites old ids to new ones. `mapping` is {old id or old id with a trailing *: new id}."""
+
+    def __init__(self, mapping):
+        self.mapping = dict(mapping)
         # Longest key first so gpt-4o-mini-2024-07-18 beats gpt-4o-mini beats gpt-4o.
-        ordered = sorted(self.retired, key=lambda k: (-len(k.rstrip("*")), k))
-        alternation = "|".join(self._key_pattern(k) for k in ordered)
+        ordered = sorted(self.mapping, key=lambda k: (-len(k.rstrip("*")), k))
+        alternation = "|".join(self._key_pattern(k) for k in ordered) or r"(?!x)x"
         self._regex = re.compile(_BEFORE + "(?:" + alternation + ")" + _AFTER)
-        self._by_key = {k.rstrip("*"): k for k in self.retired}
+        self._by_key = {k.rstrip("*"): k for k in self.mapping}
+
+    def __bool__(self):
+        return bool(self.mapping)
 
     @staticmethod
     def _key_pattern(key):
@@ -58,11 +63,11 @@ class ModelMap:
         return re.escape(key)
 
     def finditer(self, text):
-        """Yield (start, end, matched_text, key, replacement) for each retired id in text."""
+        """Yield (start, end, matched_text, key, replacement) for each old id in text."""
         for m in self._regex.finditer(text):
             matched = m.group(0)
             key = self._key_for(matched)
-            yield m.start(), m.end(), matched, key, self.current[self.retired[key]]
+            yield m.start(), m.end(), matched, key, self.mapping[key]
 
     def _key_for(self, matched):
         if matched in self._by_key:
@@ -89,25 +94,80 @@ class ModelMap:
         out.append(text[last:])
         return "".join(out), n
 
-    def replacement_for(self, key):
-        return self.current[self.retired[key]]
+
+def _roles(data):
+    # Accept the current flat shape and the earlier {"current": {...}} shape found in history.
+    if isinstance(data, dict) and isinstance(data.get("current"), dict):
+        data = data["current"]
+    if not isinstance(data, dict) or not all(isinstance(v, str) for v in data.values()):
+        raise ValueError(f"{DOCS_MODELS_FILE}: expected an object of role -> model id")
+    return dict(data)
 
 
-def load(path=DOCS_MODELS_PATH):
+def load_current(path=DOCS_MODELS_PATH):
     with open(path, encoding="utf-8") as f:
-        return ModelMap(json.load(f))
+        return _roles(json.load(f))
+
+
+def _git(*args):
+    try:
+        return subprocess.run(
+            ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True
+        ).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def current_at(rev="HEAD"):
+    """Roles as committed at `rev`, or None if git or the file is unavailable there."""
+    out = _git("show", f"{rev}:{DOCS_MODELS_FILE}")
+    if out is None:
+        return None
+    try:
+        return _roles(json.loads(out))
+    except ValueError:
+        return None
+
+
+def diff_mapping(before, after):
+    """{old id: new id} for every role whose id changed between two role maps."""
+    return {
+        before[role]: after[role]
+        for role in after
+        if role in before and before[role] != after[role]
+    }
+
+
+def history_mapping(current=None):
+    """{old id: current id} for every id docs-models.json held in an earlier commit.
+
+    Empty when git history is unavailable (no git, a shallow clone without the
+    file's history) so the retired-model rule then checks nothing.
+    """
+    current = current if current is not None else load_current()
+    log = _git("log", "--format=%H", "--", DOCS_MODELS_FILE)
+    if not log:
+        return {}
+    mapping = {}
+    current_ids = set(current.values())
+    for sha in log.split():
+        roles = current_at(sha)
+        if not roles:
+            continue
+        for role, old in roles.items():
+            if role in current and old not in current_ids and old not in mapping:
+                mapping[old] = current[role]
+    return mapping
 
 
 def self_test():
     """Unit-style assertions for the matching rule. Raises AssertionError on failure."""
     mm = ModelMap({
-        "current": {"small": "gpt-5.6-luna", "large": "gpt-5.6-terra", "anthropic": "claude-sonnet-5", "flash": "gemini-3.8-flash"},
-        "retired": {
-            "gpt-4o": "large", "gpt-4o-mini": "small", "gpt-4o-mini-2024-07-18": "small",
-            "gpt-4": "large", "gpt-4.1": "large", "gpt-5": "large", "gpt-5.5": "large", "gpt-3.5-turbo": "small",
-            "claude-sonnet-4-5*": "anthropic", "claude-v2": "anthropic", "claude-v2:1": "anthropic",
-            "claude-3-5-sonnet-20241022": "anthropic", "gemini-2.5-flash": "flash",
-        },
+        "gpt-4o": "gpt-5.6-terra", "gpt-4o-mini": "gpt-5.6-luna", "gpt-4o-mini-2024-07-18": "gpt-5.6-luna",
+        "gpt-4": "gpt-5.6-terra", "gpt-4.1": "gpt-5.6-terra", "gpt-5": "gpt-5.6-terra", "gpt-5.5": "gpt-5.6-terra",
+        "gpt-3.5-turbo": "gpt-5.6-luna",
+        "claude-sonnet-4-5*": "claude-sonnet-5", "claude-v2": "claude-sonnet-5", "claude-v2:1": "claude-sonnet-5",
+        "claude-3-5-sonnet-20241022": "claude-sonnet-5", "gemini-2.5-flash": "gemini-3.8-flash",
     })
     cases = [
         # plain ids and provider prefixes
@@ -151,13 +211,18 @@ def self_test():
         assert got == expected, f"{text!r}: expected {expected!r}, got {got!r}"
     found = [(m[2], m[4]) for m in mm.finditer("gpt-4o and gpt-4o-mini and gpt-4-fallback")]
     assert found == [("gpt-4o", "gpt-5.6-terra"), ("gpt-4o-mini", "gpt-5.6-luna")], found
-    # the real data file loads, every role resolves, and no current id is itself retired
-    real = load()
-    for cur in real.current.values():
-        assert real.replace(cur)[0] == cur, f"current id {cur} is matched as retired"
-        assert real.replace("azure/" + cur + " x")[0] == "azure/" + cur + " x", cur
-    for key in real.retired:
-        bare = key.rstrip("*")
-        new, n = real.replace(bare)
-        assert n == 1 and new == real.replacement_for(key), (key, new, n)
-    return len(cases) + 2 * len(real.current) + len(real.retired)
+    # an empty map matches nothing
+    empty = ModelMap({})
+    assert not empty and empty.replace("gpt-4o")[0] == "gpt-4o"
+    # diffing two versions of the file yields old -> new per role
+    before = {"openai_small": "gpt-4o-mini", "openai_large": "gpt-4o", "anthropic": "claude-sonnet-5"}
+    after = {"openai_small": "gpt-5.6-luna", "openai_large": "gpt-4o", "anthropic": "claude-sonnet-5"}
+    assert diff_mapping(before, after) == {"gpt-4o-mini": "gpt-5.6-luna"}
+    assert _roles({"current": before}) == before
+    # the real file loads and none of its ids is rewritten by its own history
+    real = load_current()
+    assert real, "docs-models.json has no roles"
+    hist = ModelMap(history_mapping(real))
+    for cur in real.values():
+        assert hist.replace(cur)[0] == cur, f"current id {cur} is matched as retired"
+    return len(cases) + 4 + len(real)

@@ -15,15 +15,17 @@ Every check here is deterministic and fails the build:
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
-  retired-model       a fenced block uses a model id listed as retired in docs-models.json
+  retired-model       a fenced block uses a model id that docs-models.json replaced in an earlier commit
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
 
 Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
 block that is intentionally a fragment. Add `keep-model-ids` when a block
-must keep a retired model id because the exact id is the point; run
-`python3 scripts/bump-docs-models.py docs` to rewrite the rest.
+must keep an old model id because the exact id is the point; run
+`python3 scripts/bump-docs-models.py docs` to rewrite the rest. The
+retired-model rule reads the git history of docs-models.json, so it checks
+nothing in a clone without that history.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -301,7 +303,7 @@ def check_page(page, site, page_cache):
                     if key in seen_ids:
                         continue
                     seen_ids.add(key)
-                    err("retired-model", start + offset + 1, f"retired model id `{matched}`; use `{replacement}` (see docs-models.json)")
+                    err("retired-model", start + offset + 1, f"retired model id `{matched}`; use `{replacement}` (docs-models.json changed it)")
         content = textwrap.dedent("\n".join(buf))
         if lang in YAML_LANGS:
             try:
@@ -395,7 +397,7 @@ def check_page(page, site, page_cache):
 
 
 KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
-MODEL_MAP = docs_models.load()
+MODEL_MAP = docs_models.ModelMap(docs_models.history_mapping())
 
 
 def split_meta(meta):
