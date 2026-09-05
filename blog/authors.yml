@@ -4,6 +4,12 @@ litellm:
   url: https://github.com/BerriAI/litellm
   image_url: https://github.com/BerriAI.png
 
+yujonglee:
+  name: Yujong Lee
+  title: Software Engineer, LiteLLM
+  url: https://github.com/yujonglee
+  image_url: https://github.com/yujonglee.png
+
 sameer:
   name: Sameer Kankute
   title: SWE @ LiteLLM (LLM Translation)
