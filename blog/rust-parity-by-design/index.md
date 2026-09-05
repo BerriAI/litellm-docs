@@ -21,21 +21,21 @@ The number matters, but how we got it matters more. We are moving one bounded su
 
 OCR is a practical first step. It exercises request transformation, response parsing, async behavior, and varied payload sizes without asking us to move the whole gateway at once. The work gives us a real Rust path to measure, a focused contract to preserve, and a repeatable way to decide what should move next.
 
-The benchmark measures one complete `litellm.ocr()` call, from invocation until the parsed OCR response returns. Each workload below pairs a PDF request size with a response page count. The local provider removes live model latency, but request transformation, loopback HTTP transfer, and response parsing all remain inside the measurement.
+The benchmark measures one complete `litellm.ocr()` call, from invocation until the parsed OCR response returns. The chart holds the response at one page while the PDF request grows from `32 KiB` to `2 MiB`. The local provider removes live model latency, but request transformation, loopback HTTP transfer, and response parsing all remain inside the measurement.
 
 <BenchmarkVisualization
-  configLabel="Mistral OCR SDK benchmark · controlled payload fixtures · macOS arm64 · concurrency 1"
+  configLabel="Mistral OCR SDK benchmark · controlled request-size sweep · macOS arm64 · concurrency 1"
   pythonLabel="Existing Python code"
   rustLabel="Rust core"
   groups={[
     {
-      label: 'End-to-end OCR workloads',
-      description: 'Complete SDK calls through a local provider replay',
-      takeaway: 'Rust lowers median latency across all five measured request and response combinations.',
+      label: 'End-to-end performance as request size grows',
+      description: 'Complete SDK calls; response fixed at one page',
+      takeaway: 'Rust remains faster as the request grows, with the largest measured latency advantage at 256 KiB.',
       profiles: [
         {
-          name: '32 KiB request',
-          description: '1-page response',
+          name: 'Small',
+          description: '32 KiB request',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
@@ -44,8 +44,8 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '256 KiB request',
-          description: '1-page response',
+          name: 'Medium',
+          description: '256 KiB request',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 5.714, rust: 1.363, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 3.814, rust: 1.438, lowerIsBetter: true },
@@ -54,33 +54,13 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
           ],
         },
         {
-          name: '2 MiB request',
-          description: '1-page response',
+          name: 'Large',
+          description: '2 MiB request',
           metrics: [
             { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
             { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
             { label: 'Throughput', unit: 'calls/s', python: 101.5, rust: 306.2, lowerIsBetter: false },
             { label: 'Peak RSS', unit: 'MiB', python: 457.6, rust: 390.6, lowerIsBetter: true },
-          ],
-        },
-        {
-          name: '32 KiB request',
-          description: '16-page response',
-          metrics: [
-            { label: 'Median latency', unit: 'ms', python: 1.961, rust: 0.511, lowerIsBetter: true },
-            { label: 'CPU time per call', unit: 'ms', python: 1.879, rust: 0.63, lowerIsBetter: true },
-            { label: 'Throughput', unit: 'calls/s', python: 494.9, rust: 1798.4, lowerIsBetter: false },
-            { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 221.1, lowerIsBetter: true },
-          ],
-        },
-        {
-          name: '32 KiB request',
-          description: '128-page response',
-          metrics: [
-            { label: 'Median latency', unit: 'ms', python: 2.125, rust: 1.628, lowerIsBetter: true },
-            { label: 'CPU time per call', unit: 'ms', python: 2.059, rust: 2.082, lowerIsBetter: true },
-            { label: 'Throughput', unit: 'calls/s', python: 465.5, rust: 603.4, lowerIsBetter: false },
-            { label: 'Peak RSS', unit: 'MiB', python: 220.6, rust: 223, lowerIsBetter: true },
           ],
         },
       ],
@@ -90,7 +70,7 @@ The benchmark measures one complete `litellm.ocr()` call, from invocation until 
 
 These results are early, not a broad production capacity claim. They come from one macOS arm64 host, one concurrent caller, 100 timed calls per worker, and one paired repeat. The job now is to measure profiles that match real traffic mixes, widen the workload, and make sure the gains hold.
 
-These are controlled sensitivity fixtures, not five representative production requests. The larger PDFs use padding, and the larger responses use repeated synthetic pages. Because real OCR request and response sizes are related, the next step is to repeat the benchmark with naturally paired documents and OCR results from production-like traffic.
+These are controlled sensitivity fixtures, not representative production requests. The larger PDFs use padding so request size can change while the response stays fixed. The next step is to repeat the benchmark with naturally paired documents and OCR results from production-like traffic.
 
 ## Safe means proving parity before expanding scope
 
