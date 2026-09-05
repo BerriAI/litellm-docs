@@ -39,7 +39,7 @@ import litellm
 litellm.global_prompt_directory = "prompts/"
 
 response = litellm.completion(
-    model="dotprompt/gpt-5.6-terra",
+    model="dotprompt/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -83,7 +83,7 @@ litellm.set_global_bitbucket_config(bitbucket_config)
 
 ```python
 response = litellm.completion(
-    model="bitbucket/gpt-5.6-terra",
+    model="bitbucket/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -127,7 +127,7 @@ litellm.set_global_gitlab_config(gitlab_config)
 
 ```python
 response = litellm.completion(
-    model="gitlab/gpt-5.6-terra",
+    model="gitlab/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "What is the capital of France?"}
 )
@@ -157,7 +157,7 @@ User: {{user_message}}
 model_list:
   - model_name: my-dotprompt-model
     litellm_params:
-      model: dotprompt/gpt-5.6-terra
+      model: dotprompt/{{openai_large}}
       prompt_id: "hello"
       api_key: os.environ/OPENAI_API_KEY
 
@@ -251,14 +251,14 @@ For prompt integrations, use these parameters:
 
 **File System (dotprompt):**
 ```
-model: dotprompt/<base_model>     # required (e.g., dotprompt/gpt-5.6-terra)
+model: dotprompt/<base_model>     # required (e.g., dotprompt/{{openai_large}})
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 ```
 
 **BitBucket:**
 ```
-model: bitbucket/<base_model>     # required (e.g., bitbucket/gpt-5.6-terra)
+model: bitbucket/<base_model>     # required (e.g., bitbucket/{{openai_large}})
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 bitbucket_config: Optional[dict]  # optional - BitBucket configuration (if not set globally)
@@ -266,7 +266,7 @@ bitbucket_config: Optional[dict]  # optional - BitBucket configuration (if not s
 
 **Gitlab:**
 ```
-model: gitlab/<base_model>        # required (e.g., gitlab/gpt-5.6-terra)
+model: gitlab/<base_model>        # required (e.g., gitlab/{{openai_large}})
 prompt_id: str                    # required - the .prompt filename without extension
 prompt_variables: Optional[dict]  # optional - variables for template rendering
 gitlab_config: Optional[dict]     # optional - Gitlab configuration (if not set globally)
@@ -277,7 +277,7 @@ gitlab_config: Optional[dict]     # optional - Gitlab configuration (if not set 
 ```python
 # File system integration
 response = litellm.completion(
-    model="dotprompt/gpt-5.6-terra",
+    model="dotprompt/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     messages=[{"role": "user", "content": "This will be ignored"}]
@@ -285,7 +285,7 @@ response = litellm.completion(
 
 # BitBucket integration
 response = litellm.completion(
-    model="bitbucket/gpt-5.6-terra",
+    model="bitbucket/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     bitbucket_config={
@@ -297,7 +297,7 @@ response = litellm.completion(
 
 # Gitlab integration
 response = litellm.completion(
-    model="gitlab/gpt-5.6-terra",
+    model="gitlab/{{openai_large}}",
     prompt_id="hello",
     prompt_variables={"user_message": "Hello world"},
     gitlab_config={

@@ -14,9 +14,9 @@ If you're using the LiteLLM CLI with `litellm --config proxy_config.yaml` then y
 Add this to your proxy config.yaml 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
 litellm_settings:
   callbacks:
     - prometheus
@@ -32,7 +32,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -472,9 +472,9 @@ Track custom metrics on prometheus on all events mentioned above.
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-5.6-terra
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -491,7 +491,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <LITELLM_API_KEY>' \
 -d '{
-    "model": "openai/gpt-5.6-terra",
+    "model": "openai/{{openai_large}}",
     "messages": [
       {
         "role": "user",
@@ -552,9 +552,9 @@ Track specific tags as prometheus labels for better filtering and monitoring.
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-5.6-terra
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -575,7 +575,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <LITELLM_API_KEY>' \
 -d '{
-    "model": "openai/gpt-5.6-terra",
+    "model": "openai/{{openai_large}}",
     "messages": [
       {
         "role": "user",
@@ -633,9 +633,9 @@ Configure which metrics to emit by specifying them in `prometheus_metrics_config
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
 
 litellm_settings:
   callbacks: ["prometheus"]
@@ -756,9 +756,9 @@ To monitor the health of litellm adjacent services (redis / postgres), do:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
 litellm_settings:
   service_callback: ["prometheus_system"]
 ```

@@ -67,7 +67,7 @@ os.environ["OPENAI_API_KEY"] = ""
 
 for _ in range(2):
     response = completion(
-        model="gpt-5.6-terra",
+        model="{{openai_large}}",
         messages=[
             # System Message
             {
@@ -121,9 +121,9 @@ assert response.usage.prompt_tokens_details.cached_tokens > 0
 
 ```yaml
 model_list:
-    - model_name: gpt-5.6-terra
+    - model_name: {{openai_large}}
       litellm_params:
-        model: openai/gpt-5.6-terra
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -146,7 +146,7 @@ client = OpenAI(
 
 for _ in range(2):
     response = client.chat.completions.create(
-        model="gpt-5.6-terra",
+        model="{{openai_large}}",
         messages=[
             # System Message
             {
@@ -215,7 +215,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 
 response = completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "system",
@@ -245,7 +245,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "system",
@@ -365,7 +365,7 @@ litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -397,9 +397,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: claude-sonnet-5
+    - model_name: {{anthropic}}
       litellm_params:
-        model: anthropic/claude-sonnet-5
+        model: anthropic/{{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -421,7 +421,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-5",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -482,7 +482,7 @@ Prompts below the minimum are processed without caching, and no error is returne
 import litellm
 
 response = litellm.completion(
-    model="bedrock/us.anthropic.claude-sonnet-5",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -512,7 +512,7 @@ print(response.usage)
 model_list:
   - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
 ```
 
 2. Start proxy
@@ -581,7 +581,7 @@ import os
 os.environ["GEMINI_API_KEY"] = ""
 
 response = completion(
-    model="gemini/gemini-3.8-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -613,9 +613,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-3.8-flash
+    - model_name: {{gemini_flash}}
       litellm_params:
-        model: gemini/gemini-3.8-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -636,7 +636,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -676,7 +676,7 @@ For Vertex AI, use `vertex_ai/` prefix:
 from litellm import completion
 
 response = completion(
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     vertex_project="my-gcp-project",
     vertex_location="us-central1",
     messages=[
@@ -710,9 +710,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-3.8-flash
+    - model_name: {{gemini_flash}}
       litellm_params:
-        model: vertex_ai/gemini-3.8-flash
+        model: vertex_ai/{{gemini_flash}}
         vertex_project: my-gcp-project
         vertex_location: us-central1
 ```
@@ -734,7 +734,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -854,7 +854,7 @@ import os
 
 litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
-model = "anthropic/claude-sonnet-5"
+model = "anthropic/{{anthropic}}"
 response = completion(
     model=model,
     messages=[
@@ -903,7 +903,7 @@ response = client.chat.completions.with_raw_response.create(
         "role": "user",
         "content": "Say this is a test",
     }],
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
 )
 print(response.headers.get('x-litellm-response-cost'))
 
@@ -924,7 +924,7 @@ Check if a model supports prompt caching with `supports_prompt_caching()`
 ```python
 from litellm.utils import supports_prompt_caching
 
-supports_pc: bool = supports_prompt_caching(model="anthropic/claude-sonnet-5")
+supports_pc: bool = supports_prompt_caching(model="anthropic/{{anthropic}}")
 
 assert supports_pc
 ```
@@ -938,9 +938,9 @@ Use the `/model/info` endpoint to check if a model on the proxy supports prompt 
 
 ```yaml
 model_list:
-    - model_name: claude-sonnet-5
+    - model_name: {{anthropic}}
       litellm_params:
-        model: anthropic/claude-sonnet-5
+        model: anthropic/{{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -963,12 +963,12 @@ curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
 {
     "data": [
         {
-            "model_name": "claude-sonnet-5",
+            "model_name": "{{anthropic}}",
             "litellm_params": {
-                "model": "anthropic/claude-sonnet-5"
+                "model": "anthropic/{{anthropic}}"
             },
             "model_info": {
-                "key": "claude-sonnet-5",
+                "key": "{{anthropic}}",
                 ...
                 "supports_prompt_caching": true # 👈 LOOK FOR THIS!
             }

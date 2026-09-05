@@ -152,7 +152,7 @@ os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
 os.environ['BEDROCK_MANTLE_REGION'] = "us-east-2"
 
 response = litellm.responses(
-    model="bedrock_mantle/openai.gpt-5.6-terra",
+    model="bedrock_mantle/openai.{{openai_large}}",
     input="Hello! How can you help me today?",
 )
 print(response)
@@ -167,7 +167,7 @@ import os
 os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
 
 response = litellm.responses(
-    model="bedrock_mantle/openai.gpt-5.6-terra",
+    model="bedrock_mantle/openai.{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True,
 )
@@ -185,7 +185,7 @@ for event in response:
 model_list:
   - model_name: gpt-5.5-mantle
     litellm_params:
-      model: bedrock_mantle/openai.gpt-5.6-terra
+      model: bedrock_mantle/openai.{{openai_large}}
       api_key: os.environ/BEDROCK_MANTLE_API_KEY
       api_base: https://bedrock-mantle.us-east-2.api.aws/v1
 ```
@@ -339,7 +339,7 @@ response = completion(
 model_list:
   - model_name: gpt-5.5-mantle
     litellm_params:
-      model: bedrock_mantle/openai.gpt-5.6-terra
+      model: bedrock_mantle/openai.{{openai_large}}
       api_key: os.environ/BEDROCK_MANTLE_API_KEY
       api_base: "https://bedrock-mantle.us-east-2.api.aws/v1"
 

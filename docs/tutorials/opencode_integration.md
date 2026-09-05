@@ -81,10 +81,10 @@ Create `~/.config/opencode/opencode.json` (global config):
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra"
         },
-        "claude-sonnet-5": {
+        "{{anthropic}}": {
           "name": "Claude Sonnet 5"
         },
         "deepseek-chat": {
@@ -147,14 +147,14 @@ You can customize model parameters like context limits:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra",
           "limit": {
             "context": 922000,
             "output": 128000
           }
         },
-        "claude-sonnet-5": {
+        "{{anthropic}}": {
           "name": "Claude Sonnet 5",
           "limit": {
             "context": 1000000,
@@ -190,11 +190,11 @@ Declare `modalities` on every vision-capable model in your OpenCode config:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "claude-sonnet-5": {
+        "{{anthropic}}": {
           "name": "Claude Sonnet 5",
           "modalities": { "input": ["text", "image"], "output": ["text"] }
         },
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra",
           "modalities": { "input": ["text", "image"], "output": ["text"] }
         },
@@ -254,7 +254,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "https://your-prod-instance.com/v1"
       },
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra (Production)"
         }
       }
@@ -266,7 +266,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra (Development)"
         }
       }
@@ -289,10 +289,10 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra via LiteLLM"
         },
-        "claude-sonnet-5": {
+        "{{anthropic}}": {
           "name": "Claude Sonnet 5 via LiteLLM"
         }
       }
@@ -301,7 +301,7 @@ You can configure multiple LiteLLM instances or mix with other providers:
       "npm": "@ai-sdk/openai",
       "name": "OpenAI Direct",
       "models": {
-        "gpt-5.6-terra": {
+        "{{openai_large}}": {
           "name": "GPT-5.6 Terra (Direct)"
         }
       }
@@ -320,20 +320,20 @@ Here's an example LiteLLM `config.yaml` that works well with OpenCode:
 ```yaml
 model_list:
   # OpenAI models
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
   # Anthropic models
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # DeepSeek models
@@ -345,13 +345,13 @@ model_list:
 
 ### Dropping OpenCode-specific parameters
 
-OpenCode sends a `reasoningSummary` parameter with reasoning-capable models such as `gpt-5.6-terra`. This parameter is not supported by the Chat Completions API and will cause errors. Add `additional_drop_params` to every model entry in your `model_list` that will receive requests from OpenCode with reasoning enabled:
+OpenCode sends a `reasoningSummary` parameter with reasoning-capable models such as `{{openai_large}}`. This parameter is not supported by the Chat Completions API and will cause errors. Add `additional_drop_params` to every model entry in your `model_list` that will receive requests from OpenCode with reasoning enabled:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       additional_drop_params: ["reasoningSummary"]
 ```
@@ -383,7 +383,7 @@ model_list:
   attachments before sending, so the request reaching LiteLLM contains no image. Declare
   `modalities` on the model in your OpenCode config:
   ```json
-  "claude-sonnet-5": {
+  "{{anthropic}}": {
     "name": "Claude Sonnet 5",
     "modalities": { "input": ["text", "image"], "output": ["text"] }
   }
@@ -394,9 +394,9 @@ model_list:
 **`Unknown parameter: 'reasoningSummary'` error:**
 - OpenCode sends a `reasoningSummary` parameter that is not supported by the Chat Completions API. Add `additional_drop_params: ["reasoningSummary"]` to each affected model entry in your `litellm_params`:
   ```yaml
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       additional_drop_params: ["reasoningSummary"]
   ```

@@ -89,9 +89,9 @@ Add this to your litellm proxy config.yaml
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:

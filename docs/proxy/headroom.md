@@ -29,9 +29,9 @@ For testing ahead of the stable cut, use the [v1.92.0-dev.1](https://github.com/
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 guardrails:
@@ -63,7 +63,7 @@ litellm --config config.yaml
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "system", "content": "You are a helpful assistant."},
       {"role": "user", "content": "Summarize the prior conversation..."}
@@ -80,7 +80,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
       {"role": "user", "content": "Summarize the prior conversation..."}
@@ -125,7 +125,7 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [...],
     "guardrails": ["headroom-compression"]
   }'
@@ -141,7 +141,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [...],
     "litellm_metadata": {"guardrails": ["headroom-compression"]}
@@ -170,7 +170,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -d '{
         "key_alias": "claude-code-alice",
         "guardrails": ["headroom-compression"],
-        "models": ["claude-sonnet-5"],
+        "models": ["{{anthropic}}"],
         "metadata": {"team": "claude-code-rollout"}
       }'
 ```

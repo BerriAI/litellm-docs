@@ -45,7 +45,7 @@ public class User
 """
 
 completion = litellm.completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -66,9 +66,9 @@ print(completion)
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna # OpenAI gpt-5.6-luna
+  - model_name: {{openai_small}} # OpenAI {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY 
 
 ```
@@ -91,7 +91,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",

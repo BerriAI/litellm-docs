@@ -18,7 +18,7 @@ Add `finetune_settings` and `files_settings` to your litellm config.yaml to use 
 ## Example config.yaml for `finetune_settings` and `files_settings`
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -83,7 +83,7 @@ curl http://localhost:4000/v1/files \
 <Tabs>
 <TabItem value="openai" label="OpenAI Python SDK">
 
-```python keep-model-ids
+```python
 ft_job = await client.fine_tuning.jobs.create(
     model="gpt-35-turbo-1106",                   # Azure OpenAI model you want to fine-tune
     training_file="file-abc123",                 # file_id from create file response
@@ -94,7 +94,7 @@ ft_job = await client.fine_tuning.jobs.create(
 
 <TabItem value="curl" label="curl">
 
-```shell keep-model-ids
+```shell
 curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer sk-1234" \
@@ -184,7 +184,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
 </TabItem>
 <TabItem value="example" label="Example Request Body">
 
-```json keep-model-ids
+```json
 {
   "model": "gpt-4o-mini",
   "training_file": "file-abcde12345",

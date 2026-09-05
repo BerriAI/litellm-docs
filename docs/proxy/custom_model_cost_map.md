@@ -12,7 +12,7 @@ Example: an Azure deployment billed under a regional price variant (such as US D
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_key: os.environ/AZURE_API_KEY

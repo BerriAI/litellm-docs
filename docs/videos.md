@@ -318,7 +318,7 @@ LiteLLM proxy also supports these OpenAI-compatible video routes:
 curl --location 'http://localhost:4000/v1/videos/characters' \
 --header 'Authorization: Bearer sk-1234' \
 -F 'name=hero' \
--F 'target_model_names=gpt-5.6-terra' \
+-F 'target_model_names={{openai_large}}' \
 -F 'video=@/path/to/character.mp4'
 ```
 

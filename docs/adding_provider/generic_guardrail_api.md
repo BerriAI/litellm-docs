@@ -325,7 +325,7 @@ Users apply your guardrail by name:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=["my-guardrail"]
 )
@@ -335,7 +335,7 @@ Or with dynamic parameters:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=[{
         "my-guardrail": {

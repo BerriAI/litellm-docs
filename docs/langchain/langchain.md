@@ -24,7 +24,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['OPENAI_API_KEY'] = ""
-chat = ChatLiteLLM(model="gpt-5.6-luna")
+chat = ChatLiteLLM(model="{{openai_small}}")
 messages = [
     HumanMessage(
         content="what model are you"
@@ -49,7 +49,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['ANTHROPIC_API_KEY'] = ""
-chat = ChatLiteLLM(model="claude-sonnet-5", temperature=0.3)
+chat = ChatLiteLLM(model="{{anthropic}}", temperature=0.3)
 messages = [
     HumanMessage(
         content="what model are you"
@@ -131,7 +131,7 @@ from langchain.chat_models import ChatLiteLLM
 
 os.environ['OPENAI_API_KEY']="sk-..."
 
-chat = ChatLiteLLM(model="gpt-5.6-luna")
+chat = ChatLiteLLM(model="{{openai_small}}")
 chat.invoke("Hi!")
 ```
 
@@ -149,7 +149,7 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"] 
 
 chat = ChatLiteLLM(
-  model="gpt-5.6-terra"
+  model="{{openai_large}}"
 )
 messages = [
     HumanMessage(
@@ -181,7 +181,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 os.environ['OPENAI_API_KEY'] = "sk-your-key-here"
 
 chat = ChatOpenAI(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -211,7 +211,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 os.environ['ANTHROPIC_API_KEY'] = "sk-ant-your-key-here"
 
 chat = ChatOpenAI(
-    model="claude-sonnet-5",
+    model="{{anthropic}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -241,7 +241,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # No API key needed when using proxy
 chat = ChatOpenAI(
     openai_api_base="http://localhost:4000",  # Your proxy URL
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -294,7 +294,7 @@ def create_chat_with_tags(user_type: str, feature: str):
     
     return ChatOpenAI(
         openai_api_base="http://localhost:4000",
-        model="gpt-5.6-terra",
+        model="{{openai_large}}",
         temperature=0.7,
         extra_body={
             "metadata": {
@@ -324,7 +324,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # Tags for cost tracking
 cost_tracking_chat = ChatOpenAI(
     openai_api_base="http://localhost:4000",
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -365,7 +365,7 @@ def create_ab_test_chat(test_variant: str = None):
     
     return ChatOpenAI(
         openai_api_base="http://localhost:4000",
-        model="gpt-5.6-terra",
+        model="{{openai_large}}",
         temperature=0.7 if test_variant == "variant-a" else 0.9,  # Different temp for variants
         extra_body={
             "metadata": {
@@ -446,17 +446,17 @@ When using tags with LiteLLM Proxy, you can:
 ```yaml
 # config.yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: your-key
 
 # Tag-based routing rules
 tag_routing:
   - tags: ["premium", "high-priority"]
-    models: ["gpt-5.6-terra", "claude-opus-5"]
+    models: ["{{openai_large}}", "{{anthropic_large}}"]
   - tags: ["standard"]
-    models: ["gpt-5.6-luna", "claude-sonnet-5"]
+    models: ["{{openai_small}}", "{{anthropic}}"]
 ```
 
 ### Monitoring and Analytics

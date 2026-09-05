@@ -12,12 +12,12 @@ Set allowed models for a key using the `models` param
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
---data-raw '{"models": ["gpt-5.6-luna", "gpt-5.6-terra"]}'
+--data-raw '{"models": ["{{openai_small}}", "{{openai_large}}"]}'
 ```
 
 :::info
 
-This key can only make requests to `models` that are `gpt-5.6-luna` or `gpt-5.6-terra`
+This key can only make requests to `models` that are `{{openai_small}}` or `{{openai_large}}`
 
 :::
 
@@ -31,7 +31,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -53,7 +53,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -190,14 +190,14 @@ When `include_metadata=true` is specified, the response includes fallback inform
 {
   "data": [
     {
-      "id": "gpt-5.6-terra",
+      "id": "{{openai_large}}",
       "object": "model",
       "created": 1677610602,
       "owned_by": "openai",
       "fallbacks": {
-        "general": ["gpt-5.6-luna", "claude-sonnet-5"],
-        "context_window": ["gpt-5.6-luna", "claude-sonnet-5"],
-        "content_policy": ["claude-sonnet-5"]
+        "general": ["{{openai_small}}", "{{anthropic}}"],
+        "context_window": ["{{openai_small}}", "{{anthropic}}"],
+        "content_policy": ["{{anthropic}}"]
       }
     }
   ]

@@ -215,7 +215,7 @@ curl -X POST "https://litellm.example.com/v1/responses" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <litellm-api-key>" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "input": "List the available internal tools",
     "tools": [
       {

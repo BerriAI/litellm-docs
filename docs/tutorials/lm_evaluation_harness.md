@@ -116,7 +116,7 @@ Since LiteLLM provides an OpenAI compatible proxy `-t` and `-m` don't need to ch
 `-t` will remain openai
 `-m` will remain gpt-3.5
 
-```shell keep-model-ids
+```shell
 ./fasteval -b human-eval-plus -t openai -m gpt-3.5-turbo
 ```
 

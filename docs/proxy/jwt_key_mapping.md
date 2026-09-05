@@ -89,7 +89,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "models": ["claude-sonnet-5", "claude-opus-5"],
+    "models": ["{{anthropic}}", "{{anthropic_large}}"],
     "max_budget": 50.0,
     "budget_duration": "30d",
     "rpm_limit": 100,
@@ -120,7 +120,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -143,7 +143,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -H 'Content-Type: application/json' \
   -d '{
     "team_alias": "engineering",
-    "models": ["claude-sonnet-5", "claude-opus-5"]
+    "models": ["{{anthropic}}", "{{anthropic_large}}"]
   }'
 ```
 
@@ -155,7 +155,7 @@ Each developer is a virtual key plus a mapping from their JWT claim to that key.
 # Alice: senior eng, higher budget
 ALICE_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
-  -d '{"team_id": "engineering", "models": ["claude-sonnet-5", "claude-opus-5"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
+  -d '{"team_id": "engineering", "models": ["{{anthropic}}", "{{anthropic_large}}"], "max_budget": 200.0, "budget_duration": "30d", "rpm_limit": 200}' \
   | jq -r '.key')
 
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
@@ -165,7 +165,7 @@ curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
 # Bob: contractor, tighter limits
 BOB_KEY=$(curl -s -X POST 'http://0.0.0.0:4000/key/generate' \
   -H 'Authorization: Bearer <MASTER_KEY>' -H 'Content-Type: application/json' \
-  -d '{"team_id": "engineering", "models": ["claude-sonnet-5"], "max_budget": 20.0, "budget_duration": "30d", "rpm_limit": 30}' \
+  -d '{"team_id": "engineering", "models": ["{{anthropic}}"], "max_budget": 20.0, "budget_duration": "30d", "rpm_limit": 30}' \
   | jq -r '.key')
 
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \

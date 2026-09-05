@@ -40,7 +40,7 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"]
 
 response = completion(
-  model="gpt-5.6-terra",
+  model="{{openai_large}}",
   messages=[{"role": "user", "content": "Hi there 👋"}],
   user="ishaan_litellm"
 )
@@ -60,7 +60,7 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"] 
 
 chat = ChatLiteLLM(
-  model="gpt-5.6-terra"
+  model="{{openai_large}}"
 )
 messages = [
     HumanMessage(
@@ -103,13 +103,13 @@ litellm.failure_callback = ["lunary"]
 def my_chain(chain_input):
   chain_run_id = lunary.run_manager.current_run_id
   response = completion(
-    model="gpt-5.6-terra", 
+    model="{{openai_large}}", 
     messages=[{"role": "user", "content": "Say 1"}],
     metadata={"parent_run_id": chain_run_id},
   )
 
   response = completion(
-    model="gpt-5.6-terra", 
+    model="{{openai_large}}", 
     messages=[{"role": "user", "content": "Say 2"}],
     metadata={"parent_run_id": chain_run_id},
   )
@@ -156,7 +156,7 @@ litellm --config config.yaml
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {
         "role": "system",

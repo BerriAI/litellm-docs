@@ -19,12 +19,12 @@ Use cases:
 ```mermaid
 graph LR
     subgraph AG1["Access Group: 'prod-models'"]
-        M1["gpt-5.6-terra"]
+        M1["{{openai_large}}"]
         M2["claude-opus"]
     end
     
     subgraph AG2["Access Group: 'dev-models'"]
-        M3["gpt-5.6-luna"]
+        M3["{{openai_small}}"]
         M4["claude-haiku"]
     end
     
@@ -41,7 +41,7 @@ graph LR
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -80,7 +80,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -102,7 +102,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -146,7 +146,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -168,7 +168,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -232,7 +232,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-<key-from-previous-step>" \
   -d '{
-    "model": "openai/gpt-5.6-terra",
+    "model": "openai/{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello"}
     ]
@@ -279,14 +279,14 @@ This tutorial shows how to create an access group, view its details, attach it t
 First, add some models to the database:
 
 ```bash showLineNumbers title="Add Models to Database"
-# Add gpt-5.6-terra to database
+# Add {{openai_large}} to database
 curl -X POST 'http://localhost:4000/model/new' \
   -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model_name": "gpt-5.6-terra",
+    "model_name": "{{openai_large}}",
     "litellm_params": {
-      "model": "gpt-5.6-terra",
+      "model": "{{openai_large}}",
       "api_key": "os.environ/OPENAI_API_KEY"
     }
   }'
@@ -296,9 +296,9 @@ curl -X POST 'http://localhost:4000/model/new' \
   -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model_name": "claude-sonnet-5",
+    "model_name": "{{anthropic}}",
     "litellm_params": {
-      "model": "claude-sonnet-5",
+      "model": "{{anthropic}}",
       "api_key": "os.environ/ANTHROPIC_API_KEY"
     }
   }'
@@ -314,7 +314,7 @@ curl -X POST 'http://localhost:4000/access_group/new' \
   -H 'Content-Type: application/json' \
   -d '{
     "access_group": "production-models",
-    "model_names": ["gpt-5.6-terra", "claude-sonnet-5"]
+    "model_names": ["{{openai_large}}", "{{anthropic}}"]
   }'
 ```
 
@@ -322,7 +322,7 @@ curl -X POST 'http://localhost:4000/access_group/new' \
 ```json showLineNumbers title="Response"
 {
   "access_group": "production-models",
-  "model_names": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model_names": ["{{openai_large}}", "{{anthropic}}"],
   "models_updated": 2
 }
 ```
@@ -340,7 +340,7 @@ curl -X GET 'http://localhost:4000/access_group/production-models/info' \
 ```json showLineNumbers title="Response"
 {
   "access_group": "production-models",
-  "model_names": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model_names": ["{{openai_large}}", "{{anthropic}}"],
   "deployment_count": 2
 }
 ```
@@ -369,21 +369,21 @@ curl -X POST 'http://localhost:4000/key/generate' \
 
 **Test the key:**
 ```bash showLineNumbers title="Test Key Access"
-# This succeeds - gpt-5.6-terra is in production-models
+# This succeeds - {{openai_large}} is in production-models
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-...' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 
-# This succeeds - claude-sonnet-5 is in production-models
+# This succeeds - {{anthropic}} is in production-models
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-...' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -397,7 +397,7 @@ curl -X PUT 'http://localhost:4000/access_group/production-models/update' \
   -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model_names": ["gpt-5.6-terra", "claude-sonnet-5", "gemini-3.8-flash"]
+    "model_names": ["{{openai_large}}", "{{anthropic}}", "{{gemini_flash}}"]
   }'
 ```
 
@@ -405,12 +405,12 @@ curl -X PUT 'http://localhost:4000/access_group/production-models/update' \
 ```json showLineNumbers title="Response"
 {
   "access_group": "production-models",
-  "model_names": ["gpt-5.6-terra", "claude-sonnet-5", "gemini-3.8-flash"],
+  "model_names": ["{{openai_large}}", "{{anthropic}}", "{{gemini_flash}}"],
   "models_updated": 3
 }
 ```
 
-The API key from Step 4 now automatically has access to `gemini-3.8-flash` without any changes to the key itself.
+The API key from Step 4 now automatically has access to `{{gemini_flash}}` without any changes to the key itself.
 
 ### Budgets
 
@@ -430,7 +430,7 @@ When adding a model to the database, assign it to an access group using the "Mod
 
 ![Add Model with Access Group](../../img/add_model_access.png)
 
-In this example, `gpt-5.6-terra` is added to the `production-models` access group.
+In this example, `{{openai_large}}` is added to the `production-models` access group.
 
 ### Step 2: Create Key with Access Group
 
@@ -445,12 +445,12 @@ The key will have access to all models in the `production-models` group.
 Use the generated key to make requests:
 
 ```bash showLineNumbers title="Test Key with Access Group"
-# This succeeds - gpt-5.6-terra is in production-models
+# This succeeds - {{openai_large}} is in production-models
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-...' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -461,7 +461,7 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
   "id": "chatcmpl-...",
   "object": "chat.completion",
   "created": 1234567890,
-  "model": "gpt-5.6-terra",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -478,12 +478,12 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
 If you try to access a model not in the access group, the request will be rejected:
 
 ```bash showLineNumbers title="Test Rejected Request"
-# This fails - gpt-5.6-luna is not in production-models
+# This fails - {{openai_small}} is not in production-models
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-...' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```

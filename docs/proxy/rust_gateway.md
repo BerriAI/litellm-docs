@@ -32,15 +32,15 @@ Set `rust: true` in a model's `litellm_params`. Everything else about the deploy
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       rust: true            # run this deployment through the Rust core
 
   - model_name: azure-claude
     litellm_params:
-      model: azure_ai/claude-sonnet-5
+      model: azure_ai/{{anthropic}}
       api_base: os.environ/AZURE_AI_API_BASE
       api_key: os.environ/AZURE_AI_API_KEY
       rust: true
@@ -53,7 +53,7 @@ curl -i http://localhost:4000/v1/messages \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 128,
     "messages": [{"role": "user", "content": "hello from rust"}]
   }'

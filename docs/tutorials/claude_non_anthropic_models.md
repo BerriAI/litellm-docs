@@ -36,16 +36,16 @@ Create a configuration file with your preferred non-Anthropic models:
 
 ```yaml
 model_list:
-  # OpenAI gpt-5.6-terra
-  - model_name: gpt-5.6-terra
+  # OpenAI {{openai_large}}
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  # OpenAI gpt-5.6-luna
-  - model_name: gpt-5.6-luna
+  # OpenAI {{openai_small}}
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -83,7 +83,7 @@ model_list:
   # Google Gemini
   - model_name: vertex-gemini-3.8-flash
     litellm_params:
-      model: vertex_ai/gemini-3.8-flash
+      model: vertex_ai/{{gemini_flash}}
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
       vertex_project: "my-test-project"
       vertex_location: "us-east-1"
@@ -91,7 +91,7 @@ model_list:
   # Anthropic Claude
   - model_name: anthropic-vertex
     litellm_params:
-      model: vertex_ai/claude-sonnet-5
+      model: vertex_ai/{{anthropic}}
       vertex_ai_project: "my-test-project"
       vertex_ai_location: "us-east-1"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json" 
@@ -112,7 +112,7 @@ model_list:
   # Azure OpenAI
   - model_name: azure-gpt-5.6-terra
     litellm_params:
-      model: azure/gpt-5.6-terra
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: "2024-02-01"
@@ -149,7 +149,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -218,11 +218,11 @@ The `LITELLM_MASTER_KEY` gives Claude Code access to all proxy models. You can a
 Start Claude Code and specify which model to use:
 
 ```bash
-# Use OpenAI gpt-5.6-terra
-claude --model gpt-5.6-terra
+# Use OpenAI {{openai_large}}
+claude --model {{openai_large}}
 
-# Use OpenAI gpt-5.6-luna for faster responses
-claude --model gpt-5.6-luna
+# Use OpenAI {{openai_small}} for faster responses
+claude --model {{openai_small}}
 
 # Use Google Gemini
 claude --model gemini-3.0-flash-exp
@@ -253,7 +253,7 @@ On startup, Claude Code will call `GET /v1/models` against your `ANTHROPIC_BASE_
 /model
 ```
 
-and select any LiteLLM-managed model (`gpt-5.6-terra`, `gemini-3.0-flash-exp`, `anthropic-vertex`, etc.) to switch without restarting the session.
+and select any LiteLLM-managed model (`{{openai_large}}`, `gemini-3.0-flash-exp`, `anthropic-vertex`, etc.) to switch without restarting the session.
 
 :::info Requirements
 
@@ -313,14 +313,14 @@ Configure multiple deployments with automatic fallback:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra  # virtual model name
+  - model_name: {{openai_large}}  # virtual model name
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  - model_name: gpt-5.6-terra  # same virtual name
+  - model_name: {{openai_large}}  # same virtual name
     litellm_params:
-      model: azure/gpt-5.6-terra
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
 

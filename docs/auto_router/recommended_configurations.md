@@ -71,13 +71,13 @@ Luna, Terra, Sol, then Sol at xhigh reasoning effort.
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-5.6-sol
     litellm_params:
@@ -94,14 +94,14 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    gpt-5.6-terra
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
           COMPLEX:   gpt-5.6-sol
           REASONING: gpt-5.6-sol-xhigh
         classifier_type: heuristic
         escalation_keywords: ["LITELLM ESCALATE"]
         session_affinity: false
-      complexity_router_default_model: gpt-5.6-terra
+      complexity_router_default_model: {{openai_large}}
 ```
 
 ## Gemini Family
@@ -162,9 +162,9 @@ model_list:
       model: moonshot/kimi-k3
       api_key: os.environ/MOONSHOT_API_KEY
       reasoning_effort: max
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: lite-router
@@ -175,7 +175,7 @@ model_list:
           SIMPLE:    deepseek-v4-flash
           MEDIUM:    muse-spark-1.2-xhigh
           COMPLEX:   kimi-k3-max
-          REASONING: claude-opus-5
+          REASONING: {{anthropic_large}}
         classifier_type: llm
         classifier_llm_config:
           model: deepseek-v4-flash
@@ -195,13 +195,13 @@ The GPT tiers accept up to 922K input tokens and Opus 5 accepts 1M. The router m
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-5.6-sol
     litellm_params:
@@ -209,7 +209,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
   - model_name: claude-opus-5-high
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
       reasoning_effort: high
 
@@ -218,14 +218,14 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    gpt-5.6-terra
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
           COMPLEX:   gpt-5.6-sol
           REASONING: claude-opus-5-high
         classifier_type: heuristic_v2
         escalation_keywords: ["LITELLM ESCALATE"]
         session_affinity: false
-      complexity_router_default_model: gpt-5.6-terra
+      complexity_router_default_model: {{openai_large}}
 ```
 
 ## The benchmark configuration

@@ -26,9 +26,9 @@ LiteLLM supports Vertex AI batch prediction jobs through passthrough endpoints, 
 
 ```yaml
 model_list:
-  - model_name: gemini-3.8-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: vertex_ai/gemini-3.8-flash
+      model: vertex_ai/{{gemini_flash}}
       vertex_project: your-project-id
       vertex_location: us-central1
       vertex_credentials: path/to/service-account.json
@@ -42,7 +42,7 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
   -H "Content-Type: application/json" \
   -d '{
     "displayName": "my-batch-job",
-    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-3.8-flash",
+    "model": "projects/your-project/locations/us-central1/publishers/google/models/{{gemini_flash}}",
     "inputConfig": {
       "gcsSource": {
         "uris": ["gs://my-bucket/input.jsonl"]
@@ -69,13 +69,13 @@ curl -X GET "http://localhost:4000/v1/projects/your-project/locations/us-central
 
 When configuring models for batch operations, use these naming conventions:
 
-- **`model_name`**: Base model name (e.g., `gemini-3.8-flash`)
-- **`model`**: Full LiteLLM identifier (e.g., `vertex_ai/gemini-3.8-flash`)
+- **`model_name`**: Base model name (e.g., `{{gemini_flash}}`)
+- **`model`**: Full LiteLLM identifier (e.g., `vertex_ai/{{gemini_flash}}`)
 
 ## Supported Models
 
-- `gemini-3.8-flash` / `vertex_ai/gemini-3.8-flash`
-- `gemini-3.1-pro-preview` / `vertex_ai/gemini-3.1-pro-preview`
+- `{{gemini_flash}}` / `vertex_ai/{{gemini_flash}}`
+- `{{gemini_pro}}` / `vertex_ai/{{gemini_pro}}`
 
 ## Advanced Usage
 
@@ -87,7 +87,7 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
   -H "Content-Type: application/json" \
   -d '{
     "displayName": "advanced-batch-job",
-    "model": "projects/your-project/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview",
+    "model": "projects/your-project/locations/us-central1/publishers/google/models/{{gemini_pro}}",
     "inputConfig": {
       "gcsSource": {
         "uris": ["gs://my-bucket/advanced-input.jsonl"]

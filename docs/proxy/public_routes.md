@@ -72,7 +72,7 @@ curl --request POST \
   --url 'http://localhost:4000/spend/calculate' \
   --header 'Content-Type: application/json' \
   --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hey, how'\''s it going?"}]
   }'
 ```

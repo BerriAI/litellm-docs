@@ -48,9 +48,9 @@ Add the CloudZero callback to your LiteLLM configuration YAML file:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -188,7 +188,7 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
   "resource/region": "cross-region",
   "resource/usage_family": "llm-usage",
   "resource/tag:provider": "openai",
-  "resource/tag:model": "gpt-5.6-terra",
+  "resource/tag:model": "{{openai_large}}",
   "resource/tag:prompt_tokens": "100",
   "resource/tag:completion_tokens": "50"
 }
@@ -199,7 +199,7 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 LiteLLM automatically creates resource tags for cost attribution:
 
 - **Provider Tags**: `openai`, `anthropic`, `azure`, etc.
-- **Model Tags**: Specific model names like `gpt-5.6-terra`, `claude-sonnet-5`
+- **Model Tags**: Specific model names like `{{openai_large}}`, `{{anthropic}}`
 - **Team/User Tags**: Team IDs and user IDs for cost allocation
 - **Token Breakdown**: Separate tracking of prompt and completion tokens
 - **Usage Metrics**: Total tokens consumed per request

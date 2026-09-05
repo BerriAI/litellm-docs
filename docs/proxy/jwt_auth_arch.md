@@ -59,10 +59,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-sonnet-5
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-5.6-terra
+        model: {{openai_large}}
 ```
 
 </TabItem>
@@ -83,10 +83,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-sonnet-5
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-5.6-terra
+        model: {{openai_large}}
 ```
 
 </TabItem>

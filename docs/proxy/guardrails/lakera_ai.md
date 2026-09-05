@@ -13,9 +13,9 @@ Define your guardrails under the `guardrails` section
 
 ```yaml showLineNumbers title="litellm config.yaml"
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -68,7 +68,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -123,7 +123,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],

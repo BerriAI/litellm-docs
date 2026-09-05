@@ -10,15 +10,15 @@ Check whether the entry is on `main` right now. Test every key the model was add
 
 ```bash
 curl -s https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json \
-  | jq '[has("gemini-3.8-flash"), has("gemini/gemini-3.8-flash")]'
+  | jq '[has("{{gemini_flash}}"), has("gemini/{{gemini_flash}}")]'
 ```
 
 Check when it got there, and when it merged upstream:
 
 ```bash
 git fetch origin main litellm_internal_staging
-git log -S '"gemini-3.8-flash"' --first-parent --format='%h %ci %s' origin/main -- model_prices_and_context_window.json
-git log -S '"gemini-3.8-flash"' --first-parent --format='%h %ci %s' origin/litellm_internal_staging -- model_prices_and_context_window.json
+git log -S '"{{gemini_flash}}"' --first-parent --format='%h %ci %s' origin/main -- model_prices_and_context_window.json
+git log -S '"{{gemini_flash}}"' --first-parent --format='%h %ci %s' origin/litellm_internal_staging -- model_prices_and_context_window.json
 ```
 
 No output for `origin/main` means the entry is not there yet, and no reload, restart, or configuration change on the deployment can find it. Otherwise the first line is the merge that carried it onto `main`, and its timestamp is the earliest moment a reload could have picked it up, plus up to five minutes while raw.githubusercontent.com serves its cached copy. The gap between the `main` line and the staging line is the delay the customer experienced.

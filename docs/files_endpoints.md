@@ -35,13 +35,13 @@ model_list:
   # litellm OpenAI Account
   - model_name: "gpt-4o-litellm"
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_LITELLM_API_KEY
   
   # Free OpenAI Account
   - model_name: "gpt-4o-free"
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_FREE_API_KEY
 ```
 
@@ -135,7 +135,7 @@ client.files.retrieve(file_id, extra_headers={"custom-llm-provider": "openai"})
 model_list:
   - model_name: "gpt-4o-account1"
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_KEY
 ```
 

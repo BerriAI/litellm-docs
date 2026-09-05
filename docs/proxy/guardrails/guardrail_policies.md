@@ -19,9 +19,9 @@ Use policies to group guardrails and control which ones run for specific teams, 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
 
 # 1. Define your guardrails
 guardrails:
@@ -207,7 +207,7 @@ policies:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-5.6.*"  # regex - matches gpt-5.6-luna, gpt-5.6-terra
+      model: "gpt-5.6.*"  # regex - matches {{openai_small}}, {{openai_large}}
 
   bedrock-compliance:
     guardrails:
@@ -215,8 +215,8 @@ policies:
         - audit_logger
     condition:
       model:  # exact match list
-        - bedrock/anthropic.claude-sonnet-5
-        - bedrock/anthropic.claude-opus-5
+        - bedrock/anthropic.{{anthropic}}
+        - bedrock/anthropic.{{anthropic_large}}
 ```
 
 ## Attachments
@@ -283,7 +283,7 @@ curl -X POST "http://localhost:4000/policies/resolve" \
     -H "Content-Type: application/json" \
     -d '{
         "tags": ["healthcare"],
-        "model": "gpt-5.6-terra"
+        "model": "{{openai_large}}"
     }'
 ```
 

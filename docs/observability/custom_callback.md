@@ -39,7 +39,7 @@ customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
 ## sync 
-response = completion(model="gpt-5.6-luna", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -49,7 +49,7 @@ for chunk in response:
 import asyncio 
 
 async def completion():
-    response = await acompletion(model="gpt-5.6-luna", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -154,7 +154,7 @@ from litellm import completion
 litellm.success_callback = [custom_callback]
 
 response = completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -192,7 +192,7 @@ customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
 async def completion():
-    response = await acompletion(model="gpt-5.6-luna", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -215,7 +215,7 @@ async def test_chat_openai():
     try:
         # litellm.set_verbose = True
         litellm.success_callback = [async_test_logging_fn]
-        response = await litellm.acompletion(model="gpt-5.6-luna",
+        response = await litellm.acompletion(model="{{openai_small}}",
                               messages=[{
                                   "role": "user",
                                   "content": "Hi 👋 - i'm openai"
@@ -267,7 +267,7 @@ def track_cost_callback(kwargs, completion_response, start_time, end_time):
 
 litellm.success_callback = [track_cost_callback]
 
-response = completion(model="gpt-5.6-luna", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hello"}])
 ```
 
 ### Log Inputs to LLMs
@@ -278,7 +278,7 @@ def get_transformed_inputs(kwargs):
 
 litellm.input_callback = [get_transformed_inputs]
 
-response = completion(model="claude-sonnet-5", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="{{anthropic}}", messages=[{"role": "user", "content": "Hello"}])
 ```
 
 ### Send to External Service

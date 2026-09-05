@@ -26,9 +26,9 @@ Add a `prompts` field to your config.yaml:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
@@ -83,7 +83,7 @@ prompts:
         my_inline_prompt:
           content: "Hello {{name}}! How can I help you with {{topic}}?"
           metadata:
-            model: "gpt-5.6-terra"
+            model: "{{openai_large}}"
             temperature: 0.7
             max_tokens: 150
 ```
@@ -98,7 +98,7 @@ prompts:
       prompt_integration: "dotprompt"
       dotprompt_content: |
         ---
-        model: gpt-5.6-terra
+        model: {{openai_large}}
         temperature: 0.7
         ---
         System: You are a helpful assistant.
@@ -244,7 +244,7 @@ A GET endpoint at `/beta/litellm_prompt_management` that returns:
       "content": "Help me with {task}"
     }
   ],
-  "prompt_template_model": "gpt-5.6-terra",
+  "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
     "temperature": 0.7,
     "max_tokens": 500
@@ -269,9 +269,9 @@ Here's a complete example showing multiple prompts with different integrations:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
@@ -291,7 +291,7 @@ prompts:
         simple_chat:
           content: "You are a {{personality}} assistant. User: {{message}}"
           metadata:
-            model: "gpt-5.6-terra"
+            model: "{{openai_large}}"
             temperature: 0.8
   
   # Langfuse prompt
@@ -322,7 +322,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -338,7 +338,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/responses' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -385,7 +385,7 @@ os.environ["LANGFUSE_SECRET_KEY"] = "secret_key" # [OPTIONAL] set here or in `.c
 litellm.set_verbose = True # see raw request to provider
 
 resp = litellm.completion(
-    model="langfuse/gpt-5.6-luna",
+    model="langfuse/{{openai_small}}",
     prompt_id="test-chat-prompt",
     prompt_variables={"user_message": "this is used"}, # [OPTIONAL]
     messages=[{"role": "user", "content": "<IGNORED>"}],
@@ -408,7 +408,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
   - model_name: openai-model
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -452,7 +452,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -482,7 +482,7 @@ print(response)
 POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/ \
--d '{'model': 'gpt-5.6-luna', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
+-d '{'model': '{{openai_small}}', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
 ```
 
 ## How to set model 
@@ -496,7 +496,7 @@ You can do `langfuse/<litellm_model_name>`
 
 ```python
 litellm.completion(
-    model="langfuse/gpt-5.6-luna", # or `langfuse/anthropic/claude-sonnet-5`
+    model="langfuse/{{openai_small}}", # or `langfuse/anthropic/{{anthropic}}`
     # ...
 )
 ```
@@ -506,9 +506,9 @@ litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: langfuse/gpt-5.6-luna # OR langfuse/anthropic/claude-sonnet-5
+      model: langfuse/{{openai_small}} # OR langfuse/anthropic/{{anthropic}}
       prompt_id: <langfuse_prompt_id>
       api_key: os.environ/OPENAI_API_KEY
 ```
@@ -524,7 +524,7 @@ If the model is specified in the Langfuse config, it will be used.
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_key: os.environ/AZURE_API_KEY

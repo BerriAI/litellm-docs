@@ -194,19 +194,19 @@ Route batch operations to different provider accounts using model-specific crede
 model_list:
   - model_name: gpt-4o-account-1
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-account-1-key
       api_base: https://api.openai.com/v1
   
   - model_name: gpt-4o-account-2
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-account-2-key
       api_base: https://api.openai.com/v1
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/gpt-5.6-terra
+      model: azure/{{openai_large}}
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"

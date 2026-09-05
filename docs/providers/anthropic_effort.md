@@ -64,7 +64,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-```python keep-model-ids
+```python
 # Also works with Claude Opus 4.5 (beta header auto-injected)
 response = litellm.completion(
     model="anthropic/claude-opus-4-5-20251101",
@@ -148,7 +148,7 @@ curl https://api.anthropic.com/v1/messages \
 </TabItem>
 <TabItem value="45" label="Claude Opus 4.5 (beta)">
 
-```bash keep-model-ids
+```bash
 # Claude Opus 4.5 — requires beta header
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -174,11 +174,9 @@ curl https://api.anthropic.com/v1/messages \
 ## Model Compatibility
 
 The effort parameter is supported by:
-{/* keep-model-ids:start */}
 - **Claude Opus 4.6** (`claude-opus-4-6`): supports `high`, `medium`, `low`, and `max`
 - **Claude Sonnet 4.6** (`claude-sonnet-4-6`): supports `high`, `medium`, `low`
 - **Claude Opus 4.5** (`claude-opus-4-5-20251101`): supports `high`, `medium`, `low`
-{/* keep-model-ids:end */}
 
 :::info
 `effort="max"` is only available on Claude Opus 4.6. Using it with other models will raise a validation error.
@@ -276,7 +274,7 @@ Token usage with different effort levels is tracked in the standard usage object
 
 ```python
 response = litellm.completion(
-    model="anthropic/claude-opus-5",
+    model="anthropic/{{anthropic_large}}",
     messages=[{"role": "user", "content": "Analyze this"}],
     output_config={"effort": "low"}
 )
@@ -303,7 +301,7 @@ If you're not seeing the header for Opus 4.5:
 
 Accepted values: `"high"`, `"medium"`, `"low"`, and `"max"` (Opus 4.6 only). Any other value will raise a validation error:
 
-```python keep-model-ids
+```python
 # ❌ This will raise an error
 output_config={"effort": "very_low"}
 

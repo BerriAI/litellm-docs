@@ -97,7 +97,7 @@ Inside your Retool dashboard, configure LiteLLM as a custom AI resource:
    - **Provider Schema:** `OpenAI`
    - **Base URL:** Your ngrok-generated URL (e.g. `https://abc123.ngrok-free.app`) or deployed proxy URL. Do not add `/v1` unless Retool requires it
    - **API Key:** Your LiteLLM virtual key from Step 3
-4. **Add model names** from your LiteLLM proxy (e.g. `openai/gpt-5.6-luna`, `openai/gpt-5.6-terra`).
+4. **Add model names** from your LiteLLM proxy (e.g. `openai/{{openai_small}}`, `openai/{{openai_large}}`).
 5. Click **Create Resource**
 
 <Image img={require('../../img/retool_llm_setup.gif')} />
@@ -124,7 +124,7 @@ Inside your Retool dashboard, configure LiteLLM as a custom AI resource:
 
 ### 401 "key not allowed to access model"
 
-Your virtual key is restricted to specific models. Generate a new key with `openai/*` or include the model you need (e.g. `openai/gpt-5.6-terra`) in the key's allowed models list.
+Your virtual key is restricted to specific models. Generate a new key with `openai/*` or include the model you need (e.g. `openai/{{openai_large}}`) in the key's allowed models list.
 
 ### 500 "api_key client option must be set"
 

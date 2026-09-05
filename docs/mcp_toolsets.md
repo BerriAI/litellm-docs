@@ -138,7 +138,7 @@ client = openai.OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     input="What CI/CD tools do you have?",
     tools=[
         {
@@ -164,7 +164,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What CI/CD tools do you have?"}],
     tools=[
         {
@@ -186,7 +186,7 @@ curl http://your-proxy/v1/responses \
   -H "Authorization: Bearer your-litellm-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "input": "What CI/CD tools do you have?",
     "tools": [
       {

@@ -7,13 +7,13 @@ Route the same model to different LLM provider endpoints (e.g. different Azure i
 
 ## Overview
 
-In multi-tenant deployments, different teams often need the same model name (e.g., `gpt-5.6-terra`) to hit different provider endpoints, for example separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
+In multi-tenant deployments, different teams often need the same model name (e.g., `{{openai_large}}`) to hit different provider endpoints, for example separate Azure OpenAI instances per business unit for cost isolation, data residency, or rate limit separation.
 
 **Credential routing** lets you configure this in team/project metadata using the existing [credentials table](./model_management.md#reusable-provider-credentials), without duplicating model definitions or creating separate model groups per team.
 
 ```
-Hotel Team → gpt-5.6-terra → https://hotel-eastus.openai.azure.com/
-Flight Team → gpt-5.6-terra → https://flight-centralus.openai.azure.com/
+Hotel Team → {{openai_large}} → https://hotel-eastus.openai.azure.com/
+Flight Team → {{openai_large}} → https://flight-centralus.openai.azure.com/
 ```
 
 ### Precedence Chain
@@ -112,13 +112,13 @@ Requests are automatically routed to the correct Azure endpoint based on the API
 curl http://localhost:4000/v1/chat/completions \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-hotel-team-key' \
--d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "Hello"}]}'
+-d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
 
 # Request using Flight team's API key → routes to flight-centralus.openai.azure.com
 curl http://localhost:4000/v1/chat/completions \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-flight-team-key' \
--d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "Hello"}]}'
+-d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
 ## Per-Model Overrides
@@ -138,7 +138,7 @@ curl -X PATCH 'http://0.0.0.0:4000/team/update' \
                     "litellm_credentials": "hotel-azure-eastus"
                 }
             },
-            "gpt-5.6-terra": {
+            "{{openai_large}}": {
                 "azure": {
                     "litellm_credentials": "hotel-azure-westus"
                 }
@@ -149,7 +149,7 @@ curl -X PATCH 'http://0.0.0.0:4000/team/update' \
 ```
 
 With this config:
-- `gpt-5.6-terra` requests → `hotel-azure-westus` credential (model-specific)
+- `{{openai_large}}` requests → `hotel-azure-westus` credential (model-specific)
 - All other models → `hotel-azure-eastus` credential (default)
 
 ## Project-Level Overrides
@@ -183,7 +183,7 @@ curl -X PATCH 'http://0.0.0.0:4000/project/update' \
 ### Full Example: Hotel Team with Two Projects
 
 **Setup:**
-- **Hotel Team**: default `hotel-azure-eastus`, `gpt-5.6-terra` override to `hotel-azure-westus`
+- **Hotel Team**: default `hotel-azure-eastus`, `{{openai_large}}` override to `hotel-azure-westus`
 - **Hotel Rec App** (project): default `hotel-rec-azure`, GPT-4-Vision override to `hotel-rec-vision`
 - **Hotel Review App** (project): no overrides, inherits team config
 

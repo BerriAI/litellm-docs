@@ -35,7 +35,7 @@ uv tool install 'litellm[proxy]'
 
 Create a secure configuration using environment variables:
 
-```yaml keep-model-ids
+```yaml
 model_list:
   # Configure the models you want to use
   - model_name: claude-opus-4-7
@@ -159,7 +159,7 @@ This value will be sent as `Authorization` and `X-Api-Key` headers. The `apiKeyH
 
 Start Claude Code with the model you want to use:
 
-```bash keep-model-ids
+```bash
 # Specify model at startup (Opus 4.7 — newest Claude Code model)
 claude --model claude-opus-4-7
 
@@ -174,7 +174,7 @@ claude
 
 Alternatively, set default models with environment variables:
 
-```bash keep-model-ids
+```bash
 export ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-7
 export ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6
 export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-5-20251001
@@ -246,7 +246,7 @@ Compatibility between Claude Code features and each provider (Anthropic, Bedrock
 <Tabs>
 <TabItem value="multi-provider" label="Multi-Provider Setup">
 
-```yaml keep-model-ids
+```yaml
 model_list:
   # Anthropic models
   - model_name: claude-opus-4-7

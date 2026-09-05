@@ -361,7 +361,7 @@ litellm_settings:
   default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is omitted or null; an explicit budget_duration: null is honored
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
-    models: ["gpt-5.6-luna"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
+    models: ["{{openai_small}}"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
     tpm_limit: 100000              # Optional[int]: tokens per minute limit
     rpm_limit: 1000                # Optional[int]: requests per minute limit
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
@@ -395,7 +395,7 @@ litellm_settings:
     user_role: "internal_user"     # one of "internal_user", "internal_user_viewer", "proxy_admin", "proxy_admin_viewer". New SSO users not in litellm will be created as this user
     max_budget: 100                # Optional[float], optional): $100 budget for a new SSO sign in user
     budget_duration: 30d           # Optional[str], optional): 30 days budget_duration for a new SSO sign in user
-    models: ["gpt-5.6-luna"]      # Optional[List[str]], optional): models to be used by a new SSO sign in user
+    models: ["{{openai_small}}"]      # Optional[List[str]], optional): models to be used by a new SSO sign in user
     teams: # Optional[List[NewUserRequestTeam]], optional): teams to be used by the user
       - team_id: "team_id_1" # Required[str]: team_id to be used by the user
         max_budget_in_team: 100 # Optional[float], optional): $100 budget for the team. Defaults to None.
@@ -404,7 +404,7 @@ litellm_settings:
   default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is omitted or null; an explicit budget_duration: null is honored
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
-    models: ["gpt-5.6-luna"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
+    models: ["{{openai_small}}"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
     tpm_limit: 100000              # Optional[int]: tokens per minute limit
     rpm_limit: 1000                # Optional[int]: requests per minute limit
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members

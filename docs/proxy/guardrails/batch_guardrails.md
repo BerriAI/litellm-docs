@@ -32,9 +32,9 @@ Nothing to turn on. Any guardrail that runs on `pre_call` is applied to batch up
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:

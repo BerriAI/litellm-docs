@@ -15,17 +15,20 @@ Every check here is deterministic and fails the build:
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
-  retired-model       a fenced block uses a model id that docs-models.json replaced in an earlier commit
+  model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
 
 Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
-block that is intentionally a fragment. Add `keep-model-ids` when a block
-must keep an old model id because the exact id is the point; run
-`python3 scripts/bump-docs-models.py docs` to rewrite the rest. The
-retired-model rule reads the git history of docs-models.json, so it checks
-nothing in a clone without that history.
+block that is intentionally a fragment.
+
+Model ids in examples are `{{role}}` placeholders filled from docs-models.json
+at build time (src/remark/docs-models.js). This script applies the same
+substitution before parsing a block, and the model-literal rule fails a block
+that writes the current id itself, because that block would not follow the
+next bump. Add `keep-model-ids` to the fence line when the exact id is the
+point of the block (a price map key, a cache key, a printed log).
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -44,7 +47,6 @@ except ImportError:  # pragma: no cover
     sys.exit(2)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import docs_models  # noqa: E402
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS_ROOT = os.path.join(REPO_ROOT, "docs")
@@ -299,12 +301,12 @@ def check_page(page, site, page_cache):
         if "keep-model-ids" not in meta_tokens:
             seen_ids = set()
             for offset, l in enumerate(buf):
-                for _, _, matched, key, replacement in MODEL_MAP.finditer(l):
-                    if key in seen_ids:
+                for m in MODEL_LITERAL_RE.finditer(l):
+                    if m.group(0) in seen_ids:
                         continue
-                    seen_ids.add(key)
-                    err("retired-model", start + offset + 1, f"retired model id `{matched}`; use `{replacement}` (docs-models.json changed it)")
-        content = textwrap.dedent("\n".join(buf))
+                    seen_ids.add(m.group(0))
+                    err("model-literal", start + offset + 1, f"hardcoded model id `{m.group(0)}`; write `{{{{{MODEL_ROLES[m.group(0)]}}}}}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
+        content = textwrap.dedent(substitute_models("\n".join(buf)))
         if lang in YAML_LANGS:
             try:
                 list(yaml.safe_load_all(content))
@@ -397,7 +399,29 @@ def check_page(page, site, page_cache):
 
 
 KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
-MODEL_MAP = docs_models.ModelMap(docs_models.history_mapping())
+
+
+def load_model_roles():
+    """{model id: role} from docs-models.json, the file src/remark/docs-models.js reads."""
+    with open(os.path.join(REPO_ROOT, "docs-models.json"), encoding="utf-8") as f:
+        roles = json.load(f)
+    return {model_id: role for role, model_id in roles.items()}
+
+
+MODEL_ROLES = load_model_roles()
+MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
+# A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
+# (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
+# alias such as bedrock-claude-sonnet-5 or a header name is left alone.
+MODEL_LITERAL_RE = re.compile(
+    r"(?<![A-Za-z0-9:@-])(?:" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
+) if MODEL_ROLES else re.compile(r"(?!x)x")
+ROLE_TO_ID = {role: model_id for model_id, role in MODEL_ROLES.items()}
+
+
+def substitute_models(text):
+    """Fill {{role}} placeholders the way the site build does; other {{tokens}} are left alone."""
+    return MODEL_TOKEN_RE.sub(lambda m: ROLE_TO_ID.get(m.group(1), m.group(0)), text)
 
 
 def split_meta(meta):

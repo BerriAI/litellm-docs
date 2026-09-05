@@ -85,9 +85,9 @@ For automatic scheduled exports, configure via environment variables and proxy c
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-your-key
 
 litellm_settings:

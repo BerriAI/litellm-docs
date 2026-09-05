@@ -23,7 +23,7 @@ Fine tuned models on vertex have a numerical model/endpoint id.
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python keep-model-ids
+```python
 from litellm import completion
 import os
 
@@ -49,7 +49,7 @@ response = completion(
 
 2. Setup config.yaml 
 
-```yaml keep-model-ids
+```yaml
 - model_name: finetuned-gemini
   litellm_params:
     model: vertex_ai/<ENDPOINT_ID>

@@ -130,9 +130,9 @@ In the config below, we point the guardrail to our custom guardrail by setting `
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -243,7 +243,7 @@ curl -i -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -278,7 +278,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the weather like today?"}
     ],
@@ -307,7 +307,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -327,7 +327,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -351,7 +351,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -384,7 +384,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -408,7 +408,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -441,7 +441,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-1234" \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -518,7 +518,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a short poem"}],
     extra_body={
         "guardrails": {
@@ -539,7 +539,7 @@ response = client.chat.completions.create(
 curl 'http://0.0.0.0:4000/chat/completions' \
     -H 'Content-Type: application/json' \
     -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",

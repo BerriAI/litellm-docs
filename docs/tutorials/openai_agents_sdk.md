@@ -27,7 +27,7 @@ from agents.extensions.models.litellm_model import LitellmModel
 agent = Agent(
     name="Assistant",
     instructions="You are a helpful assistant.",
-    model=LitellmModel(model="anthropic/claude-sonnet-5"),
+    model=LitellmModel(model="anthropic/{{anthropic}}"),
 )
 
 result = Runner.run_sync(agent, "Hello!")
@@ -58,20 +58,20 @@ Configure and start the LiteLLM proxy with the models you want to use:
 model_list:
   - model_name: bedrock-claude-sonnet-5
     litellm_params:
-      model: "bedrock/us.anthropic.claude-sonnet-5"
+      model: "bedrock/us.anthropic.{{anthropic}}"
       aws_region_name: "us-east-1"
 
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: "openai/gpt-5.6-terra"
+      model: "openai/{{openai_large}}"
 
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: "anthropic/claude-sonnet-5"
+      model: "anthropic/{{anthropic}}"
 
   - model_name: bedrock-claude-opus
     litellm_params:
-      model: "bedrock/us.anthropic.claude-opus-5"
+      model: "bedrock/us.anthropic.{{anthropic_large}}"
       aws_region_name: "us-east-1"
 
   - model_name: bedrock-nova-premier
@@ -121,7 +121,7 @@ API_KEY = os.getenv("LITELLM_API_KEY") or "sk-1234"
 # Define model constants for cleaner code
 MODEL_BEDROCK_SONNET = "bedrock-claude-sonnet-5"
 MODEL_BEDROCK_OPUS = "bedrock-claude-opus"
-MODEL_GPT = "gpt-5.6-terra"
+MODEL_GPT = "{{openai_large}}"
 
 # Create the OpenAI client pointed at LiteLLM
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -215,7 +215,7 @@ async def test_openai_agent():
 
     agent = Agent(
         name="weather_agent_gpt",
-        instructions="You are a helpful weather assistant powered by gpt-5.6-terra. "
+        instructions="You are a helpful weather assistant powered by {{openai_large}}. "
                      "Use the 'get_weather' tool for city weather requests. "
                      "Present information clearly.",
         tools=[get_weather],
@@ -226,7 +226,7 @@ async def test_openai_agent():
         "What's the weather in London?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="gpt-5.6-terra",  # Uses the model name from your LiteLLM config
+            model="{{openai_large}}",  # Uses the model name from your LiteLLM config
         ),
     )
     print(f"<<< Agent Response: {result.final_output}")
@@ -254,7 +254,7 @@ async def test_anthropic_agent():
         "What's the weather in New York?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="claude-sonnet-5",  # Uses the model name from your LiteLLM config
+            model="{{anthropic}}",  # Uses the model name from your LiteLLM config
         ),
     )
     print(f"<<< Agent Response: {result.final_output}")
@@ -347,7 +347,7 @@ async def main():
         "What's the weather in London?",
         run_config=RunConfig(
             model_provider=LITELLM_MODEL_PROVIDER,
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
         ),
     )
     print(result.final_output)

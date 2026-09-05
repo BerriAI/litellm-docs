@@ -74,7 +74,7 @@ from litellm import completion, litellm
 litellm.callbacks = ["otel"]
 
 response = completion(
-  model="openai/gpt-5.6-terra",
+  model="openai/{{openai_large}}",
   messages=[{ "content": "What is SigNoz","role": "user"}]
 )
 
@@ -285,7 +285,7 @@ from litellm import completion, litellm
 litellm.callbacks = ["otel"]
 
 response = completion(
-  model="openai/gpt-5.6-terra",
+  model="openai/{{openai_large}}",
   messages=[{ "content": "What is SigNoz","role": "user"}]
 )
 

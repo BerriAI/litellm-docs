@@ -31,19 +31,19 @@ First, create a configuration file for your LiteLLM proxy:
 ```yaml
 # config.yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: azure/gpt-5.6-luna
+      model: azure/{{openai_small}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: "2023-07-01-preview"
@@ -68,7 +68,7 @@ client = create_client()
 
 # Configure the LLM endpoint
 client.set_default_llm_config(
-    model="gpt-5.6-terra",  # This should match a model from your LiteLLM config
+    model="{{openai_large}}",  # This should match a model from your LiteLLM config
     model_endpoint_type="openai",
     model_endpoint="http://localhost:4000",  # Your LiteLLM proxy URL
     context_window=8192
@@ -130,7 +130,7 @@ client = create_client()
 
 # Set up LLM configuration using direct SDK integration
 llm_config = LLMConfig(
-    model="gpt-5.6-terra",  # or "claude-sonnet-5", "azure/gpt-5.6-luna", etc.
+    model="{{openai_large}}",  # or "{{anthropic}}", "azure/{{openai_small}}", etc.
     model_endpoint_type="openai",
     context_window=8192
 )
@@ -233,14 +233,14 @@ from letta import LLMConfig, EmbeddingConfig
 
 # Create different LLM configurations pointing to your proxy
 gpt_config = LLMConfig(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     model_endpoint_type="openai",
     model_endpoint="http://localhost:4000",
     context_window=8192
 )
 
 claude_config = LLMConfig(
-    model="claude-sonnet-5",
+    model="{{anthropic}}",
     model_endpoint_type="openai",  # Using OpenAI-compatible endpoint
     model_endpoint="http://localhost:4000",
     context_window=200000
@@ -256,7 +256,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt_config  # Use gpt-5.6-terra for creative tasks
+    llm_config=gpt_config  # Use {{openai_large}} for creative tasks
 )
 ```
 
@@ -274,13 +274,13 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
 
 # Create different LLM configurations for direct SDK usage
 gpt_config = LLMConfig(
-    model="openai/gpt-5.6-terra",  # Using LiteLLM model format
+    model="openai/{{openai_large}}",  # Using LiteLLM model format
     model_endpoint_type="openai",
     context_window=8192
 )
 
 claude_config = LLMConfig(
-    model="anthropic/claude-sonnet-5",  # Using LiteLLM model format
+    model="anthropic/{{anthropic}}",  # Using LiteLLM model format
     model_endpoint_type="openai",
     context_window=200000
 )
@@ -295,7 +295,7 @@ research_agent = client.create_agent(
 creative_agent = client.create_agent(
     name="creative-agent", 
     system="You are a creative writing assistant.",
-    llm_config=gpt_config  # Use gpt-5.6-terra for creative tasks
+    llm_config=gpt_config  # Use {{openai_large}} for creative tasks
 )
 ```
 
@@ -361,7 +361,7 @@ agent_state = client.create_agent(
     name="research-assistant",
     system="You are a research assistant that can search the web and save notes.",
     llm_config=LLMConfig(
-        model="openai/gpt-5.6-terra",  # Direct model specification
+        model="openai/{{openai_large}}",  # Direct model specification
         model_endpoint_type="openai",
         context_window=8192
     ),
@@ -392,7 +392,7 @@ from letta import LLMConfig
 
 # Set up authenticated configuration
 llm_config = LLMConfig(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     model_endpoint_type="openai",
     model_endpoint="http://localhost:4000",
     model_wrapper="openai",
@@ -414,16 +414,16 @@ general_settings:
   master_key: "your-master-key"
 
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
 ```python
 # Configure Letta with authenticated proxy
 llm_config = LLMConfig(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     model_endpoint_type="openai",
     model_endpoint="http://localhost:4000",
     context_window=8192,
@@ -455,14 +455,14 @@ litellm.set_verbose = True  # For debugging
 from letta import LLMConfig
 
 llm_config = LLMConfig(
-    model="openai/gpt-5.6-terra",  # Will use OPENAI_API_KEY automatically
+    model="openai/{{openai_large}}",  # Will use OPENAI_API_KEY automatically
     model_endpoint_type="openai",
     context_window=8192
 )
 
 # Or for Azure
 azure_config = LLMConfig(
-    model="azure/gpt-5.6-luna", 
+    model="azure/{{openai_small}}", 
     model_endpoint_type="openai",
     context_window=4096
 )
@@ -481,16 +481,16 @@ LiteLLM proxy's load balancing and fallback features work with Letta:
 ```yaml
 # config.yaml with fallbacks
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     tpm: 40000
     rpm: 500
 
-  - model_name: gpt-5.6-terra  # Same model name for fallback
+  - model_name: {{openai_large}}  # Same model name for fallback
     litellm_params:
-      model: azure/gpt-5.6-terra
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: "2023-07-01-preview"
@@ -499,7 +499,7 @@ model_list:
 
 router_settings:
   routing_strategy: "usage-based-routing"
-  fallbacks: [{"gpt-5.6-terra": ["azure/gpt-5.6-terra"]}]
+  fallbacks: [{"{{openai_large}}": ["azure/{{openai_large}}"]}]
 ```
 
 The proxy handles all routing, load balancing, and fallbacks transparently for Letta.
@@ -517,18 +517,18 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-5.6-terra",
+            "model_name": "{{openai_large}}",
             "litellm_params": {
-                "model": "openai/gpt-5.6-terra",
+                "model": "openai/{{openai_large}}",
                 "api_key": os.environ["OPENAI_API_KEY"]
             },
             "tpm": 40000,
             "rpm": 500
         },
         {
-            "model_name": "gpt-5.6-terra",  # Same name for fallback
+            "model_name": "{{openai_large}}",  # Same name for fallback
             "litellm_params": {
-                "model": "azure/gpt-5.6-terra", 
+                "model": "azure/{{openai_large}}", 
                 "api_key": os.environ["AZURE_API_KEY"],
                 "api_base": os.environ["AZURE_API_BASE"],
                 "api_version": "2023-07-01-preview"
@@ -537,12 +537,12 @@ router = Router(
             "rpm": 800
         }
     ],
-    fallbacks=[{"gpt-5.6-terra": ["azure/gpt-5.6-terra"]}],
+    fallbacks=[{"{{openai_large}}": ["azure/{{openai_large}}"]}],
     routing_strategy="usage-based-routing"
 )
 
 # Create custom completion function for Letta
-def custom_completion(messages, model="gpt-5.6-terra", **kwargs):
+def custom_completion(messages, model="{{openai_large}}", **kwargs):
     return router.completion(
         model=model,
         messages=messages,
@@ -603,7 +603,7 @@ litellm.failure_callback = ["langfuse"]
 litellm.set_verbose = True
 
 # Create custom completion wrapper with logging
-def logged_completion(messages, model="gpt-5.6-terra", **kwargs):
+def logged_completion(messages, model="{{openai_large}}", **kwargs):
     try:
         response = litellm.completion(
             model=model,
@@ -643,18 +643,18 @@ agents['researcher'] = client.create_agent(
     name="researcher",
     system="You are a research specialist. Analyze information thoroughly.",
     llm_config=LLMConfig(
-        model="claude-sonnet-5",
+        model="{{anthropic}}",
         model_endpoint="http://localhost:4000",
         model_endpoint_type="openai"
     )
 )
 
-# Writer agent using gpt-5.6-terra for content creation
+# Writer agent using {{openai_large}} for content creation
 agents['writer'] = client.create_agent(
     name="writer",
     system="You are a content writer. Create engaging, well-structured content.",
     llm_config=LLMConfig(
-        model="gpt-5.6-terra",
+        model="{{openai_large}}",
         model_endpoint="http://localhost:4000", 
         model_endpoint_type="openai"
     )
@@ -706,27 +706,27 @@ agents['researcher'] = client.create_agent(
     name="researcher",
     system="You are a research specialist. Analyze information thoroughly.",
     llm_config=LLMConfig(
-        model="anthropic/claude-sonnet-5",
+        model="anthropic/{{anthropic}}",
         model_endpoint_type="openai"
     )
 )
 
-# Writer agent using gpt-5.6-terra for content creation
+# Writer agent using {{openai_large}} for content creation
 agents['writer'] = client.create_agent(
     name="writer",
     system="You are a content writer. Create engaging, well-structured content.",
     llm_config=LLMConfig(
-        model="openai/gpt-5.6-terra",
+        model="openai/{{openai_large}}",
         model_endpoint_type="openai"
     )
 )
 
-# Cost-conscious agent using gpt-5.6-luna
+# Cost-conscious agent using {{openai_small}}
 agents['reviewer'] = client.create_agent(
     name="reviewer",
     system="You are an editor. Review and improve content quality.",
     llm_config=LLMConfig(
-        model="openai/gpt-5.6-luna",
+        model="openai/{{openai_small}}",
         model_endpoint_type="openai"
     )
 )
@@ -793,9 +793,9 @@ print(article)
 <TabItem value="sdk" label="LiteLLM SDK Best Practices">
 
 1. **Model Selection**: Choose models based on task requirements:
-   - Use `openai/gpt-5.6-terra` for complex reasoning
-   - Use `anthropic/claude-sonnet-5` for analysis
-   - Use `openai/gpt-5.6-luna` for cost-effective simple tasks
+   - Use `openai/{{openai_large}}` for complex reasoning
+   - Use `anthropic/{{anthropic}}` for analysis
+   - Use `openai/{{openai_small}}` for cost-effective simple tasks
 
 2. **Error Handling**: Implement robust error handling with retries:
    ```python
@@ -813,7 +813,7 @@ print(article)
        except Exception as e:
            print(f"LLM call failed: {e}")
            # Implement fallback logic
-           return completion(model="openai/gpt-5.6-luna", **kwargs)
+           return completion(model="openai/{{openai_small}}", **kwargs)
    ```
 
 3. **Cost Management**:
@@ -845,7 +845,7 @@ print(article)
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -882,7 +882,7 @@ print("Anthropic Key:", os.environ.get("ANTHROPIC_API_KEY", "Not set"))
 # Test direct LiteLLM call
 try:
     response = litellm.completion(
-        model="openai/gpt-5.6-luna",
+        model="openai/{{openai_small}}",
         messages=[{"role": "user", "content": "Hello"}]
     )
     print("LiteLLM working:", response.choices[0].message.content)
@@ -896,7 +896,7 @@ except Exception as e:
 litellm.set_verbose = True
 
 # Test model availability
-models = ["openai/gpt-5.6-terra", "anthropic/claude-sonnet-5"]
+models = ["openai/{{openai_large}}", "anthropic/{{anthropic}}"]
 for model in models:
     try:
         response = litellm.completion(
@@ -911,7 +911,7 @@ for model in models:
 
 ### Common SDK Issues
 - **Import errors**: Ensure `uv add litellm letta` is run
-- **Model format**: Use `provider/model` format (e.g., `openai/gpt-5.6-terra`)
+- **Model format**: Use `provider/model` format (e.g., `openai/{{openai_large}}`)
 - **API key format**: Different providers have different key formats
 - **Rate limits**: Implement exponential backoff for retries
 

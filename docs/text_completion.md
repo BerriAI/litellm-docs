@@ -35,7 +35,7 @@ response = text_completion(
 
 1. Define models on config.yaml
 
-```yaml keep-model-ids
+```yaml
 model_list:
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:

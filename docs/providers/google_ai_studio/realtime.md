@@ -10,7 +10,7 @@
 
 ### Add model to config 
 
-```yaml keep-model-ids
+```yaml
 model_list:
   - model_name: "gemini-2.0-flash"
     litellm_params:

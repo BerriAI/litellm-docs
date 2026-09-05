@@ -227,7 +227,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",

@@ -21,9 +21,9 @@ litellm_settings:
 Contents of `model_config.yaml`:
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
   - model_name: fake-anthropic-endpoint
     litellm_params:

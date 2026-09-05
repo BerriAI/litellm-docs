@@ -49,7 +49,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_alias": "my-new-team_4",
-  "model_aliases": {"gpt-5.6-luna": "gpt-4o-mini-eu"}
+  "model_aliases": {"{{openai_small}}": "gpt-4o-mini-eu"}
 }'
 
 # Returns team_id: my-team-id
@@ -73,7 +73,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-A1L0C3Px2LJl53sF_kTF9A' \
 --data '{
-  "model": "gpt-5.6-luna", # 👈 MODEL 
+  "model": "{{openai_small}}", # 👈 MODEL 
   "messages": [{"role": "system", "content": "You'\''re an expert at writing poems"}, {"role": "user", "content": "Write me a poem"}, {"role": "user", "content": "What'\''s your name?"}],
   "user": "usha"
 }'

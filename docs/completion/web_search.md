@@ -30,7 +30,7 @@ For OpenAI, only dedicated search models support the `web_search_options` parame
 - `gpt-4o-mini-search-preview`
 - `gpt-5-search-api`
 
-**Regular models like `gpt-5.6-terra` and `gpt-5.6-luna` do not support `web_search_options`**
+**Regular models like `{{openai_large}}` and `{{openai_small}}` do not support `web_search_options`**
 :::
 
 :::tip The `web_search_options` parameter is optional
@@ -42,7 +42,7 @@ Use `web_search_options` when you need to:
 :::
 
 :::info
-**Anthropic Web Search Models**: Claude models that support web search: `claude-3-5-sonnet-latest`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-latest`, `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219` {/* keep-model-ids */}
+**Anthropic Web Search Models**: Claude models that support web search: `claude-3-5-sonnet-latest`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-latest`, `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`
 :::
 
 ## OpenAI Web Search: Two Approaches
@@ -107,22 +107,22 @@ model_list:
       api_key: os.environ/XAI_API_KEY
 
   # Anthropic
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # VertexAI
   - model_name: gemini-2-flash
     litellm_params:
-      model: gemini-3.8-flash
+      model: {{gemini_flash}}
       vertex_project: your-project-id
       vertex_location: us-central1
 
   # Google AI Studio
   - model_name: gemini-2-flash-studio
     litellm_params:
-      model: gemini/gemini-3.8-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GOOGLE_API_KEY
 ```
 
@@ -210,7 +210,7 @@ from litellm import completion
 
 # Customize search context size for Anthropic
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -235,7 +235,7 @@ from litellm import completion
 
 # Customize search context size for Gemini
 response = completion(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user",
@@ -294,7 +294,7 @@ response = client.chat.completions.create(
 
 ## `/responses` (litellm.responses)
 
-Use the `web_search_preview` tool with models like `gpt-5.6-terra`, `gpt-5.6-luna`, etc.
+Use the `web_search_preview` tool with models like `{{openai_large}}`, `{{openai_small}}`, etc.
 
 :::info
 Search-dedicated models like `gpt-5-search-api` and `gpt-4o-search-preview` do **not** support the `/responses` endpoint. Use them with `/chat/completions` + `web_search_options` instead (see above).
@@ -309,7 +309,7 @@ Search-dedicated models like `gpt-5-search-api` and `gpt-4o-search-preview` do *
 from litellm import responses
 
 response = responses(
-    model="openai/gpt-5.6-terra",
+    model="openai/{{openai_large}}",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview"  # enables web search with default medium context size
@@ -324,14 +324,14 @@ response = responses(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -353,7 +353,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     tools=[{
         "type": "web_search_preview"
     }],
@@ -375,7 +375,7 @@ from litellm import responses
 
 # Customize search context size
 response = responses(
-    model="openai/gpt-5.6-terra",
+    model="openai/{{openai_large}}",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview",
@@ -397,7 +397,7 @@ client = OpenAI(
 
 # Customize search context size
 response = client.responses.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     tools=[{
         "type": "web_search_preview",
         "search_context_size": "low"  # Options: "low", "medium" (default), "high"
@@ -430,12 +430,12 @@ model_list:
 ### Advanced
 You can configure LiteLLM's router to optionally drop models that do not support WebSearch, for example
 ```yaml
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
-  - model_name: gpt-5.6-terra
+      model: openai/{{openai_large}}
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.6-terra
+      model: azure/{{openai_large}}
       api_base: "x.openai.azure.com/"
       api_version: 2025-03-01-preview
     model_info:
@@ -467,7 +467,7 @@ model_list:
   # Gemini with medium context (default)
   - model_name: gemini-2-flash
     litellm_params:
-      model: gemini-3.8-flash
+      model: {{gemini_flash}}
       vertex_project: your-project-id
       vertex_location: us-central1
       web_search_options:
@@ -495,13 +495,13 @@ assert litellm.supports_web_search(model="openai/gpt-4o-search-preview") == True
 assert litellm.supports_web_search(model="xai/grok-3") == True
 
 # Check Anthropic models
-assert litellm.supports_web_search(model="anthropic/claude-sonnet-5") == True
+assert litellm.supports_web_search(model="anthropic/{{anthropic}}") == True
 
 # Check VertexAI models
-assert litellm.supports_web_search(model="gemini-3.8-flash") == True
+assert litellm.supports_web_search(model="{{gemini_flash}}") == True
 
 # Check Google AI Studio models
-assert litellm.supports_web_search(model="gemini/gemini-3.8-flash") == True
+assert litellm.supports_web_search(model="gemini/{{gemini_flash}}") == True
 ```
 </TabItem>
 
@@ -535,9 +535,9 @@ model_list:
       supports_web_search: True
   
   # Anthropic
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
     model_info:
       supports_web_search: True
@@ -545,7 +545,7 @@ model_list:
   # VertexAI
   - model_name: gemini-2-flash
     litellm_params:
-      model: gemini-3.8-flash
+      model: {{gemini_flash}}
       vertex_project: your-project-id
       vertex_location: us-central1
     model_info:
@@ -554,7 +554,7 @@ model_list:
   # Google AI Studio
   - model_name: gemini-2-flash-studio
     litellm_params:
-      model: gemini/gemini-3.8-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GOOGLE_API_KEY
     model_info:
       supports_web_search: True
@@ -632,7 +632,7 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
 - **`search_context_cost_per_query`**: the cost per billable unit (per search context size tier).
 - **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default; flat fee per API call that uses search).
 
-```json keep-model-ids
+```json
 {
     "gemini/gemini-3-flash-preview": {
         "web_search_billing_unit": "per_query",
@@ -660,9 +660,9 @@ You can override these in your proxy config using `model_info`:
 
 ```yaml
 model_list:
-  - model_name: gemini-3.8-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-3.8-flash
+      model: gemini/{{gemini_flash}}
     model_info:
       web_search_billing_unit: per_query
       search_context_cost_per_query:
@@ -682,7 +682,7 @@ The number of web search requests is stored in `usage.prompt_tokens_details.web_
 
 ```python
 response = litellm.completion(
-    model="gemini/gemini-3.8-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Latest tech news?"}],
     web_search_options={"search_context_size": "medium"},
 )

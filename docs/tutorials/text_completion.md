@@ -1,7 +1,7 @@
 # Using Text Completion Format - with Completion()
 
 If your prefer interfacing with the OpenAI Text Completion format this tutorial covers how to use LiteLLM in this format
-```python keep-model-ids
+```python
 response = openai.Completion.create(
     model="text-davinci-003",
     prompt='Write a tagline for a traditional bavarian tavern',
@@ -11,7 +11,7 @@ response = openai.Completion.create(
 
 ## Using LiteLLM in the Text Completion format
 ### With gpt-3.5-turbo
-```python keep-model-ids
+```python
 from litellm import text_completion
 response = text_completion(
     model="gpt-3.5-turbo",
@@ -21,7 +21,7 @@ response = text_completion(
 ```
 
 ### With text-davinci-003
-```python keep-model-ids
+```python
 response = text_completion(
     model="text-davinci-003",
     prompt='Write a tagline for a traditional bavarian tavern',

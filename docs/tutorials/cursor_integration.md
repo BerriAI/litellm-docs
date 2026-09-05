@@ -81,7 +81,7 @@ Cursor rejects a custom model whose name matches one of its built-in models with
 model_list:
   - model_name: litellm-claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
 ```
 :::
 
@@ -118,7 +118,7 @@ Open **Cursor → Settings → Cursor Settings → Models**, expand **API Keys**
 Fill in the fields:
 
 - **Base URL**: your LiteLLM proxy URL, e.g. `https://your-litellm-proxy.com`. Do not append `/cursor`. The proxy must be reachable from the internet: Cursor sends requests from its backend, not from your machine.
-- **Deployment Name**: the LiteLLM public model name to use, e.g. `claude-sonnet-5`. This decides which model serves every request (see the warning below).
+- **Deployment Name**: the LiteLLM public model name to use, e.g. `{{anthropic}}`. This decides which model serves every request (see the warning below).
 - **API Key**: your LiteLLM virtual key.
 
 ### 2. Add a custom model

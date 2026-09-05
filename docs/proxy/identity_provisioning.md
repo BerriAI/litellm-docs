@@ -142,7 +142,7 @@ JWT_TOKEN="eyJhbG..."   # a valid IdP token for the SCIM-provisioned user
 curl -X POST 'https://your-litellm-proxy:4000/v1/chat/completions' \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"model": "claude-sonnet-5", "messages": [{"role": "user", "content": "Hello"}]}'
+  -d '{"model": "{{anthropic}}", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
 That first request mints the user's virtual key and the claim-to-key mapping. Confirm both:

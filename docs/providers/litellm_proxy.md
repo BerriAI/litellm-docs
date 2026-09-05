@@ -199,7 +199,7 @@ When enabled, requests will use `LITELLM_PROXY_API_BASE` with `LITELLM_PROXY_API
 litellm.use_litellm_proxy = True
 
 response = litellm.completion(
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 ```
@@ -211,7 +211,7 @@ response = litellm.completion(
 os.environ["USE_LITELLM_PROXY"] = "True"
 
 response = litellm.completion(
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 ```
@@ -221,7 +221,7 @@ response = litellm.completion(
 ```python
 # Enable proxy for specific requests only
 response = litellm.completion(
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
     use_litellm_proxy=True
 )
@@ -242,7 +242,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -261,7 +261,7 @@ Send tags by including them in the `extra_body` parameter of your completion req
 import litellm
 
 response = litellm.completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000",
     api_key="sk-1234",
@@ -275,7 +275,7 @@ response = litellm.completion(
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000", 
     api_key="sk-1234",

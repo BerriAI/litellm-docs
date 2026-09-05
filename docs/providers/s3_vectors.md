@@ -116,7 +116,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
     -H "Authorization: Bearer sk-1234" \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "gpt-5.6-terra",
+        "model": "{{openai_large}}",
         "messages": [{"role": "user", "content": "Summarize our pricing policy"}],
         "tools": [{"type": "file_search", "vector_store_ids": ["my-embeddings:litellm-index-a1b2c3d4"]}]
     }'

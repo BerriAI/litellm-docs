@@ -93,7 +93,7 @@ These results apply to a same-family cost ladder, where every model can attempt 
 
 ## Validate the model tiers before tuning the router
 
-The middle tier, `gemini-3-flash-preview`, appeared to offer a useful price and quality trade-off based on list prices. Its measured performance did not support that assumption: {/* keep-model-ids */}
+The middle tier, `gemini-3-flash-preview`, appeared to offer a useful price and quality trade-off based on list prices. Its measured performance did not support that assumption:
 
 | Metric | `gemini-3-flash-preview` | `gemini-3.1-flash-lite` |
 |---|---:|---:|
@@ -103,7 +103,7 @@ The middle tier, `gemini-3-flash-preview`, appeared to offer a useful price and 
 
 Among prompts where exactly one of these models answered correctly, Flash-Lite won 20 to 2. The middle tier did not provide a useful cost-quality trade-off on this dataset.
 
-Thinking tokens explain much of the unexpected cost. `gemini-3-flash-preview` generated 981,308 thinking tokens, compared with 581,883 from the flagship. As a result, its 4x list-price output advantage produced only a 2.7x measured cost advantage. Flash-Lite generated no thinking tokens and cost 37 times less than the flagship, compared with the 8x difference suggested by list prices. {/* keep-model-ids */}
+Thinking tokens explain much of the unexpected cost. `gemini-3-flash-preview` generated 981,308 thinking tokens, compared with 581,883 from the flagship. As a result, its 4x list-price output advantage produced only a 2.7x measured cost advantage. Flash-Lite generated no thinking tokens and cost 37 times less than the flagship, compared with the 8x difference suggested by list prices.
 
 Both `complexity_router` configurations sent most prompts to the underperforming middle tier. Before tuning a router, measure each candidate model on representative traffic and include thinking-token charges in the cost calculation.
 

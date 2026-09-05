@@ -30,7 +30,7 @@ GitHub Copilot uses OAuth device flow for authentication. On first use, you'll b
 
 ### Chat Completion
 
-```python showLineNumbers title="GitHub Copilot Chat Completion" keep-model-ids
+```python showLineNumbers title="GitHub Copilot Chat Completion"
 from litellm import completion
 
 response = completion(
@@ -43,7 +43,7 @@ response = completion(
 print(response)
 ```
 
-```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming" keep-model-ids
+```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming"
 from litellm import completion
 
 stream = completion(
@@ -61,7 +61,7 @@ for chunk in stream:
 
 For GPT Codex models, only responses API is supported.
 
-```python showLineNumbers title="GitHub Copilot Responses" keep-model-ids
+```python showLineNumbers title="GitHub Copilot Responses"
 import litellm
 
 response = await litellm.aresponses(
@@ -89,7 +89,7 @@ print(response)
 
 Add the following to your LiteLLM Proxy configuration file:
 
-```yaml showLineNumbers title="config.yaml" keep-model-ids
+```yaml showLineNumbers title="config.yaml"
 model_list:
   - model_name: github_copilot/gpt-4o
     litellm_params:
@@ -117,7 +117,7 @@ litellm --config config.yaml
 <Tabs>
 <TabItem value="openai-sdk" label="OpenAI SDK">
 
-```python showLineNumbers title="GitHub Copilot via Proxy - Non-streaming" keep-model-ids
+```python showLineNumbers title="GitHub Copilot via Proxy - Non-streaming"
 from openai import OpenAI
 
 # Initialize client with your proxy URL
@@ -139,7 +139,7 @@ print(response.choices[0].message.content)
 
 <TabItem value="litellm-sdk" label="LiteLLM SDK">
 
-```python showLineNumbers title="GitHub Copilot via Proxy - LiteLLM SDK" keep-model-ids
+```python showLineNumbers title="GitHub Copilot via Proxy - LiteLLM SDK"
 import litellm
 
 # Configure LiteLLM to use your proxy
@@ -157,7 +157,7 @@ print(response.choices[0].message.content)
 
 <TabItem value="curl" label="cURL">
 
-```bash showLineNumbers title="GitHub Copilot via Proxy - cURL" keep-model-ids
+```bash showLineNumbers title="GitHub Copilot via Proxy - cURL"
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \

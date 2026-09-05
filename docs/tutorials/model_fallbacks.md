@@ -24,7 +24,7 @@ os.environ["AZURE_API_KEY"] = ""
 os.environ["AZURE_API_BASE"] = ""
 os.environ["AZURE_API_VERSION"] = ""
 
-model_fallback_list = ["claude-sonnet-5", "gpt-5.6-luna", "chatgpt-test"]
+model_fallback_list = ["{{anthropic}}", "{{openai_small}}", "chatgpt-test"]
 
 user_message = "Hello, how are you?"
 messages = [{ "content": user_message,"role": "user"}]
@@ -45,7 +45,7 @@ LiteLLM also exposes a `get_max_tokens()` function, which you can use to identif
 
 The model ids in the fallback list below are illustrative and kept for their context window sizes.
 
-```python keep-model-ids
+```python
 import litellm
 from litellm import completion, ContextWindowExceededError, get_max_tokens
 

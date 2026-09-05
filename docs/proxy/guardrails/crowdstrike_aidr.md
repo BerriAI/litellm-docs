@@ -48,9 +48,9 @@ configuration file.
 
 ```yaml title="config.yaml - Example LiteLLM configuration with CrowdStrike AIDR guardrail"
 model_list:
-  - model_name: gpt-5.6-terra                       # Alias used in API requests
+  - model_name: {{openai_large}}                       # Alias used in API requests
     litellm_params:
-      model: openai/gpt-5.6-luna              # Actual model to use
+      model: openai/{{openai_small}}              # Actual model to use
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -113,7 +113,7 @@ This example requires the **Malicious Prompt** detector to be enabled in your co
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-5.6-terra",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "system",
@@ -155,7 +155,7 @@ If the policy input rules redact a sensitive value, you will not see redaction a
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-5.6-terra",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -197,7 +197,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
 curl -sSLX POST http://localhost:4000/v1/chat/completions \
 --header "Content-Type: application/json" \
 --data '{
-  "model": "gpt-5.6-terra",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Hi :0)"}
   ]

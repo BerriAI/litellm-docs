@@ -52,7 +52,7 @@ litellm.success_callback = ["logfire"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-5.6-luna",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]

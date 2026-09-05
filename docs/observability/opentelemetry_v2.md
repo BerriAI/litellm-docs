@@ -23,7 +23,7 @@ POST /v1/chat/completions                  ← HTTP request (server span)
 │   ├── postgres get_key_object            ← DB lookups during auth
 │   └── postgres get_team_membership
 ├── execute_guardrail presidio-pii         ← each guardrail that runs
-├── chat gpt-5.6-terra                     ← the LLM call (model, tokens, cost)
+├── chat {{openai_large}}                     ← the LLM call (model, tokens, cost)
 └── batch_write_to_db                      ← spend/usage written to DB
 ```
 

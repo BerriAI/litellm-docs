@@ -25,7 +25,7 @@ Add `model_info.access_groups` to a deployment, either in `config.yaml` or throu
 model_list:
   - model_name: premium-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
     model_info:
       access_groups: ["premium"]
@@ -41,7 +41,7 @@ curl -X POST 'http://0.0.0.0:4000/model/new' \
      -H 'Content-Type: application/json' \
      -d '{
            "model_name": "premium-sonnet",
-           "litellm_params": {"model": "anthropic/claude-sonnet-5", "api_key": "os.environ/ANTHROPIC_API_KEY"},
+           "litellm_params": {"model": "anthropic/{{anthropic}}", "api_key": "os.environ/ANTHROPIC_API_KEY"},
            "model_info": {"access_groups": ["premium"]}
          }'
 ```

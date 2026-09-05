@@ -352,8 +352,8 @@ See [Gemini's full list of supported file types](https://ai.google.dev/gemini-ap
 ## Supported Models
 
 File Search works with:
-- `gemini-3.1-pro-preview`
-- `gemini-3.8-flash` (and preview versions)
+- `{{gemini_pro}}`
+- `{{gemini_flash}}` (and preview versions)
 
 ## Troubleshooting
 

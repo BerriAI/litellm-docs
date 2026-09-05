@@ -11,7 +11,7 @@ Failed requests to the LLM API routes (`/chat/completions`, `/completions`, `/em
 ```json
 {
   "error": {
-    "message": "litellm.RateLimitError: RateLimitError: OpenAIException - Rate limit reached for gpt-5.6-luna in organization org-abc on requests per min (RPM): Limit 3, Used 3.",
+    "message": "litellm.RateLimitError: RateLimitError: OpenAIException - Rate limit reached for {{openai_small}} in organization org-abc on requests per min (RPM): Limit 3, Used 3.",
     "type": "throttling_error",
     "param": null,
     "code": "429"
@@ -110,7 +110,7 @@ Worked example, provider origin. The same 429 status, but the message names the 
 ```json
 {
   "error": {
-    "message": "litellm.RateLimitError: RateLimitError: OpenAIException - Rate limit reached for gpt-5.6-luna in organization org-abc on requests per min (RPM): Limit 3, Used 3.",
+    "message": "litellm.RateLimitError: RateLimitError: OpenAIException - Rate limit reached for {{openai_small}} in organization org-abc on requests per min (RPM): Limit 3, Used 3.",
     "type": "throttling_error",
     "param": null,
     "code": "429"
@@ -195,7 +195,7 @@ import litellm
 from litellm.exceptions import RateLimitErrorCategory
 
 try:
-    response = litellm.completion(model="gpt-5.6-luna", messages=[{"role": "user", "content": "hi"}])
+    response = litellm.completion(model="{{openai_small}}", messages=[{"role": "user", "content": "hi"}])
 except litellm.RateLimitError as e:
     if e.category == RateLimitErrorCategory.LITELLM_RATE_LIMIT:
         print(f"LiteLLM's own limiter: {e.rate_limit_type}")
@@ -309,7 +309,7 @@ The `unreachable` deployment above needs no mock server at all; port 9 refuses c
 curl -X POST 'http://localhost:4000/key/generate' \
   -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \
-  -d '{"key_alias": "restricted", "models": ["gpt-5.6-luna"]}'
+  -d '{"key_alias": "restricted", "models": ["{{openai_small}}"]}'
 
 # 429 throttling_error, on the second call within the same minute
 curl -X POST 'http://localhost:4000/key/generate' \

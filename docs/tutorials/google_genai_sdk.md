@@ -52,9 +52,9 @@ uv add google-genai
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gemini-3.8-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-3.8-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -79,7 +79,7 @@ const ai = new GoogleGenAI({
 
 async function main() {
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "{{gemini_flash}}",
     contents: "Explain how AI works",
   });
   console.log(response.text);
@@ -100,7 +100,7 @@ client = genai.Client(
 )
 
 response = client.models.generate_content(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     contents="Explain how AI works",
 )
 print(response.text)
@@ -110,7 +110,7 @@ print(response.text)
 <TabItem value="curl" label="curl">
 
 ```bash
-curl "http://localhost:4000/gemini/v1beta/models/gemini-3.8-flash:generateContent?key=sk-1234" \
+curl "http://localhost:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=sk-1234" \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
@@ -140,7 +140,7 @@ const ai = new GoogleGenAI({
 
 async function main() {
   const response = await ai.models.generateContentStream({
-    model: "gemini-3.8-flash",
+    model: "{{gemini_flash}}",
     contents: "Write a short poem about the ocean",
   });
 
@@ -164,7 +164,7 @@ client = genai.Client(
 )
 
 response = client.models.generate_content_stream(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     contents="Write a short poem about the ocean",
 )
 
@@ -192,7 +192,7 @@ const ai = new GoogleGenAI({
 
 async function main() {
   const chat = ai.chats.create({
-    model: "gemini-3.8-flash",
+    model: "{{gemini_flash}}",
   });
 
   const response1 = await chat.sendMessage({ message: "I have 2 dogs and 3 cats." });
@@ -216,7 +216,7 @@ client = genai.Client(
     http_options={"base_url": "http://localhost:4000/gemini"},
 )
 
-chat = client.chats.create(model="gemini-3.8-flash")
+chat = client.chats.create(model="{{gemini_flash}}")
 
 response1 = chat.send_message("I have 2 dogs and 3 cats.")
 print(response1.text)
@@ -244,51 +244,51 @@ For this to work, point the SDK `baseUrl` to `http://localhost:4000` (without `/
 <Tabs>
 <TabItem value="anthropic" label="Anthropic">
 
-Route `gemini-3.8-flash` requests to Claude Sonnet:
+Route `{{gemini_flash}}` requests to Claude Sonnet:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-3.8-flash": "claude-sonnet"}
+  model_group_alias: {"{{gemini_flash}}": "claude-sonnet"}
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route `gemini-3.8-flash` requests to `gpt-5.6-terra`:
+Route `{{gemini_flash}}` requests to `{{openai_large}}`:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
   - model_name: openai-gpt
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-3.8-flash": "openai-gpt"}
+  model_group_alias: {"{{gemini_flash}}": "openai-gpt"}
 ```
 
 </TabItem>
 <TabItem value="bedrock" label="Bedrock">
 
-Route `gemini-3.8-flash` requests to Claude on Bedrock:
+Route `{{gemini_flash}}` requests to Claude on Bedrock:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 
 router_settings:
-  model_group_alias: {"gemini-3.8-flash": "bedrock-claude"}
+  model_group_alias: {"{{gemini_flash}}": "bedrock-claude"}
 ```
 
 </TabItem>
@@ -300,15 +300,15 @@ Load balance across Anthropic and OpenAI:
 model_list:
   - model_name: my-model
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: my-model
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-3.8-flash": "my-model"}
+  model_group_alias: {"{{gemini_flash}}": "my-model"}
 ```
 
 </TabItem>
@@ -330,9 +330,9 @@ const ai = new GoogleGenAI({
 });
 
 async function main() {
-  // This calls Claude/gpt-5.6-terra/Bedrock under the hood via model_group_alias
+  // This calls Claude/{{openai_large}}/Bedrock under the hood via model_group_alias
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "{{gemini_flash}}",
     contents: "Hello from any model!",
   });
   console.log(response.text);
@@ -352,9 +352,9 @@ client = genai.Client(
     http_options={"base_url": "http://localhost:4000"},  # No /gemini
 )
 
-# This calls Claude/gpt-5.6-terra/Bedrock under the hood via model_group_alias
+# This calls Claude/{{openai_large}}/Bedrock under the hood via model_group_alias
 response = client.models.generate_content(
-    model="gemini-3.8-flash",
+    model="{{gemini_flash}}",
     contents="Hello from any model!",
 )
 print(response.text)

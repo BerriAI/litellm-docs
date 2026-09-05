@@ -21,12 +21,12 @@ uv add claude-agent-sdk
 model_list:
   - model_name: bedrock-claude-sonnet-5
     litellm_params:
-      model: "bedrock/us.anthropic.claude-sonnet-5"
+      model: "bedrock/us.anthropic.{{anthropic}}"
       aws_region_name: "us-east-1"
 
   - model_name: bedrock-claude-opus-5
     litellm_params:
-      model: "bedrock/us.anthropic.claude-opus-5"
+      model: "bedrock/us.anthropic.{{anthropic_large}}"
       aws_region_name: "us-east-1"
 
   - model_name: bedrock-nova-premier

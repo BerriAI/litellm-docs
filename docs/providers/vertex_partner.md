@@ -41,7 +41,7 @@ import os
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
 
-model = "claude-sonnet-5"
+model = "{{anthropic}}"
 
 vertex_ai_project = "your-vertex-project" # can also set this as os.environ["VERTEXAI_PROJECT"]
 vertex_ai_location = "your-vertex-location" # can also set this as os.environ["VERTEXAI_LOCATION"]
@@ -64,12 +64,12 @@ print("\nModel Response", response)
 model_list:
     - model_name: anthropic-vertex
       litellm_params:
-        model: vertex_ai/claude-sonnet-5
+        model: vertex_ai/{{anthropic}}
         vertex_ai_project: "my-test-project"
         vertex_ai_location: "us-east-1"
     - model_name: anthropic-vertex
       litellm_params:
-        model: vertex_ai/claude-sonnet-5
+        model: vertex_ai/{{anthropic}}
         vertex_ai_project: "my-test-project"
         vertex_ai_location: "us-west-1"
 ```
@@ -110,7 +110,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python keep-model-ids
+```python
 from litellm import completion
 
 resp = completion(
@@ -127,7 +127,7 @@ resp = completion(
 
 1. Setup config.yaml
 
-```yaml keep-model-ids
+```yaml
 - model_name: claude-3-7-sonnet-20250219
   litellm_params:
     model: vertex_ai/claude-3-7-sonnet-20250219
@@ -143,7 +143,7 @@ litellm --config /path/to/config.yaml
 
 3. Test it! 
 
-```bash keep-model-ids
+```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
@@ -160,7 +160,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 **Expected Response**
 
-```python keep-model-ids
+```python
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,

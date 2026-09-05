@@ -75,7 +75,7 @@ client = openai.OpenAI(
 assistant = client.beta.assistants.create(
     name="Math Tutor",
     instructions="You are a math tutor. Help solve equations.",
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
 )
 ```
 

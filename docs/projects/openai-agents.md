@@ -19,19 +19,19 @@ uv add "openai-agents[litellm]"
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: "openai/gpt-5.6-terra"
+      model: "openai/{{openai_large}}"
       api_key: "os.environ/OPENAI_API_KEY"
 
   - model_name: claude-sonnet
     litellm_params:
-      model: "anthropic/claude-sonnet-5"
+      model: "anthropic/{{anthropic}}"
       api_key: "os.environ/ANTHROPIC_API_KEY"
 
-  - model_name: gemini-3.1-pro-preview
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: "gemini/gemini-3.1-pro-preview"
+      model: "gemini/{{gemini_pro}}"
       api_key: "os.environ/GEMINI_API_KEY"
 ```
 
@@ -77,7 +77,7 @@ agent = Agent(
     name="Assistant",
     instructions="You are a helpful assistant.",
     model=LitellmModel(
-        model="anthropic/claude-sonnet-5",
+        model="anthropic/{{anthropic}}",
         api_key="your-anthropic-key"
     )
 )

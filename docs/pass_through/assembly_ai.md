@@ -134,7 +134,7 @@ Use AssemblyAI's [LLM Gateway](https://www.assemblyai.com/docs/llm-gateway) as a
 
 #### LiteLLM Python SDK
 
-```python keep-model-ids
+```python
 import litellm
 import os
 
@@ -170,7 +170,7 @@ litellm --config config.yaml
 
 3. Test it!
 
-```python keep-model-ids
+```python
 import requests
 
 headers = {

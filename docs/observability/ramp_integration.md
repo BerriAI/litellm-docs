@@ -54,7 +54,7 @@ litellm.callbacks = ["ramp"]
 
 # OpenAI call
 response = litellm.completion(
-  model="gpt-5.6-luna",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi - I'm testing Ramp integration"}
   ]
@@ -68,9 +68,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -93,7 +93,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",

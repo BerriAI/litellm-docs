@@ -102,9 +102,9 @@ This feature enables scenarios where:
 ```yaml
 # proxy_config.yaml
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       # No api_key configured! Will use client's key
 
 general_settings:
@@ -123,7 +123,7 @@ curl -X POST "http://localhost:4000/v1/messages" \
   -H "x-api-key: sk-ant-api03-YOUR-KEY..." \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
   }'
@@ -133,9 +133,9 @@ curl -X POST "http://localhost:4000/v1/messages" \
 
 ```yaml
 model_list:
-  - model_name: gemini-3.1-pro-preview
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-3.1-pro-preview
+      model: gemini/{{gemini_pro}}
       # No api_key configured
 
 general_settings:
@@ -149,7 +149,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Authorization: Bearer sk-proxy-auth-123" \
   -H "x-goog-api-key: AIza..." \
   -d '{
-    "model": "gemini-3.1-pro-preview",
+    "model": "{{gemini_pro}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -190,9 +190,9 @@ Add the `forward_client_headers_to_llm_api` setting under `model_group_settings`
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: "your-api-key"
   - model_name: "wildcard-models/*"
     litellm_params:
@@ -202,7 +202,7 @@ model_list:
 litellm_settings:
   model_group_settings:
     forward_client_headers_to_llm_api:
-      - gpt-5.6-luna
+      - {{openai_small}}
       - wildcard-models/*
 ```
 
@@ -213,8 +213,8 @@ The configuration supports various model matching patterns:
 ### 1. Exact Model Names
 ```yaml
 forward_client_headers_to_llm_api:
-  - gpt-5.6-luna
-  - claude-sonnet-5
+  - {{openai_small}}
+  - {{anthropic}}
 ```
 
 ### 2. Wildcard Patterns
@@ -266,7 +266,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "x-trace-id: abc123" \
   -H "x-request-source: mobile-app" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -280,7 +280,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "x-customer-id: customer-123" \
   -H "x-environment: production" \
   -d '{
-    "model": "gpt-5.6-luna", 
+    "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -293,7 +293,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "Authorization: Bearer your-key" \
   -H "anthropic-beta: tools-2024-04-04" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -305,7 +305,7 @@ model_list:
   # Fixed model with header forwarding
   - model_name: byok-fixed-gpt-4o-mini
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_base: "https://your-openai-endpoint.com"
       api_key: "your-api-key"
       
@@ -319,7 +319,7 @@ model_list:
   # Standard model without header forwarding
   - model_name: standard-gpt-4o
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: "your-api-key"
 
 litellm_settings:
@@ -376,6 +376,6 @@ class ModelGroupSettings(BaseModel):
 ```
 
 Where each string in the list can be:
-- An exact model name (e.g., `"gpt-5.6-luna"`)
+- An exact model name (e.g., `"{{openai_small}}"`)
 - A wildcard pattern (e.g., `"openai/*"`)
 - A model group name (e.g., `"my-model-group/*"`)

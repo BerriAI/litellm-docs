@@ -58,9 +58,9 @@ export AWS_REGION_NAME="us-east-1"
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:

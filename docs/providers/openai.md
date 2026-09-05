@@ -24,7 +24,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-5.6-terra", 
+    model = "{{openai_large}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -34,7 +34,7 @@ When `litellm.enable_preview_features = True`, LiteLLM forwards only the values 
 
 ```python
 completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     metadata= {"custom_meta_key": "value"},
 )
@@ -58,9 +58,9 @@ export OPENAI_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna                          # The `openai/` prefix will call openai.chat.completions.create
+      model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
@@ -71,7 +71,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-5.6-terra`, `gpt-5.6-luna` will all go through this route 
+This means requests to `{{openai_large}}`, `{{openai_small}}` will all go through this route 
 
 ```yaml
 model_list:
@@ -84,7 +84,7 @@ model_list:
 <TabItem value="cli" label="CLI">
 
 ```bash
-$ litellm --model gpt-5.6-luna
+$ litellm --model {{openai_small}}
 
 # Server running on http://0.0.0.0:4000
 ```
@@ -102,7 +102,7 @@ $ litellm --model gpt-5.6-luna
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-5.6-luna",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -123,7 +123,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-5.6-luna", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -147,7 +147,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-5.6-luna",
+    model = "{{openai_small}}",
     temperature=0.1
 )
 
@@ -318,7 +318,7 @@ response = completion(
 from litellm import responses
 
 response = responses(
-    model="openai/gpt-5.6-terra",
+    model="openai/{{openai_large}}",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview",
@@ -339,9 +339,9 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
   # Regular model for /responses with web_search_preview tool
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -366,7 +366,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-5.6-terra", 
+    model = "{{openai_large}}", 
     messages=[
         {
             "role": "user",
@@ -405,7 +405,7 @@ with open("draconomicon.pdf", "rb") as f:
 base64_string = base64.b64encode(data).decode("utf-8")
 
 completion = completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "user",
@@ -439,7 +439,7 @@ print(completion.choices[0].message.content)
 model_list:
   - model_name: openai-model
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -542,7 +542,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="sdk" label="SDK">
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-luna", # tells litellm to call the model via the Responses API
+    model="openai/responses/{{openai_small}}", # tells litellm to call the model via the Responses API
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -555,7 +555,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{ 
-    "model": "openai/responses/gpt-5.6-luna",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
 }'
@@ -568,7 +568,7 @@ Expected Response:
 {
   "id": "chatcmpl-6382a222-43c9-40c4-856b-22e105d88075",
   "created": 1760146746,
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": null,
   "choices": [
@@ -603,7 +603,7 @@ Expected Response:
 
 ### Advanced: Using `reasoning_effort` with `summary` field
 
-By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary. {/* keep-model-ids */}
+By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
 
 To opt-in to the `summary` feature, you can pass `reasoning_effort` as a dictionary. **Note:** The `summary` field requires your OpenAI organization to have verification status. Using `summary` without verification will result in a 400 error from OpenAI.
 
@@ -612,14 +612,14 @@ To opt-in to the `summary` feature, you can pass `reasoning_effort` as a diction
 ```python
 # Option 1: String format (default - no summary)
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="high"  # Only sets effort level
 )
 
 # Option 2: Dict format (with optional summary - requires org verification)
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort={"effort": "high", "summary": "auto"}  # "auto", "detailed", or "concise" (not all supported by all models)
 )
@@ -633,7 +633,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "openai/responses/gpt-5.6-luna",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "high"
 }'
@@ -644,7 +644,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "openai/responses/gpt-5.6-luna",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": {"effort": "high", "summary": "auto"}
 }'
@@ -678,12 +678,10 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 | `gpt-5-pro` | `high` | `high` only |
 
 **Note:**
-{/* keep-model-ids:start */}
 - GPT-5.1 introduced a new `reasoning_effort="none"` setting for faster, lower-latency responses. This replaces the `"minimal"` setting from GPT-5.
 - `gpt-5.1-codex-max`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.5`, and `gpt-5.5-pro` support `reasoning_effort="xhigh"`. Models outside this set will reject the value.
 - `gpt-5-pro` only accepts `reasoning_effort="high"`. Other values will return an error.
 - When `reasoning_effort` is not set (None), OpenAI defaults to the value shown in the "Default" column.
-{/* keep-model-ids:end */}
 
 See [OpenAI Reasoning documentation](https://platform.openai.com/docs/guides/reasoning) for more details on organization verification requirements.
 
@@ -701,7 +699,7 @@ messages = [{"role": "user", "content": "Solve this step by step: 2 + 2"}]
 
 # Turn 1 — get reasoning_items (encrypted_content);
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -718,7 +716,7 @@ messages.append({
 messages.append({"role": "user", "content": "Now summarize your reasoning."})
 
 response2 = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -739,7 +737,7 @@ collected_content = []
 collected_reasoning_items = []
 
 stream = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     stream=True,
     reasoning_effort="low",
@@ -761,7 +759,7 @@ messages.append({
 messages.append({"role": "user", "content": "Continue the conversation."})
 
 response2 = litellm.completion(
-    model="openai/responses/gpt-5.6-luna",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -775,9 +773,9 @@ response2 = litellm.completion(
 
 The `verbosity` parameter controls the length and detail of responses from GPT-5 family models. It accepts three values: `"low"`, `"medium"`, or `"high"`.
 
-**Supported models:** `gpt-5`, `gpt-5.1`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-pro` {/* keep-model-ids */}
+**Supported models:** `gpt-5`, `gpt-5.1`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-pro`
 
-**Note:** GPT-5-Codex models (`gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`) do **not** support the `verbosity` parameter. {/* keep-model-ids */}
+**Note:** GPT-5-Codex models (`gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`) do **not** support the `verbosity` parameter.
 
 **Use cases:**
 - **`"low"`**: Best for concise answers or simple code generation (e.g., SQL queries)
@@ -791,14 +789,14 @@ import litellm
 
 # Low verbosity - concise responses
 response = litellm.completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a function to reverse a string"}],
     verbosity="low"
 )
 
 # High verbosity - detailed responses
 response = litellm.completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Explain how neural networks work"}],
     verbosity="high"
 )
@@ -811,7 +809,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Write a function to reverse a string"}],
     "verbosity": "low"
 }'
@@ -828,13 +826,13 @@ This is useful when you want to use [Responses API](https://platform.openai.com/
 
 :::tip gpt-5.4+ + reasoning_effort + function tools
 
-LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API. {/* keep-model-ids */}
+LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API.
 
 If you need reasoning **and** tools together, use the responses bridge instead (LiteLLM also auto-routes these requests to `/v1/responses` when both `tools` and `reasoning_effort` are set):
 
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-terra",  # routes to /v1/responses
+    model="openai/responses/{{openai_large}}",  # routes to /v1/responses
     messages=[{"role": "user", "content": "What's the weather?"}],
     tools=[...],
     reasoning_effort="low",
@@ -851,7 +849,6 @@ Each model has a `mode` property defined in [`model_prices_and_context_window.js
 - **`mode: chat`** - Model defaults to the Chat Completions API
 
 **Models with `mode: responses`** (automatic Responses API):
-{/* keep-model-ids:start */}
 - `o3-deep-research`, `o4-mini-deep-research`
 - `o1-pro`, `o3-pro`
 - `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`
@@ -861,14 +858,13 @@ Each model has a `mode` property defined in [`model_prices_and_context_window.js
 - `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`
 - `gpt-5`, `gpt-5-mini`, `gpt-5.6-terra`, `gpt-5.6-luna`
 - `o3`, `o4-mini`
-{/* keep-model-ids:end */}
 
 To use built-in tools like `web_search_preview` with `mode: chat` models, add the `openai/responses/` prefix:
 
 ```python
-# This will FAIL - gpt-5.6-terra has mode: chat, uses Chat Completions API
+# This will FAIL - {{openai_large}} has mode: chat, uses Chat Completions API
 response = litellm.completion(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[{"type": "web_search_preview"}],  # Not supported in Chat Completions
     # ... other kwargs
@@ -876,7 +872,7 @@ response = litellm.completion(
 
 # This will WORK - prefix forces Responses API
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-terra",
+    model="openai/responses/{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[{"type": "web_search_preview"}],  # Supported in Responses API
     # ... other kwargs
@@ -917,7 +913,7 @@ os.environ["OPENAI_API_KEY"] = "sk-1234"
 
 # Use the openai/responses/ prefix to enable built-in tools
 response = litellm.completion(
-    model="openai/responses/gpt-5.6-terra",
+    model="openai/responses/{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[
         {"type": "web_search_preview"},
@@ -942,7 +938,7 @@ model_list:
   # Model with mode: chat (use prefix for built-in tools)
   - model_name: gpt-4o-with-tools
     litellm_params:
-      model: openai/responses/gpt-5.6-terra
+      model: openai/responses/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -1057,7 +1053,7 @@ litellm.return_response_headers = True
 
 # /chat/completion
 response = completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -1077,7 +1073,7 @@ litellm.return_response_headers = True
 
 # /chat/completion
 response = completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     stream=True,
     messages=[
         {
@@ -1185,7 +1181,7 @@ tools = [
 ]
 
 response = litellm.completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=messages,
     tools=tools,
     tool_choice="auto",  # auto is default, but we'll be explicit
@@ -1203,7 +1199,7 @@ from litellm import completion
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model = "gpt-5.6-luna", 
+    model = "{{openai_small}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}],
     extra_headers={"AI-Resource Group": "ishaan-resource"}
 )
@@ -1222,7 +1218,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 os.environ["OPENAI_ORGANIZATION"] = "your-org-id" # OPTIONAL
 
 response = completion(
-    model = "gpt-5.6-luna", 
+    model = "{{openai_small}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -1239,14 +1235,14 @@ import litellm, httpx
 # for completion
 litellm.client_session = httpx.Client(verify=False)
 response = litellm.completion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=messages,
 )
 
 # for acompletion
 litellm.aclient_session = httpx.AsyncClient(verify=False)
 response = litellm.acompletion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=messages,
 )
 ```
@@ -1284,9 +1280,9 @@ Forward openai Org ID's from the client to OpenAI with `forward_openai_org_id` p
 
 ```yaml
 model_list:
-  - model_name: "gpt-5.6-luna"
+  - model_name: "{{openai_small}}"
     litellm_params:
-      model: gpt-5.6-luna
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1311,7 +1307,7 @@ client = OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-client.chat.completions.create(model="gpt-5.6-luna", messages=[{"role": "user", "content": "Hello world"}])
+client.chat.completions.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hello world"}])
 ```
 
 In your logs you should see the forwarded org id
@@ -1333,7 +1329,7 @@ GPT-5 Pro is OpenAI's most advanced reasoning model with unique characteristics:
 - **Tools**: Supports Web Search, File Search, Image Generation, MCP (but not Code Interpreter or Computer Use)
 - **Modalities**: Text and Image input, Text output only
 
-```python keep-model-ids
+```python
 # GPT-5 Pro usage example
 response = completion(
     model="gpt-5-pro", 

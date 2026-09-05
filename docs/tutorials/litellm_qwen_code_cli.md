@@ -95,25 +95,25 @@ Route `qwen-code` requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
-  model_group_alias: {"qwen-code": "claude-sonnet-5"}
+  model_group_alias: {"qwen-code": "{{anthropic}}"}
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route `qwen-code` requests to `gpt-5.6-terra`:
+Route `qwen-code` requests to `{{openai_large}}`:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
   - model_name: openai-gpt
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
@@ -129,7 +129,7 @@ Route `qwen-code` requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
@@ -147,11 +147,11 @@ All deployments with model_name=`anthropic-claude` will be load balanced. In thi
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY  
   - model_name: anthropic-claude
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1

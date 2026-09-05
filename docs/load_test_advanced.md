@@ -120,15 +120,15 @@ All requests with `model="gemini-vision"` will be load balanced equally across t
 model_list:
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-3.1-pro-preview
-      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-3.1-pro-preview
-      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-3.1-pro-preview
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json

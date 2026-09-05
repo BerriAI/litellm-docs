@@ -34,7 +34,7 @@ Add an `input_examples` field to your tool definition with an array of example i
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What's the weather like in San Francisco?"}
     ],
@@ -248,13 +248,11 @@ Examples add to your prompt tokens:
 
 Input examples work with all Claude models that support the `advanced-tool-use-2025-11-20` beta header:
 
-- Claude Sonnet 5 (`claude-sonnet-5`)
-{/* keep-model-ids:start */}
+- Claude Sonnet 5 (`{{anthropic}}`)
 - Claude Opus 5 (`claude-opus-5`)
 - Claude Opus 4.5 (`claude-opus-4-5-20251101`)
 - Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`)
 - Claude Opus 4.1 (`claude-opus-4-1-20250805`)
-{/* keep-model-ids:end */}
 
 :::note
 On Google Cloud's Vertex AI and Amazon Bedrock, only Claude Opus 4.5 supports tool input examples.
@@ -390,10 +388,10 @@ Input examples work together with other Anthropic tool features:
 
 LiteLLM supports input examples across the following Anthropic-compatible providers:
 
-- **Standard Anthropic API** (`anthropic/claude-sonnet-5`) ✅
-- **Azure Anthropic / Microsoft Foundry** (`azure/claude-sonnet-5`) ✅
-- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only) {/* keep-model-ids */}
-- **Google Cloud Vertex AI** (`vertex_ai/claude-sonnet-5`) ❌ Not supported
+- **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
+- **Azure Anthropic / Microsoft Foundry** (`azure/{{anthropic}}`) ✅
+- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only)
+- **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
 The beta header (`advanced-tool-use-2025-11-20`) is automatically added when LiteLLM detects tools with the `input_examples` field.
 

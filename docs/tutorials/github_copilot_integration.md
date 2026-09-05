@@ -51,14 +51,14 @@ Create a `config.yaml` file with your model configurations:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -107,9 +107,9 @@ Route requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -119,13 +119,13 @@ general_settings:
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route requests to `gpt-5.6-terra`:
+Route requests to `{{openai_large}}`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -141,7 +141,7 @@ Route requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
@@ -157,13 +157,13 @@ All deployments with the same model_name will be load balanced. In this example 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5.6-terra
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-terra  # Same model name for load balancing
+  - model_name: {{openai_large}}  # Same model name for load balancing
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:

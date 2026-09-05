@@ -89,7 +89,7 @@ This means any endpoint that accepts a file ID, batch ID, or response ID in path
 
 **Example, fine-tuning job:**
 
-```python keep-model-ids
+```python
 # Client sends managed IDs for training_file and validation_file
 response = client.post("/azure/openai/v1/fine_tuning/jobs", json={
     "model": "gpt-4o-mini",

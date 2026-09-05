@@ -22,17 +22,17 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-5.6-luna",
+        "model_name": "{{openai_small}}",
         "litellm_params": {
             "model": "azure/chatgpt-v-2",
             "api_key": "...",
-            "silent_model": "gpt-5.6-terra" # 👈 Mirror traffic to gpt-5.6-terra
+            "silent_model": "{{openai_large}}" # 👈 Mirror traffic to {{openai_large}}
         },
     },
     {
-        "model_name": "gpt-5.6-terra",
+        "model_name": "{{openai_large}}",
         "litellm_params": {
-            "model": "openai/gpt-5.6-terra",
+            "model": "openai/{{openai_large}}",
             "api_key": "..."
         },
     }
@@ -40,9 +40,9 @@ model_list = [
 
 router = Router(model_list=model_list)
 
-# The request to "gpt-5.6-luna" will trigger a background call to "gpt-5.6-terra"
+# The request to "{{openai_small}}" will trigger a background call to "{{openai_large}}"
 response = await router.acompletion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "How does traffic mirroring work?"}]
 )
 ```
@@ -56,12 +56,12 @@ Add `silent_model` to your `config.yaml`:
 model_list:
   - model_name: primary-model
     litellm_params:
-      model: azure/gpt-5.6-luna
+      model: azure/{{openai_small}}
       api_key: os.environ/AZURE_API_KEY
       silent_model: evaluation-model # 👈 Mirror traffic here
   - model_name: evaluation-model
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 

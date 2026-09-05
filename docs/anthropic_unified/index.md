@@ -33,7 +33,7 @@ import litellm
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     max_tokens=100,
 )
 ```
@@ -44,7 +44,7 @@ import litellm
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     max_tokens=100,
     stream=True,
 )
@@ -66,7 +66,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="openai/gpt-5.6-terra",
+    model="openai/{{openai_large}}",
     max_tokens=100,
 )
 ```
@@ -81,7 +81,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="openai/gpt-5.6-terra",
+    model="openai/{{openai_large}}",
     max_tokens=100,
     stream=True,
 )
@@ -103,7 +103,7 @@ os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="gemini/gemini-3.8-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
 )
 ```
@@ -118,7 +118,7 @@ os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="gemini/gemini-3.8-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
     stream=True,
 )
@@ -142,7 +142,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     max_tokens=100,
 )
 ```
@@ -159,7 +159,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="vertex_ai/gemini-3.8-flash",
+    model="vertex_ai/{{gemini_flash}}",
     max_tokens=100,
     stream=True,
 )
@@ -183,7 +183,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="bedrock/us.anthropic.claude-sonnet-5",
+    model="bedrock/us.anthropic.{{anthropic}}",
     max_tokens=100,
 )
 ```
@@ -200,7 +200,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 response = await litellm.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
-    model="bedrock/us.anthropic.claude-sonnet-5",
+    model="bedrock/us.anthropic.{{anthropic}}",
     max_tokens=100,
     stream=True,
 )
@@ -221,7 +221,7 @@ Example response:
     }
   ],
   "id": "msg_013Zva2CMHLNnXjNJJKqJ2EF",
-  "model": "claude-sonnet-5",
+  "model": "{{anthropic}}",
   "role": "assistant",
   "stop_reason": "end_turn",
   "stop_sequence": null,
@@ -246,7 +246,7 @@ Example response:
 model_list:
     - model_name: anthropic-claude
       litellm_params:
-        model: claude-sonnet-5
+        model: {{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -284,7 +284,7 @@ response = client.messages.create(
 model_list:
     - model_name: openai-gpt4
       litellm_params:
-        model: openai/gpt-5.6-terra
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -322,7 +322,7 @@ response = client.messages.create(
 model_list:
     - model_name: gemini-2-flash
       litellm_params:
-        model: gemini/gemini-3.8-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -360,7 +360,7 @@ response = client.messages.create(
 model_list:
     - model_name: vertex-gemini
       litellm_params:
-        model: vertex_ai/gemini-3.8-flash
+        model: vertex_ai/{{gemini_flash}}
         vertex_project: your-gcp-project-id
         vertex_location: us-central1
 ```
@@ -399,7 +399,7 @@ response = client.messages.create(
 model_list:
     - model_name: bedrock-claude
       litellm_params:
-        model: bedrock/us.anthropic.claude-sonnet-5
+        model: bedrock/us.anthropic.{{anthropic}}
         aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
         aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
         aws_region_name: us-west-2
@@ -462,7 +462,7 @@ Request body will be in the Anthropic messages API format. **litellm follows the
 
 ```json
 {
-  "model": "claude-sonnet-5",
+  "model": "{{anthropic}}",
   "max_tokens": 1024,
   "messages": [
     {
@@ -475,7 +475,7 @@ Request body will be in the Anthropic messages API format. **litellm follows the
 
 #### Required Fields
 - **model** (string):  
-  The model identifier (e.g., `"claude-sonnet-5"`).
+  The model identifier (e.g., `"{{anthropic}}"`).
 - **max_tokens** (integer):  
   The maximum number of tokens to generate before stopping.  
   _Note: The model may stop before reaching this limit; value must be greater than 1._
@@ -514,7 +514,7 @@ Request body will be in the Anthropic messages API format. **litellm follows the
     E.g., `"enabled"`.
   - **summary** (string, optional):
     Enables the summary style for thinking blocks. Possible values: `"auto"`, `"concise"`, `"detailed"`, `"disabled"`.
-    When routing to non-Anthropic providers (e.g., `openai/gpt-5.6-terra`), the `summary` value is preserved and forwarded to the downstream API.
+    When routing to non-Anthropic providers (e.g., `openai/{{openai_large}}`), the `summary` value is preserved and forwarded to the downstream API.
 - **tool_choice** (object):  
   Instructs how the model should use any provided tools.
 - **tools** (array of objects):  
@@ -547,7 +547,7 @@ Responses will be in the Anthropic messages API format.
     }
   ],
   "id": "msg_013Zva2CMHLNnXjNJJKqJ2EF",
-  "model": "claude-sonnet-5",
+  "model": "{{anthropic}}",
   "role": "assistant",
   "stop_reason": "end_turn",
   "stop_sequence": null,

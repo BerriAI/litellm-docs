@@ -365,7 +365,7 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             },
             "breakdown": {
                 "models": {
-                    "gpt-5.6-luna": {
+                    "{{openai_small}}": {
                         "spend": 1.82e-05,
                         "prompt_tokens": 37,
                         "completion_tokens": 9,
@@ -457,7 +457,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -489,7 +489,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-5.6-luna",
+      model: "{{openai_small}}",
       messages: [
         {
           role: "user",
@@ -521,7 +521,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -546,7 +546,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-5.6-luna",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -615,7 +615,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="response" label="Expected Response">
 
-```shell keep-model-ids
+```shell
 [
     {
         "group_by_day": "2024-04-30T00:00:00+00:00",
@@ -692,7 +692,7 @@ for row in spend_report:
 
 Output from script
 
-```shell keep-model-ids
+```shell
 # Date: 2024-05-11T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.003675099999999999
@@ -741,7 +741,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 #### Example Response
 
-```shell keep-model-ids
+```shell
 [
     {
         "group_by_day": "2024-04-30T00:00:00+00:00",
@@ -838,7 +838,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 #### Example Response
 
-```shell keep-model-ids
+```shell
 [
   {
     "api_key": "example-api-key-123",
@@ -996,7 +996,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1026,7 +1026,7 @@ client = openai.OpenAI(
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1057,7 +1057,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-5.6-luna',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1094,7 +1094,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-5.6-luna',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1127,7 +1127,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1154,7 +1154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1178,7 +1178,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-5.6-luna",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {

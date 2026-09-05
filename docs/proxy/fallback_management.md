@@ -20,8 +20,8 @@ Create or update fallbacks for a specific model.
 **Request Body:**
 ```json
 {
-  "model": "gpt-5.6-luna",
-  "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model": "{{openai_small}}",
+  "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
   "fallback_type": "general"
 }
 ```
@@ -37,8 +37,8 @@ Create or update fallbacks for a specific model.
 **Response:**
 ```json
 {
-  "model": "gpt-5.6-luna",
-  "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model": "{{openai_small}}",
+  "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
   "fallback_type": "general",
   "message": "Fallback configuration created successfully"
 }
@@ -50,8 +50,8 @@ curl -X POST "http://localhost:4000/fallback" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5.6-luna",
-    "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+    "model": "{{openai_small}}",
+    "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
     "fallback_type": "general"
   }'
 ```
@@ -67,8 +67,8 @@ response = requests.post(
         "Content-Type": "application/json"
     },
     json={
-        "model": "gpt-5.6-luna",
-        "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+        "model": "{{openai_small}}",
+        "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
         "fallback_type": "general"
     }
 )
@@ -87,15 +87,15 @@ Get fallback configuration for a specific model.
 **Response:**
 ```json
 {
-  "model": "gpt-5.6-luna",
-  "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model": "{{openai_small}}",
+  "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
   "fallback_type": "general"
 }
 ```
 
 **Example using cURL:**
 ```bash
-curl -X GET "http://localhost:4000/fallback/gpt-5.6-luna?fallback_type=general" \
+curl -X GET "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
   -H "Authorization: Bearer sk-1234"
 ```
 
@@ -104,7 +104,7 @@ curl -X GET "http://localhost:4000/fallback/gpt-5.6-luna?fallback_type=general" 
 import requests
 
 response = requests.get(
-    "http://localhost:4000/fallback/gpt-5.6-luna",
+    "http://localhost:4000/fallback/{{openai_small}}",
     headers={"Authorization": "Bearer sk-1234"},
     params={"fallback_type": "general"}
 )
@@ -123,7 +123,7 @@ Delete fallback configuration for a specific model.
 **Response:**
 ```json
 {
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "fallback_type": "general",
   "message": "Fallback configuration deleted successfully"
 }
@@ -131,7 +131,7 @@ Delete fallback configuration for a specific model.
 
 **Example using cURL:**
 ```bash
-curl -X DELETE "http://localhost:4000/fallback/gpt-5.6-luna?fallback_type=general" \
+curl -X DELETE "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
   -H "Authorization: Bearer sk-1234"
 ```
 
@@ -140,7 +140,7 @@ curl -X DELETE "http://localhost:4000/fallback/gpt-5.6-luna?fallback_type=genera
 import requests
 
 response = requests.delete(
-    "http://localhost:4000/fallback/gpt-5.6-luna",
+    "http://localhost:4000/fallback/{{openai_small}}",
     headers={"Authorization": "Bearer sk-1234"},
     params={"fallback_type": "general"}
 )
@@ -161,7 +161,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -191,7 +191,7 @@ The endpoints perform the following validations:
 {
   "detail": {
     "error": "Invalid fallback models: ['non-existent-model']",
-    "available_models": ["gpt-5.6-luna", "gpt-5.6-terra", "claude-sonnet-5"]
+    "available_models": ["{{openai_small}}", "{{openai_large}}", "{{anthropic}}"]
   }
 }
 ```
@@ -200,8 +200,8 @@ The endpoints perform the following validations:
 ```json
 {
   "detail": {
-    "error": "Model 'gpt-5.6-luna' not found in router",
-    "available_models": ["gpt-5.6-terra", "claude-sonnet-5"]
+    "error": "Model '{{openai_small}}' not found in router",
+    "available_models": ["{{openai_large}}", "{{anthropic}}"]
   }
 }
 ```
@@ -224,8 +224,8 @@ Used for any type of error that occurs during model invocation. This is the most
 
 ```json
 {
-  "model": "gpt-5.6-luna",
-  "fallback_models": ["gpt-5.6-terra", "claude-sonnet-5"],
+  "model": "{{openai_small}}",
+  "fallback_models": ["{{openai_large}}", "{{anthropic}}"],
   "fallback_type": "general"
 }
 ```
@@ -235,7 +235,7 @@ Specifically triggered when a context window exceeded error occurs.
 
 **Use Case:** When the input is too long for the primary model, fallback to a model with a larger context window. The ids below are illustrative and kept for their context window sizes.
 
-```json keep-model-ids
+```json
 {
   "model": "gpt-3.5-turbo",
   "fallback_models": ["gpt-4-32k", "claude-3-opus"],
@@ -250,8 +250,8 @@ Specifically triggered when content policy violations occur.
 
 ```json
 {
-  "model": "gpt-5.6-terra",
-  "fallback_models": ["claude-sonnet-5"],
+  "model": "{{openai_large}}",
+  "fallback_models": ["{{anthropic}}"],
   "fallback_type": "content_policy"
 }
 ```

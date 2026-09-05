@@ -17,9 +17,9 @@ Set provider budgets in your `proxy_config.yaml` file
 #### Proxy Config setup
 ```yaml
 model_list:
-    - model_name: gpt-5.6-luna
+    - model_name: {{openai_small}}
       litellm_params:
-        model: openai/gpt-5.6-luna
+        model: openai/{{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -81,7 +81,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -199,15 +199,15 @@ Set model budgets in your `proxy_config.yaml` file
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       max_budget: 0.000000000001 # (USD)
       budget_duration: 1d # (Duration. can be 1s, 1m, 1h, 1d, 1mo)
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       max_budget: 100 # (USD)
       budget_duration: 30d # (Duration. can be 1s, 1m, 1h, 1d, 1mo)
@@ -218,7 +218,7 @@ model_list:
 
 #### Make a test request
 
-We expect the first request to succeed, and the second request to fail since we cross the budget for `openai/gpt-5.6-terra`
+We expect the first request to succeed, and the second request to fail since we cross the budget for `openai/{{openai_large}}`
 
 **[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
 
@@ -230,7 +230,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -240,14 +240,14 @@ curl -i http://localhost:4000/v1/chat/completions \
 </TabItem>
 <TabItem label="Unsuccessful call" value = "not-allowed">
 
-Expect this to fail since since we cross the budget for `openai/gpt-5.6-terra`
+Expect this to fail since since we cross the budget for `openai/{{openai_large}}`
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ]
@@ -259,7 +259,7 @@ Expected response on failure
 ```json
 {
     "error": {
-        "message": "No deployments available - crossed budget: Exceeded budget for deployment model_name: gpt-5.6-terra, litellm_params.model: openai/gpt-5.6-terra, model_id: dbe80f2fe2b2465f7bfa9a5e77e0f143a2eb3f7d167a8b55fb7fe31aed62587f: 0.00015250000000000002 >= 1e-12",
+        "message": "No deployments available - crossed budget: Exceeded budget for deployment model_name: {{openai_large}}, litellm_params.model: openai/{{openai_large}}, model_id: dbe80f2fe2b2465f7bfa9a5e77e0f143a2eb3f7d167a8b55fb7fe31aed62587f: 0.00015250000000000002 >= 1e-12",
         "type": "None",
         "param": "None",
         "code": "429"
@@ -283,9 +283,9 @@ Set tag budgets by setting `tag_budget_config` in your `proxy_config.yaml` file
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -300,7 +300,7 @@ litellm_settings:
 
 #### Make a test request
 
-We expect the first request to succeed, and the second request to fail since we cross the budget for `openai/gpt-5.6-terra`
+We expect the first request to succeed, and the second request to fail since we cross the budget for `openai/{{openai_large}}`
 
 **[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
 
@@ -312,7 +312,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ],
@@ -330,7 +330,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is test request"}
     ],
@@ -362,9 +362,9 @@ If you are using a multi-instance setup, you will need to set the Redis host, po
 
 ```yaml
 model_list:
-    - model_name: gpt-5.6-luna
+    - model_name: {{openai_small}}
       litellm_params:
-        model: openai/gpt-5.6-luna
+        model: openai/{{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
 
 router_settings:

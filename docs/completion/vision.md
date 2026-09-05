@@ -19,7 +19,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-5.6-terra", 
+    model = "{{openai_large}}", 
     messages=[
         {
             "role": "user",
@@ -48,9 +48,9 @@ response = completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra # OpenAI gpt-5.6-terra
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -80,7 +80,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model = "gpt-5.6-terra",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",
@@ -133,9 +133,9 @@ assert litellm.supports_vision(model="xai/grok-2-latest") == False
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra # OpenAI gpt-5.6-terra
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -167,7 +167,7 @@ Expected Response
 {
   "data": [
     {
-      "model_group": "gpt-5.6-terra",
+      "model_group": "{{openai_large}}",
       "providers": ["openai"],
       "max_input_tokens": 922000,
       "max_output_tokens": 128000,
@@ -218,7 +218,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "claude-sonnet-5", 
+    model = "{{anthropic}}", 
     messages=[
         {
             "role": "user",
@@ -248,9 +248,9 @@ response = completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra # OpenAI gpt-5.6-terra
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -280,7 +280,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model = "gpt-5.6-terra",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",

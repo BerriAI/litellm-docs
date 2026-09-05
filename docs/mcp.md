@@ -56,9 +56,9 @@ general_settings:
   supported_db_objects: ["mcp"]  # Only store MCP servers in DB
 
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 ```
 
@@ -184,9 +184,9 @@ Add your MCP servers directly in your `config.yaml` file:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -766,7 +766,7 @@ curl --location 'https://your-proxy.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -854,7 +854,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -882,7 +882,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -913,7 +913,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -941,7 +941,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -1175,9 +1175,9 @@ export LITELLM_MCP_CLIENT_SIDE_AUTH_HEADER_NAME="authorization"
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 
 general_settings:
@@ -1193,7 +1193,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -1224,7 +1224,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "messages": [
     {"role": "user", "content": "Summarize the latest open PR."}
   ],
@@ -1300,7 +1300,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = await litellm.acompletion(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             api_key=os.getenv("OPENAI_API_KEY"),
             messages=messages,
             tools=tools,
@@ -1345,7 +1345,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = client.chat.completions.create(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             messages=messages,
             tools=tools
         )
@@ -1399,7 +1399,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = await litellm.acompletion(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             api_key=os.getenv("OPENAI_API_KEY"),
             messages=messages,
             tools=tools,
@@ -1425,7 +1425,7 @@ async with stdio_client(server_params) as (read, write):
         )
         print("final messages with tool result: ", messages)
         llm_response = await litellm.acompletion(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             api_key=os.getenv("OPENAI_API_KEY"),
             messages=messages,
             tools=tools,
@@ -1471,7 +1471,7 @@ async with stdio_client(server_params) as (read, write):
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
         llm_response = client.chat.completions.create(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             messages=messages,
             tools=tools
         )
@@ -1496,7 +1496,7 @@ async with stdio_client(server_params) as (read, write):
         })
 
         final_response = client.chat.completions.create(
-            model="gpt-5.6-terra",
+            model="{{openai_large}}",
             messages=messages,
             tools=tools
         )

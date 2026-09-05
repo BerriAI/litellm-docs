@@ -73,14 +73,14 @@ router = Router(
         {
             "model_name": "litellm-gpt-4.1",
             "litellm_params": {
-                "model": "gpt-5.6-terra",
+                "model": "{{openai_large}}",
             },
             "model_info": {"id": "openai-id"},
         },
         {
             "model_name": "litellm-claude-35",
             "litellm_params": {
-                "model": "claude-sonnet-5",
+                "model": "{{anthropic}}",
             },
             "model_info": {"id": "claude-id"},
         },
@@ -90,7 +90,7 @@ router = Router(
             "litellm_params": {
                 "model": "auto_router/auto_router_1",
                 "auto_router_config_path": "router.json",
-                "auto_router_default_model": "gpt-5.6-luna",
+                "auto_router_default_model": "{{openai_small}}",
                 "auto_router_embedding_model": "custom-text-embedding-model",
             },
         },
@@ -103,13 +103,13 @@ router = Router(
 Once configured, use the auto router by calling it with your auto router model name:
 
 ```python
-# This request will be routed to gpt-5.6-terra based on the utterance match
+# This request will be routed to {{openai_large}} based on the utterance match
 response = await router.acompletion(
     model="auto_router1",
     messages=[{"role": "user", "content": "litellm is great"}],
 )
 
-# This request will be routed to claude-sonnet-5 for coding queries
+# This request will be routed to {{anthropic}} for coding queries
 response = await router.acompletion(
     model="auto_router1",
     messages=[{"role": "user", "content": "how to code a program in python"}],

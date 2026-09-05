@@ -23,7 +23,7 @@ LiteLLM will standardize the computer use tools across all supported providers.
 <Tabs>
 <TabItem value="sdk" label="LiteLLM Python SDK">
 
-```python keep-model-ids
+```python
 import os 
 from litellm import completion
 
@@ -72,7 +72,7 @@ print(response)
 
 1. Define computer use models on config.yaml
 
-```yaml keep-model-ids
+```yaml
 model_list:
   - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
     litellm_params:
@@ -96,7 +96,7 @@ litellm --config config.yaml
 
 3. Test it using the OpenAI Python SDK
 
-```python keep-model-ids
+```python
 import os 
 from openai import OpenAI
 
@@ -151,11 +151,11 @@ Use `litellm.supports_computer_use(model="")` -> returns `True` if model support
 ```python
 import litellm
 
-assert litellm.supports_computer_use(model="anthropic/claude-sonnet-5") == True
-assert litellm.supports_computer_use(model="anthropic/claude-opus-5") == True
-assert litellm.supports_computer_use(model="bedrock/us.anthropic.claude-sonnet-5") == True
-assert litellm.supports_computer_use(model="vertex_ai/claude-sonnet-5") == True
-assert litellm.supports_computer_use(model="openai/gpt-5.6-terra") == False
+assert litellm.supports_computer_use(model="anthropic/{{anthropic}}") == True
+assert litellm.supports_computer_use(model="anthropic/{{anthropic_large}}") == True
+assert litellm.supports_computer_use(model="bedrock/us.anthropic.{{anthropic}}") == True
+assert litellm.supports_computer_use(model="vertex_ai/{{anthropic}}") == True
+assert litellm.supports_computer_use(model="openai/{{openai_large}}") == False
 ```
 </TabItem>
 
@@ -163,7 +163,7 @@ assert litellm.supports_computer_use(model="openai/gpt-5.6-terra") == False
 
 1. Define computer use models on config.yaml
 
-```yaml keep-model-ids
+```yaml
 model_list:
   - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
     litellm_params:
@@ -196,7 +196,7 @@ curl -X 'GET' \
 
 Expected Response 
 
-```json keep-model-ids
+```json
 {
   "data": [
     {
@@ -235,7 +235,7 @@ Computer use supports several different tool types for various interaction modes
 
 The `computer_20241022` tool provides direct screen interaction capabilities.
 
-```python keep-model-ids
+```python
 import os 
 from litellm import completion
 
@@ -283,7 +283,7 @@ print(response)
 
 The `bash_20241022` tool provides command line interface access.
 
-```python keep-model-ids
+```python
 import os 
 from litellm import completion
 
@@ -317,7 +317,7 @@ print(response)
 
 The `text_editor_20250124` tool provides text file editing capabilities.
 
-```python keep-model-ids
+```python
 import os 
 from litellm import completion
 
@@ -353,7 +353,7 @@ print(response)
 
 You can combine different computer use tools in a single request:
 
-```python keep-model-ids
+```python
 import os 
 from litellm import completion
 

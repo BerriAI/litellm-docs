@@ -119,7 +119,7 @@ curl -v http://localhost:4000/chat/completions \
   -H "Authorization: Bearer <your-tagged-key>" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "say hi"}]
   }'
 ```

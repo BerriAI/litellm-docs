@@ -54,7 +54,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -68,9 +68,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-5 # Anthropic claude-sonnet-5
+  - model_name: {{anthropic}} # Anthropic {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -92,7 +92,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-5",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user", 
@@ -115,7 +115,6 @@ print(response)
 
 Web fetch is available on the following Anthropic API models:
 
-{/* keep-model-ids:start */}
 - `claude-opus-4-6` (Claude Opus 4.6)
 - `claude-sonnet-4-6` (Claude Sonnet 4.6)
 - `claude-opus-4-5` (Claude Opus 4.5)
@@ -127,7 +126,6 @@ Web fetch is available on the following Anthropic API models:
 - `claude-3-7-sonnet-20250219` (Claude Sonnet 3.7)
 - `claude-3-5-sonnet-latest` (Claude Sonnet 3.5 v2 - deprecated)
 - `claude-3-5-haiku-latest` (Claude Haiku 3.5)
-{/* keep-model-ids:end */}
 
 :::note
 The web fetch tool currently does not support websites dynamically rendered via JavaScript.
@@ -159,7 +157,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -191,7 +189,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -223,7 +221,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -261,7 +259,7 @@ messages = [
 ]
     
 response = completion(
-    model="anthropic/claude-sonnet-5",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )

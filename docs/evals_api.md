@@ -73,7 +73,7 @@ eval_obj = client.evals.create(
     testing_criteria=[
         {
             "type": "label_model",
-            "model": "gpt-5.6-luna",
+            "model": "{{openai_small}}",
             "input": [
                 {
                     "role": "developer",
@@ -133,7 +133,7 @@ Summary: {{sample.output_text}}
 push_notification_grader = {
     "name": "Push Notification Summary Grader",
     "type": "label_model",
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "input": [
         {
             "role": "developer",
@@ -287,7 +287,7 @@ tasks = []
 for notifications in push_notification_data:
     for (prompt, version) in PROMPTS:
         tasks.append(client.chat.completions.create(
-            model="gpt-5.6-luna",
+            model="{{openai_small}}",
             messages=[
                 {"role": "developer", "content": prompt},
                 {"role": "user", "content": notifications},
@@ -347,7 +347,7 @@ print(f"Report URL: {eval_run_result_v2.report_url}")
 Test how different models perform on the same inputs:
 
 ```python
-# Test with gpt-5.6-terra using stored completions as input
+# Test with {{openai_large}} using stored completions as input
 tasks = []
 for prompt_version in ["v1", "v2"]:
     tasks.append(client.evals.runs.create(
@@ -359,7 +359,7 @@ for prompt_version in ["v1", "v2"]:
                 "type": "item_reference",
                 "item_reference": "item.input",
             },
-            "model": "gpt-5.6-terra",
+            "model": "{{openai_large}}",
             "source": {
                 "type": "stored_completions",
                 "metadata": {

@@ -17,7 +17,7 @@ To use fallback models with `completion()`, specify a list of models in the `fal
 The `fallbacks` list should include the primary model you want to use, followed by additional models that can be used as backups in case the primary model fails to provide a response.
 
 ```python
-response = completion(model="bad-model", fallbacks=["gpt-5.6-luna" "command-nightly"], messages=messages)
+response = completion(model="bad-model", fallbacks=["{{openai_small}}" "command-nightly"], messages=messages)
 ```
 
 ## How does `completion_with_fallbacks()` work
@@ -30,12 +30,12 @@ Completion with 'bad-model': got exception Unable to map your input to a model. 
 
 
 
-completion call gpt-5.6-luna
+completion call {{openai_small}}
 {
   "id": "chatcmpl-7qTmVRuO3m3gIBg4aTmAumV1TmQhB",
   "object": "chat.completion",
   "created": 1692741891,
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,

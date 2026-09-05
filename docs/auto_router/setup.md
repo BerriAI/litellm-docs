@@ -46,25 +46,25 @@ run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instruc
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-luna
-    litellm_params: {model: openai/gpt-5.6-luna, api_key: os.environ/OPENAI_API_KEY}
-  - model_name: gpt-5.6-terra
-    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
-  - model_name: claude-sonnet-5
-    litellm_params: {model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY}
-  - model_name: claude-opus-5
-    litellm_params: {model: anthropic/claude-opus-5, api_key: os.environ/ANTHROPIC_API_KEY}
+  - model_name: {{openai_small}}
+    litellm_params: {model: openai/{{openai_small}}, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: {{openai_large}}
+    litellm_params: {model: openai/{{openai_large}}, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: {{anthropic}}
+    litellm_params: {model: anthropic/{{anthropic}}, api_key: os.environ/ANTHROPIC_API_KEY}
+  - model_name: {{anthropic_large}}
+    litellm_params: {model: anthropic/{{anthropic_large}}, api_key: os.environ/ANTHROPIC_API_KEY}
 
   - model_name: smart-router
     litellm_params:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    gpt-5.6-terra
-          COMPLEX:   claude-sonnet-5
-          REASONING: claude-opus-5
-      complexity_router_default_model: gpt-5.6-terra
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
+          COMPLEX:   {{anthropic}}
+          REASONING: {{anthropic_large}}
+      complexity_router_default_model: {{openai_large}}
 ```
 
 - Tiers name other `model_name` entries in the same file, so every tier is a deployment the proxy already knows.
@@ -88,15 +88,15 @@ curl -X POST "http://localhost:4000/model/new" \
       "complexity_router_config": {
         "tiers": {
           "SIMPLE": "claude-haiku-4-5",
-          "MEDIUM": "claude-sonnet-5",
-          "COMPLEX": "claude-opus-5",
+          "MEDIUM": "{{anthropic}}",
+          "COMPLEX": "{{anthropic_large}}",
           "REASONING": "claude-opus-5-high"
         },
         "classifier_type": "heuristic",
         "escalation_keywords": ["LITELLM ESCALATE"],
         "session_affinity": false
       },
-      "complexity_router_default_model": "claude-sonnet-5"
+      "complexity_router_default_model": "{{anthropic}}"
     }
   }'
 ```

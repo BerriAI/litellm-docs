@@ -29,7 +29,7 @@ os.environ["AZURE_API_TYPE"] = ""
 
 :::info Azure Foundry Claude Models
 
-Azure also supports Claude models via Azure Foundry. Use `azure/claude-*` model names (e.g., `azure/claude-sonnet-5`) with Azure authentication. See the [Azure Anthropic documentation](./azure_anthropic) for details.
+Azure also supports Claude models via Azure Foundry. Use `azure/claude-*` model names (e.g., `azure/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](./azure_anthropic) for details.
 
 :::
 
@@ -100,7 +100,7 @@ export AZURE_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -117,7 +117,7 @@ model_list:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-5.6-luna",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -137,7 +137,7 @@ client = openai.OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-response = client.chat.completions.create(model="gpt-5.6-luna", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -161,7 +161,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-5.6-luna",
+    model = "{{openai_small}}",
     temperature=0.1
 )
 
@@ -189,7 +189,7 @@ You can set the `api_version` for Azure OpenAI in your proxy config.yaml in the 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/my-gpt4-deployment
       api_base: https://your-resource.openai.azure.com/
@@ -384,7 +384,7 @@ model_list:
 
 LiteLLM supports using Azure GPT-5 models in one of the two ways:
 1. Explicit Routing: `model = azure/gpt5_series/<deployment-name>`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt5_series/<deployment-name>`.
-2. Inferred Routing (If the azure deployment name contains `gpt-5` in the name): `model = azure/gpt-5.6-luna`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt-5.6-luna`. {/* keep-model-ids */}
+2. Inferred Routing (If the azure deployment name contains `gpt-5` in the name): `model = azure/gpt-5.6-luna`. In this scenario the model onboarded to litellm follows the format `model=azure/gpt-5.6-luna`.
 
 #### Explicit Routing
 Use `azure/gpt5_series/<deployment-name>` for explicit GPT-5 model routing. 
@@ -405,7 +405,7 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt5_series/my-gpt-5-deployment
       api_base: os.environ/AZURE_API_BASE
@@ -416,12 +416,12 @@ model_list:
 </Tabs>
 
 #### Inferred Routing (gpt-5 in the deployment name)
-If your Azure deployment name contains `gpt-5`, LiteLLM automatically recognizes it as a GPT-5 model. {/* keep-model-ids */}
+If your Azure deployment name contains `gpt-5`, LiteLLM automatically recognizes it as a GPT-5 model.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python keep-model-ids
+```python
 import litellm
 
 # Deployment name contains 'gpt-5' - automatically inferred
@@ -604,7 +604,7 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -620,7 +620,7 @@ model_list:
 Here is an example of setting up `tenant_id`, `client_id`, `client_secret` in your litellm proxy `config.yaml`
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -637,7 +637,7 @@ Test it
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-5.6-luna",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -657,7 +657,7 @@ Example video of using `tenant_id`, `client_id`, `client_secret` with LiteLLM Pr
 Here is an example of setting up `client_id`, `azure_username`, `azure_password` in your litellm proxy `config.yaml`
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -674,7 +674,7 @@ Test it
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-5.6-luna",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -746,7 +746,7 @@ export AZURE_CLIENT_SECRET=""
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/your-deployment-name
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -761,7 +761,7 @@ Perfect for AKS clusters, Azure VMs, or other managed environments where Azure a
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/your-deployment-name
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -776,7 +776,7 @@ If you're authenticated via `az login`, no additional configuration needed:
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/your-deployment-name
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
@@ -1042,7 +1042,7 @@ In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 model_list:
   - model_name: "batch-gpt-4o-mini"
     litellm_params:
-      model: "azure/gpt-5.6-luna"
+      model: "azure/{{openai_small}}"
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:
@@ -1150,7 +1150,7 @@ uv add litellm
 from litellm import Router
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-5.6-luna", # openai model name 
+	"model_name": "{{openai_small}}", # openai model name 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -1160,7 +1160,7 @@ model_list = [{ # list of model deployments
 	"tpm": 240000,
 	"rpm": 1800
 }, {
-    "model_name": "gpt-5.6-luna", # openai model name 
+    "model_name": "{{openai_small}}", # openai model name 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -1170,9 +1170,9 @@ model_list = [{ # list of model deployments
 	"tpm": 240000,
 	"rpm": 1800
 }, {
-    "model_name": "gpt-5.6-luna", # openai model name 
+    "model_name": "{{openai_small}}", # openai model name 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-5.6-luna", 
+		"model": "{{openai_small}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	},
 	"tpm": 1000000,
@@ -1182,7 +1182,7 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list)
 
 # openai.chat.completions.create replacement
-response = router.completion(model="gpt-5.6-luna", 
+response = router.completion(model="{{openai_small}}", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
@@ -1314,14 +1314,14 @@ model_list:
 
 #### Chat Completions / Embeddings
 
-**Problem**: Azure returns `gpt-4` in the response when `azure/gpt-4-1106-preview` is used. This leads to inaccurate cost tracking {/* keep-model-ids */}
+**Problem**: Azure returns `gpt-4` in the response when `azure/gpt-4-1106-preview` is used. This leads to inaccurate cost tracking
 
 **Solution** ✅ :  Set `base_model` on your config so litellm uses the correct model for calculating azure cost
 
 Get the base model name from [here](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
 
 Example config with `base_model`
-```yaml keep-model-ids
+```yaml
 model_list:
   - model_name: azure-gpt-3.5
     litellm_params:

@@ -50,7 +50,7 @@ Every response from LiteLLM includes this header. It shows the total latency ove
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm-overhead-duration-ms
 ```
 
@@ -61,7 +61,7 @@ Shows time spent building callback/logging payloads (ms). If this is high (>100m
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm
 ```
 

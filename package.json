@@ -13,8 +13,7 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
-    "lint:docs": "python3 scripts/check-docs.py docs",
-    "bump:models": "python3 scripts/bump-docs-models.py docs"
+    "lint:docs": "python3 scripts/check-docs.py docs"
   },
   "dependencies": {
     "@docusaurus/core": "3.8.1",

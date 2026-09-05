@@ -18,7 +18,7 @@ import litellm
 
 # Works exactly as before
 response = await litellm.acompletion(
-    model="gpt-5.6-luna",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -39,7 +39,7 @@ session = aiohttp.ClientSession(
 litellm.base_llm_aiohttp_handler = BaseLLMAIOHTTPHandler(client_session=session)
 
 # All completions now use your session
-response = await litellm.acompletion(model="gpt-5.6-luna", messages=[...])
+response = await litellm.acompletion(model="{{openai_small}}", messages=[...])
 ```
 
 ## Common Patterns
@@ -69,7 +69,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/chat")
 async def chat(messages: list[dict]):
-    return await litellm.acompletion(model="gpt-5.6-luna", messages=messages)
+    return await litellm.acompletion(model="{{openai_small}}", messages=messages)
 ```
 
 ### Corporate Proxy

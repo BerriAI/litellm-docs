@@ -59,5 +59,5 @@ os.environ["LANGFUSE_PUBLIC_KEY"] = ""
 os.environ["LANGFUSE_SECRET_KEY"] = ""
 os.environ["LANGFUSE_HOST"] = ""
 
-response = completion(model="gpt-5.6-luna", messages=messages)
+response = completion(model="{{openai_small}}", messages=messages)
 ```

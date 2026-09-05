@@ -30,7 +30,7 @@ When a request arrives with an `advisor_20260301` tool and a non-Anthropic provi
 
 ```mermaid
 flowchart TD
-    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/gpt-5.6-luna"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
+    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/{{openai_small}}"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
 
     B --> C["EXECUTOR CALL\nopenai / bedrock / vertex / etc."]
 
@@ -59,7 +59,7 @@ flowchart TD
 
 ## Model Compatibility
 
-The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-4-6`. {/* keep-model-ids */}
+The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-4-6`.
 
 | Executor | Advisor |
 |----------|---------|
@@ -75,7 +75,7 @@ The executor and advisor models must form a valid pair. Currently the only suppo
 
 #### Basic Example
 
-```python showLineNumbers title="Advisor Tool — litellm.completion()" keep-model-ids
+```python showLineNumbers title="Advisor Tool — litellm.completion()"
 import litellm
 
 response = litellm.completion(
@@ -98,7 +98,7 @@ print(response.choices[0].message.content)
 
 #### With Optional Parameters
 
-```python showLineNumbers title="Advisor Tool with max_uses and caching" keep-model-ids
+```python showLineNumbers title="Advisor Tool with max_uses and caching"
 import litellm
 
 response = litellm.completion(
@@ -121,7 +121,7 @@ response = litellm.completion(
 
 #### Streaming
 
-```python showLineNumbers title="Streaming with Advisor Tool" keep-model-ids
+```python showLineNumbers title="Streaming with Advisor Tool"
 import litellm
 
 response = litellm.completion(
@@ -153,7 +153,7 @@ The advisor sub-inference does not stream. The executor's stream pauses while th
 
 #### Multi-Turn Conversation
 
-```python showLineNumbers title="Multi-Turn with Advisor Tool" keep-model-ids
+```python showLineNumbers title="Multi-Turn with Advisor Tool"
 import litellm
 
 tools = [
@@ -209,7 +209,7 @@ model_list:
 
 #### Client Request via Proxy
 
-```python showLineNumbers title="Advisor Tool via AI Gateway" keep-model-ids
+```python showLineNumbers title="Advisor Tool via AI Gateway"
 from openai import OpenAI
 
 client = OpenAI(
@@ -241,7 +241,7 @@ response = client.chat.completions.create(
 
 #### Basic Example
 
-```python showLineNumbers title="Advisor Tool — litellm.anthropic.messages" keep-model-ids
+```python showLineNumbers title="Advisor Tool — litellm.anthropic.messages"
 import asyncio
 import litellm
 
@@ -267,7 +267,7 @@ asyncio.run(main())
 
 #### Streaming
 
-```python showLineNumbers title="Messages API Streaming with Advisor Tool" keep-model-ids
+```python showLineNumbers title="Messages API Streaming with Advisor Tool"
 import asyncio
 import json
 import litellm
@@ -315,7 +315,7 @@ model_list:
 
 #### Client Request via Proxy (Anthropic SDK)
 
-```python showLineNumbers title="Advisor Tool via AI Gateway (Anthropic SDK)" keep-model-ids
+```python showLineNumbers title="Advisor Tool via AI Gateway (Anthropic SDK)"
 import anthropic
 
 client = anthropic.Anthropic(
@@ -416,7 +416,7 @@ Pass the full assistant content, including advisor blocks, back on subsequent tu
 
 Advisor calls run as a separate sub-inference billed at the advisor model's rates. Usage is reported in `usage.iterations[]`:
 
-```json title="Usage with advisor sub-inference" keep-model-ids
+```json title="Usage with advisor sub-inference"
 {
   "usage": {
     "input_tokens": 412,

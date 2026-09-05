@@ -5,8 +5,8 @@
 Use `litellm.supports_function_calling(model="")` -> returns `True` if model supports Function calling, `False` if not
 
 ```python
-assert litellm.supports_function_calling(model="gpt-5.6-luna") == True
-assert litellm.supports_function_calling(model="azure/gpt-5.6-terra") == True
+assert litellm.supports_function_calling(model="{{openai_small}}") == True
+assert litellm.supports_function_calling(model="azure/{{openai_large}}") == True
 assert litellm.supports_function_calling(model="palm/chat-bison") == False
 assert litellm.supports_function_calling(model="xai/grok-2-latest") == True
 assert litellm.supports_function_calling(model="ollama/llama2") == False
@@ -38,7 +38,7 @@ In this example we define a single function `get_current_weather`.
 
 ### Full Code - Parallel function calling with `gpt-3.5-turbo-1106`
 
-```python keep-model-ids
+```python
 import litellm
 import json
 # set openai api key
@@ -134,9 +134,9 @@ test_parallel_function_call()
 ```
 
 ### Explanation - Parallel function calling
-Below is an explanation of what is happening in the code snippet above for Parallel function calling with `gpt-3.5-turbo-1106` {/* keep-model-ids */}
+Below is an explanation of what is happening in the code snippet above for Parallel function calling with `gpt-3.5-turbo-1106`
 ### Step1: litellm.completion() with `tools` set to `get_current_weather`
-```python keep-model-ids
+```python
 import litellm
 import json
 # set openai api key
@@ -190,7 +190,7 @@ tool_calls = response.choices[0].message.tool_calls
 
 ##### Expected output
 In the output you can see the model calls the function multiple times - for San Francisco, Tokyo, Paris
-```python keep-model-ids
+```python
 ModelResponse(
   id='chatcmpl-8MHBKZ9t6bXuhBvUMzoKsfmmlv7xq', 
   choices=[
@@ -253,7 +253,7 @@ if tool_calls:
 
 ### Step 3 - Second litellm.completion() call 
 Once the functions are executed, send the model the information for each function call and its response. This allows the model to generate a new response considering the effects of the function calls.
-```python keep-model-ids
+```python
 second_response = litellm.completion(
     model="gpt-3.5-turbo-1106",
     messages=messages,
@@ -262,7 +262,7 @@ print("Second Response\n", second_response)
 ```
 
 #### Expected output
-```python keep-model-ids
+```python
 ModelResponse(
   id='chatcmpl-8MHBLh1ldADBP71OrifKap6YfAd4w', 
   choices=[
@@ -415,7 +415,7 @@ functions = [
     }
   ]
 
-response = completion(model="gpt-5.6-luna", messages=messages, functions=functions)
+response = completion(model="{{openai_small}}", messages=messages, functions=functions)
 print(response)
 ```
 
@@ -499,7 +499,7 @@ def get_current_weather(location: str, unit: str):
 
 functions = [litellm.utils.function_to_dict(get_current_weather)]
 
-response = completion(model="gpt-5.6-luna", messages=messages, functions=functions)
+response = completion(model="{{openai_small}}", messages=messages, functions=functions)
 print(response)
 ```
 
@@ -509,7 +509,7 @@ print(response)
 For Models/providers without function calling support, LiteLLM allows you to add the function to the prompt set: `litellm.add_function_to_prompt = True`
 
 #### Usage
-```python keep-model-ids
+```python
 import os, litellm
 from litellm import completion
 

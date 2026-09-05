@@ -290,7 +290,7 @@ resp = completion(
 1. Setup config.yaml
 
 ```yaml
-- model_name: claude-sonnet-5
+- model_name: {{anthropic}}
   litellm_params:
     model: databricks/databricks-claude-sonnet-5
     api_key: os.environ/DATABRICKS_API_KEY
@@ -310,7 +310,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
   }'
@@ -326,7 +326,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-sonnet-5',
+    model='{{anthropic}}',
     object='chat.completion',
     system_fingerprint=None,
     choices=[

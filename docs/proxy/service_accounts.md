@@ -97,7 +97,7 @@ curl --location 'http://localhost:4000/chat/completions' \
     --header 'Authorization: Bearer <sk-your-service-account>' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -130,7 +130,7 @@ curl --location 'http://localhost:4000/chat/completions' \
     --header 'Authorization: Bearer <sk-your-service-account>' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-5.6-luna",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -159,7 +159,7 @@ Expected Response
     }
   ],
   "created": 1677652288,
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": "fp_44709d6fcb",
   "usage": {

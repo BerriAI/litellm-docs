@@ -34,7 +34,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data '{
-  "model": "gpt-5.6-luna",
+  "model": "{{openai_small}}",
   "messages": [{"role":"user","content":"What llm are you?"}],
   "temperature": 0.7,
   "max_tokens": 10,

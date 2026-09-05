@@ -34,25 +34,25 @@ The [semantic auto router](./auto_routing_semantic.md) is deprecated but still w
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
-    litellm_params: {model: openai/gpt-5.6-luna, api_key: os.environ/OPENAI_API_KEY}
-  - model_name: gpt-5.6-terra
-    litellm_params: {model: openai/gpt-5.6-terra, api_key: os.environ/OPENAI_API_KEY}
-  - model_name: claude-sonnet-5
-    litellm_params: {model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY}
-  - model_name: claude-opus-5
-    litellm_params: {model: anthropic/claude-opus-5, api_key: os.environ/ANTHROPIC_API_KEY}
+  - model_name: {{openai_small}}
+    litellm_params: {model: openai/{{openai_small}}, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: {{openai_large}}
+    litellm_params: {model: openai/{{openai_large}}, api_key: os.environ/OPENAI_API_KEY}
+  - model_name: {{anthropic}}
+    litellm_params: {model: anthropic/{{anthropic}}, api_key: os.environ/ANTHROPIC_API_KEY}
+  - model_name: {{anthropic_large}}
+    litellm_params: {model: anthropic/{{anthropic_large}}, api_key: os.environ/ANTHROPIC_API_KEY}
 
   - model_name: smart-router
     litellm_params:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    gpt-5.6-terra
-          COMPLEX:   claude-sonnet-5
-          REASONING: claude-opus-5
-      complexity_router_default_model: gpt-5.6-terra
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{openai_large}}
+          COMPLEX:   {{anthropic}}
+          REASONING: {{anthropic_large}}
+      complexity_router_default_model: {{openai_large}}
 ```
 
 Call it like any other model:
@@ -84,10 +84,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     drop_params: true
     complexity_router_config:
       tiers:
-        SIMPLE:    ["gpt-5.6-luna", "gemini-3.8-flash"]   # random-pick pool
-        MEDIUM:    gpt-5.6-terra                                 # single pin
-        COMPLEX:   claude-sonnet-5
-        REASONING: claude-opus-5
+        SIMPLE:    ["{{openai_small}}", "{{gemini_flash}}"]   # random-pick pool
+        MEDIUM:    {{openai_large}}                                 # single pin
+        COMPLEX:   {{anthropic}}
+        REASONING: {{anthropic_large}}
 
       # Optional display names; omit to keep SIMPLE/MEDIUM/COMPLEX/REASONING everywhere
       # tier_labels:
@@ -96,7 +96,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       # LLM classifier instead of the heuristic scorer
       classifier_type: llm
       classifier_llm_config:
-        model: claude-sonnet-5
+        model: {{anthropic}}
         timeout_ms: 2000
         # system_prompt: <your rubric>         # replaces the built-in rubric entirely; omit for the default
       classifier_fallback: heuristic           # default; or default_model
@@ -164,7 +164,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
         multiStepPatterns: 0.03
         questionComplexity: 0.02
 
-    complexity_router_default_model: claude-sonnet-5
+    complexity_router_default_model: {{anthropic}}
 ```
 
 ## Classification
@@ -190,7 +190,7 @@ Two or more reasoning markers auto-routes to `REASONING` regardless of the weigh
 ```yaml
 classifier_type: llm
 classifier_llm_config:
-  model: claude-sonnet-5
+  model: {{anthropic}}
   timeout_ms: 2000
 ```
 
@@ -226,9 +226,9 @@ Custom classifier plugins ship in **v1.99.x** ([PR #37249](https://github.com/Be
       classifier_plugin: classifiers.tier_by_team   # dotted path, resolved next to this config file
       classifier_plugin_timeout_ms: 3000            # default
       tiers:
-        SIMPLE:    gpt-5.6-luna
-        REASONING: gpt-5.6-terra
-    complexity_router_default_model: gpt-5.6-luna
+        SIMPLE:    {{openai_small}}
+        REASONING: {{openai_large}}
+    complexity_router_default_model: {{openai_small}}
 ```
 
 ```python title="classifiers.py"
@@ -313,7 +313,7 @@ Note that `session_affinity` skips reclassification after a session's first turn
 ```yaml
 classifier_type: llm
 classifier_llm_config:
-  model: claude-sonnet-5
+  model: {{anthropic}}
 classifier_context_include_assistant_turns: true
 classifier_context_window_size: 3
 classifier_context_per_turn_chars: 200
@@ -370,22 +370,22 @@ Recommended shape for a coding-agent workload, pinning the tier for the session 
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   # same tier, second deployment: this is the fan-out a model-name pin cannot hold
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-5
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-auto
@@ -396,13 +396,13 @@ model_list:
           role: system
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.6-luna
-          MEDIUM:    claude-sonnet-5
-          COMPLEX:   claude-sonnet-5
-          REASONING: claude-opus-5
+          SIMPLE:    {{openai_small}}
+          MEDIUM:    {{anthropic}}
+          COMPLEX:   {{anthropic}}
+          REASONING: {{anthropic_large}}
         session_affinity: true
         session_affinity_ttl_seconds: 3600
-      complexity_router_default_model: claude-sonnet-5
+      complexity_router_default_model: {{anthropic}}
 
 router_settings:
   optional_pre_call_checks: ["deployment_affinity", "session_affinity", "prompt_caching"]
@@ -424,12 +424,12 @@ custom_technical_keywords: [kafka, redis, postgresql, mongodb, udp, dns, ssl, ss
 Every routing decision emits one greppable line naming its cause. `cause=` is greppable by decision type in your log pipeline.
 
 ```
-ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-5.6-luna
-ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model=gpt-5.6-terra
-ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model=gpt-5.6-terra
-ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model=claude-sonnet-5
-ComplexityRouter: routing decision cause=classifier_plugin,      tier=REASONING,  score=n/a,   signals=['classifier-plugin:REASONING'],             routed_model=gpt-5.6-terra
-ComplexityRouter: routing decision cause=session_affinity_pin,                                                                                      routed_model=gpt-5.6-terra
+ComplexityRouter: routing decision cause=complexity_scorer,      tier=SIMPLE,     score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model={{openai_small}}
+ComplexityRouter: routing decision cause=literal_keyword_match,  tier=REASONING,                                                                    routed_model={{openai_large}}
+ComplexityRouter: routing decision cause=semantic_keyword_match, tier=REASONING,                                                                    routed_model={{openai_large}}
+ComplexityRouter: routing decision cause=llm_classifier,         tier=COMPLEX,    score=1.000, signals=['llm-classifier:COMPLEX'],                  routed_model={{anthropic}}
+ComplexityRouter: routing decision cause=classifier_plugin,      tier=REASONING,  score=n/a,   signals=['classifier-plugin:REASONING'],             routed_model={{openai_large}}
+ComplexityRouter: routing decision cause=session_affinity_pin,                                                                                      routed_model={{openai_large}}
 ```
 
 ## Reading the picked model from the response
@@ -444,8 +444,8 @@ Set `return_raw_model_name` on the router to put it there. The proxy then skips 
     model: auto_router/complexity_router
     complexity_router_config:
       tiers:
-        SIMPLE:    gpt-5.6-luna
-        REASONING: gpt-5.6-terra
+        SIMPLE:    {{openai_small}}
+        REASONING: {{openai_large}}
       return_raw_model_name: true   # default false
 ```
 
@@ -456,7 +456,7 @@ Non-streaming:
 ```json
 {
   "id": "chatcmpl-abc123",
-  "model": "gpt-5.6-terra",
+  "model": "{{openai_large}}",
   "choices": [{"...": "..."}]
 }
 ```
@@ -464,9 +464,9 @@ Non-streaming:
 Streaming, on every SSE chunk rather than only the first or the last:
 
 ```
-data: {"id":"chatcmpl-abc123","model":"gpt-5.6-terra","choices":[{"delta":{"content":"The"},"...":"..."}]}
+data: {"id":"chatcmpl-abc123","model":"{{openai_large}}","choices":[{"delta":{"content":"The"},"...":"..."}]}
 
-data: {"id":"chatcmpl-abc123","model":"gpt-5.6-terra","choices":[{"delta":{"content":" sum"},"...":"..."}]}
+data: {"id":"chatcmpl-abc123","model":"{{openai_large}}","choices":[{"delta":{"content":" sum"},"...":"..."}]}
 ```
 
 Because `model` is a standard OpenAI response field, every SDK and framework already carries it through to application code; nothing needs to read raw chunks. In LangChain it arrives as `response_metadata.model_name`, on the final chunk when streaming.
@@ -551,9 +551,9 @@ Declare it in `model_info` on the router entry:
     model: auto_router/complexity_router
     complexity_router_config:
       tiers:
-        SIMPLE:    gpt-5.6-luna
-        REASONING: gpt-5.6-terra
-    complexity_router_default_model: gpt-5.6-terra
+        SIMPLE:    {{openai_small}}
+        REASONING: {{openai_large}}
+    complexity_router_default_model: {{openai_large}}
   model_info:
     max_input_tokens: 200000
     max_output_tokens: 64000
@@ -622,9 +622,9 @@ model_list:
       reasoning_effort: xhigh
 
   # top rung: a different rate on every token
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: smart-router
@@ -636,7 +636,7 @@ model_list:
           SIMPLE:    gpt-5.4-mini-low
           MEDIUM:    gpt-5.4-mini-high
           COMPLEX:   gpt-5.4-mini-xhigh
-          REASONING: gpt-5.6-terra
+          REASONING: {{openai_large}}
       complexity_router_default_model: gpt-5.4-mini-high
 ```
 
@@ -645,12 +645,12 @@ Anthropic-family rungs use `thinking` the same way, since it is an ordinary `lit
 ```yaml
   - model_name: claude-sonnet-5-thinking
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       thinking: {type: enabled, budget_tokens: 8192}
 ```
 
-Effort levels are per-model capabilities, so check the model supports the rung you are asking for: `gpt-5-mini` rejects `xhigh` while `gpt-5.4-mini` accepts it, and `drop_params: true` on the router alias turns that rejection into a silently dropped parameter, which reads as a ladder that changed nothing. Two more things to keep in mind. Cost tracking prices each rung under its underlying model, so a ladder built this way shows up in spend as one model at several effort levels rather than as separate models. And `session_affinity` pins the rung's `model_name`; the TTL is refreshed on cache hits, and an escalation request can move the pin up a tier rather than leaving it on a hard fixed-duration lock {/* keep-model-ids */}
+Effort levels are per-model capabilities, so check the model supports the rung you are asking for: `gpt-5-mini` rejects `xhigh` while `gpt-5.4-mini` accepts it, and `drop_params: true` on the router alias turns that rejection into a silently dropped parameter, which reads as a ladder that changed nothing. Two more things to keep in mind. Cost tracking prices each rung under its underlying model, so a ladder built this way shows up in spend as one model at several effort levels rather than as separate models. And `session_affinity` pins the rung's `model_name`; the TTL is refreshed on cache hits, and an escalation request can move the pin up a tier rather than leaving it on a hard fixed-duration lock
 
 ## Python SDK
 
@@ -659,9 +659,9 @@ from litellm import Router
 
 router = Router(
     model_list=[
-        {"model_name": "gpt-5.6-luna",   "litellm_params": {"model": "gpt-5.6-luna"}},
-        {"model_name": "gpt-5.6-terra",        "litellm_params": {"model": "gpt-5.6-terra"}},
-        {"model_name": "claude-sonnet", "litellm_params": {"model": "claude-sonnet-5"}},
+        {"model_name": "{{openai_small}}",   "litellm_params": {"model": "{{openai_small}}"}},
+        {"model_name": "{{openai_large}}",        "litellm_params": {"model": "{{openai_large}}"}},
+        {"model_name": "claude-sonnet", "litellm_params": {"model": "{{anthropic}}"}},
         {"model_name": "o1-preview",    "litellm_params": {"model": "o1-preview"}},
         {
             "model_name": "smart-router",
@@ -669,14 +669,14 @@ router = Router(
                 "model": "auto_router/complexity_router",
                 "complexity_router_config": {
                     "tiers": {
-                        "SIMPLE":    "gpt-5.6-luna",
-                        "MEDIUM":    "gpt-5.6-terra",
+                        "SIMPLE":    "{{openai_small}}",
+                        "MEDIUM":    "{{openai_large}}",
                         "COMPLEX":   "claude-sonnet",
                         "REASONING": "o1-preview",
                     },
                     "session_affinity": True,
                 },
-                "complexity_router_default_model": "gpt-5.6-terra",
+                "complexity_router_default_model": "{{openai_large}}",
             },
         },
     ],

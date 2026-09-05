@@ -119,7 +119,7 @@ curl http://0.0.0.0:4000/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-Nb5eCf427iewOlbxXIH4Ow" \
 -d '{
-  "model": "openai/gpt-5.6-terra",
+  "model": "openai/{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -150,7 +150,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-5.6-terra",
+    model="{{openai_large}}",
     messages = [], 
     extra_body={
         "metadata": {
@@ -206,7 +206,7 @@ Set `alert_to_webhook_url` on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -240,7 +240,7 @@ Provide multiple slack channels for a given alert type
 
 ```yaml
 model_list:
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -278,7 +278,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -306,7 +306,7 @@ SLACK_WEBHOOK_URL="https://berriai.webhook.office.com/webhookb2/...6901/Incoming
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-5.6-luna"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -348,7 +348,7 @@ Discord provides a slack compatible webhook url that you can use for alerting
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-5.6-luna"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -484,7 +484,7 @@ End: `2026-02-20 03:27:39`
 Count: `847`
 
 Message: `Requests are hanging - 600s+ request time`
-Request Model: `gemini-3.8-flash`
+Request Model: `{{gemini_flash}}`
 API Base: `None`
 ```
 

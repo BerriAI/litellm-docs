@@ -44,7 +44,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, who won the world cup in 2022?"}]
   }'
 
@@ -53,7 +53,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
-    "model": "gpt-5.6-terra",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "And who was the top scorer?"}]
   }'
 ```
