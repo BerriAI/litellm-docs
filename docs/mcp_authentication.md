@@ -1,4 +1,6 @@
-# MCP Authentication
+# MCP Non-OAuth Authentication
+
+This page covers upstream MCP authentication that does not use an OAuth flow, including no authentication, fixed credentials, and AWS SigV4. For OAuth setup, see [MCP OAuth](./mcp_oauth.md), [MCP OAuth Passthrough](./mcp_oauth_passthrough.md), or [MCP On-Behalf-Of Auth](./mcp_obo_auth.md).
 
 LiteLLM handles two separate authentication hops for an MCP request:
 
@@ -13,7 +15,7 @@ The wire examples on this page cover remote MCP servers using SSE or Streamable 
 
 :::
 
-## Choose an auth type
+## Choose a non-OAuth auth type
 
 For a fixed, non-OAuth credential, choose the type that matches the header required by the upstream server:
 
@@ -27,7 +29,7 @@ For a fixed, non-OAuth credential, choose the type that matches the header requi
 | `authorization` | Complete header value, including its scheme | `Authorization: <auth_value>` | A custom authorization scheme; available in config and API |
 | `aws_sigv4` | AWS credentials or an IAM role | A new AWS SigV4 signature for each request | AWS Bedrock AgentCore MCP servers |
 
-OAuth-based modes are summarized in [OAuth auth types](#oauth-auth-types).
+OAuth-based modes are summarized in [When to use OAuth instead](#when-to-use-oauth-instead).
 
 ## What the client sends
 
@@ -134,7 +136,7 @@ If the upstream expects a different header name, use [`static_headers`](#custom-
 
 - **Authentication value:** enter only the token. Do not add the `Bearer` prefix.
 - **Behavior:** LiteLLM sends `Authorization: Bearer <token>` on each upstream request.
-- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, choose an [OAuth auth type](#oauth-auth-types).
+- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, choose an [OAuth auth type](#when-to-use-oauth-instead).
 
 ```yaml title="config.yaml"
 mcp_servers:
@@ -235,7 +237,7 @@ The `none` resolver still contributes no credential in this example. `X-Custom-A
 
 For a caller-owned OAuth bearer in `Authorization`, use `true_passthrough` or `oauth_delegate` instead of treating it as a generic extra header.
 
-## OAuth auth types
+## When to use OAuth instead
 
 OAuth modes decide who obtains the upstream token and whether LiteLLM admits the caller first:
 

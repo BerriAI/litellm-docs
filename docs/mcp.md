@@ -238,7 +238,7 @@ mcp_servers:
 - **Description**: Optional description for the server
 - **Auth Type**: Optional authentication type. Supported values:
 
-  See [MCP Authentication](./mcp_authentication.md) for a choice guide, exact credential inputs, and upstream request examples.
+  See [MCP Non-OAuth Authentication](./mcp_authentication.md) for a choice guide, exact credential inputs, and upstream request examples.
 
   | Value | Header sent (managed SSE/HTTP transport) |
   |-------|-------------|
