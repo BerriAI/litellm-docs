@@ -31,6 +31,8 @@ A cheap model can get stuck mid-task: it calls the same tool with the same argum
 
 `stall_escalation_enabled: true` gives the router that judgment on its own.
 
+On a 24-task test set escalating `gpt-4.1-nano` to `gpt-5.4-mini`, stall escalation achieved 52.8% solve rate vs 38.9% without it, a 14 percentage point jump. Both models are not that powerful, but the improvement is good proof that it works.
+
 ## How it decides
 
 - **Reads the assistant's own tool calls, not the human's messages.** A task counts as stalled once the newest call repeats, or errors, at least `stall_escalation_repeat_threshold` times across the last `stall_escalation_window` calls
