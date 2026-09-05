@@ -148,7 +148,7 @@ Azure AI OCR endpoints don't have internet access. LiteLLM automatically convert
 
 ## Cohere Parse
 
-Azure AI Foundry also serves [Cohere Parse](https://ai.azure.com/catalog/models/Cohere-parse-v5) through the same `/ocr` endpoint. Use `azure_ai/<deployment name>`: any deployment whose name contains `parse` is sent to the Cohere Parse API on your Foundry resource, at `{api_base}/providers/cohere/v2/parse`.
+Azure AI Foundry also serves [Cohere Parse](https://ai.azure.com/catalog/models/Cohere-parse-v5) through the same `/ocr` endpoint. Use `azure_ai/<deployment name>`: a deployment whose name contains both `cohere` and `parse` (the catalog's default name `Cohere-parse-v5` does) is sent to the Cohere Parse API on your Foundry resource, at `{api_base}/providers/cohere/v2/parse`. Other names keep routing to Mistral OCR, so keep `cohere` and `parse` in the deployment name if you rename it.
 
 Parse accepts `image_url` documents only, an image URL or a base64 `data:image/...` URI. PDFs and `document_url` inputs are rejected with a 400 before anything is sent to Azure. Foundry cannot fetch external URLs, so LiteLLM downloads a remote image and sends it inline as a data URI, the same conversion it applies for the Mistral models above.
 
