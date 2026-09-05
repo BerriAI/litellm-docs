@@ -231,6 +231,31 @@
   border-radius: 12px;
 }
 
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.profileGrid > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.profileHeader {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.profileHeader strong {
+  color: var(--mw-text-primary);
+  font-size: 0.95rem;
+}
+
+.profileHeader span {
+  color: var(--mw-text-secondary);
+  font-size: 0.75rem;
+}
+
 .chartMetric {
   display: grid;
   gap: 0.45rem;
@@ -576,6 +601,14 @@
 
   .benchmarkColumns {
     flex-direction: column;
+  }
+
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileGrid > :last-child:nth-child(odd) {
+    grid-column: auto;
   }
 
   .summaryStats {

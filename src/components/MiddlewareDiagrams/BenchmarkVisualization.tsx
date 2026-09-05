@@ -9,32 +9,46 @@ interface BenchmarkMetric {
   lowerIsBetter: boolean;
 }
 
+interface BenchmarkProfile {
+  name: string;
+  description: string;
+  metrics: readonly BenchmarkMetric[];
+}
+
 interface BenchmarkVisualizationProps {
   configLabel?: string;
   pythonLabel?: string;
   rustLabel?: string;
-  metrics?: readonly BenchmarkMetric[];
+  profiles?: readonly BenchmarkProfile[];
 }
 
-const DEFAULT_METRICS: readonly BenchmarkMetric[] = [
-  { label: 'Median latency', unit: 'ms', python: 21, rust: 13, lowerIsBetter: true },
-  { label: 'Throughput', unit: 'RPS', python: 3_785, rust: 6_577, lowerIsBetter: false },
+const DEFAULT_PROFILES: readonly BenchmarkProfile[] = [
+  {
+    name: 'Default workload',
+    description: '1,000 concurrent requests · 1 worker',
+    metrics: [
+      { label: 'Median latency', unit: 'ms', python: 21, rust: 13, lowerIsBetter: true },
+      { label: 'Throughput', unit: 'RPS', python: 3_785, rust: 6_577, lowerIsBetter: false },
+    ],
+  },
 ];
 
 const formatValue = (value: number, unit: string): string => `${value.toLocaleString()} ${unit}`;
 
 const getImprovement = ({ python, rust, lowerIsBetter }: BenchmarkMetric): string => {
-  const ratio = lowerIsBetter ? 1 - rust / python : rust / python - 1;
-  const direction = lowerIsBetter ? 'lower' : 'higher';
+  const ratio = lowerIsBetter ? (python - rust) / python : (rust - python) / python;
+  const direction = ratio >= 0
+    ? lowerIsBetter ? 'lower' : 'higher'
+    : lowerIsBetter ? 'higher' : 'lower';
 
-  return `${Math.round(ratio * 100)}% ${direction}`;
+  return `${Math.abs(Math.round(ratio * 100))}% ${direction}`;
 };
 
 export default function BenchmarkVisualization({
-  configLabel = '1,000 concurrent requests · 1 worker',
+  configLabel = 'Measured locally against recorded traffic profiles',
   pythonLabel = 'Python implementation',
   rustLabel = 'Rust core',
-  metrics = DEFAULT_METRICS,
+  profiles = DEFAULT_PROFILES,
 }: BenchmarkVisualizationProps) {
   return (
     <figure className={styles.benchmarkWrapper}>
@@ -43,33 +57,41 @@ export default function BenchmarkVisualization({
         <span><i className={`${styles.legendSwatch} ${styles.pythonSwatch}`} />{pythonLabel}</span>
         <span><i className={`${styles.legendSwatch} ${styles.rustSwatch}`} />{rustLabel}</span>
       </div>
-      <div className={styles.comparisonChart}>
-        {metrics.map((metric) => {
-          const maximum = Math.max(metric.python, metric.rust);
+      <div className={styles.profileGrid}>
+        {profiles.map((profile) => (
+          <section className={styles.comparisonChart} key={profile.name}>
+            <header className={styles.profileHeader}>
+              <strong>{profile.name}</strong>
+              <span>{profile.description}</span>
+            </header>
+            {profile.metrics.map((metric) => {
+              const maximum = Math.max(metric.python, metric.rust);
 
-          return (
-            <section className={styles.chartMetric} key={metric.label}>
-              <div className={styles.chartMetricHeader}>
-                <span>{metric.label}</span>
-                <strong>{getImprovement(metric)}</strong>
-              </div>
-              <div className={styles.chartSeries}>
-                <span className={styles.chartSeriesLabel}>Python</span>
-                <div className={styles.chartTrack}>
-                  <div className={`${styles.chartBar} ${styles.pythonBar}`} style={{ width: `${metric.python / maximum * 100}%` }} />
+              return (
+                <div className={styles.chartMetric} key={metric.label}>
+                  <div className={styles.chartMetricHeader}>
+                    <span>{metric.label}</span>
+                    <strong>{getImprovement(metric)}</strong>
+                  </div>
+                  <div className={styles.chartSeries}>
+                    <span className={styles.chartSeriesLabel}>Python</span>
+                    <div className={styles.chartTrack}>
+                      <div className={`${styles.chartBar} ${styles.pythonBar}`} style={{ width: `${metric.python / maximum * 100}%` }} />
+                    </div>
+                    <span className={styles.chartValue}>{formatValue(metric.python, metric.unit)}</span>
+                  </div>
+                  <div className={styles.chartSeries}>
+                    <span className={styles.chartSeriesLabel}>Rust</span>
+                    <div className={styles.chartTrack}>
+                      <div className={`${styles.chartBar} ${styles.rustBar}`} style={{ width: `${metric.rust / maximum * 100}%` }} />
+                    </div>
+                    <span className={styles.chartValue}>{formatValue(metric.rust, metric.unit)}</span>
+                  </div>
                 </div>
-                <span className={styles.chartValue}>{formatValue(metric.python, metric.unit)}</span>
-              </div>
-              <div className={styles.chartSeries}>
-                <span className={styles.chartSeriesLabel}>Rust</span>
-                <div className={styles.chartTrack}>
-                  <div className={`${styles.chartBar} ${styles.rustBar}`} style={{ width: `${metric.rust / maximum * 100}%` }} />
-                </div>
-                <span className={styles.chartValue}>{formatValue(metric.rust, metric.unit)}</span>
-              </div>
-            </section>
-          );
-        })}
+              );
+            })}
+          </section>
+        ))}
       </div>
     </figure>
   );
