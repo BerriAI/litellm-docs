@@ -25,6 +25,17 @@ Standard passthrough endpoint that may conflict with LiteLLM's native implementa
 
 **Note:** Some endpoints like `/openai/v1/responses` will be routed to LiteLLM's native implementation instead of OpenAI.
 
+## WebSocket endpoints are off by default
+
+Both prefixes can also relay WebSocket connections (for example `/openai_passthrough/v1/realtime` and `/openai/v1/responses`) to OpenAI. The relay forwards frames without reading them, so it cannot check which model a session asks for, and it is served under the proxy's own OpenAI credential. Because of that it is disabled unless a proxy admin opts in:
+
+```yaml
+general_settings:
+  enable_openai_websocket_passthrough: true
+```
+
+While it is off, a WebSocket client receives one `error` event that names this setting and the connection closes with code `1008`. Keys with model restrictions are refused on these routes even when it is on. If you only need the Realtime API for models in your `model_list`, use the proxy's own `/v1/realtime` route instead, which needs no opt-in and enforces the key's model access
+
 ## When to use this?
 
 - For 90% of your use cases, you should use the [native LiteLLM OpenAI Integration](https://docs.litellm.ai/docs/providers/openai) (`/chat/completions`, `/embeddings`, `/completions`, `/images`, `/batches`, etc.)
