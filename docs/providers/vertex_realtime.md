@@ -163,9 +163,10 @@ Key settings for audio:
 - Server VAD is enabled by default with 800 ms silence threshold
 
 ```python
-# Send session.update first: LiteLLM builds the Vertex AI setup from the first client
-# message, so a session.update sent first sets the modalities, VAD, and tools for the
-# whole session. Later session.update events are ignored.
+# Send session.update before any content: LiteLLM merges every session.update it
+# receives before the first conversation item or audio frame into the one Vertex AI
+# setup, so they set the modalities, VAD, and tools for the whole session. A
+# session.update sent after content is ignored.
 await ws.send(json.dumps({
     "type": "session.update",
     "session": {
@@ -321,7 +322,7 @@ python test_realtime_tool_calling.py
 |---|---|
 | `input_audio_buffer.append` | Forwarded as `realtime_input.audio` |
 | `conversation.item.create` | Forwarded as `realtime_input.text` |
-| `session.update` | Becomes the Vertex AI `setup` when it is the first client message. Later ones are ignored: Vertex AI accepts one setup per connection |
+| `session.update` | Every one sent before the first content frame is merged into the Vertex AI `setup` and acknowledged with `session.updated`. Ones sent after content are ignored: Vertex AI accepts one setup per connection |
 | `response.create` | Silently ignored — Vertex AI responds automatically after each turn |
 
 **Vertex AI → Proxy (→ Client)**
@@ -337,7 +338,7 @@ python test_realtime_tool_calling.py
 
 ## Limitations
 
-- Only the first `session.update` takes effect. LiteLLM sends the Vertex AI setup on the client's first message: a `session.update` sent first becomes that setup, anything else sent first gets the model's default (audio) setup, and later `session.update` events are ignored because Vertex AI accepts one setup per connection.
+- Session configuration is fixed once content flows. LiteLLM sends the Vertex AI setup with the client's first content frame (a conversation item, audio, or a tool result): every `session.update` received before it is merged into that setup, a session that sends content first gets the model's default (audio) setup, and a `session.update` sent after content is ignored because Vertex AI accepts one setup per connection.
 - A client that streams audio before its `session.update` gets the default setup. Set `gemini_live_defer_setup: true` to buffer that audio until the `session.update` arrives.
 - `output_modalities: ["text"]` on an audio-only model (for example `gemini-live-2.5-flash-native-audio`) is downgraded to audio, and the proxy logs a warning saying so.
 - Audio transcription requires `outputAudioTranscription: {}` to be set in the initial setup (done automatically by LiteLLM).
