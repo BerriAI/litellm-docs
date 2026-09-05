@@ -17,8 +17,7 @@ Merged after the v1.100.0 release candidate was cut. Available in `v1.101.0-dev`
 - **Shadow evals on teams and users.** Target a `key`, `team`, or `user`, so JWT-authenticated traffic can be evaluated. [#39015](https://github.com/BerriAI/litellm/pull/39015).
 - **Shadow evals across several routers.** Compare multiple router configs on one job's sampled traffic, paired. [#39028](https://github.com/BerriAI/litellm/pull/39028).
 - **1M context preset.** [#39490](https://github.com/BerriAI/litellm/pull/39490).
-- **Mid-task stall escalation.** `stall_escalation_enabled: true` reads the assistant's own recent tool calls and bumps a request one tier when it's stuck in a retry loop, the same ladder `escalation_keywords` uses. Off by default. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation).
-- **Per-hop compression (in progress).** `auto_router_routing_compression` and `auto_router_model_compression` name a compression guardrail for the classifier call and the model call separately, or turn either off; the same guardrail on both hops still runs compression once. [#39823](https://github.com/BerriAI/litellm/pull/39823).
+- **Mid-task stall escalation.** Classification runs on how the newest message reads, which misses a task stuck retrying the same tool call while the newest message is a plain "try again." `stall_escalation_enabled: true` reads the assistant's own recent tool calls instead and bumps one tier when the newest call keeps repeating or erroring, the same ladder `escalation_keywords` uses. Off by default. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation).
 
 Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation).
 

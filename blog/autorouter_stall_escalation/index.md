@@ -27,7 +27,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
-A cheap model can get stuck mid-task: it calls the same tool with the same arguments three times, or the same call keeps erroring, while the newest message in that history still reads as a harmless follow-up like "can you try a different approach?" Read on its own, that turn classifies SIMPLE every time, so the router sends it right back to the model that was already failing. Until now, the only way out was a person noticing the loop and typing an escalation keyword.
+The router classifies each turn on how the newest message reads, and that misses one case: a cheap model stuck mid-task, calling the same tool with the same arguments three times, or hitting the same error over and over, while the newest message still reads as a harmless follow-up like "can you try a different approach?" Read on its own, that turn classifies SIMPLE every time, so the router sends it right back to the model that was already failing.
 
 `stall_escalation_enabled: true` gives the router that judgment on its own.
 
