@@ -27,55 +27,77 @@ The result changes with the shape of the OCR traffic. The input PDF ranges from 
   configLabel="Mistral OCR SDK benchmark · recorded traffic profiles · macOS arm64 · concurrency 1"
   pythonLabel="Existing Python code"
   rustLabel="Rust core"
-  profiles={[
+  groups={[
     {
-      name: 'Small input and response',
-      description: '32 KiB PDF · 1 response page',
-      metrics: [
-        { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
-        { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
-        { label: 'Throughput', unit: 'calls/s', python: 506.6, rust: 589.4, lowerIsBetter: false },
-        { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 223.1, lowerIsBetter: true },
+      label: 'Input PDF size',
+      description: 'Response fixed at one page',
+      profiles: [
+        {
+          name: '32 KiB PDF',
+          description: '1 response page',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 506.6, rust: 589.4, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 223.1, lowerIsBetter: true },
+          ],
+        },
+        {
+          name: '256 KiB PDF',
+          description: '1 response page',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 5.714, rust: 1.363, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 3.814, rust: 1.438, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 56.1, rust: 496, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 232, rust: 222.2, lowerIsBetter: true },
+          ],
+        },
+        {
+          name: '2 MiB PDF',
+          description: '1 response page',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 101.5, rust: 306.2, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 457.6, rust: 390.6, lowerIsBetter: true },
+          ],
+        },
       ],
     },
     {
-      name: 'Medium input',
-      description: '256 KiB PDF · 1 response page',
-      metrics: [
-        { label: 'Median latency', unit: 'ms', python: 5.714, rust: 1.363, lowerIsBetter: true },
-        { label: 'CPU time per call', unit: 'ms', python: 3.814, rust: 1.438, lowerIsBetter: true },
-        { label: 'Throughput', unit: 'calls/s', python: 56.1, rust: 496, lowerIsBetter: false },
-        { label: 'Peak RSS', unit: 'MiB', python: 232, rust: 222.2, lowerIsBetter: true },
-      ],
-    },
-    {
-      name: 'Large input',
-      description: '2 MiB PDF · 1 response page',
-      metrics: [
-        { label: 'Median latency', unit: 'ms', python: 9.739, rust: 3.291, lowerIsBetter: true },
-        { label: 'CPU time per call', unit: 'ms', python: 9.6, rust: 3.438, lowerIsBetter: true },
-        { label: 'Throughput', unit: 'calls/s', python: 101.5, rust: 306.2, lowerIsBetter: false },
-        { label: 'Peak RSS', unit: 'MiB', python: 457.6, rust: 390.6, lowerIsBetter: true },
-      ],
-    },
-    {
-      name: 'Medium response',
-      description: '32 KiB PDF · 16 response pages',
-      metrics: [
-        { label: 'Median latency', unit: 'ms', python: 1.961, rust: 0.511, lowerIsBetter: true },
-        { label: 'CPU time per call', unit: 'ms', python: 1.879, rust: 0.63, lowerIsBetter: true },
-        { label: 'Throughput', unit: 'calls/s', python: 494.9, rust: 1798.4, lowerIsBetter: false },
-        { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 221.1, lowerIsBetter: true },
-      ],
-    },
-    {
-      name: 'Large response',
-      description: '32 KiB PDF · 128 response pages',
-      metrics: [
-        { label: 'Median latency', unit: 'ms', python: 2.125, rust: 1.628, lowerIsBetter: true },
-        { label: 'CPU time per call', unit: 'ms', python: 2.059, rust: 2.082, lowerIsBetter: true },
-        { label: 'Throughput', unit: 'calls/s', python: 465.5, rust: 603.4, lowerIsBetter: false },
-        { label: 'Peak RSS', unit: 'MiB', python: 220.6, rust: 223, lowerIsBetter: true },
+      label: 'Response size',
+      description: 'Input fixed at a 32 KiB PDF',
+      profiles: [
+        {
+          name: '1 response page',
+          description: '32 KiB PDF',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 1.576, rust: 1.269, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 1.549, rust: 1.308, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 506.6, rust: 589.4, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 223.1, lowerIsBetter: true },
+          ],
+        },
+        {
+          name: '16 response pages',
+          description: '32 KiB PDF',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 1.961, rust: 0.511, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 1.879, rust: 0.63, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 494.9, rust: 1798.4, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 221.4, rust: 221.1, lowerIsBetter: true },
+          ],
+        },
+        {
+          name: '128 response pages',
+          description: '32 KiB PDF',
+          metrics: [
+            { label: 'Median latency', unit: 'ms', python: 2.125, rust: 1.628, lowerIsBetter: true },
+            { label: 'CPU time per call', unit: 'ms', python: 2.059, rust: 2.082, lowerIsBetter: true },
+            { label: 'Throughput', unit: 'calls/s', python: 465.5, rust: 603.4, lowerIsBetter: false },
+            { label: 'Peak RSS', unit: 'MiB', python: 220.6, rust: 223, lowerIsBetter: true },
+          ],
+        },
       ],
     },
   ]}

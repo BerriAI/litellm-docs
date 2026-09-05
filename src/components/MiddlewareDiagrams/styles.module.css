@@ -256,6 +256,70 @@
   font-size: 0.75rem;
 }
 
+.chartControls {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.controlButton,
+.controlActive {
+  border: 1px solid var(--mw-panel-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  color: var(--mw-text-secondary);
+  background: var(--mw-stage-bg);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.controlActive {
+  color: var(--mw-text-primary);
+  border-color: var(--mw-success-accent);
+  background: var(--mw-stage-green-active-bg);
+  font-weight: 700;
+}
+
+.chartInsight {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--mw-stage-bg);
+  color: var(--mw-text-primary);
+  font-size: 0.85rem;
+}
+
+.profileChart {
+  display: grid;
+  gap: 1rem;
+}
+
+.profileRow {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.profileLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--mw-text-primary);
+  font-size: 0.85rem;
+}
+
+.profileLabel span {
+  color: var(--mw-text-secondary);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
 .chartMetric {
   display: grid;
   gap: 0.45rem;
