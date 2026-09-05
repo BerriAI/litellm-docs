@@ -153,6 +153,10 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 The response includes an `x-litellm-applied-guardrails: headroom-compression` header so the caller can confirm compression actually ran.
 
+## Compression behind an auto router
+
+A request an [auto router](./auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails above for them, whether they were attached to a key, a team, or the request body. See [Compression](./auto_routing.md#compression).
+
 ## Claude Code usage
 
 This is the most common rollout: a platform admin wants to cut input token spend for a team that drives heavy traffic through Claude Code without asking each developer to change their setup.
