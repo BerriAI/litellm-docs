@@ -1,27 +1,27 @@
 ---
 slug: rust-ocr-benchmark
-title: "Early Results: Rust Makes LiteLLM OCR Faster on Larger Payloads"
+title: "Rust OCR: A Safe First Step in LiteLLM’s Migration"
 date: 2026-09-05T09:00:00
 authors:
   - yujonglee
-description: "An early Python and Rust SDK comparison for LiteLLM OCR, measured against recorded OCR fixtures on a local provider."
+description: "Early OCR results show LiteLLM's Rust migration is improving SDK performance while keeping correctness as the release gate."
 keywords: [rust, ocr, mistral ocr, ai gateway, python sdk, performance benchmark]
-tags: [rust, ocr, performance, benchmarks, engineering]
+tags: [rust, ocr, performance, benchmarks, engineering, reliability]
 ---
 
 import { BenchmarkVisualization } from '@site/src/components/MiddlewareDiagrams';
 
-The first Rust migration surface in LiteLLM is OCR. It is a narrow API with a useful mix of request sizes, response sizes, sync calls, and async calls, which makes it the right place to establish a performance baseline before moving larger endpoints.
+LiteLLM’s move to Rust is underway, and OCR is the first surface we are measuring end to end. The early result is encouraging: on the synchronous OCR fixtures we tested, the Rust path was faster in every case. On a large request, it cut median SDK latency from `9.739ms` to `3.291ms` and raised throughput from `101.5` to `306.2` calls per second.
 
-Our early measurements show the Rust OCR path is faster for every synchronous fixture we tested. The largest gain came from medium requests, where the Rust path completed `4.19x` as many calls per second. Async results are also faster for four of five fixtures, while the smallest async call is currently slower and needs more investigation.
-
-These are early, single-repeat measurements on one macOS arm64 host at concurrency one. They describe this workload, not a production capacity claim.
+The number matters, but how we got it matters more. We are moving one bounded surface at a time, checking it against the established Python behavior, and publishing the cases where the result is not yet good enough. That is how we make the gateway faster without making it less dependable.
 
 {/* truncate */}
 
-## The early result
+## A migration that is moving forward
 
-For the large-request OCR fixture, Rust reduced median SDK latency from `9.739ms` to `3.291ms` and increased throughput from `101.5` to `306.2` calls per second.
+OCR is a practical first step. It exercises request transformation, response parsing, async behavior, and varied payload sizes without asking us to move the whole gateway at once. The work gives us a real Rust path to measure, a focused contract to preserve, and a repeatable way to decide what should move next.
+
+For the large-request fixture, Rust completed nearly three times as many calls per second as Python:
 
 <BenchmarkVisualization
   configLabel="Mistral OCR SDK benchmark · recorded large-request fixture · macOS arm64 · concurrency 1"
@@ -73,32 +73,29 @@ For the large-request OCR fixture, Rust reduced median SDK latency from `9.739ms
   }}
 />
 
-## What we measured
+These results are early, not a broad production capacity claim. They come from one macOS arm64 host, one concurrent caller, 100 timed calls per worker, and one paired repeat. The job now is to keep measuring, widen the workload, and make sure the gains hold.
 
-The benchmark replays recorded Mistral OCR request and response shapes through a local isolated provider. It measures SDK latency percentiles, process CPU time, calls per second, and sampled RSS separately for the Python and Rust implementations.
+## Safe means proving parity before expanding scope
 
-| Fixture | Python p50 | Rust p50 | Rust throughput speedup |
-|---|---:|---:|---:|
-| Small request and response | 1.576 ms | 1.269 ms | 1.24x |
-| Medium request | 5.714 ms | 1.363 ms | 4.19x |
-| Large request | 9.739 ms | 3.291 ms | 2.96x |
-| Medium response | 1.961 ms | 0.511 ms | 3.84x |
-| Large response | 2.125 ms | 1.628 ms | 1.31x |
+A fast implementation is not useful if it changes what a customer receives. Before we accept a result, each Python/Rust pair validates matching response digests. The benchmark uses recorded Mistral OCR request and response shapes through a local isolated provider, so provider latency does not hide SDK behavior.
 
-The async path shows the same direction on medium and large fixtures: `2.64x` faster for medium requests, `1.93x` for large requests, `1.27x` for medium responses, and `1.38x` for large responses. The small async fixture measured `0.56x`, so we are treating it as a regression to understand, not a result to average away.
+That gives every case two gates:
 
-Memory was workload-dependent. On the large-request fixture, sampled peak RSS fell from `457.6 MiB` on Python to `390.6 MiB` on Rust. Smaller fixtures had similar resident memory, so this early report does not make a general memory claim.
+- Does the Rust path produce the same result?
+- Does it improve the work that happens inside LiteLLM?
 
-## Why OCR first
+The harness captures latency percentiles, CPU time, calls per second, and sampled RSS in separate processes. It keeps the timing, provider, and memory measurements from interfering with one another, and it saves atomic result files so a partial worker cannot look like a valid run.
 
-OCR is a focused way to verify the Rust boundary. The benchmark keeps provider latency out of the comparison and varies the request and response shapes that exercise serialization, parsing, and transformation work in the SDK.
+## Better includes finding the regressions
 
-Correctness remains the gate. Each Python/Rust pair validates matching response digests before its performance numbers are accepted. That lets us distinguish a real speedup from an implementation that simply did less work.
+The sync results are consistently faster. The async path is faster for medium and large requests and responses, from `1.27x` to `2.64x`. The smallest async fixture measured `0.56x`, so we are treating it as a regression to understand, not a number to average away.
 
-## How to read these numbers
+That is the behavior we want from this migration: a smaller, testable surface makes it possible to find a rough edge before it spreads into the next endpoint. The same discipline applies to memory. On the large-request fixture, sampled peak RSS fell from `457.6 MiB` to `390.6 MiB`, while smaller fixtures were similar. We will not turn that into a general memory claim until repeated workloads support it.
 
-This benchmark is deliberately local and controlled. It uses one host, a local provider, one concurrent caller, 100 timed calls per worker, and one paired repeat. The machine was not reserved, and sampled RSS can miss brief allocation peaks.
+## The gateway gets better without a new contract
 
-Use the result as an early signal: Rust is already reducing SDK overhead for meaningful OCR payloads. We will repeat the workload on an idle host, add more repeats and concurrency levels, and extend coverage to streaming, additional providers, and proxy traffic before treating it as a broader performance claim.
+The outcome we are working toward is simple. LiteLLM should continue to behave as customers expect while more of the CPU-bound transformation work moves onto a faster, lighter path. The same SDK, configuration, providers, and response contracts stay in place. The implementation underneath improves.
 
-The benchmark harness and its full output are in [PR #39931](https://github.com/BerriAI/litellm/pull/39931).
+OCR is the first checkpoint, not the finish line. We will repeat these runs on an idle host, add more repeats and concurrency levels, and extend coverage to streaming, more providers, and proxy traffic. Each next surface will have to meet the same standard: preserve behavior, show the measurement, and address regressions before expanding.
+
+The benchmark harness and its full early output are in [PR #39931](https://github.com/BerriAI/litellm/pull/39931).
