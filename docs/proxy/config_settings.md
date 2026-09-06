@@ -1341,6 +1341,8 @@ router_settings:
 | PILLAR_ON_FLAGGED_ACTION | Action to take when content is flagged ('block' or 'monitor')
 | PKCE_STRICT_CACHE_MISS | When set to `true`, the SSO callback will return a 401 error if the PKCE code_verifier is not found in the cache (e.g. due to a cache miss across pods). When `false` (default), it logs a warning and continues without the code_verifier.
 | POD_NAME | Pod name for the server, this will be [emitted to `datadog` logs](https://docs.litellm.ai/docs/proxy/logging#datadog) as `POD_NAME` 
+| POINTFIVE_API_KEY | API key for the PointFive logging integration. Used to request a presigned upload URL for each batch of logs
+| POINTFIVE_API_URL | Base URL of the PointFive ingestion API the integration calls. Default is https://api.pointfive.co/api/v1/ingestion
 | POSTHOG_API_KEY | API key for PostHog analytics integration
 | POSTHOG_API_URL | Base URL for PostHog API (defaults to https://us.i.posthog.com)
 | POSTHOG_MOCK | Enable mock mode for PostHog integration testing. When set to true, intercepts PostHog API calls and returns mock responses without making actual network calls. Default is false
