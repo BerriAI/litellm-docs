@@ -62,9 +62,9 @@ export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
 ```yaml
 model_list:
   # Google Gemini
-  - model_name: gemini-3.0-flash-exp
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-3.0-flash-exp
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -163,7 +163,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "gemini-3.0-flash-exp",
+    "model": "{{gemini_flash}}",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -177,7 +177,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H "Content-Type: application/json" \
 -d '{
-    "model": "gemini-3.0-flash-exp",
+    "model": "{{gemini_flash}}",
     "max_tokens": 1000,
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
 }'
@@ -225,7 +225,7 @@ claude --model {{openai_large}}
 claude --model {{openai_small}}
 
 # Use Google Gemini
-claude --model gemini-3.0-flash-exp
+claude --model {{gemini_flash}}
 
 # Use Vertex AI Gemini
 claude --model vertex-gemini-3.8-flash
@@ -253,7 +253,7 @@ On startup, Claude Code will call `GET /v1/models` against your `ANTHROPIC_BASE_
 /model
 ```
 
-and select any LiteLLM-managed model (`{{openai_large}}`, `gemini-3.0-flash-exp`, `anthropic-vertex`, etc.) to switch without restarting the session.
+and select any LiteLLM-managed model (`{{openai_large}}`, `{{gemini_flash}}`, `anthropic-vertex`, etc.) to switch without restarting the session.
 
 :::info Requirements
 

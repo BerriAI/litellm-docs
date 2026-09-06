@@ -89,7 +89,7 @@ async def completion_call():
         
         print("test acompletion + streaming")
         response = await acompletion(
-            model="cometapi/chatgpt-4o-latest", 
+            model="cometapi/{{openai_large}}", 
             messages=[{"content": "Hello, how are you?", "role": "user"}], 
             stream=True
         )

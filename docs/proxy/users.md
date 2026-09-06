@@ -572,7 +572,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "user_id": "engineer-1",
-  "model_max_budget": {"claude-opus-4-8": {"budget_limit": 200, "time_period": "1mo"}}
+  "model_max_budget": {"{{anthropic_large}}": {"budget_limit": 200, "time_period": "1mo"}}
 }'
 ```
 
@@ -581,7 +581,7 @@ Use `1mo` for a calendar-month budget that resets on the first day of each month
 ```json
 {
     "error": {
-        "message": "LiteLLM User: engineer-1, exceeded budget for model=claude-opus-4-8",
+        "message": "LiteLLM User: engineer-1, exceeded budget for model={{anthropic_large}}",
         "type": "budget_exceeded",
         "param": null,
         "code": "429"

@@ -48,7 +48,7 @@ This gives a much greater degree of control over efficiency.
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python
+```python keep-model-ids
 import litellm
 
 # Works with Claude 4.6 models (no beta header needed)
@@ -64,7 +64,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-```python
+```python keep-model-ids
 # Also works with Claude Opus 4.5 (beta header auto-injected)
 response = litellm.completion(
     model="anthropic/claude-opus-4-5-20251101",
@@ -79,7 +79,7 @@ response = litellm.completion(
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-```typescript
+```typescript keep-model-ids
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({
@@ -107,7 +107,7 @@ console.log(response.content[0].text);
 
 ### Using LiteLLM Proxy
 
-```bash
+```bash keep-model-ids
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
@@ -126,7 +126,7 @@ curl http://localhost:4000/v1/chat/completions \
 <Tabs>
 <TabItem value="46" label="Claude 4.6 (stable)">
 
-```bash
+```bash keep-model-ids
 # Claude 4.6 — no beta header needed
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -148,7 +148,7 @@ curl https://api.anthropic.com/v1/messages \
 </TabItem>
 <TabItem value="45" label="Claude Opus 4.5 (beta)">
 
-```bash
+```bash keep-model-ids
 # Claude Opus 4.5 — requires beta header
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -199,7 +199,7 @@ When using tools, the effort parameter affects both the explanations around tool
 
 Example with tools:
 
-```python
+```python keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -230,7 +230,7 @@ response = litellm.completion(
 
 The effort parameter works together with extended thinking. When both are enabled, effort controls the token budget across all response types:
 
-```python
+```python keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -301,7 +301,7 @@ If you're not seeing the header for Opus 4.5:
 
 Accepted values: `"high"`, `"medium"`, `"low"`, and `"max"` (Opus 4.6 only). Any other value will raise a validation error:
 
-```python
+```python keep-model-ids
 # ❌ This will raise an error
 output_config={"effort": "very_low"}
 

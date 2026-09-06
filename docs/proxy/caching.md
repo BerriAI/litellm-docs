@@ -1171,7 +1171,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "user": "ishan",
     "messages": [
         {

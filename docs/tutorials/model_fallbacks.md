@@ -45,7 +45,7 @@ LiteLLM also exposes a `get_max_tokens()` function, which you can use to identif
 
 The model ids in the fallback list below are illustrative and kept for their context window sizes.
 
-```python
+```python keep-model-ids
 import litellm
 from litellm import completion, ContextWindowExceededError, get_max_tokens
 

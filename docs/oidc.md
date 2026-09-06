@@ -134,7 +134,7 @@ The configuration below is only an example. You should adjust the permissions an
 
 Permissions:
 
-```json
+```json keep-model-ids
 {
     "Version": "2012-10-17",
     "Statement": [

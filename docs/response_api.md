@@ -36,7 +36,7 @@ import litellm
 
 # Non-streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -52,7 +52,7 @@ print(response)
     "object": "response",
     "created_at": 1734366691,
     "status": "completed",
-    "model": "o1-pro-2025-01-30",
+    "model": "{{openai_large}}",
     "output": [
         {
             "type": "message",
@@ -82,7 +82,7 @@ import litellm
 
 # Streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -199,7 +199,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -226,7 +226,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -261,7 +261,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -471,9 +471,9 @@ litellm --config /path/to/config.yaml
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/o1-pro
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/o1-pro
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -489,7 +489,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -508,7 +508,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -555,7 +555,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -580,7 +580,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 

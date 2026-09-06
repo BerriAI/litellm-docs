@@ -30,7 +30,7 @@ Use this function to get an up-to-date list of supported openai params for any m
 ```python
 from litellm import get_supported_openai_params
 
-response = get_supported_openai_params(model="anthropic.claude-3", custom_llm_provider="bedrock")
+response = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_llm_provider="bedrock")
 
 print(response) # ["max_tokens", "tools", "tool_choice", "stream"]
 ```

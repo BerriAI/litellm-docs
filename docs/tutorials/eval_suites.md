@@ -184,7 +184,7 @@ eval_data = pd.DataFrame(
 with mlflow.start_run() as run:
     system_prompt = "Answer the following question in two sentences"
     logged_model_info = mlflow.openai.log_model(
-        model="gpt-3.5",
+        model="{{openai_small}}",
         task=openai.ChatCompletion,
         artifact_path="model",
         messages=[

@@ -235,7 +235,7 @@ Specifically triggered when a context window exceeded error occurs.
 
 **Use Case:** When the input is too long for the primary model, fallback to a model with a larger context window. The ids below are illustrative and kept for their context window sizes.
 
-```json
+```json keep-model-ids
 {
   "model": "gpt-3.5-turbo",
   "fallback_models": ["gpt-4-32k", "claude-3-opus"],

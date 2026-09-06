@@ -85,7 +85,7 @@ curl http://localhost:4000/v1/files \
 
 ```python
 ft_job = await client.fine_tuning.jobs.create(
-    model="gpt-35-turbo-1106",                   # Azure OpenAI model you want to fine-tune
+    model="gpt-4.1-2025-04-14",                   # Azure OpenAI model you want to fine-tune
     training_file="file-abc123",                 # file_id from create file response
     extra_headers={"custom-llm-provider": "azure"}, # tell litellm proxy which provider to use
 )
@@ -100,7 +100,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: azure" \
     -d '{
-    "model": "gpt-35-turbo-1106",
+    "model": "gpt-4.1-2025-04-14",
     "training_file": "file-abc123"
     }'
 ```
@@ -186,7 +186,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
 
 ```json
 {
-  "model": "gpt-4o-mini",
+  "model": "gpt-4.1-mini-2025-04-14",
   "training_file": "file-abcde12345",
   "hyperparameters": {
     "batch_size": 4,

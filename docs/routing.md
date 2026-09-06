@@ -1136,19 +1136,19 @@ from litellm import Router
 
 model_list = [
 	{
-		"model_name": "o1",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
-			"model": "o1-preview", 
+			"model": "{{openai_small}}", 
 			"api_key": os.getenv("OPENAI_API_KEY"), 
 			"weight": 1
 		},
 	},
 	{
-		"model_name": "o1",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
-			"model": "o1-preview", 
+			"model": "{{openai_small}}", 
 			"api_key": os.getenv("OPENAI_API_KEY"), 
-			"weight": 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
+			"weight": 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 		},
 	},
 ]
@@ -1166,16 +1166,16 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: o1
+  - model_name: {{openai_small}}
     litellm_params:
-      model: o1
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       weight: 1
-  - model_name: o1
+  - model_name: {{openai_small}}
     litellm_params:
-      model: o1-preview
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-      weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
+      weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 ```
 
 </TabItem>
@@ -1780,7 +1780,7 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```python
+```python keep-model-ids
 """
 - Give a gpt-3.5-turbo model group with different context windows (4k vs. 16k)
 - Send a 5k prompt
@@ -2011,7 +2011,7 @@ from litellm import Router
 
 model_list = [
 	{ # list of model deployments 
-		"model_name": "gpt-4-preview", # model alias 
+		"model_name": "{{openai_small}}", # model alias 
 		"litellm_params": { # params for litellm completion/embedding call 
 			"model": "azure/chatgpt-v-2", # actual model name
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -2019,11 +2019,11 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-4-1106-preview" # azure/gpt-4-1106-preview will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/{{openai_small}}" # azure/{{openai_small}} will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}, 
 	{
-		"model_name": "gpt-4-32k", 
+		"model_name": "{{openai_large}}", 
 		"litellm_params": { # params for litellm completion/embedding call 
 			"model": "azure/chatgpt-functioncalling", 
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -2031,7 +2031,7 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-4-32k" # azure/gpt-4-32k will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/{{openai_large}}" # azure/{{openai_large}} will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}
 ]
@@ -2057,7 +2057,7 @@ litellm.callbacks = [customHandler]
 
 # router completion call
 response = router.completion(
-	model="gpt-4-32k", 
+	model="{{openai_large}}", 
 	messages=[{ "role": "user", "content": "Hi who are you"}]
 )
 ```
@@ -2069,7 +2069,7 @@ You can also set default params for litellm completion/embedding calls. Here's h
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```python
+```python keep-model-ids
 from litellm import Router
 
 fallback_dict = {"gpt-4o-mini": "gpt-4.1"}

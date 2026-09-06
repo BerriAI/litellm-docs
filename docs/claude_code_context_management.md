@@ -124,7 +124,7 @@ curl -X POST http://localhost:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-5.4-mini",
+    "model": "{{openai_small}}",
     "max_tokens": 1024,
     "messages": [...],
     "tools": [...],
@@ -164,7 +164,7 @@ Without this setting, the polyfill is a no-op and `applied_edits[0].error: "summ
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="gpt-5.4-mini",          # any non-Anthropic provider
+    model="{{openai_small}}",          # any non-Anthropic provider
     max_tokens=1024,
     messages=[...],                # multi-turn history
     context_management={
@@ -188,7 +188,7 @@ curl -X POST http://localhost:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-5.4-mini",
+    "model": "{{openai_small}}",
     "max_tokens": 1024,
     "messages": [...],
     "context_management": {
@@ -261,7 +261,7 @@ When compaction fires, the response includes `context_management.applied_edits` 
     },
     {"type": "text", "text": "Sure, here's the output formatter..."}
   ],
-  "model": "gpt-5.4-mini",
+  "model": "{{openai_small}}",
   "stop_reason": "end_turn",
   "usage": {"input_tokens": 420, "output_tokens": 120},
   "context_management": {
@@ -320,7 +320,7 @@ When at least one edit fires, the response includes a `context_management` field
   "type": "message",
   "role": "assistant",
   "content": [{"type": "text", "text": "Based on the latest weather data..."}],
-  "model": "gpt-5.4-mini",
+  "model": "{{openai_small}}",
   "stop_reason": "end_turn",
   "usage": {
     "input_tokens": 620,
@@ -346,7 +346,7 @@ The `context_management.applied_edits` field is included in the final `message_d
 
 ```
 event: message_start
-data: {"type":"message_start","message":{"id":"msg_01...","type":"message","role":"assistant","content":[],"model":"gpt-5.4-mini","stop_reason":null,"usage":{"input_tokens":620,"output_tokens":0}}}
+data: {"type":"message_start","message":{"id":"msg_01...","type":"message","role":"assistant","content":[],"model":"{{openai_small}}","stop_reason":null,"usage":{"input_tokens":620,"output_tokens":0}}}
 
 event: content_block_start
 data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}

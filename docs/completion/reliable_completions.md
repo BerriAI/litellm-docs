@@ -43,7 +43,7 @@ response = completion(
 
 The ids below are illustrative and kept for their context window sizes: a 4k model falling back to its 16k variant.
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}

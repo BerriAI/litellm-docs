@@ -765,7 +765,7 @@ LiteLLM supports Anthropic's beta features on AWS Bedrock through the `anthropic
 
 **Single Beta Feature**
 
-```python
+```python keep-model-ids
 from litellm import completion
 import os
 
@@ -787,7 +787,7 @@ response = completion(
 
 **Multiple Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Combine multiple beta features (comma-separated)
@@ -803,7 +803,7 @@ response = completion(
 
 **Computer Use Tools with Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Computer use tools automatically add computer-use-2024-10-22
@@ -828,7 +828,7 @@ response = completion(
 
 **Set on YAML Config**
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: claude-sonnet-4-1m
     litellm_params:
@@ -1289,7 +1289,7 @@ The returned completion will _**not**_ include your "pre-fill" text, since it is
 
 :::
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1318,7 +1318,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1 with Bedrock, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1990,14 +1990,14 @@ print(response.choices[0].message.content)
 
 ## Provisioned throughput models
 To use provisioned throughput Bedrock models pass 
-- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.claude-v2`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models)
+- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.{{anthropic}}`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models)
 - `model_id=provisioned-model-arn` 
 
 Completion
 ```python
 import litellm
 response = litellm.completion(
-    model="bedrock/anthropic.claude-instant-v1",
+    model="bedrock/anthropic.{{anthropic}}",
     model_id="provisioned-model-arn",
     messages=[{"content": "Hello, how are you?", "role": "user"}]
 )

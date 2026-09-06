@@ -201,7 +201,7 @@ import litellm
 os.environ["HELICONE_API_KEY"] = "your-helicone-key"
 
 response = litellm.completion(
-    model="helicone/claude-3.5-haiku/anthropic",
+    model="helicone/{{anthropic}}/anthropic",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```

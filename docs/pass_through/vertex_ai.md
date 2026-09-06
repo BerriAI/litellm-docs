@@ -322,11 +322,11 @@ Create Fine Tuning Job
 
 
 ```shell
-curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/gemini-2.5-flash:tuningJobs \
+curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/{{gemini_flash}}:tuningJobs \
       -H "Content-Type: application/json" \
       -H "x-litellm-api-key: Bearer sk-1234" \
       -d '{
-  "baseModel": "gemini-1.0-pro-002",
+  "baseModel": "{{gemini_flash}}",
   "supervisedTuningSpec" : {
       "training_dataset_uri": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl"
   }

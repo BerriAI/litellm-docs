@@ -124,7 +124,7 @@ Set `keepalive_seconds` under a deployment's `litellm_params` to keep the connec
 model_list:
   - model_name: claude-opus
     litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
       keepalive_seconds: 15
 ```
@@ -146,7 +146,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 model_list:
   - model_name: claude-opus
     litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
       keepalive_seconds: 15
       allow_client_keepalive_override: true

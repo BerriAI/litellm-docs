@@ -179,7 +179,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4-1106-preview
+      base_model: azure/{{openai_large}}
 ```
 
 ### OpenAI Models with Dated Versions

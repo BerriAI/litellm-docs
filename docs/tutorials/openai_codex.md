@@ -82,9 +82,9 @@ Ensure your LiteLLM Proxy is properly configured to route to your desired models
 
 ```yaml showLineNumbers
 model_list:
-  - model_name: o3-mini
+  - model_name: gpt-5.3-codex
     litellm_params:
-      model: openai/o3-mini
+      model: openai/gpt-5.3-codex
       api_key: os.environ/OPENAI_API_KEY
   - model_name: {{anthropic}}
     litellm_params:

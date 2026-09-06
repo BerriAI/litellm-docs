@@ -43,7 +43,7 @@ fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}]
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import Router 
 router = Router(
   model_list=[
@@ -75,7 +75,7 @@ router = Router(
 <TabItem value="proxy" label="PROXY">
 
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
@@ -601,7 +601,7 @@ If all models in a group are in cooldown (e.g. rate limited), LiteLLM will fallb
 This skips any cooldown check for the fallback model.
 
 1. Specify the model ID in `model_info`
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_large}}
     litellm_params:
@@ -735,7 +735,7 @@ Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -765,7 +765,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -794,7 +794,7 @@ Fallback to larger models if current model is too small.
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -832,7 +832,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -861,7 +861,7 @@ print(response)
 
 Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit content policy violation errors. 
 
-```yaml
+```yaml keep-model-ids
 model_list:
     - model_name: gpt-3.5-turbo-small
       litellm_params:
@@ -886,7 +886,7 @@ litellm_settings:
 You can also set default_fallbacks, in case a specific model group is misconfigured / bad.
 
 
-```yaml
+```yaml keep-model-ids
 model_list:
     - model_name: gpt-3.5-turbo-small
       litellm_params:
@@ -918,7 +918,7 @@ Set 'region_name' of deployment.
 
 **1. Set Config**
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -1026,7 +1026,7 @@ By default a fallback configured in `router_settings` runs for every request, ev
 
 Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-5.6
     litellm_params:

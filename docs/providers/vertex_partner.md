@@ -114,7 +114,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 from litellm import completion
 
 resp = completion(
-    model="vertex_ai/claude-3-7-sonnet-20250219",
+    model="vertex_ai/{{anthropic}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -128,9 +128,9 @@ resp = completion(
 1. Setup config.yaml
 
 ```yaml
-- model_name: claude-3-7-sonnet-20250219
+- model_name: {{anthropic}}
   litellm_params:
-    model: vertex_ai/claude-3-7-sonnet-20250219
+    model: vertex_ai/{{anthropic}}
     vertex_ai_project: "my-test-project"
     vertex_ai_location: "us-west-1"
 ```
@@ -148,7 +148,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-7-sonnet-20250219",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -164,7 +164,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-3-7-sonnet-20250219',
+    model='{{anthropic}}',
     object='chat.completion',
     system_fingerprint=None,
     choices=[
