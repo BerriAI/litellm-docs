@@ -1,11 +1,11 @@
 ---
 slug: auto-router-per-hop-compression
-title: "AutoRouter Per-Hop Compression: Cut Classification Costs Another 32%"
+title: "AutoRouter Per-Hop Compression: Cut LLM Classifier Costs Another 32%"
 date: 2026-09-05T21:00:00
 authors:
   - moe
 image: ./compression-config.png
-description: "AutoRouter can now apply different compression to the routing classifier and the model call. The classifier only needs enough context to route correctly, not to generate an answer. In internal testing, compressing it aggressively cut classification costs a further 32% beyond shared compression, with no change in routing accuracy."
+description: "The complexity router's LLM classifier can now use different compression than the model call it routes to. The classifier only needs enough context to route correctly, not to generate an answer. In internal testing, compressing it aggressively cut classification costs a further 32% beyond shared compression, with no change in routing accuracy."
 keywords: [auto router, compression, cost savings, routing classifier, prompt compression, llm gateway, litellm]
 tags: [routing, cost, compression, engineering]
 hide_table_of_contents: false
@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Routing vs Model Compression: compress the routing decision independently](./compression-config.png)
 
-**The AutoRouter classifier can now be compressed more aggressively than your model calls. In internal testing, that cut classification costs a further 32% beyond what shared compression was already saving, with no change in routing accuracy.**
+**The complexity router's LLM classifier can now be compressed more aggressively than your model calls. In internal testing, that cut classification costs a further 32% beyond what shared compression was already saving, with no change in routing accuracy.**
 
 {/* truncate */}
 
@@ -31,13 +31,13 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 ## The problem
 
-Every request through an AutoRouter pays for two LLM calls. The first one, the complexity classifier, decides where the request should go: SIMPLE task to a cheap model, MEDIUM to something in the middle, COMPLEX or REASONING to a frontier model. The second call is the actual model that answers the request.
+The complexity router can classify requests a few ways: a free heuristic scorer, keyword rules, or, when you need judgment the heuristics can't capture, an LLM classifier. That last option pays for a second LLM call on every request: one call to decide the tier (SIMPLE to a cheap model, MEDIUM to something in the middle, COMPLEX or REASONING to a frontier model), then a second call to the model that actually answers.
 
-Until now, both calls shared the same compression setting, which meant the classifier's compression was capped by whatever the model call could tolerate. That ceiling is the wrong one. The classifier only needs enough context to answer one question: what tier can handle this. It doesn't need the full conversation history or the detailed background the model call needs to actually produce an answer, so it can be compressed far past the point where the model call would start to suffer.
+Until now, that classifier call shared its compression setting with the model call it routed to, which meant the classifier's compression was capped by whatever the model call could tolerate. That ceiling is the wrong one. The classifier only needs enough context to answer one question: what tier can handle this. It doesn't need the full conversation history or the detailed background the model call needs to actually produce an answer, so it can be compressed far past the point where the model call would start to suffer.
 
 ## The solution
 
-Two new fields decouple classifier compression from model-call compression:
+Two new fields decouple the LLM classifier's compression from the model call's:
 
 - `auto_router_routing_compression`: the guardrail to compress the classifier's prompt
 - `auto_router_model_compression`: the guardrail to compress the model's prompt
@@ -46,7 +46,7 @@ Set the routing compression to be aggressive while the model call compression st
 
 ## How it works
 
-When you send a request through an AutoRouter with separate compression settings:
+When you send a request through a complexity router with `classifier_type: llm` and separate compression settings:
 
 1. The proxy applies the routing-hop compression to a copy of your messages
 2. The classifier sees the compressed version and makes a routing decision
@@ -75,7 +75,8 @@ model_list:
           SIMPLE: gpt-4o-mini
           MEDIUM: gpt-4o
           COMPLEX: gpt-4-turbo
-        
+        classifier_type: llm
+
         # Aggressive compression for the classifier
         auto_router_routing_compression: headroom-aggressive
         # Moderate compression for the model call
@@ -99,7 +100,7 @@ guardrails:
       tokens_to_retain: 1000
 ```
 
-In the Admin UI, open an AutoRouter's Detailed Configuration, then Advanced: Compression. Pick your routing guardrail, choose "Use a different compression" for the model call, and select its guardrail separately.
+In the Admin UI, open a complexity router's Detailed Configuration, then Advanced: Compression. Pick your routing guardrail, choose "Use a different compression" for the model call, and select its guardrail separately.
 
 :::info[Try it on your traffic]
 
