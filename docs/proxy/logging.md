@@ -1402,6 +1402,22 @@ On s3 bucket, you will see the object key as `my-test-path/my-key-alias/...`
 if both team alias and key alias are enabled then the path becomes
 `my-test-path/my-team-alias/my-key-alias/...`
 
+### Server-Side Encryption (SSE-KMS)
+
+Set `s3_server_side_encryption` to have LiteLLM send the `x-amz-server-side-encryption` header on every PUT. Use `s3_server_side_encryption_kms_key_id` to pin a specific customer-managed KMS key, which sends `x-amz-server-side-encryption-aws-kms-key-id`. This is required for buckets whose IAM policy enforces an exact KMS key id with a `StringNotEquals` condition, since AWS evaluates the negated condition as true when the header is absent and returns `403 Forbidden`.
+
+```yaml
+litellm_settings:
+  callbacks: ["s3_v2"]
+  s3_callback_params:
+    s3_bucket_name: logs-bucket-litellm
+    s3_region_name: us-west-2
+    s3_aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+    s3_aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+    s3_server_side_encryption: "aws:kms"
+    s3_server_side_encryption_kms_key_id: os.environ/AWS_S3_KMS_KEY_ID  # arn or key id of the customer-managed KMS key
+```
+
 ## AWS SQS
 
 
