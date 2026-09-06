@@ -69,7 +69,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 This will emit the raw request sent by LiteLLM to the API Provider and raw response received from the API Provider for **just** this request in the logs. 
 
 
-```bash showLineNumbers
+```bash showLineNumbers keep-model-ids
 INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
 20:14:06 - LiteLLM:WARNING: litellm_logging.py:938 - 
 

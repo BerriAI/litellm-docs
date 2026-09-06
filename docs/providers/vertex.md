@@ -3048,7 +3048,7 @@ finetune_settings:
 
 ```python
 ft_job = await client.fine_tuning.jobs.create(
-    model="gemini-1.0-pro-002",                  # Vertex model you want to fine-tune
+    model="{{gemini_flash}}",                  # Vertex model you want to fine-tune
     training_file="gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",                 # file_id from create file response
     extra_headers={"custom-llm-provider": "vertex_ai"}, # tell litellm proxy which provider to use
 )
@@ -3063,7 +3063,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
-    "model": "gemini-1.0-pro-002",
+    "model": "{{gemini_flash}}",
     "training_file": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl"
     }'
 ```
@@ -3083,7 +3083,7 @@ Set hyper_parameters, such as `n_epochs`, `learning_rate_multiplier` and `adapte
 ```python
 
 ft_job = client.fine_tuning.jobs.create(
-    model="gemini-1.0-pro-002",                  # Vertex model you want to fine-tune
+    model="{{gemini_flash}}",                  # Vertex model you want to fine-tune
     training_file="gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",                 # file_id from create file response
     hyperparameters={
         "n_epochs": 3,                      # epoch_count on Vertex
@@ -3103,7 +3103,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
-    "model": "gemini-1.0-pro-002",
+    "model": "{{gemini_flash}}",
     "training_file": "gs://cloud-samples-data/ai-platform/generative_ai/sft_train_data.jsonl",
     "hyperparameters": {
         "n_epochs": 3,

@@ -515,7 +515,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ```python showLineNumbers
 response = litellm.responses(
-  model="vertex_ai/claude-opus-4-8",
+  model="vertex_ai/{{anthropic_large}}",
   input="How many prime numbers are less than 30?",
   reasoning={"effort": "low"},
 )
@@ -529,7 +529,7 @@ curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-opus-4-8",
+    "model": "{{anthropic_large}}",
     "input": "How many prime numbers are less than 30?",
     "reasoning": {"effort": "low"}
   }'
@@ -566,7 +566,7 @@ curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-opus-4-8",
+    "model": "{{anthropic_large}}",
     "input": "How many prime numbers are less than 30?",
     "thinking": {"type": "adaptive"},
     "output_config": {"effort": "high"}
@@ -590,11 +590,11 @@ Use `litellm.supports_reasoning(model="")` -> returns `True` if model supports r
 import litellm 
 
 # Example models that support reasoning
-assert litellm.supports_reasoning(model="anthropic/claude-3-7-sonnet-20250219") == True
+assert litellm.supports_reasoning(model="anthropic/{{anthropic}}") == True
 assert litellm.supports_reasoning(model="deepseek/deepseek-chat") == True 
 
 # Example models that do not support reasoning
-assert litellm.supports_reasoning(model="openai/gpt-4o-mini") == False 
+assert litellm.supports_reasoning(model="openai/gpt-4.1") == False 
 ```
 </TabItem>
 

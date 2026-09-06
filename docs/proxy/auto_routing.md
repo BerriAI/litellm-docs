@@ -628,21 +628,21 @@ Nothing new is needed to express that. Declare one `model_list` entry per rung, 
 
 ```yaml
 model_list:
-  - model_name: gpt-5.4-mini-low
+  - model_name: {{openai_small}}-low
     litellm_params:
-      model: openai/gpt-5.4-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       reasoning_effort: low
 
   # same model and the same per-token rate as the rung above, more thinking
-  - model_name: gpt-5.4-mini-high
+  - model_name: {{openai_small}}-high
     litellm_params:
-      model: openai/gpt-5.4-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       reasoning_effort: high
-  - model_name: gpt-5.4-mini-xhigh
+  - model_name: {{openai_small}}-xhigh
     litellm_params:
-      model: openai/gpt-5.4-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       reasoning_effort: xhigh
 
@@ -658,11 +658,11 @@ model_list:
       drop_params: true
       complexity_router_config:
         tiers:
-          SIMPLE:    gpt-5.4-mini-low
-          MEDIUM:    gpt-5.4-mini-high
-          COMPLEX:   gpt-5.4-mini-xhigh
+          SIMPLE:    {{openai_small}}-low
+          MEDIUM:    {{openai_small}}-high
+          COMPLEX:   {{openai_small}}-xhigh
           REASONING: {{openai_large}}
-      complexity_router_default_model: gpt-5.4-mini-high
+      complexity_router_default_model: {{openai_small}}-high
 ```
 
 Anthropic-family rungs use `thinking` the same way, since it is an ordinary `litellm_params` key:
@@ -687,7 +687,7 @@ router = Router(
         {"model_name": "{{openai_small}}",   "litellm_params": {"model": "{{openai_small}}"}},
         {"model_name": "{{openai_large}}",        "litellm_params": {"model": "{{openai_large}}"}},
         {"model_name": "claude-sonnet", "litellm_params": {"model": "{{anthropic}}"}},
-        {"model_name": "o1-preview",    "litellm_params": {"model": "o1-preview"}},
+        {"model_name": "claude-opus",   "litellm_params": {"model": "{{anthropic_large}}"}},
         {
             "model_name": "smart-router",
             "litellm_params": {
@@ -697,7 +697,7 @@ router = Router(
                         "SIMPLE":    "{{openai_small}}",
                         "MEDIUM":    "{{openai_large}}",
                         "COMPLEX":   "claude-sonnet",
-                        "REASONING": "o1-preview",
+                        "REASONING": "claude-opus",
                     },
                     "session_affinity": True,
                 },

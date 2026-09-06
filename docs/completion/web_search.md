@@ -632,9 +632,9 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
 - **`search_context_cost_per_query`**: the cost per billable unit (per search context size tier).
 - **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default; flat fee per API call that uses search).
 
-```json
+```json keep-model-ids
 {
-    "gemini/gemini-3-flash-preview": {
+    "gemini/{{gemini_flash}}": {
         "web_search_billing_unit": "per_query",
         "search_context_cost_per_query": {
             "search_context_size_low": 0.014,

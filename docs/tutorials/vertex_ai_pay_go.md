@@ -64,7 +64,7 @@ curl http://localhost:4000/v1/chat/completions \
 Use `x-pass-` so LiteLLM forwards provider-specific headers.
 
 ```bash
-MODEL_ID="gemini-3-pro-preview-0325"
+MODEL_ID="{{gemini_pro}}"
 PROJECT_ID="YOUR_PROJECT_ID"
 
 curl -X POST \

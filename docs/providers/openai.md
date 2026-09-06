@@ -502,7 +502,7 @@ import litellm
 litellm.route_all_chat_openai_to_responses = True
 
 response = litellm.completion(
-    model="gpt-5.4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -523,7 +523,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
 }'

@@ -348,7 +348,7 @@ $ litellm --model {{anthropic_large}}
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "claude-3",
+      "model": "anthropic/{{anthropic}}",
       "messages": [
         {
           "role": "user",
@@ -369,7 +369,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="claude-3", messages = [
+response = client.chat.completions.create(model="anthropic/{{anthropic}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -393,7 +393,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "claude-3",
+    model = "anthropic/{{anthropic}}",
     temperature=0.1
 )
 
@@ -1138,7 +1138,7 @@ response = completion(
 <Tabs>
 <TabItem value="computer" label="Computer">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [
@@ -1173,7 +1173,7 @@ print(resp)
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [{
@@ -1197,7 +1197,7 @@ print(resp)
 
 1. Setup config.yaml
 
-```yaml
+```yaml keep-model-ids
 - model_name: claude-3-5-sonnet-latest
   litellm_params:
     model: anthropic/claude-3-5-sonnet-latest
@@ -1212,7 +1212,7 @@ litellm --config /path/to/config.yaml
 
 3. Test it! 
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
@@ -1494,7 +1494,7 @@ This means **any value other than `"none"` for `reasoning_effort` will automatic
 
 You can disable thinking either by omitting `reasoning_effort` entirely or setting it to `"none"`. LiteLLM will not send a `thinking` field in that case. You can still pass the native `thinking` parameter directly if you wish to explicitly control thinking with a fixed budget on prior models:
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Disable thinking on Claude 4.6/4.7
@@ -1633,7 +1633,7 @@ You can also pass the `thinking` parameter to Anthropic models.
 
 ```python
 response = litellm.completion(
-  model="anthropic/claude-3-7-sonnet-20250219",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -1647,7 +1647,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-3-7-sonnet-20250219",
+    "model": "anthropic/{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -1693,7 +1693,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ```python
 response = litellm.completion(
-  model="anthropic/claude-opus-4-6",
+  model="anthropic/{{anthropic_large}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 5000},
 )
@@ -1707,7 +1707,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-opus-4-6",
+    "model": "anthropic/{{anthropic_large}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 5000}
   }'
@@ -1720,7 +1720,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 Pass `extra_headers: dict` to `litellm.completion`
 
-```python
+```python keep-model-ids
 from litellm import completion
 messages = [{"role": "user", "content": "What is Anthropic?"}]
 response = completion(
@@ -1740,7 +1740,7 @@ The returned completion will _not_ include your "pre-fill" text, since it is par
 
 :::
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1769,7 +1769,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1816,11 +1816,11 @@ file_data = response.content
 
 encoded_file = base64.b64encode(file_data).decode("utf-8")
 
-## check if model supports pdf input - (2024/11/11) only claude-3-5-haiku-20241022 supports it
-supports_pdf_input("anthropic/claude-3-5-haiku-20241022") # True
+## check if model supports pdf input
+supports_pdf_input("anthropic/{{anthropic}}") # True
 
 response = completion(
-    model="anthropic/claude-3-5-haiku-20241022",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -1846,9 +1846,9 @@ print(response.choices[0])
 1. Add model to config 
 
 ```yaml
-- model_name: claude-3-5-haiku-20241022
+- model_name: {{anthropic}}
   litellm_params:
-    model: anthropic/claude-3-5-haiku-20241022
+    model: anthropic/{{anthropic}}
     api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1865,7 +1865,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-5-haiku-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {
         "role": "user",

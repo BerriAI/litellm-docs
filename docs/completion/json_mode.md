@@ -59,7 +59,7 @@ Call `litellm.get_supported_openai_params` to check if a model/provider supports
 ```python
 from litellm import get_supported_openai_params
 
-params = get_supported_openai_params(model="anthropic.claude-3", custom_llm_provider="bedrock")
+params = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_llm_provider="bedrock")
 
 assert "response_format" in params
 ```
