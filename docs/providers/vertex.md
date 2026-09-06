@@ -2307,7 +2307,7 @@ Pass any file supported by Vertex AI, through LiteLLM.
 
 LiteLLM Supports the following file types passed in url. 
 
-Using `file` message type for VertexAI <SinceVersion v="1.65.1" />
+You can use the `file` message type for VertexAI <SinceVersion v="1.65.1" />
 
 ```
 Files with Cloud Storage URIs - gs://cloud-samples-data/generative-ai/image/boats.jpeg

@@ -28,7 +28,7 @@ Claude Desktop treats LiteLLM the way it treats Anthropic's own API: it discover
 | Credential, single sign-on | the user's ID token, validated by LiteLLM JWT auth |
 | Credential, static key | a LiteLLM virtual key |
 | Endpoints used | `GET /v1/models`, `POST /v1/messages`, and `POST /mcp` for MCP servers |
-| LiteLLM version | v1.98.0 or later for model discovery, v1.89.0 or later for the `issuers` JWT config |
+| LiteLLM version | <SinceVersion v="1.98.0" /> for model discovery, <SinceVersion v="1.89.0" /> for the `issuers` JWT config |
 | Claude Desktop version | 1.6889.0 or later for single sign-on |
 
 ## Option A: Single sign-on with your identity provider

@@ -50,10 +50,11 @@ feature exists in the version they run. The version-note rule fails a prose
 line that ends in a hand-written availability note ("Requires LiteLLM
 v1.76.1+", "This feature is available in v1.74.3-stable and above", a table
 cell holding "1.63.8+") and points at the badge. The note has to be the tail of
-the line and carry exactly one LiteLLM version, so a sentence that happens to
-mention a release ("From v1.81.0 the request is set as attributes on the parent
-span") and another project's version (OpenAI Python v1.0.0+, a2a-sdk >= 1.1.0)
-are both left alone. Add `{/* keep-version-note */}` to the line when the
+the line and carry exactly one version, so a sentence that happens to mention a
+release ("From v1.81.0 the request is set as attributes on the parent span") is
+left alone. Another project's version usually is too, since the words leading
+into it are not availability words, but a line like "requires the SDK 1.1.0"
+does fire. Add `{/* keep-version-note */}` to the line there, and wherever the
 release itself is the subject, as on the release-cycle page.
 
 Requires PyYAML (pip install pyyaml).
@@ -382,8 +383,8 @@ def check_page(page, site, page_cache):
         for match in SINCE_VERSION_TAG_RE.finditer(raw):
             if not SINCE_VERSION_PROP_RE.search(match.group(1)):
                 err("version-note", line_no, "<SinceVersion> without a `v` prop renders nothing; write `<SinceVersion v=\"1.85.0\" />`")
-        if "keep-version-note" not in raw and "<SinceVersion" not in raw:
-            literal = version_note_literal(raw)
+        if "keep-version-note" not in raw:
+            literal = version_note_literal(SINCE_VERSION_TAG_RE.sub(" ", raw))
             if literal:
                 err("version-note", line_no, version_note_message(literal))
         text = strip_inline_code(raw)
@@ -475,7 +476,7 @@ def python_literal_message(literal):
     )
 
 
-VERSION_TOKEN_RE = re.compile(r"v?1\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
+VERSION_TOKEN_RE = re.compile(r"v?[12]\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
 VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_|>]")
 VERSION_NOTE_TAIL_RE = re.compile(
     r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
@@ -516,8 +517,8 @@ def version_note_literal(raw):
 def version_note_message(literal):
     return (
         f"hand-written version note `{literal}`; write `<SinceVersion v=\"{literal.lstrip('vV')}\" />` so every "
-        "page states availability the same way, or add {/* keep-version-note */} when the release itself is the "
-        "subject of the sentence rather than a feature's availability"
+        "page states availability the same way, or add {/* keep-version-note */} when the version is not "
+        "LiteLLM's own or the release itself is the subject of the sentence"
     )
 
 

@@ -14,8 +14,8 @@ LiteLLM provides image editing functionality that maps to OpenAI's `/images/edit
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
 | Supported operations | Create image edits | Single and multiple images supported |
-| Supported LiteLLM SDK Versions | 1.63.8+ | Gemini support requires 1.79.3+ |
-| Supported LiteLLM Proxy Versions | 1.71.1+ | Gemini support requires 1.79.3+ |
+| Supported LiteLLM SDK Versions | <SinceVersion v="1.63.8" /> | Gemini support <SinceVersion v="1.79.3" /> |
+| Supported LiteLLM Proxy Versions | <SinceVersion v="1.71.1" /> | Gemini support <SinceVersion v="1.79.3" /> |
 | Supported LLM providers | **OpenAI**, **Gemini (Google AI Studio)**, **Vertex AI**, **OpenRouter**, **Stability AI**, **AWS Bedrock (Stability)**, **Black Forest Labs** | Gemini supports the new `gemini-2.5-flash-image` family. Vertex AI supports both Gemini and Imagen models. OpenRouter routes image edits through chat completions. Stability AI and Bedrock Stability support various image editing operations. Black Forest Labs supports FLUX Kontext models. |
 
  #### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
