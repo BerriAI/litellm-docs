@@ -307,6 +307,7 @@ LiteLLM supports **ALL** azure ai models. Here's a few examples:
 
 | Model Name               | Function Call                                                                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Claude Opus 5 | `completion(model="azure_ai/claude-opus-5", messages)` |
 | Cohere command-r-plus | `completion(model="azure_ai/command-r-plus", messages)` | 
 | Cohere command-r | `completion(model="azure_ai/command-r", messages)` | 
 | mistral-large-latest | `completion(model="azure_ai/mistral-large-latest", messages)` | 
@@ -354,7 +355,7 @@ export AZURE_AI_API_BASE="https://my-resource.services.ai.azure.com/anthropic"
 
 ```yaml
 model_list:
-  - model_name: claude-4-azure
+  - model_name: azure-claude
     litellm_params:
       model: azure_ai/{{anthropic_large}}
       api_key: os.environ/AZURE_AI_API_KEY
@@ -374,11 +375,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Bearer $LITELLM_KEY' \
   --data '{
-    "model": "claude-4-azure",
+    "model": "azure-claude",
     "messages": [
       {
         "role": "user",
-        "content": "How do I use Claude Opus 4 via Azure Anthropic in LiteLLM?"
+        "content": "How do I use Claude Opus via Azure Anthropic in LiteLLM?"
       }
     ],
     "max_tokens": 1024

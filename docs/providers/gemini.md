@@ -19,9 +19,9 @@ import TabItem from '@theme/TabItem';
 :::tip Gemini API vs Vertex AI
 | Model Format | Provider | Auth Required |
 |-------------|----------|---------------|
-| `gemini/gemini-2.0-flash` | Gemini API | `GEMINI_API_KEY` (simple API key) |
-| `vertex_ai/gemini-2.0-flash` | Vertex AI | GCP credentials + project |
-| `gemini-2.0-flash` (no prefix) | Vertex AI | GCP credentials + project |
+| `gemini/{{gemini_flash}}` | Gemini API | `GEMINI_API_KEY` (simple API key) |
+| `vertex_ai/{{gemini_flash}}` | Vertex AI | GCP credentials + project |
+| `{{gemini_flash}}` (no prefix) | Vertex AI | GCP credentials + project |
 
 **If you just want to use an API key** (like OpenAI), use the `gemini/` prefix.
 
@@ -2257,18 +2257,15 @@ response = litellm.completion(
 **We support ALL Gemini models, just set `model=gemini/<any-model-on-gemini>` as a prefix when sending litellm requests**
 
 :::
-| Model Name            | Function Call                                          | Required OS Variables          |
-|-----------------------|--------------------------------------------------------|--------------------------------|
-| gemini-pro            | `completion(model='gemini/gemini-pro', messages)`            | `os.environ['GEMINI_API_KEY']` |
-| gemini-1.5-pro-latest | `completion(model='gemini/gemini-1.5-pro-latest', messages)` | `os.environ['GEMINI_API_KEY']` |
-| gemini-2.0-flash     | `completion(model='gemini/gemini-2.0-flash', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-2.0-flash-exp     | `completion(model='gemini/gemini-2.0-flash-exp', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-2.0-flash-lite-preview-02-05	     | `completion(model='gemini/gemini-2.0-flash-lite-preview-02-05', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-2.5-flash-preview-09-2025     | `completion(model='gemini/gemini-2.5-flash-preview-09-2025', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-2.5-flash-lite-preview-09-2025     | `completion(model='gemini/gemini-2.5-flash-lite-preview-09-2025', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-3.1-flash-lite-preview     | `completion(model='gemini/gemini-3.1-flash-lite-preview', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-flash-latest     | `completion(model='gemini/gemini-flash-latest', messages)`     | `os.environ['GEMINI_API_KEY']` |
-| gemini-flash-lite-latest     | `completion(model='gemini/gemini-flash-lite-latest', messages)`     | `os.environ['GEMINI_API_KEY']` |
+| Model Name | Function Call | Required OS Variables |
+|------------|---------------|-----------------------|
+| gemini-3.8-flash | `completion(model='gemini/gemini-3.8-flash', messages)` | `os.environ['GEMINI_API_KEY']` |
+| gemini-3.1-pro-preview | `completion(model='gemini/gemini-3.1-pro-preview', messages)` | `os.environ['GEMINI_API_KEY']` |
+| gemini-3.1-flash-lite-preview | `completion(model='gemini/gemini-3.1-flash-lite-preview', messages)` | `os.environ['GEMINI_API_KEY']` |
+| gemini-flash-latest | `completion(model='gemini/gemini-flash-latest', messages)` | `os.environ['GEMINI_API_KEY']` |
+| gemini-flash-lite-latest | `completion(model='gemini/gemini-flash-lite-latest', messages)` | `os.environ['GEMINI_API_KEY']` |
+
+This table is a representative selection. See the [Gemini models documentation](https://ai.google.dev/gemini-api/docs/models) for the current catalog.
 
 
 

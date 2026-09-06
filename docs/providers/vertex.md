@@ -17,9 +17,9 @@ import TabItem from '@theme/TabItem';
 :::tip Vertex AI vs Gemini API
 | Model Format | Provider | Auth Required |
 |-------------|----------|---------------|
-| `vertex_ai/gemini-2.0-flash` | Vertex AI | GCP credentials + project |
-| `gemini-2.0-flash` (no prefix) | Vertex AI | GCP credentials + project |
-| `gemini/gemini-2.0-flash` | Gemini API | `GEMINI_API_KEY` (simple API key) |
+| `vertex_ai/{{gemini_flash}}` | Vertex AI | GCP credentials + project |
+| `{{gemini_flash}}` (no prefix) | Vertex AI | GCP credentials + project |
+| `gemini/{{gemini_flash}}` | Gemini API | `GEMINI_API_KEY` (simple API key) |
 
 **If you just want to use an API key** (like OpenAI), use the `gemini/` prefix instead. See [Gemini - Google AI Studio](./gemini.md).
 
@@ -1755,13 +1755,14 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1" # Your Location
 litellm.vertex_location = "us-central1" # Your Location
 ```
 
-## Gemini Pro
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| gemini-2.5-pro   | `completion('gemini-2.5-pro', messages)`, `completion('vertex_ai/gemini-2.5-pro', messages)` |
-| gemini-2.5-flash-preview-09-2025   | `completion('gemini-2.5-flash-preview-09-2025', messages)`, `completion('vertex_ai/gemini-2.5-flash-preview-09-2025', messages)` |
-| gemini-2.5-flash-lite-preview-09-2025   | `completion('gemini-2.5-flash-lite-preview-09-2025', messages)`, `completion('vertex_ai/gemini-2.5-flash-lite-preview-09-2025', messages)` |
-| gemini-3.1-flash-lite-preview   | `completion('gemini-3.1-flash-lite-preview', messages)`, `completion('vertex_ai/gemini-3.1-flash-lite-preview', messages)` |
+## Gemini Models {#gemini-pro}
+| Model Name | Function Call |
+|------------|---------------|
+| gemini-3.8-flash | `completion('gemini-3.8-flash', messages)`, `completion('vertex_ai/gemini-3.8-flash', messages)` |
+| gemini-3.1-pro-preview | `completion('gemini-3.1-pro-preview', messages)`, `completion('vertex_ai/gemini-3.1-pro-preview', messages)` |
+| gemini-3.1-flash-lite-preview | `completion('gemini-3.1-flash-lite-preview', messages)`, `completion('vertex_ai/gemini-3.1-flash-lite-preview', messages)` |
+
+This table is a representative selection. See the [Vertex AI model catalog](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models) for the current catalog.
 
 ## PayGo / Priority Cost Tracking
 

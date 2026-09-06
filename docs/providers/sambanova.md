@@ -23,14 +23,14 @@ import os
 
 os.environ['SAMBANOVA_API_KEY'] = ""
 response = completion(
-    model="sambanova/Llama-4-Maverick-17B-128E-Instruct",
+    model="sambanova/MiniMax-M2.7",
     messages=[
         {
             "role": "user",
             "content": "What do you know about SambaNova Systems",
         }
     ],
-    max_tokens=10,
+    max_tokens=4096,
     stop=[],
     temperature=0.2,
     top_p=0.9,
@@ -46,7 +46,7 @@ import os
 
 os.environ['SAMBANOVA_API_KEY'] = ""
 response = completion(
-    model="sambanova/Llama-4-Maverick-17B-128E-Instruct",
+    model="sambanova/MiniMax-M2.7",
     messages=[
         {
             "role": "user",
@@ -54,8 +54,7 @@ response = completion(
         }
     ],
     stream=True,
-    max_tokens=10,
-    response_format={ "type": "json_object" },
+    max_tokens=4096,
     stop=[],
     temperature=0.2,
     top_p=0.9,

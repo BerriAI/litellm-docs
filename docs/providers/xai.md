@@ -13,18 +13,18 @@ https://docs.x.ai/docs
 
 ## Supported Models
 
-**Grok 4.5** - Frontier model for coding, agentic tasks, and knowledge work with 500K context, reasoning (low/medium/high), vision, tools, web search, and prompt caching.
+**Grok 4.6** - Frontier model for coding, agentic tasks, and knowledge work with 500K context, reasoning (low/medium/high), vision, tools, web search, and prompt caching.
 
 | Model | Context | Features |
 |-------|---------|----------|
-| `xai/grok-4.5` | 500K tokens | **Reasoning**, Function calling, Vision, Web search, Caching |
+| `xai/grok-4.6` | 500K tokens | **Reasoning**, Function calling, Vision, Web search, Caching |
 
 **Example:**
 ```python
 from litellm import completion
 
 response = completion(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[{"role": "user", "content": "Find and fix the bug, then explain it."}],
     reasoning_effort="high",  # low | medium | high (default high)
 )
@@ -54,14 +54,14 @@ import os
 
 os.environ['XAI_API_KEY'] = ""
 response = completion(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[
         {
             "role": "user",
             "content": "What's the weather like in Boston today in Fahrenheit?",
         }
     ],
-    max_tokens=10,
+    max_tokens=4096,
     response_format={ "type": "json_object" },
     seed=123,
     temperature=0.2,
@@ -81,7 +81,7 @@ import os
 
 os.environ['XAI_API_KEY'] = ""
 response = completion(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[
         {
             "role": "user",
@@ -89,7 +89,7 @@ response = completion(
         }
     ],
     stream=True,
-    max_tokens=10,
+    max_tokens=4096,
     response_format={ "type": "json_object" },
     seed=123,
     temperature=0.2,
@@ -112,7 +112,7 @@ from litellm import completion
 os.environ["XAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[
         {
             "role": "user",
@@ -211,10 +211,10 @@ LiteLLM supports reasoning usage for xAI models.
 
 <TabItem value="python" label="LiteLLM Python SDK">
 
-```python showLineNumbers title="reasoning with xai/grok-4.5"
+```python showLineNumbers title="reasoning with xai/grok-4.6"
 import litellm
 response = litellm.completion(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[{"role": "user", "content": "What is 101*3?"}],
     reasoning_effort="low",  # low | medium | high
 )
@@ -235,7 +235,7 @@ print(response.usage.completion_tokens_details.reasoning_tokens)
 
 <TabItem value="curl" label="LiteLLM Proxy - OpenAI SDK Usage">
 
-```python showLineNumbers title="reasoning with xai/grok-4.5"
+```python showLineNumbers title="reasoning with xai/grok-4.6"
 import openai
 client = openai.OpenAI(
     api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
@@ -243,7 +243,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="xai/grok-4.5",
+    model="xai/grok-4.6",
     messages=[{"role": "user", "content": "What is 101*3?"}],
     reasoning_effort="low",  # low | medium | high
 )

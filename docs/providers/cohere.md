@@ -25,7 +25,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 
 # cohere v2 call
 response = completion(
-    model="cohere_chat/command-a-03-2025", 
+    model="cohere_chat/command-a-plus-05-2026",
     messages = [{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -42,7 +42,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 
 # cohere v1 call
 response = completion(
-    model="cohere_chat/v1/command-a-03-2025", 
+    model="cohere_chat/v1/command-a-plus-05-2026",
     messages = [{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -59,7 +59,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 
 # cohere v2 streaming
 response = completion(
-    model="cohere_chat/command-a-03-2025", 
+    model="cohere_chat/command-a-plus-05-2026",
     messages = [{ "content": "Hello, how are you?","role": "user"}],
     stream=True
 )
@@ -79,7 +79,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 
 # cohere v1 streaming
 response = completion(
-    model="cohere_chat/v1/command-a-03-2025", 
+    model="cohere_chat/v1/command-a-plus-05-2026",
     messages = [{ "content": "Hello, how are you?","role": "user"}],
     stream=True
 )
@@ -106,18 +106,18 @@ Define the cohere models you want to use in the config.yaml
 **For Cohere v1 models:**
 ```yaml showLineNumbers
 model_list:
-  - model_name: command-a-03-2025 
+  - model_name: command-a-plus-05-2026
     litellm_params:
-      model: cohere_chat/v1/command-a-03-2025
+      model: cohere_chat/v1/command-a-plus-05-2026
       api_key: "os.environ/COHERE_API_KEY"
 ```
 
 **For Cohere v2 models:**
 ```yaml showLineNumbers
 model_list:
-  - model_name: command-a-03-2025-v2
+  - model_name: command-a-plus-05-2026-v2
     litellm_params:
-      model: cohere_chat/command-a-03-2025
+      model: cohere_chat/command-a-plus-05-2026
       api_key: "os.environ/COHERE_API_KEY"
 ```
 
@@ -136,7 +136,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <your-litellm-api-key>' \
 --data ' {
-      "model": "command-a-03-2025",
+      "model": "command-a-plus-05-2026",
       "messages": [
         {
           "role": "user",
@@ -154,7 +154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <your-litellm-api-key>' \
 --data ' {
-      "model": "command-a-03-2025-v2",
+      "model": "command-a-plus-05-2026-v2",
       "messages": [
         {
           "role": "user",
@@ -175,7 +175,7 @@ client = openai.OpenAI(
 )
 
 # request sent to cohere v1 model
-response = client.chat.completions.create(model="command-a-03-2025", messages = [
+response = client.chat.completions.create(model="command-a-plus-05-2026", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -195,7 +195,7 @@ client = openai.OpenAI(
 )
 
 # request sent to cohere v2 model
-response = client.chat.completions.create(model="command-a-03-2025-v2", messages = [
+response = client.chat.completions.create(model="command-a-plus-05-2026-v2", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -211,7 +211,7 @@ print(response)
 ## Supported Models
 | Model Name | Function Call |
 |------------|----------------|
-| command-a-03-2025 | `litellm.completion('command-a-03-2025', messages)` |
+| command-a-plus-05-2026 | `litellm.completion('cohere_chat/command-a-plus-05-2026', messages)` |
 | command-r-plus-08-2024 | `litellm.completion('command-r-plus-08-2024', messages)` |  
 | command-r-08-2024 | `litellm.completion('command-r-08-2024', messages)` |
 | command-r-plus | `litellm.completion('command-r-plus', messages)` |  

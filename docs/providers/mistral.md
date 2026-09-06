@@ -17,7 +17,7 @@ import os
 
 os.environ['MISTRAL_API_KEY'] = ""
 response = completion(
-    model="mistral/mistral-tiny", 
+    model="mistral/mistral-large-2512",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -32,7 +32,7 @@ import os
 
 os.environ['MISTRAL_API_KEY'] = ""
 response = completion(
-    model="mistral/mistral-tiny", 
+    model="mistral/mistral-large-2512",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -148,7 +148,7 @@ All models listed here https://docs.mistral.ai/platform/endpoints are supported.
 |----------------|--------------------------------------------------------------|-------------------|
 | Mistral Small  | `completion(model="mistral/mistral-small-latest", messages)` | No |
 | Mistral Medium | `completion(model="mistral/mistral-medium-latest", messages)`| No |
-| Mistral Large 2  | `completion(model="mistral/mistral-large-2407", messages)` | No |
+| Mistral Large 3 | `completion(model="mistral/mistral-large-2512", messages)` | No |
 | Mistral Large Latest  | `completion(model="mistral/mistral-large-latest", messages)` | No |
 | **Magistral Small**  | `completion(model="mistral/magistral-small-2506", messages)` | Yes |
 | **Magistral Medium** | `completion(model="mistral/magistral-medium-2506", messages)`| Yes |
