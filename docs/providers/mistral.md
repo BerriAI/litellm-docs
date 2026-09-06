@@ -384,6 +384,100 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --form 'model="voxtral"'
 ```
 
+## Text to Speech
+
+Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported
+
+### SDK Usage
+
+```python
+from litellm import speech
+import os
+
+os.environ["MISTRAL_API_KEY"] = ""
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="The quick brown fox jumped over the lazy dog.",
+    voice="alloy",
+)
+
+response.stream_to_file("speech.mp3")
+```
+
+### Voices
+
+`voice` takes either an OpenAI voice name or a native Mistral voice id. LiteLLM maps the six OpenAI names onto Mistral voices, so an integration written against OpenAI TTS keeps working without a change:
+
+| OpenAI voice | Mistral voice     |
+|--------------|-------------------|
+| `alloy`      | `en_paul_neutral` |
+| `echo`       | `gb_oliver_neutral` |
+| `fable`      | `en_paul_cheerful` |
+| `onyx`       | `en_paul_confident` |
+| `nova`       | `gb_jane_sarcasm` |
+| `shimmer`    | `gb_jane_sarcasm` |
+
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use
+
+### Response Formats
+
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`
+
+### Voice Cloning
+
+Pass a base64 encoded audio sample as `ref_audio` and leave `voice` out, and Voxtral speaks the input in the sampled voice:
+
+```python
+import base64
+from litellm import speech
+
+with open("sample.wav", "rb") as sample:
+    ref_audio = base64.b64encode(sample.read()).decode()
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="This sentence comes back in the sampled voice.",
+    ref_audio=ref_audio,
+)
+
+response.stream_to_file("cloned.mp3")
+```
+
+### Unsupported Parameters
+
+Mistral's speech API rejects `speed` and `instructions` with a 422, so LiteLLM drops both before sending the request instead of failing it. A call that passes either one still returns audio, generated from the parameters Mistral does accept
+
+### Usage with LiteLLM Proxy
+
+```yaml
+model_list:
+  - model_name: voxtral-tts
+    litellm_params:
+      model: mistral/voxtral-mini-tts-2603
+      api_key: os.environ/MISTRAL_API_KEY
+```
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
+--header 'Authorization: Bearer sk-1234' \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": "voxtral-tts",
+    "input": "The quick brown fox jumped over the lazy dog.",
+    "voice": "alloy"
+}' \
+--output speech.mp3
+```
+
+### Cost Tracking
+
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is billed as 17 characters
+
 ## Sample Usage - Embedding
 ```python
 from litellm import embedding
