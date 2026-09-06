@@ -232,6 +232,103 @@ status = batch_response.status
 print(f"status: {status}")
 ```
 
+## Observability
+
+Once a managed batch reaches `completed`, the proxy's batch cost poller downloads its output file, prices every line, and writes a single spend log row for the whole batch. That row is what `/spend/logs` and the Logs page read, and it is where the per-request outcome counts, the reasoning token totals, and the batch's cost live
+
+The poller runs on a timer, so the row appears some time after the batch finishes rather than the moment it completes. `proxy_batch_polling_interval` in `general_settings` (or the `PROXY_BATCH_POLLING_INTERVAL` env var) sets the base interval in seconds and defaults to `3600`, and the poller adds up to 30s of jitter on top. Set it to something small like `30` while you are testing
+
+### Spend log fields
+
+The batch's cost row has `call_type: "aretrieve_batch"` and a `request_id` of `<batch id>_batch_cost`, where `<batch id>` is the id `POST /v1/batches` returned:
+
+```bash showLineNumbers title="get_batch_spend_row.sh"
+curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
+  -H "Authorization: Bearer sk-1234"
+```
+
+```json showLineNumbers title="batch cost row (trimmed)"
+{
+  "request_id": "batch_bGl0ZWxsbV9wcm94eTtt...._batch_cost",
+  "session_id": "batch_bGl0ZWxsbV9wcm94eTtt....",
+  "call_type": "aretrieve_batch",
+  "model": "gemini-2.5-flash",
+  "model_group": "gemini-batch",
+  "spend": 0.0003221,
+  "prompt_tokens": 14,
+  "completion_tokens": 256,
+  "total_tokens": 270,
+  "status": "success",
+  "metadata": {
+    "batch_models": ["gemini-2.5-flash"],
+    "batch_successful_requests": 2,
+    "batch_failed_requests": 1,
+    "cost_breakdown": {
+      "input_cost": 0.0000021,
+      "output_cost": 0.00032,
+      "total_cost": 0.0003221,
+      "tool_usage_cost": 0.0
+    },
+    "usage_object": {
+      "prompt_tokens": 14,
+      "completion_tokens": 256,
+      "total_tokens": 270,
+      "completion_tokens_details": {"text_tokens": 32, "reasoning_tokens": 224}
+    }
+  }
+}
+```
+
+| Field | What it holds |
+| --- | --- |
+| `request_id` | The batch id with `_batch_cost` appended |
+| `session_id` | The batch id, shared with the create row so both group into one trace |
+| `spend` | The whole batch's cost, counting the successful lines only |
+| `prompt_tokens`, `completion_tokens`, `total_tokens` | Summed across every successful line |
+| `metadata.batch_successful_requests` | Requests the provider answered successfully |
+| `metadata.batch_failed_requests` | Requests it rejected, from the output file and the error file |
+| `metadata.batch_models` | The model the batch ran on |
+| `metadata.usage_object.completion_tokens_details.reasoning_tokens` | Reasoning tokens summed across the successful lines |
+| `metadata.cost_breakdown` | The input and output cost split behind `spend` |
+
+`/spend/logs/v2` returns the same fields with pagination and is the endpoint to use for anything beyond a single lookup. It wants `start_date` and `end_date` even when you pass `request_id`, so the plain `/spend/logs?request_id=` call above stays the shorter way to pull one batch's row
+
+### On the Logs page
+
+Open [http://localhost:4000/ui/?page=logs](http://localhost:4000/ui/?page=logs) once the poller has run. The batch's create row and its cost row share a session, so the page shows them as a single grouped row carrying the batch's total cost and tokens, with a **Batch** badge in the Type column in place of the usual LLM badge. The Status column is where the outcome shows up: a green **Success** badge when every request succeeded, and an amber **N/M succeeded** badge when some of them failed, where `N` is the successful count and `M` is the total, so `2/3 succeeded` means one request out of three failed. The Request ID column shows the batch id itself under a small `batch cost` label rather than the raw `<batch id>_batch_cost` string, so it matches the id you got back from `POST /v1/batches`
+
+Click the row to open the drawer. A **Batch Results** card lists the batch id, the successful and failed request counts with the failed count highlighted in red when it is not zero, and the models the batch ran on. **Metrics** picks up a **Reasoning Tokens** row whenever the batch aggregated any, and **Cost Breakdown** shows the input and output split behind the row's cost
+
+### Reading a partially failed batch
+
+A batch reaches `completed` at the provider as soon as it finishes running, whether or not every one of its requests worked, so the status on its own tells you nothing about failures. The counts on the cost row are what tell you, and they line up with `request_counts` on the batch itself:
+
+```bash showLineNumbers title="compare_counts.sh"
+# what the provider reports
+curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
+  -H "Authorization: Bearer sk-1234" | jq '.status, .request_counts'
+# "completed"
+# {"completed": 2, "failed": 1, "total": 3}
+
+# what the spend log recorded
+curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
+  -H "Authorization: Bearer sk-1234" \
+  | jq '.[0].metadata | {batch_successful_requests, batch_failed_requests}'
+# {"batch_successful_requests": 2, "batch_failed_requests": 1}
+```
+
+To see why the failed requests failed, download the batch's error file. It holds one line per rejected request, keyed by the `custom_id` you set in the input file:
+
+```bash showLineNumbers title="read_error_file.sh"
+ERROR_FILE_ID=$(curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
+  -H "Authorization: Bearer sk-1234" | jq -r '.error_file_id')
+
+curl -s "http://0.0.0.0:4000/v1/files/${ERROR_FILE_ID}/content" \
+  -H "Authorization: Bearer sk-1234"
+```
+
+Failed requests cost nothing, so `spend` covers the successful lines only and a batch that half failed costs about half of what you budgeted for. A request the provider accepted but LiteLLM could not price still counts as successful and is billed at `$0`, which keeps the counts reconcilable with the provider's own numbers. A batch whose requests all failed has no output file at all, and its cost row records `$0`, zero successful requests, and the failure count read from the error file. Anthropic and Bedrock extended thinking batches do not report reasoning tokens per line, so `reasoning_tokens` stays absent for them even though the model was thinking. The one case where the two counts do not add up to the provider's total is an output line that is not valid JSON, which gets skipped with a warning and lands in neither count
+
 ## FAQ
 
 ### Where are my files written?
