@@ -1204,6 +1204,7 @@ router_settings:
 | PYROSCOPE_GRAFANA_USER | Optional. Grafana Cloud Pyroscope user/tenant ID for basic auth. Required when PYROSCOPE_GRAFANA_API_TOKEN is set.
 | PYROSCOPE_GRAFANA_API_TOKEN | Optional. Grafana Cloud API/access policy token for Pyroscope basic auth. Required when PYROSCOPE_GRAFANA_USER is set.
 | LITELLM_MASTER_KEY | Master key for proxy authentication
+| LITELLM_BUDGET_RESERVATION_MAX_COST_USD | Optional positive finite USD cap for a single pre-call budget reservation. Disabled when unset or non-positive. This is an availability trade-off: it prevents one worst-case estimate (large context + high `max_tokens`) from pinning the shared counter at `max_budget`, but concurrent capped requests can transiently overshoot the hard budget by `sum(max(actual_cost - cap, 0))` until post-call reconciliation records true spend. Invalid, NaN, and infinite values disable the cap with a warning.
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
