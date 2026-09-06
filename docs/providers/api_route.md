@@ -4,16 +4,19 @@
 
 ## API Key and Base URL
 
-Get your API key and base URL from API Access in the API Route dashboard, then set these environment variables:
+Get your API key from API Access in the API Route dashboard, then set the API key environment variable:
 
 ```python
 import os
 
 os.environ["API_ROUTE_API_KEY"] = "your-api-key"
-os.environ["API_ROUTE_BASE_URL"] = "your-api-base-url"
 ```
 
-You can also pass `api_key` and `api_base` directly to `litellm.completion`.
+The API base defaults to `https://global.api-route.com/v1`. To use another API Route endpoint, set `API_ROUTE_BASE_URL` or pass `api_base` directly to `litellm.completion`.
+
+```python
+os.environ["API_ROUTE_BASE_URL"] = "your-api-base-url"  # optional
+```
 
 ## Usage
 
