@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.99.0: Dark Mode, CLI OAuth Login & Batch Billing](/release_notes/v1.99.0/v1-99-0)
+### [v1.100.0: Access Group Budgets, Together AI Sync & Custom Router Tiers](/release_notes/v1.100.0/v1-100-0)
 
-_September 1, 2026_
+_September 6, 2026_
 
-The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, `antd` and `@ant-design/icons` dropped from the dashboard's dependencies and the dashboard now on React 19; dark mode ships with a light/dark/system toggle, semantic status tokens, and theme-aware logos, surfaces and code blocks; `lite login` becomes a real OAuth flow with authorization code plus PKCE, storing the credential and refresh token in the OS keychain, and `lite login --config-claude` wires up Claude Code at login; batch spend is accounted for end to end, with enqueued-token rate limiting that refunds on completion, atomic cost claims so multi-pod polling cannot double-bill, and billing for cancelled and failed batches that still produced output; provisioned throughput can be declared in `config.yaml`; and the complexity router becomes operator-configurable with custom classifier plugins, tier sets, and per-model reasoning effort. This stable also folds in the v1.99.0-rc.2 fixes.
+Model access groups can carry one shared budget enforced across every deployment in the group, tracked in a per-window spend table, settable from the dashboard, and with opt-in rollover of unused headroom; Together AI moves onto a dedicated config with `api.together.ai` as the default endpoint, `reasoning_effort` mapped per model class, cache-read pricing, and a daily sync that keeps the registry priced against the live serverless catalog; the complexity router's tier set becomes operator-defined end to end, with custom classifier tiers, a preview of the classifier prompt, heuristic-first chaining, a dry run on `/auto_router/test_routing`, and classifier cost counted in savings; the MCP gateway gains RFC 7662 `/introspect` for session tokens, RS256-signed session tokens, bulk import of Anthropic MCP connectors, and enforcement of toolsets attached to teams, organizations and users; Grounding with Bing Search arrives as a search provider alongside 242 new models, including `gemini-3.5-transcribe`, the xAI `grok-4.20` family, 24 Mistral entries, RunwayML `gen4.5` and the Seedance 2 family; and `GET /public/v1/model_hub` exposes a paginated public listing of the models the proxy serves. This stable also carries the Docker base image fix for glibc 2.44 that landed after the rc.1 cut.
 
 ---
 
@@ -22,6 +22,7 @@ The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, 
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
 | [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
