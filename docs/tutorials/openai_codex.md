@@ -14,11 +14,7 @@ This guide walks you through connecting OpenAI Codex to LiteLLM. Using LiteLLM w
 
 ## Quickstart
 
-:::info
-
-Requires LiteLLM v1.66.3.dev5 and higher
-
-:::
+<SinceVersion v="1.66.3.dev5" />
 
 
 Make sure to set up LiteLLM with the [LiteLLM Quickstart](../proxy/docker_quick_start.md).

@@ -18,6 +18,7 @@ Every check here is deterministic and fails the build:
   model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
+  version-note        a hand-written "available in v1.85.0" note instead of the <SinceVersion /> badge
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
@@ -42,6 +43,18 @@ one interpreter, a third-party requirement, a historical commit message).
 A placeholder that looks like a role but is not one (a typo, or a role removed
 from docs-models.json) fails model-role-unknown, since the build would print it
 as written.
+
+Feature availability is stated with the <SinceVersion /> badge
+(src/components/SinceVersion), so a reader can tell at a glance whether a
+feature exists in the version they run. The version-note rule fails a prose
+line that ends in a hand-written availability note ("Requires LiteLLM
+v1.76.1+", "This feature is available in v1.74.3-stable and above", a table
+cell holding "1.63.8+") and points at the badge. The note has to be the tail of
+the line and carry exactly one LiteLLM version, so a sentence that happens to
+mention a release ("From v1.81.0 the request is set as attributes on the parent
+span") and another project's version (OpenAI Python v1.0.0+, a2a-sdk >= 1.1.0)
+are both left alone. Add `{/* keep-version-note */}` to the line when the
+release itself is the subject, as on the release-cycle page.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -366,6 +379,13 @@ def check_page(page, site, page_cache):
             m = PYTHON_LITERAL_RE.search(raw)
             if m:
                 err("python-literal", line_no, python_literal_message(m.group(0)))
+        for match in SINCE_VERSION_TAG_RE.finditer(raw):
+            if not SINCE_VERSION_PROP_RE.search(match.group(1)):
+                err("version-note", line_no, "<SinceVersion> without a `v` prop renders nothing; write `<SinceVersion v=\"1.85.0\" />`")
+        if "keep-version-note" not in raw and "<SinceVersion" not in raw:
+            literal = version_note_literal(raw)
+            if literal:
+                err("version-note", line_no, version_note_message(literal))
         text = strip_inline_code(raw)
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
@@ -452,6 +472,52 @@ def python_literal_message(literal):
         f"hardcoded Python version `{literal}`; write `{{{{python_version}}}}` (the version examples use) or "
         f"`{{{{python_min_version}}}}` (the lowest version LiteLLM supports) so docs-models.json controls it, "
         "or add keep-python-version if this exact version is the point"
+    )
+
+
+VERSION_TOKEN_RE = re.compile(r"v?1\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
+VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_|>]")
+VERSION_NOTE_TAIL_RE = re.compile(
+    r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
+    re.I,
+)
+VERSION_NOTE_WORD_RE = re.compile(r"[A-Za-z]+")
+VERSION_NOTE_LEAD_WORDS = frozenset(
+    "available added introduced requires require required supported supports support "
+    "since starting works work live valid new version versions".split()
+)
+VERSION_NOTE_FILLER_WORDS = VERSION_NOTE_LEAD_WORDS | frozenset(
+    "a and as at be feature from gateway in integration is it note of on only "
+    "litellm proxy python sdk server that the this to up with".split()
+)
+VERSION_NOTE_LOOKBACK = 5
+SINCE_VERSION_TAG_RE = re.compile(r"<SinceVersion\b([^>]*)>")
+SINCE_VERSION_PROP_RE = re.compile(r"\bv\s*=\s*[\"']([^\"']+)[\"']")
+
+
+def version_note_literal(raw):
+    text = VERSION_NOTE_STRIP_RE.sub(" ", raw)
+    matches = list(VERSION_TOKEN_RE.finditer(text))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    if not VERSION_NOTE_TAIL_RE.match(text[match.end():]):
+        return None
+    lead_in = VERSION_NOTE_WORD_RE.findall(text[: match.start()])
+    for word in reversed(lead_in[-VERSION_NOTE_LOOKBACK:]):
+        lowered = word.lower()
+        if lowered in VERSION_NOTE_LEAD_WORDS:
+            return match.group(0)
+        if lowered not in VERSION_NOTE_FILLER_WORDS:
+            return None
+    return None
+
+
+def version_note_message(literal):
+    return (
+        f"hand-written version note `{literal}`; write `<SinceVersion v=\"{literal.lstrip('vV')}\" />` so every "
+        "page states availability the same way, or add {/* keep-version-note */} when the release itself is the "
+        "subject of the sentence rather than a feature's availability"
     )
 
 

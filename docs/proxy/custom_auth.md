@@ -248,7 +248,7 @@ This path also enforces end-user budgets and per-model end-user budgets when `en
 
 ## ✨ Support LiteLLM Virtual Keys + Custom Auth
 
-Supported from v1.72.2+
+<SinceVersion v="1.72.2" />
 
 <EnterpriseFeature feature="Using Custom Auth with LiteLLM Virtual Keys" />
 

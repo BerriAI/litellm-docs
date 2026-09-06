@@ -541,7 +541,7 @@ print(f"\nResponse: {resp}")
 
 This is currently only supported for Anthropic's Claude 3.7 Sonnet + Deepseek R1 + GPT-OSS models.
 
-Works on v1.61.20+.
+<SinceVersion v="1.61.20" />
 
 Returns 2 new fields in `message` and `delta` object:
 - `reasoning_content` - string - The reasoning content of the response
@@ -989,7 +989,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Usage - Latency Optimized Inference
 
-Valid from v1.65.1+
+<SinceVersion v="1.65.1" />
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1516,11 +1516,7 @@ print(response)
 
 ## Set 'converse' / 'invoke' route 
 
-:::info
-
-Supported from LiteLLM Version `v1.53.5`
-
-:::
+<SinceVersion v="1.53.5" />
 
 LiteLLM defaults to the `invoke` route. LiteLLM uses the `converse` route for Bedrock models that support it.
 

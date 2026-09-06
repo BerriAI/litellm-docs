@@ -12,11 +12,7 @@ Selecting a plugin replaces the AI Gateway navigation with the plugin's own; the
 
 <Image img={require('../../img/plugins_loaded.png')} />
 
-:::info
-
-Available in v1.89.3+.
-
-:::
+<SinceVersion v="1.89.3" />
 
 ## Quick start
 

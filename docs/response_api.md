@@ -20,7 +20,7 @@ Requests to /chat/completions may be bridged here automatically when the provide
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to input and output text (non-streaming only) |
 | Supported operations | Create a response, Get a response, Delete a response | |
-| Supported LiteLLM Versions | 1.63.8+ | |
+| Supported LiteLLM Versions | <SinceVersion v="1.63.8" /> | |
 | Supported LLM providers | **All LiteLLM supported providers** | `openai`, `anthropic`, `bedrock`, `vertex_ai`, `gemini`, `azure`, `azure_ai` etc. |
 
 ## Usage
@@ -1182,12 +1182,12 @@ follow_up = await router.aresponses(
 To enable session continuity for Responses API in your LiteLLM proxy, set `optional_pre_call_checks` in your proxy config.yaml.
 
 - `responses_api_deployment_check`: high priority routing when `previous_response_id` is provided
-- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) (**requires LiteLLM >= 1.82.3**)
+- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) <SinceVersion v="1.82.3" />
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
 :::tip Recommended: Use `encrypted_content_affinity`
-For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
+For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. <SinceVersion v="1.82.3" />
 :::
 
 Notes:

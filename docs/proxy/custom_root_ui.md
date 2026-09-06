@@ -6,11 +6,7 @@ import Image from '@theme/IdealImage';
 
 💥 Use this when you want to serve LiteLLM on a custom base url path like `https://localhost:4000/api/v1` 
 
-:::info
-
-Requires v1.72.3 or higher.
-
-:::
+<SinceVersion v="1.72.3" />
 
 Limitations:
 - This does not work in [litellm non-root](./docker_image_security) images, as it requires write access to the UI files.

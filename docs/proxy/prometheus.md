@@ -859,7 +859,7 @@ Here is a screenshot of the metrics you can monitor with the LiteLLM Grafana Das
 
 ## Authentication on `/metrics` endpoint
 
-**By default, `/metrics` requires LiteLLM API key authentication** (since v1.85.0).
+**By default, `/metrics` requires LiteLLM API key authentication** <SinceVersion v="1.85.0" />
 
 For Prometheus, add `authorization` to your scrape config:
 

@@ -5,11 +5,7 @@ import TabItem from '@theme/TabItem';
 
 This guide covers how to generate images when using the `chat/completions`. Note - if you want this on Responses API please file a Feature Request [here](https://github.com/BerriAI/litellm/issues/new).
 
-:::info
-
-Requires LiteLLM v1.76.1+
-
-:::
+<SinceVersion v="1.76.1" />
 
 Supported Providers:
 - Google AI Studio (`gemini`)
