@@ -1,11 +1,11 @@
 ---
 slug: auto-router-per-hop-compression
-title: "AutoRouter Per-Hop Compression: Cut Classification Costs 32%"
+title: "AutoRouter Per-Hop Compression: Cut Classification Costs Another 32%"
 date: 2026-09-05T21:00:00
 authors:
   - moe
 image: ./compression-config.png
-description: "AutoRouter can now apply different compression to the routing classifier and the model call. The classifier only needs enough context to route correctly, not to generate an answer. In internal testing, aggressive classifier compression reduced costs 32% while maintaining routing accuracy."
+description: "AutoRouter can now apply different compression to the routing classifier and the model call. The classifier only needs enough context to route correctly, not to generate an answer. In internal testing, compressing it aggressively cut classification costs a further 32% beyond shared compression, with no change in routing accuracy."
 keywords: [auto router, compression, cost savings, routing classifier, prompt compression, llm gateway, litellm]
 tags: [routing, cost, compression, engineering]
 hide_table_of_contents: false
@@ -13,7 +13,7 @@ hide_table_of_contents: false
 
 ![Routing vs Model Compression: compress the routing decision independently](./compression-config.png)
 
-**The AutoRouter classifier can now be compressed more aggressively than your model calls. In internal testing, this reduced classification costs by 32% with no loss in routing accuracy.**
+**The AutoRouter classifier can now be compressed more aggressively than your model calls. In internal testing, that cut classification costs a further 32% beyond what shared compression was already saving, with no change in routing accuracy.**
 
 {/* truncate */}
 
@@ -33,7 +33,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 Every request through an AutoRouter pays for two LLM calls. The first one, the complexity classifier, decides where the request should go: SIMPLE task to a cheap model, MEDIUM to something in the middle, COMPLEX or REASONING to a frontier model. The second call is the actual model that answers the request.
 
-Until now, both calls shared the same compression setting. That's wasteful. The classifier only needs enough context to answer one question: what tier can handle this. It doesn't need the full conversation history or the detailed background the model call needs.
+Until now, both calls shared the same compression setting, which meant the classifier's compression was capped by whatever the model call could tolerate. That ceiling is the wrong one. The classifier only needs enough context to answer one question: what tier can handle this. It doesn't need the full conversation history or the detailed background the model call needs to actually produce an answer, so it can be compressed far past the point where the model call would start to suffer.
 
 ## The solution
 
