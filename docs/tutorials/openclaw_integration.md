@@ -17,7 +17,7 @@ Chat apps → OpenClaw Gateway → LiteLLM Proxy → LLM Providers (OpenAI, Anth
 | Requirement | How to get it |
 |---|---|
 | **Node.js 22+** | `node --version` — install from [nodejs.org](https://nodejs.org) if needed |
-| **Python 3.8+** | `python --version` |
+| **Python {{python_min_version}}+** | `python --version` |
 | **At least one LLM API key** | OpenAI, Anthropic, Gemini, etc. |
 
 ## Step 1: Install LiteLLM Proxy

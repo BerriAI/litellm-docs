@@ -55,7 +55,7 @@ Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a
 
 Examples:
 
-```
+```text keep-python-version
 feat(router): add weighted round-robin strategy
 fix(bedrock): decouple STS region from aws_region_name
 chore(deps): bump black to 26.3.1
