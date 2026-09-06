@@ -1174,6 +1174,7 @@ const sidebars = {
         "providers/milvus_vector_stores",
         "providers/mistral",
         "providers/minimax",
+        "providers/mizumi",
         "providers/moonshot",
         "providers/morph",
         "providers/nebius",
