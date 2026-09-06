@@ -242,7 +242,7 @@ These come from the federation rule you create in the Anthropic Console, and the
 | `anthropic_federation_rule_id` | The `fdrl_...` id of the federation rule |
 | `anthropic_organization_id` | Your Anthropic organization UUID |
 | `anthropic_service_account_id` | The `svac_...` service account the rule maps to |
-| `anthropic_workspace_id` | Optional. Scopes the minted token to one workspace |
+| `anthropic_federation_workspace_id` | Required when the rule is enabled in more than one workspace; scopes the minted token to that workspace |
 
 ### Configuring by environment instead
 
@@ -254,7 +254,7 @@ when the same values apply proxy-wide. A value set on the deployment wins over t
 | `anthropic_federation_rule_id` | `ANTHROPIC_FEDERATION_RULE_ID` |
 | `anthropic_organization_id` | `ANTHROPIC_ORGANIZATION_ID` |
 | `anthropic_service_account_id` | `ANTHROPIC_SERVICE_ACCOUNT_ID` |
-| `anthropic_workspace_id` | `ANTHROPIC_WORKSPACE_ID` |
+| `anthropic_federation_workspace_id` | `ANTHROPIC_FEDERATION_WORKSPACE_ID` |
 | `anthropic_identity_source` | `ANTHROPIC_IDENTITY_SOURCE` |
 | `anthropic_identity_token_file` | `ANTHROPIC_IDENTITY_TOKEN_FILE` |
 | `anthropic_identity_token` | `ANTHROPIC_IDENTITY_TOKEN` |
@@ -338,13 +338,15 @@ Mixing fields across variants is rejected rather than silently ignored, so a con
 
 ### Setting it up in the UI
 
-The Admin UI covers the whole flow under **Models + Endpoints -> LLM Credentials**. Press Add Credential, pick Anthropic, choose a workload identity variant instead of an API key, and fill in that variant's fields, using a reference such as `os.environ/KEYCLOAK_CLIENT_SECRET` for anything secret. With LiteLLM as the issuer the credential saves before you have a rule id, since you need the JWKS it publishes in order to create the rule in the first place: add the credential with only the issuer fields, then open Edit on its row, where the modal shows the public JWKS with a copy button. Register that JWKS with Anthropic, paste the Organization ID, Federation Rule ID and Service Account ID (plus the Workspace ID when the rule is enabled in more than one workspace) back into the same modal, press Update Credential, then reopen Edit and press Test Connection to see the models the credential can reach. Attach the credential to a model through Add Model under Existing Credentials.
+The Admin UI does not offer these fields yet, so configure federation through the proxy config or the environment as shown above. A follow-up adds them to the LLM Credentials flow.
 
 ### Token lifetime and refresh
 
 LiteLLM caches the minted access token per deployment and refreshes it in the background before it expires, so a request rarely waits on an exchange. Refresh is two-tier: an advisory refresh at half the token's lifetime that happens in the background while the old token keeps serving, and a mandatory one at an eighth of the lifetime that blocks. Concurrent requests for the same deployment share a single in-flight exchange rather than each minting their own, so the number of exchanges does not scale with traffic.
 
-The cache is per process, so each replica mints its own token.
+Workers on the same host share the minted token through a small on-disk cache under the temp directory, readable only by the proxy's user, so a proxy running several uvicorn workers exchanges each assertion once rather than once per worker. `LITELLM_TOKEN_EXCHANGE_CACHE_DIR` moves that cache, and setting it to an empty string turns it off so every process mints on its own. Replicas on different hosts always mint their own token.
+
+Anthropic accepts each assertion once: a second exchange of the same JWT is denied with the opaque 401 and shows up as `jti_reused` in the rule's authentication history. That is fine for the internal issuer and Keycloak sources, which mint a fresh assertion for every exchange, but a token file or `oidc/env/` value has to rotate faster than the rule's `token_lifetime_seconds`, or the first refresh after the minted token expires fails until a new assertion shows up. Kubernetes rotates a projected service account token once 80% of its `expirationSeconds` has passed, so keep the rule's token lifetime at or above that rotation period; the defaults (a one hour projected token and a one hour rule lifetime) line up.
 
 ### Who can configure it
 
