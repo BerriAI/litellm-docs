@@ -249,8 +249,8 @@ curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
 
 ```json showLineNumbers title="batch cost row (trimmed)"
 {
-  "request_id": "batch_bGl0ZWxsbV9wcm94eTtt...._batch_cost",
-  "session_id": "batch_bGl0ZWxsbV9wcm94eTtt....",
+  "request_id": "bGl0ZWxsbV9wcm94eTttb2RlbF9pZDo3YjJl..._batch_cost",
+  "session_id": "bGl0ZWxsbV9wcm94eTttb2RlbF9pZDo3YjJl...",
   "call_type": "aretrieve_batch",
   "model": "gemini-2.5-flash",
   "model_group": "gemini-batch",
