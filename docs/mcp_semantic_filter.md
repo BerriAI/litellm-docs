@@ -55,6 +55,7 @@ litellm_settings:
     embedding_model: "text-embedding-3-small"  # Model for semantic matching
     top_k: 5                                    # Max tools to return
     similarity_threshold: 0.3                   # Min similarity score
+    embedding_batch_size: 1024                  # Max tool descriptions per embedding request
 ```
 
 **Configuration Options:**
@@ -62,6 +63,7 @@ litellm_settings:
 - `embedding_model` - Model for generating embeddings (default: `"text-embedding-3-small"`)
 - `top_k` - Maximum number of tools to return (default: `10`)
 - `similarity_threshold` - Minimum similarity score for matches (default: `0.3`)
+- `embedding_batch_size` - Maximum number of tool descriptions sent to the embedding provider per request when building the index (default: `1024`). Lower this when your embedding provider rejects large input arrays; for example DeepInfra caps input at 1024 and OpenAI at 2048. Tool descriptions beyond this size are embedded across multiple requests and combined, so large tool catalogs no longer fail or hang during index build
 
 ## Usage
 
