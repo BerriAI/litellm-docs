@@ -1293,6 +1293,12 @@ router_settings:
 | NO_PROXY | List of addresses to bypass proxy
 | NON_LLM_CONNECTION_TIMEOUT | Timeout in seconds for non-LLM service connections. Default is 15
 | OAUTH_TOKEN_INFO_ENDPOINT | Endpoint for OAuth token info retrieval
+| OKTA_CLIENT_ID | Client ID for Okta OIDC SSO authentication
+| OKTA_CLIENT_SECRET | Client secret for Okta OIDC SSO authentication. Not required when PKCE is enabled
+| OKTA_ISSUER | Okta authorization server issuer URL (e.g. https://your-domain.okta.com/oauth2/default). Used to derive authorize, token, and userinfo endpoints automatically
+| OKTA_AUTHORIZATION_ENDPOINT | Override for the Okta authorization endpoint (derived from OKTA_ISSUER when not set)
+| OKTA_TOKEN_ENDPOINT | Override for the Okta token endpoint (derived from OKTA_ISSUER when not set)
+| OKTA_USERINFO_ENDPOINT | Override for the Okta userinfo endpoint (derived from OKTA_ISSUER when not set)
 | OPENAI_BASE_URL | Base URL for OpenAI API
 | OPENAI_API_BASE | Base URL for OpenAI API. Default is https://api.openai.com/
 | OPENAI_API_KEY | API key for OpenAI services
