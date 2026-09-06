@@ -894,6 +894,10 @@ router_settings:
 | LITELLM_MCP_OAUTH_DISCOVERY_ON_STARTUP | Set to `1`, `true`, `yes`, or `on` to fetch remote MCP OAuth metadata eagerly while servers are registered at startup, which lets an unreachable OAuth server delay proxy readiness. Default is unset: metadata is fetched in a background task that the first request needing it joins, and a failed fetch is retried after a cooldown
 | LITELLM_MCP_HEALTH_CHECK_TIMEOUT | Health check timeout in seconds for MCP servers. Default is 10
 | LITELLM_MCP_STDIO_EXTRA_COMMANDS | Comma-separated extra command basenames allowed for MCP stdio transport beyond the built-in allowlist. Example: `my-mcp-bin`. Empty by default
+| LITELLM_MCP_MAX_STATEFUL_SESSIONS_PER_OWNER | Max concurrent stateful MCP sessions per owner fingerprint. Shared API keys collapse callers into one bucket unless subdivided via `LITELLM_MCP_SESSION_OWNER_HEADER` / `LITELLM_MCP_SESSION_OWNER_PREFER_IP`. Non-positive values fall back to 100. Default is 100
+| LITELLM_MCP_MAX_STATEFUL_SESSIONS_PER_AUTH_IDENTITY | Hard ceiling across all owner sub-buckets of one authenticated identity (API key / user / OAuth bearer). Prevents rotating session-owner headers or client IPs from opening unbounded sessions under one credential. Never tighter than the per-owner cap. Default is `max(1000, 10 × per-owner)`
+| LITELLM_MCP_SESSION_OWNER_HEADER | HTTP header whose value is combined with the authenticated identity for MCP session-owner fingerprinting (default `x-litellm-mcp-session-owner`). Use for IDE/plugin users behind a shared service-account key. Empty string disables header-based subdivision
+| LITELLM_MCP_SESSION_OWNER_PREFER_IP | When `true`, combine client IP with the authenticated identity for MCP session-owner fingerprinting so shared-key callers from distinct IPs get separate per-owner caps. Default is `false`
 | MCP_OAUTH2_TOKEN_CACHE_DEFAULT_TTL | Default TTL in seconds for MCP OAuth2 token cache. Default is 3600
 | MCP_OAUTH2_TOKEN_CACHE_MAX_SIZE | Maximum number of entries in MCP OAuth2 token cache. Default is 200
 | MCP_OAUTH2_TOKEN_CACHE_MIN_TTL | Minimum TTL in seconds for MCP OAuth2 token cache. Default is 10
