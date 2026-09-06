@@ -165,6 +165,7 @@ const sidebars = {
           "proxy/guardrails/repelloai",
           "proxy/guardrails/promptguard",
           "proxy/guardrails/pii_masking_v2",
+          "proxy/guardrails/maskflow",
           "proxy/guardrails/panw_prisma_airs",
           "proxy/guardrails/secret_detection",
           "proxy/guardrails/sensitive_data_routing",
