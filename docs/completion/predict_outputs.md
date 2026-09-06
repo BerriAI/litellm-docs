@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 | Description | Use this when most of the output of the LLM is known ahead of time. For instance, if you are asking the model to rewrite some text or code with only minor changes, you can reduce your latency significantly by using Predicted Outputs, passing in the existing content as your prediction. |
 | Supported providers | `openai` |
 | Link to OpenAI doc on Predicted Outputs | [Predicted Outputs ↗](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs) |
-| Supported from LiteLLM Version | `v1.51.4` |
+| Supported from LiteLLM Version | <SinceVersion v="1.51.4" /> |
 
 
 

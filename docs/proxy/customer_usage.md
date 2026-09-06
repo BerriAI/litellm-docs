@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Track and visualize end-user spend directly in the dashboard. Monitor customer-level usage analytics, spend logs, and activity metrics to understand how your customers are using your LLM services.
 
-This feature is **available in v1.80.8-stable and above**.
+<SinceVersion v="1.80.8-stable" />
 
 ## Overview
 

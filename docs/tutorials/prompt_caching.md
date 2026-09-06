@@ -47,11 +47,7 @@ This is provider-side prompt caching, a different feature from [LiteLLM response
 
 ## Automatic checkpoints for Claude models
 
-:::info
-
-Requires LiteLLM v1.94.0
-
-:::
+<SinceVersion v="1.94.0" />
 
 Everything below asks you to decide *where* the checkpoints go. If all you want is the common case for Claude, one flag does it for you.
 

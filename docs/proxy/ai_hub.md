@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Share models and agents with your organization. Show developers what's available without needing to rebuild them.
 
-This feature is **available in v1.74.3-stable and above**.
+<SinceVersion v="1.74.3-stable" />
 
 ## Overview
 
@@ -47,9 +47,7 @@ Go to the public url (`PROXY_BASE_URL/ui/model_hub_table`) and see available mod
 
 ## Agents
 
-:::info
-Agents are only available in v1.79.4-stable and above.
-:::
+<SinceVersion v="1.79.4-stable" />
 
 Share pre-built agents (A2A spec) across your organization. Users can discover and use agents without rebuilding them.
 

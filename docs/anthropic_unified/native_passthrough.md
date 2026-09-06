@@ -2,7 +2,7 @@
 
 When a deployment's provider has no native Anthropic Messages support, LiteLLM translates each `/v1/messages` request into the provider's own API: `openai/` deployments go through the OpenAI Responses API (see [the parameter mapping](./messages_to_responses_mapping.md)) and everything else goes through `/v1/chat/completions`. That translation only keeps what the target API can express: `cache_control` blocks are dropped, `thinking` is mapped to the provider's own reasoning parameter, and other Anthropic-only request details are approximated or lost
 
-Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. Available from v1.92.0
+Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. <SinceVersion v="1.92.0" />
 
 ## Opt in with `supported_endpoints`
 
@@ -64,7 +64,7 @@ The opt-in only matters for providers LiteLLM would otherwise translate, such as
 
 ## Native `/v1/responses` passthrough
 
-A deployment whose `litellm_params.model` is prefixed `openai/` already sends `/v1/responses` natively to `{api_base}/responses`. A generic OpenAI-compatible deployment such as `custom_openai/` has no Responses API config of its own, so by default LiteLLM bridges `/v1/responses` through `/v1/chat/completions`: the input is converted to messages, the chat completion is converted back into a Responses object, and Responses-only request fields are approximated or dropped. When the server serves `/responses` itself, add `/v1/responses` to `model_info.supported_endpoints` to forward the request untranslated. Available from v1.102.0
+A deployment whose `litellm_params.model` is prefixed `openai/` already sends `/v1/responses` natively to `{api_base}/responses`. A generic OpenAI-compatible deployment such as `custom_openai/` has no Responses API config of its own, so by default LiteLLM bridges `/v1/responses` through `/v1/chat/completions`: the input is converted to messages, the chat completion is converted back into a Responses object, and Responses-only request fields are approximated or dropped. When the server serves `/responses` itself, add `/v1/responses` to `model_info.supported_endpoints` to forward the request untranslated. <SinceVersion v="1.102.0" />
 
 ```yaml
 model_list:

@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Compare multiple LLM models side-by-side in an interactive playground interface. Evaluate model responses, performance metrics, and costs to make informed decisions about which models work best for your use case.
 
-This feature is **available in v1.80.0-stable and above**.
+<SinceVersion v="1.80.0-stable" />
 
 ## Overview
 

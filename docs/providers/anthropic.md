@@ -1228,9 +1228,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </TabItem>
 <TabItem value="web_search" label="Web Search">
 
-:::info
-Live from v1.70.1+
-:::
+<SinceVersion v="1.70.1" />
 
 LiteLLM maps OpenAI's `search_context_size` param to Anthropic's `max_uses` param.
 

@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use CopilotKit SDK with any LLM provider through LiteLLM Proxy.
 
-> **Note:** CopilotKit SDK integration with LiteLLM Proxy works with LiteLLM v1.81.7-nightly or higher.
+> **Note:** CopilotKit SDK works with LiteLLM Proxy <SinceVersion v="1.81.7-nightly" />
 
 
 ## Quick Start
