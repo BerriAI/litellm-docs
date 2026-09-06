@@ -10,7 +10,7 @@ Add authenticated tool calls to your LiteLLM-powered agents. [Scalekit](https://
 
 ## Prerequisites
 
-- Python 3.9+
+- Python {{python_min_version}}+
 - A [Scalekit account](https://app.scalekit.com) with a connection configured (this tutorial uses Gmail)
 - API keys for at least one LLM provider, or a running LiteLLM proxy
 - Scalekit API credentials (`SCALEKIT_CLIENT_ID`, `SCALEKIT_CLIENT_SECRET`, `SCALEKIT_ENV_URL`) from Dashboard → **Developers** → **API Credentials**

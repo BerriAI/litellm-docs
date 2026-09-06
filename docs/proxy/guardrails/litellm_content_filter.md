@@ -641,7 +641,7 @@ Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/lite
 ```yaml title="values.yaml (Helm)"
 extraVolumeMounts:
   - name: content-filter-categories
-    mountPath: /usr/local/lib/python3.13/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    mountPath: /usr/local/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
     subPath: <your-category-name>.yaml
     readOnly: true
 

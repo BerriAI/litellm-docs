@@ -16,6 +16,7 @@ Every check here is deterministic and fails the build:
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
   model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
+  python-literal      a Python version is written out (python3.12, python:3.12-slim, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
 
 Usage:
@@ -30,6 +31,14 @@ substitution before parsing a block, and the model-literal rule fails a block
 that writes the current id itself, because that block would not follow the
 next bump. Add `keep-model-ids` to the fence line when the exact id is the
 point of the block (a price map key, a cache key, a printed log).
+
+The Python version examples use ({{python_version}}, the interpreter in the
+official Docker image) and the lowest version LiteLLM supports
+({{python_min_version}}, the pyproject floor) come from the same file, and the
+python-literal rule fails a fence or prose line that spells a version out.
+Add `keep-python-version` to the fence line, or a `{/* keep-python-version */}`
+comment on the prose line, when one specific version is the point (a bug in
+one interpreter, a third-party requirement, a historical commit message).
 A placeholder that looks like a role but is not one (a typo, or a role removed
 from docs-models.json) fails model-role-unknown, since the build would print it
 as written.
@@ -312,6 +321,11 @@ def check_page(page, site, page_cache):
                         continue
                     seen_ids.add(m.group(0))
                     err("model-literal", start + offset + 1, f"hardcoded model id `{m.group(0)}`; write `{{{{{MODEL_ROLES[m.group(0)]}}}}}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
+        if "keep-python-version" not in meta_tokens:
+            for offset, l in enumerate(buf):
+                m = PYTHON_LITERAL_RE.search(l)
+                if m:
+                    err("python-literal", start + offset + 1, python_literal_message(m.group(0)))
         content = textwrap.dedent(substitute_models("\n".join(buf)))
         if lang in YAML_LANGS:
             try:
@@ -348,6 +362,10 @@ def check_page(page, site, page_cache):
     for line_no, raw in page.prose:
         if GITHUB_ALERT_RE.match(raw):
             err("github-alert", line_no, "GitHub-style alert does not render in Docusaurus; use :::note / :::warning")
+        if "keep-python-version" not in raw:
+            m = PYTHON_LITERAL_RE.search(raw)
+            if m:
+                err("python-literal", line_no, python_literal_message(m.group(0)))
         text = strip_inline_code(raw)
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
@@ -404,17 +422,19 @@ def check_page(page, site, page_cache):
     return errors
 
 
-KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
+KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|keep-python-version|live|noInline|title=\S+|mode=\S+|\{[\d,\s-]+\})$")
 
 
-def load_model_roles():
-    """{model id: role} from docs-models.json, the file src/remark/docs-models.js reads."""
+def load_roles():
+    """{role: value} from docs-models.json, the file src/remark/docs-models.js reads."""
     with open(os.path.join(REPO_ROOT, "docs-models.json"), encoding="utf-8") as f:
-        roles = json.load(f)
-    return {model_id: role for role, model_id in roles.items()}
+        return json.load(f)
 
 
-MODEL_ROLES = load_model_roles()
+ROLE_TO_ID = load_roles()
+PYTHON_ROLES = {"python_version", "python_min_version"}
+# {model id: role}. The Python roles hold bare version numbers, which get their own rule below.
+MODEL_ROLES = {model_id: role for role, model_id in ROLE_TO_ID.items() if role not in PYTHON_ROLES}
 MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
@@ -422,7 +442,16 @@ MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 MODEL_LITERAL_RE = re.compile(
     r"(?<![A-Za-z0-9:@-])(?:" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
-ROLE_TO_ID = {role: model_id for model_id, role in MODEL_ROLES.items()}
+# python3.12, python-3.12, python:3.12-slim and Python 3.12+; `python3 -m venv` and wheel tags such as cp312 are not versions.
+PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:_ ]?3\.\d{1,2}(?![0-9])")
+
+
+def python_literal_message(literal):
+    return (
+        f"hardcoded Python version `{literal}`; write `{{{{python_version}}}}` (the version examples use) or "
+        f"`{{{{python_min_version}}}}` (the lowest version LiteLLM supports) so docs-models.json controls it, "
+        "or add keep-python-version if this exact version is the point"
+    )
 
 
 def substitute_models(text):
