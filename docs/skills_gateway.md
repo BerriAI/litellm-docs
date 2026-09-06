@@ -87,6 +87,36 @@ Then install any skill:
 /plugin marketplace add grill-me
 ```
 
+### 5. Install in other agents
+
+Agents other than Claude Code install skills through the [`skills` CLI](https://github.com/vercel-labs/skills), which reads an [Agent Skills discovery index](https://agentskills.io) from the proxy. Serving that index is opt-in:
+
+```yaml title="config.yaml"
+litellm_settings:
+  public_skills_index: true
+```
+
+It is off by default. The CLI sends no credentials, so the index and the archives it points at are served without a LiteLLM key, and anyone who can reach the proxy can read every skill uploaded through `POST /v1/skills`. Turn it on only on a proxy whose skills you are happy to publish
+
+With it on, point any agent at the proxy:
+
+```bash
+npx skills add https://your-proxy -a gemini-cli
+npx skills add https://your-proxy -a cursor
+```
+
+The CLI reads `GET /.well-known/agent-skills/index.json`, downloads each skill from `GET /v1/skills/{skill_id}/archive`, checks the bytes against the `sha256` digest the index published, and writes the skill into that agent's skills directory. Run `npx skills add --help` for the list of agent names it accepts
+
+The index covers skills uploaded as a zip through `POST /v1/skills`. An upload with no `SKILL.md` at the root of its archive is left out, since discovery clients have no manifest to read
+
+Skills registered as a git source (the `POST /claude-code/plugins` flow above) work differently, because LiteLLM stores the source URL rather than the skill's files. Agents install those from the git URL directly:
+
+```bash
+npx skills add https://github.com/mattpocock/skills -a gemini-cli
+```
+
+`GET /public/skill_hub` returns that URL in each skill's `source` field. Some agents also ship their own installer for git URLs, such as `gemini skills install https://github.com/mattpocock/skills`, so check the agent's own docs
+
 ## Skill fields
 
 | Field | Description |
@@ -109,3 +139,5 @@ Then install any skill:
 | `POST /claude-code/plugins/{name}/disable` | Required | Unpublish a skill |
 | `GET /public/skill_hub` | None | List public skills |
 | `GET /claude-code/marketplace.json` | None | Claude Code marketplace manifest |
+| `GET /.well-known/agent-skills/index.json` | None | Agent Skills discovery index, needs `public_skills_index: true` |
+| `GET /v1/skills/{skill_id}/archive` | None | Download an uploaded skill as a zip, needs `public_skills_index: true` |
