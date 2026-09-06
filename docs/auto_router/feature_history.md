@@ -23,9 +23,9 @@ Merged after the v1.100.0 release candidate was cut. Available in `v1.101.0-dev`
 
 Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation).
 
-## v1.100.0 (release candidate)
+## v1.100.0
 
-[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.100.0-rc.1), [Release notes](/release_notes/v1.100.0rc1/v1-100-0-rc-1)
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.100.0), [Release notes](/release_notes/v1.100.0/v1-100-0)
 
 - **Custom tier sets.** Define your own tiers for the LLM classifier, preview the exact classifier prompt, keyword rules follow renames. [#38602](https://github.com/BerriAI/litellm/pull/38602), [#38603](https://github.com/BerriAI/litellm/pull/38603), [#38605](https://github.com/BerriAI/litellm/pull/38605).
 - **Heuristic-first chaining.** `classifier_type: heuristic_first` scores locally and calls the LLM classifier only when needed. [#38428](https://github.com/BerriAI/litellm/pull/38428).
