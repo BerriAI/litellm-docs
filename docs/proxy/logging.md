@@ -167,7 +167,7 @@ litellm_settings:
 
 ### Disable Message Redaction
 
-If you have `litellm.turn_on_message_logging` turned on, you can override it for specific requests by
+If you have `litellm.turn_off_message_logging` enabled, you can override it for specific requests by
 setting a request header `LiteLLM-Disable-Message-Redaction: true`.
 
 
