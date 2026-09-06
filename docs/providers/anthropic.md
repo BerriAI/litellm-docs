@@ -244,6 +244,14 @@ These come from the federation rule you create in the Anthropic Console, and the
 | `anthropic_service_account_id` | The `svac_...` service account the rule maps to |
 | `anthropic_federation_workspace_id` | Required when the rule is enabled in more than one workspace; scopes the minted token to that workspace |
 
+Anthropic's own reference calls the last one `workspace_id`, but federation reads it from `ANTHROPIC_FEDERATION_WORKSPACE_ID`, not `ANTHROPIC_WORKSPACE_ID`. The shorter name already belongs to the Bedrock Claude platform provider, where it picks the workspace a Bedrock call is billed to, so federation takes the longer one and leaves that behavior alone. Setting `ANTHROPIC_WORKSPACE_ID` does nothing for federation
+
+### Static keys take precedence
+
+A static credential outranks federation everywhere in the Anthropic provider. If `ANTHROPIC_API_KEY` is set, every Anthropic route uses it and nothing is federated; `ANTHROPIC_AUTH_TOKEN` comes next, and federation is the last tier. This matches the Anthropic SDK's own ordering, and it applies to files, batches and model discovery as well as to chat.
+
+So a deployment that is meant to be federated must not carry a static key. If one is set anyway, LiteLLM logs a warning naming the model whose federation is being shadowed. A blank or whitespace-only value counts as unset and falls through to federation
+
 ### Configuring by environment instead
 
 Every field below can come from the environment rather than the deployment, which is what you want
@@ -363,6 +371,14 @@ The exchange only talks to `api.anthropic.com`. If you front Anthropic with a ga
 ```shell
 export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal"
 ```
+
+An entry may name a port, in which case only that port is trusted and another process on the same host is not. An entry without a port trusts every port on that host.
+
+```shell
+export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal:8443"
+```
+
+The list is read from the environment only. It is never taken from a model or credential API, because `api_base` decides both where the assertion is sent and where the minted token is presented
 
 ### Monitoring
 
