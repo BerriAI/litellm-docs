@@ -1,7 +1,7 @@
 ---
 slug: auto-router-stall-escalation
 title: "Auto-Router: Escalate a Task That Gets Stuck"
-date: 2026-09-08T10:00:00
+date: 2026-09-04T10:00:00
 authors:
   - moe
 image: ./hero.png
