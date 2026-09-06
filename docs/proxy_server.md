@@ -327,7 +327,7 @@ Credits [@Nathan](https://gist.github.com/CUexter) for this tutorial.
 ```shell
 git clone https://github.com/OpenBMB/ChatDev.git
 cd ChatDev
-conda create -n ChatDev_conda_env python=3.9 -y
+conda create -n ChatDev_conda_env python={{python_version}} -y
 conda activate ChatDev_conda_env
 uv add -r requirements.txt
 ```
@@ -562,7 +562,7 @@ Credits [@Nathan](https://gist.github.com/CUexter) for this tutorial.
 ```shell
 git clone https://github.com/OpenBMB/ChatDev.git
 cd ChatDev
-conda create -n ChatDev_conda_env python=3.9 -y
+conda create -n ChatDev_conda_env python={{python_version}} -y
 conda activate ChatDev_conda_env
 uv add -r requirements.txt
 ```
