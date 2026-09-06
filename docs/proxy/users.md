@@ -599,6 +599,48 @@ Go to **Internal Users**, select the user, and then open **Details → Edit → 
 
 User-level and key-level budgets are tracked independently. If a key has its own per-model budget, each request counts toward both the key budget and the owner's user budget. LiteLLM rejects the request when either limit is exceeded.
 
+### ✨ Virtual Key (Model Group)
+
+Share one budget across a group of models on a key. Useful when you want to cap spend on a family of expensive models, for example all Opus versions, so usage is enforced against the combined spend rather than per-model spend
+
+:::info
+
+✨ This is an Enterprise only feature [Get Started with Enterprise here](https://www.litellm.ai/#pricing)
+
+:::
+
+Add a `models` list to any `model_max_budget` entry to turn it into a model group budget. The entry's key is the group's name (any label you like) and every model in `models` draws from the same pool
+
+```bash
+curl 'http://0.0.0.0:4000/key/generate' \
+--header 'Authorization: Bearer <your-master-key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "model_max_budget": {
+    "opus-family": {
+      "models": ["claude-opus-4-7", "claude-opus-4-8"],
+      "budget_limit": 10,
+      "time_period": "30d"
+    }
+  }
+}'
+```
+
+Once combined spend across `claude-opus-4-7` and `claude-opus-4-8` crosses $10, requests to either model fail
+
+```json
+{
+    "error": {
+        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model group=opus-family, model=claude-opus-4-8",
+        "type": "budget_exceeded",
+        "param": null,
+        "code": "400"
+    }
+}
+```
+
+Group entries combine with per-model entries; a model that appears in a group and also has its own entry must be within both budgets. Models are matched against the `models` list by exact name, with or without a provider prefix, so a request for `anthropic/claude-opus-4-8` counts toward a group containing `claude-opus-4-8`. A member written with a provider prefix matches only that provider's route; use the bare model name to cap every route for that model
+
 
 ### Agents
 
@@ -1393,6 +1435,7 @@ A Pydantic model that defines budget information with a time period and limit.
 class GenericBudgetInfo(BaseModel):
     budget_limit: float  # The maximum budget amount in USD
     time_period: str    # Duration string like "1d", "30d", etc.
+    models: Optional[List[str]]  # If set, the entry is a model group budget shared by these models
 ```
 
 #### Fields:
@@ -1402,6 +1445,7 @@ class GenericBudgetInfo(BaseModel):
   - Minutes: "30m" 
   - Hours: "30h"
   - Days: "30d"
+- `models` (Optional[List[str]]): When set, the entry's key names a model group and every listed model draws from the same shared budget
 
 #### Example:
 ```json
