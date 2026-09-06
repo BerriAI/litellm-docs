@@ -16,7 +16,7 @@ Every check here is deterministic and fails the build:
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
   model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
-  python-literal      a Python version is written out (python3.12, python:3.12-slim, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
+  python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
 
 Usage:
@@ -442,8 +442,9 @@ MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 MODEL_LITERAL_RE = re.compile(
     r"(?<![A-Za-z0-9:@-])(?:" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
-# python3.12, python-3.12, python:3.12-slim and Python 3.12+; `python3 -m venv` and wheel tags such as cp312 are not versions.
-PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:_ ]?3\.\d{1,2}(?![0-9])")
+# python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
+# `python3 -m venv` and wheel tags such as cp312 are not versions.
+PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:=@_ ]?3\.\d{1,2}(?![0-9])")
 
 
 def python_literal_message(literal):
