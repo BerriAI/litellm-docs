@@ -66,6 +66,7 @@ const sidebars = {
             "observability/mlflow",
             "observability/promptlayer_integration",
             "observability/qualifire_integration",
+            "observability/telemetry_dev_integration",
             "observability/wandb_integration",
           ],
         },
