@@ -864,6 +864,7 @@ router_settings:
 | DEFAULT_CHUNK_OVERLAP | Default chunk overlap for RAG text splitters. Default is 200
 | DEFAULT_CHUNK_SIZE | Default chunk size for RAG text splitters. Default is 1000
 | DEFAULT_CLIENT_DISCONNECT_CHECK_TIMEOUT_SECONDS | Timeout in seconds for checking client disconnection. Default is 1
+| DEFAULT_COOLDOWN_REDIS_READ_INTERVAL_SECONDS | How often each worker re-reads deployment cooldowns from Redis, in seconds. A lower value lets a cooldown set by one replica reach the others sooner, at the cost of more Redis reads. Default is 1
 | DEFAULT_COOLDOWN_TIME_SECONDS | Duration in seconds to cooldown a model after failures. Default is 5
 | DEFAULT_CRON_JOB_LOCK_TTL_SECONDS | Time-to-live for cron job locks in seconds. Default is 60 (1 minute)
 | DEFAULT_DATAFORSEO_LOCATION_CODE | Default location code for DataForSEO search API. Default is 2250 (France)
