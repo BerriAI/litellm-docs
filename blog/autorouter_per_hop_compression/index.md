@@ -4,14 +4,14 @@ title: "AutoRouter Per-Hop Compression: Cut LLM Classifier Costs Another 32%"
 date: 2026-09-05T21:00:00
 authors:
   - moe
-image: ./compression-config.png
+image: ./hero.png
 description: "The complexity router's LLM classifier can now use different compression than the model call it routes to. The classifier only needs enough context to route correctly, not to generate an answer. In internal testing, compressing it aggressively cut classification costs a further 32% beyond shared compression, with no change in routing accuracy."
 keywords: [auto router, compression, cost savings, routing classifier, prompt compression, llm gateway, litellm]
 tags: [routing, cost, compression, engineering]
 hide_table_of_contents: false
 ---
 
-![Routing vs Model Compression: compress the routing decision independently](./compression-config.png)
+![Per-hop compression: 32% lower classification cost without sacrificing routing quality](./hero.png)
 
 **The complexity router's LLM classifier can now be compressed more aggressively than your model calls. In internal testing, that cut classification costs a further 32% beyond what shared compression was already saving, with no change in routing accuracy.**
 
@@ -101,6 +101,8 @@ guardrails:
 ```
 
 In the Admin UI, open a complexity router's Detailed Configuration, then Advanced: Compression. Pick your routing guardrail, choose "Use a different compression" for the model call, and select its guardrail separately.
+
+![Advanced: Compression, with the routing decision and model call set to different guardrails](./compression-config.png)
 
 :::info[Try it on your traffic]
 
