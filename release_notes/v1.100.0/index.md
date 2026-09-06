@@ -1,7 +1,7 @@
 ---
-title: "v1.100.0rc1 - Access Group Budgets, Together AI Sync & Custom Router Tiers"
-slug: "v1-100-0-rc-1"
-date: 2026-08-31T10:00:00
+title: "v1.100.0 - Access Group Budgets, Together AI Sync & Custom Router Tiers"
+slug: "v1-100-0"
+date: 2026-09-06T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,18 +30,24 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.100.0-rc.1
+docker.litellm.ai/berriai/litellm:1.100.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.100.0rc1
+pip install litellm==1.100.0
 ```
 
 </TabItem>
 </Tabs>
+
+:::note
+
+PyPI and Docker artifacts for this release were built from different SHAs, but are expected to be functionally the same. PyPI was built from [`10631eb`](https://github.com/BerriAI/litellm/commit/10631eb834c7802aa61611e807474170b8a4d425) and Docker from [`e4f2526`](https://github.com/BerriAI/litellm/commit/e4f25265704e2b2c6cf6e81be2e4c5cffff896f4).
+
+:::
 
 :::danger Breaking Changes
 
@@ -68,6 +74,13 @@ pip install litellm==1.100.0rc1
 - **Operator-defined auto-router tiers** - the complexity router's tier set is now editable end to end: custom classifier-defined tiers, a preview of the exact classifier prompt an edited tier set sends, heuristic-first classifier chaining, a dry run of a real request body on `/auto_router/test_routing` before saving, and classifier cost counted in savings and benchmarks
 - **MCP gateway session hardening** - RFC 7662 introspection lets an external gateway validate LiteLLM session tokens, session tokens can be signed asymmetrically with RS256, Anthropic MCP connectors can be bulk-imported via API and admin UI, and toolsets attached to teams, orgs and users are enforced
 - **242 new models** - day-0 support for `gemini-3.5-transcribe` and `transcribe-live` on Gemini and Vertex, the xAI `grok-4.20` family and `grok-imagine` image models, 24 Mistral entries spanning Voxtral audio, Ministral, OCR 3 and 4 and the Code and Vibe CLI lines, RunwayML `gen4.5`, `veo3.1` and the Seedance 2 family, and Grounding with Bing Search as a new search provider
+
+## Included after the v1.100.0-rc.1 cut
+
+This stable also carries the one change that landed on the release line after the rc.1 cut:
+
+- **Docker**
+    - Bump wolfi-base for glibc 2.44 and pin the image builds' apk python to 3.13, so the images build again after Wolfi rolled its python package forward - [PR #39992](https://github.com/BerriAI/litellm/pull/39992) (cherry-pick of [PR #38917](https://github.com/BerriAI/litellm/pull/38917) and [PR #38973](https://github.com/BerriAI/litellm/pull/38973))
 
 ## New Providers and Endpoints
 
@@ -571,9 +584,9 @@ Documentation now lives in [BerriAI/litellm-docs](https://github.com/BerriAI/lit
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 391)
+PRs by ownership area (total: 392)
 
-- Other (CI / chore / tests / build / version bumps): 69
+- Other (CI / chore / tests / build / version bumps): 70
 - Performance: 55
 - Spend / Budgets / Rate Limits: 53
 - UI: 53
@@ -613,4 +626,4 @@ The rest of the window closed coverage gaps and hardened what already runs. Fort
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.99.0-rc.1...v1.100.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.99.0...v1.100.0
