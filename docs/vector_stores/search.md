@@ -168,6 +168,38 @@ print(response)
 
 </TabItem>
 
+<TabItem value="mongodb-provider" label="MongoDB Provider (BETA)">
+
+#### Using MongoDB (BETA)
+
+Search an existing MongoDB Vector Search index on Atlas or a self-managed deployment. Install `litellm[mongodb]`, then set `MONGODB_CONNECTION_STRING` and your embedding provider's credentials. Replace the placeholders with your index, collection fields, and the model used to embed your documents.
+
+```python showLineNumbers title="Search Vector Store - MongoDB Provider (BETA)"
+import os
+
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="<index-name>",  # Exact MongoDB Vector Search index name
+    query="<question-about-your-documents>",
+    custom_llm_provider="mongodb",
+    mongodb_connection_string=os.environ["MONGODB_CONNECTION_STRING"],
+    mongodb_database="<database-name>",
+    mongodb_collection="<collection-name>",
+    mongodb_text_field="<text-field>",
+    mongodb_embedding_field="<vector-field>",
+    litellm_embedding_model="<provider>/<embedding-model>",
+    max_num_results=3,
+)
+print(response)
+```
+
+The embedding model must match the one used for the stored vectors. This BETA integration supports search only; index creation, ingestion, filters, ranking options, and query rewriting are not supported.
+
+[MongoDB setup and reference](../providers/mongodb_vector_stores.md) · [Sample-document example](../tutorials/mongodb_vector_search.md)
+
+</TabItem>
+
 <TabItem value="valkey-provider" label="Valkey Provider">
 
 #### Using Valkey

@@ -3,14 +3,14 @@ import TabItem from '@theme/TabItem';
 
 # LiteLLM Managed Vector Stores
 
-Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, Valkey search index, ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
+Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, Valkey search index, [MongoDB Vector Search index (BETA)](../providers/mongodb_vector_stores.md), ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
 
 A managed vector store is a mapping, stored in `config.yaml` or in the LiteLLM database, of:
 
 | Field | Required | Description |
 |---|---|---|
 | `vector_store_id` | Yes | The id clients will reference, typically the provider's own store id (Knowledge Base id, datastore id, index name) |
-| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `valkey`, `gemini`, `openai`, `pg_vector` |
+| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `mongodb` (BETA), `valkey`, `gemini`, `openai`, `pg_vector` |
 | `vector_store_name` | No | Human readable name shown in the UI |
 | `vector_store_description` | No | Description shown in the UI |
 | `vector_store_metadata` | No | Free-form metadata object |
@@ -60,7 +60,7 @@ curl -X POST 'http://localhost:4000/vector_store/new' \
   }'
 ```
 
-The store is written to the LiteLLM database and is immediately usable; no restart needed. The response echoes the stored object with sensitive `litellm_params` values redacted.
+The store is written to the LiteLLM database and is immediately available to direct search; no restart needed. If the proxy started with no registered vector stores, chat retrieval for its first UI or API registration becomes available after database synchronization or a proxy restart. The response echoes the stored object with sensitive `litellm_params` values redacted.
 
 </TabItem>
 <TabItem value="ui" label="Admin UI">
