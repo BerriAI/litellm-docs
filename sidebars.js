@@ -1174,6 +1174,7 @@ const sidebars = {
         "providers/milvus_vector_stores",
         "providers/mistral",
         "providers/minimax",
+        "providers/mongodb_vector_stores",
         "providers/moonshot",
         "providers/morph",
         "providers/nebius",
@@ -1685,6 +1686,7 @@ const learnSidebar = {
           items: [
             "tutorials/prompt_caching",
             "tutorials/file_search_responses_api",
+            "tutorials/mongodb_vector_search",
             "tutorials/anthropic_file_usage",
             "tutorials/gemini_realtime_with_audio",
             "tutorials/litellm_proxy_aporia",

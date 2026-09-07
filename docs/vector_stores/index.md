@@ -41,6 +41,7 @@ Support for the unified endpoints varies by provider. `Search` is `POST /v1/vect
 | `azure_ai` (Azure AI Search) | Yes | No | [Setup](../providers/azure_ai_vector_stores.md) |
 | `gemini` (File Search) | Yes | Yes | [Setup](../providers/gemini_file_search.md) |
 | `milvus` | Yes | Yes | [Setup](../providers/milvus_vector_stores.md) |
+| `mongodb` (BETA) | Yes | No | Searches existing MongoDB Vector Search indexes on Atlas or self-managed deployments. [Setup](../providers/mongodb_vector_stores.md), [chat completions](../providers/mongodb_vector_stores.md#use-mongodb-in-chat-completions), [worked example](../tutorials/mongodb_vector_search.md) |
 | `pg_vector` | Yes | Yes | Requires the [litellm-pgvector](../completion/knowledgebase.md) connector |
 | `s3_vectors` | Yes | No | Create via [/rag/ingest](../rag_ingest.md), [Setup](../providers/s3_vectors.md) |
 | `valkey` | Yes | No | Searches an existing valkey-search index, [setup](../providers/valkey_vector_stores.md) |

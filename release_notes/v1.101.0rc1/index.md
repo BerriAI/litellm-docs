@@ -114,7 +114,7 @@ pip install litellm==1.101.0rc1
 | Provider | Supported LiteLLM Endpoints | Description |
 | --- | --- | --- |
 | [QwenCloud and Qwen AI Platform](../../docs/providers/qwencloud) | `/chat/completions`, `/embeddings`, `/rerank`, `/images/generations` | `qwencloud/` (international) and `qwen_ai_platform/` (mainland) prefixes over the DashScope implementation, with 45 priced entries each |
-| [MongoDB](../../docs/completion/knowledgebase) | `/v1/vector_stores/search`, `/v1/rag/query`, chat `vector_store_ids` | Vector store provider running `$vectorSearch` on Atlas and self-managed deployments, shipped in every proxy image |
+| [MongoDB Vector Search (BETA)](../../docs/providers/mongodb_vector_stores) | `/v1/vector_stores/{id}/search`, `/v1/chat/completions` with `file_search` | Search existing Atlas or self-managed MongoDB indexes and use retrieved documents as chat context. Collection/index creation and document ingestion are not supported through LiteLLM. |
 | [Alice](../../docs/proxy/guardrails/alice) | Guardrails (`pre_call`, `post_call`) | Guardrail provider (formerly ActiveFence) enforcing ALLOW, BLOCK, MASK, or DETECT verdicts with the application chosen per virtual key |
 
 ### New LLM API Endpoints (6 new endpoints)
@@ -297,7 +297,7 @@ The maintenance pass touched 306 existing entries, concentrated in OpenRouter (4
 - **[Batches](../../docs/batches)**
     - Enforce team isolation on provider-format batch ids: retrieve, cancel, and output or error file reads on another team's batch now return 403, while ids with no ownership row keep passing through - [PR #33536](https://github.com/BerriAI/litellm/pull/33536)
 - **[Vector Stores](../../docs/completion/knowledgebase)**
-    - Add a `mongodb` vector store provider running `$vectorSearch` through pymongo on Atlas and self-managed deployments, selectable in the Admin UI, installable with `pip install 'litellm[mongodb]'` and shipped in every proxy Docker image - [PR #39811](https://github.com/BerriAI/litellm/pull/39811), [PR #39994](https://github.com/BerriAI/litellm/pull/39994)
+    - Add **MongoDB Vector Search (BETA)**: register an existing Atlas or self-managed index through the Admin UI, configuration file, or management API, then search directly or use `file_search` in chat completions. The query embedding model must match the stored vectors. See the [setup guide](../../docs/providers/mongodb_vector_stores), [chat-completions examples](../../docs/providers/mongodb_vector_stores#use-mongodb-in-chat-completions), and [sample-document tutorial](../../docs/tutorials/mongodb_vector_search) - [PR #39811](https://github.com/BerriAI/litellm/pull/39811), [PR #39994](https://github.com/BerriAI/litellm/pull/39994)
 - **OCR**
     - Add Cohere Parse on `/v1/ocr` for `cohere/parse-v5.0` and Azure AI Foundry `Cohere-parse-v5` deployments, billed at $0.0015 a page, with health checks probing each OCR deployment with a document its provider accepts - [PR #39862](https://github.com/BerriAI/litellm/pull/39862)
 - **Agents and A2A**
