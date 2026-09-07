@@ -77,6 +77,13 @@ curl -X POST "http://0.0.0.0:4000/model/new" \
     }'
 ```
 
+By default `rpm` and `tpm` are optional on a model, so a fleet can end up with some deployments rate limited and others unbounded. To make them required at creation time, set `enforce_rpm_tpm_on_model_add` in `general_settings` (available from `v1.100.0`); `POST /model/new` then returns a `400` unless `litellm_params` carries both `rpm` and `tpm` as positive values. The check applies to model creation only; `POST /model/update` is not affected.
+
+```yaml
+general_settings:
+  enforce_rpm_tpm_on_model_add: true
+```
+
 The rest of the operations:
 
 | Operation | Route | Notes |
