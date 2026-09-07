@@ -266,9 +266,9 @@ Expected response when blocked:
 {
   "error": {
     "message": "Content blocked: Policy violation",
-    "type": "None",
-    "param": "None",
-    "code": "500"
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400"
   }
 }
 ```
@@ -374,9 +374,9 @@ Expected response:
 {
   "error": {
     "message": "Guardrail failed words - `litellm` detected",
-    "type": "None",
-    "param": "None",
-    "code": "500"
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400"
   }
 }
 ```
@@ -431,9 +431,9 @@ Expected response:
 {
   "error": {
     "message": "Guardrail failed Coffee Detected",
-    "type": "None",
-    "param": "None",
-    "code": "500"
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400"
   }
 }
 ```
