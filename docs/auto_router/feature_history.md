@@ -4,24 +4,34 @@ sidebar_label: Auto Router Feature History
 description: Which Auto Router features shipped in which LiteLLM release, so you know what to expect when you upgrade.
 ---
 
-Every stable release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
+Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
 ## Coming in Next Release
 
-Merged after the v1.100.0 release candidate was cut. Available in `v1.101.0-dev` builds now; the stable link will be added when it ships.
+Merged after the v1.101.0 release candidate was cut. These changes are in `v1.102.0-dev` builds.
 
-- **Heuristic v2 classifier.** `classifier_type: trained_heuristic`, pretrained, no LLM call on the request path. 27% more Terminal-Bench tasks solved at 45% lower cost per task than v1. [#39276](https://github.com/BerriAI/litellm/pull/39276), [#39423](https://github.com/BerriAI/litellm/pull/39423). [Post](/blog/heuristic-v2).
-- **Context-window escalation.** Oversized prompts move to the cheapest tier that fits before dispatch. On by default, `context_window_escalation_buffer: 0.95`. [#38844](https://github.com/BerriAI/litellm/pull/38844), UI [#39054](https://github.com/BerriAI/litellm/pull/39054).
-- **Modality routing.** Opt-in `modality_routing: true` sends image requests to a tier that can see them. [#39032](https://github.com/BerriAI/litellm/pull/39032), UI [#39059](https://github.com/BerriAI/litellm/pull/39059).
-- **User-turn classification.** `classification_mode: user_turn` classifies new user asks only and carries the decision through continuation turns. [#38861](https://github.com/BerriAI/litellm/pull/38861).
-- **Shadow evals on teams and users.** Target a `key`, `team`, or `user`, so JWT-authenticated traffic can be evaluated. [#39015](https://github.com/BerriAI/litellm/pull/39015).
-- **Shadow evals across several routers.** Compare multiple router configs on one job's sampled traffic, paired. [#39028](https://github.com/BerriAI/litellm/pull/39028).
-- **1M context preset.** [#39490](https://github.com/BerriAI/litellm/pull/39490).
-- **Mid-task stall escalation.** `stall_escalation_enabled: true` reads the assistant's own recent tool calls and bumps a request one tier when it's stuck in a retry loop, the same ladder `escalation_keywords` uses. Off by default. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation).
-- **One-click Auto Router setup.** Configure automatically checks the chat model groups your proxy already serves and fills all four tiers, mixing providers when needed, without picking a template first. [#39693](https://github.com/BerriAI/litellm/pull/39693).
-- **Per-hop compression.** `auto_router_routing_compression` and `auto_router_model_compression` name a compression guardrail for the routing decision and for the model call separately, or `none` for either hop. Naming the same guardrail on both compresses once. [#39823](https://github.com/BerriAI/litellm/pull/39823).
+- **Heuristic v1 tuning.** One tuned router stays editable without the `auto_router` license feature. [#39952](https://github.com/BerriAI/litellm/pull/39952)
+- **Faster semantic cold start.** Build the first route layer once, off the event loop. [#39954](https://github.com/BerriAI/litellm/pull/39954)
+- **Adaptive router fixes.** Read model pricing from `model_info` and preserve bandit priors across restarts. [#39957](https://github.com/BerriAI/litellm/pull/39957), [#39955](https://github.com/BerriAI/litellm/pull/39955)
+- **Cross-provider tool history.** `/v1/messages` can replay `tool_use` blocks across OpenAI and Anthropic tiers. [#39967](https://github.com/BerriAI/litellm/pull/39967)
 
-Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation).
+## v1.101.0 (release candidate)
+
+[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.101.0-rc.1), [Release notes](/release_notes/v1.101.0rc1/v1-101-0-rc-1)
+
+- **Heuristic classifiers.** `heuristic_v2` routes locally; `hybrid` calls the LLM near a tier boundary. [#39276](https://github.com/BerriAI/litellm/pull/39276), [#39403](https://github.com/BerriAI/litellm/pull/39403). [Post](/blog/heuristic-v2)
+- **Context and user-turn routing.** Fit oversized prompts to a tier and classify only new user turns when configured. [#38844](https://github.com/BerriAI/litellm/pull/38844), [#38861](https://github.com/BerriAI/litellm/pull/38861), UI [#39042](https://github.com/BerriAI/litellm/pull/39042), [#39054](https://github.com/BerriAI/litellm/pull/39054)
+- **Image routing.** Send images to vision-capable tiers and optionally let the classifier read them. [#39032](https://github.com/BerriAI/litellm/pull/39032), [#39454](https://github.com/BerriAI/litellm/pull/39454), [#39825](https://github.com/BerriAI/litellm/pull/39825), UI [#39059](https://github.com/BerriAI/litellm/pull/39059), [#39840](https://github.com/BerriAI/litellm/pull/39840)
+- **Stall escalation.** Move a request up one tier when an agent repeats tool calls or errors. [#39809](https://github.com/BerriAI/litellm/pull/39809). [Post](/blog/auto-router-stall-escalation)
+- **Classifier controls.** Set classifier reasoning effort, a total timeout, and a circuit breaker for repeated timeouts. [#39372](https://github.com/BerriAI/litellm/pull/39372), [#39696](https://github.com/BerriAI/litellm/pull/39696), [#39701](https://github.com/BerriAI/litellm/pull/39701)
+- **Tier failover and compression.** Use a live peer when a tier is cooled down and choose compression per routing or model hop. [#39675](https://github.com/BerriAI/litellm/pull/39675), [#39823](https://github.com/BerriAI/litellm/pull/39823). [Post](/blog/auto-router-per-hop-compression)
+- **Shadow eval targeting.** Target teams, users, and model groups, compare up to four routers, and judge tool-call turns. [#39015](https://github.com/BerriAI/litellm/pull/39015), [#39028](https://github.com/BerriAI/litellm/pull/39028), [#39817](https://github.com/BerriAI/litellm/pull/39817), [#39818](https://github.com/BerriAI/litellm/pull/39818), [#39828](https://github.com/BerriAI/litellm/pull/39828)
+- **Setup and prompt editing.** Configure all tiers from existing models, edit built-in prompts by section, and set session affinity TTL in the UI. [#39679](https://github.com/BerriAI/litellm/pull/39679), [#39688](https://github.com/BerriAI/litellm/pull/39688), [#39693](https://github.com/BerriAI/litellm/pull/39693)
+- **Presets.** Add the 1M Context preset, update OpenAI Family, and serve the catalog at runtime. [#39412](https://github.com/BerriAI/litellm/pull/39412), [#39490](https://github.com/BerriAI/litellm/pull/39490), [#39396](https://github.com/BerriAI/litellm/pull/39396), [#39797](https://github.com/BerriAI/litellm/pull/39797)
+- **Claude Code support.** Route subagents through the selected router, expose its mode in `/v1/models`, and bill routing embeddings to the caller. [#39239](https://github.com/BerriAI/litellm/pull/39239), [#39619](https://github.com/BerriAI/litellm/pull/39619), [#39532](https://github.com/BerriAI/litellm/pull/39532)
+- **Breaking changes.** The `auto_router` license feature meters customization, and shadow eval results rename key fields. [#39468](https://github.com/BerriAI/litellm/pull/39468), [#39674](https://github.com/BerriAI/litellm/pull/39674), [#39015](https://github.com/BerriAI/litellm/pull/39015)
+
+Posts: [Route on Context Size and Modality](/blog/auto-router-more-routing-configurations), [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation), [Per-Hop Compression](/blog/auto-router-per-hop-compression).
 
 ## v1.100.0
 
