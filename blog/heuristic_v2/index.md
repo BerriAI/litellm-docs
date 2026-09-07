@@ -115,7 +115,7 @@ model_list:
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5
-        classifier_type: trained_heuristic
+        classifier_type: heuristic_v2
       complexity_router_default_model: claude-sonnet-5
 ```
 

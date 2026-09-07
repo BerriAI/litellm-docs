@@ -45,7 +45,7 @@ items={[
 - **No LLM classifier call** on the request path. Pretrained on graded response data, so no cold start.
 - **87%** of input tokens were cache reads, against 82% for v1: steadier tier choices mean fewer cache misses.
 - Zero failed requests in either arm across 933 LLM calls.
-- Enable with `classifier_type: trained_heuristic`.
+- Enable with `classifier_type: heuristic_v2`.
 
 <NavigationCards
 columns={2}
