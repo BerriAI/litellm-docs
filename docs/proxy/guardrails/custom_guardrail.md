@@ -10,7 +10,7 @@ Use this if you want to write code to run a custom guardrail
 
 ### 1. Write a `CustomGuardrail` Class
 
-You only have to implement one method: `apply_guardrail`. LiteLLM pulls the content out of a request (or a response), hands it to you as `inputs`, and writes back whatever you return. Raise an exception to block the call.
+You only have to implement one method: `apply_guardrail`. LiteLLM pulls the content out of a request (or a response), hands it to you as `inputs`, and writes back whatever you return. Raise `GuardrailRaisedException` with `blocked_content=True` when inspected content violates policy. Leave `blocked_content` false for timeouts, backend failures, and parsing errors.
 
 **Example `CustomGuardrail` Class**
 
@@ -20,6 +20,7 @@ Create a new file called `custom_guardrail.py` and add this code to it:
 import os
 from typing import TYPE_CHECKING, List, Literal, Optional
 
+from litellm.exceptions import GuardrailRaisedException
 from litellm.integrations.custom_guardrail import CustomGuardrail
 from litellm.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
@@ -46,7 +47,7 @@ class myCustomGuardrail(CustomGuardrail):
     ) -> GenericGuardrailAPIInputs:
         """
         Check the extracted content against your guardrail rules.
-        Raise an exception to block the call.
+        Raise GuardrailRaisedException with blocked_content=True to block the call.
         Return the inputs (optionally modified) to allow it through.
         """
         checked_texts: List[str] = []
@@ -54,7 +55,12 @@ class myCustomGuardrail(CustomGuardrail):
             result = await self._check_with_api(text, request_data)
 
             if result.get("action") == "BLOCK":
-                raise Exception(f"Content blocked: {result.get('reason', 'Policy violation')}")
+                raise GuardrailRaisedException(
+                    guardrail_name=self.guardrail_name,
+                    message=f"Content blocked: {result.get('reason', 'Policy violation')}",
+                    should_wrap_with_default_message=False,
+                    blocked_content=True,
+                )
 
             checked_texts.append(result.get("masked_text") or text)
 
@@ -473,6 +479,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import litellm
 from litellm._logging import verbose_proxy_logger
 from litellm.caching.caching import DualCache
+from litellm.exceptions import GuardrailRaisedException
 from litellm.integrations.custom_guardrail import CustomGuardrail
 from litellm.proxy._types import UserAPIKeyAuth
 
@@ -584,6 +591,7 @@ from typing import Any, AsyncGenerator, Literal, Optional, Union
 import litellm
 from litellm._logging import verbose_proxy_logger
 from litellm.caching.caching import DualCache
+from litellm.exceptions import GuardrailRaisedException
 from litellm.integrations.custom_guardrail import CustomGuardrail
 from litellm.proxy._types import UserAPIKeyAuth
 from litellm.types.utils import ModelResponseStream, CallTypes
@@ -649,7 +657,12 @@ class myCustomGuardrail(CustomGuardrail):
                 _content = message.get("content")
                 if isinstance(_content, str):
                     if "litellm" in _content.lower():
-                        raise ValueError("Guardrail failed words - `litellm` detected")
+                        raise GuardrailRaisedException(
+                            guardrail_name=self.guardrail_name,
+                            message="Guardrail failed words - `litellm` detected",
+                            should_wrap_with_default_message=False,
+                            blocked_content=True,
+                        )
 
     async def async_post_call_success_hook(
         self,
@@ -674,7 +687,12 @@ class myCustomGuardrail(CustomGuardrail):
                         and isinstance(choice.message.content, str)
                         and "coffee" in choice.message.content
                     ):
-                        raise ValueError("Guardrail failed Coffee Detected")
+                        raise GuardrailRaisedException(
+                            guardrail_name=self.guardrail_name,
+                            message="Guardrail failed Coffee Detected",
+                            should_wrap_with_default_message=False,
+                            blocked_content=True,
+                        )
 
     async def async_post_call_streaming_iterator_hook(
         self,
