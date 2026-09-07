@@ -28,6 +28,8 @@ guardrails:
       api_base: os.environ/PROMPT_SECURITY_API_BASE
       user: os.environ/PROMPT_SECURITY_USER              # Optional: User identifier
       system_prompt: os.environ/PROMPT_SECURITY_SYSTEM_PROMPT  # Optional: System context
+      file_sanitization_fail_open: true  # Optional: Allow the original file on timeout (default: true)
+      block_on_file_modify: true         # Optional: Block file modify verdicts (default: true)
       default_on: true
 ```
 
@@ -179,10 +181,13 @@ When a message contains file content (encoded as base64 in data URLs), the guard
 1. **Extracts** the file data from the message
 2. **Uploads** the file to Prompt Security's sanitization API
 3. **Polls** the API for sanitization results (with configurable timeout)
-4. **Takes action** based on the verdict:
-   - `block`: Rejects the request with violation details
-   - `modify`: Replaces file content with sanitized version
-   - `allow`: Passes the file through unchanged
+4. **Takes action** based on the verdict
+
+Verdict behavior:
+
+- `block`: Rejects the request with violation details
+- `modify`: Rejects the request by default. Set `block_on_file_modify: false` to replace the file content with the returned sanitized content
+- `allow`: Passes the file through unchanged
 
 ### File Upload Example
 
@@ -277,11 +282,20 @@ If the PDF contains malicious scripts or harmful content:
 **Note**: File sanitization uses a job-based async API. The guardrail:
 - Submits the file and receives a `jobId`
 - Polls `/api/sanitizeFile?jobId={jobId}` until status is `done`
-- Times out after `max_poll_attempts * poll_interval` seconds (default: 60 seconds)
+- Bounds the complete upload-and-poll operation to 30 seconds by default
+- Allows the original file through on timeout by default
+
+:::warning
+
+The default `file_sanitization_fail_open: true` prioritizes availability by forwarding the original, unsanitized file when sanitization times out. Set `file_sanitization_fail_open: false` to reject timed-out files with HTTP 408 instead.
+
+:::
 
 ## Prompt Modification
 
 When violations are detected but can be mitigated, Prompt Security can modify the content instead of blocking it entirely.
+
+This section applies to prompt and response text. File `modify` verdicts are blocked by default because the returned content might be extracted text rather than a reconstructed file. Set `block_on_file_modify: false` only when the returned content is safe to use as replacement file content.
 
 ### Modification Example
 
@@ -365,6 +379,27 @@ data: {"error": "Blocked by Prompt Security, Violations: harmful_content"}
 
 ## Advanced Configuration
 
+### File Sanitization Policies
+
+Use these settings to choose availability and file-replacement behavior:
+
+```yaml
+guardrails:
+  - guardrail_name: "prompt-security-guard"
+    litellm_params:
+      guardrail: prompt_security
+      mode: "during_call"
+      api_key: os.environ/PROMPT_SECURITY_API_KEY
+      api_base: os.environ/PROMPT_SECURITY_API_BASE
+      file_sanitization_fail_open: true
+      block_on_file_modify: true
+```
+
+| Setting | Default | Behavior when `true` | Behavior when `false` |
+| --- | --- | --- | --- |
+| `file_sanitization_fail_open` | `true` | A timeout logs an error and forwards the original file | A timeout rejects the request with HTTP 408 |
+| `block_on_file_modify` | `true` | A file `modify` verdict rejects the request with HTTP 400 | A file `modify` verdict replaces the file content |
+
 ### User and System Prompt Tracking
 
 Track users and provide system context for better security analysis:
@@ -392,9 +427,14 @@ guardrail = PromptSecurityGuardrail(
     api_key="your-api-key",
     api_base="https://eu.prompt.security",
     user="user-123",
-    system_prompt="You are a helpful assistant that must not reveal sensitive data."
+    system_prompt="You are a helpful assistant that must not reveal sensitive data.",
+    file_sanitization_timeout=30.0,
+    file_sanitization_fail_open=True,
+    block_on_file_modify=True,
 )
 ```
+
+`file_sanitization_timeout` configures the complete upload-and-poll deadline for programmatic setup.
 
 ### Multiple Guardrail Configuration
 
@@ -440,7 +480,7 @@ Prompt Security protects against:
 The guardrail takes three types of actions based on risk:
 
 - **`block`**: Completely blocks the request/response and returns an error with violation details
-- **`modify`**: Sanitizes the content (redacts PII, removes harmful parts) and allows it to proceed
+- **`modify`**: Sanitizes prompt or response text and allows it to proceed. File modifications are blocked by default
 - **`allow`**: Passes the content through unchanged
 
 ## Violation Reporting
@@ -471,6 +511,15 @@ PromptSecurityGuardrailMissingSecrets: Couldn't get Prompt Security api base or 
 Solution: Set `PROMPT_SECURITY_API_KEY` and `PROMPT_SECURITY_API_BASE` environment variables
 
 **File Sanitization Timeout:**
+
+By default, the guardrail logs the timeout and forwards the original file. To fail closed instead, configure:
+
+```yaml
+file_sanitization_fail_open: false
+```
+
+The caller then receives:
+
 ```
 {
   "error": {
@@ -479,7 +528,8 @@ Solution: Set `PROMPT_SECURITY_API_KEY` and `PROMPT_SECURITY_API_BASE` environme
   }
 }
 ```
-Solution: Increase `max_poll_attempts` or reduce file size
+
+For programmatic setup, adjust `file_sanitization_timeout` to change the deadline.
 
 **Invalid File Format:**
 ```
@@ -499,7 +549,7 @@ Solution: Ensure files are properly base64-encoded in data URLs
 3. **Configure user tracking** to identify patterns across user sessions
 4. **Monitor violations** in Prompt Security dashboard to tune policies
 5. **Test file uploads** thoroughly with various file types before production deployment
-6. **Set appropriate timeouts** for file sanitization based on expected file sizes
+6. **Choose a timeout policy** based on whether availability or fail-closed enforcement is more important
 7. **Combine with other guardrails** for defense-in-depth security
 
 ## Troubleshooting
@@ -526,9 +576,9 @@ Verify that:
 ### High Latency
 
 File sanitization adds latency due to upload and polling. To optimize:
-1. Reduce `poll_interval` for faster polling (but more API calls)
-2. Increase `max_poll_attempts` for larger files
-3. Consider caching sanitization results for frequently uploaded files
+1. Reduce file size before sending the request
+2. Set `file_sanitization_timeout` when configuring the guardrail programmatically
+3. Choose `file_sanitization_fail_open` based on the required availability and security posture
 
 ## Need Help?
 
