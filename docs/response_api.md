@@ -1749,7 +1749,7 @@ LiteLLM Proxy supports session management for all supported models. This allows 
 
 1. Enable storing request / response content in the database
 
-Set `store_prompts_in_cold_storage: true` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
+Set `store_prompts_in_spend_logs: true` under `general_settings` and `cold_storage_custom_logger: s3_v2` under `litellm_settings` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
 
 ```yaml showLineNumbers title="config.yaml with Session Continuity"
 litellm_settings:
@@ -1760,7 +1760,6 @@ litellm_settings:
     s3_region_name: us-west-2      
 
 general_settings:
-  store_prompts_in_cold_storage: true
   store_prompts_in_spend_logs: true
 ```
 
