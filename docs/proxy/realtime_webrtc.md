@@ -5,8 +5,8 @@ Connect to the Realtime API via WebRTC from browser/mobile clients. LiteLLM hand
 **Providers:** OpenAI · Azure
 
 :::info **WebRTC vs WebSocket**
-- **WebSocket** (`/v1/realtime`) — server-to-server
-- **WebRTC** (`/v1/realtime/client_secrets` + `/v1/realtime/calls`) — browser/mobile, lower latency
+- **WebSocket** (`/v1/realtime`): server-to-server
+- **WebRTC** (`/v1/realtime/client_secrets` + `/v1/realtime/calls`): browser/mobile, lower latency
 :::
 
 ## How it works

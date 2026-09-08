@@ -13,7 +13,7 @@ LiteLLM supports all models on Llamafile.
 | Supported Endpoints       | `/chat/completions`, `/embeddings`, `/completions`                                                                                   |
 
 
-# Quick Start
+## Quick Start
 
 ## Usage - litellm.completion (calling OpenAI compatible endpoint)
 llamafile Provides an OpenAI compatible endpoint for chat completions - here's how to call it with LiteLLM

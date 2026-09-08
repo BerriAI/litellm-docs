@@ -4,6 +4,8 @@ LiteLLM maps exceptions across all providers to their OpenAI counterparts.
 
 All exceptions can be imported from `litellm` - e.g. `from litellm import BadRequestError`
 
+Calling through the AI Gateway rather than the SDK? See the [Error Reference](/docs/proxy/error_reference) for the JSON error payload, the response headers, and how to tell a gateway error from a provider error
+
 ## LiteLLM Exceptions
 
 | Status Code | Error Type               | Inherits from | Description |
@@ -49,7 +51,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -69,7 +71,7 @@ except openai.APITimeoutError as e:
 import litellm
 try:
     response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -98,7 +100,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -128,7 +130,7 @@ from litellm.exceptions import ContentPolicyViolationError
 
 try:
     response = litellm.completion(
-        model="azure/gpt-4",
+        model="azure/{{openai_large}}",
         messages=[
             {
                 "role": "user", 
@@ -190,6 +192,7 @@ When calling the LiteLLM proxy, content policy violations will return detailed f
     }
   }
 }
+```
 
 ## Details 
 

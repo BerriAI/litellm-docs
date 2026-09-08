@@ -14,11 +14,11 @@ import TabItem from '@theme/TabItem';
 
 # Gemini Embedding 2 Preview: Multimodal Embeddings
 
-LiteLLM now supports **multimodal embeddings** with `gemini-embedding-2-preview`—mixing text, images, audio, video, and PDF content in a single request. Available via both the **Gemini API** (API key) and **Vertex AI** (GCP credentials).
+LiteLLM now supports **multimodal embeddings** with `gemini-embedding-2-preview`, mixing text, images, audio, video, and PDF content in a single request. Available via both the **Gemini API** (API key) and **Vertex AI** (GCP credentials).
 
 :::info Response shape differs by provider
 
-- **Gemini API** (`gemini/...`): each input element returns its own embedding, indexed `0..N-1` — same shape as OpenAI's `/embeddings`. LiteLLM routes to the [`batchEmbedContents`](https://ai.google.dev/api/embeddings#method:-models.batchembedcontents) endpoint with one `EmbedContentRequest` per input.
+- **Gemini API** (`gemini/...`): each input element returns its own embedding, indexed `0..N-1`, the same shape as OpenAI's `/embeddings`. LiteLLM routes to the [`batchEmbedContents`](https://ai.google.dev/api/embeddings#method:-models.batchembedcontents) endpoint with one `EmbedContentRequest` per input.
 - **Vertex AI** (`vertex_ai/...`): all input elements are combined into a single unified embedding via [`embedContent`](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/multimodal-embeddings-api). Vertex AI does not expose `batchEmbedContents` for Gemini embedding models, so `N` parts → `1` vector. To get one vector per item, call `embedding(...)` once per input.
 
 :::
@@ -177,7 +177,7 @@ response = embedding(
 
 ## Combined Embeddings (Gemini API, opt-in)
 
-By default the Gemini API path returns one embedding per input element (OpenAI-compatible). To fuse several modalities into a **single** vector — e.g., a product represented by its name + photo — wrap them in a nested list:
+By default the Gemini API path returns one embedding per input element (OpenAI-compatible). To fuse several modalities into a **single** vector, for example a product represented by its name + photo, wrap them in a nested list:
 
 ```python
 from litellm import embedding
@@ -201,4 +201,4 @@ embedding(
 )
 ```
 
-Useful for multi-modal retrieval where a single entity has more than one modality. See the [embedding docs](../../docs/embedding/supported_embedding#combined-multimodal-embeddings) for details. On Vertex AI this opt-in is unnecessary — every request already returns one combined vector.
+Useful for multi-modal retrieval where a single entity has more than one modality. See the [embedding docs](../../docs/embedding/supported_embedding#combined-multimodal-embeddings) for details. On Vertex AI this opt-in is unnecessary; every request already returns one combined vector.

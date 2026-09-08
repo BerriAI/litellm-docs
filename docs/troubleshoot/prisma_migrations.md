@@ -26,7 +26,7 @@ Migration: 20260116142756_update_deleted_keys_teams_table_routing_settings
 
 **How to fix:**
 
-#### Step 1 — Delete the failed migration entry and restart
+#### Step 1: Delete the failed migration entry and restart
 
 Remove the problematic migration from the history so it can be re-applied:
 
@@ -42,9 +42,9 @@ DELETE FROM "_prisma_migrations"
 WHERE migration_name = '<failed_migration_name>';
 ```
 
-After deleting the entry, restart LiteLLM — it will re-apply the migration on startup.
+After deleting the entry, restart LiteLLM and it will re-apply the migration on startup.
 
-#### Step 2 — If that doesn't work, use `prisma db push`
+#### Step 2: If that doesn't work, use `prisma db push`
 
 If deleting the migration entry and restarting doesn't resolve the issue, sync the schema directly:
 
@@ -80,7 +80,7 @@ DELETE FROM "_prisma_migrations"
 WHERE migration_name = '<failed_migration_name>';
 ```
 
-3. If that doesn't work, use `prisma db push` (see [warning above](#step-2--if-that-doesnt-work-use-prisma-db-push) — back up your database first):
+3. If that doesn't work, use `prisma db push` (see [warning above](#step-2-if-that-doesnt-work-use-prisma-db-push), and back up your database first):
 
 ```bash
 DATABASE_URL="<your_database_url>" prisma db push
@@ -110,7 +110,7 @@ LIMIT 20;
 
 3. Restart LiteLLM to re-run migrations.
 
-4. If that doesn't work, use `prisma db push` (see [warning above](#step-2--if-that-doesnt-work-use-prisma-db-push) — back up your database first):
+4. If that doesn't work, use `prisma db push` (see [warning above](#step-2-if-that-doesnt-work-use-prisma-db-push), and back up your database first):
 
 ```bash
 DATABASE_URL="<your_database_url>" prisma db push
@@ -124,10 +124,10 @@ DATABASE_URL="<your_database_url>" prisma db push
 
 ```
 PermissionError: [Errno 13] Permission denied:
-'/usr/local/lib/python3.11/site-packages/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x'
+'/usr/local/lib/python{{python_version}}/site-packages/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x'
 ```
 
-**Cause:** before Prisma can talk to your database it has to decide which query engine binary to run, and it does that by walking the engine paths the Prisma CLI recorded when the client was generated. A generated client carries five of them, one per supported platform, so the walk always runs. It tests each candidate with `Path.exists()`, which reports a missing file as `False` but re-raises `PermissionError` when a directory on the way to the candidate denies the running uid; it only swallows `ENOENT`, `ENOTDIR`, `EBADF` and `ELOOP`. An image that generates the client as one uid and runs as another, or that installs the client somewhere the runtime uid cannot traverse, therefore dies at startup rather than moving on to the next candidate. Python 3.14 returns `False` here and is unaffected; every other interpreter LiteLLM supports, 3.10 through 3.13, raises.
+**Cause:** before Prisma can talk to your database it has to decide which query engine binary to run, and it does that by walking the engine paths the Prisma CLI recorded when the client was generated. A generated client carries five of them, one per supported platform, so the walk always runs. It tests each candidate with `Path.exists()`, which reports a missing file as `False` but re-raises `PermissionError` when a directory on the way to the candidate denies the running uid; it only swallows `ENOENT`, `ENOTDIR`, `EBADF` and `ELOOP`. An image that generates the client as one uid and runs as another, or that installs the client somewhere the runtime uid cannot traverse, therefore dies at startup rather than moving on to the next candidate. Python 3.14 returns `False` here and is unaffected; every older interpreter LiteLLM supports raises. {/* keep-python-version */}
 
 **How to fix:** point Prisma at an engine the runtime uid can read, setting both variables together. `PRISMA_QUERY_ENGINE_BINARY` on its own does not clear this, because the walk that raises runs before Prisma reads that variable. `PRISMA_BINARY_PLATFORM` is the one that short-circuits the walk, before any candidate is tested, so neither variable substitutes for the other:
 

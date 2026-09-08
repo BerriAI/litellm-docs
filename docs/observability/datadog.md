@@ -26,9 +26,9 @@ We will use the `--config` to set `litellm.callbacks = ["datadog"]` this will lo
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["datadog"] # logs llm success + failure logs on datadog
   service_callback: ["datadog"] # logs redis, postgres failures on datadog
@@ -47,9 +47,9 @@ litellm_settings:
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["datadog_llm_observability"] # logs llm success logs on datadog
 ```
@@ -82,12 +82,15 @@ DD_SOURCE="litellm_dev"                   # [OPTIONAL] your datadog source
 When `LITELLM_DD_AGENT_HOST` is set, logs are sent to the agent instead of directly to DataDog API. This is useful for:
 - Centralized log shipping in containerized environments
 - Reducing direct API calls from multiple services
-- Leveraging agent-side processing and filtering
+- Using agent-side processing and filtering
 
 **Note:** We use `LITELLM_DD_AGENT_HOST` instead of `DD_AGENT_HOST` to avoid conflicts with `ddtrace` which automatically sets `DD_AGENT_HOST` for APM tracing.
 
-> [!IMPORTANT]
-> **Datadog LLM Observability**: `DD_API_KEY` is **REQUIRED** even when using the Datadog Agent (`LITELLM_DD_AGENT_HOST`). The agent acts as a proxy but the API key header is mandatory for the LLM Observability endpoint.
+:::info
+
+**Datadog LLM Observability**: `DD_API_KEY` is **REQUIRED** even when using the Datadog Agent (`LITELLM_DD_AGENT_HOST`). The agent acts as a proxy but the API key header is mandatory for the LLM Observability endpoint.
+
+:::
 
 **Step 3**: Start the proxy, make a test request
 
@@ -103,7 +106,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -131,9 +134,9 @@ When redaction is enabled, the actual message content and response text will be 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["datadog_llm_observability"] # logs llm success logs on datadog
 
@@ -148,7 +151,7 @@ litellm_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -193,9 +196,9 @@ All metrics include the following tags: `env`, `service`, `version`, `HOSTNAME`,
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["datadog_metrics"]
   failure_callback: ["datadog_metrics"]
@@ -219,7 +222,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'Authorization: Bearer sk-1234' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "hello"}]
 }'
 ```
@@ -242,9 +245,9 @@ We will use the `--config` to set `litellm.callbacks = ["datadog_cost_management
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["datadog_cost_management"]
 ```

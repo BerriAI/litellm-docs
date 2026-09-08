@@ -1,7 +1,7 @@
 ---
-title: "v1.97.0rc1 - Tool-Result Guardrails, Deployment Affinity & Viewer Parity"
-slug: "v1-97-0-rc-1"
-date: 2026-08-08T14:24:04
+title: "v1.97.0 - Tool-Result Guardrails, Deployment Affinity & Viewer Parity"
+slug: "v1-97-0"
+date: 2026-08-15T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,14 +30,14 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.97.0-rc.1
+docker.litellm.ai/berriai/litellm:1.97.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.97.0rc1
+pip install litellm==1.97.0
 ```
 
 </TabItem>
@@ -52,8 +52,6 @@ pip install litellm==1.97.0rc1
 :::
 
 ## Key Highlights
-
-`v1.97.0rc1` is the current release candidate for 1.97.0.
 
 - **Guardrails can be pointed at tool results alone** - a new per-guardrail `scan_only_tool_results` flag scans and masks tool output while system, user, and assistant content pass through untouched, so an agent platform can keep injection detection on untrusted tool results without its own harness prompts tripping the filter. Works on both `/v1/messages` and `/v1/chat/completions`
 - **The auto-router now sticks to a deployment, not just a model group** - `deployment_affinity` is on by default, so a conversation returning to a model group lands on the deployment it used there before and the provider prompt cache stays warm, while every turn is still classified on its own merits. `session_affinity` implies it, and session pins are now scoped by the caller's hashed API key
@@ -136,6 +134,7 @@ Beyond the new entries, this release carries OpenAI's GPT-5.6 price cut onto the
     - Return unified ids from unscoped file listing and unified output file ids from `GET /batches` - [PR #36031](https://github.com/BerriAI/litellm/pull/36031), [PR #36049](https://github.com/BerriAI/litellm/pull/36049)
 - **[Passthrough](../../docs/pass_through/vertex_ai)**
     - Resolve pass-through credentials live from router deployments - [PR #35916](https://github.com/BerriAI/litellm/pull/35916)
+    - Stop forwarding the client's `Accept-Encoding` upstream - [PR #37058](https://github.com/BerriAI/litellm/pull/37058)
 - **Web search**
     - Restore snippet text in native `web_search_tool_result` blocks - [PR #36228](https://github.com/BerriAI/litellm/pull/36228)
 - **General**
@@ -313,13 +312,13 @@ Beyond the new entries, this release carries OpenAI's GPT-5.6 price cut onto the
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 252)
+PRs by ownership area (total: 253)
 
 - Other (CI / chore / tests / build / version bumps): 86
 - Performance: 30
 - UI: 28
+- LLM API Endpoints: 21
 - Auth & Management: 20
-- LLM API Endpoints: 20
 - Spend / Budgets / Rate Limits: 20
 - Models & Providers: 17
 - Logging: 15
@@ -343,4 +342,4 @@ This window added 18 test-only PRs, 11 of them touching the live e2e suite. New 
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.96.0-rc.1...v1.97.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.96.0...v1.97.0

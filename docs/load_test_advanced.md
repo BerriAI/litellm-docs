@@ -10,7 +10,6 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
 - [ ] Ensure you're using the **latest `-stable` version** of litellm
     - [Github releases](https://github.com/BerriAI/litellm/releases)
     - [litellm docker containers](https://github.com/BerriAI/litellm/pkgs/container/litellm)
-    - [litellm database docker container](https://github.com/BerriAI/litellm/pkgs/container/litellm-database)
 - [ ] Ensure you're following **ALL** [best practices for production](./proxy/prod.md)
 - [ ] Locust - Ensure you're Locust instance can create 1K+ requests per second
     - 👉 You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**
@@ -121,15 +120,15 @@ All requests with `model="gemini-vision"` will be load balanced equally across t
 model_list:
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-1.0-pro-vision-001
-      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-1.0-pro-vision-001
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-1.0-pro-vision-001
-      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-1.0-pro-vision-001
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json

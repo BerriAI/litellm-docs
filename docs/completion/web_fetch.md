@@ -54,7 +54,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -68,9 +68,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
+  - model_name: {{anthropic}} # Anthropic {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -92,7 +92,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet-latest",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user", 
@@ -157,7 +157,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -189,7 +189,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -221,7 +221,7 @@ messages = [
 ]
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )
@@ -259,7 +259,7 @@ messages = [
 ]
     
 response = completion(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
 )

@@ -11,9 +11,9 @@ import Image from '@theme/IdealImage';
 
 <Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
 
-**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs — OpenAI, Anthropic, Vertex AI, Bedrock, and more — using the OpenAI format.
+**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 
-- Call any provider using the same `completion()` interface — no re-learning the API for each one
+- Call any provider using the same `completion()` interface, with no API to re-learn for each one
 - Consistent output format regardless of which provider or model you use
 - Built-in retry / fallback logic across multiple deployments via the [Router](./routing.md)
 - Self-hosted [LLM Gateway (Proxy)](./simple_proxy) with virtual keys, cost tracking, and an admin UI
@@ -47,7 +47,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -63,7 +63,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="anthropic/claude-3-5-sonnet-20241022",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -81,7 +81,7 @@ os.environ["VERTEXAI_PROJECT"] = "your-project-id"
 os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 response = completion(
-  model="vertex_ai/gemini-1.5-pro",
+  model="vertex_ai/{{gemini_pro}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -99,7 +99,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret"
 os.environ["AWS_REGION_NAME"] = "us-east-1"
 
 response = completion(
-  model="bedrock/anthropic.claude-haiku-4-5-20251001:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 print(response.choices[0].message.content)
@@ -151,7 +151,7 @@ Non-streaming responses return a `ModelResponse` object:
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -177,7 +177,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
   "id": "chatcmpl-abc123",
   "object": "chat.completion.chunk",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -203,7 +203,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 
 ## New to LiteLLM?
 
-**Want to get started fast?** Head to [Tutorials](/docs/tutorials) for step-by-step walkthroughs — AI coding tools, agent SDKs, proxy setup, and more.
+**Want to get started fast?** Head to [Tutorials](/docs/tutorials) for step-by-step walkthroughs of AI coding tools, agent SDKs, proxy setup, and more.
 
 **Need to understand a specific feature?** Check [Guides](/docs/guides) for streaming, function calling, prompt caching, and other how-tos.
 
@@ -256,7 +256,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 for chunk in completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{"role": "user", "content": "Write a short poem"}],
   stream=True,
 ):
@@ -265,14 +265,14 @@ for chunk in completion(
 
 ### Exception Handling
 
-LiteLLM maps every provider's errors to the OpenAI exception types — your existing error handling works out of the box:
+LiteLLM maps every provider's errors to the OpenAI exception types, so your existing error handling keeps working:
 
 ```python
 import litellm
 
 try:
     litellm.completion(
-      model="anthropic/claude-instant-1",
+      model="anthropic/{{anthropic}}",
       messages=[{"role": "user", "content": "Hey!"}]
     )
 except litellm.AuthenticationError as e:
@@ -293,7 +293,7 @@ import litellm
 litellm.success_callback = ["langfuse", "mlflow", "helicone"]
 
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[{"role": "user", "content": "Hi!"}]
 )
 ```
@@ -313,7 +313,7 @@ def track_cost(kwargs, completion_response, start_time, end_time):
 litellm.success_callback = [track_cost]
 
 litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[{"role": "user", "content": "Hello!"}],
   stream=True
 )
@@ -325,11 +325,11 @@ litellm.completion(
 
 ## LiteLLM Proxy Server (LLM Gateway)
 
-The proxy is a self-hosted OpenAI-compatible gateway. Any client that works with OpenAI works with the proxy — no code changes needed.
+The proxy is a self-hosted OpenAI-compatible gateway. Any client that works with OpenAI works with the proxy, with no code changes.
 
 ![LiteLLM Proxy Dashboard](https://github.com/BerriAI/litellm/assets/29436595/47c97d5e-b9be-4839-b28c-43d7f4f10033)
 
-#### Step 1 — Start the proxy
+#### Step 1: Start the proxy
 
 <Tabs>
 <TabItem value="cli" label="LiteLLM CLI">
@@ -344,7 +344,7 @@ litellm --model huggingface/bigcode/starcoder
 
 ```yaml title="litellm_config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/your-deployment
       api_base: os.environ/AZURE_API_BASE
@@ -365,7 +365,7 @@ docker run \
 </TabItem>
 </Tabs>
 
-#### Step 2 — Call it with the OpenAI client
+#### Step 2: Call it with the OpenAI client
 
 ```python
 import openai
@@ -373,7 +373,7 @@ import openai
 client = openai.OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[{"role": "user", "content": "Write a short poem"}]
 )
 print(response.choices[0].message.content)
@@ -382,7 +382,7 @@ print(response.choices[0].message.content)
 👉 [Full proxy quickstart →](./proxy/docker_quick_start)
 
 :::tip Debugging tool
-Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exactly what LiteLLM sends to any provider — useful for debugging prompt formatting, header issues, and provider-specific parameters.
+Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
 🔗 [Interactive API explorer (Swagger) →](https://litellm-api.up.railway.app/)
@@ -391,7 +391,7 @@ Use [**`/utils/transform_request`**](./utils/transform_request) to inspect exact
 
 ## Agent & MCP Gateway
 
-LiteLLM is a unified gateway for **LLMs, agents, and MCP** — you don't need a separate agent or MCP gateway. One endpoint for 100+ models, A2A agents, and MCP tools.
+LiteLLM is a unified gateway for **LLMs, agents, and MCP**, so you don't need a separate agent or MCP gateway. One endpoint for 100+ models, A2A agents, and MCP tools.
 
 <NavigationCards
 columns={3}
@@ -411,7 +411,7 @@ to: "/docs/mcp",
 {
 icon: "✨",
 title: "✨ Enterprise Quickstart",
-description: "Quickstart guide for trial customers — LLM, MCP, and Agent gateway.",
+      description: "Quickstart guide for trial customers: LLM, MCP, and Agent gateway.",
 to: "/docs/learn/enterprise_quickstart",
 },
 ]}

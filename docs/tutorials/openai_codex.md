@@ -82,29 +82,29 @@ Ensure your LiteLLM Proxy is properly configured to route to your desired models
 
 ```yaml showLineNumbers
 model_list:
-  - model_name: o3-mini
+  - model_name: gpt-5.3-codex
     litellm_params:
-      model: openai/o3-mini
+      model: openai/gpt-5.3-codex
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: claude-3-7-sonnet-latest
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-7-sonnet-latest
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: gemini-2.0-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
-  - model_name: gpt-5.6-luna
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5.6-luna
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-5.6-sol
     litellm_params:
       model: openai/gpt-5.6-sol
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-terra
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.6-terra
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -125,7 +125,7 @@ export LITELLM_API_KEY="sk-1234"
 You can also configure Codex directly via `~/.codex/config.toml`:
 
 ```toml showLineNumbers
-model = "gpt-5.6-terra"
+model = "{{openai_large}}"
 model_provider = "litellm"
 model_reasoning_effort = "medium"
 approvals_reviewer = "user"
@@ -143,7 +143,7 @@ request_max_retries = 4
 trust_level = "trusted"
 
 [tui.model_availability_nux]
-"gpt-5.6-terra" = 1
+"{{openai_large}}" = 1
 ```
 
 ## 5. Run Codex
@@ -178,10 +178,10 @@ You can use any model configured in your LiteLLM proxy:
 
 ```bash
 # Use Claude models
-codex --model claude-3-7-sonnet-latest
+codex --model {{anthropic}}
 
 # Use Google AI Studio Gemini models
-codex --model gemini/gemini-2.0-flash
+codex --model gemini/{{gemini_flash}}
 ```
 
 ## Troubleshooting

@@ -41,8 +41,35 @@ curl -X POST "https://your-proxy-url/schedule/model_cost_map_reload?hours=6" \
 | `/schedule/model_cost_map_reload?hours={hours}` | POST | Schedule periodic sync |
 | `/schedule/model_cost_map_reload` | DELETE | Cancel scheduled sync |
 | `/schedule/model_cost_map_reload/status` | GET | Check sync status |
+| `/model/cost_map/source` | GET | Where the loaded map came from and which revision it is |
 
 **Authentication:** Requires admin role or master key
+
+If a reload succeeds but a newly added model still does not show up, work through [Model missing after Reload Price Data](../troubleshoot/missing_model) before changing anything on the deployment.
+
+## Checking which revision is loaded
+
+Every time the proxy loads the pricing map it records the git blob id of the bytes it parsed, the same id `git rev-parse <commit>:model_prices_and_context_window.json` prints for that file in a litellm checkout. It reports that id as `source_revision`, together with the `etag` GitHub served for the fetch and `loaded_at`, on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
+
+```bash
+curl -s "https://your-proxy-url/model/cost_map/source" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+```json
+{
+  "source": "remote",
+  "url": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
+  "is_env_forced": false,
+  "fallback_reason": null,
+  "loaded_at": "2026-09-08T00:49:21.311283+00:00",
+  "source_revision": "b1ffc1583e46583bb4becd34cf85ec70c6930828",
+  "etag": "W/\"6523ba12ad8daed03f7c879bc2c079d11b111d1ebdee2c27a34c0c756af30445\"",
+  "model_count": 3850
+}
+```
+
+`source_revision` is the one-line answer to "which pricing map is my proxy on". To check it against `main`, run `git rev-parse origin/main:model_prices_and_context_window.json` in a litellm checkout: a match means the proxy is on the current file. To see when `main` shipped that exact file, run `git log --first-parent --find-object=<source_revision> --format='%h %cs %s' origin/main -- model_prices_and_context_window.json`: the older line is the merge that shipped it and the newer line, when there is one, the merge that replaced it. `--first-parent` matters because most revisions reach `main` through merges from `litellm_internal_staging`, and plain `git log` leaves those merges out. Without a checkout, `gh api 'repos/BerriAI/litellm/contents/model_prices_and_context_window.json?ref=main' --jq .sha` prints the id `main` serves right now. Two proxies reporting the same `source_revision` are serving byte-identical maps, whatever URL each fetched from. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and `source_revision` is then the bundled file's id. Nothing is stamped into the JSON itself, so the file has no `_metadata` entry and no `generated_at`
 
 ## Python Example
 

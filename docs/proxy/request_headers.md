@@ -14,9 +14,9 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-enable-message-redaction`: Optional[bool]: Don't log the message content to logging integrations. Just track spend. [Learn More](./logging#redact-messages-response-content)
 
-`x-litellm-tags`: Optional[str]: A comma separated list (e.g. `tag1,tag2,tag3`) of tags to use for [tag-based routing](./tag_routing) **OR** [spend-tracking](./enterprise.md#tracking-spend-for-custom-tags).
+`x-litellm-tags`: Optional[str]: A comma separated list (e.g. `tag1,tag2,tag3`) of tags to use for [tag-based routing](./tag_routing) **OR** [spend-tracking](/docs/proxy/cost_tracking#custom-tags).
 
-`x-litellm-num-retries`: Optional[int]: The number of retries for the request.
+`x-litellm-num-retries`: Optional[int]: The number of retries for the request. This outranks a `num_retries` in the request body, in a deployment's `litellm_params`, and in `litellm_settings`. [Learn More](../routing#where-num_retries-can-be-set-and-which-one-wins)
 
 `x-litellm-keepalive-seconds`: Optional[float]: Emit an SSE `: ping` comment frame after this many seconds of stream silence, to keep idle-looking connections alive through load balancer timeouts. Subject to the deployment's `allow_client_keepalive_override` setting; has no effect if the deployment hasn't opted in. [Learn More](./timeout#keepalive-pings-for-idle-streaming-connections)
 
@@ -44,7 +44,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, who won the world cup in 2022?"}]
   }'
 
@@ -53,7 +53,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "And who was the top scorer?"}]
   }'
 ```

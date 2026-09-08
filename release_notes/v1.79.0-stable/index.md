@@ -133,7 +133,7 @@ pip install litellm==1.79.0
     - Support tags in metadata - [PR #15867](https://github.com/BerriAI/litellm/pull/15867)
     - Security: prevent User A from retrieving User B's response, if response.id is leaked - [PR #15757](https://github.com/BerriAI/litellm/pull/15757)
 
-- **[Batch API](../../docs/batch_api)**
+- **[Batch API](/docs/batches)**
     - Add pre and post call for list batches - [PR #15673](https://github.com/BerriAI/litellm/pull/15673)
     - Add function responsible to call precall - [PR #15636](https://github.com/BerriAI/litellm/pull/15636)
     - Fix "User default_user_id does not have access to the object" when object not in db - [PR #15873](https://github.com/BerriAI/litellm/pull/15873)
@@ -142,7 +142,7 @@ pip install litellm==1.79.0
     - Add Azure AI - OCR to docs - [PR #15768](https://github.com/BerriAI/litellm/pull/15768)
     - Add mode + Health check support for OCR models - [PR #15767](https://github.com/BerriAI/litellm/pull/15767)
 
-- **[Search API](../../docs/search_api)**
+- **[Search API](/docs/search)**
     - Add def search() APIs for Web Search - Perplexity API - [PR #15769](https://github.com/BerriAI/litellm/pull/15769)
     - Add Tavily Search API - [PR #15770](https://github.com/BerriAI/litellm/pull/15770)
     - Add Parallel AI - Search API - [PR #15772](https://github.com/BerriAI/litellm/pull/15772)
@@ -165,14 +165,14 @@ pip install litellm==1.79.0
 - **[Images API](../../docs/image_generation)**
     - Pass user-defined headers and extra_headers to image-edit calls - [PR #15811](https://github.com/BerriAI/litellm/pull/15811)
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Add Azure support for video generation functionality (Sora-2, Sora-2-Pro, Sora-2-Pro-High-Res) - [PR #15901](https://github.com/BerriAI/litellm/pull/15901)
     - OpenAI video generation refactoring (Sora-2) - [PR #15900](https://github.com/BerriAI/litellm/pull/15900)
 
 - **[Bedrock /invoke](../../docs/bedrock_invoke)**
     - Fix: Hooks broken on /bedrock passthrough due to missing metadata - [PR #15849](https://github.com/BerriAI/litellm/pull/15849)
 
-- **[Realtime API](../../docs/realtime_api)**
+- **[Realtime API](/docs/realtime)**
     - Fix: OpenAI Realtime API integration fails due to websockets.exceptions.PayloadTooBig error - [PR #15751](https://github.com/BerriAI/litellm/pull/15751)
 
 ---
@@ -208,7 +208,7 @@ pip install litellm==1.79.0
 - **[Sentry](../../docs/proxy/logging#sentry)**
     - Add SENTRY_ENVIRONMENT configuration for Sentry integration - [PR #15760](https://github.com/BerriAI/litellm/pull/15760)
 
-- **[Helicone](../../docs/proxy/logging#helicone)**
+- **[Helicone](/docs/observability/helicone_integration)**
     - Fix JSON serialization error in Helicone logging by removing OpenTelemetry span from metadata - [PR #15728](https://github.com/BerriAI/litellm/pull/15728)
 
 - **[MLFlow](../../docs/proxy/logging#mlflow)**
@@ -219,21 +219,21 @@ pip install litellm==1.79.0
 
 #### Guardrails
 
-- **[Gray Swan](../../docs/proxy/guardrails)**
+- **[Gray Swan](/docs/proxy/guardrails/quick_start)**
     - Add GraySwan Guardrails support - [PR #15756](https://github.com/BerriAI/litellm/pull/15756)
     - Rename GraySwan to Gray Swan - [PR #15771](https://github.com/BerriAI/litellm/pull/15771)
 
-- **[Dynamo AI](../../docs/proxy/guardrails)**
+- **[Dynamo AI](/docs/proxy/guardrails/quick_start)**
     - New Guardrail - Dynamo AI Guardrail - [PR #15920](https://github.com/BerriAI/litellm/pull/15920)
 
-- **[IBM Guardrails](../../docs/proxy/guardrails)**
+- **[IBM Guardrails](/docs/proxy/guardrails/quick_start)**
     - IBM Guardrails integration - [PR #15924](https://github.com/BerriAI/litellm/pull/15924)
 
-- **[Lasso Security](../../docs/proxy/guardrails)**
+- **[Lasso Security](/docs/proxy/guardrails/quick_start)**
     - Add v3 API Support - [PR #12452](https://github.com/BerriAI/litellm/pull/12452)
     - Fixed lasso import config, redis cluster hash tags for test keys - [PR #15917](https://github.com/BerriAI/litellm/pull/15917)
 
-- **[Bedrock Guardrails](../../docs/proxy/guardrails)**
+- **[Bedrock Guardrails](/docs/proxy/guardrails/quick_start)**
     - Implement Bedrock Guardrail apply_guardrail endpoint support - [PR #15892](https://github.com/BerriAI/litellm/pull/15892)
 
 - **General**

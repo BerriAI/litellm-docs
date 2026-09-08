@@ -134,7 +134,7 @@ Navigate to **Virtual Keys** → **Create Key** (or edit an existing key) and se
 
 ### 3. Use the tag in your requests (optional)
 
-If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header — see [Request Tags](request_tags.md)):
+If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header, see [Request Tags](request_tags.md)):
 
 <Tabs>
 
@@ -149,7 +149,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -168,7 +168,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-1234' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -189,7 +189,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-your-key-with-engineering-tag' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```
@@ -201,7 +201,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-1234' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -296,7 +296,7 @@ You can apply multiple tags to a single request to track costs across different 
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -311,7 +311,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-1234' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering", "project-alpha", "customer-acme"]

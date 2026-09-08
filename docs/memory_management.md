@@ -247,7 +247,7 @@ Create a new memory entry.
 | `user_id` | string | ❌ | Scope to a user. Defaults to caller's `user_id`. Admin-only override. |
 | `team_id` | string | ❌ | Scope to a team. Defaults to caller's `team_id`. Admin-only override. |
 
-**Response:** `201` — Returns the created `LiteLLM_MemoryRow`.
+**Response:** `201`, returns the created `LiteLLM_MemoryRow`.
 
 ---
 
@@ -264,7 +264,7 @@ List memory entries visible to the caller.
 | `page` | int | 1 | Page number (1-indexed). |
 | `page_size` | int | 50 | Items per page (max 500). |
 
-**Response:** `200` — Returns `MemoryListResponse` with `memories` array and `total` count.
+**Response:** `200`, returns `MemoryListResponse` with `memories` array and `total` count.
 
 ---
 
@@ -278,7 +278,7 @@ Get a single memory entry by key.
 |-----------|------|-------------|
 | `key` | string | The memory key to retrieve. |
 
-**Response:** `200` — Returns the `LiteLLM_MemoryRow`.
+**Response:** `200`, returns the `LiteLLM_MemoryRow`.
 
 ---
 
@@ -301,7 +301,7 @@ Upsert a memory entry. Creates the entry if the key doesn't exist; updates it if
 | `user_id` | string | ❌ | Only used on create. Admin-only override. |
 | `team_id` | string | ❌ | Only used on create. Admin-only override. |
 
-**Response:** `200` — Returns the created/updated `LiteLLM_MemoryRow`.
+**Response:** `200`, returns the created/updated `LiteLLM_MemoryRow`.
 
 ---
 
@@ -315,7 +315,7 @@ Delete a memory entry by key.
 |-----------|------|-------------|
 | `key` | string | The memory key to delete. |
 
-**Response:** `200` — Returns `{"key": "...", "deleted": true}`.
+**Response:** `200`, returns `{"key": "...", "deleted": true}`.
 
 ## Response Object
 

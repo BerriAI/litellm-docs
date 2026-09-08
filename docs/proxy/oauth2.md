@@ -2,11 +2,7 @@
 
 Use this if you want to use an Oauth2.0 token to make `/chat`, `/embeddings` requests to the LiteLLM Proxy
 
-:::info
-
-This is an Enterprise Feature - [get in touch with us if you want a free trial to test if this feature meets your needs]((https://enterprise.litellm.ai/demo))
-
-:::
+<EnterpriseFeature />
 
 ## Usage 
 
@@ -30,7 +26,7 @@ Set this on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -47,7 +43,7 @@ general_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -59,7 +55,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## Debugging 
 
-Start the LiteLLM Proxy with [`--detailed_debug` mode and you should see more verbose logs](cli.md#detailed_debug)
+Start the LiteLLM Proxy with [`--detailed_debug` mode and you should see more verbose logs](cli.md#--detailed_debug)
 
 ## Using OAuth2 + JWT Together
 
@@ -85,5 +81,5 @@ general_settings:
 
 Selectors support shell-style wildcards (`*`, `?`, case-sensitive) and accept either a single string or a list of strings.
 
-For full `routing_overrides` behavior — supported selectors, wildcard and list semantics, and matching rules — see [`/proxy/token_auth`](./token_auth.md#route-jwt-shaped-machine-tokens-to-oauth2).
+For full `routing_overrides` behavior (supported selectors, wildcard and list semantics, and matching rules) see [`/proxy/token_auth`](./token_auth.md#route-jwt-shaped-machine-tokens-to-oauth2).
 

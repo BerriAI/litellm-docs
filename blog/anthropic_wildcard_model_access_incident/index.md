@@ -26,7 +26,7 @@ key not allowed to access model. This key can only access models=['anthropic/*']
 The reload updated `litellm.model_cost` correctly but never re-ran `add_known_models()`, so `litellm.anthropic_models` (the in-memory set used by the wildcard resolver) remained stale. The new model was invisible to the `anthropic/*` wildcard even though the cost map knew about it.
 
 - **LLM calls:** All requests to newly-added Anthropic models were blocked with a 401.
-- **Existing models:** Unaffected — only models missing from the stale provider set were impacted.
+- **Existing models:** Unaffected. Only models missing from the stale provider set were impacted.
 - **Other providers:** Same bug class existed for any provider wildcard (e.g. `openai/*`, `gemini/*`).
 
 {/* truncate */}
@@ -81,7 +81,7 @@ _invalidate_model_cost_lowercase_map()           # ✅ cache cleared
 
 The gap existed in two places:
 1. `_check_and_reload_model_cost_map` — the periodic automatic reload (every 10 s)
-2. The `/reload/model_cost_map` admin endpoint — the manual reload
+2. The `/reload/model_cost_map` admin endpoint, the manual reload
 
 **Timeline:**
 
@@ -89,7 +89,7 @@ The gap existed in two places:
 2. Admin triggers cost map reload via UI → `litellm.model_cost` updated
 3. Users with `anthropic/*` wildcard keys attempt requests to `claude-sonnet-4-6`
 4. `get_llm_provider('claude-sonnet-4-6')` raises → wildcard returns False → 401
-5. Admin reloads cost map again — same result (root cause not addressed)
+5. Admin reloads cost map again, same result (root cause not addressed)
 6. ~3 hours of investigation → root cause identified → fix deployed
 
 ---

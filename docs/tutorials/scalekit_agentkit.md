@@ -1,16 +1,16 @@
 # Scalekit with LiteLLM
 
-Add authenticated tool calls to your LiteLLM-powered agents. [Scalekit](https://docs.scalekit.com/agentkit/overview/) manages OAuth flows, token storage, and API execution for 100+ third-party apps (Gmail, GitHub, Slack, Salesforce, etc.) — your agent picks tools at runtime and LiteLLM routes the model calls to any provider.
+Add authenticated tool calls to your LiteLLM-powered agents. [Scalekit](https://docs.scalekit.com/agentkit/overview/) manages OAuth flows, token storage, and API execution for 100+ third-party apps (Gmail, GitHub, Slack, Salesforce, etc.). Your agent picks tools at runtime and LiteLLM routes the model calls to any provider.
 
 ## Overview
 
 - Fetch user-scoped tool definitions from Scalekit and pass them as function schemas to `litellm.completion()`
-- Switch models freely — the same tool definitions work across OpenAI, Anthropic, Bedrock, Vertex AI, and every other provider LiteLLM supports
-- Execute tool calls through Scalekit — no API keys, endpoints, or auth headers to manage per third-party app
+- Switch models freely, since the same tool definitions work across OpenAI, Anthropic, Bedrock, Vertex AI, and every other provider LiteLLM supports
+- Execute tool calls through Scalekit, with no API keys, endpoints, or auth headers to manage per third-party app
 
 ## Prerequisites
 
-- Python 3.9+
+- Python {{python_min_version}}+
 - A [Scalekit account](https://app.scalekit.com) with a connection configured (this tutorial uses Gmail)
 - API keys for at least one LLM provider, or a running LiteLLM proxy
 - Scalekit API credentials (`SCALEKIT_CLIENT_ID`, `SCALEKIT_CLIENT_SECRET`, `SCALEKIT_ENV_URL`) from Dashboard → **Developers** → **API Credentials**
@@ -62,7 +62,7 @@ if connected_account.status != "ACTIVE":
 
 ## 4. Fetch Scoped Tools
 
-`list_scoped_tools` returns only the tools this specific user is authorized to call. Convert them to OpenAI's function-calling format — the same format LiteLLM normalizes to across all providers.
+`list_scoped_tools` returns only the tools this specific user is authorized to call. Convert them to OpenAI's function-calling format, the same format LiteLLM normalizes to across all providers.
 
 ```python showLineNumbers title="fetch_tools.py"
 scoped_response, _ = actions.tools.list_scoped_tools(
@@ -87,14 +87,14 @@ llm_tools = [
 
 ## 5. Run the Agent Loop
 
-Call `litellm.completion()` with the tool definitions. When the model returns tool calls, execute them through Scalekit and feed the results back. Change the `model` parameter to switch providers — no other code changes needed.
+Call `litellm.completion()` with the tool definitions. When the model returns tool calls, execute them through Scalekit and feed the results back. Change the `model` parameter to switch providers; no other code changes needed.
 
 ```python showLineNumbers title="agent_loop.py"
 messages = [{"role": "user", "content": "Fetch my last 5 unread emails and summarize them"}]
 
 while True:
     response = litellm.completion(
-        model="anthropic/claude-sonnet-4-20250514",  # swap to any litellm-supported model
+        model="anthropic/{{anthropic}}",  # swap to any litellm-supported model
         tools=llm_tools,
         messages=messages,
     )
@@ -123,7 +123,7 @@ while True:
 
 ## 6. Complete Working Example
 
-Full end-to-end script — copy and run:
+Full end-to-end script, copy and run:
 
 ```python showLineNumbers title="scalekit_agent.py"
 import os
@@ -133,7 +133,7 @@ import scalekit.client
 from google.protobuf.json_format import MessageToDict
 
 # --- Configuration ---
-MODEL = os.getenv("MODEL", "anthropic/claude-sonnet-4-20250514")
+MODEL = os.getenv("MODEL", "anthropic/{{anthropic}}")
 CONNECTION_NAME = os.getenv("GMAIL_CONNECTION_NAME", "gmail")
 USER_ID = "user_123"
 
@@ -207,28 +207,28 @@ Switch models by changing the `MODEL` environment variable:
 
 ```bash
 # OpenAI
-MODEL=gpt-4o python scalekit_agent.py
+MODEL={{openai_large}} python scalekit_agent.py
 
 # Anthropic
-MODEL=anthropic/claude-sonnet-4-20250514 python scalekit_agent.py
+MODEL=anthropic/{{anthropic}} python scalekit_agent.py
 
 # AWS Bedrock
-MODEL=bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0 python scalekit_agent.py
+MODEL=bedrock/us.anthropic.{{anthropic}} python scalekit_agent.py
 
 # Via LiteLLM Proxy
-OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL=claude-sonnet-4 python scalekit_agent.py
+OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL={{anthropic}} python scalekit_agent.py
 ```
 
 ## Route Through LiteLLM Proxy for Cost Tracking and Rate Limits
 
-If you're running a LiteLLM proxy, point your agent at it for centralized model management, cost tracking, and rate limiting. The agent code stays the same — set the proxy URL:
+If you're running a LiteLLM proxy, point your agent at it for centralized model management, cost tracking, and rate limiting. The agent code stays the same; set the proxy URL:
 
 ```python showLineNumbers title="proxy_agent.py"
 import litellm
 
 # Point litellm at your proxy
 response = litellm.completion(
-    model="claude-sonnet-4",                          # model name from your proxy config
+    model="{{anthropic}}",                          # model name from your proxy config
     api_base="http://localhost:4000",                  # proxy URL
     api_key="sk-1234",                                 # proxy virtual key
     tools=llm_tools,

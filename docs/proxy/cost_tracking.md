@@ -150,6 +150,10 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
   "total_tokens": 100,
   "completion_tokens": 80,
   "prompt_tokens": 20,
+  "metadata": {
+    "attempted_fallbacks": 0,                                                    # 0 = requested model group served the request
+    "original_model_group": "llama3"                                             # Model group originally requested
+  }
 
 }
 ```
@@ -361,12 +365,13 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             },
             "breakdown": {
                 "models": {
-                    "gpt-4o-mini": {
-                        "spend": 1.095e-05,
+                    "{{openai_small}}": {
+                        "spend": 1.82e-05,
                         "prompt_tokens": 37,
                         "completion_tokens": 9,
                         "total_tokens": 46,
                         "api_requests": 1
+                    }
                 },
                 "providers": { "openai": { ... }, "azure_ai": { ... } },
                 "api_keys": { "3126b6eaf1...": { ... } }
@@ -386,10 +391,14 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
 
 See our [Swagger API](https://litellm-api.up.railway.app/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
+:::info
+Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
+:::
+
 ## Custom Tags
 
 :::tip See Full Request Tags Documentation
-For comprehensive documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
 :::
 
 Requirements:
@@ -448,7 +457,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -480,7 +489,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "{{openai_small}}",
       messages: [
         {
           role: "user",
@@ -512,7 +521,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -537,7 +546,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -616,13 +625,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -634,7 +643,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "{{openai_small}}",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -687,22 +696,22 @@ Output from script
 # Date: 2024-05-11T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.003675099999999999
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: Unassigned Team
 # Total Spend: 3.4e-05
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: central
 # Total Spend: 0.000684
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.0005715000000000001
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
 ```
 
 </TabItem>
@@ -742,13 +751,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -760,7 +769,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "{{openai_small}}",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -858,7 +867,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
     "total_output_tokens": 27.0,
     "model_details": [
       {
-        "model": "gpt-3.5-turbo",
+        "model": "{{openai_small}}",
         "total_cost": 5.2499999999999995e-05,
         "total_input_tokens": 24,
         "total_output_tokens": 27
@@ -927,11 +936,7 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 
 Log specific key,value pairs as part of the metadata for a spend log
 
-:::info
-
-Logging specific key,value pairs in spend logs metadata is an enterprise feature.
-
-:::
+<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
@@ -991,7 +996,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1021,7 +1026,7 @@ client = openai.OpenAI(
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1052,7 +1057,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1089,7 +1094,7 @@ async function runOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1122,7 +1127,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1149,7 +1154,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1173,7 +1178,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -1206,7 +1211,8 @@ print(response)
 #### `/spend/logs` Request Format 
 
 ```bash
-curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \ # e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+# request_id: e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
 -H "Authorization: Bearer sk-1234"
 ```
 

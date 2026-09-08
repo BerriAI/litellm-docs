@@ -2,7 +2,7 @@
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -38,6 +38,8 @@ for result in response.results:
     print(f"{result.title}: {result.url}")
     print(f"Snippet: {result.snippet}\n")
 ```
+
+To use [Parallel AI Search](./parallel_ai.md), set `PARALLEL_API_KEY` and pass `search_provider="parallel_ai"`.
 
 ### Async Usage 
 
@@ -87,9 +89,9 @@ Add this to your litellm proxy config.yaml
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:
@@ -102,6 +104,11 @@ search_tools:
     litellm_params:
       search_provider: tavily
       api_key: os.environ/TAVILY_API_KEY
+
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
 ```
 
 Start litellm
@@ -210,7 +217,7 @@ See the [official Perplexity Search documentation](https://docs.perplexity.ai/ap
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string or array | Yes | Search query. Can be a single string or array of strings |
-| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` |
+| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` |
 | `search_tool_name` | string | Yes (Proxy) | Name of the search tool configured in `config.yaml` |
 | `max_results` | integer | No | Maximum number of results to return (1-20). Default: 10 |
 | `search_domain_filter` | array | No | List of domains to filter results (max 20 domains) |
@@ -282,6 +289,8 @@ The response follows Perplexity's search format with the following structure:
 | You.com | `YOUCOM_API_KEY` *(optional — omit for keyless free tier)* | `you_com` |
 | APISerpent | `APISERPENT_API_KEY` | `apiserpent` |
 | Bedrock AgentCore | `AGENTCORE_GATEWAY_URL` (required), AWS credentials or `AGENTCORE_GATEWAY_TOKEN` | `agentcore` |
+| Nimble | `NIMBLE_API_KEY` | `nimble` |
+| Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
 

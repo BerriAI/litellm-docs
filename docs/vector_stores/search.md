@@ -12,7 +12,7 @@ Search a vector store for relevant chunks based on a query and file attributes f
 | Cost Tracking | ✅ | Tracked per search operation |
 | Logging | ✅ | Works across all integrations |
 | End-user Tracking | ✅ | |
-| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Gemini** | Full vector stores API support across providers |
+| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Valkey, Gemini** | Full vector stores API support across providers |
 
 For **retrieve, list, update, and delete** over HTTP (including `custom_llm_provider` / `model` routing), see [Create vector store](./create.md#vector-store-management-and-routing-on-the-proxy).
 
@@ -168,6 +168,60 @@ print(response)
 
 </TabItem>
 
+<TabItem value="mongodb-provider" label="MongoDB Provider (BETA)">
+
+#### Using MongoDB (BETA)
+
+Search an existing MongoDB Vector Search index on Atlas or a self-managed deployment. Install `litellm[mongodb]`, then set `MONGODB_CONNECTION_STRING` and your embedding provider's credentials. Replace the placeholders with your index, collection fields, and the model used to embed your documents.
+
+```python showLineNumbers title="Search Vector Store - MongoDB Provider (BETA)"
+import os
+
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="<index-name>",  # Exact MongoDB Vector Search index name
+    query="<question-about-your-documents>",
+    custom_llm_provider="mongodb",
+    mongodb_connection_string=os.environ["MONGODB_CONNECTION_STRING"],
+    mongodb_database="<database-name>",
+    mongodb_collection="<collection-name>",
+    mongodb_text_field="<text-field>",
+    mongodb_embedding_field="<vector-field>",
+    litellm_embedding_model="<provider>/<embedding-model>",
+    max_num_results=3,
+)
+print(response)
+```
+
+The embedding model must match the one used for the stored vectors. This BETA integration supports search only; index creation, ingestion, filters, ranking options, and query rewriting are not supported.
+
+[MongoDB setup and reference](../providers/mongodb_vector_stores.md) · [Sample-document example](../tutorials/mongodb_vector_search.md)
+
+</TabItem>
+
+<TabItem value="valkey-provider" label="Valkey Provider">
+
+#### Using Valkey
+```python showLineNumbers title="Search Vector Store - Valkey Provider"
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="my-search-index",  # name of the FT index in Valkey
+    query="What is the capital of France?",
+    custom_llm_provider="valkey",
+    valkey_host="my-valkey.example.com",
+    valkey_port=6379,
+    litellm_embedding_model="openai/text-embedding-3-small",
+    max_num_results=3,
+)
+print(response)
+```
+
+[See full Valkey vector store documentation](../providers/valkey_vector_stores.md)
+
+</TabItem>
+
 <TabItem value="gemini-provider" label="Gemini Provider">
 
 #### Using Gemini File Search
@@ -213,9 +267,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:

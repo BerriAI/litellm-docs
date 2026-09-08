@@ -18,12 +18,12 @@ litellm.cache = Cache()
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": "Tell me a joke."}]
+    model="{{openai_small}}", 
+    messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -55,14 +55,14 @@ litellm.cache = Cache()
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}], 
     stream=True,
     caching=True)
 for chunk in response1:
     print(chunk)
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}], 
     stream=True,
     caching=True)

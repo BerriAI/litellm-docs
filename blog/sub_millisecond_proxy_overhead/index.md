@@ -80,6 +80,6 @@ As of today, the sidecar is an optimization, not a requirement.
 
 Sub-millisecond proxy overhead is not achieved through a single optimization, but through architectural changes.
 
-By keeping Python focused on orchestration and extensibility, and offloading performance-critical execution to a sidecar, we establish a foundation for making LiteLLM **permanently fast over time**—even on modest hardware such as a 1-CPU, 2-GB RAM instance, while keeping deployment and self-hosting simple.
+By keeping Python focused on orchestration and extensibility, and offloading performance-critical execution to a sidecar, we establish a foundation for making LiteLLM **permanently fast over time**, even on modest hardware such as a 1-CPU, 2-GB RAM instance, while keeping deployment and self-hosting simple.
 
 This work extends beyond Q1, and we will continue sharing benchmarks and updates as the architecture evolves.

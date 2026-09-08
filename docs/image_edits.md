@@ -269,7 +269,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/path/to/service-account.json"
 
 response = litellm.image_edit(
-    model="vertex_ai/gemini-2.5-flash",
+    model="vertex_ai/gemini-2.5-flash-image",
     image=open("original_image.png", "rb"),
     prompt="Add neon lights in the background",
     size="1024x1024",
@@ -485,7 +485,7 @@ curl -X POST "http://0.0.0.0:4000/v1/images/edits" \
 model_list:
   - model_name: vertex-gemini-image-edit
     litellm_params:
-      model: vertex_ai/gemini-2.5-flash
+      model: vertex_ai/gemini-2.5-flash-image
       vertex_project: os.environ/VERTEXAI_PROJECT
       vertex_location: os.environ/VERTEXAI_LOCATION
       vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS

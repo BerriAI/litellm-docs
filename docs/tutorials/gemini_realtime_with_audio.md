@@ -8,7 +8,7 @@ Requires LiteLLM Proxy v1.70.1+
 
 ```yaml
 model_list:
-  - model_name: "gemini-2.0-flash"
+  - model_name: "gemini-flash-live"
     litellm_params:
       model: gemini/gemini-2.0-flash-live-001
     model_info:
@@ -39,7 +39,7 @@ import numpy as np
 # Load environment variables
 
 OPENAI_API_KEY = "sk-1234"  # Replace with your LiteLLM API key
-OPENAI_API_URL = 'ws://{PROXY_URL}/v1/realtime?model=gemini-2.0-flash' # REPLACE WITH `wss://{PROXY_URL}/v1/realtime?model=gemini-2.0-flash` for secure connection
+OPENAI_API_URL = 'ws://{PROXY_URL}/v1/realtime?model=gemini-flash-live' # REPLACE WITH `wss://{PROXY_URL}/v1/realtime?model=gemini-flash-live` for secure connection
 WAV_FILE_PATH = "/path/to/audio.wav"  # Replace with your .wav file path
 
 async def send_session_update(ws):

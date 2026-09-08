@@ -42,7 +42,7 @@ import os
 
 os.environ['GEMINI_API_KEY'] = ""
 response = completion(
-    model="gemini/gemini-pro", 
+    model="gemini/{{gemini_flash}}", 
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}]
 )
 ```
@@ -83,7 +83,7 @@ Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
 :::tip Gemini 3 Models
-For **Gemini 3+ models** (e.g., `gemini-3-pro-preview`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level` — the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
+For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
 :::warning Image Models
@@ -119,14 +119,14 @@ from litellm import completion
 
 # Cost-optimized: Use reasoning_effort="none" for best pricing
 resp = completion(
-    model="gemini/gemini-2.0-flash-thinking-exp-01-21",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="none",  # Up to 96% cheaper!
 )
 
 # Or use other levels: "low", "medium", "high"
 resp = completion(
-    model="gemini/gemini-2.5-flash-preview-04-17",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -140,9 +140,9 @@ resp = completion(
 1. Setup config.yaml
 
 ```yaml
-- model_name: gemini-2.5-flash
+- model_name: {{gemini_flash}}
   litellm_params:
-    model: gemini/gemini-2.5-flash-preview-04-17
+    model: gemini/{{gemini_flash}}
     api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -159,7 +159,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
   }'
@@ -170,7 +170,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ### Gemini 3+ Models - `thinking_level` Parameter
 
-For Gemini 3+ models (e.g., `gemini-3-pro-preview`), you can use the new `thinking_level` parameter directly:
+For Gemini 3+ models (e.g., `{{gemini_pro}}`), you can use the new `thinking_level` parameter directly:
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -180,14 +180,14 @@ from litellm import completion
 
 # Use thinking_level for Gemini 3 models
 resp = completion(
-    model="gemini/gemini-3-pro-preview",
+    model="gemini/{{gemini_pro}}",
     messages=[{"role": "user", "content": "Solve this complex math problem step by step."}],
     reasoning_effort="high",  # Options: "low" or "high"
 )
 
 # Low thinking level for faster, simpler tasks
 resp = completion(
-    model="gemini/gemini-3-pro-preview",
+    model="gemini/{{gemini_pro}}",
     messages=[{"role": "user", "content": "What is the weather today?"}],
     reasoning_effort="low",  # Minimizes latency and cost
 )
@@ -202,7 +202,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-3-pro-preview",
+    "model": "{{gemini_pro}}",
     "messages": [{"role": "user", "content": "Solve this complex problem."}],
     "reasoning_effort": "high"
   }'
@@ -228,7 +228,7 @@ LiteLLM will automatically set `temperature=1.0` if not specified for Gemini 3+ 
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-3-7-sonnet-20250219',
+    model='{{gemini_flash}}',
     object='chat.completion',
     system_fingerprint=None,
     choices=[
@@ -272,7 +272,7 @@ This is translated to Gemini's [`thinkingConfig` parameter](https://ai.google.de
 
 ```python
 response = litellm.completion(
-  model="gemini/gemini-2.5-flash-preview-04-17",
+  model="gemini/{{gemini_flash}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -286,7 +286,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "gemini/gemini-2.5-flash-preview-04-17",
+    "model": "gemini/{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -433,9 +433,99 @@ response = completion(
 
 For more information about Gemini's TTS capabilities and available voices, see the [official Gemini TTS documentation](https://ai.google.dev/gemini-api/docs/speech-generation).
 
+## Audio Transcription (Speech-to-Text)
+
+:::info
+
+LiteLLM supports `gemini-3.5-transcribe` on `/v1/audio/transcriptions` and `gemini-3.5-transcribe-live` on `/v1/realtime`. Using Vertex AI instead of an API key? See [Vertex AI Audio Transcription](./vertex_transcription.md).
+
+:::
+
+### Quick Start
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import transcription
+import os
+
+os.environ["GEMINI_API_KEY"] = "your-api-key"
+
+audio_file = open("speech.wav", "rb")
+response = transcription(
+    model="gemini/gemini-3.5-transcribe",
+    file=audio_file,
+    response_format="verbose_json",
+    timestamp_granularities=["word"],
+)
+print(response.text)
+print(response.words)  # word-level timestamps
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. Add the model to your config
+
+```yaml
+model_list:
+  - model_name: gemini-3.5-transcribe
+    litellm_params:
+      model: gemini/gemini-3.5-transcribe
+      api_key: os.environ/GEMINI_API_KEY
+```
+
+2. Start the proxy
+
+```bash
+litellm --config config.yaml
+```
+
+3. Test it
+
+```bash
+curl http://0.0.0.0:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer sk-1234" \
+  -F file=@speech.wav \
+  -F model=gemini-3.5-transcribe \
+  -F response_format=verbose_json \
+  -F "timestamp_granularities[]=word"
+```
+
+</TabItem>
+</Tabs>
+
+### Supported Params
+
+`language`, `response_format`, and `timestamp_granularities` are supported. Requesting word timestamps also enables speaker diarization on the underlying Interactions API call. The `srt` and `vtt` response formats are synthesized by LiteLLM from Gemini's word timestamps, so `text` holds the subtitle document; when Gemini returns no timestamps, `text` falls back to the plain transcript.
+
+### Live Transcription over `/v1/realtime`
+
+`gemini-3.5-transcribe-live` runs over the Realtime websocket. Stream `pcm16` audio with `input_audio_buffer.append` and read transcripts from `conversation.item.input_audio_transcription.completed` events. The Gemini Live API reports no token usage for transcription sessions, so LiteLLM estimates usage (and spend) from the streamed audio duration using Google's published estimator rates.
+
+```python
+import asyncio
+import json
+import websockets
+
+async def main():
+    async with websockets.connect(
+        "ws://0.0.0.0:4000/v1/realtime?model=gemini-3.5-transcribe-live",
+        additional_headers={"Authorization": "Bearer sk-1234"},
+    ) as ws:
+        await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": "<base64 pcm16 audio>"}))
+        async for message in ws:
+            event = json.loads(message)
+            if event.get("type") == "conversation.item.input_audio_transcription.completed":
+                print(event["transcript"], event.get("usage"))
+
+asyncio.run(main())
+```
+
 ## Passing Gemini Specific Params
 ### Response schema 
-LiteLLM supports sending `response_schema` as a param for Gemini-1.5-Pro on Google AI Studio. 
+LiteLLM supports sending `response_schema` as a param for Gemini models on Google AI Studio (e.g. `{{gemini_pro}}`). 
 
 **Response Schema**
 <Tabs>
@@ -470,7 +560,7 @@ response_schema = {
 
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/{{gemini_pro}}", 
     messages=messages, 
     response_format={"type": "json_object", "response_schema": response_schema} # 👈 KEY CHANGE
     )
@@ -484,9 +574,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -503,7 +593,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "{{gemini_pro}}",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -537,7 +627,7 @@ To validate the response_schema, set `enforce_validation: true`.
 from litellm import completion, JSONSchemaValidationError
 try: 
 	completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/{{gemini_pro}}", 
     messages=messages, 
     response_format={
         "type": "json_object", 
@@ -555,9 +645,9 @@ except JSONSchemaValidationError as e:
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -574,7 +664,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "{{gemini_pro}}",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -631,7 +721,7 @@ messages = [
 ]
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/{{gemini_pro}}", 
     messages=messages, 
     topK=1 # 👈 KEY CHANGE
 )
@@ -645,9 +735,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -664,7 +754,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "{{gemini_pro}}",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -687,7 +777,7 @@ To validate the response_schema, set `enforce_validation: true`.
 from litellm import completion, JSONSchemaValidationError
 try: 
 	completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/{{gemini_pro}}", 
     messages=messages, 
     response_format={
         "type": "json_object", 
@@ -705,9 +795,9 @@ except JSONSchemaValidationError as e:
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -724,7 +814,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "{{gemini_pro}}",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -754,7 +844,7 @@ In certain use-cases you may need to make calls to the models and pass [safety s
 
 ```python
 response = completion(
-    model="gemini/gemini-pro", 
+    model="gemini/{{gemini_flash}}", 
     messages=[{"role": "user", "content": "write code for saying hi from LiteLLM"}],
     safety_settings=[
         {
@@ -808,7 +898,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/{{gemini_flash}}",
     messages=messages,
     tools=tools,
 )
@@ -837,7 +927,7 @@ os.environ["GEMINI_API_KEY"] = ".."
 tools = [{"googleSearch": {}}] # 👈 ADD GOOGLE SEARCH
 
 response = completion(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What is the weather in San Francisco?"}],
     tools=tools,
 )
@@ -851,9 +941,9 @@ print(response)
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-2.0-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -868,7 +958,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-2.0-flash",
+  "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
   "tools": [{"googleSearch": {}}]
 }
@@ -888,7 +978,7 @@ When enabled, Gemini can execute Google Search server-side, use those results to
 1. You pass `include_server_side_tool_invocations=True` along with both Google Search and your function tools
 2. Gemini executes server-side tools internally and returns `toolCall`/`toolResponse` parts alongside any `functionCall` parts
 3. LiteLLM extracts the server-side invocations into `provider_specific_fields["server_side_tool_invocations"]`
-4. On subsequent turns, include the full assistant message in your conversation history — LiteLLM re-injects the server-side parts automatically
+4. On subsequent turns, include the full assistant message in your conversation history; LiteLLM re-injects the server-side parts automatically
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -897,7 +987,7 @@ When enabled, Gemini can execute Google Search server-side, use those results to
 from litellm import completion
 
 response = completion(
-    model="gemini/gemini-3-flash-preview",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What's the weather in Buenos Aires? If it's raining, schedule a meeting."}],
     tools=[
         {"type": "web_search_preview"},  # Google Search (server-side)
@@ -932,7 +1022,7 @@ messages.append(msg)
 messages.append({"role": "user", "content": "Thanks!"})
 # LiteLLM automatically re-injects the server-side parts + thought signatures
 response2 = completion(
-    model="gemini/gemini-3-flash-preview",
+    model="gemini/{{gemini_flash}}",
     messages=messages,
     tools=tools,
     include_server_side_tool_invocations=True,
@@ -945,9 +1035,9 @@ response2 = completion(
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-3-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-3-flash-preview
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -962,7 +1052,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-3-flash",
+  "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in Buenos Aires?"}],
   "tools": [
     {"type": "web_search_preview"},
@@ -978,7 +1068,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 :::info
 
 - Context circulation requires **Gemini 3+** models
-- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls` — they are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
+- Server-side tool invocations (`toolCall`/`toolResponse`) are **not** included in `tool_calls`. They are in `provider_specific_fields["server_side_tool_invocations"]` because they were already executed by Google, not by your code
 - `thought_signatures` are automatically preserved alongside server-side invocations for multi-turn coherence
 
 :::
@@ -998,7 +1088,7 @@ os.environ["GEMINI_API_KEY"] = ".."
 tools = [{"urlContext": {}}]
 
 response = completion(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Summarize this document: https://ai.google.dev/gemini-api/docs/models"}],
     tools=tools,
 )
@@ -1018,9 +1108,9 @@ print(f"Retrieval Status: {urlMetadata['urlRetrievalStatus']}")
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-2.0-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1035,7 +1125,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-2.0-flash",
+    "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "Summarize this document: https://ai.google.dev/gemini-api/docs/models"}],
     "tools": [{"urlContext": {}}]
   }'
@@ -1058,7 +1148,7 @@ os.environ["GEMINI_API_KEY"] = ".."
 tools = [{"googleSearch": {}}] # 👈 ADD GOOGLE SEARCH
 
 response = completion(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What is the weather in San Francisco?"}],
     tools=tools,
 )
@@ -1072,9 +1162,9 @@ print(response)
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-2.0-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1089,7 +1179,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-2.0-flash",
+  "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
   "tools": [{"googleSearch": {}}]
 }
@@ -1115,7 +1205,7 @@ os.environ["GEMINI_API_KEY"] = ".."
 tools = [{"codeExecution": {}}] # 👈 ADD GOOGLE SEARCH
 
 response = completion(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What is the weather in San Francisco?"}],
     tools=tools,
 )
@@ -1129,9 +1219,9 @@ print(response)
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-2.0-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1146,7 +1236,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-2.0-flash",
+  "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
   "tools": [{"codeExecution": {}}]
 }
@@ -1350,7 +1440,7 @@ To enable thought signatures, you need to enable thinking/reasoning:
 from litellm import completion
 
 response = completion(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What's the weather in Tokyo?"}],
     tools=[...],
     reasoning_effort="low",  # Enable thinking to get thought signatures
@@ -1365,7 +1455,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What'\''s the weather in Tokyo?"}],
     "tools": [...],
     "reasoning_effort": "low"
@@ -1422,7 +1512,7 @@ messages = [
 ]
 
 response = client.chat.completions.create(
-    model="gemini-2.5-flash",
+    model="{{gemini_flash}}",
     messages=messages,
     tools=[get_weather_declaration, set_thermostat_declaration],
     reasoning_effort="low"
@@ -1443,7 +1533,7 @@ for tool_call in response.choices[0].message.tool_calls:
 
 # Second request - thought signatures are automatically preserved
 response2 = client.chat.completions.create(
-    model="gemini-2.5-flash",
+    model="{{gemini_flash}}",
     messages=messages,
     tools=[get_weather_declaration, set_thermostat_declaration],
     reasoning_effort="low"
@@ -1461,7 +1551,7 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Bearer sk-1234' \
   --data '{
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
       {
         "role": "user",
@@ -1534,7 +1624,7 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Bearer sk-1234' \
   --data '{
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
       {
         "role": "user",
@@ -1638,7 +1728,7 @@ messages = [
 
 
 completion(
-    model="gemini/gemini-1.5-pro", 
+    model="gemini/{{gemini_pro}}", 
     messages=messages, 
     response_format={"type": "json_object"} # 👈 KEY CHANGE
 )
@@ -1652,9 +1742,9 @@ print(json.loads(completion.choices[0].message.content))
 1. Add model to config.yaml
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1671,7 +1761,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gemini-pro",
+  "model": "{{gemini_pro}}",
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
@@ -1682,7 +1772,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 </TabItem>
 </Tabs>
-# Gemini-Pro-Vision
+## Gemini-Pro-Vision
 LiteLLM Supports the following image types passed in `url`
 - Images with direct links - https://storage.googleapis.com/github-repo/img/gemini/intro/landmark3.jpg
 - Image in local storage - ./localimage.jpeg
@@ -1739,7 +1829,7 @@ messages = [
 
 # Works with both Gemini 2.x and 3+
 response = completion(
-    model="gemini/gemini-2.5-flash",  # or gemini-3-pro-preview
+    model="gemini/{{gemini_flash}}",  # or {{gemini_pro}}
     messages=messages,
 )
 ```
@@ -1771,7 +1861,7 @@ messages = [
 ]
 
 response = completion(
-    model="gemini/gemini-3-pro-preview",
+    model="gemini/{{gemini_pro}}",
     messages=messages,
 )
 ```
@@ -1819,7 +1909,7 @@ For Gemini 3+ models, LiteLLM supports fine-grained video processing control thr
 from litellm import completion
 
 response = completion(
-    model="gemini/gemini-3-pro-preview",
+    model="gemini/{{gemini_pro}}",
     messages=[
         {
             "role": "user",
@@ -1852,7 +1942,7 @@ print(response.choices[0].message.content)
 from litellm import completion
 
 response = completion(
-    model="gemini/gemini-3-pro-preview",
+    model="gemini/{{gemini_pro}}",
     messages=[
         {
             "role": "user",
@@ -1886,9 +1976,9 @@ print(response.choices[0].message.content)
 
 ```yaml
 model_list:
-  - model_name: gemini-3-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-3-pro-preview
+      model: gemini/{{gemini_pro}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -1905,7 +1995,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "gemini-3-pro",
+    "model": "{{gemini_pro}}",
     "messages": [
       {
         "role": "user",
@@ -1966,7 +2056,7 @@ messages = [
 
 # Make the API call to Gemini model
 response = litellm.completion(
-    model="gemini/gemini-pro-vision",
+    model="gemini/{{gemini_pro}}",
     messages=messages,
 )
 
@@ -2036,7 +2126,7 @@ LiteLLM follows the OpenAI format and accepts sending inline data as an encoded 
 
 The format to follow is 
 
-```python
+```text
 data:<mime_type>;base64,<encoded_data>
 ```
 
@@ -2055,7 +2145,7 @@ litellm.set_verbose = True # 👈 See Raw call
 audio_bytes = Path("speech_vertex.mp3").read_bytes()
 encoded_data = base64.b64encode(audio_bytes).decode("utf-8")
 print("Audio Bytes = {}".format(audio_bytes))
-model = "gemini/gemini-1.5-flash"
+model = "gemini/{{gemini_flash}}"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2079,7 +2169,7 @@ response = litellm.completion(
 
 ```python
 # Initialize a Gemini model appropriate for your use case.
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+model = genai.GenerativeModel('models/{{gemini_flash}}')
 
 # Create the prompt.
 prompt = "Please summarize the audio."
@@ -2108,7 +2198,7 @@ os.environ["GEMINI_API_KEY"] = ""
 
 litellm.set_verbose = True # 👈 See Raw call 
 
-model = "gemini/gemini-1.5-flash"
+model = "gemini/{{gemini_flash}}"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2139,7 +2229,7 @@ os.environ["GEMINI_API_KEY"] = ""
 
 litellm.set_verbose = True # 👈 See Raw call 
 
-model = "gemini/gemini-1.5-flash"
+model = "gemini/{{gemini_flash}}"
 response = litellm.completion(
     model=model,
     messages=[
@@ -2242,7 +2332,7 @@ You can now specify a custom Time-To-Live (TTL) for your cached content using th
 - The raw request to Gemini's `/generateContent` endpoint looks like this: 
 
 ```bash
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=$GOOGLE_API_KEY" \
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/{{gemini_flash}}:generateContent?key=$GOOGLE_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
       "contents": [
@@ -2268,7 +2358,7 @@ from litellm import completion
 
 for _ in range(2): 
     resp = completion(
-        model="gemini/gemini-1.5-pro",
+        model="gemini/{{gemini_pro}}",
         messages=[
         # System Message
             {
@@ -2305,7 +2395,7 @@ from litellm import completion
 
 # Cache for 2 hours (7200 seconds)
 resp = completion(
-    model="gemini/gemini-1.5-pro",
+    model="gemini/{{gemini_pro}}",
     messages=[
         {
             "role": "system",
@@ -2346,9 +2436,9 @@ print(resp.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-1.5-pro
+    - model_name: {{gemini_pro}}
       litellm_params:
-        model: gemini/gemini-1.5-pro
+        model: gemini/{{gemini_pro}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -2369,7 +2459,7 @@ litellm --config /path/to/config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gemini-1.5-pro",
+    "model": "{{gemini_pro}}",
     "messages": [
         # System Message
             {
@@ -2402,7 +2492,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gemini-1.5-pro",
+    "model": "{{gemini_pro}}",
     "messages": [
         {
             "role": "system",
@@ -2445,7 +2535,7 @@ client = openai.AsyncOpenAI(
 
 
 response = await client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="{{gemini_pro}}",
     messages=[
         {
             "role": "system",
@@ -2477,7 +2567,7 @@ client = openai.AsyncOpenAI(
 )
 
 response = await client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="{{gemini_pro}}",
     messages=[
         {
             "role": "system",

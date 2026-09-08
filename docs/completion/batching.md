@@ -31,7 +31,7 @@ os.environ['ANTHROPIC_API_KEY'] = ""
 
 
 responses = batch_completion(
-    model="claude-2",
+    model="{{anthropic}}",
     messages = [
         [
             {
@@ -68,7 +68,7 @@ os.environ['OPENAI_API_KEY'] = ""
 os.environ['COHERE_API_KEY'] = ""
 
 response = batch_completion_models(
-    models=["gpt-3.5-turbo", "claude-instant-1.2", "command-nightly"], 
+    models=["{{openai_small}}", "{{anthropic}}", "command-nightly"], 
     messages=[{"role": "user", "content": "Hey, how's it going"}]
 )
 print(result)
@@ -92,7 +92,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \ 
 -D '{
-    "model": "gpt-4o, groq-llama", # 👈 Comma-separated models
+    "model": "{{openai_large}}, groq-llama", # 👈 Comma-separated models
     "messages": [
       {
         "role": "user",
@@ -118,7 +118,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o, groq-llama", # 👈 Comma-separated models
+    model="{{openai_large}}, groq-llama", # 👈 Comma-separated models
     messages = [
         {
             "role": "user",
@@ -144,9 +144,9 @@ model_list:
   litellm_params:
     model: groq/llama3-8b-8192
     api_key: os.environ/GROQ_API_KEY
-- model_name: gpt-4o
+- model_name: {{openai_large}}
   litellm_params:
-    model: gpt-4o
+    model: {{openai_large}}
     api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -203,7 +203,7 @@ os.environ['OPENAI_API_KEY'] = ""
 os.environ['COHERE_API_KEY'] = ""
 
 responses = batch_completion_models_all_responses(
-    models=["gpt-3.5-turbo", "claude-instant-1.2", "command-nightly"], 
+    models=["{{openai_small}}", "{{anthropic}}", "command-nightly"], 
     messages=[{"role": "user", "content": "Hey, how's it going"}]
 )
 print(responses)
@@ -212,7 +212,7 @@ print(responses)
 
 ### Output
 
-```json
+```text
 [<ModelResponse chat.completion id=chatcmpl-e673ec8e-4e8f-4c9e-bf26-bf9fa7ee52b9 at 0x103a62160> JSON: {
   "object": "chat.completion",
   "choices": [
@@ -228,7 +228,7 @@ print(responses)
   ],
   "id": "chatcmpl-e673ec8e-4e8f-4c9e-bf26-bf9fa7ee52b9",
   "created": 1695222060.917964,
-  "model": "claude-instant-1.2",
+  "model": "{{anthropic}}",
   "usage": {
     "prompt_tokens": 14,
     "completion_tokens": 9,
@@ -259,7 +259,7 @@ print(responses)
   "id": "chatcmpl-80szFnKHzCxObW0RqCMw1hWW1Icrq",
   "object": "chat.completion",
   "created": 1695222061,
-  "model": "gpt-3.5-turbo-0613",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,

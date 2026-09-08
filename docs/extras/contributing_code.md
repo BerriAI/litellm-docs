@@ -5,20 +5,20 @@
 Here are the core requirements for any PR submitted to LiteLLM:
 
 - [ ] Sign the [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
-- [ ] Keep scope as isolated as possible — your changes should address **one specific problem** at a time
-- [ ] Follow the [Commit and Branch Conventions](#commit-and-branch-conventions) — PR titles are gated by CI
+- [ ] Keep scope as isolated as possible; your changes should address **one specific problem** at a time
+- [ ] Follow the [Commit and Branch Conventions](#commit-and-branch-conventions); PR titles are gated by CI
 
 ### Proxy (Backend) PRs
 
-- [ ] Add testing — **at least 1 test is a hard requirement** ([details](#2-adding-tests))
+- [ ] Add testing. **At least 1 test is a hard requirement** ([details](#2-adding-tests))
 - [ ] Ensure your PR passes:
-  - [ ] [Unit Tests](#3-running-unit-tests) — `make test-unit`
-  - [ ] [Formatting / Linting Tests](#4-running-linting-tests) — `make lint`
+  - [ ] [Unit Tests](#3-running-unit-tests): `make test-unit`
+  - [ ] [Formatting / Linting Tests](#4-running-linting-tests): `make lint`
 
 ### UI PRs
 
-- [ ] Ensure the UI builds successfully — `npm run build`
-- [ ] Ensure all UI unit tests pass — `npm run test`
+- [ ] Ensure the UI builds successfully: `npm run build`
+- [ ] Ensure all UI unit tests pass: `npm run test`
 - [ ] If you are adding a **new component** or **new logic**, add corresponding tests
 
 ## Contributor License Agreement (CLA)
@@ -33,8 +33,8 @@ Before contributing code to LiteLLM, you must sign our [Contributor License Agre
 
 LiteLLM enforces two community specs:
 
-- **Commits** follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) — `<type>(<scope>)!: <description>`
-- **Branches** follow [Conventional Branches](https://conventional-branch.github.io/) — `<type>/<description>`
+- **Commits** follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `<type>(<scope>)!: <description>`
+- **Branches** follow [Conventional Branches](https://conventional-branch.github.io/): `<type>/<description>`
 
 Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a required CI check on the PR title (since squash-merge uses the PR title as the commit subject).
 
@@ -55,14 +55,14 @@ Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a
 
 Examples:
 
-```
+```text keep-python-version
 feat(router): add weighted round-robin strategy
 fix(bedrock): decouple STS region from aws_region_name
 chore(deps): bump black to 26.3.1
 refactor!: drop Python 3.8 support
 ```
 
-PR titles must follow the same format — squash-merge uses the PR title as the commit subject and the **Conventional PR Title** workflow validates it.
+PR titles must follow the same format, because squash-merge uses the PR title as the commit subject and the **Conventional PR Title** workflow validates it.
 
 ### Branch naming
 

@@ -25,7 +25,7 @@ Tip : We support ALL Snowflake Cortex models. Use `model=snowflake/<model-name>`
 
 Snowflake Cortex REST API supports three authentication methods.
 
-### Programmatic Access Token (PAT) — Recommended
+### Programmatic Access Token (PAT), recommended
 
 The simplest approach. Generate a PAT in Snowsight under **User Menu → My Profile → Programmatic Access Tokens**.
 
@@ -37,7 +37,7 @@ os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-programmatic-access-token>"
 os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
 
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
@@ -54,7 +54,7 @@ os.environ["SNOWFLAKE_JWT"] = "<your-jwt-token>"
 os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
@@ -66,7 +66,7 @@ from litellm import completion
 
 # Using PAT
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Hello!"}],
     api_key="pat/<your-pat-token>",
     api_base="https://<account>.snowflakecomputing.com/api/v2/cortex/v1",
@@ -74,7 +74,7 @@ response = completion(
 
 # Using JWT
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Hello!"}],
     api_key="<your-jwt-token>",
     account_id="<orgname>-<account_name>",
@@ -96,7 +96,7 @@ os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
 os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
 
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "What is Snowflake Cortex?"}],
 )
 print(response.choices[0].message.content)
@@ -111,7 +111,7 @@ print(response.choices[0].message.content)
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: snowflake/claude-sonnet-4-5
+      model: snowflake/claude-sonnet-4-6
       api_key: pat/<your-pat>
       api_base: https://<account>.snowflakecomputing.com/api/v2/cortex/v1
   - model_name: llama4-maverick
@@ -163,7 +163,7 @@ os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
 os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
 
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Write a haiku about data."}],
     stream=True,
 )
@@ -221,7 +221,7 @@ tools = [
 ]
 
 response = completion(
-    model="snowflake/claude-sonnet-4-5",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "What's the weather in San Francisco?"}],
     tools=tools,
     tool_choice="auto",
@@ -237,7 +237,7 @@ print(response.choices[0].message.tool_calls)
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: snowflake/claude-sonnet-4-5
+      model: snowflake/claude-sonnet-4-6
       api_key: pat/<your-pat>
       api_base: https://<account>.snowflakecomputing.com/api/v2/cortex/v1
 ```
@@ -281,7 +281,7 @@ Claude 3.7 Sonnet, Claude 4 Opus, and DeepSeek R1 on Cortex support extended thi
 from litellm import completion
 
 response = completion(
-    model="snowflake/claude-3-7-sonnet",
+    model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Solve: what is 127 * 389?"}],
     reasoning_effort="low",
 )

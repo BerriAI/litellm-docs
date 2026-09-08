@@ -35,7 +35,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 
@@ -68,7 +68,7 @@ you will see a Python `ModelResponse(...)` object. For an OpenAI-backed model, i
 ModelResponse(
     id='chatcmpl-abc123',
     created=1773782130,
-    model='gpt-4o-2024-08-06',
+    model='{{openai_large}}',
     object='chat.completion',
     system_fingerprint='fp_4ff89bf575',
     choices=[
@@ -104,7 +104,7 @@ The same response follows an OpenAI-style shape. Conceptually, it looks like thi
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,

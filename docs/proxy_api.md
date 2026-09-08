@@ -15,7 +15,7 @@ os.environ["COHERE_API_KEY"] = "your-api-key"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages)
+response = completion(model="{{openai_small}}", messages=messages)
 
 # cohere call
 response = completion("command-nightly", messages)
@@ -68,14 +68,14 @@ To run it do:
 ```
 uv build 
 
-# call gpt-4 - always add 'litellm_proxy/' in front of the model name
-uv run interpreter --model litellm_proxy/gpt-4
+# call {{openai_large}} - always add 'litellm_proxy/' in front of the model name
+uv run interpreter --model litellm_proxy/{{openai_large}}
 
 # call llama-70b - always add 'litellm_proxy/' in front of the model name
 uv run interpreter --model litellm_proxy/togethercomputer/llama-2-70b-chat
 
-# call claude-2 - always add 'litellm_proxy/' in front of the model name
-uv run interpreter --model litellm_proxy/claude-2
+# call {{anthropic}} - always add 'litellm_proxy/' in front of the model name
+uv run interpreter --model litellm_proxy/{{anthropic}}
 ```
 
 And that's it! 

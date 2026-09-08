@@ -12,9 +12,9 @@ Set your guardrails under the `guardrails` section
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -85,18 +85,18 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 
 ### Skip system messages in guardrail evaluation
 
-You can stop **unified** guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
+You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
-**Global** — in `litellm_settings`:
+**Global**, in `litellm_settings`:
 
 ```yaml
 litellm_settings:
   skip_system_message_in_guardrail: true
 ```
 
-**Per guardrail** — under that guardrail’s `litellm_params`: set `skip_system_message_in_guardrail: true` or `false`. If omitted, the global `litellm_settings` value is used; per-guardrail `false` forces system messages to be included even when the global flag is `true`.
+**Per guardrail**, under that guardrail’s `litellm_params`: set `skip_system_message_in_guardrail: true` or `false`. If omitted, the global `litellm_settings` value is used; per-guardrail `false` forces system messages to be included even when the global flag is `true`.
 
-**Via LiteLLM UI** — when **creating** or **editing** a guardrail in the LiteLLM Admin Dashboard, set **Skip system messages in guardrail** (under Basic Info on create, or in the edit / guardrail settings flows):
+**Via LiteLLM UI**, when **creating** or **editing** a guardrail in the LiteLLM Admin Dashboard, set **Skip system messages in guardrail** (under Basic Info on create, or in the edit / guardrail settings flows):
 
 
 | UI option                             | Effect                                                                                 |
@@ -112,9 +112,26 @@ litellm_settings:
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
 
-**Where this applies:** Only the **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`.
+### Skip tool messages in guardrail evaluation
 
-**Where this does *not* apply:** Guardrails that run only via direct hooks on the raw request (e.g. Lakera v2, Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). It also does not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
+Same idea, for `role: tool` content: stop guardrails from scanning tool call results while still sending the full `messages` list to the model.
+
+**Global** (in `litellm_settings`):
+
+```yaml
+litellm_settings:
+  skip_tool_message_in_guardrail: true
+```
+
+**Per guardrail**: under that guardrail's `litellm_params`, set `skip_tool_message_in_guardrail: true` or `false`, with the same global/per-guardrail precedence as the system-message flag above.
+
+**Via LiteLLM UI**: set **Skip tool messages in guardrail** the same way, right below the system-message dropdown described above, with the same three options (**Use global default**, **Yes, exclude from guardrail scan**, **No, always include in scan**).
+
+### Where the skip flags apply
+
+**Where these apply:** The **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`. **Lakera v2** also honors both flags, despite running via a direct hook rather than the unified path; see [Lakera AI](./lakera_ai#supported-params).
+
+**Where these do *not* apply:** Other guardrails that run only via direct hooks on the raw request (e.g. Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). These flags also do not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
 
 ### Load Balancing Guardrails
 
@@ -132,7 +149,7 @@ litellm --config config.yaml --detailed_debug
 
 ## 3. Test request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 
 
@@ -143,7 +160,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -182,7 +199,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -218,7 +235,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ]
@@ -252,7 +269,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -307,12 +324,12 @@ This config will return the `/guardrails/list` response above. The `guardrail_in
 
 ```yaml
 - guardrail_name: "aporia-post-guard"
-    litellm_params:
+  litellm_params:
       guardrail: aporia  # supported values: "aporia", "lakera"
       mode: "post_call"
       api_key: os.environ/APORIA_API_KEY_2
       api_base: os.environ/APORIA_API_BASE_2
-    guardrail_info: # Optional field, info is returned on GET /guardrails/list
+  guardrail_info: # Optional field, info is returned on GET /guardrails/list
       # you can enter any fields under info for consumers of your guardrail
       params:
         - name: "toxicity_score"
@@ -330,7 +347,7 @@ Add selected guardrails to your chat completion request:
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "your message"}],
     "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
   }'
@@ -345,7 +362,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -356,13 +373,9 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### 4. ✨ Pass Dynamic Parameters to Guardrail
 
-:::info
+<EnterpriseFeature />
 
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
-
-Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](#spec-guardrails-parameter)**
+Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold. **[See `guardrails` spec for more details](/docs/proxy/guardrails/quick_start#guardrails-request-parameter)**
 
 
 
@@ -380,7 +393,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -410,7 +423,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -455,11 +468,7 @@ Monitor which guardrails were executed and whether they passed or failed. e.g. g
 
 ### ✨ Control Guardrails per API Key
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 Use this to control what guardrails run per API Key. In this tutorial we only want the following guardrails to run for 1 API Key
 
@@ -499,7 +508,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-jNm1Zar7XfNdZXp49Z1kSQ' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -511,11 +520,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ### ✨ Tag-based Guardrail Modes
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 Run guardrails based on the user-agent header. This is useful for running pre-call checks on OpenWebUI but only masking in logs for Claude CLI.
 
@@ -525,9 +530,9 @@ Both `default` and tag values can be a single mode string or a list of modes.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -547,9 +552,9 @@ guardrails:
 
 ```yaml
 Per guardrailmodel_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -569,9 +574,9 @@ guardrails:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -591,25 +596,21 @@ guardrails:
 
 ### ✨ Model-level Guardrails
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 This is great for cases when you have an on-prem and hosted model, and just want to run prevent sending PII to the hosted model.
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-4
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       api_base: https://api.anthropic.com/v1
       guardrails: ["azure-text-moderation"]
   - model_name: openai-gpt-4o
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
 
 guardrails:
   - guardrail_name: "presidio-pii"
@@ -629,11 +630,7 @@ guardrails:
 
 ### ✨ Disable team from turning on/off guardrails
 
-:::info
-
-✨ This is an Enterprise only feature [Get a free trial](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 #### 1. Disable team from modifying guardrails
 
@@ -654,7 +651,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer $LITELLM_VIRTUAL_KEY' \
 --data '{
-"model": "gpt-3.5-turbo",
+"model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -738,10 +735,10 @@ The `guardrails` parameter can be passed to any LiteLLM Proxy endpoint (`/chat/c
 1. Simple List Format:
 
 ```python
-"guardrails": [
+{"guardrails": [
     "aporia-pre-guard",
     "aporia-post-guard"
-]
+]}
 ```
 
 1. Advanced Dictionary Format:
@@ -749,14 +746,14 @@ The `guardrails` parameter can be passed to any LiteLLM Proxy endpoint (`/chat/c
 In this format the dictionary key is `guardrail_name` you want to run
 
 ```python
-"guardrails": {
+{"guardrails": {
     "aporia-pre-guard": {
         "extra_body": {
             "success_threshold": 0.9,
             "other_param": "value"
         }
     }
-}
+}}
 ```
 
 #### Type Definition

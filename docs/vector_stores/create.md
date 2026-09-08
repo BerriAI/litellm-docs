@@ -113,9 +113,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -257,7 +257,7 @@ Use your LiteLLM proxy virtual key with either:
 
 ### Provider routing
 
-LiteLLM automatically selects the vector store provider from the request context — no extra query parameters needed:
+LiteLLM automatically selects the vector store provider from the request context, with no extra query parameters needed:
 
 - **LiteLLM-managed stores** — If `vector_store_id` is a LiteLLM-managed store, the proxy resolves the provider from the registry (`litellm_params` stored in the database).
 - **Model-based routing** — If the request includes a `model` matching a configured deployment/model group, credentials come from that deployment.

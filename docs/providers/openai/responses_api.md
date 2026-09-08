@@ -14,7 +14,7 @@ import litellm
 
 # Non-streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -28,7 +28,7 @@ import litellm
 
 # Streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -42,7 +42,7 @@ for event in response:
 import litellm
 
 response = litellm.responses(
-    model="openai/gpt-5",
+    model="openai/{{openai_large}}",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview",
@@ -62,7 +62,7 @@ import base64
 
 # Streaming image generation with partial images
 stream = litellm.responses(
-    model="gpt-4.1",  # Use an actual image generation model
+    model="{{openai_large}}",  # Use an actual image generation model
     input="Generate a gorgeous image of a river made of white owl feathers",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -84,7 +84,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -109,7 +109,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -135,9 +135,9 @@ print(delete_response)
 
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/o1-pro
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/o1-pro
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -163,7 +163,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -182,7 +182,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -200,7 +200,7 @@ import base64
 client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
 
 stream = client.responses.create(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     input="Draw a gorgeous image of a river made of white owl feathers, snaking its way through a serene winter landscape",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -230,7 +230,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -255,7 +255,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -283,7 +283,7 @@ Use the `prompt` parameter to reference a stored prompt template and optionally 
 import litellm
 
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     prompt={
         "id": "pmpt_abc123",
         "version": "2",
@@ -305,7 +305,7 @@ from openai import OpenAI
 client = OpenAI(base_url="http://localhost:4000", api_key="your-api-key")
 
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     prompt={
         "id": "pmpt_abc123",
         "version": "2",
@@ -368,9 +368,9 @@ print(response.output)
 
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/o1-pro
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/o1-pro
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -453,7 +453,7 @@ MCP_TOOLS = [
 
 # Step 1: Make initial request - OpenAI will use MCP LIST and return MCP calls for approval
 response = litellm.responses(
-    model="openai/gpt-4.1",
+    model="openai/{{openai_large}}",
     tools=MCP_TOOLS,
     input="What transport protocols does the 2025-03-26 version of the MCP spec support?"
 )
@@ -467,7 +467,7 @@ for output in response.output:
 
 # Step 2: Send followup with approval for the MCP call
 response_with_mcp_call = litellm.responses(
-    model="openai/gpt-4.1",
+    model="openai/{{openai_large}}",
     tools=MCP_TOOLS,
     input=[
         {
@@ -489,9 +489,9 @@ print(response_with_mcp_call)
 
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/gpt-4.1
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -527,7 +527,7 @@ MCP_TOOLS = [
 
 # Step 1: Make initial request - OpenAI will use MCP LIST and return MCP calls for approval
 response = client.responses.create(
-    model="openai/gpt-4.1",
+    model="openai/{{openai_large}}",
     tools=MCP_TOOLS,
     input="What transport protocols does the 2025-03-26 version of the MCP spec support?"
 )
@@ -541,7 +541,7 @@ for output in response.output:
 
 # Step 2: Send followup with approval for the MCP call
 response_with_mcp_call = client.responses.create(
-    model="openai/gpt-4.1",
+    model="openai/{{openai_large}}",
     tools=MCP_TOOLS,
     input=[
         {
@@ -574,7 +574,7 @@ question = "Write a poem about a boy and his first pet dog."
 
 for verbosity in ["low", "medium", "high"]:
     response = responses(
-        model="gpt-5-mini",
+        model="{{openai_small}}",
         input=question,
         text={"verbosity": verbosity}
     )
@@ -601,7 +601,7 @@ data = []
 
 for verbosity in ["low", "medium", "high"]:
     response = client.responses.create(
-        model="gpt-5-mini",
+        model="{{openai_small}}",
         input=question,
         text={"verbosity": verbosity}
     )
@@ -664,7 +664,7 @@ tools = [
 
 # Step 1: Request with tools (parallel_tool_calls=True allows multiple calls)
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input=[{"role": "user", "content": "What's the weather in Paris and Tokyo?"}],
     tools=tools,
     parallel_tool_calls=True, # Defaults = True
@@ -683,7 +683,7 @@ for output in response.output:
 
 # Step 3: Send results back
 final_response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input=tool_results,
     tools=tools,
 )
@@ -695,7 +695,7 @@ Set `parallel_tool_calls=False` to ensure zero or one tool is called per turn. [
 
 ## Tool Search & Namespaces
 
-Tool search lets models dynamically load tools at runtime instead of sending every tool definition in the prompt. Group functions into **namespaces** and mark them with `defer_loading: true` — the model only loads the schemas it actually needs, saving tokens.
+Tool search lets models dynamically load tools at runtime instead of sending every tool definition in the prompt. Group functions into **namespaces** and mark them with `defer_loading: true`, and the model only loads the schemas it actually needs, saving tokens.
 
 Requires `gpt-5.4` or later. See [OpenAI Tool Search docs](https://developers.openai.com/api/docs/guides/tools-tool-search) for full details.
 
@@ -763,7 +763,7 @@ tools = [
 ]
 
 response = litellm.responses(
-    model="openai/gpt-5.4",
+    model="openai/{{openai_large}}",
     input="Look up invoice INV-2024-001 from the billing system",
     tools=tools,
 )
@@ -789,9 +789,9 @@ for item in response.output:
 
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/gpt-5.4
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-5.4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -814,7 +814,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="openai/gpt-5.4",
+    model="openai/{{openai_large}}",
     input="Look up invoice INV-2024-001 from the billing system",
     tools=[
         {"type": "tool_search"},
@@ -856,7 +856,7 @@ You can also use tool search through the `/v1/chat/completions` endpoint by pref
 import litellm
 
 response = litellm.completion(
-    model="openai/responses/gpt-5.4",
+    model="openai/responses/{{openai_large}}",
     messages=[{"role": "user", "content": "Look up invoice INV-2024-001"}],
     tools=[
         {"type": "tool_search"},
@@ -894,7 +894,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "openai/responses/gpt-5.4",
+    "model": "openai/responses/{{openai_large}}",
     "messages": [{"role": "user", "content": "Look up invoice INV-2024-001"}],
     "tools": [
       {"type": "tool_search"},
@@ -933,7 +933,7 @@ curl http://localhost:4000/v1/chat/completions \
 import litellm
 
 response = litellm.responses(
-    model="gpt-5-mini",
+    model="{{openai_small}}",
     input="Please use the code_exec tool to calculate the area of a circle with radius equal to the number of 'r's in strawberry",
     text={"format": {"type": "text"}},
     tools=[
@@ -959,7 +959,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5-mini",
+    model="{{openai_small}}",
     input="Please use the code_exec tool to calculate the area of a circle with radius equal to the number of 'r's in strawberry",
     text={"format": {"type": "text"}},
     tools=[
@@ -1027,7 +1027,7 @@ sql_prompt_mssql = (
 
 
 response = litellm.responses(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=sql_prompt_mssql,
     text={"format": {"type": "text"}},
     tools=[
@@ -1102,7 +1102,7 @@ sql_prompt_mssql = (
 
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=sql_prompt_mssql,
     text={"format": {"type": "text"}},
     tools=[
@@ -1137,7 +1137,7 @@ print(response_mssql.output[1].input)
 import litellm
 
 response = litellm.responses(
-    model="gpt-5",
+    model="{{openai_large}}",
     input= [{ 'role': 'developer', 'content': prompt }, 
             { 'role': 'user', 'content': 'The food that the restaurant was great! I recommend it to everyone.' }],
     reasoning = {
@@ -1163,7 +1163,7 @@ prompt = "Classify sentiment of the review as positive|neutral|negative. Return 
 
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input= [{ 'role': 'developer', 'content': prompt }, 
             { 'role': 'user', 'content': 'The food that the restaurant was great! I recommend it to everyone.' }],
     reasoning = {

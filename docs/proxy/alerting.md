@@ -17,8 +17,8 @@ Get alerts for:
 
 Works across: 
 - [Slack](#quick-start)
-- [Discord](#advanced---using-discord-webhooks)
-- [Microsoft Teams](#advanced---using-ms-teams-webhooks)
+- [Discord](/docs/proxy/alerting#discord-webhooks)
+- [Microsoft Teams](/docs/proxy/alerting#ms-teams-webhooks)
 
 ## Quick Start
 
@@ -28,7 +28,7 @@ Set up a slack alert channel to receive alerts from proxy.
 
 Get a slack webhook url from https://api.slack.com/messaging/webhooks
 
-You can also use Discord Webhooks, see [here](#using-discord-webhooks)
+You can also use Discord Webhooks, see [here](/docs/proxy/alerting#discord-webhooks)
 
 
 Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
@@ -36,6 +36,8 @@ Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
 ```bash
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/<>/<>/<>"
 ```
+
+If `SLACK_WEBHOOK_URL` is unset, `ALERTING_WEBHOOK_URL` is read as a provider-neutral fallback. Use it to send the same Slack-format alerts to any Slack-compatible incoming webhook, such as Rocket.Chat or Mattermost
 
 ### Step 2: Setup Proxy
 
@@ -117,7 +119,7 @@ curl http://0.0.0.0:4000/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-Nb5eCf427iewOlbxXIH4Ow" \
 -d '{
-  "model": "openai/gpt-4",
+  "model": "openai/{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -148,7 +150,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages = [], 
     extra_body={
         "metadata": {
@@ -204,7 +206,7 @@ Set `alert_to_webhook_url` on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -238,7 +240,7 @@ Provide multiple slack channels for a given alert type
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -276,7 +278,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -304,7 +306,7 @@ SLACK_WEBHOOK_URL="https://berriai.webhook.office.com/webhookb2/...6901/Incoming
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-35-turbo"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -346,7 +348,7 @@ Discord provides a slack compatible webhook url that you can use for alerting
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-35-turbo"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -482,7 +484,7 @@ End: `2026-02-20 03:27:39`
 Count: `847`
 
 Message: `Requests are hanging - 600s+ request time`
-Request Model: `gemini-2.5-flash`
+Request Model: `{{gemini_flash}}`
 API Base: `None`
 ```
 
@@ -521,7 +523,7 @@ general_settings:
 
 ## **All Possible Alert Types**
 
-👉 [**Here is how you can set specific alert types**](#opting-into-specific-alert-types)
+👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
 
 LLM-related Alerts
 

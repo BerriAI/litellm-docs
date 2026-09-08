@@ -6,7 +6,7 @@ This is a specialized task particular to code models. The model is trained to ge
 
 This task is available in the base and instruction variants of the **7B** and **13B** CodeLlama models. It is not available for any of the 34B models or the Python versions.
 
-# usage
+## usage
 
 ```python 
 import os
@@ -26,7 +26,7 @@ model = "huggingface/codellama/CodeLlama-34b-Instruct-hf" # specify huggingface 
 response = completion(model=model, messages=messages, max_tokens=500)
 ```
 
-# output 
+## output 
 ```python
 def remove_non_ascii(s: str) -> str:
     """ Remove non-ASCII characters from a string.

@@ -145,7 +145,7 @@ Some VLLM models (e.g. gemma) don't support system messages. To map those reques
 ```yaml
 model_list:
 - model_name: my-custom-model
-   litellm_params:
+  litellm_params:
       model: openai/google/gemma
       api_base: http://my-custom-base
       api_key: "" 

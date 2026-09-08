@@ -86,6 +86,6 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -H "User-Agent: claude-cli/1.0" \
-  -d '{"model": "claude-3-5-sonnet-latest", "messages": [{"role": "user", "content": "Hello, how are you?"}]}' \
+  -d '{"model": "{{anthropic}}", "messages": [{"role": "user", "content": "Hello, how are you?"}]}' \
   http://localhost:4000/chat/completions
 ```

@@ -36,7 +36,7 @@ import litellm
 async def main():
     # OpenAI
     result = await litellm.acount_tokens(
-        model="openai/gpt-4o",
+        model="openai/{{openai_large}}",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
     print(f"Token count: {result.total_tokens}")
@@ -44,7 +44,7 @@ async def main():
 
     # Anthropic
     result = await litellm.acount_tokens(
-        model="anthropic/claude-3-5-sonnet-20241022",
+        model="anthropic/{{anthropic}}",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
     print(f"Token count: {result.total_tokens}")
@@ -61,7 +61,7 @@ import litellm
 
 async def main():
     result = await litellm.acount_tokens(
-        model="openai/gpt-4o",
+        model="openai/{{openai_large}}",
         messages=[{"role": "user", "content": "What's the weather in Paris?"}],
         tools=[{
             "type": "function",
@@ -88,8 +88,8 @@ asyncio.run(main())
 ```python
 TokenCountResponse(
     total_tokens=15,           # Token count
-    request_model="openai/gpt-4o",  # Model requested
-    model_used="gpt-4o",      # Model used for counting
+    request_model="openai/{{openai_large}}",  # Model requested
+    model_used="{{openai_large}}",      # Model used for counting
     tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "local_tokenizer"
     original_response={"input_tokens": 15},  # Raw API response
     error=False,               # True if counting failed
@@ -112,7 +112,7 @@ print(result.tokenizer_type)  # "local_tokenizer"
 
 ## Proxy Usage
 
-### OpenAI Format — `/v1/responses/input_tokens`
+### OpenAI Format: `/v1/responses/input_tokens`
 
 <Tabs>
 <TabItem value="curl" label="curl">
@@ -122,7 +122,7 @@ curl -X POST "http://localhost:4000/v1/responses/input_tokens" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": "Hello, how are you?"
   }'
 ```
@@ -140,13 +140,13 @@ response = httpx.post(
         "Authorization": "Bearer sk-1234"
     },
     json={
-        "model": "gpt-4o",
+        "model": "{{openai_large}}",
         "input": "Hello, how are you?"
     }
 )
 
 print(response.json())
-# {"input_tokens": 7}
+# {"object": "response.input_tokens", "input_tokens": 13}
 ```
 
 </TabItem>
@@ -154,10 +154,10 @@ print(response.json())
 
 **Response:**
 ```json
-{"input_tokens": 7}
+{"object": "response.input_tokens", "input_tokens": 13}
 ```
 
-### Anthropic Format — `/v1/messages/count_tokens`
+### Anthropic Format: `/v1/messages/count_tokens`
 
 See [Anthropic Token Counting](./anthropic_count_tokens.md) for full documentation.
 
@@ -166,7 +166,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]
@@ -177,13 +177,13 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```

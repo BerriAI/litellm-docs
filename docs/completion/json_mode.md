@@ -15,7 +15,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 
 response = completion(
-  model="gpt-4o-mini",
+  model="{{openai_small}}",
   response_format={ "type": "json_object" },
   messages=[
     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -32,7 +32,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "response_format": { "type": "json_object" },
     "messages": [
       {
@@ -59,7 +59,7 @@ Call `litellm.get_supported_openai_params` to check if a model/provider supports
 ```python
 from litellm import get_supported_openai_params
 
-params = get_supported_openai_params(model="anthropic.claude-3", custom_llm_provider="bedrock")
+params = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_llm_provider="bedrock")
 
 assert "response_format" in params
 ```
@@ -73,7 +73,7 @@ This is used to check if you can pass
 ```python
 from litellm import supports_response_schema
 
-assert supports_response_schema(model="gemini-1.5-pro-preview-0215", custom_llm_provider="bedrock")
+assert supports_response_schema(model="{{gemini_pro}}", custom_llm_provider="bedrock")
 ```
 
 Check out [model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) for a full list of models and their support for `response_schema`.
@@ -120,7 +120,7 @@ class EventsList(BaseModel):
     events: list[CalendarEvent]
 
 resp = completion(
-    model="gpt-4o-2024-08-06",
+    model="{{openai_large}}",
     messages=messages,
     response_format=EventsList
 )
@@ -136,9 +136,9 @@ events_list = EventsList.model_validate_json(resp.choices[0].message.content)
 
 ```yaml
 model_list:
-  - model_name: "gpt-4o"
+  - model_name: "{{openai_large}}"
     litellm_params:
-      model: "gpt-4o-2024-08-06"
+      model: "{{openai_large}}"
 ```
 
 2. Start proxy with config.yaml
@@ -170,7 +170,7 @@ class MathReasoning(BaseModel):
     final_answer: str
 
 completion = client.beta.chat.completions.parse(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "system", "content": "You are a helpful math tutor. Guide the user through the solution step by step."},
         {"role": "user", "content": "how can I solve 8x + 7 = -23"}
@@ -188,7 +188,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {
         "role": "system",
@@ -236,7 +236,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ## Validate JSON Schema 
 
 
-Not all vertex models support passing the json_schema to them (e.g. `gemini-1.5-flash`). To solve this, LiteLLM supports client-side validation of the json schema. 
+Not all models support passing the json_schema to them natively. To solve this, LiteLLM supports client-side validation of the json schema. 
 
 ```
 litellm.enable_json_schema_validation=True
@@ -270,7 +270,7 @@ class CalendarEvent(BaseModel):
   participants: list[str]
 
 resp = completion(
-    model="gemini/gemini-1.5-pro",
+    model="gemini/{{gemini_pro}}",
     messages=messages,
     response_format=CalendarEvent,
 )
@@ -283,9 +283,9 @@ print("Received={}".format(resp))
 1. Create config.yaml
 ```yaml
 model_list:
-  - model_name: "gemini-1.5-flash"
+  - model_name: "{{gemini_flash}}"
     litellm_params:
-      model: "gemini/gemini-1.5-flash"
+      model: "gemini/{{gemini_flash}}"
       api_key: os.environ/GEMINI_API_KEY
 
 litellm_settings:
@@ -305,7 +305,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gemini-1.5-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
         {"role": "system", "content": "Extract the event information."},
         {"role": "user", "content": "Alice and Bob are going to a science fair on Friday."},
@@ -367,7 +367,7 @@ class UserInfo(BaseModel):
     age: int
 
 response = completion(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Extract: John is 25 years old"}],
     response_format={
         "type": "json_schema",
@@ -395,7 +395,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gemini-2.0-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
         {"role": "user", "content": "Extract: John is 25 years old"}
     ],

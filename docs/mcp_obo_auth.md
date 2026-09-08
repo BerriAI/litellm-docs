@@ -5,7 +5,7 @@ OAuth 2.0 On-Behalf-Of (OBO) auth lets LiteLLM exchange a user's incoming bearer
 Use OBO when:
 
 - Your MCP server should receive a token minted specifically for that MCP server.
-- Your identity provider supports [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693).
+- Your identity provider supports [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693), or is Microsoft Entra ID, which LiteLLM speaks natively (see [Microsoft Entra ID](#microsoft-entra-id-azure-ad) below).
 - You want LiteLLM to keep the user's raw token from being forwarded directly to the MCP server.
 
 ## How It Works
@@ -71,6 +71,47 @@ mcp_servers:
 | `audience` | Recommended | Resource identifier for the MCP server. LiteLLM sends this as the token exchange `audience`. |
 | `scopes` | Optional | Scopes LiteLLM requests for the exchanged token. LiteLLM joins the list into the OAuth `scope` parameter. |
 | `subject_token_type` | Optional | RFC 8693 subject token type. Defaults to `urn:ietf:params:oauth:token-type:access_token`. |
+| `upstream_token_header` | Optional | Which upstream header carries the exchanged token. Defaults to `Authorization`. See [sending the token on a different header](#sending-the-exchanged-token-on-a-different-header). |
+| `token_exchange_profile` | Optional | Wire dialect for the exchange. `rfc8693` (default) speaks the standard token-exchange grant; `entra_obo` speaks Microsoft Entra ID's On-Behalf-Of flow. See [Microsoft Entra ID](#microsoft-entra-id-azure-ad). |
+
+### Sending the exchanged token on a different header
+
+By default the exchanged token goes out as `Authorization: Bearer <token>`. When the MCP server sits
+behind an API gateway that reads its own credential from a private header, and the server behind the
+gateway still expects its own bearer on `Authorization`, both credentials have to travel on the same
+request.
+
+Set `upstream_token_header` to name the header the exchanged token should use. Anything under
+`static_headers` is then left alone, so a shared credential still reaches the server behind the
+gateway.
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  my_mcp_server:
+    url: "https://gateway.example.com/mcp"
+    auth_type: oauth2_token_exchange
+    token_exchange_endpoint: "https://idp.example.com/token"
+    client_id: os.environ/MCP_CLIENT_ID
+    client_secret: os.environ/MCP_CLIENT_SECRET
+    audience: "api://esb"
+    upstream_token_header: "esb-oauth"
+    static_headers:
+      Authorization: "Bearer os.environ/UPSTREAM_MCP_TOKEN"
+```
+
+Each upstream request then carries both, with the exchanged token scoped to the calling user:
+
+```
+esb-oauth: Bearer <token exchanged for this user>
+Authorization: Bearer <the shared token you configured>
+```
+
+The exchanged token is still cached per user, so a short-lived token does not mean an exchange on
+every request. Leaving `upstream_token_header` unset keeps the default.
+
+If a redirect from the upstream crosses origin, the custom header is dropped rather than forwarded,
+the same way HTTP clients drop `Authorization`. An upstream that legitimately redirects across
+origins will not see the credential on the second hop.
 
 ## Token Exchange Request
 
@@ -105,6 +146,54 @@ LiteLLM then calls the MCP server with:
 Authorization: Bearer scoped-token-for-mcp-server
 ```
 
+## Microsoft Entra ID (Azure AD)
+
+Microsoft Entra ID doesn't implement the RFC 8693 token-exchange grant above. Its On-Behalf-Of flow uses the RFC 7523 `jwt-bearer` grant instead: the caller's token rides as `assertion` rather than `subject_token`, there's no `audience` parameter, and a Microsoft-only `requested_token_use=on_behalf_of` extension is what turns the grant into a delegation rather than a plain jwt-bearer exchange. LiteLLM treats Entra as a first-class profile, so pointing at Entra is a config change, not a different integration: set `token_exchange_profile: entra_obo` and LiteLLM builds the jwt-bearer form instead of the RFC 8693 form.
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  internal_tools:
+    url: "https://mcp.example.com/mcp"
+    transport: "http"
+    auth_type: oauth2_token_exchange
+    token_exchange_profile: entra_obo
+
+    # Your Entra tenant's v2.0 token endpoint
+    token_exchange_endpoint: "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token"
+
+    # App registration LiteLLM uses to call the token endpoint. The caller's
+    # token must have been issued with this client_id as its `aud`.
+    client_id: "<entra-app-client-id>"
+    client_secret: "<entra-app-client-secret>"
+
+    # Entra has no audience parameter, so the target resource goes in scope
+    # as <app-id-uri>/.default
+    scopes:
+      - "api://internal-tools-mcp/.default"
+```
+
+`audience` and `subject_token_type` are unused with `entra_obo`: Entra has no audience parameter (the target resource goes in `scope` instead), and the jwt-bearer grant doesn't examine subject token type.
+
+For each uncached caller token and MCP server pair, LiteLLM sends:
+
+```http
+POST /<tenant-id>/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
+&assertion=<caller-bearer-token>
+&scope=api://internal-tools-mcp/.default
+&requested_token_use=on_behalf_of
+&client_id=<entra-app-client-id>
+&client_secret=<entra-app-client-secret>
+```
+
+Entra returns the same access token response shape shown above, and LiteLLM caches and forwards the exchanged token the same way regardless of profile.
+
+:::note
+The caller's token must be issued for LiteLLM's app registration, not some other Entra app. If your harness authenticates against a different app registration, have it request a token for this app's scope first, then send that token to LiteLLM.
+:::
+
 ## Calling an OBO MCP Server
 
 The inbound request must include the user's bearer token so LiteLLM has a `subject_token` to exchange.
@@ -126,7 +215,7 @@ curl -X POST "https://litellm.example.com/v1/responses" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <litellm-api-key>" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": "List the available internal tools",
     "tools": [
       {

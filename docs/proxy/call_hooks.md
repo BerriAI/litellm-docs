@@ -131,17 +131,23 @@ class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observabilit
 proxy_handler_instance = MyCustomHandler()
 ```
 
+The last line matters: `callbacks` takes the dotted path of an **instance**, so the file has to create one
+
 2. Add this file to your proxy config
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
 ```
+
+:::warning
+Point `callbacks` at the class (`custom_callbacks.MyCustomHandler`) rather than the instance and the proxy fails config load with an error naming the entry and what it resolved to. The proxy only dispatches `CustomLogger` instances, so on versions before that check it started clean, served traffic and never ran your hooks, with no error and no log line
+:::
 
 3. Start the server + test the request
 
@@ -151,7 +157,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -231,9 +237,9 @@ proxy_handler_instance = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -247,7 +253,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -318,9 +324,9 @@ proxy_handler_instance = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -335,7 +341,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",

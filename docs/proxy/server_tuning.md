@@ -144,6 +144,32 @@ docker run docker.litellm.ai/berriai/litellm:latest \
 
 Both `--ssl_certfile_path` and `--ssl_keyfile_path` are required when enabling TLS with Granian. Not supported with Granian: `--max_requests_before_restart` (use Gunicorn for per-request worker recycling) and `--ciphers` (Hypercorn only). See [CLI server backend options](/docs/proxy/cli#server-backend-options).
 
+## Per-worker admission control
+
+A worker whose event loop is saturated keeps accepting connections, so during a load spike callers wait for seconds with no overload signal, and the liveness probe (which runs on the same loop) slows down enough that Kubernetes restarts the pod and pushes the load onto the remaining replicas. Admission control puts a hard cap on how much work each worker process takes on and turns the excess into an explicit, fast `503` that clients can retry against.
+
+```yaml
+general_settings:
+  max_in_flight_requests_per_worker: 64   # requests being processed at once, per worker process
+  max_queued_requests_per_worker: 64      # requests waiting for a slot; defaults to the in-flight cap
+  admission_queue_timeout_seconds: 1.0    # a queued request is rejected after waiting this long
+```
+
+The feature is off until `max_in_flight_requests_per_worker` is set. When a request arrives and the worker has a free slot it runs immediately. Otherwise it waits in the queue until a slot frees or the timeout elapses. If the queue is already full, or the wait times out, the client gets:
+
+```
+HTTP/1.1 503 Service Unavailable
+retry-after: 1
+
+{"error":{"message":"Worker at capacity: 64 in-flight, 64 queued requests. Retry later.","type":"overloaded_error","code":"503"}}
+```
+
+A slot is held for the whole response, so a streaming completion counts as one in-flight request until its last chunk is sent, and a client disconnect (queued or in flight) releases the slot immediately. The probe and metrics paths (`/health/liveliness`, `/health/liveness`, `/health/readiness`, `/health/readiness/details`, `/health/backlog`, `/health/drain`, `/metrics`) bypass the gate, so an overloaded worker still answers its liveness probe quickly while a wedged process does not. Rejections happen before authentication, so they are not attributed to a key in spend logs. The limits are read on the first request and need a restart to change.
+
+The cap is per worker process and works the same on uvicorn and Granian. A pod started with `--num_workers 4` and `max_in_flight_requests_per_worker: 64` admits up to 256 concurrent requests, and a deployment of N replicas admits N times that, so size it from the per-worker throughput you measured rather than the deployment total. It is a good fit with an HPA: replicas that are already saturated shed load with `503`s instead of accumulating latency while new replicas come up. It complements `global_max_parallel_requests`, which is a deployment-wide limit coordinated through Redis: use the global limit to bound total load on your providers and the per-worker limit to keep any single event loop from drowning without depending on Redis.
+
+Monitor it with `/health/backlog` (fields `in_flight_requests`, `admitted_requests`, `queued_requests`, `rejected_requests`) or the Prometheus metrics `litellm_admission_admitted_requests`, `litellm_admission_queued_requests`, and `litellm_admission_rejected_requests_total{reason="queue_full"|"queue_timeout"}`; see [Pod health metrics](/docs/proxy/prometheus#pod-health-metrics). A steady stream of `queue_timeout` rejections means the worker is at capacity and needs more replicas; `queue_full` rejections mean spikes are arriving faster than the queue can absorb, so raise the queue size or add capacity.
+
 ## Keepalive timeout
 
 Defaults to 5 seconds; between requests, connections must receive new data within this period or be disconnected.
@@ -169,7 +195,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME="litellm-proxy" \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="proxy_config.yaml" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 
 </TabItem>
@@ -181,7 +207,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME="litellm-proxy" \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="litellm_proxy_config.yaml" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 
 </TabItem>

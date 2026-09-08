@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # MCP Toolsets
 
-A **Toolset** is a named collection of specific tools drawn from one or more MCP servers. Instead of giving an agent access to every tool on every server, you pick exactly which tools it needs — from whichever servers they live on — and bundle them under a single name.
+A **Toolset** is a named collection of specific tools drawn from one or more MCP servers. Instead of giving an agent access to every tool on every server, you pick exactly which tools it needs, from whichever servers they live on, and bundle them under a single name.
 
 ## How it works
 
@@ -33,7 +33,7 @@ A **Toolset** is a named collection of specific tools drawn from one or more MCP
         Agent sees exactly 6 tools, nothing more.
 ```
 
-Instead of 13+ tools across two servers, the agent gets 6 — the ones it actually needs.
+Instead of 13+ tools across two servers, the agent gets 6: the ones it actually needs.
 
 **Why this matters:**
 - Smaller tool lists → fewer tokens, faster responses, less hallucination
@@ -62,7 +62,7 @@ Click the **Toolsets** tab on the MCP page.
 
 ### 4. Enter a name
 
-Type a name for the toolset. Pick something descriptive — this is what agents will reference.
+Type a name for the toolset. Pick something descriptive, since this is what agents will reference.
 
 ![Enter toolset name](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/62b412e0-d38f-44c3-99e4-3693f1512f6a/ascreenshot_b678c7c988a04f8b887b0f54c4dd95a7_text_export.jpeg)
 
@@ -80,7 +80,7 @@ Select an MCP server from the dropdown, then choose the tool you want to include
 
 ### 6. Add tools from a second server
 
-Click **Add Tool**, pick a different MCP server, and select another tool. Repeat for as many tools as you need — they can come from any number of servers.
+Click **Add Tool**, pick a different MCP server, and select another tool. Repeat for as many tools as you need; they can come from any number of servers.
 
 ![Add tool from second server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/f34e0600-cc74-4b18-8794-88d45f326144/ascreenshot_98834b14ab9343e39fb503e458d72b7c_text_export.jpeg)
 
@@ -98,7 +98,7 @@ Click **Create Toolset** to save.
 
 ## Use a toolset in the Playground
 
-Once created, your toolset appears alongside MCP servers in the **MCP Servers** dropdown in the Playground — it's selectable the same way.
+Once created, your toolset appears alongside MCP servers in the **MCP Servers** dropdown in the Playground, selectable the same way.
 
 ### 1. Go to the Playground
 
@@ -124,7 +124,7 @@ The model now has access to exactly the tools in your toolset and nothing else.
 
 ## Use a toolset via API
 
-Pass the toolset's route as the `server_url` in your tools list. LiteLLM resolves it server-side — no public URL needed.
+Pass the toolset's route as the `server_url` in your tools list. LiteLLM resolves it server-side, so no public URL is needed.
 
 <Tabs>
 <TabItem value="responses" label="Responses API">
@@ -138,7 +138,7 @@ client = openai.OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     input="What CI/CD tools do you have?",
     tools=[
         {
@@ -164,7 +164,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What CI/CD tools do you have?"}],
     tools=[
         {
@@ -186,7 +186,7 @@ curl http://your-proxy/v1/responses \
   -H "Authorization: Bearer your-litellm-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": "What CI/CD tools do you have?",
     "tools": [
       {

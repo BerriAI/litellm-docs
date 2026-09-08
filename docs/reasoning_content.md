@@ -25,7 +25,7 @@ Supported Providers:
 
 LiteLLM will standardize the `reasoning_content` in the response and `thinking_blocks` in the assistant message.
 
-```python title="Example response from litellm"
+```python nolint title="Example response from litellm"
 "message": {
     ...
     "reasoning_content": "The capital of France is Paris.",
@@ -51,7 +51,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 response = completion(
-  model="anthropic/claude-3-7-sonnet-20250219",
+  model="anthropic/{{anthropic}}",
   messages=[
     {"role": "user", "content": "What is the capital of France?"},
   ],
@@ -68,7 +68,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-3-7-sonnet-20250219",
+    "model": "anthropic/{{anthropic}}",
     "messages": [
       {
         "role": "user",
@@ -164,7 +164,7 @@ litellm.modify_params = True
 
 # Now this will work even if thinking_blocks are missing from the assistant message
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-20250514",
+    model="anthropic/{{anthropic}}",
     thinking={"type": "enabled", "budget_tokens": 1024},
     tools=[...],
     messages=[
@@ -189,7 +189,7 @@ litellm_settings:
 model_list:
   - model_name: claude-thinking
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       thinking:
         type: enabled
         budget_tokens: 1024
@@ -222,7 +222,7 @@ assistant_message = {
 ```python showLineNumbers
 litellm._turn_on_debug()
 litellm.modify_params = True
-model = "anthropic/claude-3-7-sonnet-20250219" # works across Anthropic, Bedrock, Vertex AI
+model = "anthropic/{{anthropic}}" # works across Anthropic, Bedrock, Vertex AI
 # Step 1: send the conversation and available functions to the model
 messages = [
     {
@@ -322,7 +322,7 @@ if tool_calls:
 model_list:
   - model_name: claude-3-7-sonnet-thinking
     litellm_params:
-      model: anthropic/claude-3-7-sonnet-20250219
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       thinking: {
         "type": "enabled",
@@ -446,7 +446,7 @@ litellm.drop_params = True # 👈 EITHER GLOBALLY or per request
 # or per request
 ## Anthropic
 response = litellm.completion(
-  model="anthropic/claude-3-7-sonnet-20250219",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   reasoning_effort="low",
   drop_params=True,
@@ -483,7 +483,7 @@ You can also pass the `thinking` parameter to Anthropic models.
 
 ```python showLineNumbers
 response = litellm.completion(
-  model="anthropic/claude-3-7-sonnet-20250219",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -497,7 +497,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-3-7-sonnet-20250219",
+    "model": "anthropic/{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -505,6 +505,79 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+## Reasoning on the Responses API
+
+`/v1/responses` accepts the OpenAI `reasoning` object, and LiteLLM translates it into whatever the target model expects. Claude models take it on every route LiteLLM serves them on (`anthropic/`, `bedrock/`, `vertex_ai/`, `azure_ai/`), so the same request shape controls reasoning depth no matter which provider is behind the model.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers
+response = litellm.responses(
+  model="vertex_ai/{{anthropic_large}}",
+  input="How many prime numbers are less than 30?",
+  reasoning={"effort": "low"},
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash showLineNumbers
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "{{anthropic_large}}",
+    "input": "How many prime numbers are less than 30?",
+    "reasoning": {"effort": "low"}
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Anthropic changed how thinking is configured in Claude 4.6, so the translation depends on which model you are calling. LiteLLM decides from the model's `supports_adaptive_thinking` capability rather than the model name, so your own code never has to branch on it.
+
+Claude 4.6 and newer (Sonnet 4.6, Opus 4.7, Opus 4.8) use adaptive thinking, and the effort level is forwarded alongside it:
+
+```json title="what LiteLLM sends for reasoning.effort = low"
+{"thinking": {"type": "adaptive"}, "output_config": {"effort": "low"}}
+```
+
+`minimal` collapses to `low` in that form; the other levels pass through unchanged. Earlier Claude models get the legacy token budget instead, `{"thinking": {"type": "enabled", "budget_tokens": N}}`, sized from the effort level:
+
+| `reasoning.effort` | `budget_tokens` |
+| --- | --- |
+| `minimal` | 1024 |
+| `low` | 1024 |
+| `medium` | 2048 |
+| `high` | 4096 |
+| `xhigh` | 8192 |
+| `max` | 16384 |
+
+Each budget is overridable through the matching `DEFAULT_REASONING_EFFORT_*_THINKING_BUDGET` environment variable, and `{"effort": "none"}` turns thinking off entirely on both shapes.
+
+If you would rather set Anthropic's native parameters yourself, send `thinking` and `output_config` in the request body and LiteLLM forwards them untouched.
+
+```bash showLineNumbers
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "{{anthropic_large}}",
+    "input": "How many prime numbers are less than 30?",
+    "thinking": {"type": "adaptive"},
+    "output_config": {"effort": "high"}
+  }'
+```
+
+:::info
+
+Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI needs v1.89.0+ ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
+
+:::
 
 ## Checking if a model supports reasoning
 
@@ -517,11 +590,11 @@ Use `litellm.supports_reasoning(model="")` -> returns `True` if model supports r
 import litellm 
 
 # Example models that support reasoning
-assert litellm.supports_reasoning(model="anthropic/claude-3-7-sonnet-20250219") == True
+assert litellm.supports_reasoning(model="anthropic/{{anthropic}}") == True
 assert litellm.supports_reasoning(model="deepseek/deepseek-chat") == True 
 
 # Example models that do not support reasoning
-assert litellm.supports_reasoning(model="openai/gpt-3.5-turbo") == False 
+assert litellm.supports_reasoning(model="openai/gpt-4.1") == False 
 ```
 </TabItem>
 
@@ -533,7 +606,7 @@ assert litellm.supports_reasoning(model="openai/gpt-3.5-turbo") == False
 model_list:
   - model_name: claude-3-sonnet-reasoning
     litellm_params:
-      model: anthropic/claude-3-7-sonnet-20250219
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: deepseek-reasoning
     litellm_params:
@@ -573,17 +646,17 @@ Expected Response
       "model_group": "claude-3-sonnet-reasoning",
       "providers": ["anthropic"],
       "mode": "chat",
-      "supports_reasoning": true,
+      "supports_reasoning": true
     },
     {
       "model_group": "deepseek-reasoning",
       "providers": ["deepseek"],
-      "supports_reasoning": true,
+      "supports_reasoning": true
     },
     {
       "model_group": "my-custom-reasoning-model",
       "providers": ["openai"],
-      "supports_reasoning": true,
+      "supports_reasoning": true
     }
   ]
 }
@@ -595,7 +668,7 @@ Expected Response
 
 :::tip gpt-5.4: reasoning_effort + function tools
 
-When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers — no extra configuration needed.
+When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 
 You can also route explicitly via `openai/responses/gpt-5.4` or `azure/responses/gpt-5.4`. See [Responses API Bridge](/docs/providers/openai#openai-chat-completion-to-responses-api-bridge) for details.
 
@@ -603,7 +676,7 @@ You can also route explicitly via `openai/responses/gpt-5.4` or `azure/responses
 
 **SDK:**
 ```python
-litellm.completion(model="azure/responses/my-reasoning-model", ...)
+litellm.completion(model="azure/responses/my-reasoning-model")  # ...
 ```
 
 **Proxy config:**
@@ -620,7 +693,7 @@ model_list:
 
 ## OpenAI Responses API - Auto-Summary Control
 
-When using OpenAI Responses API models (like `gpt-5`) via `/chat/completions` with `reasoning_effort`, you can control whether `summary="detailed"` is automatically added to the reasoning parameter.
+When using OpenAI Responses API models (like `{{openai_large}}`) via `/chat/completions` with `reasoning_effort`, you can control whether `summary="detailed"` is automatically added to the reasoning parameter.
 
 ### Enabling Auto-Summary
 
@@ -636,7 +709,7 @@ import litellm
 litellm.reasoning_auto_summary = True
 
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",  # Will automatically add summary="detailed"
 )
@@ -663,26 +736,26 @@ litellm_settings:
   reasoning_auto_summary: true  # Enable auto-summary for all requests
 
 model_list:
-  - model_name: gpt-5-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/responses/gpt-5-mini
+      model: openai/responses/{{openai_small}}
 ```
 
 **Per-model configuration** (recommended when using Open WebUI or clients that cannot set `extra_body`):
 
 ```yaml
 model_list:
-  - model_name: gpt-5.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.1
+      model: openai/{{openai_large}}
       # String format - uses reasoning_auto_summary for summary when set
       reasoning_effort: "high"
     model_info:
       mode: responses  # if using Responses API bridge
 
-  - model_name: gpt-5.1-with-summary
+  - model_name: gpt-5.6-terra-with-summary
     litellm_params:
-      model: openai/gpt-5.1
+      model: openai/{{openai_large}}
       # Dict format - explicit control over effort and summary
       reasoning_effort: {"effort": "high", "summary": "detailed"}
 ```
@@ -696,7 +769,7 @@ For fine-grained control, pass `reasoning_effort` as a dictionary:
 
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort={"effort": "low", "summary": "detailed"},  # Explicit control
 )
@@ -704,13 +777,13 @@ response = litellm.completion(
 
 ### Summary Preservation via `/v1/messages` Adapter
 
-When using the Anthropic `/v1/messages` adapter to route non-Claude models (e.g., `openai/gpt-5.1`), the `thinking.summary` value is preserved and forwarded to the downstream provider. For example:
+When using the Anthropic `/v1/messages` adapter to route non-Claude models (e.g., `openai/{{openai_large}}`), the `thinking.summary` value is preserved and forwarded to the downstream provider. For example:
 
 ```python
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="openai/gpt-5.1",
+    model="openai/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     max_tokens=8096,
     thinking={"type": "enabled", "budget_tokens": 5000, "summary": "concise"},
@@ -734,7 +807,7 @@ import litellm
 litellm.reasoning_auto_summary = True
 
 response = await litellm.anthropic.messages.acreate(
-    model="openai/gpt-5.1",
+    model="openai/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     max_tokens=8096,
     thinking={"type": "enabled", "budget_tokens": 5000},

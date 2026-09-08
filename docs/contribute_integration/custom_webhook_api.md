@@ -50,13 +50,13 @@ a. Setup config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
@@ -80,7 +80,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "system",
@@ -105,7 +105,7 @@ If you're adding a new integration, please add documentation for it under the `o
 
 5. File a PR! 
 
-- Review our contribution guide [here](../../extras/contributing_code)
+- Review our contribution guide [here](/docs/extras/contributing_code)
 - Push your fork to your GitHub repo
 - Submit a PR from there
 

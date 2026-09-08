@@ -12,7 +12,7 @@ Use OpenAI's Code Interpreter tool to execute Python code in a secure, sandboxed
 
 :::tip Route code interpreter to your own sandbox
 
-The proxy can intercept `code_interpreter` on `/v1/responses` and run the code in a configured sandbox (e2b today) instead of OpenAI's container, with no change to the client request. The response shape stays identical (`code_interpreter_call` next to `message`). See [Code Interpreter Sandbox Interception](/docs/sandbox#litellm-proxy-responses-api-code-interpreter-interceptor).
+The proxy can intercept `code_interpreter` on `/v1/responses` and run the code in a configured sandbox (e2b today) instead of OpenAI's container, with no change to the client request. The response shape stays identical (`code_interpreter_call` next to `message`). See [Code Interpreter Sandbox Interception](/docs/sandbox#code-interpreter-interceptor).
 
 :::
 
@@ -31,7 +31,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     tools=[{"type": "code_interpreter"}],
     input="Calculate the first 20 fibonacci numbers and plot them"
 )
@@ -50,7 +50,7 @@ client = OpenAI(
 )
 
 stream = client.responses.create(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     tools=[{"type": "code_interpreter"}],
     input="Generate sample sales data CSV and create a visualization",
     stream=True
@@ -72,7 +72,7 @@ client = OpenAI(
 
 # 1. Run code interpreter
 response = client.responses.create(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     tools=[{"type": "code_interpreter"}],
     input="Create a scatter plot and save as PNG"
 )
@@ -104,7 +104,7 @@ The LiteLLM Admin UI includes built-in Code Interpreter support.
 **Steps:**
 
 1. Go to **Playground** in the LiteLLM UI
-2. Select an **OpenAI model** (e.g., `openai/gpt-4o`)
+2. Select an **OpenAI model** (e.g., `openai/{{openai_large}}`)
 3. Select `/v1/responses` as the endpoint under **Endpoint Type**
 4. Toggle **Code Interpreter** in the left panel
 5. Send a prompt requesting code execution or file generation
@@ -122,7 +122,7 @@ The UI will display:
 import litellm
 
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Generate a bar chart of quarterly sales and save as PNG",
     tools=[{"type": "code_interpreter"}]
 )
@@ -139,7 +139,7 @@ import litellm
 
 # 1. Run code interpreter
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Create a pie chart of market share and save as PNG",
     tools=[{"type": "code_interpreter"}]
 )

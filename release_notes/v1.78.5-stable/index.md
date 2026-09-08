@@ -109,7 +109,7 @@ pip install litellm==1.78.5
     - Get completion cost directly from OpenRouter - [PR #15448](https://github.com/BerriAI/litellm/pull/15448)
     - Fix OpenRouter Claude Opus 4 model naming - [PR #15495](https://github.com/BerriAI/litellm/pull/15495)
 
-- **[CometAPI](../../docs/providers/comet)**
+- **[CometAPI](/docs/providers/cometapi)**
     - Fix(cometapi): improve CometAPI provider support (embeddings, image generation, docs) - [PR #15591](https://github.com/BerriAI/litellm/pull/15591)
 
 - **[Lemonade](../../docs/providers/lemonade)**
@@ -209,7 +209,7 @@ pip install litellm==1.78.5
     - Feat: add guardrail for image generation - [PR #15619](https://github.com/BerriAI/litellm/pull/15619)
     - Feat: Add Guardrails for /v1/messages and /v1/responses API - [PR #15686](https://github.com/BerriAI/litellm/pull/15686)
 
-- **[Pillar Security](../../docs/proxy/guardrails)**
+- **[Pillar Security](/docs/proxy/guardrails/quick_start)**
     - Feature: update pillar security integration to support no persistence mode in litellm proxy - [PR #15599](https://github.com/BerriAI/litellm/pull/15599)
 
 #### Prompt Management

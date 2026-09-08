@@ -318,7 +318,7 @@ LiteLLM proxy also supports these OpenAI-compatible video routes:
 curl --location 'http://localhost:4000/v1/videos/characters' \
 --header 'Authorization: Bearer sk-1234' \
 -F 'name=hero' \
--F 'target_model_names=gpt-4' \
+-F 'target_model_names={{openai_large}}' \
 -F 'video=@/path/to/character.mp4'
 ```
 
@@ -382,7 +382,7 @@ curl http://localhost:4000/v1/videos \
 
 ## **Using OpenAI Client with LiteLLM Proxy**
 
-You can use the standard OpenAI Python client to interact with LiteLLM's video endpoints. This provides a familiar interface while leveraging LiteLLM's provider abstraction and proxy features.
+You can use the standard OpenAI Python client to interact with LiteLLM's video endpoints. This provides a familiar interface while keeping LiteLLM's provider abstraction and proxy features.
 
 ### Setup
 

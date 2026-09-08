@@ -50,7 +50,7 @@ def test_completion_azure_model():
         # azure call
         response = completion(
           model = "azure/<your_deployment_name>", 
-          messages = [{ "content": "Hello, how are you?","role": "user"}]
+          messages = [{ "content": "Hello, how are you?","role": "user"}],
           input_cost_per_token=0.005,
           output_cost_per_token=1,
         )

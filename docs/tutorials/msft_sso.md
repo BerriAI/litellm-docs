@@ -136,7 +136,7 @@ litellm_settings:
   default_team_params:             # Applied to all /team/new calls (including SSO auto-created teams) when the field is not explicitly set
     max_budget: 100                # Optional[float]: $100 budget for the team
     budget_duration: 30d           # Optional[str]: 30 days budget_duration for the team
-    models: ["gpt-3.5-turbo"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
+    models: ["{{openai_small}}"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
       - "/team/daily/activity"     # Allow members to view team usage
 ```
@@ -154,16 +154,18 @@ litellm_settings:
 
 ## 4. Using Entra ID App Roles for User Permissions
 
-You can assign user roles directly from Entra ID using App Roles. LiteLLM will automatically read the app roles from the JWT token during SSO sign-in and assign the corresponding role to the user.
+You can assign global proxy roles directly from Entra ID using App Roles. LiteLLM reads the app roles from the JWT token during SSO sign-in and assigns the corresponding role to the user.
 
 ### 4.1 Supported Roles
 
-LiteLLM supports the following app roles (case-insensitive):
+Use one of the following global proxy roles (case-insensitive):
 
 - `proxy_admin` - Admin over the entire LiteLLM platform
 - `proxy_admin_viewer` - Read-only admin access (can view all keys and spend)
-- `org_admin` - Admin over a specific organization (can create teams and users within their org)
 - `internal_user` - Standard user (can create/view/delete their own keys and view their own spend)
+- `internal_user_viewer` - Read-only standard user (can view their own keys and spend)
+
+Do not use `org_admin` as an Entra App Role. The value is recognized and stored as the user's global role, but the Entra role claim does not identify an organization or create an organization membership. It does not grant organization admin permissions on its own. Add the user as an `org_admin` to each organization separately using [organization access control](../proxy/access_control.md).
 
 ### 4.2 Create App Roles in Entra ID
 
@@ -195,9 +197,9 @@ LiteLLM supports the following app roles (case-insensitive):
 4. The user's permissions will reflect their assigned role
 
 **How it works:**
-- When a user signs in via Microsoft SSO, LiteLLM extracts the `roles` claim from the JWT `id_token`
+- When a user signs in via Microsoft SSO, LiteLLM extracts the `roles` or `app_roles` claim from the JWT `id_token`
 - If any of the roles match a valid LiteLLM role (case-insensitive), that role is assigned to the user
-- If multiple roles are present, LiteLLM uses the first valid role it finds
+- If multiple supported global roles are present, LiteLLM selects the highest privilege role: `proxy_admin`, `proxy_admin_viewer`, `internal_user`, then `internal_user_viewer`
 - This role assignment persists in the LiteLLM database and determines the user's access level
 
 ## Video Walkthrough
@@ -207,7 +209,6 @@ This walks through setting up sso auto-add for **Microsoft Entra ID**
 Follow along this video for a walkthrough of how to set this up with Microsoft Entra ID
 
 <iframe width="840" height="500" src="https://www.loom.com/embed/ea711323aa9a496d84a01fd7b2a12f54?sid=c53e238c-5bfd-4135-b8fb-b5b1a08632cf" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
 
 
 

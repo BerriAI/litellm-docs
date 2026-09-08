@@ -36,7 +36,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Bearer sk-1234' \
   --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "user": "customer-123",
     "messages": [
       {
@@ -64,7 +64,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Authorization: Bearer sk-1234' \
   --header 'x-litellm-customer-id: customer-123' \
   --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -151,5 +151,5 @@ Understand how different customers use your service:
 ## Related Features
 
 - [Customers / End-User Budgets](./customers.md) - Set budgets and rate limits for customers
-- [Cost Tracking](./cost_tracking.md) - Comprehensive cost tracking and analytics
+- [Cost Tracking](./cost_tracking.md) - Cost tracking and analytics
 - [Billing](./billing.md) - Bill customers based on their usage

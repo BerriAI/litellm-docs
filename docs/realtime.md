@@ -35,7 +35,7 @@ model_list:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: azure-gpt-4o-realtime-audio
     litellm_params:
       model: azure/gpt-4o-realtime-preview
       api_key: os.environ/AZURE_SWEDEN_API_KEY
@@ -70,7 +70,7 @@ model_list:
 ```bash
 litellm --config /path/to/config.yaml 
 
-# RUNNING on http://0.0.0.0:8000
+# RUNNING on http://0.0.0.0:4000
 ```
 
 ### Test 
@@ -116,7 +116,7 @@ You can apply [LiteLLM guardrails](https://docs.litellm.ai/docs/proxy/guardrails
 
 ### Set guardrails on a key or team
 
-The easiest production setup — attach guardrails to a virtual key or team so they always apply automatically, without any client-side changes.
+The easiest production setup: attach guardrails to a virtual key or team so they always apply automatically, without any client-side changes.
 
 See [Virtual Keys → Guardrails](https://docs.litellm.ai/docs/proxy/virtual_keys#guardrails) and [Teams → Guardrails](https://docs.litellm.ai/docs/proxy/team_budgets).
 

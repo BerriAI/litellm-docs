@@ -1,6 +1,6 @@
 # LiteLLM Skills
 
-[litellm-skills](https://github.com/BerriAI/litellm-skills) is a collection of [Agent Skills](https://agentskills.io) for managing a live LiteLLM proxy. Install them once and any agent that supports the Agent Skills standard (Claude Code, OpenCode, OpenClaw, etc.) can create users, teams, keys, models, MCP servers, agents, and query usage — all by running `curl` commands against your proxy.
+[litellm-skills](https://github.com/BerriAI/litellm-skills) is a collection of [Agent Skills](https://agentskills.io) for managing a live LiteLLM proxy. Install them once and any agent that supports the Agent Skills standard (Claude Code, OpenCode, OpenClaw, etc.) can create users, teams, keys, models, MCP servers, agents, and query usage, all by running `curl` commands against your proxy.
 
 ## Install
 
@@ -12,7 +12,7 @@ curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install
 
 - `curl` installed
 - A running LiteLLM proxy (local or remote)
-- A proxy admin key — not a virtual key scoped to `llm_api_routes`
+- A proxy admin key, not a virtual key scoped to `llm_api_routes`
 
 ## Available Skills
 

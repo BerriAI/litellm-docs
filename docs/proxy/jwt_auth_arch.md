@@ -4,15 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Control Model Access with OIDC (Azure AD/Keycloak/etc.)
 
-:::info
-
-✨ JWT Auth is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature feature="JWT Auth" />
 
 <Image img={require('../../img/control_model_access_jwt.png')} style={{ width: '100%', maxWidth: '4000px' }} />
 
@@ -67,10 +59,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: {{openai_large}}
 ```
 
 </TabItem>
@@ -91,10 +83,10 @@ general_settings:
 model_list:
     - model: anthropic-claude
       litellm_params:
-        model: claude-3-5-haiku-20241022
+        model: {{anthropic}}
     - model: openai-gpt-4o
       litellm_params:
-        model: gpt-4o
+        model: {{openai_large}}
 ```
 
 </TabItem>

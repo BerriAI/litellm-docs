@@ -8,7 +8,7 @@ https://aimlapi.com/
 | Description | AI/ML API provides access to state-of-the-art AI models including flux-pro/v1.1 for high-quality image generation. |
 | Provider Route on LiteLLM | `aiml/` |
 | Link to Provider Doc | [AI/ML API ↗](https://docs.aimlapi.com/) |
-| Supported Operations | [`/chat/completions`], [`/images/generations`](#image-generation) |
+| Supported Operations | [`/chat/completions`], [`/images/generations`](/docs/providers/aiml#async-image-generation) |
 
 LiteLLM supports AI/ML API Image Generation calls.
 
@@ -85,7 +85,7 @@ import litellm
 
 async def main():
     response = await litellm.acompletion(
-        model="aiml/anthropic/claude-3-5-haiku",  # The model name must include prefix "openai" + the model name from ai/ml api
+        model="aiml/anthropic/{{anthropic}}",  # The model name must include prefix "openai" + the model name from ai/ml api
         api_key="",  # your aiml api-key
         api_base="https://api.aimlapi.com/v2",
         messages=[

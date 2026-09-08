@@ -42,7 +42,7 @@ items={[
   {
     icon: "✨",
     title: "✨ Enterprise Quickstart",
-    description: "Quickstart Guide for LiteLLM Enterprise — LLM, MCP, and Agent gateway.",
+    description: "Quickstart Guide for LiteLLM Enterprise: LLM, MCP, and Agent gateway.",
     listDescription: [
       "Deploy with license",
       "Validate three gateways",

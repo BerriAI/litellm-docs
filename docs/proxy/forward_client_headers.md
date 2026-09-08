@@ -8,7 +8,7 @@ By default, LiteLLM does not forward client headers to LLM provider APIs for sec
 
 ## How it Works
 
-LiteLLM does **not** forward all client headers to the LLM provider. Instead, it uses an **allowlist** approach — only headers matching specific rules are forwarded. This ensures sensitive headers (like your LiteLLM API key) are never accidentally sent to upstream providers.
+LiteLLM does **not** forward all client headers to the LLM provider. Instead, it uses an **allowlist** approach: only headers matching specific rules are forwarded. Sensitive headers (like your LiteLLM API key) are therefore never accidentally sent to upstream providers.
 
 ```mermaid
 sequenceDiagram
@@ -102,9 +102,9 @@ This feature enables scenarios where:
 ```yaml
 # proxy_config.yaml
 model_list:
-  - model_name: claude-sonnet-4
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       # No api_key configured! Will use client's key
 
 general_settings:
@@ -116,12 +116,14 @@ For **Claude Code** with `/login` and your own Anthropic key, see [Claude Code B
 
 Client request:
 ```bash
+# Authorization: Proxy authentication (stripped)
+# x-api-key: Client's Anthropic key (forwarded!)
 curl -X POST "http://localhost:4000/v1/messages" \
-  -H "Authorization: Bearer sk-proxy-auth-123" \     # Proxy authentication (stripped)
-  -H "x-api-key: sk-ant-api03-YOUR-KEY..." \        # Client's Anthropic key (forwarded!)
+  -H "Authorization: Bearer sk-proxy-auth-123" \
+  -H "x-api-key: sk-ant-api03-YOUR-KEY..." \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-4",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
   }'
@@ -131,9 +133,9 @@ curl -X POST "http://localhost:4000/v1/messages" \
 
 ```yaml
 model_list:
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/{{gemini_pro}}
       # No api_key configured
 
 general_settings:
@@ -147,7 +149,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Authorization: Bearer sk-proxy-auth-123" \
   -H "x-goog-api-key: AIza..." \
   -d '{
-    "model": "gemini-pro",
+    "model": "{{gemini_pro}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -188,9 +190,9 @@ Add the `forward_client_headers_to_llm_api` setting under `model_group_settings`
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: "your-api-key"
   - model_name: "wildcard-models/*"
     litellm_params:
@@ -200,7 +202,7 @@ model_list:
 litellm_settings:
   model_group_settings:
     forward_client_headers_to_llm_api:
-      - gpt-4o-mini
+      - {{openai_small}}
       - wildcard-models/*
 ```
 
@@ -211,8 +213,8 @@ The configuration supports various model matching patterns:
 ### 1. Exact Model Names
 ```yaml
 forward_client_headers_to_llm_api:
-  - gpt-4o-mini
-  - claude-3-sonnet
+  - {{openai_small}}
+  - {{anthropic}}
 ```
 
 ### 2. Wildcard Patterns
@@ -264,7 +266,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "x-trace-id: abc123" \
   -H "x-request-source: mobile-app" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -278,7 +280,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "x-customer-id: customer-123" \
   -H "x-environment: production" \
   -d '{
-    "model": "gpt-4o-mini", 
+    "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -291,7 +293,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
   -H "Authorization: Bearer your-key" \
   -H "anthropic-beta: tools-2024-04-04" \
   -d '{
-    "model": "claude-3-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -303,7 +305,7 @@ model_list:
   # Fixed model with header forwarding
   - model_name: byok-fixed-gpt-4o-mini
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_base: "https://your-openai-endpoint.com"
       api_key: "your-api-key"
       
@@ -315,9 +317,9 @@ model_list:
       api_key: "your-api-key"
       
   # Standard model without header forwarding
-  - model_name: standard-gpt-4
+  - model_name: standard-gpt-4o
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: "your-api-key"
 
 litellm_settings:
@@ -328,7 +330,7 @@ litellm_settings:
     forward_client_headers_to_llm_api:
       - byok-fixed-gpt-4o-mini
       - byok-wildcard/*
-      # Note: standard-gpt-4 is NOT included, so no headers forwarded
+      # Note: standard-gpt-4o is NOT included, so no headers forwarded
 
 general_settings:
   # Enable OpenAI organization header forwarding (optional)
@@ -374,6 +376,6 @@ class ModelGroupSettings(BaseModel):
 ```
 
 Where each string in the list can be:
-- An exact model name (e.g., `"gpt-4o-mini"`)
+- An exact model name (e.g., `"{{openai_small}}"`)
 - A wildcard pattern (e.g., `"openai/*"`)
 - A model group name (e.g., `"my-model-group/*"`)

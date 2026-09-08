@@ -81,7 +81,7 @@ The CLI will now use LiteLLM Proxy as the backend, giving you access to LiteLLM'
 
 ### Use Anthropic, OpenAI, Bedrock, etc. models on gemini-cli
 
-In order to use non-gemini models on gemini-cli, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `gemini-2.5-pro` should be routed to your desired model from any provider.
+To use non-gemini models on gemini-cli, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `{{gemini_pro}}` should be routed to your desired model from any provider.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -89,51 +89,51 @@ import TabItem from '@theme/TabItem';
 <Tabs>
 <TabItem value="anthropic" label="Anthropic">
 
-Route `gemini-2.5-pro` requests to Claude Sonnet:
+Route `{{gemini_pro}}` requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-20250514
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-2.5-pro": "claude-sonnet-4-20250514"}
+  model_group_alias: {"{{gemini_pro}}": "{{anthropic}}"}
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route `gemini-2.5-pro` requests to GPT-4o:
+Route `{{gemini_pro}}` requests to `{{openai_large}}`:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: gpt-4o-model
+  - model_name: openai-gpt
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
-  model_group_alias: {"gemini-2.5-pro": "gpt-4o-model"}
+  model_group_alias: {"{{gemini_pro}}": "openai-gpt"}
 ```
 
 </TabItem>
 <TabItem value="bedrock" label="Bedrock">
 
-Route `gemini-2.5-pro` requests to Claude on Bedrock:
+Route `{{gemini_pro}}` requests to Claude on Bedrock:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 
 router_settings:
-  model_group_alias: {"gemini-2.5-pro": "bedrock-claude"}
+  model_group_alias: {"{{gemini_pro}}": "bedrock-claude"}
 ```
 
 </TabItem>
@@ -145,23 +145,23 @@ All deployments with model_name=`anthropic-claude` will be load balanced. In thi
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY  
   - model_name: anthropic-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 
 router_settings:
-  model_group_alias: {"gemini-2.5-pro": "anthropic-claude"}
+  model_group_alias: {"{{gemini_pro}}": "anthropic-claude"}
 ```
 
 </TabItem>
 </Tabs>
 
-With this configuration, when you use `gemini-2.5-pro` in the CLI, LiteLLM will automatically route your requests to the configured provider(s) with load balancing and fallbacks.
+With this configuration, when you use `{{gemini_pro}}` in the CLI, LiteLLM will automatically route your requests to the configured provider(s) with load balancing and fallbacks.
 
 
 

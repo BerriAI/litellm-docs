@@ -136,7 +136,7 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
     - Forward `timeout` on the completion-transformation path for Anthropic, Bedrock, and Vertex - [PR #28133](https://github.com/BerriAI/litellm/pull/28133)
     - Accept dict-shape `reasoning_effort` from the Anthropic Responses bridge - [PR #28201](https://github.com/BerriAI/litellm/pull/28201)
     - Wrap `aresponses` streaming iterator for mid-stream router fallbacks - [PR #28215](https://github.com/BerriAI/litellm/pull/28215)
-    - Unblock staging — mypy + coverage for `aresponses` streaming fallback - [PR #28318](https://github.com/BerriAI/litellm/pull/28318)
+        - Unblock staging: mypy + coverage for `aresponses` streaming fallback - [PR #28318](https://github.com/BerriAI/litellm/pull/28318)
     - Strip Anthropic `cache_control` from OpenAI Responses API requests - [PR #28431](https://github.com/BerriAI/litellm/pull/28431)
     - Use the OpenAI `SSEDecoder` for Responses API streaming - [PR #28566](https://github.com/BerriAI/litellm/pull/28566)
     - Replay `openai/responses` bridge cache hits as chat streams - [PR #28158](https://github.com/BerriAI/litellm/pull/28158)
@@ -156,7 +156,7 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 - **Playground**
     - Interactions API endpoint in the Playground with SSE streaming - [PR #28156](https://github.com/BerriAI/litellm/pull/28156)
 - **Passthrough Routes**
-    - Team passthrough routes — create parity + edit-load fix - [PR #28098](https://github.com/BerriAI/litellm/pull/28098)
+        - Team passthrough routes: create parity + edit-load fix - [PR #28098](https://github.com/BerriAI/litellm/pull/28098)
     - Gate `team.allowed_passthrough_routes` writes to proxy admins - [PR #28097](https://github.com/BerriAI/litellm/pull/28097)
 - **Auth / Codex CLI**
     - Codex CLI JWT team alias propagation - [PR #28621](https://github.com/BerriAI/litellm/pull/28621)
@@ -179,7 +179,7 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 ### Logging
 
 - **[Prometheus](https://docs.litellm.ai/docs/proxy/logging#prometheus)**
-    - Emit per-token-type detail metrics — five sparse counters that break out `usage.prompt_tokens_details` / `usage.completion_tokens_details` fields providers already report (LIT-3220) - [PR #28372](https://github.com/BerriAI/litellm/pull/28372)
+        - Emit per-token-type detail metrics: five sparse counters that break out `usage.prompt_tokens_details` / `usage.completion_tokens_details` fields providers already report (LIT-3220) - [PR #28372](https://github.com/BerriAI/litellm/pull/28372)
     - Add `user_email` and `user_alias` labels to user budget metrics - [PR #28155](https://github.com/BerriAI/litellm/pull/28155)
 - **[OpenTelemetry](https://docs.litellm.ai/docs/proxy/logging#opentelemetry)**
     - Propagate `team_id` and `team_alias` to all child OTEL spans - [PR #28273](https://github.com/BerriAI/litellm/pull/28273)
@@ -209,13 +209,13 @@ Plus a Vertex / Anthropic `supports_output_config` flag flip on all `claude-opus
 
 ## Performance / Loadbalancing / Reliability improvements
 
-- **Anthropic `/v1/messages` streaming hot path** — cut per-request and per-chunk overhead on the proxy's Anthropic streaming path, with byte-identical wire output guaranteed by parity tests that diff the logged and billed payloads between the fast and legacy paths. Measured on a real 4-pod `m7i.xlarge` deployment (no HPA) streaming 256 `text_delta` chunks per request, against both Anthropic and Bedrock Invoke — **TTFT overhead ~90% lower** with **higher sustained throughput** (full numbers below) - [PR #28289](https://github.com/BerriAI/litellm/pull/28289)
+    - **Anthropic `/v1/messages` streaming hot path**: cut per-request and per-chunk overhead on the proxy's Anthropic streaming path, with byte-identical wire output guaranteed by parity tests that diff the logged and billed payloads between the fast and legacy paths. Measured on a real 4-pod `m7i.xlarge` deployment (no HPA) streaming 256 `text_delta` chunks per request, against both Anthropic and Bedrock Invoke: **TTFT overhead ~90% lower** with **higher sustained throughput** (full numbers below) - [PR #28289](https://github.com/BerriAI/litellm/pull/28289)
     - Skip work that's a no-op in the default config: the per-chunk Datadog span when tracing is off, the per-chunk streaming hook when no callback / guardrail / cost-injection is active, and the agentic post-processing wrapper when no callback overrides its hook (it otherwise buffers every chunk and rebuilds the response from SSE just to call hooks that all return `(False, {})`).
     - Stop doing the same work twice per request: serialize the request body once and reuse it for the pre-call log and the wire, memoize the optional-params type-hint resolution (~80µs/request), and skip the redundant `strip_empty_text_blocks` scan when the async wrapper already sanitized.
     - Cheaper end-of-stream reconstruction: collapse the homogeneous run of `content_block_delta` text events into a single equivalent SSE event before `stream_chunk_builder`, removing O(output-token) `ModelResponseStream` constructions; tool-use / thinking / citations streams fall back to the unchanged legacy path.
     - Cheaper hot-path logging: gate debug f-string evaluation behind `isEnabledFor(DEBUG)`, hoist `cost_injection_active` out of the per-chunk loop, and drop one async-generator layer per chunk in `async_sse_data_generator`.
 
-*Anthropic `/v1/messages` streaming, 256 `text_delta` chunks/request — 4 pods on `m7i.xlarge` (4 vCPU / 16 GB), no HPA:*
+    *Anthropic `/v1/messages` streaming, 256 `text_delta` chunks/request, on 4 pods on `m7i.xlarge` (4 vCPU / 16 GB), no HPA:*
 
 | Metric | Baseline (`v1.87.0-dev.1`) | Patched ([#28289](https://github.com/BerriAI/litellm/pull/28289)) | Change |
 | --- | --- | --- | --- |

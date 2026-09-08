@@ -3,7 +3,7 @@
 Litellm Proxy has the following release cycle:
 
 - `1.x.x-dev.N` (nightly): Releases which pass ci/cd (no manual review). Published on PyPI as `1.x.x.devN`.
-- `1.x.x-rc.N` (release candidate): Releases which pass ci/cd + [manual review](https://github.com/BerriAI/litellm/discussions/8495#discussioncomment-12180711) + performance testing (pending — being implemented soon) + a 7-day window for early testers to submit issues. Published on PyPI as `1.x.xrcN`.
+- `1.x.x-rc.N` (release candidate): Releases which pass ci/cd + [manual review](https://github.com/BerriAI/litellm/discussions/8495#discussioncomment-12180711) + performance testing (pending, being implemented soon) + a 7-day window for early testers to submit issues. Published on PyPI as `1.x.xrcN`.
 - `1.x.x` (stable): An `rc` that has passed everything above, then promoted to stable after a second round of manual testing.
 
 In production, we recommend pinning to the latest stable `1.x.x` release.
@@ -48,7 +48,7 @@ Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-ver
 
 ### Enterprise Support
 
-:::info Support model changing — May 18, 2026
+:::info Support model changing, May 18, 2026
 
 As LiteLLM has grown, the current professional support model no longer fits our scale. We're moving to a new model built around clear, predictable communication on when customers can expect support and changes. The model described below is being deprecated, we'll share details on the new system as we finalize it over the next few weeks.
 

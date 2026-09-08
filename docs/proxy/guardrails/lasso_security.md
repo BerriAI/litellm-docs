@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Lasso Security
 
-Use [Lasso Security](https://www.lasso.security/) to protect your LLM applications from prompt injection attacks, harmful content generation, and other security threats through comprehensive input and output validation.
+Use [Lasso Security](https://www.lasso.security/) to protect your LLM applications from prompt injection attacks, harmful content generation, and other security threats through input and output validation.
 
 ## Prerequisites
 
@@ -339,7 +339,7 @@ guardrails:
 
 ### Multiple Guardrail Configuration
 
-You can configure both pre-call and post-call guardrails for comprehensive protection:
+You can configure both pre-call and post-call guardrails to cover both directions:
 
 ```yaml
 guardrails:
@@ -396,7 +396,7 @@ The Lasso guardrail uses an intelligent action-based system to determine how to 
 - **`WARN`**: Violations will be logged as warnings and the request continues
 - **Mixed Actions**: If ANY finding has a `BLOCK` action, the entire request is blocked
 
-This provides granular control based on Lasso's risk assessment, allowing safe content to proceed while blocking genuinely dangerous requests.
+This provides granular control based on Lasso's risk assessment, allowing safe content to proceed while blocking dangerous requests.
 
 **Example behavior:**
 - Jailbreak attempt → `"action": "BLOCK"` → Request blocked

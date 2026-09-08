@@ -21,7 +21,7 @@ import os
 os.environ["GEMINI_API_KEY"] = "your-api-key"
 
 response = create_interaction(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a short joke about programming."
 )
 
@@ -39,7 +39,7 @@ os.environ["GEMINI_API_KEY"] = "your-api-key"
 
 async def main():
     response = await acreate_interaction(
-        model="gemini/gemini-2.5-flash",
+        model="gemini/{{gemini_flash}}",
         input="Tell me a short joke about programming."
     )
     print(response.outputs[-1].text)
@@ -56,7 +56,7 @@ import os
 os.environ["GEMINI_API_KEY"] = "your-api-key"
 
 response = create_interaction(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Write a 3 paragraph story about a robot.",
     stream=True
 )
@@ -75,7 +75,7 @@ Add this to your litellm proxy config.yaml:
 model_list:
   - model_name: gemini-flash
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -97,7 +97,7 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gemini/gemini-2.5-flash",
+    "model": "gemini/{{gemini_flash}}",
     "input": "Tell me a short joke about programming."
   }'
 ```
@@ -109,7 +109,7 @@ curl -N -X POST "http://localhost:4000/v1beta/interactions" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gemini/gemini-2.5-flash",
+    "model": "gemini/{{gemini_flash}}",
     "input": "Write a 3 paragraph story about a robot.",
     "stream": true
   }'
@@ -139,7 +139,7 @@ client = genai.Client(
 
 # Create an interaction
 interaction = client.interactions.create(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a short joke about programming."
 )
 
@@ -157,7 +157,7 @@ client = genai.Client(
 )
 
 for chunk in client.interactions.create_stream(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Write a story about space exploration.",
 ):
     print(chunk)
@@ -186,7 +186,7 @@ for chunk in client.interactions.create_stream(
 {
   "id": "interaction_abc123",
   "object": "interaction",
-  "model": "gemini-2.5-flash",
+  "model": "{{gemini_flash}}",
   "status": "completed",
   "created": "2025-01-15T10:30:00Z",
   "updated": "2025-01-15T10:30:05Z",
@@ -220,7 +220,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 
 # Non-streaming interaction
 response = litellm.interactions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     input="Tell me a short joke about programming."
 )
 
@@ -235,7 +235,7 @@ print(response.outputs[-1].text)
 model_list:
 - model_name: openai-model
   litellm_params:
-    model: gpt-4o
+    model: {{openai_large}}
     api_key: os.environ/OPENAI_API_KEY
 ```
 

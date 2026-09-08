@@ -55,14 +55,14 @@ from litellm import Router
 import asyncio
 
 model_list = [{
-    "model_name": "gpt-3.5-turbo",
+    "model_name": "{{openai_small}}",
     "litellm_params": {
         "model": "azure/chatgpt-v-2",
         "api_key": os.getenv("AZURE_API_KEY"),
         "api_version": os.getenv("AZURE_API_VERSION"),
         "api_base": os.getenv("AZURE_API_BASE"),
-        "timeout": 300 # sets a 5 minute timeout
-        "stream_timeout": 30 # sets a 30s timeout for streaming calls
+        "timeout": 300, # sets a 5 minute timeout
+        "stream_timeout": 30, # sets a 30s timeout for streaming calls
     }
 }]
 
@@ -70,7 +70,7 @@ model_list = [{
 router = Router(model_list=model_list, routing_strategy="least-busy")
 async def router_acompletion():
     response = await router.acompletion(
-        model="gpt-3.5-turbo", 
+        model="{{openai_small}}", 
         messages=[{"role": "user", "content": "Hey, how's it going?"}]
     )
     print(response)
@@ -84,7 +84,7 @@ asyncio.run(router_acompletion())
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-eu
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
@@ -92,7 +92,7 @@ model_list:
       timeout: 0.1                      # timeout in (seconds)
       stream_timeout: 0.01              # timeout for stream requests (seconds)
       max_retries: 5
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -124,7 +124,7 @@ Set `keepalive_seconds` under a deployment's `litellm_params` to keep the connec
 model_list:
   - model_name: claude-opus
     litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
       keepalive_seconds: 15
 ```
@@ -146,7 +146,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 model_list:
   - model_name: claude-opus
     litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
       keepalive_seconds: 15
       allow_client_keepalive_override: true
@@ -184,6 +184,29 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 The header goes through the same `allow_client_keepalive_override` gate as the body field, so it has no effect on a deployment that hasn't opted in either.
 
+#### A proxy-wide default
+
+`keepalive_seconds` is per deployment. To apply one interval across every deployment, and to every pass-through route, set `sse_keepalive_ping_interval_seconds` under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  sse_keepalive_ping_interval_seconds: 15
+```
+
+A deployment's own `keepalive_seconds` still wins where it is set, and a deployment-level `0` still hard-disables. The global value only applies where nothing more specific does.
+
+One nuance applies before the upstream has answered, since no deployment has served the request yet: a per-deployment value is only used when every deployment behind the requested model name carries the same one. Where they disagree, the global value applies until the serving deployment is known, after which its own setting takes over for the rest of the stream.
+
+#### Silence before the upstream answers at all
+
+Some providers withhold their response headers until the first token, so on those the model's whole thinking time passes before the proxy has anything to relay. `sse_keepalive_ping_interval_seconds` covers that window too: when the upstream call has not come back within one interval, the proxy opens the SSE response and starts sending `: ping` comments, then replays the real response onto the same connection once it arrives.
+
+Two things follow from opening the response that early, and both are why this stays off until you set an interval:
+
+- The status line is committed before the outcome is known, so a request that fails after the first ping arrives as an SSE error frame under a `200` rather than as an HTTP error status. Any error transformation your callbacks apply still applies to that frame
+- LiteLLM's `x-litellm-*` response headers are not known yet, so they are absent on a stream that pinged
+
+
 ### Setting Dynamic Timeouts - Per Request
 
 LiteLLM supports setting a `timeout` per request 
@@ -199,7 +222,7 @@ model_list = [{...}]
 router = Router(model_list=model_list)
 
 response = router.completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "what color is red"}],
     timeout=1
 )
@@ -215,7 +238,7 @@ response = router.completion(
 curl --location 'http://0.0.0.0:4000/chat/completions' \
      --header 'Content-Type: application/json' \
      --data-raw '{
-        "model": "gpt-3.5-turbo",
+        "model": "{{openai_small}}",
         "messages": [
             {"role": "user", "content": "what color is red"}
         ],
@@ -236,7 +259,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {"role": "user", "content": "what color is red"}
     ],
@@ -264,7 +287,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     -H 'Content-Type: application/json' \
     -H 'Authorization: Bearer sk-1234' \
     --data-raw '{
-        "model": "gemini/gemini-1.5-flash",
+        "model": "gemini/{{gemini_flash}}",
         "messages": [
         {"role": "user", "content": "hi my email is ishaan@berri.ai"}
         ],

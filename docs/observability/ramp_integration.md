@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Send AI usage and cost data to Ramp for automated spend tracking.
 
-[Ramp](https://ramp.com/) is a finance automation platform that helps businesses manage expenses, corporate cards, and vendor payments. With the Ramp callback integration, your LiteLLM AI usage — including token counts, model costs, and request metadata — is automatically sent to Ramp for real-time spend visibility.
+[Ramp](https://ramp.com/) is a finance automation platform that helps businesses manage expenses, corporate cards, and vendor payments. With the Ramp callback integration, your LiteLLM AI usage, including token counts, model costs, and request metadata, is automatically sent to Ramp for real-time spend visibility.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
@@ -22,7 +22,7 @@ join our [discord](https://discord.gg/wuPM9dRgDw)
 
 3. In the Connect LiteLLM drawer, click **Generate API Key** to create an API key.
 
-> **Important:** Copy the API key immediately — it won't be shown again. If you lose it, you can revoke the existing key and generate a new one from the integration settings.
+> **Important:** Copy the API key immediately, because it won't be shown again. If you lose it, you can revoke the existing key and generate a new one from the integration settings.
 
 ```shell
 pip install litellm
@@ -54,7 +54,7 @@ litellm.callbacks = ["ramp"]
 
 # OpenAI call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi - I'm testing Ramp integration"}
   ]
@@ -68,9 +68,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -93,7 +93,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",

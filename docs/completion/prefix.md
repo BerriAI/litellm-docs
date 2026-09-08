@@ -8,11 +8,11 @@ Supported by:
 - Mistral
 - Anthropic
 
-```python
+```json
 {
   "role": "assistant", 
   "content": "..", 
-  ...
+  ...,
   "prefix": true # 👈 KEY CHANGE
 }
 ```

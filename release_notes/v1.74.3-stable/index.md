@@ -111,7 +111,7 @@ This improves on the previous model hub by enabling:
     - filter by provider and feature (e.g. 'vision' models)
     - sort by cost (e.g. cheapest vision model from OpenAI)
 
-[Get started](../../docs/proxy/model_hub)
+[Get started](/docs/proxy/ai_hub)
 
 ---
 
@@ -172,7 +172,7 @@ This improves on the previous model hub by enabling:
 />
 
 #### Features
-- **[Cost Tracking](../../docs/mcp#-mcp-cost-tracking)**
+- **[Cost Tracking](/docs/mcp)**
     - Add Cost Tracking - [PR](https://github.com/BerriAI/litellm/pull/12385)
     - Add usage tracking - [PR](https://github.com/BerriAI/litellm/pull/12397)
     - Add custom cost configuration for each MCP tool - [PR](https://github.com/BerriAI/litellm/pull/12499)
@@ -182,7 +182,7 @@ This improves on the previous model hub by enabling:
     - Allow customizing what client side auth header to use - [PR](https://github.com/BerriAI/litellm/pull/12460)
     - Raises error when MCP server header is malformed in the request - [PR](https://github.com/BerriAI/litellm/pull/12494)
 - **[MCP Server](../../docs/mcp#adding-your-mcp)**
-    - Allow using stdio MCPs with LiteLLM (enables using Circle CI MCP w/ LiteLLM) - [PR](https://github.com/BerriAI/litellm/pull/12530), [Get Started](../../docs/mcp#adding-a-stdio-mcp-server)
+    - Allow using stdio MCPs with LiteLLM (enables using Circle CI MCP w/ LiteLLM) - [PR](https://github.com/BerriAI/litellm/pull/12530), [Get Started](/docs/mcp#add-stdio-mcp-server)
 
 #### Bugs
 - **General**

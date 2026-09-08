@@ -152,7 +152,7 @@ os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
 os.environ['BEDROCK_MANTLE_REGION'] = "us-east-2"
 
 response = litellm.responses(
-    model="bedrock_mantle/openai.gpt-5.5",
+    model="bedrock_mantle/openai.{{openai_large}}",
     input="Hello! How can you help me today?",
 )
 print(response)
@@ -167,7 +167,7 @@ import os
 os.environ['BEDROCK_MANTLE_API_KEY'] = "your-bedrock-api-key"
 
 response = litellm.responses(
-    model="bedrock_mantle/openai.gpt-5.5",
+    model="bedrock_mantle/openai.{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True,
 )
@@ -185,7 +185,7 @@ for event in response:
 model_list:
   - model_name: gpt-5.5-mantle
     litellm_params:
-      model: bedrock_mantle/openai.gpt-5.5
+      model: bedrock_mantle/openai.{{openai_large}}
       api_key: os.environ/BEDROCK_MANTLE_API_KEY
       api_base: https://bedrock-mantle.us-east-2.api.aws/v1
 ```
@@ -242,12 +242,12 @@ os.environ['BEDROCK_MANTLE_REGION'] = "us-east-1"  # or use AWS_REGION
 
 | Model | Endpoint | Context Window | Input (per 1M tokens) | Output (per 1M tokens) |
 |-------|----------|---------------|----------------------|------------------------|
-| `openai.gpt-5.5` | `/responses` | 272K | $5.50 | $33.00 |
-| `openai.gpt-5.4` | `/responses` | 272K | $2.75 | $16.50 |
+| `openai.gpt-5.5` | `/responses` | 1.05M | $5.50 | $33.00 |
+| `openai.gpt-5.4` | `/responses` | 1.05M | $2.75 | $16.50 |
 | `openai.gpt-oss-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
-| `openai.gpt-oss-20b` | `/chat/completions` | 131K | $0.075 | $0.30 |
+| `openai.gpt-oss-20b` | `/chat/completions` | 131K | $0.07 | $0.30 |
 | `openai.gpt-oss-safeguard-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
-| `openai.gpt-oss-safeguard-20b` | `/chat/completions` | 131K | $0.075 | $0.30 |
+| `openai.gpt-oss-safeguard-20b` | `/chat/completions` | 131K | $0.07 | $0.20 |
 
 ## Sample Usage
 
@@ -339,7 +339,7 @@ response = completion(
 model_list:
   - model_name: gpt-5.5-mantle
     litellm_params:
-      model: bedrock_mantle/openai.gpt-5.5
+      model: bedrock_mantle/openai.{{openai_large}}
       api_key: os.environ/BEDROCK_MANTLE_API_KEY
       api_base: "https://bedrock-mantle.us-east-2.api.aws/v1"
 

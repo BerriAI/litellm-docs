@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.96.0 — MCP Entitlements, Redis Config Sync & Auto-Router Context](/release_notes/v1.96.0/v1-96-0)
+### [v1.100.0: Access Group Budgets, Together AI Sync & Custom Router Tiers](/release_notes/v1.100.0/v1-100-0)
 
-_August 9, 2026_
+_September 6, 2026_
 
-An internal user's `object_permission` becomes a real MCP entitlement level that intersects the key, team, agent, and org scopes and is enforced at both `tools/list` and `tools/call`; a new `post_mcp_call` guardrail mode that finally lets a guardrail mask or reject the contents of an MCP tool result; config changes propagating to every pod through a coordination-Redis invalidation event instead of the 30s poll; OpenAI's GPT-5.6 price cut of 20% on terra and 80% on luna, mirrored onto Bedrock Mantle with new flex long-context rates; a complexity classifier that now sees prior and assistant turns and records its tier decision in spend logs; a generic `/management/v1` list contract with `GET /management/v1/budgets` on top of it; and operational hardening for large deployments covering DB statement and lock timeouts, `REPLICA IDENTITY FULL`, and an unreachable Redis that no longer blocks every request. Note that mock testing request params are now gated behind a config flag that is off by default.
+Model access groups can carry one shared budget enforced across every deployment in the group, tracked in a per-window spend table, settable from the dashboard, and with opt-in rollover of unused headroom; Together AI moves onto a dedicated config with `api.together.ai` as the default endpoint, `reasoning_effort` mapped per model class, cache-read pricing, and a daily sync that keeps the registry priced against the live serverless catalog; the complexity router's tier set becomes operator-defined end to end, with custom classifier tiers, a preview of the classifier prompt, heuristic-first chaining, a dry run on `/auto_router/test_routing`, and classifier cost counted in savings; the MCP gateway gains RFC 7662 `/introspect` for session tokens, RS256-signed session tokens, bulk import of Anthropic MCP connectors, and enforcement of toolsets attached to teams, organizations and users; Grounding with Bing Search arrives as a search provider alongside 242 new models, including `gemini-3.5-transcribe`, the xAI `grok-4.20` family, 24 Mistral entries, RunwayML `gen4.5` and the Seedance 2 family; and `GET /public/v1/model_hub` exposes a paginated public listing of the models the proxy serves. This stable also carries the Docker base image fix for glibc 2.44 that landed after the rc.1 cut.
 
 ---
 
@@ -22,6 +22,10 @@ An internal user's `object_permission` becomes a real MCP entitlement level that
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
 | [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
 | [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |

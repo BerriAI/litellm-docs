@@ -126,7 +126,7 @@ print(transcript.id)
 
 ## LLM Gateway
 
-Use AssemblyAI's [LLM Gateway](https://www.assemblyai.com/docs/llm-gateway) as an OpenAI-compatible provider — a unified API for Claude, GPT, and Gemini models with full LiteLLM logging, guardrails, and cost tracking support.
+Use AssemblyAI's [LLM Gateway](https://www.assemblyai.com/docs/llm-gateway) as an OpenAI-compatible provider: a unified API for Claude, GPT, and Gemini models with full LiteLLM logging, guardrails, and cost tracking support.
 
 [**See Available Models**](https://www.assemblyai.com/docs/llm-gateway#available-models)
 

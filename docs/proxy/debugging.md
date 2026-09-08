@@ -48,7 +48,7 @@ POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/chat/completions \
 -H 'content-type: application/json' -H 'Authorization: Bearer sk-qnWGUIW9****************************************' \
--d '{"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": "this is a test request, write a short poem"}]}'
+-d '{"model": "{{openai_small}}", "messages": [{"role": "user", "content": "this is a test request, write a short poem"}]}'
 ```
 
 ## Debug single request
@@ -69,7 +69,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 This will emit the raw request sent by LiteLLM to the API Provider and raw response received from the API Provider for **just** this request in the logs. 
 
 
-```bash showLineNumbers
+```bash showLineNumbers keep-model-ids
 INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
 20:14:06 - LiteLLM:WARNING: litellm_logging.py:938 - 
 
@@ -182,7 +182,7 @@ Expected Output:
 1. "No available deployments..."
 
 ```
-No deployments available for selected model, Try again in 60 seconds. Passed model=claude-3-5-sonnet. pre-call-checks=False, allowed_model_region=n/a.
+No deployments available for selected model, Try again in 60 seconds. Passed model={{anthropic}}. pre-call-checks=False, allowed_model_region=n/a.
 ```
 
 This can be caused due to all your models hitting rate limit errors, causing the cooldown to kick in. 

@@ -191,7 +191,7 @@ We've added zizmor to help us catch issues such as unpinned dependencies and cre
 
 **Q: Did you observe any lateral movement into your corporate environment during this incident?**
 
-A: No. Our investigation to date, conducted in coordination with external security experts, has found no evidence of lateral movement into our internal corporate systems. The incident was isolated to the CI/CD pipeline and the release path for specific versions (v1.82.7 and v1.82.8). As a proactive measure, we have rotated all potentially impacted or adjacent secrets—including PyPI, GitHub, and Docker credentials—and updated maintainer account security to ensure continued isolation.
+A: No. Our investigation to date, conducted in coordination with external security experts, has found no evidence of lateral movement into our internal corporate systems. The incident was isolated to the CI/CD pipeline and the release path for specific versions (v1.82.7 and v1.82.8). As a proactive measure, we have rotated all potentially impacted or adjacent secrets, including PyPI, GitHub, and Docker credentials, and updated maintainer account security to ensure continued isolation.
 
 **Q: Do you expect delays in future product releases due to these new security measures?**
 

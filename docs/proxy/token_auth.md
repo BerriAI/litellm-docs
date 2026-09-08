@@ -5,20 +5,11 @@ import TabItem from '@theme/TabItem';
 
 Use JWT's to auth admins / users / projects into the proxy.
 
-:::info
-
-✨ JWT-based Auth  is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature feature="JWT-based Auth" />
 
 :::tip JWT → Virtual Key Mapping
 
-Want per-user model restrictions, spend limits, and rate limits without distributing API keys? See **[JWT → Virtual Key Mapping](./jwt_key_mapping.md)** — enterprise-grade granular access control for JWT-authenticated users (e.g. Claude Code + SSO).
+Want per-user model restrictions, spend limits, and rate limits without distributing API keys? See **[JWT → Virtual Key Mapping](./jwt_key_mapping.md)** for granular access control for JWT-authenticated users (e.g. Claude Code + SSO).
 
 :::
 
@@ -74,9 +65,10 @@ curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 Create a JWT for your project on your OpenID provider (e.g. Keycloak).
 
 ```bash
+# client_id: 👈 project id
 curl --location ' 'https://demo.duendesoftware.com/connect/token'' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'client_id={CLIENT_ID}' \ # 👈 project id
+--data-urlencode 'client_id={CLIENT_ID}' \
 --data-urlencode 'client_secret={CLIENT_SECRET}' \
 --data-urlencode 'grant_type=client_credential' \
 ```
@@ -114,11 +106,127 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 Use this if you want LiteLLM to validate your JWT against multiple OIDC providers (e.g. Google Cloud, GitHub Auth)
 
-Set `JWT_PUBLIC_KEY_URL` in your environment to a comma-separated list of URLs for your OIDC providers.
+Set `JWT_PUBLIC_KEY_URL` in your environment to a comma-separated list of URLs for your OIDC providers. Each entry can be a JWKS URL or an OIDC discovery URL (`.../.well-known/openid-configuration`); LiteLLM fetches a discovery document and follows its `jwks_uri`
 
 ```bash
-export JWT_PUBLIC_KEY_URL="https://demo.duendesoftware.com/.well-known/openid-configuration/jwks,https://accounts.google.com/.well-known/openid-configuration/jwks"
+export JWT_PUBLIC_KEY_URL="https://demo.duendesoftware.com/.well-known/openid-configuration,https://accounts.google.com/.well-known/openid-configuration"
 ```
+
+This validates tokens from every listed provider against one shared set of claim mappings. If your providers disagree about what a given claim contains, use per-issuer claim mapping instead
+
+#### How a token is validated
+
+LiteLLM reads the `kid` from the unverified JWT header and walks the `JWT_PUBLIC_KEY_URL` list in order. For each URL it loads that provider's key set and looks for a key whose `kid` equals the token's. The first match wins and the search stops there; if no listed provider publishes that `kid`, the request is rejected with a 401 (`No matching public key found`). The `iss` claim plays no part in choosing the key set on this path, so `kid` alone decides which provider's key is tried
+
+A token without a `kid` header only matches a key set that contains exactly one key. Against a JWKS with several keys it is rejected, so a provider that rotates keys must put `kid` in the header
+
+Once a key is selected the signature is verified with it and `exp` (plus `nbf` and `iat` when present) is checked. The accepted algorithms are RS256/384/512, PS256/384/512, ES256/384/512 and EdDSA; HMAC-signed tokens (`HS*`) are always rejected. Key material is read from the JWK `kty`, `n`, `e`, `x`, `y` and `crv` members, so RSA, EC and OKP keys all work and `x5c` certificate chains are ignored
+
+`aud` and `iss` are only verified when you ask for it. `JWT_AUDIENCE` sets the expected audience (a token whose `aud` is a list passes if it contains that value) and `JWT_ISSUER` sets the expected `iss`. Both are single values shared by every URL in the list, so with several providers `JWT_ISSUER` can only admit one of them; a setup that needs `iss` verified for more than one provider must use [per-issuer configuration](#per-issuer-claim-mapping). Leaving both unset means any token signed by any listed provider is accepted no matter which application it was minted for, and the proxy logs a warning at first use to say so
+
+#### Caching and failure behavior
+
+Each key set (and each discovery document) is cached in the proxy's auth cache, Redis when configured and otherwise in-process memory, for `litellm_jwtauth.public_key_ttl` seconds (default 600). A `kid` miss does not trigger a refetch inside the TTL, so a token signed with a key the provider rotated in a moment ago is rejected until the cached copy expires
+
+When a fetch fails at the transport level (DNS, connect, TLS, timeout) LiteLLM tries it up to three times with a short backoff, then remembers the outage for 30 seconds so concurrent requests do not pile onto the dead endpoint. If a last-known-good copy of that key set exists and is younger than `public_key_ttl + public_key_stale_ttl` (default 600 + 3600 seconds) it is served and a warning is logged. Otherwise the request fails with a 503 (`the identity provider's JWKS endpoint is temporarily unreachable`) and the remaining URLs in the list are not tried, even if one of them holds the matching key. Set `public_key_stale_ttl: 0` to fail closed as soon as the cached copy expires. A non-200 response or an unparseable body is neither retried nor served stale; it fails the request with a 401 and also stops the walk through the list
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    public_key_ttl: 600
+    public_key_stale_ttl: 3600
+```
+
+#### Per-issuer claim mapping
+
+Use `litellm_jwtauth.issuers` when the same claim means different things depending on which provider minted the token. A common case: one provider puts the team ID in `sub` while another puts the user ID there, so a single global `team_id_jwt_field: "sub"` cannot serve both
+
+Each entry is matched against the token's `iss` claim and carries its own JWKS URL, audience, and claim mappings
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    admin_jwt_scope: "litellm_proxy_admin"
+    issuers:
+      - issuer: "https://accounts.google.com"
+        audience: "my-gcp-audience"
+        team_id_jwt_field: "sub"
+
+      - issuer: "https://keycloak.example.com/realms/my-realm"
+        jwks_url: "https://keycloak.example.com/realms/my-realm/protocol/openid-connect/certs"
+        audience: "my-keycloak-audience"
+        user_id_jwt_field: "sub"
+        user_email_jwt_field: "email"
+```
+
+With this config a token from `accounts.google.com` resolves `sub` to a team ID, while a token from Keycloak resolves the same `sub` to a user ID
+
+##### Per-issuer fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `issuer` | Yes | Exact expected `iss` claim value. Matching is an exact string comparison |
+| `audience` | Yes, unless `disable_audience_validation` is set | Expected `aud` for tokens from this issuer |
+| `disable_audience_validation` | Yes, unless `audience` is set | Skip audience validation for this issuer. Setting both this and `audience` is rejected |
+| `jwks_url` | No | This issuer's JWKS endpoint. Defaults to reading `<issuer>/.well-known/openid-configuration` and following its `jwks_uri` |
+| `team_id_jwt_field` | No | Claim path to read as the team ID |
+| `team_ids_jwt_field` | No | Claim path to read as a list of team IDs |
+| `user_id_jwt_field` | No | Claim path to read as the user ID |
+| `user_email_jwt_field` | No | Claim path to read as the user email |
+| `org_id_jwt_field` | No | Claim path to read as the organization ID |
+| `end_user_id_jwt_field` | No | Claim path to read as the end-user ID |
+
+Claim paths support dot notation for nested claims, for example `resource_access.my-client.team`
+
+##### Things to know
+
+Every issuer must set either `audience` or `disable_audience_validation: true`. LiteLLM rejects the config at startup otherwise, so tokens minted by another application that shares your provider's signing keys cannot authenticate against your proxy
+
+Claim mappings you leave out of an issuer entry fall back to the top-level `litellm_jwtauth` setting. If you keep a global `team_id_jwt_field: "sub"` and add an issuer that only maps `user_id_jwt_field: "sub"`, that issuer's tokens still get a team ID read from `sub`. Move all of your claim mappings into `issuers` to avoid this
+
+`issuers` is additive routing rather than an allow-list. A token whose `iss` matches no entry falls through to the global `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` path, so leave those unset if you want only your listed issuers accepted
+
+Matching is on `iss` only. The `kid` header still selects the signing key within the matched issuer's JWKS
+
+#### Recommended multi-provider setup
+
+For more than one provider, prefer `litellm_jwtauth.issuers` over the shared list even when the claim mappings are the same. An `issuers` entry scopes the key lookup to that issuer's own JWKS and verifies `iss` and `aud` per provider, which the shared list cannot do. Leave `JWT_PUBLIC_KEY_URL` unset so a token whose `iss` is not listed is rejected (401, `Missing JWT Public Key URL`) instead of falling through to an unscoped path. Key caching and the stale-copy fallback described above apply to each issuer's JWKS in the same way
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: "sub"
+    user_email_jwt_field: "email"
+    issuers:
+      - issuer: "https://keycloak.example.com/realms/my-realm"
+        audience: "litellm-proxy"
+
+      - issuer: "https://sts.example-cloud.com"
+        jwks_url: "https://sts.example-cloud.com/.well-known/jwks.json"
+        audience: "litellm-proxy"
+```
+
+#### Provider compatibility
+
+LiteLLM does not special-case any identity provider. Any issuer works if it signs tokens with one of the algorithms listed above, publishes its public keys as a JWKS (directly, or through an OIDC discovery document that carries a `jwks_uri`), sets a `kid` header that appears in that JWKS, and mints a stable `iss` value plus the audience you configure. The Keycloak and Kubernetes issuers shown on this page publish keys this way; for any other issuer, check those four points against a decoded sample token and the provider's JWKS before relying on it
+
+#### Troubleshooting
+
+Run the proxy with `--detailed_debug` to see the `JWT Auth:` log lines that explain each rejection
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| 401 `No matching public key found. keys=[...], kid=...` | No listed JWKS contains the token's `kid`, or the token has no `kid` and the JWKS has several keys | Confirm the `kid` from the token header appears in one of the JWKS documents. If the provider just rotated keys, wait out `public_key_ttl` or restart the proxy |
+| 401 `Validation fails: Signature verification failed` with several providers in `JWT_PUBLIC_KEY_URL` | Two providers publish the same `kid`; the shared list picks the first URL that has it and verifies against the wrong key | Use `litellm_jwtauth.issuers` so the lookup is scoped to the token's issuer |
+| 401 `Validation fails: Invalid issuer` | `iss` does not equal `JWT_ISSUER` (shared path) or the matched `issuers[].issuer` | Copy `iss` verbatim from a decoded token; trailing slashes and `http` vs `https` matter |
+| 401 `Validation fails: Audience doesn't match` or `Token is missing the "aud" claim` | `aud` does not contain `JWT_AUDIENCE` / `issuers[].audience`, or the token has no `aud` | Set the audience your provider actually mints (often the client ID), or set `disable_audience_validation: true` on that issuer if it cannot mint one |
+| 401 `Validation fails: The specified alg value is not allowed` | Token is HMAC-signed or uses an algorithm outside the list above | Configure the provider to sign with RS256 or another asymmetric algorithm |
+| 401 `OIDC discovery document at ... does not contain a 'jwks_uri' field` | The URL contains `.well-known/openid-configuration`, so it was treated as a discovery document, but it returned a JWKS | Point `JWT_PUBLIC_KEY_URL` at the discovery document itself, or at a JWKS URL whose path does not contain that segment |
+| 503 `the identity provider's JWKS endpoint is temporarily unreachable` | A JWKS or discovery URL could not be reached and no stale copy was available | Check egress from the proxy to the provider. Raise `public_key_stale_ttl` to ride out longer outages |
+| 401 `Missing JWT Public Key URL from environment` | `iss` matched no `issuers` entry and `JWT_PUBLIC_KEY_URL` is unset | Add the issuer to `issuers`, or set `JWT_PUBLIC_KEY_URL` if unlisted issuers should be accepted |
 
 ### Kubernetes ServiceAccount Authentication
 
@@ -184,7 +292,7 @@ general_settings:
   enable_jwt_auth: True
   litellm_jwtauth:  
     # Use namespace as team identifier (resolves via team_alias in DB)
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
 ```
 
 #### Step 3: Create ServiceAccount and Configure Pod
@@ -242,7 +350,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 -d '{
     "team_alias": "my-app",
     "team_id": "my-app",
-    "models": ["gpt-4", "claude-sonnet-4-20250514"]
+    "models": ["{{openai_large}}", "{{anthropic}}"]
 }'
 ```
 
@@ -256,7 +364,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_TOKEN" \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello!"}]
 }'
 ```
@@ -297,7 +405,7 @@ general_settings:
   litellm_jwtauth:
     user_id_jwt_field: "sub"
     # Map the namespace to team_alias in the database
-    team_alias_jwt_field: "kubernetes\.io.namespace"
+    team_alias_jwt_field: 'kubernetes\.io.namespace'
     user_id_upsert: true
 ```
 
@@ -502,7 +610,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer <your-jwt-token>' \
 -H 'x-litellm-team-id: team_id_2' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```
@@ -515,7 +623,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### Fall back to DB team when JWT claims don't resolve
 
-By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error — the claim is treated as authoritative.
+By default, when `team_id_jwt_field` or `team_ids_jwt_field` is configured and the JWT carries a claim value that does **not** map to any LiteLLM team, LiteLLM raises an error: the claim is treated as authoritative.
 
 For deployments where the IdP team claim is **advisory** (e.g. machine tokens whose `groups` claim lives in a separate namespace from LiteLLM `team_id`s), opt in to a fallback: if the configured claim is present but unresolved, LiteLLM defers to the user's single LiteLLM team (when the user belongs to exactly one team in the DB).
 
@@ -628,7 +736,7 @@ general_settings:
   master_key: sk-1234
   enable_jwt_auth: True
   litellm_jwtauth:
-    ...
+    # ...
     team_id_jwt_field: "litellm-team" # 👈 Set field in the JWT token that stores the team ID
     team_allowed_routes: ["/v1/chat/completions"] # 👈 Set accepted routes
 ```
@@ -638,6 +746,8 @@ general_settings:
 To enable team JWT tokens to access Anthropic-style endpoints such as `/v1/messages`, update `team_allowed_routes` in your `litellm_jwtauth` configuration. `team_allowed_routes` supports the following values:
 
 - Named route groups from `LiteLLMRoutes` (e.g., `openai_routes`, `anthropic_routes`, `info_routes`, `mapped_pass_through_routes`).
+- Exact routes, e.g. `/v1/messages`.
+- Route prefixes ending in `*`, e.g. `/internal-models/*`, which match every route under that prefix.
 
 Below is a quick reference for the route groups you can use and example representative routes from each group. If you need the exhaustive list, see the `LiteLLMRoutes` enum in `litellm/proxy/_types.py` for the authoritative list.
 
@@ -683,6 +793,18 @@ general_settings:
     team_ids_jwt_field: "team_ids"
     team_allowed_routes: ["/v1/messages", "info_routes"]
 ```
+
+If you register pass-through endpoints that all share a prefix, grant the prefix once with a trailing `*` so routes added later are covered without another config change. `admin_allowed_routes` accepts the same patterns.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes", "info_routes", "/internal-models/*"]
+```
+
+Only a trailing `*` is treated as a wildcard, and it matches routes below the prefix, so `/internal-models/*` covers `/internal-models/anthropic/v1/messages` but not the bare `/internal-models` route.
 
 
 ### Caching Public Keys 
@@ -847,7 +969,7 @@ general_settings:
 - A rule matches when **all** configured selectors match the corresponding token claims (AND semantics).
 - Supported selectors: `iss` (required), `client_id` (optional), `scope` (optional), `aud` (optional).
 - Selector values can be a single string or a list of strings (the claim must match at least one entry, using the rules below).
-- **Wildcards:** selectors may use shell-style `*` and `?`. Matching is **case-sensitive**—use the same casing your IdP emits in JWT claims.
+- **Wildcards:** selectors may use shell-style `*` and `?`. Matching is **case-sensitive**, so use the same casing your IdP emits in JWT claims.
 - **`scope` claim as a space-delimited string:** OAuth/OIDC often sends `scope` as one string (e.g. `openid profile App:LiteLLM`). LiteLLM splits that string **only when matching the `scope` selector**, so a configured value like `App:LiteLLM` can match. **`iss`, `aud`, and `client_id` are never split on spaces**; the full claim string is used (routing uses unverified claims only for path selection; final auth still validates the token).
 - If no rule matches, LiteLLM continues with standard JWT validation.
 
@@ -918,7 +1040,7 @@ environment_variables:
 
 - `team_ids_jwt_field`: Field containing team IDs (as a list). **Supports dot notation** (e.g., `"groups"`, `"teams.ids"`).
 - `user_email_jwt_field`: Field containing user email. **Supports dot notation** (e.g., `"email"`, `"user.email"`).
-- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`).
+- `end_user_id_jwt_field`: Field containing end-user ID for cost tracking. **Supports dot notation** (e.g., `"customer_id"`, `"customer.id"`). When set, the end-user ID from the verified JWT claim takes precedence over any request-supplied value (headers like `x-litellm-end-user-id` or body fields like `metadata.user_id`; see the [customer ID priority order](customers#1-make-llm-api-call-w-customer-id)).
 
 - `role_mappings`: A list of role mappings. Map the received role in the JWT token to an internal role on LiteLLM.
 
@@ -957,11 +1079,11 @@ Control which models a JWT can access. Set `enforce_scope_based_access: true` to
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: gpt-3.5-turbo-testing
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1137,7 +1259,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <JWT_WITH_ADMIN_ROLE>' \
 -d '{
-  "model": "claude-sonnet-4-20250514",
+  "model": "{{anthropic}}",
   "messages": [{"role": "user", "content": "Hello"}]
 }'
 ```
@@ -1153,7 +1275,7 @@ curl -X GET 'http://0.0.0.0:4000/user/info?user_id=user-123' \
 
 Map JWT identities to LiteLLM virtual keys so that JWT-authenticated users get per-user budgets, rate limits, model access controls, and spend tracking.
 
-When a JWT comes in, LiteLLM looks up a configured claim (e.g. `email`, `sub`) in a mapping table. If a mapping exists, the request is treated as if it arrived with the corresponding virtual key — all virtual key features apply.
+When a JWT comes in, LiteLLM looks up a configured claim (e.g. `email`, `sub`) in a mapping table. If a mapping exists, the request is treated as if it arrived with the corresponding virtual key, and all virtual key features apply.
 
 ### Setup
 
@@ -1171,7 +1293,7 @@ general_settings:
 
 All endpoints require admin auth (`Authorization: Bearer <master_key>`).
 
-**Create a mapping** — link a JWT claim value to an existing virtual key:
+**Create a mapping.** Link a JWT claim value to an existing virtual key:
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/new \
@@ -1226,7 +1348,7 @@ curl -X POST http://localhost:4000/jwt/key/mapping/delete \
 2. LiteLLM validates the JWT signature
 3. Extracts the configured claim (e.g. `email` → `user@example.com`)
 4. Looks up the claim value in the `LiteLLM_JWTKeyMapping` table
-5. If a mapping exists, the request proceeds as if the mapped virtual key was used — budgets, rate limits, model access, and spend tracking all apply
+5. If a mapping exists, the request proceeds as if the mapped virtual key was used, so budgets, rate limits, model access, and spend tracking all apply
 6. If no mapping exists, falls back to standard JWT auth (team-level controls)
 
 ### Error Codes

@@ -49,9 +49,9 @@ response = search(
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-5
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:
@@ -143,4 +143,4 @@ response = search(
 
 ## Response Notes
 
-APISerpent's full-format response nests results under `results.organic`. The LiteLLM adapter maps each organic result's `title`, `url`, and `snippet` into the unified [`SearchResponse`](./index#response-format) shape.
+APISerpent's full-format response nests results under `results.organic`. The LiteLLM adapter maps each organic result's `title`, `url`, and `snippet` into the unified [`SearchResponse`](/docs/search#response-format) shape.

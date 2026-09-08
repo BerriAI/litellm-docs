@@ -6,7 +6,7 @@ Anthropic, OpenAI, Qwen, xAI, Gemini and most of Open soured LLMs are Supported 
 
 | Property | Details |
 |-------|-------|
-| Description | Clarifai is a powerful AI platform that provides access to a wide range of LLMs through a unified API. LiteLLM enables seamless integration with Clarifai's models using an OpenAI-compatible interface. |
+| Description | Clarifai is an AI platform that provides access to a wide range of LLMs through a unified API. LiteLLM calls Clarifai's models using an OpenAI-compatible interface. |
 | Provider Doc | [Clarifai ↗](https://docs.clarifai.com/) |
 |OpenAI compatible Endpoint for Provider | `https://api.clarifai.com/v2/ext/openai/v1` |
 | Supported Endpoints | `/chat/completions` |
@@ -79,7 +79,6 @@ tools = [{
             "additionalProperties": False
         },
     }
-  }
 }]
 
 response = litellm.completion(

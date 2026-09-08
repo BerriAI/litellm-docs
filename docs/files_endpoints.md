@@ -35,13 +35,13 @@ model_list:
   # litellm OpenAI Account
   - model_name: "gpt-4o-litellm"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_LITELLM_API_KEY
   
   # Free OpenAI Account
   - model_name: "gpt-4o-free"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_FREE_API_KEY
 ```
 
@@ -135,7 +135,7 @@ client.files.retrieve(file_id, extra_headers={"custom-llm-provider": "openai"})
 model_list:
   - model_name: "gpt-4o-account1"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_KEY
 ```
 
@@ -252,7 +252,7 @@ print("content=", content)
 
 **Upload a File**
 ```python
-from litellm
+import litellm
 import os 
 
 os.environ["OPENAI_API_KEY"] = "sk-.."
@@ -322,14 +322,14 @@ print("file content=", content.text)
 
 ### [Azure OpenAI](./providers/azure#azure-batches-api)
 
-### [Vertex AI](./providers/vertex#batch-apis)
+### [Vertex AI](/docs/providers/vertex_batch)
 
 ### [Bedrock](./providers/bedrock_batches#4-retrieve-batch-results)
 
 ### [Anthropic](./providers/anthropic#files-api)
 
 :::note
-Anthropic Files API has a different purpose than OpenAI's. It's **not** for Batches or Fine-tuning—it's for uploading files once and referencing them by `file_id` in multiple messages, avoiding re-uploads. File API operations are free — file content used in Messages requests is priced as input tokens.
+Anthropic Files API has a different purpose than OpenAI's. Rather than serving Batches or Fine-tuning, it lets you upload a file once and reference it by `file_id` in multiple messages, avoiding re-uploads. File API operations are free; file content used in Messages requests is priced as input tokens.
 :::
 
 ## [Swagger API Reference](https://litellm-api.up.railway.app/#/files)

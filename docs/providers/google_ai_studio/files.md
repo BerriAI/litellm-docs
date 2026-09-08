@@ -50,7 +50,7 @@ assert file is not None
 
 ### GENERATE CONTENT ### 
 completion = completion(
-    model="gemini-2.0-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user",
@@ -82,9 +82,9 @@ print(completion.choices[0].message)
 
 ```yaml
 model_list:
-    - model_name: "gemini-2.0-flash"
+    - model_name: "{{gemini_flash}}"
       litellm_params:
-        model: gemini/gemini-2.0-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -117,7 +117,7 @@ encoded_string = base64.b64encode(wav_data).decode('utf-8')
 file = client.files.create(
     file=wav_data,
     purpose="user_data",
-    extra_body={"target_model_names": "gemini-2.0-flash"}
+    extra_body={"target_model_names": "{{gemini_flash}}"}
 )
 
 print(f"file: {file}")
@@ -125,7 +125,7 @@ print(f"file: {file}")
 assert file is not None
 
 completion = client.chat.completions.create(
-    model="gemini-2.0-flash",
+    model="{{gemini_flash}}",
     modalities=["text", "audio"],
     audio={"voice": "alloy", "format": "wav"},
     messages=[
@@ -200,9 +200,9 @@ Azure Blob Storage supports all Gemini-compatible file types:
 
 ```yaml
 model_list:
-    - model_name: "gemini-2.5-flash"
+    - model_name: "{{gemini_flash}}"
       litellm_params:
-        model: gemini/gemini-2.5-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -236,7 +236,7 @@ file = client.files.create(
     file=open("document.pdf", "rb"),
     purpose="user_data",
     extra_body={
-        "target_model_names": "gemini-2.0-flash",
+        "target_model_names": "{{gemini_flash}}",
         "target_storage": "azure_storage"  # 👈 Use Azure Blob Storage
     }
 )
@@ -245,7 +245,7 @@ print(f"File uploaded to Azure Blob Storage: {file.id}")
 
 # Use the file with Gemini
 completion = client.chat.completions.create(
-    model="gemini-2.0-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "user",
@@ -275,7 +275,7 @@ curl -X POST "http://0.0.0.0:4000/v1/files" \
   -F "file=@document.pdf" \
   -F "purpose=user_data" \
   -F "target_storage=azure_storage" \
-  -F "target_model_names=gemini-2.0-flash" \
+  -F "target_model_names={{gemini_flash}}" \
   -F "custom_llm_provider=gemini"
 
 # Use the file with Gemini
@@ -283,7 +283,7 @@ curl -X POST "http://0.0.0.0:4000/v1/chat/completions" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gemini-2.0-flash",
+    "model": "{{gemini_flash}}",
     "messages": [
       {
         "role": "user",

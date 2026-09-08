@@ -137,7 +137,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-5-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user","content": "What is the weather like in Tokyo today?"}],
     "tools": [
       {
@@ -176,7 +176,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-master-key-here" \
   -d '{
-    "model": "gpt-5-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user","content": "What is the weather like in Tokyo today?"}],
     "tools": [
       {
@@ -196,7 +196,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 {
 	"id": "chatcmpl-xxxxxxxxxxxxxxx",
 	"created": 1757716050,
-	"model": "gpt-5-mini-2025-08-07",
+	"model": "{{openai_small}}",
 	"object": "chat.completion",
 	"choices": [
 		{
@@ -214,8 +214,8 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 		"prompt_tokens": 112,
 		"total_tokens": 735,
 		"completion_tokens_details": {
-			"reasoning_tokens": 384,
-		},
+			"reasoning_tokens": 384
+		}
 	},
 	"service_tier": "default"
 }
@@ -246,4 +246,4 @@ guardrails:
       on_disallowed_action: "block"
 ```
 
-In this example the LLM can still call `send_email`, but the guardrail blocks the invocation (or rewrites it, depending on `on_disallowed_action`) if it tries to email anyone outside `@berri.ai` or produce a subject that fails the regex. Use this pattern for any tool where argument values matter—mail senders, escalation workflows, ticket creation, etc.
+In this example the LLM can still call `send_email`, but the guardrail blocks the invocation (or rewrites it, depending on `on_disallowed_action`) if it tries to email anyone outside `@berri.ai` or produce a subject that fails the regex. Use this pattern for any tool where argument values matter: mail senders, escalation workflows, ticket creation, etc.

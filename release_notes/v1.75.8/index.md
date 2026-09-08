@@ -63,7 +63,7 @@ pip install litellm==1.75.8
 </p>
 
 
-This release adds support for setting rate limits on individual members (including machine users) within a team. Teams can now give each agent its own rate limits—so that heavy-traffic agents don’t impact other agents or human users. 
+This release adds support for setting rate limits on individual members (including machine users) within a team. Teams can now give each agent its own rate limits, so that heavy-traffic agents don’t impact other agents or human users. 
 
 Agents can authenticate with LiteLLM using JWT and the same team role as human users, while still enforcing per-agent rate limits.
 
@@ -85,8 +85,8 @@ Agents can authenticate with LiteLLM using JWT and the same team role as human u
 - **[OpenAI](../../docs/providers/openai)**
     - Added `reasoning_effort` parameter support for GPT-5 model family - [PR #13475](https://github.com/BerriAI/litellm/pull/13475), [Get Started](../../docs/providers/openai#openai-chat-completion-models)
     - Support for `reasoning` parameter in Responses API - [PR #13475](https://github.com/BerriAI/litellm/pull/13475), [Get Started](../../docs/response_api)
-- **[Azure OpenAI](../../docs/providers/azure/azure)**
-    - GPT-5 support with max_tokens and `reasoning` parameter - [PR #13510](https://github.com/BerriAI/litellm/pull/13510), [Get Started](../../docs/providers/azure/azure#gpt-5-models)
+- **[Azure OpenAI](/docs/providers/azure)**
+    - GPT-5 support with max_tokens and `reasoning` parameter - [PR #13510](https://github.com/BerriAI/litellm/pull/13510), [Get Started](/docs/providers/azure#gpt-5-models)
 - **[AWS Bedrock](../../docs/providers/bedrock)**
     - Streaming support for bedrock gpt-oss model family - [PR #13346](https://github.com/BerriAI/litellm/pull/13346), [Get Started](../../docs/providers/bedrock#openai-gpt-oss)
     - `/messages` endpoint compatibility with `bedrock/converse/<model>` - [PR #13627](https://github.com/BerriAI/litellm/pull/13627)
@@ -94,7 +94,7 @@ Agents can authenticate with LiteLLM using JWT and the same team role as human u
 - **[Azure AI](../../docs/providers/azure)**
     - New Azure AI Flux Image Generation provider - [PR #13592](https://github.com/BerriAI/litellm/pull/13592), [Get Started](../../docs/providers/azure_ai_img)
     - Fixed Content-Type header for image generation - [PR #13584](https://github.com/BerriAI/litellm/pull/13584)
-- **[CometAPI](../../docs/providers/comet)**
+- **[CometAPI](/docs/providers/cometapi)**
     - New provider support with chat completions and streaming - [PR #13458](https://github.com/BerriAI/litellm/pull/13458)
 - **[SambaNova](../../docs/providers/sambanova)**
     - Added embedding model support - [PR #13308](https://github.com/BerriAI/litellm/pull/13308), [Get Started](../../docs/providers/sambanova#sambanova---embeddings)
@@ -110,7 +110,7 @@ Agents can authenticate with LiteLLM using JWT and the same team role as human u
     - Fixed streaming issues - [PR #13437](https://github.com/BerriAI/litellm/pull/13437)
 - **[Ollama](../../docs/providers/ollama)**
     - Fixed GPT-OSS streaming with 'thinking' field - [PR #13375](https://github.com/BerriAI/litellm/pull/13375)
-- **[VolcEngine](../../docs/providers/volcengine)**
+- **[VolcEngine](/docs/providers/volcano)**
     - Fixed thinking disabled parameter handling - [PR #13598](https://github.com/BerriAI/litellm/pull/13598)
 - **[Streaming](../../docs/completion/stream)**
     - Consistent 'finish_reason' chunk indexing - [PR #13560](https://github.com/BerriAI/litellm/pull/13560)
@@ -120,7 +120,7 @@ Agents can authenticate with LiteLLM using JWT and the same team role as human u
 
 #### Features
 
-- **[/messages](../../docs/anthropic/messages)**
+- **[/messages](/docs/anthropic_unified)**
     - Tool use arguments properly returned for non-anthropic models - [PR #13638](https://github.com/BerriAI/litellm/pull/13638)
 
 #### Bugs

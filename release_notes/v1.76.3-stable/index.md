@@ -139,7 +139,7 @@ This release includes significant performance optimizations. On our internal ben
 
 #### New Provider Support
 
-- **[Volcengine](../../docs/providers/volcengine)**
+- **[Volcengine](/docs/providers/volcano)**
     - Added Volcengine embedding module with handler and transformation logic - [PR #14028](https://github.com/BerriAI/litellm/pull/14028)
 
 ---
@@ -213,9 +213,9 @@ This release includes significant performance optimizations. On our internal ben
 
 - **[Datadog](../../docs/proxy/logging#datadog)**
     - Ensure `apm_id` is set on DD LLM Observability traces - [PR #14272](https://github.com/BerriAI/litellm/pull/14272)
-- **[Braintrust](../../docs/proxy/logging#braintrust)**
+- **[Braintrust](/docs/observability/braintrust)**
     - Fix logging when OTEL is enabled - [PR #14122](https://github.com/BerriAI/litellm/pull/14122)
-- **[OTEL](../../docs/proxy/logging#otel)**
+- **[OTEL](/docs/observability/opentelemetry_v2)**
     - Optional Metrics and Logs following semantic conventions - [PR #14179](https://github.com/BerriAI/litellm/pull/14179)
 - **[Slack Alerting](../../docs/proxy/alerting)**
     - Added alert type to alert message to slack for easier handling - [PR #14176](https://github.com/BerriAI/litellm/pull/14176)

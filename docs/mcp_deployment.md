@@ -17,7 +17,7 @@ LiteLLM is a single control plane for three resource types:
 | **MCP Server** | `mcp_servers` in config or via UI |
 | **Agent** | A2A routes |
 
-All three share the same auth (LiteLLM API key), rate limiting, and usage dashboard — a central catalog without separate registries.
+All three share the same auth (LiteLLM API key), rate limiting, and usage dashboard, giving you a central catalog without separate registries.
 
 ---
 
@@ -56,9 +56,9 @@ general_settings:
     - "100.64.0.0/10"   # VPN/Tailscale range
 
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:
@@ -109,7 +109,7 @@ LiteLLM exposes all resource types through standard endpoints:
 | `GET /mcp` | All MCP tools (across all servers) |
 | `GET /.well-known/agent.json` | A2A agent card |
 
-**MCP registry** (opt-in) — expose a discovery endpoint for Claude Desktop / Cursor:
+**MCP registry** (opt-in): expose a discovery endpoint for Claude Desktop / Cursor:
 
 ```yaml title="config.yaml"
 general_settings:
@@ -136,7 +136,7 @@ general_settings:
 If you expose LiteLLM's port to the internet (for Claude Desktop / ChatGPT), `/v1/chat/completions` is also reachable externally. LLM credentials stay protected by key auth, but be deliberate about this.
 
 **Mitigations:**
-1. **Separate deployments** (Option B) — the LLM gateway never gets a public port
+1. **Separate deployments** (Option B): the LLM gateway never gets a public port
 2. **Firewall** — block `/v1/chat/completions` from public IPs at the network layer
 3. **Short-lived scoped keys** — limit blast radius if a key leaks
 

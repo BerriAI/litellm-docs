@@ -48,9 +48,9 @@ Add the CloudZero callback to your LiteLLM configuration YAML file:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -179,16 +179,16 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 ```json
 {
   "time/usage_start": "2024-01-15T14:00:00Z",
-  "cost/cost": 0.002,
+  "cost/cost": 0.0008,
   "usage/amount": 150,
   "usage/units": "tokens",
-  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-4o",
+  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-5.6-terra",
   "resource/service": "litellm",
   "resource/account": "team-123",
   "resource/region": "cross-region",
   "resource/usage_family": "llm-usage",
   "resource/tag:provider": "openai",
-  "resource/tag:model": "gpt-4o",
+  "resource/tag:model": "{{openai_large}}",
   "resource/tag:prompt_tokens": "100",
   "resource/tag:completion_tokens": "50"
 }
@@ -196,10 +196,10 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 
 ### Resource Tagging
 
-LiteLLM automatically creates comprehensive resource tags for cost attribution:
+LiteLLM automatically creates resource tags for cost attribution:
 
 - **Provider Tags**: `openai`, `anthropic`, `azure`, etc.
-- **Model Tags**: Specific model names like `gpt-4o`, `claude-3-sonnet`
+- **Model Tags**: Specific model names like `{{openai_large}}`, `{{anthropic}}`
 - **Team/User Tags**: Team IDs and user IDs for cost allocation
 - **Token Breakdown**: Separate tracking of prompt and completion tokens
 - **Usage Metrics**: Total tokens consumed per request

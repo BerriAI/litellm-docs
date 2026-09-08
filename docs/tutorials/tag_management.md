@@ -30,7 +30,7 @@ Now we will test the tag based routing rules.
 
 ### 2.1 Invalid model
 
-This request will fail since we send `tags=private-data` but the model `gpt-4o` is not in the allowed models for the `private-data` tag.
+This request will fail since we send `tags=private-data` but the model `{{openai_large}}` is not in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_invalid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -49,7 +49,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "Hello, how are you?"}
     ],
@@ -67,7 +67,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -85,7 +85,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### 2.2 Valid model
 
-This request will succeed since we send `tags=private-data` and the model `us.anthropic.claude-3-7-sonnet-20250219-v1:0` is in the allowed models for the `private-data` tag.
+This request will succeed since we send `tags=private-data` and the model `us.anthropic.{{anthropic}}` is in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_valid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -103,7 +103,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model="us.anthropic.{{anthropic}}",
     messages=[
         {"role": "user", "content": "Hello, how are you?"}
     ],
@@ -121,7 +121,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+  "model": "us.anthropic.{{anthropic}}",
   "messages": [
     {
       "role": "user",
@@ -140,6 +140,6 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ## Additional Tag Features
 - [Sending tags in request headers](https://docs.litellm.ai/docs/proxy/tag_routing#calling-via-request-header)
 - [Tag based routing](https://docs.litellm.ai/docs/proxy/tag_routing)
-- [Track spend per tag](cost_tracking#-custom-tags)
-- [Setup Budgets per Virtual Key, Team](users)
+- [Track spend per tag](/docs/proxy/cost_tracking#custom-tags)
+- [Setup Budgets per Virtual Key, Team](/docs/proxy/users)
 

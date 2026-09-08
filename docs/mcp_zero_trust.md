@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 ![Zero Trust MCP Gateway](/img/mcp_zero_trust_gateway.png)
 
-MCP servers have no built-in way to verify that a request actually came through LiteLLM. Without this guardrail, any client that can reach your MCP server directly can call tools — bypassing your access controls entirely.
+MCP servers have no built-in way to verify that a request actually came through LiteLLM. Without this guardrail, any client that can reach your MCP server directly can call tools, bypassing your access controls entirely.
 
 `MCPJWTSigner` fixes this. It signs every outbound tool call with a short-lived RS256 JWT. Your MCP server verifies the signature against LiteLLM's public key. Requests that didn't go through LiteLLM have no valid signature and are rejected.
 
@@ -13,7 +13,7 @@ MCP servers have no built-in way to verify that a request actually came through 
 
 ## Basic setup
 
-Add the guardrail to your config and point your MCP server at LiteLLM's JWKS endpoint. Every tool call gets a signed JWT automatically — no changes needed on the client side.
+Add the guardrail to your config and point your MCP server at LiteLLM's JWKS endpoint. Every tool call gets a signed JWT automatically, with no changes needed on the client side.
 
 ```yaml title="config.yaml"
 mcp_servers:
@@ -32,7 +32,7 @@ guardrails:
       ttl_seconds: 300                           # default: 300
 ```
 
-**Bring your own signing key** — recommended for production. Auto-generated keys are lost on restart.
+**Bring your own signing key.** This is recommended for production, since auto-generated keys are lost on restart.
 
 ```bash
 export MCP_JWT_SIGNING_KEY="-----BEGIN RSA PRIVATE KEY-----\n..."
@@ -79,7 +79,7 @@ GET /.well-known/jwks.json             →  { "keys": [{ "kty": "RSA", "alg": "R
 
 ## Thread IdP identity into MCP JWTs
 
-By default the outbound JWT `sub` is LiteLLM's internal `user_id`. If your users authenticate with Okta, Azure AD, or another IdP, the MCP server sees a LiteLLM-internal ID — not the user's email or employee ID.
+By default the outbound JWT `sub` is LiteLLM's internal `user_id`. If your users authenticate with Okta, Azure AD, or another IdP, the MCP server sees a LiteLLM-internal ID rather than the user's email or employee ID.
 
 With verify+re-sign, LiteLLM validates the incoming IdP token first, then builds the outbound JWT using the real identity claims from that token. The MCP server gets the user's actual identity without ever having to trust the original IdP directly.
 
@@ -104,7 +104,7 @@ guardrails:
         - "litellm:user_id" # last resort: LiteLLM's internal user_id
 ```
 
-If the incoming token is **opaque** (not a JWT — some IdPs issue these), add an introspection endpoint. LiteLLM will POST the token to it (RFC 7662) and use the returned claims:
+If the incoming token is **opaque** rather than a JWT (some IdPs issue these), add an introspection endpoint. LiteLLM will POST the token to it (RFC 7662) and use the returned claims:
 
 ```yaml
       token_introspection_endpoint: "https://idp.example.com/oauth2/introspect"
@@ -124,7 +124,7 @@ If the incoming token is **opaque** (not a JWT — some IdPs issue these), add a
 
 ## Block callers missing required attributes
 
-Some MCP servers expose sensitive operations that should only be reachable by verified employees — not service accounts, not external API keys. You can enforce this at the LiteLLM layer so the MCP server never receives the request at all.
+Some MCP servers expose sensitive operations that should only be reachable by verified employees, not service accounts and not external API keys. You can enforce this at the LiteLLM layer so the MCP server never receives the request at all.
 
 `required_claims` rejects with `403` if the incoming token is missing any listed claim. `optional_claims` forwards claims that are useful but not mandatory.
 
@@ -150,7 +150,7 @@ guardrails:
 ```
 
 **What the client sees when blocked:**
-```json
+```text
 HTTP 403
 { "error": "MCPJWTSigner: incoming token is missing required claims: ['employee_id']. Configure the IdP to include these claims." }
 ```
@@ -159,7 +159,7 @@ HTTP 403
 
 ## Add custom metadata to every JWT
 
-Your MCP server may need context that LiteLLM doesn't carry natively — which deployment sent the request, a tenant ID, an environment tag. Use claim operations to inject, override, or strip claims from the outbound JWT.
+Your MCP server may need context that LiteLLM doesn't carry natively: which deployment sent the request, a tenant ID, an environment tag. Use claim operations to inject, override, or strip claims from the outbound JWT.
 
 ```yaml title="config.yaml"
 guardrails:
@@ -183,13 +183,13 @@ guardrails:
         - "nbf"   # some validators reject nbf; remove it if yours does
 ```
 
-Operations run in order — `add_claims` → `set_claims` → `remove_claims`. `set_claims` always wins over `add_claims`; `remove_claims` beats both.
+Operations run in order: `add_claims` → `set_claims` → `remove_claims`. `set_claims` always wins over `add_claims`; `remove_claims` beats both.
 
 ---
 
 ## AWS Bedrock AgentCore Gateway
 
-Bedrock AgentCore Gateway uses two separate JWTs: one to authenticate the transport connection and another to authorize tool calls. They need different `aud` values and TTLs — a single JWT won't work for both.
+Bedrock AgentCore Gateway uses two separate JWTs: one to authenticate the transport connection and another to authorize tool calls. They need different `aud` values and TTLs, so a single JWT won't work for both.
 
 LiteLLM can issue both in one hook and inject them into separate headers:
 
@@ -262,7 +262,7 @@ Response header:
 x-litellm-mcp-debug: v=1; kid=a3f1b2c4d5e6f708; sub=alice@corp.com; iss=https://my-litellm.example.com; exp=1712345678; scope=mcp:tools/call mcp:tools/get_weather:call
 ```
 
-Check that `kid` matches what the MCP server fetched from JWKS, `iss`/`aud` match your server's expected values, and `exp` hasn't passed. Disable in production — the header leaks claim metadata.
+Check that `kid` matches what the MCP server fetched from JWKS, `iss`/`aud` match your server's expected values, and `exp` hasn't passed. Disable in production, since the header leaks claim metadata.
 
 ---
 

@@ -175,7 +175,7 @@ async def process_input_messages(
     return data
 ```
 
-`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model` — populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
+`GenericGuardrailAPIInputs` also carries `images`, `tools`, `tool_calls`, `structured_messages` and `model`. Populate whichever keys your endpoint format has, and map back whichever ones the guardrail returns.
 
 Send everything in one call rather than one call per message. The guardrail provider gets to see the whole conversation, and you pay one round trip instead of many.
 
@@ -285,7 +285,7 @@ def _has_text_content(self, response: Any) -> bool:
 
 Create `__init__.py` to register the handler with call types:
 
-```python
+```python nolint
 """My Endpoint handler for Unified Guardrails."""
 
 from litellm.llms.{provider}/{endpoint}/guardrail_translation.handler import (
@@ -346,7 +346,7 @@ curl -X POST 'http://localhost:4000/{my_endpoint}' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer your-api-key' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["test"]
 }'
@@ -362,7 +362,7 @@ Override these methods to customize behavior:
 
 ### Step 6: Add Unit Tests
 
-Create comprehensive tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
+Create thorough tests in `tests/test_litellm/llms/{provider}/{endpoint}/`:
 
 ```python
 """

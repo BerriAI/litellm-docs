@@ -25,7 +25,7 @@ calling the LLM API again.
 
 ## Virtual Key Authentication Cache (Redis)
 
-When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**—so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
+When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
 Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
 
@@ -68,9 +68,9 @@ Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -99,6 +99,25 @@ and keys will be stored like:
 ```
 litellm.caching.caching:<hash>
 ```
+
+#### Restricted ACL users (Redis 7+ / Valkey)
+
+If your security policy requires the proxy to connect as a least-privilege user instead of `default`, set a namespace (as above) and grant that user the namespace's key pattern and channel pattern plus the commands it needs:
+
+```bash
+ACL SETUSER litellm-proxy on '>your-password' '~litellm:*' '&litellm:*' +@all
+```
+
+replacing `litellm` with your namespace. With a namespace set, every key the proxy writes lives under `<namespace>:`, so `~<namespace>:*` covers all of them. Without a namespace the proxy's keys have assorted names, so there is no practical key pattern to scope an ACL to
+
+The channel grant matters too: Redis 7+ and Valkey create ACL users with `resetchannels`, which denies all pub/sub channels. The proxy subscribes to channels for config sync and auth cache invalidation, and without `&<namespace>:*` (or `&litellm_proxy.*` when no namespace is set) your logs will repeat `No permissions to access a channel; reconnecting in 5s` every few seconds and config changes will only propagate on the periodic reload
+
+Two more things to know when scoping ACLs:
+
+- The `general_settings.coordination_redis` block (for pointing coordination at a different Redis than your response cache) also accepts `namespace`, so its user can be scoped the same way
+- When coordination Redis is configured through `REDIS_HOST` / `REDIS_PORT` environment variables alone (no `cache_params` redis block), it cannot carry a namespace, so its keys are unprefixed and the connecting user needs an unscoped key grant
+
+If you see `No permissions to access a key` in the proxy logs and spend tracking repeatedly logs `Restoring N transaction sets to in-memory queues`, the connecting user's ACL is missing one of the grants above. On proxy versions without [the namespace delimiter fix](https://github.com/BerriAI/litellm/pull/38403), internal keys whose literal names begin with the namespace string (for example `litellm_spend_update_buffer` under namespace `litellm`) were written outside the namespace and denied even with the grants in place; upgrade if the denied keys in your Redis `ACL LOG` show up unprefixed
 
 #### Redis Cluster
 
@@ -499,9 +518,9 @@ one**
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -532,9 +551,9 @@ $ litellm --config /path/to/config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -580,9 +599,9 @@ Caching can be enabled by adding the `cache` key in the `config.yaml`
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
   - model_name: azure-embedding-model
     litellm_params:
       model: azure/azure-embedding-model
@@ -681,7 +700,7 @@ Send the same request twice:
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-     "model": "gpt-3.5-turbo",
+     "model": "{{openai_small}}",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}],
      "temperature": 0.7
    }'
@@ -689,7 +708,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-     "model": "gpt-3.5-turbo",
+     "model": "{{openai_small}}",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}],
      "temperature": 0.7
    }'
@@ -748,7 +767,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body={
         "cache": {
             "ttl": 300  # Cache response for 5 minutes
@@ -766,7 +785,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"ttl": 300},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -794,7 +813,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body={
         "cache": {
             "s-maxage": 600  # Only use cache if less than 10 minutes old
@@ -812,7 +831,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"s-maxage": 600},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -840,7 +859,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body={
         "cache": {
             "no-cache": True  # Skip cache check, get fresh response
@@ -858,7 +877,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"no-cache": true},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -886,7 +905,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body={
         "cache": {
             "no-store": True  # Don't cache this response
@@ -904,7 +923,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"no-store": true},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -932,7 +951,7 @@ client = OpenAI(
 
 chat_completion = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello"}],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body={
         "cache": {
             "namespace": "my-custom-namespace"  # Store in custom namespace
@@ -950,7 +969,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"namespace": "my-custom-namespace"},
     "messages": [
       {"role": "user", "content": "Hello"}
@@ -997,6 +1016,42 @@ Send `"cache": {"no-cache": true}` in the request body, as shown in [Dynamic Cac
 Caching only runs on the call types listed in `supported_call_types` (OpenAI-compatible surfaces such as `/chat/completions`, `/completions`, `/embeddings`, `/responses`). Requests on `/v1/messages` (Anthropic format) and provider passthrough routes never go through the cache.
 
 :::
+
+## Semantic Caching and End-User Isolation
+
+A semantic cache key deliberately leaves the prompt out, so the only thing keeping two callers apart is the tenant scope: the virtual key, its team and its organization. Every end user behind one virtual key therefore shares one semantic bucket by default, and a response generated for one of them (tool calls included) can be served to another who sends a semantically similar prompt through the same key.
+
+Set `semantic_cache_scope: end_user` under `cache_params` to also isolate buckets per end user. The end-user id is the one the proxy authenticates for the request (`user_api_key_end_user_id`): the `x-litellm-customer-id` header, a configured `user_header_name`, or the request `user` field. It is read from both `metadata` and `litellm_metadata`, so `/v1/chat/completions`, `/v1/responses` and `/v1/messages` are all covered. A request that carries no end-user id falls back to the key/team/org bucket rather than landing in a shared empty one. The default, `key`, keeps today's key/team/org scope.
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: my-embedding-model
+    semantic_cache_scope: end_user # key (default) | end_user
+```
+
+The same setting is available in the Admin UI under Caching -> Cache Settings as "Semantic Cache Scope" when the cache type is `redis-semantic`.
+
+## Semantic Caching and a Slow Embedding Endpoint
+
+A semantic cache embeds the prompt before every request, and that embedding call runs inline, so the request cannot reach the LLM until it finishes. LiteLLM caps it at 5 seconds. Past the deadline the lookup is abandoned, the response carries `x-litellm-semantic-similarity: 0.0`, and the request proceeds to the model as a cache miss. An embedding endpoint that is unreachable or hanging therefore costs a few seconds instead of stalling the request.
+
+Raise the deadline if your embedding endpoint is legitimately slower than that, either per cache with `semantic_cache_embedding_timeout` under `cache_params` or globally with the `SEMANTIC_CACHE_EMBEDDING_TIMEOUT_SECONDS` environment variable.
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: my-embedding-model
+    semantic_cache_embedding_timeout: 10.0
+```
+
+Bear in mind that a higher deadline is how long every request waits when the embedding endpoint stops answering, so keep it close to the endpoint's real latency.
 
 ## Set cache for proxy, but not on the actual llm api call
 
@@ -1068,9 +1123,9 @@ litellm_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
   - model_name: text-embedding-ada-002
     litellm_params:
       model: text-embedding-ada-002
@@ -1092,7 +1147,7 @@ litellm_settings:
 
 ### Deleting Cache Keys - `/cache/delete`
 
-In order to delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
+To delete a cache key, send a request to `/cache/delete` with the `keys` you want to delete
 
 Example
 
@@ -1116,7 +1171,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "user": "ishan",
     "messages": [
         {
@@ -1129,7 +1184,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 
 Response from litellm proxy
 
-```json
+```text
 date: Thu, 04 Apr 2024 17:37:21 GMT
 content-type: application/json
 x-litellm-cache-key: 586bf3f3c1bf5aecb55bd9996494d3bbc69eb58397163add6d49537762a7548d
@@ -1180,7 +1235,7 @@ litellm_settings:
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=<litellm-api-key>, base_url="http://0.0.0.0:4000")
+client = OpenAI(api_key="<litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 chat_completion = client.chat.completions.create(
     messages=[
@@ -1189,7 +1244,7 @@ chat_completion = client.chat.completions.create(
             "content": "Say this is a test",
         }
     ],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     extra_body = {        # OpenAI python accepts extra args in extra_body
         "cache": {"use-cache": True}
     }
@@ -1205,7 +1260,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "cache": {"use-cache": True}
     "messages": [
       {"role": "user", "content": "Say this is a test"}
@@ -1277,6 +1332,10 @@ cache_params:
   gcs_bucket_name: your_gcs_bucket_name # Name of the GCS bucket
   gcs_path_service_account: /path/to/service-account.json # Path to GCS service account JSON file
   gcs_path: cache/ # [OPTIONAL] GCS path prefix for cache objects
+
+  # Semantic cache parameters (redis-semantic, valkey-semantic, qdrant-semantic)
+  similarity_threshold: 0.8 # Minimum cosine similarity for a cached response to be served
+  semantic_cache_embedding_timeout: 5.0 # Seconds the prompt embedding may take before the lookup gives up
 ```
 
 ## Provider-Specific Optional Parameters Caching

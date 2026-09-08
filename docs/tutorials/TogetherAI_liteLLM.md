@@ -3,8 +3,8 @@ https://together.ai/
 
 
 
-```python
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 

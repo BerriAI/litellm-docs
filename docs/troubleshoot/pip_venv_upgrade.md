@@ -39,7 +39,7 @@ uv add 'litellm[proxy]==<version>'
 prisma generate --schema <venv>/lib/python<version>/site-packages/litellm_proxy_extras/schema.prisma
 ```
 
-Replace `<venv>` with your virtual environment path and `<version>` with your Python version (e.g., `python3.11`, `python3.12`, `python3.13`).
+Replace `<venv>` with your virtual environment path and `<version>` with your interpreter's version (for example `python{{python_version}}`).
 
 ### 5. Apply DB migrations
 
@@ -75,7 +75,7 @@ Then run the migration with the explicit schema path:
 prisma migrate deploy --schema <venv>/lib/python<version>/site-packages/litellm_proxy_extras/schema.prisma
 ```
 
-Replace `<venv>` with your virtual environment path and `<version>` with your Python version (e.g., `python3.11`, `python3.12`, `python3.13`).
+Replace `<venv>` with your virtual environment path and `<version>` with your interpreter's version (for example `python{{python_version}}`).
 
 ### 6. Start the proxy
 

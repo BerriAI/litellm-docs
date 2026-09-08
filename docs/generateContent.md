@@ -43,7 +43,7 @@ contents = ContentDict(
 
 response = await agenerate_content(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
 )
 print(response)
@@ -67,7 +67,7 @@ contents = ContentDict(
 
 response = await agenerate_content_stream(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=500,
 )
 
@@ -97,7 +97,7 @@ contents = ContentDict(
 
 response = generate_content(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
 )
 print(response)
@@ -121,7 +121,7 @@ contents = ContentDict(
 
 response = generate_content_stream(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=500,
 )
 
@@ -140,7 +140,7 @@ for chunk in response:
 model_list:
     - model_name: gemini-flash
       litellm_params:
-        model: gemini/gemini-2.0-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -277,7 +277,7 @@ import os
 os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 response = generate_content(
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     contents=[{"role": "user", "parts": [{"text": "Say hi"}]}],
     safetySettings=[
         {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"}

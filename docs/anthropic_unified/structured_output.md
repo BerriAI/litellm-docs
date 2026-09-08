@@ -27,7 +27,7 @@ Use LiteLLM to call Anthropic's structured output feature via the `/v1/messages`
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5-20250514
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -80,7 +80,7 @@ curl http://localhost:4000/v1/messages \
 model_list:
   - model_name: azure-claude-sonnet
     litellm_params:
-      model: azure_ai/claude-sonnet-4-5-20250514
+      model: azure_ai/{{anthropic}}
       api_key: os.environ/AZURE_AI_API_KEY
       api_base: https://your-endpoint.inference.ai.azure.com
 ```
@@ -134,7 +134,7 @@ curl http://localhost:4000/v1/messages \
 model_list:
   - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/global.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -189,7 +189,7 @@ curl http://localhost:4000/v1/messages \
 model_list:
   - model_name: bedrock-claude-invoke
     litellm_params:
-      model: bedrock/invoke/global.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/invoke/global.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -251,7 +251,7 @@ curl http://localhost:4000/v1/messages \
       "text": "{\"name\":\"John Smith\",\"email\":\"john@example.com\",\"plan_interest\":\"Enterprise\",\"demo_requested\":true}"
     }
   ],
-  "model": "claude-sonnet-4-5-20250514",
+  "model": "{{anthropic}}",
   "stop_reason": "end_turn",
   "stop_sequence": null,
   "usage": {

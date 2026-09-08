@@ -8,7 +8,7 @@ Use AWS SigV4 authentication to connect LiteLLM to MCP servers hosted on [AWS Be
 
 ## Why SigV4?
 
-AWS services authenticate requests using [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) — a per-request signing protocol that includes the request body in the cryptographic signature. This is fundamentally different from static-header auth types (`api_key`, `bearer_token`, etc.) which send the same header on every request.
+AWS services authenticate requests using [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html), a per-request signing protocol that includes the request body in the cryptographic signature. This works differently from static-header auth types (`api_key`, `bearer_token`, etc.), which send the same header on every request.
 
 LiteLLM's `aws_sigv4` auth type handles this automatically: every outgoing MCP request is signed with your AWS credentials before it's sent.
 
@@ -58,9 +58,9 @@ export AWS_REGION_NAME="us-east-1"
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:
@@ -145,7 +145,7 @@ LiteLLM uses an `httpx.Auth` subclass (`MCPSigV4Auth`) that hooks into the HTTP 
 3. The signed `Authorization` and `x-amz-date` headers are added to the request
 4. AWS validates the signature and processes the MCP request
 
-This happens transparently — no manual token management required.
+This happens automatically, with no manual token management.
 
 ## Using Temporary Credentials (STS)
 
@@ -182,7 +182,7 @@ mcp_servers:
 
 LiteLLM uses the ambient credentials (pod role, instance profile, or env vars) to call `sts:AssumeRole`, then signs MCP requests with the assumed role's temporary credentials.
 
-You can also combine `aws_role_name` with explicit access keys — the keys are then used as the source identity for the AssumeRole call:
+You can also combine `aws_role_name` with explicit access keys. The keys are then used as the source identity for the AssumeRole call:
 
 ```yaml title="config.yaml with AssumeRole + explicit source keys" showLineNumbers
 mcp_servers:
@@ -197,7 +197,7 @@ mcp_servers:
 ```
 
 :::tip
-For most Kubernetes deployments, you only need `aws_role_name` and `aws_region_name` — the pod's IAM role provides the source credentials automatically.
+For most Kubernetes deployments, you only need `aws_role_name` and `aws_region_name`; the pod's IAM role provides the source credentials automatically.
 :::
 
 ## Troubleshooting
@@ -220,7 +220,7 @@ If you get `AccessDenied` when using `aws_role_name`:
 
 ### Health check errors on startup
 
-SigV4-authenticated MCP servers skip the standard health check on proxy startup. This is expected — the proxy will still sign requests correctly when tools are invoked.
+SigV4-authenticated MCP servers skip the standard health check on proxy startup. This is expected, and the proxy will still sign requests correctly when tools are invoked.
 
 ### "botocore not found" error
 

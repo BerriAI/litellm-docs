@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 
 ## How it works
 
-The guardrail runs before model selection. On every request it scans the messages for sensitive data using the patterns and keywords you configure. When a match is found it rewrites the target model to your `on_premise_model` so the request is served on-premise. The prompt is sent through unchanged, so nothing is blocked or redacted and the conversation stays seamless.
+The guardrail runs before model selection. On every request it scans the messages for sensitive data using the patterns and keywords you configure. When a match is found it rewrites the target model to your `on_premise_model` so the request is served on-premise. The prompt is sent through unchanged, so nothing is blocked or redacted and the conversation continues normally.
 
 With `sticky_session` enabled (the default), the first time sensitive data is seen in a session the session is pinned to the on-premise model. Every later turn in that session is then routed on-premise as well, even turns that contain no sensitive data, so a conversation that once touched sensitive data never leaves the on-premise model. Pinning relies on a stable session id sent by the client (see [Session stickiness](#session-stickiness)).
 
@@ -34,7 +34,7 @@ With `sticky_session` enabled (the default), the first time sensitive data is se
 model_list:
   - model_name: cloud-model
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: on-prem-model

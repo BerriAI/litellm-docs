@@ -39,7 +39,7 @@ Here's a Demo Instance to test changes:
 1. Anthropic 3-7 sonnet support + cost tracking (Anthropic API + Bedrock + Vertex AI + OpenRouter) 
     1. Anthropic API [Start here](https://docs.litellm.ai/docs/providers/anthropic#usage---thinking--reasoning_content)
     2. Bedrock API [Start here](https://docs.litellm.ai/docs/providers/bedrock#usage---thinking--reasoning-content)
-    3. Vertex AI API [See here](../../docs/providers/vertex#usage---thinking--reasoning_content)
+    3. Vertex AI API [See here](/docs/providers/vertex#thinking--reasoning_content)
     4. OpenRouter [See here](https://github.com/BerriAI/litellm/blob/ba5bdce50a0b9bc822de58c03940354f19a733ed/model_prices_and_context_window.json#L5626)
 2. Gpt-4.5-preview support + cost tracking [See here](https://github.com/BerriAI/litellm/blob/ba5bdce50a0b9bc822de58c03940354f19a733ed/model_prices_and_context_window.json#L79)
 3. Azure AI - Phi-4 cost tracking [See here](https://github.com/BerriAI/litellm/blob/ba5bdce50a0b9bc822de58c03940354f19a733ed/model_prices_and_context_window.json#L1773)
@@ -49,7 +49,7 @@ Here's a Demo Instance to test changes:
 
 ## LLM Translation
 
-1. Infinity Rerank - support returning documents when return_documents=True [Start here](../../docs/providers/infinity#usage---returning-documents)
+1. Infinity Rerank - support returning documents when return_documents=True [Start here](/docs/providers/infinity#usage---return-documents)
 2. Amazon Deepseek - `<think>` param extraction into ‘reasoning_content’ [Start here](https://docs.litellm.ai/docs/providers/bedrock#bedrock-imported-models-deepseek-deepseek-r1)
 3. Amazon Titan Embeddings - filter out ‘aws_’ params from request body [Start here](https://docs.litellm.ai/docs/providers/bedrock#bedrock-embedding)
 4. Anthropic ‘thinking’ + ‘reasoning_content’ translation support (Anthropic API, Bedrock, Vertex AI)  [Start here](https://docs.litellm.ai/docs/reasoning_content)

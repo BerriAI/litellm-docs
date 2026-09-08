@@ -29,7 +29,7 @@ More info on the advisory is here: https://github.com/BerriAI/litellm/security/a
 
 * A crafted `Host` header could make the proxy's auth gate evaluate a different route from the one it served, allowing potential unauthenticated access to protected management routes.
 * The update shipped in `v1.84.0`. Follow-up path-handling hardening was backported in `v1.84.3`, `v1.85.2`, and `v1.86.2`; upgrading to the latest release is recommended.
-* Potential bypass requires reaching the proxy listener with an arbitrary `Host` header. Fronting the proxy with infrastructure that validates or normalizes `Host` reduces potential for bypass depending on configuration, but is not a comprehensive substitute for upgrading.
+* Potential bypass requires reaching the proxy listener with an arbitrary `Host` header. Fronting the proxy with infrastructure that validates or normalizes `Host` reduces potential for bypass depending on configuration, but is not a full substitute for upgrading.
 * No LiteLLM Cloud customers were affected.
 
 ## Summary
@@ -40,7 +40,7 @@ Potential bypass requires an actor to reach the proxy listener with an arbitrary
 
 ## Additional hardening
 
-The primary update in `v1.84.0` addressed the reported potential for bypass by deriving the request route from the ASGI scope path rather than the `Host`-reconstructed URL. As additional follow-up, we audited every other location in the proxy that derived a route from the request URL and moved them onto the same hardened resolution. This closes the long tail of the potential for bypass and was backported across the maintained release lines in `v1.84.3`, `v1.85.2`, `v1.86.2`, and `v1.83.10-stable.patch.3`. We recommend upgrading to one of these releases for comprehensive mitigation.
+The primary update in `v1.84.0` addressed the reported potential for bypass by deriving the request route from the ASGI scope path rather than the `Host`-reconstructed URL. As additional follow-up, we audited every other location in the proxy that derived a route from the request URL and moved them onto the same hardened resolution. This closes the long tail of the potential for bypass and was backported across the maintained release lines in `v1.84.3`, `v1.85.2`, `v1.86.2`, and `v1.83.10-stable.patch.3`. We recommend upgrading to one of these releases for complete mitigation.
 
 ## Am I affected?
 
@@ -50,7 +50,7 @@ You are potentially affected only if **all** of the following are true:
 - You are on a version **earlier than `v1.84.0`**.
 - The proxy listener is reachable by untrusted clients.
 
-You are **not** remotely open to potential bypass if the proxy listener is not reachable by untrusted clients — for example, it is bound to a private network or sits behind a gateway that requires its own authentication.
+You are **not** remotely open to potential bypass if the proxy listener is not reachable by untrusted clients, for example if it is bound to a private network or sits behind a gateway that requires its own authentication.
 
 Fronting the proxy with infrastructure that validates or normalizes the `Host` header (a CDN/WAF, a reverse proxy with `server_name` allowlists, or a host-based load balancer) reduces potential for bypass, but whether it fully mitigates against potential bypass depends on the configuration.
 
@@ -67,4 +67,4 @@ If you cannot upgrade immediately, to better mitigate the potential for bypass, 
 - a reverse proxy with explicit `server_name` allowlists (nginx, Caddy, Traefik),
 - a cloud load balancer with host-based routing rules,
 
-or otherwise restrict network access to the proxy listener. Note this is a per-deployment property: a reverse proxy that forwards the client `Host` unchanged (e.g. nginx `proxy_set_header Host $host;`) may not comprehensively protect your use from this potential. Treat upgrading as the elimination of any potential for bypass and edge filtering only as a stopgap.
+or otherwise restrict network access to the proxy listener. Note this is a per-deployment property: a reverse proxy that forwards the client `Host` unchanged (e.g. nginx `proxy_set_header Host $host;`) may not fully protect your use from this potential. Treat upgrading as the elimination of any potential for bypass and edge filtering only as a stopgap.

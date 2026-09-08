@@ -2,13 +2,13 @@
 
 Pair a faster executor model with a higher-intelligence advisor model that provides strategic guidance mid-generation.
 
-The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consult a high-intelligence advisor model (Opus 4.6) mid-generation. The advisor reads the full conversation and produces a plan or course correction — typically 400–700 text tokens — and the executor continues with the task.
+The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consult a high-intelligence advisor model (Opus 4.6) mid-generation. The advisor reads the full conversation and produces a plan or course correction, typically 400–700 text tokens, and the executor continues with the task.
 
 This pattern is well-suited for long-horizon agentic workloads (coding agents, computer use, multi-step research) where most turns are mechanical but having an excellent plan is crucial. You get close to advisor-solo quality while the bulk of token generation happens at executor-model rates.
 
 :::info Beta
 
-The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests — LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
+The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests; LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
 
 :::
 
@@ -24,13 +24,13 @@ The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` i
 
 ## How it works (LiteLLM native orchestration)
 
-For non-Anthropic providers, LiteLLM implements the advisor loop itself. The API you call is identical — LiteLLM handles everything transparently.
+For non-Anthropic providers, LiteLLM implements the advisor loop itself. The API you call is identical; LiteLLM runs the loop for you.
 
 When a request arrives with an `advisor_20260301` tool and a non-Anthropic provider, `AdvisorOrchestrationHandler` intercepts it. It translates the advisor tool into a regular function tool the provider understands, then runs an orchestration loop:
 
 ```mermaid
 flowchart TD
-    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/gpt-4.1-mini"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
+    A["Your request\ntools: advisor_20260301\nmodel: e.g. openai/{{openai_small}}"] --> B["AdvisorOrchestrationHandler\ntranslates advisor → regular fn tool"]
 
     B --> C["EXECUTOR CALL\nopenai / bedrock / vertex / etc."]
 
@@ -38,7 +38,7 @@ flowchart TD
 
     D -->|"yes — tool_use\nname=advisor"| E{"max_uses\nexceeded?"}
 
-    E -->|no| F["ADVISOR SUB-CALL\nclaude-opus-4-6\nfull transcript forwarded\nno tools"]
+    E -->|no| F["ADVISOR SUB-CALL\n{{anthropic_large}}\nfull transcript forwarded\nno tools"]
 
     F --> G["Inject advice as\ntool_result into history"]
 
@@ -51,21 +51,21 @@ flowchart TD
 
 **What LiteLLM does for you:**
 
-- Strips `advisor_20260301` from the outgoing request — the provider only sees a standard function tool named `advisor`
+- Strips `advisor_20260301` from the outgoing request, so the provider only sees a standard function tool named `advisor`
 - When the executor calls it, intercepts before the result reaches you, runs the advisor sub-call, and injects the advice
 - Strips any `advisor_tool_result` / `server_tool_use` blocks from message history on re-send so non-Anthropic providers never see Anthropic-specific types
 - Wraps the final response in an SSE stream if you requested `stream=True`
-- Enforces `max_uses` as a hard cap — `AdvisorMaxIterationsError` is raised if exceeded; `max_uses=0` disables the advisor entirely
+- Enforces `max_uses` as a hard cap; `AdvisorMaxIterationsError` is raised if exceeded, and `max_uses=0` disables the advisor entirely
 
 ## Model Compatibility
 
-The executor and advisor models must form a valid pair. Currently the only supported advisor model is `claude-opus-4-6`.
+The executor and advisor models must form a valid pair. The advisor is an Opus model (`{{anthropic_large}}`), and the executor can be Opus 4.6 or later, Sonnet 4.6 or later, or Haiku 4.5.
 
 | Executor | Advisor |
 |----------|---------|
-| `claude-haiku-4-5-20251001` | `claude-opus-4-6` |
-| `claude-sonnet-4-6` | `claude-opus-4-6` |
-| `claude-opus-4-6` | `claude-opus-4-6` |
+| `claude-haiku-4-5-20251001` | `{{anthropic_large}}` |
+| `{{anthropic}}` | `{{anthropic_large}}` |
+| `{{anthropic_large}}` | `{{anthropic_large}}` |
 
 ---
 
@@ -79,7 +79,7 @@ The executor and advisor models must form a valid pair. Currently the only suppo
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-6",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Build a concurrent worker pool in Go with graceful shutdown."}
     ],
@@ -87,7 +87,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "{{anthropic_large}}",
         }
     ],
     max_tokens=4096,
@@ -102,7 +102,7 @@ print(response.choices[0].message.content)
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-6",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Build a REST API with authentication in Python."}
     ],
@@ -110,7 +110,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "{{anthropic_large}}",
             "max_uses": 3,                             # cap advisor calls per request
             "caching": {"type": "ephemeral", "ttl": "5m"},  # enable for 3+ calls per conversation
         }
@@ -125,7 +125,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-6",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Implement a distributed rate limiter."}
     ],
@@ -133,7 +133,7 @@ response = litellm.completion(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "{{anthropic_large}}",
         }
     ],
     max_tokens=4096,
@@ -160,7 +160,7 @@ tools = [
     {
         "type": "advisor_20260301",
         "name": "advisor",
-        "model": "claude-opus-4-6",
+        "model": "{{anthropic_large}}",
     }
 ]
 
@@ -169,7 +169,7 @@ messages = [
 ]
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-6",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
     max_tokens=4096,
@@ -182,7 +182,7 @@ messages.append({"role": "assistant", "content": response.choices[0].message.con
 messages.append({"role": "user", "content": "Now add a max-in-flight limit of 10."})
 
 response2 = litellm.completion(
-    model="anthropic/claude-sonnet-4-6",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools,
     max_tokens=4096,
@@ -203,7 +203,7 @@ LiteLLM automatically strips `advisor_tool_result` blocks from message history w
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-6
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -226,7 +226,7 @@ response = client.chat.completions.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "{{anthropic_large}}",
         }
     ],
     max_tokens=4096,
@@ -247,7 +247,7 @@ import litellm
 
 async def main():
     response = await litellm.anthropic.messages.acreate(
-        model="anthropic/claude-sonnet-4-6",
+        model="anthropic/{{anthropic}}",
         messages=[
             {"role": "user", "content": "Build a concurrent worker pool in Go with graceful shutdown."}
         ],
@@ -255,7 +255,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "{{anthropic_large}}",
             }
         ],
         max_tokens=4096,
@@ -274,7 +274,7 @@ import litellm
 
 async def main():
     response = await litellm.anthropic.messages.acreate(
-        model="anthropic/claude-sonnet-4-6",
+        model="anthropic/{{anthropic}}",
         messages=[
             {"role": "user", "content": "Implement a distributed rate limiter."}
         ],
@@ -282,7 +282,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "{{anthropic_large}}",
             }
         ],
         max_tokens=4096,
@@ -309,7 +309,7 @@ asyncio.run(main())
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-6
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -334,7 +334,7 @@ response = client.beta.messages.create(
         {
             "type": "advisor_20260301",
             "name": "advisor",
-            "model": "claude-opus-4-6",
+            "model": "{{anthropic_large}}",
         }
     ],
 )
@@ -343,15 +343,15 @@ print(response)
 
 #### Non-Anthropic Provider (LiteLLM orchestration loop)
 
-```python showLineNumbers title="Advisor Tool with OpenAI executor"
+```python showLineNumbers title="Advisor Tool with OpenAI executor" keep-model-ids
 import asyncio
 import litellm
 
 async def main():
-    # executor: openai/gpt-4.1-mini  |  advisor: claude-opus-4-6
+    # executor: openai/gpt-5.6-luna  |  advisor: {{anthropic_large}}
     # LiteLLM runs the orchestration loop automatically
     response = await litellm.anthropic.messages.acreate(
-        model="openai/gpt-4.1-mini",
+        model="openai/gpt-5.6-luna",
         messages=[
             {"role": "user", "content": "Implement a Python LRU cache with O(1) get and put."}
         ],
@@ -359,7 +359,7 @@ async def main():
             {
                 "type": "advisor_20260301",
                 "name": "advisor",
-                "model": "claude-opus-4-6",
+                "model": "{{anthropic_large}}",
                 "max_uses": 3,
             }
         ],
@@ -429,7 +429,7 @@ Advisor calls run as a separate sub-inference billed at the advisor model's rate
       },
       {
         "type": "advisor_message",
-        "model": "claude-opus-4-6",
+        "model": "{{anthropic_large}}",
         "input_tokens": 823,
         "output_tokens": 1612
       },

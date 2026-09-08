@@ -6,9 +6,9 @@ Beta feature. Share feedback on [Discord](https://discord.gg/wuPM9dRgDw) or [Sla
 
 :::
 
-**Requirements:** LiteLLM Proxy with a Postgres database. Quality estimates are stored in Postgres and loaded on startup — without a database the router works but forgets everything learned on restart.
+**Requirements:** LiteLLM Proxy with a Postgres database. Quality estimates are stored in Postgres and loaded on startup. Without a database the router works but forgets everything learned on restart.
 
-You have a cheap model and an expensive one. You want to use the cheap one when it's good enough, and the expensive one when it actually matters — without hardcoding rules you'll spend months tuning.
+You have a cheap model and an expensive one. You want to use the cheap one when it's good enough, and the expensive one when it actually matters, without hardcoding rules you'll spend months tuning.
 
 The adaptive router does this automatically. It tracks which model performs best for each type of request (code, writing, analysis, etc.) and routes accordingly, balancing quality against cost based on weights you control.
 
@@ -16,20 +16,20 @@ The adaptive router does this automatically. It tracks which model performs best
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
     model_info:
-      input_cost_per_token: 0.0000025
+      input_cost_per_token: 0.000002
       adaptive_router_preferences:
         quality_tier: 3        # 1=budget, 2=mid, 3=frontier
         strengths: ["code_generation", "analytical_reasoning"]
 
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
     model_info:
-      input_cost_per_token: 0.00000015
+      input_cost_per_token: 0.0000002
       adaptive_router_preferences:
         quality_tier: 2
         strengths: ["factual_lookup"]
@@ -38,7 +38,7 @@ model_list:
     litellm_params:
       model: auto_router/adaptive_router
       adaptive_router_config:
-        available_models: ["gpt-4o", "gpt-4o-mini"]
+        available_models: ["{{openai_large}}", "{{openai_small}}"]
         weights:
           quality: 0.7   # raise this if quality complaints; lower if bill too high
           cost: 0.3      # must sum to 1.0 with quality
@@ -65,10 +65,10 @@ curl -X POST {{baseURL}}/v1/chat/completions \
 The response includes a header telling you which model was actually picked:
 
 ```
-x-litellm-adaptive-router-model: gpt-4o
+x-litellm-adaptive-router-model: {{openai_large}}
 ```
 
-The "thanks!" turn in the example above fires a satisfaction signal — that's what moves the bandit.
+The "thanks!" turn in the example above fires a satisfaction signal, and that's what moves the bandit.
 
 ## Tuning cost vs. quality
 
@@ -95,7 +95,7 @@ You can also pass `min_quality_tier` via request metadata instead of a header.
 
 ## What's being learned
 
-The router classifies each request into one of 7 types and tracks how each model performs on each independently. A model that's great at factual lookup but poor at code will win factual requests and lose code requests — even if it's cheaper overall.
+The router classifies each request into one of 7 types and tracks how each model performs on each independently. A model that's great at factual lookup but poor at code will win factual requests and lose code requests, even if it's cheaper overall.
 
 | Type | Example |
 |---|---|
@@ -145,11 +145,11 @@ Returns current quality estimates per model per request type. Useful for underst
 }
 ```
 
-`quality_mean` is the key number — it's the router's current estimate of how well that model handles that request type. `samples` counts how many real observations have moved the prior (starts at 0; the cold-start prior mass is excluded).
+`quality_mean` is the key number: the router's current estimate of how well that model handles that request type. `samples` counts how many real observations have moved the prior (starts at 0; the cold-start prior mass is excluded).
 
 ## Known limitations
 
-- Latency isn't scored — a slow model can still win on quality + cost
-- Signals are regex-based and English-biased — no LLM judge
+- Latency isn't scored; a slow model can still win on quality + cost
+- Signals are regex-based and English-biased; there is no LLM judge
 - Hard cap of 200 observations per cell; no decay yet
 - Once a model is picked for a session, other models' turns in that session don't contribute to learning

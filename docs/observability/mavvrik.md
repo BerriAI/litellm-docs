@@ -38,9 +38,9 @@ Only `daily` frequency is supported. The Mavvrik ingestion protocol stores one f
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-your-key
 
 litellm_settings:
@@ -64,7 +64,7 @@ Each daily export cycle:
 2. Requests a GCS signed upload URL for the export date (`GET /metrics/agent/ai/{connection_id}/upload-url`)
 3. Uploads gzip-compressed FOCUS CSV to GCS via the signed URL
 
-Re-running an export for the same date overwrites the previous file — exports are idempotent. Exports are capped at `MAVVRIK_FOCUS_MAX_ROWS` rows per day (default 500k) to bound memory usage.
+Re-running an export for the same date overwrites the previous file, so exports are idempotent. Exports are capped at `MAVVRIK_FOCUS_MAX_ROWS` rows per day (default 500k) to bound memory usage.
 
 ## FOCUS Field Mapping
 

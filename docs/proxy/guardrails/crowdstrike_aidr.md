@@ -48,9 +48,9 @@ configuration file.
 
 ```yaml title="config.yaml - Example LiteLLM configuration with CrowdStrike AIDR guardrail"
 model_list:
-  - model_name: gpt-4o                       # Alias used in API requests
+  - model_name: {{openai_large}}                       # Alias used in API requests
     litellm_params:
-      model: openai/gpt-4o-mini              # Actual model to use
+      model: openai/{{openai_small}}              # Actual model to use
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -63,6 +63,7 @@ guardrails:
                                              # Policy actions are defined in AIDR console.
       api_key: os.environ/CS_AIDR_TOKEN      # CrowdStrike AIDR API token
       api_base: os.environ/CS_AIDR_BASE_URL  # CrowdStrike AIDR base URL
+      fail_on_error: true                    # Optional. Set false to fail open on AIDR errors (default: true)
 ```
 
 ### 3. Start LiteLLM Proxy (AI Gateway)
@@ -112,7 +113,7 @@ This example requires the **Malicious Prompt** detector to be enabled in your co
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "system",
@@ -154,7 +155,7 @@ If the policy input rules redact a sensitive value, you will not see redaction a
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -185,7 +186,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -196,7 +197,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
 curl -sSLX POST http://localhost:4000/v1/chat/completions \
 --header "Content-Type: application/json" \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Hi :0)"}
   ]
@@ -220,12 +221,37 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
 
 </Tabs>
+
+## Error Handling
+
+`fail_on_error` controls what happens when the AIDR guard API cannot be reached or returns an unusable response. It defaults to `true`, so guardrail errors block the request with an HTTP 500.
+
+Set `fail_on_error: false` to fail open instead: connection failures, timeouts, 4xx/5xx responses, and malformed reply bodies are logged and the request proceeds unmodified. Fail-open calls are recorded in spend logs with the guardrail status `guardrail_failed_to_respond`.
+
+```yaml title="config.yaml - CrowdStrike AIDR guardrail with fail open enabled"
+guardrails:
+  - guardrail_name: crowdstrike-aidr
+    litellm_params:
+      guardrail: crowdstrike_aidr
+      default_on: true
+      mode: []
+      api_key: os.environ/CS_AIDR_TOKEN
+      api_base: os.environ/CS_AIDR_BASE_URL
+      fail_on_error: false                   # Fail open on AIDR guard API errors
+```
+
+Two cases stay strict even with `fail_on_error: false`:
+
+| Case | Behavior |
+|------|----------|
+| AIDR delivers a blocked verdict on a success response, even when the rest of the body cannot be parsed | Request is blocked with HTTP 400 |
+| AIDR delivers a transformed (redacted) response that LiteLLM cannot parse | Request fails with HTTP 500, so delivered redactions are never dropped |
 
 ## Next Steps
 

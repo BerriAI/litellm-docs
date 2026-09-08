@@ -1,11 +1,7 @@
 
 # ✨ IP Address Filtering
 
-:::info
-
-You need a LiteLLM License to unlock this feature. [Grab time](https://enterprise.litellm.ai/demo), to get one today!
-
-:::
+<EnterpriseFeature />
 
 Restrict which IP's can call the proxy endpoints.
 

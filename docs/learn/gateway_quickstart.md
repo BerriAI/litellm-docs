@@ -26,9 +26,9 @@ export OPENAI_API_KEY="your-api-key"
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -51,7 +51,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello from LiteLLM Gateway"}
     ]
@@ -64,7 +64,7 @@ If the request succeeds, the proxy returns `200 OK` with an OpenAI-style respons
 
 The assistant text will be in:
 
-```json
+```text
 choices[0].message.content
 ```
 
@@ -74,7 +74,7 @@ If your gateway is routing to OpenAI, a real response can look like this:
 {
   "id": "chatcmpl-abc123",
   "created": 1677858242,
-  "model": "gpt-4o-mini-2024-07-18",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": "fp_406d6473f8",
   "choices": [

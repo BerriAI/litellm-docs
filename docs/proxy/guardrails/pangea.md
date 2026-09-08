@@ -27,9 +27,9 @@ Define the Pangea guardrail under the `guardrails` section of your configuration
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -85,7 +85,7 @@ The example below assumes the **Malicious Prompt** detector is enabled in your i
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "system",
@@ -118,7 +118,7 @@ curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 curl -sSLX POST http://localhost:4000/v1/chat/completions \
 --header "Content-Type: application/json" \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Hi :0)"}
   ],
@@ -146,7 +146,7 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -161,7 +161,7 @@ It assumes the **Confidential and PII** detector is enabled in your output recip
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -195,7 +195,7 @@ When the recipe configured in the `pangea-ai-guard-response` plugin detects PII,
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>

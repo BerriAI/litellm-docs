@@ -80,7 +80,7 @@ pip install litellm==1.81.3.rc.2
 - **[Bedrock](../../docs/providers/bedrock)**
     - support for output format for bedrock invoke via v1/messages - [PR #19560](https://github.com/BerriAI/litellm/pull/19560)
     
-- **[Azure](../../docs/providers/azure/azure)**
+- **[Azure](/docs/providers/azure)**
     - Add support for Azure OpenAI v1 API - [PR #19313](https://github.com/BerriAI/litellm/pull/19313)
     - preserve content_policy_violation details for images (#19328) - [PR #19372](https://github.com/BerriAI/litellm/pull/19372)
     - Support OpenAI-format nested tool definitions for Responses API - [PR #19526](https://github.com/BerriAI/litellm/pull/19526)

@@ -22,11 +22,12 @@ LiteLLM integrates with vector stores, allowing your models to access your organ
 - [Azure AI Search](/docs/providers/azure_ai_vector_stores) (Vector search with Azure AI Search indexes)
 - [Vertex AI RAG API](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-overview)
 - [Gemini File Search](https://ai.google.dev/gemini-api/docs/file-search)
+- [MongoDB Vector Search (BETA)](../providers/mongodb_vector_stores.md#use-mongodb-in-chat-completions) (Use an existing Atlas or self-managed MongoDB index as context for chat completions)
 - [RAGFlow Datasets](/docs/providers/ragflow_vector_store.md) (Dataset management only, search not supported)
 
 ## Quick Start
 
-In order to use a vector store with LiteLLM, you need to 
+To use a vector store with LiteLLM, you need to 
 
 - Initialize litellm.vector_store_registry
 - Pass tools with vector_store_ids to the completion request. Where `vector_store_ids` is a list of vector store ids you initialized in litellm.vector_store_registry
@@ -54,7 +55,7 @@ litellm.vector_store_registry = VectorStoreRegistry(
 
 # Make a completion request with vector_store_ids parameter
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet", 
+    model="anthropic/{{anthropic}}", 
     messages=[{"role": "user", "content": "What is litellm?"}],
     tools=[
         {
@@ -71,16 +72,16 @@ print(response.choices[0].message.content)
 
 #### 1. Configure your vector_store_registry
 
-In order to use a vector store with LiteLLM, you need to configure your vector_store_registry. This tells litellm which vector stores to use and api provider to use for the vector store.
+To use a vector store with LiteLLM, you need to configure your vector_store_registry. This tells litellm which vector stores to use and api provider to use for the vector store.
 
 <Tabs>
 <TabItem value="config-yaml" label="config.yaml">
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 vector_store_registry:
@@ -121,7 +122,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What is litellm?"}],
     "tools": [
         {
@@ -147,7 +148,7 @@ client = OpenAI(
 
 # Make a completion request with vector_store_ids parameter
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",
+    model="{{anthropic}}",
     messages=[{"role": "user", "content": "What is litellm?"}],
     tools=[
         {
@@ -354,7 +355,7 @@ In this config, we add `vector_store_ids` to the claude-3-5-sonnet-with-vector-s
 model_list:
   - model_name: claude-3-5-sonnet-with-vector-store
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       vector_store_ids: ["T37J8R4WTM"]
 
 vector_store_registry:
@@ -384,7 +385,7 @@ When you pass `vector_store_ids=["YOUR_KNOWLEDGE_BASE_ID"]`, your request flows 
 **1. Original Request to LiteLLM:**
 ```json
 {
-    "model": "anthropic/claude-3-5-sonnet",
+    "model": "anthropic/{{anthropic}}",
     "messages": [
         {"role": "user", "content": "What is litellm?"}
     ],
@@ -405,7 +406,7 @@ This is sent to: `https://bedrock-agent-runtime.{aws_region}.amazonaws.com/knowl
 **3. Final Request to LiteLLM:**
 ```json
 {
-    "model": "anthropic/claude-3-5-sonnet",
+    "model": "anthropic/{{anthropic}}",
     "messages": [
         {"role": "user", "content": "What is litellm?"},
         {"role": "user", "content": "Context: \n\nLiteLLM is an open-source SDK to simplify LLM API calls across providers (OpenAI, Claude, etc). It provides a standardized interface with robust error handling, streaming, and observability tools."}
@@ -467,7 +468,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",
+    model="{{anthropic}}",
     messages=[{"role": "user", "content": "What is litellm?"}],
     tools=[{"type": "file_search", "vector_store_ids": ["T37J8R4WTM"]}]
 )
@@ -496,7 +497,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'claude-3-5-sonnet',
+  model: '{{anthropic}}',
   messages: [{ role: 'user', content: 'What is litellm?' }],
   tools: [{ type: 'file_search', vector_store_ids: ['T37J8R4WTM'] }]
 });
@@ -557,7 +558,7 @@ client = OpenAI(
 )
 
 stream = client.chat.completions.create(
-    model="claude-3-5-sonnet",
+    model="{{anthropic}}",
     messages=[{"role": "user", "content": "What is litellm?"}],
     tools=[{"type": "file_search", "vector_store_ids": ["T37J8R4WTM"]}],
     stream=True
@@ -586,7 +587,7 @@ for chunk in stream:
 import OpenAI from 'openai';
 
 const stream = await client.chat.completions.create({
-  model: 'claude-3-5-sonnet',
+  model: '{{anthropic}}',
   messages: [{ role: 'user', content: 'What is litellm?' }],
   tools: [{ type: 'file_search', vector_store_ids: ['T37J8R4WTM'] }],
   stream: true

@@ -28,7 +28,7 @@ os.environ["HELICONE_API_KEY"] = "your-helicone-key"
 
 # OpenAI call
 response = completion(
-    model="helicone/gpt-4o-mini",
+    model="helicone/{{openai_small}}",
     messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
 )
 
@@ -42,9 +42,9 @@ Add Helicone to your LiteLLM proxy configuration:
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 # Add Helicone callback
@@ -104,7 +104,7 @@ Helicone's AI Gateway provides [advanced functionality](https://docs.helicone.ai
 
   # Helicone call - routes through Helicone gateway to any model
   response = completion(
-      model="helicone/gpt-4o-mini", # or any 100+ models
+      model="helicone/{{openai_small}}", # or any 100+ models
       messages=messages
   )
 
@@ -127,7 +127,7 @@ Helicone's AI Gateway provides [advanced functionality](https://docs.helicone.ai
       "Helicone-Retry-Enabled": "true",  # Enable retry mechanism
       "helicone-retry-num": "3",  # Set number of retries
       "helicone-retry-factor": "2",  # Set exponential backoff factor
-      "Helicone-Model-Override": "gpt-3.5-turbo-0613",  # Override the model used for cost calculation
+      "Helicone-Model-Override": "{{openai_small}}",  # Override the model used for cost calculation
       "Helicone-Session-Id": "session-abc-123",  # Set session ID for tracking
       "Helicone-Session-Path": "parent-trace/child-trace",  # Set session path for hierarchical tracking
       "Helicone-Omit-Response": "false",  # Include response in logging (default behavior)
@@ -174,7 +174,7 @@ Log requests to Helicone while using any LLM provider directly.
 
   # OpenAI call
   response = completion(
-      model="gpt-4o",
+      model="{{openai_large}}",
       messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
   )
 
@@ -186,13 +186,13 @@ Log requests to Helicone while using any LLM provider directly.
 
   ```yaml title="config.yaml"
   model_list:
-    - model_name: gpt-4
+    - model_name: {{openai_large}}
       litellm_params:
-        model: gpt-4
+        model: {{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
-    - model_name: claude-3
+    - model_name: {{anthropic}}
       litellm_params:
-        model: anthropic/claude-3-sonnet-20240229
+        model: anthropic/{{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 
   # Add Helicone logging
@@ -221,7 +221,7 @@ Log requests to Helicone while using any LLM provider directly.
   )
 
   response = client.chat.completions.create(
-      model="gpt-4",  # This gets logged to Helicone
+      model="{{openai_large}}",  # This gets logged to Helicone
       messages=[{"role": "user", "content": "Hello!"}]
   )
   ```
@@ -246,7 +246,7 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
   messages = [{"content": "What is the capital of France?", "role": "user"}]
 
   response = completion(
-      model="helicone/gpt-4",
+      model="helicone/{{openai_large}}",
       messages=messages,
       metadata={
           "Helicone-Session-Id": "session-abc-123",
@@ -270,7 +270,7 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
 
   # First request in session
   response1 = client.chat.completions.create(
-      model="gpt-4",
+      model="{{openai_large}}",
       messages=[{"role": "user", "content": "Hello"}],
       extra_headers={
           "Helicone-Session-Id": "session-abc-123",
@@ -280,7 +280,7 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
 
   # Follow-up request in same session
   response2 = client.chat.completions.create(
-      model="gpt-4",
+      model="{{openai_large}}",
       messages=[{"role": "user", "content": "Tell me more"}],
       extra_headers={
           "Helicone-Session-Id": "session-abc-123",
@@ -311,7 +311,7 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
   }
 
   response = litellm.completion(
-      model="helicone/gpt-4o-mini/openai,claude-3-5-sonnet-20241022/anthropic", # Try OpenAI first, then fallback to Anthropic, then continue with other models
+      model="helicone/{{openai_small}}/openai,{{anthropic}}/anthropic", # Try OpenAI first, then fallback to Anthropic, then continue with other models
       messages=[{"role": "user", "content": "Hello"}]
   )
   ```
@@ -321,9 +321,9 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
 
   ```yaml title="config.yaml"
   model_list:
-    - model_name: gpt-4
+    - model_name: {{openai_large}}
       litellm_params:
-        model: gpt-4
+        model: {{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
         api_base: "https://oai.hconeai.com/v1"
 
@@ -333,7 +333,7 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
       Helicone-Retry-Enabled: "true"
       helicone-retry-num: "3"
       helicone-retry-factor: "2"
-      Helicone-Fallbacks: '["gpt-3.5-turbo", "gpt-4"]'
+      Helicone-Fallbacks: '["{{openai_small}}", "{{openai_large}}"]'
 
   environment_variables:
     HELICONE_API_KEY: "your-helicone-key"
@@ -344,4 +344,4 @@ Track multi-step and agentic LLM interactions using session IDs and paths:
 </Tabs>
 
 > **Supported Headers** - For a full list of supported Helicone headers and their descriptions, please refer to the [Helicone documentation](https://docs.helicone.ai/features/advanced-usage/custom-properties).
-> By utilizing these headers and metadata options, you can gain deeper insights into your LLM usage, optimize performance, and better manage your AI workflows with Helicone and LiteLLM.
+> With these headers and metadata options, you can see more detail in your LLM usage, optimize performance, and better manage your AI workflows with Helicone and LiteLLM.

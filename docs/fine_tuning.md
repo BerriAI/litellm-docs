@@ -3,12 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # /fine_tuning
 
-
-:::info
-
-This is an Enterprise only endpoint [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
@@ -23,7 +18,7 @@ Add `finetune_settings` and `files_settings` to your litellm config.yaml to use 
 ## Example config.yaml for `finetune_settings` and `files_settings`
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -90,7 +85,7 @@ curl http://localhost:4000/v1/files \
 
 ```python
 ft_job = await client.fine_tuning.jobs.create(
-    model="gpt-35-turbo-1106",                   # Azure OpenAI model you want to fine-tune
+    model="gpt-4.1-2025-04-14",                   # Azure OpenAI model you want to fine-tune
     training_file="file-abc123",                 # file_id from create file response
     extra_headers={"custom-llm-provider": "azure"}, # tell litellm proxy which provider to use
 )
@@ -105,7 +100,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Authorization: Bearer sk-1234" \
     -H "custom-llm-provider: azure" \
     -d '{
-    "model": "gpt-35-turbo-1106",
+    "model": "gpt-4.1-2025-04-14",
     "training_file": "file-abc123"
     }'
 ```
@@ -132,7 +127,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
     **Type:** `Literal["azure", "openai", "vertex_ai"]`
 
     **Required:** Yes
-    The name of the model to fine-tune. You can select one of the [**supported providers**](#supported-providers)
+    The name of the model to fine-tune. You can select one of the [**supported providers**](/docs/fine_tuning#supported-hyperparameters)
 
 * `training_file`
 
@@ -191,7 +186,7 @@ curl http://localhost:4000/v1/fine_tuning/jobs \
 
 ```json
 {
-  "model": "gpt-4o-mini",
+  "model": "gpt-4.1-mini-2025-04-14",
   "training_file": "file-abcde12345",
   "hyperparameters": {
     "batch_size": 4,

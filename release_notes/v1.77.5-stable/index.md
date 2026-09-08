@@ -155,7 +155,7 @@ View the complete load testing script: [gist.github.com/AlexsanderHamir/no_cache
 
 #### New Provider Support
 
-- **[W&B Inference](../../docs/providers/wandb)**
+- **[W&B Inference](/docs/providers/wandb_inference)**
     - Add W&B Inference to LiteLLM - [PR #14416](https://github.com/BerriAI/litellm/pull/14416)
 
 ---
@@ -208,9 +208,9 @@ View the complete load testing script: [gist.github.com/AlexsanderHamir/no_cache
     - Logging - `datadog` callback Log message content w/o sending to datadog - [PR #14909](https://github.com/BerriAI/litellm/pull/14909)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Adding langfuse usage details for cached tokens - [PR #10955](https://github.com/BerriAI/litellm/pull/10955)
-- **[Opik](../../docs/proxy/logging#opik)**
+- **[Opik](/docs/observability/opik_integration)**
     - Improve opik integration code - [PR #14888](https://github.com/BerriAI/litellm/pull/14888)
-- **[SQS](../../docs/proxy/logging#sqs)**
+- **[SQS](/docs/proxy/logging#aws-sqs)**
     - Error logging support for SQS Logger - [PR #14974](https://github.com/BerriAI/litellm/pull/14974)
 
 #### Guardrails

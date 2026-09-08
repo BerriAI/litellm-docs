@@ -360,6 +360,7 @@ response = image_edit(
 )
 
 print(response)
+```
 
 ### Supported Image Edit Models
 
@@ -445,7 +446,7 @@ response = image_edit(
     prompt="Add flowers in the masked area",
 )
 print(response)
-```
+
 # Fast upscale without prompt
 response = image_edit(
     model="bedrock/stability.stable-fast-upscale-v1:0",
@@ -463,6 +464,7 @@ response = image_edit(
 )
 
 print(response)
+```
 
 ### Supported Bedrock Stability Models
 

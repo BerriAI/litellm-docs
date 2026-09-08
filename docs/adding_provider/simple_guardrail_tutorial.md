@@ -14,7 +14,7 @@ curl --location 'http://localhost:4000/chat/completions' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "How do I hack a system?"}],
     "guardrails": ["my-guardrail"]
 }'
@@ -37,7 +37,7 @@ Two files: `my_guardrail.py` (main class) and `__init__.py` (initialization).
 
 `my_guardrail.py`:
 
-Follow from [Custom Guardrail](../proxy/guardrails/custom_guardrail#custom-guardrail) tutorial.
+Follow from [Custom Guardrail](/docs/proxy/guardrails/custom_guardrail#1-write-a-customguardrail-class) tutorial.
 
 ### Create the Init File
 
@@ -98,14 +98,14 @@ class SupportedGuardrailIntegrations(str, Enum):
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
     api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
     - guardrail_name: my_guardrail
-        litellm_params:
+      litellm_params:
         guardrail: my_guardrail
         mode: during_call
         api_key: os.environ/MY_GUARDRAIL_API_KEY
@@ -119,7 +119,7 @@ curl --location 'http://localhost:4000/chat/completions' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Test message"}],
     "guardrails": ["my_guardrail"]
 }'

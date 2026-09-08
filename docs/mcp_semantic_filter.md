@@ -75,7 +75,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -102,7 +102,7 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Search Wikipedia for LiteLLM"}
   ],

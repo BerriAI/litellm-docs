@@ -26,7 +26,7 @@ Click the **+ Add New Prompt** button to create a new prompt.
 
 ### Step 1: Select Your Model
 
-Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-3-5-sonnet`, `gpt-4o`, etc.).
+Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-sonnet-5`, `{{openai_large}}`, etc.).
 
 ### Step 2: Set the Developer Message 
 
@@ -94,7 +94,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id"
   }' | jq
 ```
@@ -111,7 +111,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     extra_body={
         "prompt_id": "your-prompt-id"
     }
@@ -133,7 +133,7 @@ const client = new OpenAI({
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         prompt_id: "your-prompt-id"
     });
     
@@ -158,7 +158,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
     "messages": [
       {
@@ -181,7 +181,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "hi"}
     ],
@@ -206,7 +206,7 @@ const client = new OpenAI({
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         messages: [
             { role: "user", content: "hi" }
         ],
@@ -234,7 +234,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
     "prompt_variables": {
       "dish": "cookies"
@@ -254,7 +254,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     extra_body={
         "prompt_id": "your-prompt-id",
         "prompt_variables": {
@@ -279,7 +279,7 @@ const client = new OpenAI({
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         prompt_id: "your-prompt-id",
         prompt_variables: {
             "dish": "cookies"
@@ -378,7 +378,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "jack-sparrow",
     "prompt_version": 2,
     "messages": [
@@ -402,7 +402,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "Who are u"}
     ],
@@ -428,7 +428,7 @@ const client = new OpenAI({
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         messages: [
             { role: "user", content: "Who are u" }
         ],

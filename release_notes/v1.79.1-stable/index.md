@@ -164,12 +164,12 @@ pip install litellm==1.80.0
     - Support text.format parameter in Responses API for providers without native ResponsesAPIConfig - [PR #16023](https://github.com/BerriAI/litellm/pull/16023)
     - Add LLM provider response headers to Responses API - [PR #16091](https://github.com/BerriAI/litellm/pull/16091)
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Add `custom_llm_provider` support for video endpoints (non-generation) - [PR #16121](https://github.com/BerriAI/litellm/pull/16121)
     - Fix documentation for videos - [PR #15937](https://github.com/BerriAI/litellm/pull/15937)
     - Add OpenAI client usage documentation for videos and fix navigation visibility - [PR #15996](https://github.com/BerriAI/litellm/pull/15996)
 
-- **[Moderations API](../../docs/moderations)**
+- **[Moderations API](/docs/moderation)**
     - Moderations endpoint now respects `api_base` configuration parameter - [PR #16087](https://github.com/BerriAI/litellm/pull/16087)
 
 - **[Vector Stores](../../docs/vector_stores)**
@@ -232,11 +232,11 @@ pip install litellm==1.80.0
 - **[DataDog](../../docs/proxy/logging#datadog)**
     - Ensure key's metadata + guardrail is logged on DD - [PR #15980](https://github.com/BerriAI/litellm/pull/15980)
 
-- **[Opik](../../docs/proxy/logging#opik)**
+- **[Opik](/docs/observability/opik_integration)**
     - Enhance requester metadata retrieval from API key auth - [PR #15897](https://github.com/BerriAI/litellm/pull/15897)
     - User auth key metadata Documentation - [PR #16004](https://github.com/BerriAI/litellm/pull/16004)
 
-- **[SQS](../../docs/proxy/logging#sqs)**
+- **[SQS](/docs/proxy/logging#aws-sqs)**
     - Add Base64 handling for SQS Logger - [PR #16028](https://github.com/BerriAI/litellm/pull/16028)
 
 - **General**
@@ -244,23 +244,23 @@ pip install litellm==1.80.0
 
 #### Guardrails
 
-- **[IBM Guardrails](../../docs/proxy/guardrails)**
+- **[IBM Guardrails](/docs/proxy/guardrails/quick_start)**
     - Update IBM Guardrails to correctly use SSL Verify argument - [PR #15975](https://github.com/BerriAI/litellm/pull/15975)
     - Add additional detail to ibm_guardrails.md documentation - [PR #15971](https://github.com/BerriAI/litellm/pull/15971)
 
-- **[Model Armor](../../docs/proxy/guardrails)**
+- **[Model Armor](/docs/proxy/guardrails/quick_start)**
     - Support during_call for model armor guardrails - [PR #15970](https://github.com/BerriAI/litellm/pull/15970)
 
-- **[Lasso Security](../../docs/proxy/guardrails)**
+- **[Lasso Security](/docs/proxy/guardrails/quick_start)**
     - Upgrade to Lasso API v3 and fix ULID generation - [PR #15941](https://github.com/BerriAI/litellm/pull/15941)
 
-- **[PANW Prisma AIRS](../../docs/proxy/guardrails)**
+- **[PANW Prisma AIRS](/docs/proxy/guardrails/quick_start)**
     - Add per-request profile overrides to PANW Prisma AIRS - [PR #16069](https://github.com/BerriAI/litellm/pull/16069)
 
-- **[Grayswan](../../docs/proxy/guardrails)**
+- **[Grayswan](/docs/proxy/guardrails/quick_start)**
     - Improve Grayswan guardrail documentation - [PR #15875](https://github.com/BerriAI/litellm/pull/15875)
 
-- **[Pillar AI](../../docs/proxy/guardrails)**
+- **[Pillar AI](/docs/proxy/guardrails/quick_start)**
     - Graceful degradation for pillar service when using litellm - [PR #15857](https://github.com/BerriAI/litellm/pull/15857)
 
 - **General**

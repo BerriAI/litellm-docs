@@ -35,10 +35,10 @@ If you're on **AWS ALB**, correlate `litellm_in_flight_requests` spikes with ALB
 
 ## Quick Checklist
 
-1. **Check `in_flight_requests` on each pod** via `/health/backlog` or the `litellm_in_flight_requests` Prometheus gauge — this tells you if requests are queuing before LiteLLM starts processing. Start here for unexplained latency.
+1. **Check `in_flight_requests` on each pod** via `/health/backlog` or the `litellm_in_flight_requests` Prometheus gauge. This tells you if requests are queuing before LiteLLM starts processing. Start here for unexplained latency.
 2. **Collect the `x-litellm-overhead-duration-ms` response header** — this tells you LiteLLM's total overhead on every request.
 2. **Is DEBUG logging enabled?** This is the #1 cause of latency with large payloads.
-3. **Are you sending large base64 payloads?** (images, PDFs) — see [Large Payload Overhead](#large-payload-overhead).
+3. **Are you sending large base64 payloads?** (images, PDFs). See [Large Payload Overhead](#large-payload-overhead).
 4. **Enable detailed timing headers** to pinpoint where time is spent.
 
 ## Diagnostic Headers
@@ -50,7 +50,7 @@ Every response from LiteLLM includes this header. It shows the total latency ove
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm-overhead-duration-ms
 ```
 
@@ -61,7 +61,7 @@ Shows time spent building callback/logging payloads (ms). If this is high (>100m
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm
 ```
 

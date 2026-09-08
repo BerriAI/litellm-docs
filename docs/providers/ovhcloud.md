@@ -64,7 +64,7 @@ response = completion(
     temperature = 0.2,
     top_p = 0.9,
     user = "user",
-    api_key = "your-api-key" # Optional if set through the enviromnent variable,
+    api_key = "your-api-key", # Optional if set through the enviromnent variable
     stream = True
 )
 

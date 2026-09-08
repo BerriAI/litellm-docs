@@ -24,7 +24,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-4o", 
+    model = "{{openai_large}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -34,7 +34,7 @@ When `litellm.enable_preview_features = True`, LiteLLM forwards only the values 
 
 ```python
 completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     metadata= {"custom_meta_key": "value"},
 )
@@ -58,9 +58,9 @@ export OPENAI_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo                          # The `openai/` prefix will call openai.chat.completions.create
+      model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
@@ -71,7 +71,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-4`, `gpt-3.5-turbo` , `gpt-4-turbo-preview` will all go through this route 
+This means requests to `{{openai_large}}`, `{{openai_small}}` will all go through this route 
 
 ```yaml
 model_list:
@@ -84,7 +84,7 @@ model_list:
 <TabItem value="cli" label="CLI">
 
 ```bash
-$ litellm --model gpt-3.5-turbo
+$ litellm --model {{openai_small}}
 
 # Server running on http://0.0.0.0:4000
 ```
@@ -102,7 +102,7 @@ $ litellm --model gpt-3.5-turbo
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-3.5-turbo",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -123,7 +123,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -147,7 +147,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1
 )
 
@@ -175,6 +175,53 @@ os.environ["OPENAI_ORGANIZATION"] = "your-org-id"       # OPTIONAL
 os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 ```
 
+### Workload Identity Federation (no API key)
+
+Instead of a static `OPENAI_API_KEY`, the proxy can authenticate to OpenAI with workload identity federation: it reads an OIDC token from a file (for example a Kubernetes projected service account token), exchanges it for a short-lived OpenAI bearer token, and refreshes that token before it expires. This needs `openai>=2.32.0`.
+
+You need three values from the OpenAI platform: the identity provider id (`idp_...`), the service account id (`user-...`) the workload authenticates as, and the path of the token file inside the pod.
+
+<Tabs>
+<TabItem value="wif-env" label="Environment (proxy-wide default)">
+
+```bash
+export OPENAI_IDENTITY_PROVIDER_ID="idp_..."
+export OPENAI_SERVICE_ACCOUNT_ID="user-..."
+export OPENAI_IDENTITY_TOKEN_FILE="/var/run/secrets/tokens/openai"
+```
+
+Every `openai/` deployment that has no `api_key` then uses federation.
+
+</TabItem>
+<TabItem value="wif-config" label="config.yaml (per deployment)">
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      openai_identity_provider_id: idp_...
+      openai_service_account_id: user-...
+      openai_identity_token_file: /var/run/secrets/tokens/openai
+```
+
+Values set on a deployment take precedence over the environment variables, so different deployments can federate as different service accounts.
+
+</TabItem>
+<TabItem value="wif-ui" label="Admin UI (credential)">
+
+1. Open Models + Endpoints, go to the Credentials tab and click Add Credential
+2. Pick OpenAI as the provider, then Workload Identity Federation (token file) as the authentication method
+3. Fill in the identity provider id, the service account id and the token file path, then save
+4. In Add Model, pick OpenAI, choose the model, and select the credential under Existing Credentials. The API key field disappears because the credential carries the federation settings
+
+</TabItem>
+</Tabs>
+
+A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
+
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+
 ### OpenAI Chat Completion Models
 
 | Model Name            | Function Call                                                   |
@@ -196,6 +243,7 @@ os.environ["OPENAI_BASE_URL"] = "https://your_host/v1"     # OPTIONAL
 | gpt-5.4-2026-03-05 | `response = completion(model="gpt-5.4-2026-03-05", messages=messages)` |
 | gpt-5.5 | `response = completion(model="gpt-5.5", messages=messages)` |
 | gpt-5.5-2026-04-23 | `response = completion(model="gpt-5.5-2026-04-23", messages=messages)` |
+| gpt-6-astra | `response = completion(model="gpt-6-astra", messages=messages)` |
 | gpt-5.2-pro | `response = completion(model="gpt-5.2-pro", messages=messages)` |
 | gpt-5.2-pro-2025-12-11 | `response = completion(model="gpt-5.2-pro-2025-12-11", messages=messages)` |
 | gpt-5.4-pro | `response = completion(model="gpt-5.4-pro", messages=messages)` |
@@ -270,7 +318,7 @@ response = completion(
 from litellm import responses
 
 response = responses(
-    model="openai/gpt-5",
+    model="openai/{{openai_large}}",
     input="What is the capital of France?",
     tools=[{
         "type": "web_search_preview",
@@ -291,9 +339,9 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
   # Regular model for /responses with web_search_preview tool
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -318,7 +366,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-4-vision-preview", 
+    model = "{{openai_large}}", 
     messages=[
         {
             "role": "user",
@@ -357,7 +405,7 @@ with open("draconomicon.pdf", "rb") as f:
 base64_string = base64.b64encode(data).decode("utf-8")
 
 completion = completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "user",
@@ -391,7 +439,7 @@ print(completion.choices[0].message.content)
 model_list:
   - model_name: openai-model
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -441,9 +489,9 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 You can opt in globally or per request:
 
-**Option A — per-request prefix:** Use the `openai/responses/` model prefix.
+**Option A, per-request prefix:** Use the `openai/responses/` model prefix.
 
-**Option B — global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
+**Option B, global flag (recommended):** Set `route_all_chat_openai_to_responses = True` to automatically route all OpenAI `/chat/completions` requests through the Responses API, no model prefix needed.
 
 <Tabs>
 <TabItem value="sdk-global" label="SDK - Global Flag">
@@ -454,7 +502,7 @@ import litellm
 litellm.route_all_chat_openai_to_responses = True
 
 response = litellm.completion(
-    model="gpt-5.4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -469,13 +517,13 @@ litellm_settings:
   route_all_chat_openai_to_responses: true
 ```
 
-Then call normally — no model prefix needed:
+Then call normally, with no model prefix:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
 }'
@@ -488,13 +536,13 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 `route_all_chat_openai_to_responses` only applies to the `openai` provider. Azure OpenAI is unaffected. You can also set it via env var: `LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true`.
 :::
 
-**Option A — per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
+**Option A, per-request prefix:** You can also prefix individual model names with `openai/responses/` to route just that call through the Responses API.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini", # tells litellm to call the model via the Responses API
+    model="openai/responses/{{openai_small}}", # tells litellm to call the model via the Responses API
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -507,7 +555,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{ 
-    "model": "openai/responses/gpt-5-mini",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
 }'
@@ -520,7 +568,7 @@ Expected Response:
 {
   "id": "chatcmpl-6382a222-43c9-40c4-856b-22e105d88075",
   "created": 1760146746,
-  "model": "gpt-5-mini",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": null,
   "choices": [
@@ -555,7 +603,7 @@ Expected Response:
 
 ### Advanced: Using `reasoning_effort` with `summary` field
 
-By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`—`"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
+By default, `reasoning_effort` accepts a string value (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, where `"xhigh"` is only supported on `gpt-5.1-codex-max` and `gpt-5.2` models) and only sets the effort level without including a reasoning summary.
 
 To opt-in to the `summary` feature, you can pass `reasoning_effort` as a dictionary. **Note:** The `summary` field requires your OpenAI organization to have verification status. Using `summary` without verification will result in a 400 error from OpenAI.
 
@@ -564,14 +612,14 @@ To opt-in to the `summary` feature, you can pass `reasoning_effort` as a diction
 ```python
 # Option 1: String format (default - no summary)
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="high"  # Only sets effort level
 )
 
 # Option 2: Dict format (with optional summary - requires org verification)
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort={"effort": "high", "summary": "auto"}  # "auto", "detailed", or "concise" (not all supported by all models)
 )
@@ -585,7 +633,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "openai/responses/gpt-5-mini",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "high"
 }'
@@ -596,7 +644,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "openai/responses/gpt-5-mini",
+    "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": {"effort": "high", "summary": "auto"}
 }'
@@ -607,7 +655,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 **Summary field options:**
 - `"auto"`: System automatically determines the appropriate summary level based on the model
 - `"concise"`: Provides a shorter summary (not supported by GPT-5 series models)
-- `"detailed"`: Offers a comprehensive reasoning summary
+- `"detailed"`: Offers a fuller reasoning summary
 
 **Note:** GPT-5 series models support `"auto"` and `"detailed"`, but do not support `"concise"`. O-series models (o3-pro, o4-mini, o3) support all three options. Some models like o3-mini and o1 do not support reasoning summaries at all.
 
@@ -651,7 +699,7 @@ messages = [{"role": "user", "content": "Solve this step by step: 2 + 2"}]
 
 # Turn 1 — get reasoning_items (encrypted_content);
 response = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -668,7 +716,7 @@ messages.append({
 messages.append({"role": "user", "content": "Now summarize your reasoning."})
 
 response2 = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -689,7 +737,7 @@ collected_content = []
 collected_reasoning_items = []
 
 stream = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     stream=True,
     reasoning_effort="low",
@@ -711,7 +759,7 @@ messages.append({
 messages.append({"role": "user", "content": "Continue the conversation."})
 
 response2 = litellm.completion(
-    model="openai/responses/gpt-5-mini",
+    model="openai/responses/{{openai_small}}",
     messages=messages,
     reasoning_effort="low",
     include=["reasoning.encrypted_content"],
@@ -741,14 +789,14 @@ import litellm
 
 # Low verbosity - concise responses
 response = litellm.completion(
-    model="gpt-5.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a function to reverse a string"}],
     verbosity="low"
 )
 
 # High verbosity - detailed responses
 response = litellm.completion(
-    model="gpt-5.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Explain how neural networks work"}],
     verbosity="high"
 )
@@ -761,7 +809,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-5.1",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Write a function to reverse a string"}],
     "verbosity": "low"
 }'
@@ -784,7 +832,7 @@ If you need reasoning **and** tools together, use the responses bridge instead (
 
 ```python
 response = litellm.completion(
-    model="openai/responses/gpt-5.5",  # routes to /v1/responses
+    model="openai/responses/{{openai_large}}",  # routes to /v1/responses
     messages=[{"role": "user", "content": "What's the weather?"}],
     tools=[...],
     reasoning_effort="low",
@@ -808,15 +856,15 @@ Each model has a `mode` property defined in [`model_prices_and_context_window.js
 
 **Models with `mode: chat`** (require `openai/responses/` prefix for built-in tools):
 - `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`
-- `gpt-5`, `gpt-5-mini`
+- `gpt-5`, `gpt-5-mini`, `gpt-5.6-terra`, `gpt-5.6-luna`
 - `o3`, `o4-mini`
 
 To use built-in tools like `web_search_preview` with `mode: chat` models, add the `openai/responses/` prefix:
 
 ```python
-# This will FAIL - gpt-4o has mode: chat, uses Chat Completions API
+# This will FAIL - {{openai_large}} has mode: chat, uses Chat Completions API
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[{"type": "web_search_preview"}],  # Not supported in Chat Completions
     # ... other kwargs
@@ -824,7 +872,7 @@ response = litellm.completion(
 
 # This will WORK - prefix forces Responses API
 response = litellm.completion(
-    model="openai/responses/gpt-4o",
+    model="openai/responses/{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[{"type": "web_search_preview"}],  # Supported in Responses API
     # ... other kwargs
@@ -865,7 +913,7 @@ os.environ["OPENAI_API_KEY"] = "sk-1234"
 
 # Use the openai/responses/ prefix to enable built-in tools
 response = litellm.completion(
-    model="openai/responses/gpt-4o",
+    model="openai/responses/{{openai_large}}",
     messages=[{"role": "user", "content": "What is the weather in Paris today?"}],
     tools=[
         {"type": "web_search_preview"},
@@ -890,7 +938,7 @@ model_list:
   # Model with mode: chat (use prefix for built-in tools)
   - model_name: gpt-4o-with-tools
     litellm_params:
-      model: openai/responses/gpt-4o
+      model: openai/responses/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -976,7 +1024,7 @@ litellm --config config.yaml
 3. Test it!
 
 ```bash
-curl --location 'http://0.0.0.0:8000/v1/audio/transcriptions' \
+curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header 'Authorization: Bearer sk-1234' \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 --form 'model="gpt-4o-transcribe"'
@@ -1005,7 +1053,7 @@ litellm.return_response_headers = True
 
 # /chat/completion
 response = completion(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -1025,7 +1073,7 @@ litellm.return_response_headers = True
 
 # /chat/completion
 response = completion(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     stream=True,
     messages=[
         {
@@ -1133,7 +1181,7 @@ tools = [
 ]
 
 response = litellm.completion(
-    model="gpt-3.5-turbo-1106",
+    model="{{openai_small}}",
     messages=messages,
     tools=tools,
     tool_choice="auto",  # auto is default, but we'll be explicit
@@ -1151,7 +1199,7 @@ from litellm import completion
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model = "gpt-3.5-turbo", 
+    model = "{{openai_small}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}],
     extra_headers={"AI-Resource Group": "ishaan-resource"}
 )
@@ -1170,7 +1218,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 os.environ["OPENAI_ORGANIZATION"] = "your-org-id" # OPTIONAL
 
 response = completion(
-    model = "gpt-3.5-turbo", 
+    model = "{{openai_small}}", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -1187,14 +1235,14 @@ import litellm, httpx
 # for completion
 litellm.client_session = httpx.Client(verify=False)
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=messages,
 )
 
 # for acompletion
 litellm.aclient_session = httpx.AsyncClient(verify=False)
 response = litellm.acompletion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=messages,
 )
 ```
@@ -1232,9 +1280,9 @@ Forward openai Org ID's from the client to OpenAI with `forward_openai_org_id` p
 
 ```yaml
 model_list:
-  - model_name: "gpt-3.5-turbo"
+  - model_name: "{{openai_small}}"
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -1259,7 +1307,7 @@ client = OpenAI(
     base_url="http://0.0.0.0:4000"
 )
 
-client.chat.completions.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello world"}])
+client.chat.completions.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hello world"}])
 ```
 
 In your logs you should see the forwarded org id

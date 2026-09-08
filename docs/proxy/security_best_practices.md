@@ -49,3 +49,19 @@ Enable [audit logs](./multiple_admins) and review administrative changes such as
 ## 7. Add guardrails for sensitive workloads (optional)
 
 If your workloads handle sensitive or regulated data, add [guardrails](./guardrails/quick_start) to screen prompts and responses. We recommend [Bedrock Guardrails](./guardrails/bedrock) for content filtering, PII detection, and denied-topic policies, and the [LiteLLM content filter](./guardrails/litellm_content_filter) for lightweight, regex-based blocking of specific words or patterns. Guardrails can be applied per key, team, or model so you can enforce stricter controls where they are needed.
+
+## 8. Configure Secure cookies behind a TLS-terminating reverse proxy
+
+The proxy's session, SSO, and SAML cookies are marked `Secure` whenever the public-facing origin is HTTPS. When TLS terminates at a reverse proxy or load balancer in front of LiteLLM, LiteLLM only sees the plain-HTTP hop from that proxy, so it needs one trusted signal to know the public origin is actually HTTPS:
+
+- Set [`PROXY_BASE_URL`](./config_settings#environment-variables---reference) to the exact `https://` origin your users see in their browser. This is the simplest option and takes precedence over everything else.
+- Otherwise, set `general_settings.use_x_forwarded_for: true` and `general_settings.mcp_trusted_proxy_ranges` to your reverse proxy's CIDR range(s). LiteLLM then honors `X-Forwarded-Proto: https` from that proxy, but only when the request's direct peer address falls inside one of those CIDRs: an untrusted caller cannot spoof this header to strip `Secure` from its own cookies.
+
+```yaml
+general_settings:
+  use_x_forwarded_for: true
+  mcp_trusted_proxy_ranges:
+    - "10.0.0.0/8" # your reverse proxy / ingress controller's network
+```
+
+Without one of these configured, a deployment behind TLS termination gets cookies without `Secure`, since LiteLLM has no trusted way to tell it is being reached over HTTPS. Neither setting is MCP-specific despite the `mcp_` prefix; both are the general request trust boundary LiteLLM uses for `X-Forwarded-*` headers.

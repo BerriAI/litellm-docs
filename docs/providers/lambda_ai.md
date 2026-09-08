@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `lambda_ai/` |
 | Link to Provider Doc | [Lambda AI API Documentation ↗](https://docs.lambda.ai/api) |
 | Base URL | `https://api.lambda.ai/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/lambda_ai#usage---litellm-python-sdk) |
 
 <br />
 <br />

@@ -76,7 +76,7 @@ export LITELLM_API_BASE=https://litellm.your-company.com/v1
 export LITELLM_API_KEY=sk-litellm-...
 ```
 
-Then call as usual — every underlying model request routes through the gateway:
+Then call as usual; every underlying model request routes through the gateway:
 
 ```python
 from lite_harness import query, AgentOptions
@@ -104,11 +104,11 @@ async for message in query(
 
 ### Do I have to use the LiteLLM AI Gateway?
 
-No. `lite-harness` works standalone — point it at provider APIs with native keys. AI Gateway integration is opt-in for teams that want central key management, budgets, fallbacks, and a single audit log across every model call.
+No. `lite-harness` works standalone; point it at provider APIs with native keys. AI Gateway integration is opt-in for teams that want central key management, budgets, fallbacks, and a single audit log across every model call.
 
 ### Does swapping harnesses change agent behavior?
 
-Yes — that's the point. Each harness keeps its native loop, tool-calling semantics, and prompt format. `lite-harness` unifies how you *invoke* them, not how they run internally. Run the same prompt across all three to see which combo lands the task best.
+Yes, that's the point. Each harness keeps its native loop, tool-calling semantics, and prompt format. `lite-harness` unifies how you *invoke* them, not how they run internally. Run the same prompt across all three to see which combo lands the task best.
 
 ### Is this ready for production? 
 
@@ -120,6 +120,6 @@ Yes. `lite-harness` is MIT-licensed at [github.com/LiteLLM-Labs/lite-harness](ht
 
 ## Recommended Reading
 
-- [LiteLLM AI Gateway — full feature overview](https://docs.litellm.ai/docs/simple_proxy)
-- [LiteLLM Managed Agents Platform — Alpha](https://docs.litellm.ai/blog/agent-platform-alpha)
+- [LiteLLM AI Gateway: full feature overview](https://docs.litellm.ai/docs/simple_proxy)
+- [LiteLLM Managed Agents Platform: Alpha](https://docs.litellm.ai/blog/agent-platform-alpha)
 - [Load balancing and routing across 100+ LLM providers](https://docs.litellm.ai/docs/routing)

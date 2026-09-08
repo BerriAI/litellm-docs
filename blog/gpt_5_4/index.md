@@ -87,4 +87,4 @@ print(response.choices[0].message.content)
 
 - Restart your container to get the cost tracking for this model.
 - Use `/responses` for better model performance.
-- GPT-5.4 supports reasoning, function calling, vision, and tool-use — see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.
+- GPT-5.4 supports reasoning, function calling, vision, and tool-use; see the [OpenAI provider docs](../../docs/providers/openai) for advanced usage.

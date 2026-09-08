@@ -276,7 +276,7 @@ os.environ["DATABRICKS_API_KEY"] = "databricks key"
 os.environ["DATABRICKS_API_BASE"] = "databricks base url"
 
 resp = completion(
-    model="databricks/databricks-claude-3-7-sonnet",
+    model="databricks/databricks-claude-sonnet-5",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -290,9 +290,9 @@ resp = completion(
 1. Setup config.yaml
 
 ```yaml
-- model_name: claude-3-7-sonnet
+- model_name: {{anthropic}}
   litellm_params:
-    model: databricks/databricks-claude-3-7-sonnet
+    model: databricks/databricks-claude-sonnet-5
     api_key: os.environ/DATABRICKS_API_KEY
     api_base: os.environ/DATABRICKS_API_BASE
 ```
@@ -310,7 +310,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-7-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
   }'
@@ -326,7 +326,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-3-7-sonnet-20250219',
+    model='{{anthropic}}',
     object='chat.completion',
     system_fingerprint=None,
     choices=[

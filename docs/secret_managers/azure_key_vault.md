@@ -1,14 +1,6 @@
 # Azure Key Vault
 
-:::info
-
-✨ **This is an Enterprise Feature**
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 ## Usage with LiteLLM Proxy Server
 
@@ -29,7 +21,7 @@ export["AZURE_KEY_VAULT_URI"]="your-azure-key-vault-uri"
 ```yaml
 model_list: 
     - model_name: "my-azure-models" # model alias 
-        litellm_params:
+      litellm_params:
             model: "azure/<your-deployment-name>"
             api_key: "os.environ/AZURE-API-KEY" # reads from key vault - get_secret("AZURE_API_KEY")
             api_base: "os.environ/AZURE-API-BASE" # reads from key vault - get_secret("AZURE_API_BASE")
@@ -43,5 +35,5 @@ You can now test this by starting your proxy:
 litellm --config /path/to/config.yaml
 ```
 
-[Quick Test Proxy](../proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain-langchain-js)
+[Quick Test Proxy](/docs/proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain)
 

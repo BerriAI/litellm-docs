@@ -210,8 +210,6 @@ input=["good morning from litellm"]
         -0.0022326677571982145,
         0.010749882087111473,
         ...
-        ...
-        ...
    
       ]
     }
@@ -255,7 +253,7 @@ Use this for calling `/embedding` endpoints on OpenAI Compatible Servers, exampl
 from litellm import embedding
 response = embedding(
   model = "openai/<your-llm-name>",     # add `openai/` prefix to model so litellm knows to route to OpenAI
-  api_base="http://0.0.0.0:4000/"       # set API Base of your Custom OpenAI Endpoint
+  api_base="http://0.0.0.0:4000/",      # set API Base of your Custom OpenAI Endpoint
   input=["good morning from litellm"]
 )
 ```
@@ -284,11 +282,11 @@ print(response)
 | Model Name           | Function Call                               |
 |----------------------|---------------------------------------------|
 | Amazon Nova Multimodal Embeddings | `embedding(model="bedrock/amazon.nova-2-multimodal-embeddings-v1:0", input=input)` | [Nova Docs](../providers/bedrock_embedding#amazon-nova-multimodal-embeddings) |
-| Amazon Nova (Async) | `embedding(model="bedrock/async_invoke/amazon.nova-2-multimodal-embeddings-v1:0", input=input, input_type="text", output_s3_uri="s3://bucket/")` | [Nova Async Docs](../providers/bedrock_embedding#asynchronous-embeddings-with-segmentation) |
+| Amazon Nova (Async) | `embedding(model="bedrock/async_invoke/amazon.nova-2-multimodal-embeddings-v1:0", input=input, input_type="text", output_s3_uri="s3://bucket/")` | [Nova Async Docs](../providers/bedrock_embedding#async-invoke-support) |
 | Titan Embeddings - G1 | `embedding(model="amazon.titan-embed-text-v1", input=input)` |
 | Cohere Embeddings - English | `embedding(model="cohere.embed-english-v3", input=input)` |
 | Cohere Embeddings - Multilingual | `embedding(model="cohere.embed-multilingual-v3", input=input)` |
-| TwelveLabs Marengo (Async) | `embedding(model="bedrock/async_invoke/us.twelvelabs.marengo-embed-2-7-v1:0", input=input, input_type="text")` | [Async Invoke Docs](../providers/bedrock_embedding#async-invoke-embedding) |
+| TwelveLabs Marengo (Async) | `embedding(model="bedrock/async_invoke/us.twelvelabs.marengo-embed-2-7-v1:0", input=input, input_type="text")` | [Async Invoke Docs](../providers/bedrock_embedding#async-invoke-support) |
 
 ## TwelveLabs Bedrock Embedding Models
 
@@ -390,7 +388,7 @@ response = embedding(
 ```
 ## `input_type` Parameter for Embedding Models
 
-Certain embedding models, such as `nvidia/embed-qa-4` and the E5 family, operate in **dual modes**—one for **indexing documents (passages)** and another for **querying**. To maintain high retrieval accuracy, it's essential to specify how the input text is being used by setting the `input_type` parameter correctly.
+Certain embedding models, such as `nvidia/embed-qa-4` and the E5 family, operate in **dual modes**: one for **indexing documents (passages)** and another for **querying**. Set the `input_type` parameter correctly so retrieval accuracy stays high.
 
 ### Usage
 
@@ -519,11 +517,11 @@ All models listed [here](https://ai.google.dev/gemini-api/docs/models/gemini) ar
 
 ### Gemini Embedding 2 Preview (Multimodal)
 
-`gemini-embedding-2-preview` supports **multimodal embeddings**—text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior—swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
+`gemini-embedding-2-preview` supports **multimodal embeddings**: text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior, so swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
 
 :::info Response shape
 
-For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`)—same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector—see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
+For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`), the same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector; see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
 
 :::
 
@@ -622,7 +620,7 @@ curl -X POST http://localhost:4000/embeddings \
 </TabItem>
 </Tabs>
 
-This is useful for representing multi-modal entities (e.g., a product with a name + photo) as a single vector for search and retrieval. Gemini API only — Vertex AI always returns a single combined vector regardless of input shape (see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal)).
+This is useful for representing multi-modal entities (e.g., a product with a name + photo) as a single vector for search and retrieval. Gemini API only. Vertex AI always returns a single combined vector regardless of input shape (see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal)).
 
 
 ## Vertex AI Embedding Models

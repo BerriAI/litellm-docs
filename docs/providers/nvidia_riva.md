@@ -173,7 +173,7 @@ Riva-specific parameters you can set in `litellm_params` (or pass directly to `t
 
 ### Why is `riva_model_name` empty by default?
 
-Internal Riva deployment names like `parakeet-1.1b-en-US-asr-streaming-silero-vad-sortformer` are NVIDIA's deployment identifiers. They change across NIM versions, regions, and self-hosted builds. Leaving `model=""` in `RecognitionConfig` lets Riva auto-select the right one based on `language_code` and `sample_rate_hertz` — which is what you almost always want. Only set `riva_model_name` if you have a specific deployed model you need to pin.
+Internal Riva deployment names like `parakeet-1.1b-en-US-asr-streaming-silero-vad-sortformer` are NVIDIA's deployment identifiers. They change across NIM versions, regions, and self-hosted builds. Leaving `model=""` in `RecognitionConfig` lets Riva auto-select the right one based on `language_code` and `sample_rate_hertz`, which is what you almost always want. Only set `riva_model_name` if you have a specific deployed model you need to pin.
 
 ## Audio formats
 
@@ -196,5 +196,5 @@ ffmpeg -i input.mp3 -ac 1 -ar 16000 -sample_fmt s16 output.wav
 ## Notes & limitations
 
 - Transport is gRPC streaming. NVCF only supports streaming ASR today, so even short files are sent as a stream.
-- Diarization (`diarization_config`) and `srt` / `vtt` response formats aren't wired up yet — open an issue if you need them.
+- Diarization (`diarization_config`) and `srt` / `vtt` response formats aren't wired up yet. Open an issue if you need them.
 - Cost calc: Riva doesn't return token usage. LiteLLM stores the audio duration on `_hidden_params["audio_transcription_duration"]` so cost can be derived externally.

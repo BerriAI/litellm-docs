@@ -15,7 +15,7 @@ When `litellm.modify_params = True` is enabled, LiteLLM automatically sanitizes 
 2. **Orphaned Tool Results** - Tool messages that reference non-existent tool_call_ids
 3. **Empty Message Content** - Messages with empty or whitespace-only text content
 
-This ensures your tool calling workflows work seamlessly across different LLM providers without manual message validation.
+Your tool calling workflows then work across different LLM providers without manual message validation.
 
 ## Why Message Sanitization?
 
@@ -40,7 +40,7 @@ litellm.modify_params = True
 
 # This will work even if messages have formatting issues
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What's the weather in Boston?"},
         {
@@ -79,9 +79,9 @@ litellm_settings:
   modify_params: true  # Enable automatic message sanitization
 
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
 ```
 
 </TabItem>
@@ -126,7 +126,7 @@ messages = [
 # }
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=[...]
 )
@@ -164,7 +164,7 @@ messages = [
 # LiteLLM automatically removes the orphaned tool message
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -198,7 +198,7 @@ messages = [
 # {"role": "assistant", "content": "[System: Empty message content sanitised to satisfy protocol]"}
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -248,7 +248,7 @@ import litellm
 
 # Enable only for specific requests
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     modify_params=True  # Override global setting
 )
@@ -305,7 +305,7 @@ litellm.modify_params = True
 
 # Ensures robust handling of edge cases
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools
 )
@@ -345,7 +345,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Track sanitization events in your application
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -366,7 +366,7 @@ test_messages = [
 ]
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=test_messages,
     tools=[...]
 )

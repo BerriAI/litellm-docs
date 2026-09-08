@@ -11,7 +11,9 @@
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
+    "lint:docs": "python3 scripts/check-docs.py docs"
   },
   "dependencies": {
     "@docusaurus/core": "3.8.1",

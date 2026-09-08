@@ -60,5 +60,5 @@ litellm --config /path/to/config.yaml
 
 ## See also
 
-- [OpenTelemetry — Tracing LLMs](./opentelemetry_integration.md)
-- [Splunk Observability Cloud — OTLP exporter](https://docs.splunk.com/observability/en/gdi/opentelemetry/opentelemetry.html) (vendor docs)
+- [OpenTelemetry: Tracing LLMs](./opentelemetry_integration.md)
+- [Splunk Observability Cloud: OTLP exporter](https://docs.splunk.com/observability/en/gdi/opentelemetry/opentelemetry.html) (vendor docs)

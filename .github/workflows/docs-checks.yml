@@ -1,0 +1,25 @@
+name: Docs checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  writing-style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-writing-style.js docs blog release_notes
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install pyyaml
+      - run: python3 scripts/check-docs.py docs

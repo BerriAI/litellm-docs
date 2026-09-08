@@ -1,22 +1,24 @@
 ---
 title: Auto Router with Claude Code and Claude Desktop
 sidebar_label: Auto Router
-description: Route Claude Code and Claude Desktop through a LiteLLM auto router, including the model name and organization allowlist requirements that decide whether the router is selectable at all.
+description: Route Claude Code and Claude Desktop through a LiteLLM auto router, including gateway discovery's model-name filter and the organization allowlist requirements that decide whether the router is selectable at all.
 ---
 
 # Auto Router with Claude Code and Claude Desktop
 
-A LiteLLM [auto router](../proxy/auto_routing.md) sends every Claude Code request to the smallest model that can handle it, which is where most of the savings on a Claude Code workload come from. Pointing Claude at one takes two things beyond the usual `ANTHROPIC_BASE_URL` setup: a router name Claude will accept, and that name on your organization's model allowlist.
+A LiteLLM [auto router](../proxy/auto_routing.md) sends every Claude Code request to the smallest model that can handle it, which is where most of the savings on a Claude Code workload come from. Pointing Claude at one takes little beyond the usual `ANTHROPIC_BASE_URL` setup: the router's name on your organization's model allowlist if your organization restricts models, and a name containing `claude` or `anthropic` if you want the picker to discover the router on its own rather than naming it explicitly.
 
 Skip the allowlist step and the router is greyed out in the Claude Desktop model picker, missing from `/model` in the CLI, and any attempt to select it by name starts the session on a different model with the notice `Model "<name>" is restricted by your organization's settings. Using <model> instead.` Nothing reaches your proxy, so the LiteLLM logs stay empty and the problem looks like a routing bug rather than a client-side policy check.
 
 ## Name the router so Claude accepts it
 
-Claude's model pickers and Claude Desktop's third-party inference dialog only offer model names that read as Anthropic models. The `model_name` has to contain `claude` or `anthropic`, or a family name such as `opus`, `sonnet`, `haiku`, or `fable`, so `claude-auto`, `claude-smart-router`, and `opus-auto` are all accepted while `smart-router`, `auto`, and a bare UUID are rejected in the client before any request is sent. Another vendor's name anywhere in the string fails the check regardless, so `claude-vs-gpt` is filtered out as non-Anthropic despite the `claude`.
+Only one thing about the router's name matters to Claude Code by itself, and it is narrower than it sounds: gateway model discovery (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, see below) populates the `/model` picker from your proxy's `/v1/models` response and keeps only the entries whose `id` contains `claude` or `anthropic` anywhere in the string, case-insensitively; everything else in that response gets dropped. That is the entire filter. There is no separate allowance for a family word like `opus`, `sonnet`, `haiku`, or `fable`, and no check for a rival vendor's name, so `claude-auto` and `claude-smart-router` pass discovery while `smart-router` and a bare UUID do not, and `claude-vs-gpt` also passes despite naming a competitor.
 
-Build the name on `claude` rather than on a family word. A family word changes how the allowlist in the next section treats the route: `opus-auto` counts as a specific Opus entry, which disables the `opus` family wildcard and leaves every Opus version you still want selectable to be listed by hand.
+Discovery is a convenience for populating the picker automatically, not a gate on whether the router works. Point `ANTHROPIC_MODEL` at any `model_name`, or set `ANTHROPIC_CUSTOM_MODEL_OPTION` to it on the CLI or in Claude Desktop, and Claude Code sends that string through with no client-side validation on its shape, so a router named `smart-router` works the same as `claude-auto`. Use this for a name discovery would skip, instead of renaming the router to satisfy a filter that only affects the picker.
 
-```yaml title="config.yaml"
+The one place a family word still costs you something is the allowlist in the next section, not the client: `opus-auto` counts there as a specific Opus entry, which disables the `opus` family wildcard and leaves every other Opus version you still want selectable to be listed by hand. Building the name on `claude` avoids that.
+
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-auto
     litellm_params:
@@ -62,6 +64,14 @@ To get the router into the `/model` picker rather than only into the startup mod
 
 For Claude Desktop, enter the proxy URL and virtual key under **Developer > Configure Third-Party Inference**, then pick the router in the model list. The [Claude Desktop integration guide](./claude_desktop_cowork.md) walks the dialog screen by screen.
 
+## Context window shown in the client
+
+The window LiteLLM advertises for the router and the window Claude Code works to are separate numbers, and the proxy cannot push its value into the client. Claude Code applies its own default for a model name it does not recognize as one of Anthropic's, which a gateway-served router name never is. Setting `max_input_tokens` in the router's `model_info` changes what `/v1/models` and the LiteLLM UI report without moving what the client displays or when it compacts, so a mismatch between the two is expected rather than a sign the router is misconfigured.
+
+Configure the client separately. `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, or `autoCompactWindow` in `.claude/settings.json`, sets the context window Claude Code targets before auto-compaction, and `autoCompactEnabled` turns compaction off. See Claude Code's [model configuration](https://code.claude.com/docs/en/model-config) reference.
+
+The same split applies to any harness pointed at a router: the number it shows comes from its own defaults for a name it does not know, so it has to be set in the harness. What the proxy enforces is unaffected either way, because [context-window checks and escalation](../proxy/auto_routing.md#context-window) run against the tier model the router actually picked rather than against the router name.
+
 ## Scope the virtual key to the router
 
 Give Claude clients a key scoped to the router alone.
@@ -81,9 +91,10 @@ Model discovery lists whatever the key can reach, and Claude Desktop's **Test co
 | ------- | ----- | --- |
 | Router greyed out in the Claude Desktop or claude.ai model picker | Router name is missing from `availableModels` | Add the exact `model_name` to the allowlist and restart the client |
 | `Model "<name>" is restricted by your organization's settings` at CLI startup | Same allowlist, delivered to the terminal | Deploy the list through MDM or `managed-settings.json`; the admin console channel does not reach sessions on `ANTHROPIC_BASE_URL` |
-| Claude Desktop rejects the name in the third-party inference dialog | Name is not Anthropic-shaped | Rename the route to something like `claude-auto` |
+| Router never shows up in the picker even though `availableModels` lists it | Relying on discovery with a name that lacks `claude`/`anthropic`, so it never gets discovered in the first place | Rename it, or add it directly with `ANTHROPIC_CUSTOM_MODEL_OPTION` instead of depending on discovery |
 | Test connection fails naming a model you never selected | Key discovers models beyond the router and the probe picks one of them | Scope the virtual key to the router |
 | Router missing from `/v1/models` and the Models page after an edit | Older builds did not relink the in-memory router registry when a deployment was replaced | Restart the proxy to reload it from the database, and upgrade to a release containing [PR #34564](https://github.com/BerriAI/litellm/pull/34564) |
+| Context window in the client looks wrong for the router | Claude Code applies its own default for a model name it does not recognize; the proxy value is advisory | Set `CLAUDE_CODE_AUTO_COMPACT_WINDOW` or `autoCompactWindow` on the client. `model_info.max_input_tokens` on the router changes only what `/v1/models` and the UI report |
 
 ## Related
 

@@ -4,14 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # ✨ [Beta] Project Management UI
 
-:::info
-
-This is an Enterprise feature.
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Manage projects directly from the LiteLLM Admin UI. Projects sit between teams and keys in your organizational hierarchy, enabling fine-grained access control and budget management for specific use cases or applications.
 

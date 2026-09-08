@@ -45,7 +45,7 @@ pip install litellm==1.92.1
 
 `v1.92.1` is a patch release on top of [`v1.92.0`](/release_notes/v1.92.0/v1-92-0). It backports two Docker fixes onto the 1.92.x line: the runtime images regain the `/app/litellm-proxy-extras` source directory, so downstream jobs that point `prisma migrate deploy` at that path apply migrations again instead of exiting 0 with no schema applied; and the prisma CLI and engines are baked at `/opt/prisma`, a fixed path readable by any runtime uid, so fresh-database migrations work under kubernetes `runAsUser`, `docker --user`, and other non-root deployments with no outbound network access.
 
-Two provider fixes ride along. Model Armor no longer drops reference attachments — `skip_unscannable_attachments` restores them and the attachment count cap is removed. The Anthropic passthrough now drops an incompatible `temperature` when it downgrades adaptive thinking for pre-4.6 models, instead of forwarding a combination the upstream API rejects. The release also carries routine dependency maintenance updates to mcp and soupsieve in the image lockfile.
+Two provider fixes ride along. Model Armor no longer drops reference attachments; `skip_unscannable_attachments` restores them and the attachment count cap is removed. The Anthropic passthrough now drops an incompatible `temperature` when it downgrades adaptive thinking for pre-4.6 models, instead of forwarding a combination the upstream API rejects. The release also carries routine dependency maintenance updates to mcp and soupsieve in the image lockfile.
 
 ### What's Changed
 

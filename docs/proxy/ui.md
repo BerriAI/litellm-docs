@@ -66,7 +66,7 @@ Allow others to create/delete their own keys.
 
 ## Model Management
 
-The Admin UI provides comprehensive model management capabilities:
+The Admin UI provides the following model management capabilities:
 
 - **Add Models**: Add new models through the UI without restarting the proxy
 - **AI Hub**: Make models and agents public for developers to discover what's available

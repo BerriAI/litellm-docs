@@ -328,7 +328,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model = "gpt-4-vision-preview",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",

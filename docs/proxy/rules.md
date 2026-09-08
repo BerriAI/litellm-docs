@@ -18,7 +18,7 @@ def my_custom_rule(input): # receives the model response
 
 ### Step 2. Point it to your proxy
 
-```python
+```yaml
 litellm_settings:
   post_call_rules: post_call_rules.my_custom_rule
 ```
@@ -34,7 +34,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [{"role":"user","content":"What llm are you?"}],
   "temperature": 0.7,
   "max_tokens": 10,

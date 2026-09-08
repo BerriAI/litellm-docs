@@ -3,9 +3,11 @@ import TabItem from '@theme/TabItem';
 
 # Arize AX
 
-AI observability and evaluation for LLM applications, at [arize.com](https://arize.com/).
+Use Arize AX when you want the full-featured [Arize AI](https://arize.com/?utm_source=litellm-docs&utm_medium=partner&utm_campaign=partner-docs&utm_content=arize-ax-integration) platform for production LLM observability and evaluation, available as managed cloud or enterprise self-hosted deployment.
 
-Arize AX is the hosted platform. If you self-host the open-source tracer, or run it on Phoenix Cloud, see [Arize Phoenix](./phoenix_integration) instead; the two use different credentials and endpoints.
+Arize AX is separate from [Arize Phoenix](https://arize.com/phoenix/), the open-source tracing and evaluation project for local development, experimentation, and self-hosted workflows. LiteLLM supports both backends, but they use different callbacks, credentials, and endpoints. If you are sending traces to Phoenix, use the [Arize Phoenix setup guide](./phoenix_integration) instead.
+
+For production evaluation workflows, see Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) for examples of using traces to debug failures, compare model behavior, and improve agent reliability.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
@@ -39,7 +41,7 @@ litellm.callbacks = ["arize"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -53,9 +55,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -84,7 +86,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -130,7 +132,7 @@ litellm_settings:
 
 ### Per-team and per-key credentials {#pass-arize-spacekey-per-request}
 
-Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Configure this from the Admin UI or the API as described in [per-key / per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant).
+Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
 ## Full OpenTelemetry reference
 

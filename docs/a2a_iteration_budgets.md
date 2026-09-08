@@ -163,7 +163,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'x-litellm-trace-id: session-abc-123' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```

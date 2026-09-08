@@ -3,11 +3,11 @@ import TabItem from '@theme/TabItem';
 
 # Realtime API Guardrails
 
-Guard voice conversations in the [Realtime API](/docs/realtime) — intercept speech transcriptions **before** the LLM responds.
+Guard voice conversations in the [Realtime API](/docs/realtime) by intercepting speech transcriptions **before** the LLM responds.
 
 ## How it works
 
-The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns — each one needs to be checked individually.
+The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns, and each one needs to be checked individually.
 
 LiteLLM intercepts each turn at the transcription event, after Whisper converts speech to text but before the LLM generates a response:
 
@@ -165,7 +165,7 @@ When the guardrail fires, the proxy:
 
 1. Sends `response.cancel` to kill any in-flight LLM response
 2. Sends `response.create` with the block message as forced instructions
-3. OpenAI's TTS **speaks the warning** back to the user — e.g. *"Content blocked: keyword 'system update' detected (Prompt injection attempt)"*
+3. OpenAI's TTS **speaks the warning** back to the user, e.g. *"Content blocked: keyword 'system update' detected (Prompt injection attempt)"*
 
 The LLM never processes the injected instruction.
 

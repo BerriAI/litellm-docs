@@ -96,7 +96,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-<your-virtual-key>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.5",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Say hello in five words."}]
   }'
 ```
@@ -106,7 +106,7 @@ Expected response:
 ```json
 {
   "id": "chatcmpl-DzGKiNRbQ4fe9Mgt8HSHFQ6ApfRJi",
-  "model": "gpt-5.5",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "choices": [
     {
@@ -138,7 +138,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.5",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Say hello in five words."}],
 )
 print(response.choices[0].message.content)
@@ -156,7 +156,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "gpt-5.5",
+  model: "{{openai_large}}",
   messages: [{ role: "user", content: "Say hello in five words." }],
 });
 console.log(response.choices[0].message.content);
@@ -176,9 +176,9 @@ If you only need the OpenAI-compatible API (no Admin UI model management, virtua
 ```yaml
 # litellm_config.yaml
 model_list:
-  - model_name: gpt-5.5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -193,6 +193,16 @@ docker run \
 ```
 
 Requests authenticate with the master key. See the [full config reference](./configs.md) for everything the file supports.
+
+:::warning Budgets are not enforced without a database
+
+`litellm_settings.max_budget` is not a spend cap on this path. Loading the proxy's global spend requires a database client, so without one the running total stays unknown and the global budget check never fires; a proxy configured with `max_budget: 100` keeps serving requests past $100 with no per-request error and no budget alert. The proxy does log a one-time warning at startup when a budget is configured with no database connected, and that startup line is the only signal you get
+
+Key and team budgets are not an alternative here either, because virtual keys themselves need a database (requests carrying one fail with `No connected db.`), so the master key is the only credential and it has no budget of its own
+
+If a budget is part of how you bound spend, run LiteLLM with a database as shown at the top of this page. Without one, bound spend upstream instead, at your provider's own spending limits
+
+:::
 
 ## Next steps
 

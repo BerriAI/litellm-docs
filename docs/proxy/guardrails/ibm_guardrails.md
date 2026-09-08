@@ -27,9 +27,9 @@ You can run these checks:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -66,7 +66,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ],
@@ -121,7 +121,7 @@ guardrails:
 
 ### Orchestrator
 
-If you're using the IBM FMS Guardrails Orchestrator, you can use [FMS Orchestrator API](https://foundation-model-stack.github.io/fms-guardrails-orchestrator/?urls.primaryName=Orchestrator+API), specifically by leveraging the `api/v2/text/detection/content` to potentially run multiple detectors in a single request; however, this endpoint can only accept one text input per request.
+If you're using the IBM FMS Guardrails Orchestrator, you can use [FMS Orchestrator API](https://foundation-model-stack.github.io/fms-guardrails-orchestrator/?urls.primaryName=Orchestrator+API), specifically `api/v2/text/detection/content` to run multiple detectors in a single request; however, this endpoint can only accept one text input per request.
 
 ```yaml
 guardrails:
@@ -201,7 +201,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["jailbreak-check", "pii-check"]
   }'

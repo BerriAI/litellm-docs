@@ -28,11 +28,11 @@ In the config below:
 
 E.g.: 
 - `model=vllm-models` will route to `openai/facebook/opt-125m`. 
-- `model=gpt-4o` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
+- `model={{openai_large}}` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
 
 ```yaml
 model_list:
-  - model_name: gpt-4o ### RECEIVED MODEL NAME ###
+  - model_name: {{openai_large}} ### RECEIVED MODEL NAME ###
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
       model: azure/gpt-4o-eu ### MODEL NAME sent to `litellm.completion()` ###
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
@@ -40,8 +40,8 @@ model_list:
       rpm: 6      # [OPTIONAL] Rate limit for this deployment: in requests per minute (rpm)
   - model_name: bedrock-claude-v1 
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
-  - model_name: gpt-4o
+      model: bedrock/us.anthropic.{{anthropic}}
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4o-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -49,7 +49,7 @@ model_list:
       rpm: 6
   - model_name: anthropic-claude
     litellm_params: 
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.{{anthropic}}
       ### [OPTIONAL] SET AWS REGION ###
       aws_region_name: us-east-1
   - model_name: vllm-models
@@ -61,7 +61,7 @@ model_list:
     model_info: 
       version: 2
   
-  # Use this if you want to make requests to `claude-3-haiku-20240307`,`claude-3-opus-20240229`,`claude-2.1` without defining them on the config.yaml
+  # Use this if you want to make requests to `{{anthropic}}`,`{{anthropic_large}}` without defining them on the config.yaml
   # Default models
   # Works for ALL Providers and needs the default provider credentials in .env
   - model_name: "*" 
@@ -100,9 +100,9 @@ $ litellm --config /path/to/config.yaml --detailed_debug
 
 #### Step 3: Test it
 
-Sends request to model where `model_name=gpt-4o` on config.yaml. 
+Sends request to model where `model_name={{openai_large}}` on config.yaml. 
 
-If multiple with `model_name=gpt-4o` does [Load Balancing](https://docs.litellm.ai/docs/proxy/load_balancing)
+If multiple with `model_name={{openai_large}}` does [Load Balancing](https://docs.litellm.ai/docs/proxy/load_balancing)
 
 **[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
 
@@ -110,7 +110,7 @@ If multiple with `model_name=gpt-4o` does [Load Balancing](https://docs.litellm.
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "messages": [
         {
           "role": "user",
@@ -147,13 +147,13 @@ model_list:
       max_tokens: 20
   - model_name: gpt-4-team2
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
   - model_name: openai-gpt-4o
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       extra_headers: {"AI-Resource Group": "ishaan-resource"}
       api_key: sk-123
       organization: org-ikDc4ex8NB
@@ -343,7 +343,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 Add all openai models across all OpenAI organizations with just 1 model definition 
 
 ```yaml
-  - model_name: *
+  - model_name: "*"
     litellm_params:
       model: openai/*
       api_key: os.environ/OPENAI_API_KEY
@@ -376,7 +376,7 @@ For optimal performance:
 - Select your optimal routing strategy in `router_settings:routing_strategy`.
 
 LiteLLM supports
-```python
+```text
 ["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"`
 ```
 
@@ -401,27 +401,27 @@ model_list:
         model: huggingface/HuggingFaceH4/zephyr-7b-beta
         api_base: http://0.0.0.0:8003
         rpm: 60000      
-  - model_name: gpt-4o
+  - model_name: {{openai_small}}
     litellm_params:
-        model: gpt-4o
+        model: {{openai_small}}
         api_key: <my-openai-key>
         rpm: 200      
-  - model_name: gpt-3.5-turbo-16k
+  - model_name: {{openai_large}}
     litellm_params:
-        model: gpt-3.5-turbo-16k
+        model: {{openai_large}}
         api_key: <my-openai-key>
         rpm: 100      
 
 litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
-  fallbacks: [{"zephyr-beta": ["gpt-4o"]}] # fallback to gpt-4o if call fails num_retries 
-  context_window_fallbacks: [{"zephyr-beta": ["gpt-3.5-turbo-16k"]}, {"gpt-4o": ["gpt-3.5-turbo-16k"]}] # fallback to gpt-3.5-turbo-16k if context window error
+  fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] # fallback to {{openai_small}} if call fails num_retries 
+  context_window_fallbacks: [{"zephyr-beta": ["{{openai_large}}"]}, {"{{openai_small}}": ["{{openai_large}}"]}] # fallback to {{openai_large}} if context window error
   allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
 
 router_settings: # router_settings are optional
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
-  model_group_alias: {"gpt-4": "gpt-4o"} # all requests with `gpt-4` will be routed to models with `gpt-4o`
+  model_group_alias: {"gpt-5.6": "{{openai_small}}"} # all requests with `gpt-5.6` will be routed to models with `{{openai_small}}`
   num_retries: 2
   timeout: 30                                  # 30 seconds
   redis_host: <your redis host>                # set this when using multiple litellm proxy deployments, load balancing state stored in redis
@@ -462,9 +462,9 @@ Define credentials once and reuse them across multiple models. This helps with:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       litellm_credential_name: default_azure_credential  # Reference credential below
 
 credential_list:
@@ -503,22 +503,22 @@ Supported Environments:
 2. For each model set the list of supported environments in `model_info.supported_environments`
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo-16k
+ - model_name: {{openai_small}}
    litellm_params:
-     model: openai/gpt-3.5-turbo-16k
+     model: openai/{{openai_small}}
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["development", "production", "staging"]
- - model_name: gpt-4
+ - model_name: {{openai_large}}
    litellm_params:
-     model: openai/gpt-4
+     model: openai/{{openai_large}}
      api_key: os.environ/OPENAI_API_KEY
    model_info:
      supported_environments: ["production", "staging"]
- - model_name: gpt-4o
+ - model_name: {{anthropic}}
    litellm_params:
-     model: openai/gpt-4o
-     api_key: os.environ/OPENAI_API_KEY
+     model: anthropic/{{anthropic}}
+     api_key: os.environ/ANTHROPIC_API_KEY
    model_info:
      supported_environments: ["production"]
 ```
@@ -541,7 +541,7 @@ model_list:
       roles: {"system":{"pre_message":"<|im_start|>system\n", "post_message":"<|im_end|>"}, "assistant":{"pre_message":"<|im_start|>assistant\n","post_message":"<|im_end|>"}, "user":{"pre_message":"<|im_start|>user\n","post_message":"<|im_end|>"}}
       final_prompt_value: "\n"
       bos_token: " "
-      eos_token: " "
+      eos_token: " "
       max_tokens: 4096
 ```
 
@@ -628,7 +628,8 @@ general_settings:
 **Notes:**
 - `database_socket_timeout` is the main knob for capping idle DB connections from LiteLLM.
 - `database_connect_timeout` and `database_socket_timeout` are omitted from the URL when unset, so Prisma's defaults apply.
-- `database_extra_connection_params` is an untyped passthrough — any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- `database_extra_connection_params` is an untyped passthrough: any key you set here **overrides** the LiteLLM-set defaults for that key (e.g. you can override `pool_timeout` from this dict). Use it for `sslmode`, `pgbouncer`, `statement_cache_size`, or any other Prisma URL param.
+- To verify the database server certificate against a custom CA (e.g. AWS RDS), set `sslmode: "verify-full"` and `sslrootcert: "/certs/global-bundle.pem"` here or on the URL; LiteLLM translates them into Prisma's `sslcert` + `sslaccept=strict`. See [Verify the database server certificate](./prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds).
 
 ### Bounding Statement and Lock Time
 
@@ -705,15 +706,37 @@ NO_REDOC="True"
 
 in your environment, and restart the proxy. 
 
+### Disable OpenAPI schema
+
+To disable the raw OpenAPI schema (defaults to `<your-proxy-url>/openapi.json`), set 
+
+```env
+NO_OPENAPI="True"
+```
+
+in your environment, and restart the proxy. 
+
+### Restrict all API documentation for production/air-gapped deployments
+
+Swagger, Redoc and the raw OpenAPI schema are three independent surfaces, each disabled by its own env var. To fully lock down a production or air-gapped deployment, set all three: 
+
+```env
+NO_DOCS="True"
+NO_REDOC="True"
+NO_OPENAPI="True"
+```
+
+Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` then all 404 with no schema in the response, while inference and management routes are unaffected.
+
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 
 1. Setup config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -757,7 +780,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -e LITELLM_CONFIG_BUCKET_TYPE="gcs" \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest --detailed_debug
+   docker.litellm.ai/berriai/litellm:latest --detailed_debug
 ```
 
 </TabItem>
@@ -778,7 +801,7 @@ docker run --name litellm-proxy \
    -e LITELLM_CONFIG_BUCKET_NAME=<bucket_name> \
    -e LITELLM_CONFIG_BUCKET_OBJECT_KEY="<object_key>> \
    -p 4000:4000 \
-   docker.litellm.ai/berriai/litellm-database:latest
+   docker.litellm.ai/berriai/litellm:latest
 ```
 </TabItem>
 </Tabs>

@@ -184,6 +184,20 @@ $ litellm
 # RUNNING on http://0.0.0.0:4000
 ```
 
+The OpenAI key can also live in `model_list` instead of the environment. Pass that deployment's `model` in the create body or as a `model` query param on list, and the proxy calls OpenAI with the deployment's `api_key` and `api_base`. Retrieve, delete, and container file calls need no `model`: the ID a routed create returns encodes the deployment, so they route on their own
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY_TEAM_A
+```
+
+```bash
+$ litellm --config config.yaml
+```
+
 **Custom Provider Specification**
 
 You can specify the custom LLM provider in multiple ways (priority order):
@@ -229,10 +243,27 @@ curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
     }'
 ```
 
+```bash
+# With model_list credentials: name the deployment
+curl -X POST "http://localhost:4000/v1/containers" \
+    -H "Authorization: Bearer sk-1234" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "name": "My Container",
+        "model": "gpt-5.6"
+    }'
+```
+
 **List Containers**
 
 ```bash
 curl "http://localhost:4000/v1/containers?limit=20&order=desc" \
+    -H "Authorization: Bearer sk-1234"
+```
+
+```bash
+# With model_list credentials: name the deployment
+curl "http://localhost:4000/v1/containers?model=gpt-5.6&limit=20&order=desc" \
     -H "Authorization: Bearer sk-1234"
 ```
 
@@ -252,7 +283,7 @@ curl -X DELETE "http://localhost:4000/v1/containers/cntr_123..." \
 
 ## **Using OpenAI Client with LiteLLM Proxy**
 
-You can use the standard OpenAI Python client to interact with LiteLLM's container endpoints. This provides a familiar interface while leveraging LiteLLM's proxy features.
+You can use the standard OpenAI Python client to interact with LiteLLM's container endpoints. This provides a familiar interface while keeping LiteLLM's proxy features.
 
 ### Setup
 
@@ -284,6 +315,15 @@ print(f"Container Name: {container.name}")
 print(f"Created at: {container.created_at}")
 ```
 
+With `model_list` credentials, name the deployment in `extra_body`:
+
+```python
+container = client.containers.create(
+    name="test-container",
+    extra_body={"model": "gpt-5.6"}
+)
+```
+
 ### List Containers
 
 ```python
@@ -295,6 +335,15 @@ containers = client.containers.list(
 print(f"Found {len(containers.data)} containers")
 for container in containers.data:
     print(f"  - {container.id}: {container.name}")
+```
+
+With `model_list` credentials, name the deployment in `extra_query`, since list is a GET:
+
+```python
+containers = client.containers.list(
+    limit=20,
+    extra_query={"model": "gpt-5.6"}
+)
 ```
 
 ### Retrieve a Container

@@ -28,8 +28,8 @@ Each `body` in the file should be an **OpenAI API request**.
 
 Create a file called `batch_requests.jsonl` with your requests:
 ```jsonl
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gemini-2.5-flash-lite", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 10}}
-{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gemini-2.5-flash-lite", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 10}}
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{gemini_flash}}", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 10}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{gemini_flash}}", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 10}}
 ```
 
 #### 2. Upload the file
@@ -75,10 +75,10 @@ curl --request POST \
 
 ```json
 {
-    "id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd",
+    "id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd",
     "bytes": 416,
     "created_at": 1758303684,
-    "filename": "litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd",
+    "filename": "litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd",
     "object": "file",
     "purpose": "batch",
     "status": "uploaded",
@@ -99,7 +99,7 @@ batch_input_file_id = file_obj.id # from step 2
 create_batch_response = oai_client.batches.create(
     completion_window="24h",
     endpoint="/v1/chat/completions",
-    input_file_id=batch_input_file_id, # e.g. "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd"
+    input_file_id=batch_input_file_id, # e.g. "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd"
     extra_headers={"custom-llm-provider": "vertex_ai"}
 )
 
@@ -115,7 +115,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --header 'custom-llm-provider: vertex_ai' \
   --data '{         
-    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd",
+    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h"
 }'
@@ -132,7 +132,7 @@ curl --request POST \
     "completion_window": "24hrs",
     "created_at": 1758328011,
     "endpoint": "",
-    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd",
+    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd",
     "object": "batch",
     "status": "validating",
     "cancelled_at": null,
@@ -146,7 +146,7 @@ curl --request POST \
     "finalizing_at": null,
     "in_progress_at": null,
     "metadata": null,
-    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite",
+    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}",
     "request_counts": null,
     "usage": null
 }
@@ -190,7 +190,7 @@ curl --request GET \
     "completion_window": "24hrs",
     "created_at": 1758328011,
     "endpoint": "",
-    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/abc123-def4-5678-9012-34567890abcd",
+    "input_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/abc123-def4-5678-9012-34567890abcd",
     "object": "batch",
     "status": "completed",
     "cancelled_at": null,
@@ -204,7 +204,7 @@ curl --request GET \
     "finalizing_at": null,
     "in_progress_at": null,
     "metadata": null,
-    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/gemini-2.5-flash-lite/prediction-model-2025-09-19T21:26:51.569037Z/predictions.jsonl",
+    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}/prediction-model-2025-09-19T21:26:51.569037Z/predictions.jsonl",
     "request_counts": null,
     "usage": null
 }
@@ -259,6 +259,6 @@ curl --request GET \
 The response contains JSONL format with one result per line:
 
 ```jsonl
-{"status":"","processed_time":"2025-09-19T21:29:47.352+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are a helpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.48079710006713866,"content":{"parts":[{"text":"Hello there! It's nice to meet you"}],"role":"model"},"finishReason":"MAX_TOKENS"}],"createTime":"2025-09-19T21:29:47.484619Z","modelVersion":"gemini-2.5-flash-lite","responseId":"S8vNaIvKHdvshMIP_aOtuAg","usageMetadata":{"candidatesTokenCount":10,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":10}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":19,"trafficType":"ON_DEMAND"}}}
-{"status":"","processed_time":"2025-09-19T21:29:47.358+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are an unhelpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.6168075137668185,"content":{"parts":[{"text":"I am unable to assist with this request."}],"role":"model"},"finishReason":"STOP"}],"createTime":"2025-09-19T21:29:47.470889Z","modelVersion":"gemini-2.5-flash-lite","responseId":"S8vNaOneHISShMIP28nA8QQ","usageMetadata":{"candidatesTokenCount":9,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":9}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":18,"trafficType":"ON_DEMAND"}}}
+{"status":"","processed_time":"2025-09-19T21:29:47.352+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are a helpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.48079710006713866,"content":{"parts":[{"text":"Hello there! It's nice to meet you"}],"role":"model"},"finishReason":"MAX_TOKENS"}],"createTime":"2025-09-19T21:29:47.484619Z","modelVersion":"{{gemini_flash}}","responseId":"S8vNaIvKHdvshMIP_aOtuAg","usageMetadata":{"candidatesTokenCount":10,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":10}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":19,"trafficType":"ON_DEMAND"}}}
+{"status":"","processed_time":"2025-09-19T21:29:47.358+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are an unhelpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.6168075137668185,"content":{"parts":[{"text":"I am unable to assist with this request."}],"role":"model"},"finishReason":"STOP"}],"createTime":"2025-09-19T21:29:47.470889Z","modelVersion":"{{gemini_flash}}","responseId":"S8vNaOneHISShMIP28nA8QQ","usageMetadata":{"candidatesTokenCount":9,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":9}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":18,"trafficType":"ON_DEMAND"}}}
 ```

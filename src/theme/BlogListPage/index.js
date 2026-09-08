@@ -6,6 +6,7 @@ import styles from './styles.module.css';
 
 const TABS = [
   {id: 'all', label: 'All'},
+  {id: 'autorouter', label: 'Auto Router'},
   {id: 'engineering', label: 'Engineering'},
   {id: 'ideas', label: 'Ideas'},
   {id: 'security', label: 'Security'},
@@ -15,6 +16,7 @@ const TABS = [
 const SECURITY_TAGS = ['security', 'incident-report'];
 const INFRA_TAGS = ['performance', 'reliability', 'infrastructure'];
 const IDEAS_TAGS = ['ideas', 'thesis'];
+const AUTOROUTER_TAGS = ['complexity-router', 'auto-router'];
 
 function hasTag(item, tagSet) {
   const tags = item.content?.metadata?.tags || [];
@@ -23,6 +25,7 @@ function hasTag(item, tagSet) {
 
 function filterItems(items, tab) {
   if (tab === 'all') return items;
+  if (tab === 'autorouter') return items.filter(i => hasTag(i, AUTOROUTER_TAGS));
   if (tab === 'security') return items.filter(i => hasTag(i, SECURITY_TAGS));
   if (tab === 'infrastructure') return items.filter(i => hasTag(i, INFRA_TAGS));
   if (tab === 'ideas') return items.filter(i => hasTag(i, IDEAS_TAGS));
@@ -31,6 +34,77 @@ function filterItems(items, tab) {
     !hasTag(i, INFRA_TAGS) &&
     !hasTag(i, IDEAS_TAGS)
   );
+}
+
+function searchableText(item) {
+  const metadata = item.content?.metadata || {};
+  return [
+    metadata.title,
+    metadata.description,
+    metadata.keywords,
+    ...(metadata.tags || []).map(tag => tag.label),
+    ...(metadata.authors || []).map(author => author.name),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function queryTokens(query) {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+function maxEditDistance(token) {
+  if (token.length <= 3) return 0;
+  if (token.length <= 5) return 1;
+  return 2;
+}
+
+function levenshteinDistance(first, second, maxDistance) {
+  if (Math.abs(first.length - second.length) > maxDistance) return maxDistance + 1;
+
+  let previous = Array.from({length: second.length + 1}, (_, index) => index);
+  for (let firstIndex = 1; firstIndex <= first.length; firstIndex++) {
+    const current = [firstIndex];
+    for (let secondIndex = 1; secondIndex <= second.length; secondIndex++) {
+      current[secondIndex] = Math.min(
+        current[secondIndex - 1] + 1,
+        previous[secondIndex] + 1,
+        previous[secondIndex - 1] + (first[firstIndex - 1] === second[secondIndex - 1] ? 0 : 1)
+      );
+    }
+    previous = current;
+  }
+
+  return previous[second.length];
+}
+
+function isSubsequence(token, word) {
+  let tokenIndex = 0;
+  for (const character of word) {
+    if (character === token[tokenIndex]) tokenIndex++;
+  }
+  return tokenIndex === token.length;
+}
+
+function tokenScore(word, token) {
+  if (word === token) return 4;
+  if (word.startsWith(token)) return 3;
+  if (word.includes(token)) return 2;
+  if (levenshteinDistance(word, token, maxEditDistance(token)) <= maxEditDistance(token)) return 1;
+  if (token.length >= 4 && isSubsequence(token, word)) return 0.5;
+  return null;
+}
+
+function itemScore(item, tokens) {
+  if (tokens.length === 0) return 0;
+
+  const words = searchableText(item).match(/[\p{L}\p{N}]+/gu) || [];
+  return tokens.reduce((score, token) => {
+    const bestTokenScore = words.reduce((best, word) => {
+      const current = tokenScore(word, token);
+      return current !== null && current > best ? current : best;
+    }, null);
+
+    return score === null || bestTokenScore === null ? null : score + bestTokenScore;
+  }, 0);
 }
 
 // ── Provider marquee ──────────────────────────────────────────────────────
@@ -132,7 +206,13 @@ export default function BlogListPage(props) {
   const items = props.items || [];
   const metadata = props.metadata || {};
   const [activeTab, setActiveTab] = useState('all');
-  const filtered = filterItems(items, activeTab);
+  const [query, setQuery] = useState('');
+  const tokens = queryTokens(query);
+  const filtered = filterItems(items, activeTab)
+    .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
+    .filter(({score}) => score !== null)
+    .sort((first, second) => second.score - first.score || first.index - second.index)
+    .map(({item}) => item);
 
   return (
     <Layout
@@ -159,6 +239,21 @@ export default function BlogListPage(props) {
 
         <ProviderMarquee />
 
+        <div className={styles.searchRow}>
+          <input
+            type="search"
+            className={styles.searchInput}
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Escape') setQuery('');
+            }}
+            placeholder="Search posts"
+            aria-label="Search posts"
+            autoComplete="off"
+          />
+        </div>
+
         {/* Tabs */}
         <nav className={styles.tabs} aria-label="Filter posts by category">
           {TABS.map(tab => (
@@ -173,10 +268,16 @@ export default function BlogListPage(props) {
           ))}
         </nav>
 
+        <p className={styles.resultCount} role="status" aria-live="polite">
+          {query ? `${filtered.length} of ${items.length} posts` : ''}
+        </p>
+
         {/* Post list */}
         <main className={styles.list}>
           {filtered.length === 0 && (
-            <p className={styles.emptyMsg}>No posts on this page match the selected filter.</p>
+            <p className={styles.emptyMsg}>
+              {query ? `No posts match "${query}".` : 'No posts on this page match the selected filter.'}
+            </p>
           )}
           {filtered.map(({content}) => (
             <PostRow key={content.metadata.permalink} post={content.metadata} />

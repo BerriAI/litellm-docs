@@ -29,6 +29,12 @@ items={[
     to: "/docs/observability/datadog",
   },
   {
+    icon: <img src="/img/observability/grafana_icon.svg" alt="" style={{ width: 24, height: 24, display: "block" }} />,
+    title: "Grafana Cloud",
+    description: "LLM traces, GenAI metrics, and dashboards.",
+    to: "/docs/observability/grafana_cloud",
+  },
+  {
     icon: "📡",
     title: "OpenTelemetry",
     description: "Vendor-neutral tracing.",
@@ -321,7 +327,7 @@ items={[
 
 ## Manage with AI Agents
 
-Use AI agents to manage your LiteLLM deployment — create users, teams, keys, models, and more via natural language.
+Use AI agents to manage your LiteLLM deployment: create users, teams, keys, models, and more via natural language.
 
 <NavigationCards
 columns={1}
@@ -329,7 +335,7 @@ items={[
   {
     icon: "🤖",
     title: "LiteLLM Skills",
-    description: "Manage LiteLLM via Claude Code — create keys, teams, models, and more using natural language commands.",
+    description: "Manage LiteLLM via Claude Code: create keys, teams, models, and more using natural language commands.",
     to: "../tutorials/claude_code_skills",
   },
 ]}

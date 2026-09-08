@@ -20,13 +20,13 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 
 print(response.usage)
 ```
-> **Note:** LiteLLM supports endpoint bridging—if a model does not natively support a requested endpoint, LiteLLM will automatically route the call to the correct supported endpoint (such as bridging `/chat/completions` to `/responses` or vice versa) based on the model's `mode`set in `model_prices_and_context_window`.
+> **Note:** LiteLLM supports endpoint bridging. If a model does not natively support a requested endpoint, LiteLLM will automatically route the call to the correct supported endpoint (such as bridging `/chat/completions` to `/responses` or vice versa) based on the model's `mode`set in `model_prices_and_context_window`.
 
 ## Streaming Usage
 
@@ -37,7 +37,7 @@ if `stream_options={"include_usage": True}` is set, an additional chunk will be 
 from litellm import completion 
 
 completion = completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}
@@ -89,12 +89,10 @@ curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello!"}],
     "stream": true
   }'
 ```
 
 Will automatically receive usage information in the response, without needing to explicitly include `stream_options`.
-
-```

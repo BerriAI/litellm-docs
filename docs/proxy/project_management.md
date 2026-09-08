@@ -1,13 +1,6 @@
 # ✨ [Beta] Project Management
 
-:::info
-
-This is an Enterprise feature.
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Projects in LiteLLM sit between teams and keys in the organizational hierarchy, enabling fine-grained access control and budget management for specific use cases or applications.
 
@@ -50,7 +43,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "flight-search-assistant",
     "team_id": "ad898803-c8a3-4f4a-976a-a3c372cffa45",
-    "models": ["gpt-4", "gpt-3.5-turbo"],
+    "models": ["{{openai_large}}", "{{openai_small}}"],
     "max_budget": 100,
     "metadata": {
         "use_case_id": "SNOW-12345",
@@ -65,7 +58,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
   "project_id": "e402a141-725a-4437-bff5-d47459189716",
   "project_alias": "flight-search-assistant",
   "team_id": "ad898803-c8a3-4f4a-976a-a3c372cffa45",
-  "models": ["gpt-4", "gpt-3.5-turbo"],
+  "models": ["{{openai_large}}", "{{openai_small}}"],
   "max_budget": 100,
   ...
 }
@@ -78,7 +71,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer sk-1234' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "models": ["gpt-3.5-turbo", "gpt-4"],
+    "models": ["{{openai_small}}", "{{openai_large}}"],
     "metadata": {"user": "ishaan@berri.ai"},
     "project_id": "e402a141-725a-4437-bff5-d47459189716"
 }' | jq
@@ -101,7 +94,7 @@ curl http://localhost:4000/v1/chat/completions \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-W8VbscpfuyvHm5TkxRYiXA' \
 --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "What is litellm?"}]
 }' | jq
 ```
@@ -145,7 +138,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "hotel-recommendations",
     "team_id": "team-123",
-    "models": ["claude-3-sonnet"],
+    "models": ["{{anthropic}}"],
     "max_budget": 200,
     "tpm_limit": 100000,
     "metadata": {
@@ -162,7 +155,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
     "project_id": "project-def",
     "project_alias": "hotel-recommendations",
     "team_id": "team-123",
-    "models": ["claude-3-sonnet"],
+    "models": ["{{anthropic}}"],
     "spend": 0.0,
     "budget_id": "budget-xyz",
     "metadata": {
@@ -228,11 +221,11 @@ curl --location 'http://0.0.0.0:4000/project/info?project_id=project-abc' \
     "project_id": "project-abc",
     "project_alias": "flight-search-assistant",
     "team_id": "team-123",
-    "models": ["gpt-4", "gpt-3.5-turbo"],
+    "models": ["{{openai_large}}", "{{openai_small}}"],
     "spend": 45.67,
     "model_spend": {
-        "gpt-4": 42.30,
-        "gpt-3.5-turbo": 3.37
+        "{{openai_large}}": 42.30,
+        "{{openai_small}}": 3.37
     },
     "litellm_budget_table": {
         "budget_id": "budget-xyz",
@@ -309,18 +302,18 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 --data '{
     "project_alias": "multi-model-project",
     "team_id": "team-123",
-    "models": ["gpt-4", "gpt-3.5-turbo", "claude-3-sonnet"],
+    "models": ["{{openai_large}}", "{{openai_small}}", "{{anthropic}}"],
     "max_budget": 500,
     "metadata": {
         "model_tpm_limit": {
-            "gpt-4": 50000,
-            "gpt-3.5-turbo": 200000,
-            "claude-3-sonnet": 100000
+            "{{openai_large}}": 50000,
+            "{{openai_small}}": 200000,
+            "{{anthropic}}": 100000
         },
         "model_rpm_limit": {
-            "gpt-4": 50,
-            "gpt-3.5-turbo": 500,
-            "claude-3-sonnet": 100
+            "{{openai_large}}": 50,
+            "{{openai_small}}": 500,
+            "{{anthropic}}": 100
         }
     }
 }'

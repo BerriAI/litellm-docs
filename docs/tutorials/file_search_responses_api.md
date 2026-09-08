@@ -30,14 +30,14 @@ In `tools[].vector_store_ids`, LiteLLM accepts both provider-native IDs (e.g. `v
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -55,7 +55,7 @@ from openai import OpenAI
 client = OpenAI(base_url="http://localhost:4000", api_key="sk-your-proxy-key")
 
 response = client.responses.create(
-    model="claude-sonnet",  # swap to "gpt-4.1" for native path
+    model="claude-sonnet",  # swap to "{{openai_large}}" for native path
     input="What does LiteLLM support?",
     tools=[{
         "type": "file_search",
@@ -84,7 +84,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 import litellm
 
 response = litellm.responses(
-    model="anthropic/claude-sonnet-4-5",  # swap to openai/gpt-4.1 for native path
+    model="anthropic/{{anthropic}}",  # swap to openai/{{openai_large}} for native path
     input="What does LiteLLM support?",
     tools=[{
         "type": "file_search",
@@ -103,8 +103,8 @@ print(response.output)
 
 | Path | SDK model | Proxy model | Behavior |
 | --- | --- | --- | --- |
-| Native passthrough | `openai/gpt-4.1` | `gpt-4.1` | Provider executes native `file_search` |
-| Emulated fallback | `anthropic/claude-sonnet-4-5` | `claude-sonnet` | LiteLLM converts to function tool and synthesizes OpenAI-format output |
+| Native passthrough | `openai/gpt-5.6-terra` | `gpt-5.6-terra` | Provider executes native `file_search` |
+| Emulated fallback | `anthropic/claude-sonnet-5` | `claude-sonnet` | LiteLLM converts to function tool and synthesizes OpenAI-format output |
 
 
 
@@ -221,7 +221,7 @@ validate_file_search_response(response)
 ## Q&A
 
 - **Why do I see `UnsupportedParamsError`?** This usually means `file_search` was passed to a provider that does not support it natively and emulation could not route correctly. Check:
-  - The model string is valid (for example, `anthropic/claude-sonnet-4-5`).
+  - The model string is valid (for example, `anthropic/{{anthropic}}`).
   - `custom_llm_provider` resolves correctly so LiteLLM can load the provider config.
 - **Why does vector search return no results?** Common causes:
   - The vector store ID is wrong or has no files attached.

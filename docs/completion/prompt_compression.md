@@ -27,14 +27,14 @@ messages = [
 
 compressed = litellm.compress(
     messages=messages,
-    model="gpt-4o",
+    model="{{openai_large}}",
     call_type=CallTypes.completion,
     compression_trigger=1000,
     compression_target=500,
 )
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=compressed["messages"],
     tools=compressed["tools"],
 )
@@ -107,7 +107,7 @@ With this enabled, LiteLLM runs the following server-side flow:
 
 Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite_bm25_27K) (real GitHub issues with ~27k tokens of BM25-retrieved repo context per problem).
 
-### Claude Opus — 5 problems, trigger=10k
+### Claude Opus: 5 problems, trigger=10k
 
 | Metric | Baseline | Compressed | Delta |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SW
 
 - **File-level targeting is fully preserved** — the model edits the same files with or without compression.
 - **Content similarity matches baseline** — the actual lines changed are comparable.
-- **Hunk overlap drops modestly** (-0.221) — the model targets the right files but may edit slightly different line ranges with less surrounding context.
+- **Hunk overlap drops modestly** (-0.221). The model targets the right files but may edit slightly different line ranges with less surrounding context.
 - **72% cost savings** with 78% token reduction.
 
 ### Metrics explained
@@ -138,19 +138,19 @@ Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SW
 
 ```bash
 # 5-problem quick check
-python tests/eval_swe_bench.py --model claude-opus-4-20250514 --problems 5
+python tests/eval_swe_bench.py --model {{anthropic_large}} --problems 5
 
 # Custom trigger/target
-python tests/eval_swe_bench.py --model gpt-4o --problems 20 \
+python tests/eval_swe_bench.py --model {{openai_large}} --problems 20 \
     --compression-trigger 15000 --compression-target 10000
 
 # With embedding scoring
-python tests/eval_swe_bench.py --model gpt-4o --problems 10 \
+python tests/eval_swe_bench.py --model {{openai_large}} --problems 10 \
     --embedding-model text-embedding-3-small
 ```
 
 ### Running the HumanEval-style eval
 
 ```bash
-python scripts/eval_compression.py --model gpt-4o --problems 5
+python scripts/eval_compression.py --model {{openai_large}} --problems 5
 ```

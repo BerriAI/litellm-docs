@@ -50,7 +50,7 @@ Loadbalance across multiple [azure](./providers/azure)/[bedrock](./providers/bed
 from litellm import Router
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias -> loadbalance between models with same `model_name`
+	"model_name": "{{openai_small}}", # model alias -> loadbalance between models with same `model_name`
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -58,7 +58,7 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE")
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -66,23 +66,23 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE")
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "{{openai_small}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 }, {
-    "model_name": "gpt-4", 
+    "model_name": "{{openai_large}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "azure/gpt-4", 
+		"model": "azure/{{openai_large}}", 
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_base": os.getenv("AZURE_API_BASE"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
 	}
 }, {
-    "model_name": "gpt-4", 
+    "model_name": "{{openai_large}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-4", 
+		"model": "{{openai_large}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 },
@@ -92,15 +92,15 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list)
 
 # openai.ChatCompletion.create replacement
-# requests with model="gpt-3.5-turbo" will pick a deployment where model_name="gpt-3.5-turbo"
-response = await router.acompletion(model="gpt-3.5-turbo", 
+# requests with model="{{openai_small}}" will pick a deployment where model_name="{{openai_small}}"
+response = await router.acompletion(model="{{openai_small}}", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 
 # openai.ChatCompletion.create replacement
-# requests with model="gpt-4" will pick a deployment where model_name="gpt-4"
-response = await router.acompletion(model="gpt-4", 
+# requests with model="{{openai_large}}" will pick a deployment where model_name="{{openai_large}}"
+response = await router.acompletion(model="{{openai_large}}", 
 				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
@@ -117,17 +117,17 @@ See detailed proxy loadbalancing/fallback docs [here](./proxy/reliability.md)
 1. Setup model_list with multiple deployments
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: <your-azure-api-key>
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-large
       api_base: https://openai-france-1234.openai.azure.com/
@@ -147,7 +147,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
         {"role": "user", "content": "Hi there!"}
     ],
@@ -190,20 +190,20 @@ You can also set a `weight` param, to specify which model should get picked when
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-v-2
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		rpm: 900 
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-functioncalling
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		rpm: 10 
+    - model_name: {{openai_small}}
+      litellm_params:
+        model: azure/chatgpt-v-2
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        rpm: 900 
+    - model_name: {{openai_small}}
+      litellm_params:
+        model: azure/chatgpt-functioncalling
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        rpm: 10 
 ```
 
 ##### **Python SDK**
@@ -213,7 +213,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "{{openai_small}}", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -222,7 +222,7 @@ model_list = [{ # list of model deployments
 		"rpm": 900,			# requests per minute for this API
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -236,7 +236,7 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="{{openai_small}}", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -252,20 +252,20 @@ asyncio.run(router_acompletion())
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-v-2
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		weight: 9
-	- model_name: gpt-3.5-turbo
-	  litellm_params:
-	  	model: azure/chatgpt-functioncalling
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
-		weight: 1 
+    - model_name: {{openai_small}}
+      litellm_params:
+        model: azure/chatgpt-v-2
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        weight: 9
+    - model_name: {{openai_small}}
+      litellm_params:
+        model: azure/chatgpt-functioncalling
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
+        weight: 1 
 ```
 
 ##### **Python SDK**
@@ -275,7 +275,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "{{openai_small}}", # model alias 
 	"litellm_params": { 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -284,7 +284,7 @@ model_list = [{
 		"weight": 9, # pick this 90% of the time
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -298,7 +298,7 @@ model_list = [{
 router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="{{openai_small}}", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -313,8 +313,11 @@ asyncio.run(router_acompletion())
 </TabItem>
 <TabItem value="usage-based-v2" label="Rate-Limit Aware v2 (ASYNC)">
 
-> [!WARNING]  
+:::warning
+
 **Usage-based routing is not recommended for production due to performance impacts.** Use `simple-shuffle` (default) for optimal performance in high-traffic scenarios. Usage-based routing adds significant latency due to Redis operations for tracking usage across deployments.
+
+:::
 
 
 **🎉 NEW** This is an async implementation of usage-based-routing.
@@ -335,29 +338,29 @@ from litellm import Router
 
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "{{openai_small}}", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
-		"api_base": os.getenv("AZURE_API_BASE")
+		"api_base": os.getenv("AZURE_API_BASE"),
 		"tpm": 100000,
 		"rpm": 10000,
 	}, 
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
 		"api_version": os.getenv("AZURE_API_VERSION"),
-		"api_base": os.getenv("AZURE_API_BASE")
+		"api_base": os.getenv("AZURE_API_BASE"),
 		"tpm": 100000,
 		"rpm": 1000,
 	},
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "{{openai_small}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 		"tpm": 100000,
 		"rpm": 1000,
@@ -367,12 +370,12 @@ router = Router(model_list=model_list,
                 redis_host=os.environ["REDIS_HOST"], 
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
-                routing_strategy="simple-shuffle" # 👈 RECOMMENDED - best performance
+                routing_strategy="simple-shuffle", # 👈 RECOMMENDED - best performance
 				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
-response = await router.acompletion(model="gpt-3.5-turbo", 
-				messages=[{"role": "user", "content": "Hey, how's it going?"}]
+response = await router.acompletion(model="{{openai_small}}", 
+				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 ```
@@ -383,20 +386,20 @@ print(response)
 
 ```yaml
 model_list:
-	- model_name: gpt-3.5-turbo # model alias 
-	  litellm_params: # params for litellm completion/embedding call 
-		model: azure/chatgpt-v-2 # actual model name
-		api_key: os.environ/AZURE_API_KEY
-		api_version: os.environ/AZURE_API_VERSION
-		api_base: os.environ/AZURE_API_BASE
+    - model_name: {{openai_small}} # model alias 
+      litellm_params: # params for litellm completion/embedding call 
+        model: azure/chatgpt-v-2 # actual model name
+        api_key: os.environ/AZURE_API_KEY
+        api_version: os.environ/AZURE_API_VERSION
+        api_base: os.environ/AZURE_API_BASE
       tpm: 100000
-	  rpm: 10000
-	- model_name: gpt-3.5-turbo 
-	  litellm_params: # params for litellm completion/embedding call 
-		model: gpt-3.5-turbo 
-		api_key: os.getenv(OPENAI_API_KEY)
+      rpm: 10000
+    - model_name: {{openai_small}} 
+      litellm_params: # params for litellm completion/embedding call 
+        model: {{openai_small}} 
+        api_key: os.getenv(OPENAI_API_KEY)
       tpm: 100000
-	  rpm: 1000
+      rpm: 1000
 
 router_settings:
   routing_strategy: simple-shuffle # 👈 RECOMMENDED - best performance
@@ -422,7 +425,7 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data '{
-    "model": "gpt-3.5-turbo", 
+    "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```
@@ -489,7 +492,7 @@ router = Router(..., routing_strategy_args={"ttl": 10})
 
 ```yaml
 router_settings:
-	routing_strategy_args: {"ttl": 10}
+  routing_strategy_args: {"ttl": 10}
 ```
 
 #### Set Lowest Latency Buffer
@@ -519,7 +522,7 @@ router = Router(..., routing_strategy_args={"lowest_latency_buffer": 0.5})
 
 ```yaml
 router_settings:
-	routing_strategy_args: {"lowest_latency_buffer": 0.5}
+  routing_strategy_args: {"lowest_latency_buffer": 0.5}
 ```
 
 </TabItem>
@@ -540,7 +543,7 @@ from litellm import Router
 
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "{{openai_small}}", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -550,7 +553,7 @@ model_list = [{ # list of model deployments
     "tpm": 100000,
 	"rpm": 10000,
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -560,9 +563,9 @@ model_list = [{ # list of model deployments
     "tpm": 100000,
 	"rpm": 1000,
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "{{openai_small}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	},
     "tpm": 100000,
@@ -572,12 +575,12 @@ router = Router(model_list=model_list,
                 redis_host=os.environ["REDIS_HOST"], 
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
-                routing_strategy="usage-based-routing"
+                routing_strategy="usage-based-routing",
 				enable_pre_call_check=True, # enables router rate limits for concurrent calls
 				)
 
-response = await router.acompletion(model="gpt-3.5-turbo", 
-				messages=[{"role": "user", "content": "Hey, how's it going?"}]
+response = await router.acompletion(model="{{openai_small}}", 
+				messages=[{"role": "user", "content": "Hey, how's it going?"}])
 
 print(response)
 ```
@@ -596,7 +599,7 @@ from litellm import Router
 import asyncio
 
 model_list = [{ # list of model deployments 
-	"model_name": "gpt-3.5-turbo", # model alias 
+	"model_name": "{{openai_small}}", # model alias 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-v-2", # actual model name
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -604,7 +607,7 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE"),
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
 		"model": "azure/chatgpt-functioncalling", 
 		"api_key": os.getenv("AZURE_API_KEY"),
@@ -612,9 +615,9 @@ model_list = [{ # list of model deployments
 		"api_base": os.getenv("AZURE_API_BASE"),
 	}
 }, {
-    "model_name": "gpt-3.5-turbo", 
+    "model_name": "{{openai_small}}", 
 	"litellm_params": { # params for litellm completion/embedding call 
-		"model": "gpt-3.5-turbo", 
+		"model": "{{openai_small}}", 
 		"api_key": os.getenv("OPENAI_API_KEY"),
 	}
 }]
@@ -623,7 +626,7 @@ model_list = [{ # list of model deployments
 router = Router(model_list=model_list, routing_strategy="least-busy")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="{{openai_small}}", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -766,12 +769,12 @@ import asyncio
 
 model_list =  [
 	{
-		"model_name": "gpt-3.5-turbo",
-		"litellm_params": {"model": "gpt-4"},
-		"model_info": {"id": "openai-gpt-4"},
+		"model_name": "{{openai_small}}",
+		"litellm_params": {"model": "{{openai_large}}"},
+		"model_info": {"id": "openai-gpt-4o"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {"model": "groq/llama3-8b-8192"},
 		"model_info": {"id": "groq-llama"},
 	},
@@ -781,7 +784,7 @@ model_list =  [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="{{openai_small}}", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -801,7 +804,7 @@ Set `litellm_params["input_cost_per_token"]` and `litellm_params["output_cost_pe
 ```python
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-2",
 			"input_cost_per_token": 0.00003,
@@ -810,7 +813,7 @@ model_list = [
 		"model_info": {"id": "chatgpt-v-experimental"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-1",
 			"input_cost_per_token": 0.000000001,
@@ -819,7 +822,7 @@ model_list = [
 		"model_info": {"id": "chatgpt-v-1"},
 	},
 	{
-		"model_name": "gpt-3.5-turbo",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
 			"model": "azure/chatgpt-v-5",
 			"input_cost_per_token": 10,
@@ -832,7 +835,7 @@ model_list = [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 async def router_acompletion():
 	response = await router.acompletion(
-		model="gpt-3.5-turbo", 
+		model="{{openai_small}}", 
 		messages=[{"role": "user", "content": "Hey, how's it going?"}]
 	)
 	print(response)
@@ -846,15 +849,25 @@ asyncio.run(router_acompletion())
 </TabItem>
 </Tabs>
 
-## Routing Groups - Per-Model Strategies
+## Routing Groups - Per-Model Strategies and Callable Virtual Models
 
 Apply different routing strategies to different models in the same router. A **routing group** binds a list of `model_name`s to a strategy and (optionally) strategy args. Models not claimed by any group fall back to the router's top-level `routing_strategy`.
+
+A group is also **callable as a model**: request `model: <group_name>` and LiteLLM picks among the union of every member's deployments using the group's strategy. Group names appear in `/v1/models`, so clients that discover models from the gateway (Claude Code with `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`, Codex) surface them in their pickers.
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{"model": "anthropic-latency", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Access control treats a group as its own model name: grant `<group_name>` on a key or team to let it list and call the group. Membership is not expanded in either direction, so a key granted only the group cannot call members directly and a key granted a member cannot call the group. A group name must not collide with an existing `model_name` or `model_group_alias`; config load rejects it. Requests keep the group name as `model_group` in spend logs, with each row recording the member deployment that actually served it. Fallbacks and `model_group_retry_policy` are keyed by name, so give the group its own entries if you need them. Claude Code and Claude Desktop only auto-discover gateway models whose name contains `claude` or `anthropic`, so name groups like `claude-quality` if you want them to appear in the picker without setting `ANTHROPIC_CUSTOM_MODEL_OPTION` by hand.
 
 :::tip
 You can also create, edit, and delete routing groups from the dashboard. See [Manage Routing Groups via UI](./proxy/ui/routing_groups.md).
 :::
 
-**When to use this:** you want latency-based routing for `gpt-4o`, but plain weighted-pick for cheaper models — without spinning up a second router.
+**When to use this:** you want latency-based routing for `{{openai_large}}`, but plain weighted-pick for cheaper models, without spinning up a second router.
 
 #### Rules
 
@@ -868,19 +881,19 @@ You can also create, edit, and delete routing groups from the dashboard. See [Ma
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
       api_version: "2024-08-01-preview"
   - model_name: cheap-model
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
@@ -889,14 +902,14 @@ router_settings:
 
   routing_groups:
     - group_name: latency-sensitive
-      models: [gpt-4o]
+      models: [{{openai_large}}]
       routing_strategy: latency-based-routing
       routing_strategy_args:
         ttl: 3600
 ```
 
 Behavior:
-- `gpt-4o` → latency-based routing across the OpenAI + Azure deployments.
+- `{{openai_large}}` → latency-based routing across the OpenAI + Azure deployments.
 - `cheap-model` → simple-shuffle (the default group).
 
 </TabItem>
@@ -907,15 +920,15 @@ from litellm import Router
 
 router = Router(
     model_list=[
-        {"model_name": "gpt-4o", "litellm_params": {"model": "openai/gpt-4o"}},
-        {"model_name": "gpt-4o", "litellm_params": {"model": "azure/gpt-4o", "api_base": "...", "api_key": "..."}},
-        {"model_name": "cheap-model", "litellm_params": {"model": "openai/gpt-4o-mini"}},
+        {"model_name": "{{openai_large}}", "litellm_params": {"model": "openai/{{openai_large}}"}},
+        {"model_name": "{{openai_large}}", "litellm_params": {"model": "azure/{{openai_large}}", "api_base": "...", "api_key": "..."}},
+        {"model_name": "cheap-model", "litellm_params": {"model": "openai/{{openai_small}}"}},
     ],
     routing_strategy="simple-shuffle",  # fallback for ungrouped models
     routing_groups=[
         {
             "group_name": "latency-sensitive",
-            "models": ["gpt-4o"],
+            "models": ["{{openai_large}}"],
             "routing_strategy": "latency-based-routing",
             "routing_strategy_args": {"ttl": 3600},
         },
@@ -935,12 +948,12 @@ router_settings:
   routing_strategy: simple-shuffle
   routing_groups:
     - group_name: hot-path
-      models: [gpt-4o, claude-sonnet]
+      models: [{{openai_large}}, claude-sonnet]
       routing_strategy: latency-based-routing
       routing_strategy_args:
         ttl: 60          # short window — react quickly to latency changes
     - group_name: batch
-      models: [gpt-4o-mini, llama-70b]
+      models: [{{openai_small}}, llama-70b]
       routing_strategy: usage-based-routing-v2
       routing_strategy_args:
         rpm: 10000
@@ -949,6 +962,102 @@ router_settings:
 #### Updating at runtime
 
 Routing groups can be updated via `Router.update_settings(routing_groups=[...])` or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
+
+## Session Affinity (Sticky Sessions)
+
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+
+Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+<Tabs>
+<TabItem value="proxy" label="Proxy">
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: azure/{{openai_large}}
+      api_key: os.environ/AZURE_API_KEY_EASTUS
+      api_base: https://eastus.openai.azure.com
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: azure/{{openai_large}}
+      api_key: os.environ/AZURE_API_KEY_WESTUS
+      api_base: https://westus.openai.azure.com
+
+router_settings:
+  routing_strategy: simple-shuffle          # any strategy
+  optional_pre_call_checks: ["session_affinity"]
+  deployment_affinity_ttl_seconds: 3600     # optional, default 3600
+```
+
+Send a session id with every request of the conversation. The proxy reads it from the `x-litellm-session-id` header (`x-litellm-trace-id` is interchangeable), from any `x-<vendor>-session-id` header such as `x-claude-code-session-id`, or from `metadata.session_id` in the request body.
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-session-id: 7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21" \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+The `x-litellm-model-id` response header shows which deployment served the request. It stays the same for every request that carries the same session id.
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {
+            "model_name": "{{openai_large}}",
+            "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://eastus.openai.azure.com"},
+        },
+        {
+            "model_name": "{{openai_large}}",
+            "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
+        },
+    ],
+    routing_strategy="simple-shuffle",                 # any strategy
+    optional_pre_call_checks=["session_affinity"],
+    deployment_affinity_ttl_seconds=3600,              # optional, default 3600
+)
+
+response = await router.acompletion(
+    model="{{openai_large}}",
+    messages=[{"role": "user", "content": "hi"}],
+    metadata={"session_id": "7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21"},
+)
+print(response._hidden_params["model_id"])  # same deployment for every call with this session_id
+```
+
+</TabItem>
+</Tabs>
+
+#### How it works
+
+- The first request with a new session id is routed by the strategy as usual. The deployment it lands on becomes the pin for that model group and session id (on the proxy the pin is also scoped to the caller: the virtual key, or the authenticated user id under JWT auth).
+- Every later request with the same session id is narrowed to the pinned deployment before the strategy runs.
+- Every request refreshes the pin, so `deployment_affinity_ttl_seconds` bounds the idle time between turns, not the length of a conversation.
+- Pins live in the router cache. With Redis configured they are shared across proxy instances; without Redis each instance keeps its own.
+- If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
+- Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
+
+#### Settings
+
+| Setting | Description |
+|---|---|
+| `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
+| `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
+| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
+
+These settings are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy.
+
+:::info
+The `session_affinity` option inside `complexity_router_config` on the [Auto Router](./proxy/auto_routing.md) page is a different setting. It pins the auto router's model choice for a session; the pre-call check on this page pins a deployment inside a model group.
+:::
 
 ## Traffic Mirroring / Silent Experiments
 
@@ -962,7 +1071,7 @@ Traffic mirroring allows you to "mimic" production traffic to a secondary (silen
 
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
-When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured [fallbacks](#fallbacks).
+When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -972,7 +1081,7 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-4",
+        "model_name": "{{openai_large}}",
         "litellm_params": {
             "model": "azure/gpt-4-primary",
             "api_key": os.getenv("AZURE_API_KEY"),
@@ -980,7 +1089,7 @@ model_list = [
         },
     },
     {
-        "model_name": "gpt-4",
+        "model_name": "{{openai_large}}",
         "litellm_params": {
             "model": "azure/gpt-4-fallback",
             "api_key": os.getenv("AZURE_API_KEY_2"),
@@ -997,13 +1106,13 @@ router = Router(model_list=model_list)
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
       order: 1  # 👈 Highest priority
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
@@ -1027,19 +1136,19 @@ from litellm import Router
 
 model_list = [
 	{
-		"model_name": "o1",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
-			"model": "o1-preview", 
+			"model": "{{openai_small}}", 
 			"api_key": os.getenv("OPENAI_API_KEY"), 
 			"weight": 1
 		},
 	},
 	{
-		"model_name": "o1",
+		"model_name": "{{openai_small}}",
 		"litellm_params": {
-			"model": "o1-preview", 
+			"model": "{{openai_small}}", 
 			"api_key": os.getenv("OPENAI_API_KEY"), 
-			"weight": 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
+			"weight": 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 		},
 	},
 ]
@@ -1047,7 +1156,7 @@ model_list = [
 router = Router(model_list=model_list, routing_strategy="cost-based-routing")
 
 response = await router.acompletion(
-	model="gpt-3.5-turbo", 
+	model="{{openai_small}}", 
 	messages=[{"role": "user", "content": "Hey, how's it going?"}]
 )
 print(response)
@@ -1057,16 +1166,16 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: o1
-  	litellm_params:
-		model: o1
-		api_key: os.environ/OPENAI_API_KEY
-		weight: 1	
-  - model_name: o1
+  - model_name: {{openai_small}}
     litellm_params:
-		model: o1-preview
-		api_key: os.environ/OPENAI_API_KEY
-		weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN o1-preview
+      model: {{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      weight: 1
+  - model_name: {{openai_small}}
+    litellm_params:
+      model: {{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 ```
 
 </TabItem>
@@ -1084,7 +1193,7 @@ This is useful when you have multiple regional copies of the same model (e.g. Az
 - On a retryable failure, the failing deployment ID is excluded and a new deployment is picked from the remaining peers in the same model group, respecting `weight` / `rpm` / `tpm`.
 - Exclusions accumulate across hops: each retry adds the previous failure to the exclusion set, so a deployment that just failed is never picked again in the same request chain.
 - Capped by `max_fallbacks` (default `5`).
-- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError` — those keep their dedicated fallback paths.
+- Not triggered for `ContextWindowExceededError` or `ContentPolicyViolationError`, which keep their dedicated fallback paths.
 - Async-only: honored by `router.acompletion()` and other async entrypoints. The sync `router.completion()` path falls through to regular fallbacks.
 - Cooldowns still apply: a deployment that crosses `allowed_fails` is cooled down independently of weighted failover.
 
@@ -1102,18 +1211,18 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-4.1-mini",
+        "model_name": "{{openai_small}}",
         "litellm_params": {
-            "model": "azure/gpt-4.1-mini",
+            "model": "azure/{{openai_small}}",
             "api_base": "https://eastus2.example.azure.com",
             "api_key": os.getenv("AZURE_EASTUS2_KEY"),
             "weight": 1,
         },
     },
     {
-        "model_name": "gpt-4.1-mini",
+        "model_name": "{{openai_small}}",
         "litellm_params": {
-            "model": "azure/gpt-4.1-mini",
+            "model": "azure/{{openai_small}}",
             "api_base": "https://swedencentral.example.azure.com",
             "api_key": os.getenv("AZURE_SWEDEN_KEY"),
             "weight": 1,
@@ -1128,7 +1237,7 @@ router = Router(
 )
 
 response = await router.acompletion(
-    model="gpt-4.1-mini",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hey"}],
 )
 ```
@@ -1138,15 +1247,15 @@ response = await router.acompletion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4.1-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: azure/gpt-4.1-mini
+      model: azure/{{openai_small}}
       api_base: https://eastus2.example.azure.com
       api_key: os.environ/AZURE_EASTUS2_KEY
       weight: 1
-  - model_name: gpt-4.1-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: azure/gpt-4.1-mini
+      model: azure/{{openai_small}}
       api_base: https://swedencentral.example.azure.com
       api_key: os.environ/AZURE_SWEDEN_KEY
       weight: 1
@@ -1161,7 +1270,7 @@ router_settings:
 
 **Walkthrough**
 
-With the config above and a request to `gpt-4.1-mini`:
+With the config above and a request to `{{openai_small}}`:
 
 1. `simple-shuffle` picks one of the two deployments using `weight`.
 2. If the picked deployment raises a provider error (e.g. `RateLimitError`, `InternalServerError`), its deployment ID is added to `metadata._failover_excluded_ids`.
@@ -1182,10 +1291,10 @@ If tpm/rpm is set, and no max parallel request limit given, we use the RPM or ca
 from litellm import Router 
 
 model_list = [{
-	"model_name": "gpt-4",
+	"model_name": "{{openai_large}}",
 	"litellm_params": {
-		"model": "azure/gpt-4",
-		...
+		"model": "azure/{{openai_large}}",
+		# ...
 		"max_parallel_requests": 10 # 👈 SET PER DEPLOYMENT
 	}
 }]
@@ -1221,7 +1330,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="{{openai_small}}", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1233,8 +1342,8 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-	allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  	cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
@@ -1266,7 +1375,7 @@ model_list:
 **Expected Response**
 
 ```
-No deployments available for selected model, Try again in 60 seconds. Passed model=claude-3-5-sonnet. pre-call-checks=False, allowed_model_region=n/a.
+No deployments available for selected model, Try again in 60 seconds. Passed model={{anthropic}}. pre-call-checks=False, allowed_model_region=n/a.
 ```
 
 #### **Disable cooldowns**
@@ -1286,7 +1395,7 @@ router = Router(..., disable_cooldowns=True)
 
 ```yaml
 router_settings:
-	disable_cooldowns: True
+  disable_cooldowns: True
 ```
 
 </TabItem>
@@ -1308,18 +1417,18 @@ LiteLLM generates a unique `model_id` for each deployment by creating a determin
 model_list:
   - model_name: sonnet-4              # Deployment 1
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: <our-real-key>
       
   - model_name: byok-sonnet-4         # Deployment 2  
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: <customer-managed-key>
       api_base: https://proxy.litellm.ai/api.anthropic.com
       
   - model_name: sonnet-4              # Deployment 3
     litellm_params:
-      model: vertex_ai/claude-sonnet-4-20250514
+      model: vertex_ai/{{anthropic}}
       vertex_project: my-project
 ```
 
@@ -1354,18 +1463,18 @@ Consider this high-availability setup with multiple providers:
 model_list:
   - model_name: sonnet-4              # Primary: Anthropic Direct
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: <anthropic-key>
       
   - model_name: byok-sonnet-4         # BYOK: Customer-managed keys
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
       api_key: <customer-managed-key>
       api_base: https://proxy.litellm.ai/api.anthropic.com
       
   - model_name: sonnet-4              # Fallback: Vertex AI
     litellm_params:
-      model: vertex_ai/claude-sonnet-4-20250514
+      model: vertex_ai/{{anthropic}}
       vertex_project: my-project
 ```
 
@@ -1410,7 +1519,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="{{openai_small}}", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1429,10 +1538,30 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="{{openai_small}}", messages=messages)
 
 print(f"response: {response}")
 ```
+
+#### Where `num_retries` can be set, and which one wins
+
+`num_retries` can come from four places. They are ranked, highest first:
+
+1. the `x-litellm-num-retries` request header (proxy only)
+2. `num_retries` in the request body
+3. `num_retries` in a deployment's `litellm_params` in `model_list`
+4. `num_retries` in `litellm_settings` (the router-wide default)
+
+So a caller can always raise or lower the retry count for one request, including setting it to `0` to
+disable retries, no matter what the deployment or the global setting says. A deployment value applies
+whenever the request carries none, and it overrides the global default.
+
+`num_retries` is not the same knob as `max_retries`. `num_retries` is LiteLLM's own retry loop, while
+`max_retries` is the provider SDK's internal retry count. For a call that goes through the router,
+LiteLLM owns retries and pins the provider client to `max_retries: 0`, so a `max_retries` in the
+request body or in `litellm_params` has no effect on a proxy request. That is deliberate: it is what
+stops a deployment `num_retries: N` from being applied twice and turning one request into
+`(1 + N) ** 2` upstream calls. Use `num_retries` to control how many attempts a request gets.
 
 ### [Advanced]: Custom Retries, Cooldowns based on Error Type
 
@@ -1480,7 +1609,7 @@ allowed_fails_policy = AllowedFailsPolicy(
 router = litellm.Router(
 	model_list=[
 		{
-			"model_name": "gpt-3.5-turbo",  # openai model name
+			"model_name": "{{openai_small}}",  # openai model name
 			"litellm_params": {  # params for litellm completion/embedding call
 				"model": "azure/chatgpt-v-2",
 				"api_key": os.getenv("AZURE_API_KEY"),
@@ -1518,8 +1647,8 @@ router_settings:
     "ContentPolicyViolationErrorRetries": 4
   }
   allowed_fails_policy: {
-	"ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment
-	"RateLimitErrorAllowedFails": 100 # Allow 100 RateLimitErrors before cooling down a deployment
+    "ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment
+    "RateLimitErrorAllowedFails": 100 # Allow 100 RateLimitErrors before cooling down a deployment
   }
 ```
 
@@ -1534,9 +1663,9 @@ router_settings:
 
 ```yaml
 model_list:
-- model_name: gpt-4
+- model_name: {{openai_large}}
   litellm_params:
-    model: openai/gpt-4
+    model: openai/{{openai_large}}
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     allowed_fails_policy:
@@ -1570,9 +1699,9 @@ print(response)
 
 **Pass in Redis URL, additional kwargs** 
 ```python 
-router = Router(model_list: Optional[list] = None,
+router = Router(model_list=model_list,
                  ## CACHING ## 
-                 redis_url=os.getenv("REDIS_URL")",
+                 redis_url=os.getenv("REDIS_URL"),
 				 cache_kwargs= {}, # additional kwargs to pass to RedisCache (see caching.py)
 				 cache_responses=True)
 ```
@@ -1612,27 +1741,27 @@ For 'eu-region' filtering, Set 'region_name' of deployment.
 ```python
 model_list = [
             {
-                "model_name": "gpt-3.5-turbo", # model group name
+                "model_name": "{{openai_small}}", # model group name
                 "litellm_params": {  # params for litellm completion/embedding call
                     "model": "azure/chatgpt-v-2",
                     "api_key": os.getenv("AZURE_API_KEY"),
                     "api_version": os.getenv("AZURE_API_VERSION"),
                     "api_base": os.getenv("AZURE_API_BASE"),
-					"region_name": "eu" # 👈 SET 'EU' REGION NAME
-					"base_model": "azure/gpt-35-turbo", # 👈 (Azure-only) SET BASE MODEL
+					"region_name": "eu", # 👈 SET 'EU' REGION NAME
+					"base_model": "azure/{{openai_small}}", # 👈 (Azure-only) SET BASE MODEL
                 },
             },
             {
-                "model_name": "gpt-3.5-turbo", # model group name
+                "model_name": "{{openai_small}}", # model group name
                 "litellm_params": {  # params for litellm completion/embedding call
-                    "model": "gpt-3.5-turbo-1106",
+                    "model": "{{openai_small}}",
                     "api_key": os.getenv("OPENAI_API_KEY"),
                 },
             },
 			{
-				"model_name": "gemini-pro",
-				"litellm_params: {
-					"model": "vertex_ai/gemini-pro-1.5", 
+				"model_name": "{{gemini_pro}}",
+				"litellm_params": {
+					"model": "vertex_ai/{{gemini_pro}}", 
 					"vertex_project": "adroit-crow-1234",
 					"vertex_location": "us-east1" # 👈 AUTOMATICALLY INFERS 'region_name'
 				}
@@ -1649,7 +1778,9 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 <Tabs>
 <TabItem value="context-window-check" label="Context Window Check">
 
-```python
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 """
 - Give a gpt-3.5-turbo model group with different context windows (4k vs. 16k)
 - Send a 5k prompt
@@ -1700,7 +1831,7 @@ print(f"response: {response}")
 
 ```python
 """
-- Give 2 gpt-3.5-turbo deployments, in eu + non-eu regions
+- Give 2 {{openai_small}} deployments, in eu + non-eu regions
 - Make a call
 - Assert it picks the eu-region model
 """
@@ -1710,7 +1841,7 @@ import os
 
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "{{openai_small}}",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
 			"model": "azure/chatgpt-v-2",
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1723,9 +1854,9 @@ model_list = [
 		}
 	},
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "{{openai_small}}",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
-			"model": "gpt-3.5-turbo-1106",
+			"model": "{{openai_small}}",
 			"api_key": os.getenv("OPENAI_API_KEY"),
 		},
 		"model_info": {
@@ -1737,7 +1868,7 @@ model_list = [
 router = Router(model_list=model_list, enable_pre_call_checks=True) 
 
 response = router.completion(
-	model="gpt-3.5-turbo",
+	model="{{openai_small}}",
 	messages=[{"role": "user", "content": "Who was Alexander?"}],
 )
 
@@ -1752,7 +1883,7 @@ print(f"response id: {response._hidden_params['model_id']}")
 <TabItem value="proxy" label="Proxy">
 
 :::info
-Go [here](./proxy/reliability.md#advanced---context-window-fallbacks) for how to do this on the proxy
+Go [here](./proxy/reliability.md#context-window-fallbacks) for how to do this on the proxy
 :::
 </TabItem>
 </Tabs>
@@ -1777,14 +1908,14 @@ async def test_acompletion_caching_on_router_caching_groups():
 		litellm.set_verbose = True
 		model_list = [
 			{
-				"model_name": "openai-gpt-3.5-turbo",
+				"model_name": "openai-gpt-4o-mini",
 				"litellm_params": {
-					"model": "gpt-3.5-turbo-0613",
+					"model": "{{openai_small}}",
 					"api_key": os.getenv("OPENAI_API_KEY"),
 				},
 			},
 			{
-				"model_name": "azure-gpt-3.5-turbo",
+				"model_name": "azure-gpt-4o-mini",
 				"litellm_params": {
 					"model": "azure/chatgpt-v-2",
 					"api_key": os.getenv("AZURE_API_KEY"),
@@ -1800,11 +1931,11 @@ async def test_acompletion_caching_on_router_caching_groups():
 		start_time = time.time()
 		router = Router(model_list=model_list, 
 				cache_responses=True, 
-				caching_groups=[("openai-gpt-3.5-turbo", "azure-gpt-3.5-turbo")])
-		response1 = await router.acompletion(model="openai-gpt-3.5-turbo", messages=messages, temperature=1)
+				caching_groups=[("openai-gpt-4o-mini", "azure-gpt-4o-mini")])
+		response1 = await router.acompletion(model="openai-gpt-4o-mini", messages=messages, temperature=1)
 		print(f"response1: {response1}")
 		await asyncio.sleep(1) # add cache is async, async sleep for cache to get set
-		response2 = await router.acompletion(model="azure-gpt-3.5-turbo", messages=messages, temperature=1)
+		response2 = await router.acompletion(model="azure-gpt-4o-mini", messages=messages, temperature=1)
 		assert response1.id == response2.id
 		assert len(response1.choices[0].message.content) > 0
 		assert response1.choices[0].message.content == response2.choices[0].message.content
@@ -1835,9 +1966,9 @@ import asyncio
 router = Router(
 	model_list=[
 		{
-			"model_name": "gpt-3.5-turbo",
+			"model_name": "{{openai_small}}",
 			"litellm_params": {
-				"model": "gpt-3.5-turbo",
+				"model": "{{openai_small}}",
 				"api_key": "bad_key",
 			},
 		}
@@ -1854,7 +1985,7 @@ async def main():
 	
 	try:
 		await router.acompletion(
-			model="gpt-3.5-turbo",
+			model="{{openai_small}}",
 			messages=[{"role": "user", "content": "Hey, how's it going?"}],
 		)
 	except Exception as e:
@@ -1880,7 +2011,7 @@ from litellm import Router
 
 model_list = [
 	{ # list of model deployments 
-		"model_name": "gpt-4-preview", # model alias 
+		"model_name": "{{openai_small}}", # model alias 
 		"litellm_params": { # params for litellm completion/embedding call 
 			"model": "azure/chatgpt-v-2", # actual model name
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1888,11 +2019,11 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-4-1106-preview" # azure/gpt-4-1106-preview will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/{{openai_small}}" # azure/{{openai_small}} will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}, 
 	{
-		"model_name": "gpt-4-32k", 
+		"model_name": "{{openai_large}}", 
 		"litellm_params": { # params for litellm completion/embedding call 
 			"model": "azure/chatgpt-functioncalling", 
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1900,7 +2031,7 @@ model_list = [
 			"api_base": os.getenv("AZURE_API_BASE")
 		},
 		"model_info": {
-			"base_model": "azure/gpt-4-32k" # azure/gpt-4-32k will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
+			"base_model": "azure/{{openai_large}}" # azure/{{openai_large}} will be used for cost tracking, ensure this exists in litellm model_prices_and_context_window.json
 		}
 	}
 ]
@@ -1926,7 +2057,7 @@ litellm.callbacks = [customHandler]
 
 # router completion call
 response = router.completion(
-	model="gpt-4-32k", 
+	model="{{openai_large}}", 
 	messages=[{ "role": "user", "content": "Hi who are you"}]
 )
 ```
@@ -1936,10 +2067,12 @@ response = router.completion(
 
 You can also set default params for litellm completion/embedding calls. Here's how to do that: 
 
-```python 
+The model ids in this example are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 from litellm import Router
 
-fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}
+fallback_dict = {"gpt-4o-mini": "gpt-4.1"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})
@@ -1948,7 +2081,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-3.5-turbo", messages=messages)
+response = router.completion(model="gpt-4o-mini", messages=messages)
 
 print(f"response: {response}")
 ```
@@ -1992,14 +2125,14 @@ router = Router(model_list=model_list, routing_strategy="simple-shuffle")
 
 # router completion call
 response = router.completion(
-	model="gpt-3.5-turbo", 
+	model="{{openai_small}}", 
 	messages=[{ "role": "user", "content": "Hi who are you"}]
 )
 ```
 
 ## Deploy Router 
 
-If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](./simple_proxy#load-balancing---multiple-instances-of-1-model)
+If you want a server to load balance across different LLM APIs, use our [LiteLLM Proxy Server](/docs/simple_proxy)
 
 
 

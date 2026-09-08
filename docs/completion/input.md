@@ -15,7 +15,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-key"
 
 ## SET MAX TOKENS - via completion() 
 response = litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -30,7 +30,7 @@ Use this function to get an up-to-date list of supported openai params for any m
 ```python
 from litellm import get_supported_openai_params
 
-response = get_supported_openai_params(model="anthropic.claude-3", custom_llm_provider="bedrock")
+response = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_llm_provider="bedrock")
 
 print(response) # ["max_tokens", "tools", "tool_choice", "stream"]
 ```
@@ -120,7 +120,7 @@ def completion(
     # Optional liteLLM function params
     **kwargs,
 
-) -> ModelResponse:
+) -> ModelResponse: ...
 ```
 ### Required Fields
 

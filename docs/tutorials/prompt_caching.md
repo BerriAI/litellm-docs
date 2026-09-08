@@ -20,8 +20,11 @@ Supported Providers (`cache_control` marker):
 - MiniMax (`minimax/`)
 - Z.ai / GLM (`zai/`)
 
+Supported Providers (`prompt_cache_breakpoint` marker):
+- OpenAI GPT-5.6 and newer (`openai/`), see [OpenAI GPT-5.6 and newer](#openai-gpt-56-and-newer)
+
 Provider Managed (automatic, no marker needed):
-- OpenAI (`openai/`)
+- OpenAI, models before GPT-5.6 (`openai/`)
 - DeepSeek (`deepseek/`)
 - xAI (`xai/`)
 
@@ -108,6 +111,44 @@ LiteLLM will then automatically add a `cache_control` directive to the specified
 }
 ```
 
+### OpenAI GPT-5.6 and newer
+
+The same `cache_control_injection_points` work when the deployment resolves to an OpenAI model that supports [explicit prompt cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints), which the cost map marks with `supports_prompt_cache_breakpoint` (GPT-5.6 and newer on `openai/`). LiteLLM looks at the resolved deployment, not at the shape of the incoming request, so one config pattern covers a mixed Anthropic and OpenAI fleet and Anthropic-shaped clients on `/v1/messages` get the OpenAI markers too
+
+| Anthropic target | OpenAI GPT-5.6+ target |
+|---|---|
+| `"cache_control": {"type": "ephemeral"}` on the targeted block | `"prompt_cache_breakpoint": {"mode": "explicit"}` on the targeted block |
+| nothing at the request level | `"prompt_cache_options": {"mode": "explicit"}` at the request root |
+| `control.ttl` picks the 5m or 1h cache | `control` is ignored; set `prompt_cache_options` yourself for `ttl` |
+
+The request-level `prompt_cache_options` LiteLLM adds switches OpenAI to explicit mode, so the configured checkpoints are the whole caching strategy, exactly as they are on Anthropic. A `prompt_cache_options` already on the request wins and is never overwritten, which is how you change the mode or ask for the 30 minute cache per deployment:
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+      prompt_cache_options:
+        mode: implicit
+        ttl: 30m
+```
+
+With `mode: implicit` OpenAI keeps its automatic checkpoint on the latest user or tool message alongside the explicit one LiteLLM placed, which suits long multi-turn sessions; with the default `explicit` only the configured checkpoints write to the cache, which suits many single-turn requests that share one long system prompt. Either way OpenAI serves reads from the longest cached prefix it can match
+
+What to know about the OpenAI mapping:
+
+- **Block-level only.** OpenAI accepts the marker on text, image and file blocks. A string system prompt or message is wrapped into a one-block list before the marker is placed. Assistant blocks and tool results cannot carry a breakpoint, so an injection point that lands there is skipped
+- **`/v1/messages` system prompt.** OpenAI does not accept a breakpoint on the top-level `instructions` field, so when the Anthropic `system` carries a checkpoint LiteLLM sends it as a leading `developer` message instead. OpenAI treats both shapes as the same cache prefix, so switching does not cold-start the cache
+- **Stands down like Anthropic.** A request that already carries its own `cache_control` or `prompt_cache_breakpoint` markers keeps them; configured points are not added. Claude Code sets its own `cache_control`, so a Claude Code session on a GPT-5.6 deployment stays on OpenAI's implicit caching
+- **Respects the 4 breakpoint limit**, counting client-supplied markers toward it
+- **Only for requests that go to OpenAI itself.** The mapping fires for a GPT-5.6 or newer OpenAI model (the cost map's `supports_prompt_cache_breakpoint` flag when the entry carries one, otherwise the GPT version in the model name) when the deployment talks to `api.openai.com` (or a regional `*.api.openai.com` host), meaning no `api_base` (or `base_url`) or one on those hosts. A deployment with a custom `api_base`, such as another LiteLLM proxy or gateway in front of OpenAI, keeps today's behavior unless its `litellm_params` also set `prompt_cache_options`, which opts it in. `litellm_proxy/` deployments and Azure OpenAI deployments are not covered yet
+- **`/v1/responses`.** The marker lands on `input_text` blocks of the targeted message, and a string message is wrapped into a one-block list first. OpenAI does not accept a marker on the top-level `instructions` field, so a system prompt sent there stays on implicit caching; send it as a `developer` or `system` message to get the checkpoint. A `prompt_cache_options` the client sends is forwarded as is
+- **Cost reporting is unchanged.** OpenAI's `cached_tokens` and `cache_write_tokens` already come back as `cache_read_input_tokens` and `cache_creation_input_tokens` on `/v1/messages` and as `prompt_tokens_details` on `/chat/completions`
+
 ## LiteLLM Python SDK Usage
 
 Use the `cache_control_injection_points` parameter in your completion calls to automatically inject caching directives.
@@ -121,7 +162,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -199,7 +240,7 @@ import os
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -278,12 +319,21 @@ You can configure cache control injection in the proxy configuration file.
 model_list:
   - model_name: anthropic-auto-inject-cache-system-message
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20240620
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       cache_control_injection_points:
         - location: message
           role: system
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
 ```
+
+The second entry resolves to an OpenAI GPT-5.6 model, so the same injection point becomes a `prompt_cache_breakpoint` marker plus `prompt_cache_options` on the outbound request, as described in [OpenAI GPT-5.6 and newer](#openai-gpt-56-and-newer)
 </TabItem>
 
 <TabItem value="UI" label="LiteLLM UI">
@@ -357,6 +407,37 @@ LiteLLM auto-injects the caching directive into the system message based on our 
 ```
 
 When the model provider processes this request, it will recognize the caching directive and only process the system message once, caching it for subsequent requests.
+
+### 3. The same request on an OpenAI GPT-5.6 deployment
+
+With the deployment pointing at `openai/gpt-5.6` instead, the same configuration produces OpenAI's explicit breakpoint on the block and explicit mode at the request root:
+
+```json showLineNumbers title="modified_request_openai.json"
+{
+    "prompt_cache_options": {"mode": "explicit"},
+    "messages": [
+        {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "You are a helpful assistant. This is a set of very long instructions that you will follow. Here is a legal document that you will use to answer the user's question.",
+                    "prompt_cache_breakpoint": {"mode": "explicit"}
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "What is the main topic of this legal document?"
+                }
+            ]
+        }
+    ]
+}
+```
 
 ## Related Documentation
 

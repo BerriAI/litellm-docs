@@ -16,9 +16,9 @@ Use Guardrails AI ([guardrailsai.com](https://www.guardrailsai.com/)) to add che
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -39,14 +39,14 @@ litellm --config config.yaml --detailed_debug
 
 3. Test request 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -57,11 +57,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## ✨ Control Guardrails per Project (API Key)
 
-:::info
-
-✨ This is an Enterprise only feature [Contact us to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Use this to control what guardrails run per project. In this tutorial we only want the following guardrails to run for 1 project (API Key)
 - `guardrails`: ["aporia-pre-guard", "aporia-post-guard"]
@@ -105,7 +101,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-jNm1Zar7XfNdZXp49Z1kSQ' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",

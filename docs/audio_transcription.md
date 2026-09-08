@@ -84,7 +84,7 @@ general_settings:
 ```bash showLineNumbers title="Start Proxy Server"
 litellm --config /path/to/config.yaml 
 
-# RUNNING on http://0.0.0.0:8000
+# RUNNING on http://0.0.0.0:4000
 ```
 
 ### Test 
@@ -93,7 +93,7 @@ litellm --config /path/to/config.yaml
 <TabItem value="curl" label="Curl">
 
 ```bash showLineNumbers title="Test with cURL"
-curl --location 'http://0.0.0.0:8000/v1/audio/transcriptions' \
+curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header 'Authorization: Bearer sk-1234' \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 --form 'model="whisper"'
@@ -106,7 +106,7 @@ curl --location 'http://0.0.0.0:8000/v1/audio/transcriptions' \
 from openai import OpenAI
 client = openai.OpenAI(
     api_key="sk-1234",
-    base_url="http://0.0.0.0:8000"
+    base_url="http://0.0.0.0:4000"
 )
 
 
@@ -126,6 +126,7 @@ transcript = client.audio.transcriptions.create(
 - [Fireworks AI](./providers/fireworks_ai.md#audio-transcription)
 - [Groq](./providers/groq.md#speech-to-text---whisper)
 - [Deepgram](./providers/deepgram.md)
+- [Google AI Studio (Gemini)](./providers/gemini.md#audio-transcription-speech-to-text)
 - [Mistral (Voxtral)](./providers/mistral.md#audio-transcription)
 - [OVHcloud AI Endpoints](./providers/ovhcloud.md)
 

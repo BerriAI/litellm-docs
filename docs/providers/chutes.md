@@ -8,7 +8,7 @@
 | Provider Route on LiteLLM | `chutes/` |
 | Link to Provider Doc | [Chutes Website ↗](https://chutes.ai) |
 | Base URL | `https://llm.chutes.ai/v1/` |
-| Supported Operations | [`/chat/completions`](#sample-usage), Embeddings |
+| Supported Operations | [`/chat/completions`](/docs/providers/chutes#usage---litellm-python-sdk), Embeddings |
 
 <br />
 

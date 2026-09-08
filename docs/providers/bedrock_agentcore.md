@@ -247,7 +247,7 @@ model_list:
 
 ## LiteLLM A2A Gateway {#litellm-a2a-gateway}
 
-Register a Bedrock AgentCore runtime as a first-class A2A agent on the LiteLLM [Agent Gateway](../a2a). This gives you per-agent RBAC, access groups, trace-ID enforcement, and the `x-a2a-{agent_name_or_id}-{header}` per-user passthrough convention — same surface as any other A2A provider.
+Register a Bedrock AgentCore runtime as a first-class A2A agent on the LiteLLM [Agent Gateway](../a2a). This gives you per-agent RBAC, access groups, trace-ID enforcement, and the `x-a2a-{agent_name_or_id}-{header}` per-user passthrough convention, the same surface as any other A2A provider.
 
 This path is distinct from the chat-completions invocation above. Pick one based on your client:
 
@@ -264,7 +264,7 @@ This path is distinct from the chat-completions invocation above. Pick one based
 1. Go to **Agents** → **Add Agent**.
 2. Select **Bedrock AgentCore** as the provider.
 3. Paste the AgentCore Runtime ARN as the agent URL.
-4. Configure AWS credentials (or leave blank to use the proxy's ambient credential chain — see [Authentication](#a2a-gateway-authentication) below).
+4. Configure AWS credentials (or leave blank to use the proxy's ambient credential chain; see [Authentication](#a2a-gateway-authentication) below).
 
 </TabItem>
 <TabItem value="api" label="REST API">
@@ -346,7 +346,7 @@ Recognized fields on `litellm_params` for SigV4:
 
 #### IRSA on EKS
 
-For Kubernetes deployments using [IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), no explicit credential configuration is needed — boto3's default chain picks up `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` from the pod environment automatically.
+For Kubernetes deployments using [IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), no explicit credential configuration is needed. boto3's default chain picks up `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` from the pod environment automatically.
 
 If you want the invocation to assume a **second** role (e.g. separate the pod's identity from the agent-invocation identity for CloudTrail attribution), combine IRSA with `aws_role_name`:
 
@@ -372,7 +372,7 @@ The proxy pod's IRSA role serves as the source identity for the AssumeRole call;
 
 ### Per-user header passthrough
 
-The standard A2A header forwarding mechanisms apply — see [A2A Agent Authentication Headers](../a2a_agent_headers) for the full reference. All three methods work with AgentCore:
+The standard A2A header forwarding mechanisms apply; see [A2A Agent Authentication Headers](../a2a_agent_headers) for the full reference. All three methods work with AgentCore:
 
 - **`static_headers`** — always sent to AgentCore (e.g. a custom `X-Tenant-Id`)
 - **`extra_headers`** — admin-configured allowlist of client headers to forward
@@ -385,7 +385,7 @@ Note that the SigV4 / Bearer auth handled by `litellm_params` is **separate** fr
 All standard A2A controls apply:
 - **Per-agent RBAC** — [Agent Permission Management](../a2a_agent_permissions). Returns HTTP 403 when the calling key/team isn't authorized for the AgentCore agent.
 - **Access groups** — tag the agent with one or more access groups in the LiteLLM dashboard, then grant the group to a team or key via `object_permission.agent_access_groups`. See [Agent Access Groups](../a2a_agent_permissions#agent-access-groups).
-- **Trace ID enforcement** — set `require_trace_id_on_calls_to_agent: true` on `litellm_params` to require `x-litellm-trace-id` on every inbound call. See [A2A Overview — Trace ID enforcement](../a2a#trace-id-enforcement-optional-per-agent).
+- **Trace ID enforcement.** Set `require_trace_id_on_calls_to_agent: true` on `litellm_params` to require `x-litellm-trace-id` on every inbound call. See [A2A Overview: Trace ID enforcement](../a2a#trace-id-enforcement-optional-per-agent).
 
 ## Further Reading
 

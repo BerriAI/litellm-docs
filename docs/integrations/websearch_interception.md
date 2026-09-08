@@ -1,6 +1,6 @@
 # Web Search Integration
 
-Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Perplexity, Tavily, etc.).
+Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Parallel, Perplexity, Tavily, and others).
 
 ## Quick Start
 
@@ -10,9 +10,9 @@ Add to your `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -37,7 +37,7 @@ search_tools:
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "What's the weather in San Francisco today?"}
     ],
@@ -192,9 +192,9 @@ See [Search Providers Documentation](../search/index.md) for detailed setup inst
 ```yaml
 model_list:
   # OpenAI
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   # MiniMax
@@ -206,13 +206,13 @@ model_list:
   # Anthropic
   - model_name: claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # Azure OpenAI
-  - model_name: azure-gpt4
+  - model_name: azure-gpt
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_base: https://my-azure.openai.azure.com
       api_key: os.environ/AZURE_API_KEY
 
@@ -236,7 +236,14 @@ search_tools:
     litellm_params:
       search_provider: tavily
       api_key: os.environ/TAVILY_API_KEY
+
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
 ```
+
+To use Parallel Search, set `search_tool_name: parallel-search` in `websearch_interception_params`.
 
 ## Usage Examples
 
@@ -250,7 +257,7 @@ litellm.callbacks = ["websearch_interception"]
 
 # Make completion with web search tool
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "What are the latest AI news?"}
     ],
@@ -289,7 +296,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the weather in San Francisco?"}
     ],

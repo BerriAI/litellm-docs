@@ -47,10 +47,10 @@ curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer sk-1234"
 ```json
 {
     "healthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
+        {"model": "azure/{{openai_small}}", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
     ],
     "unhealthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://openai-france-1234.openai.azure.com/"}
+        {"model": "azure/{{openai_small}}", "api_base": "https://openai-france-1234.openai.azure.com/"}
     ]
 }
 ```
@@ -74,12 +74,20 @@ To exclude a model from the background loop, set `disable_background_health_chec
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       disable_background_health_check: true
+```
+
+To scope the background loop to specific model groups instead of excluding models one by one, set `general_settings.background_health_check_model_groups` to the list of model group names to probe. Only deployments in the listed groups are checked, so `/health` reports only those groups, and [health check routing](./health_check_routing.md) applies only to them; unlisted groups keep their configured routing behavior. Model groups added later are not probed until you add them to the list, and a value that is not a list of strings fails at startup
+
+```yaml
+general_settings:
+  background_health_checks: true
+  background_health_check_model_groups: ["prod-openai"]
 ```
 
 For coordinating checks across multiple pods so expensive models are not probed once per pod, see [Shared Health Check State](./shared_health_check.md).
@@ -101,6 +109,7 @@ The health check picks the operation to test from the model's `model_info.mode`.
 | `realtime` | realtime session |
 | `ocr` | OCR |
 | `video_generation` | video generation |
+| `image_edit` | image edit |
 
 For a wildcard route (`*` in `litellm_params.model`), set `health_check_model` to the concrete model the probe should call. With `mode` unset on a wildcard route, `max_tokens` is left unset on the probe request.
 

@@ -64,7 +64,7 @@ run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instruc
 
 ## Replace the classifier's system prompt
 
-The LLM classifier shipped with one built-in rubric, so the router could only grade complexity. `classifier_llm_config.system_prompt` now allows you to define your own routing criteria — whether you want a more in-depth prompt for complexity or routing based on another criterion such as data sensitivity or model capability (vision, audio, image).
+The LLM classifier shipped with one built-in rubric, so the router could only grade complexity. `classifier_llm_config.system_prompt` now allows you to define your own routing criteria, whether you want a more in-depth prompt for complexity or routing based on another criterion such as data sensitivity or model capability (vision, audio, image).
 
 - `classifier_fallback` decides what happens when classification fails: the heuristic scorer, or straight to `default_model`
 

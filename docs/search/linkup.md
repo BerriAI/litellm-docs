@@ -23,9 +23,9 @@ response = search(
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:
@@ -87,7 +87,7 @@ Linkup provides powerful web search with context retrieval capabilities:
 ### Search Depth
 Control the precision and speed of your search:
 - `standard` - Returns results faster
-- `deep` - Takes longer but yields more comprehensive results
+- `deep` - Takes longer but returns more thorough results
 
 ### Output Types
 Choose how results are formatted:

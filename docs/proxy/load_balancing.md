@@ -37,22 +37,22 @@ Use the `order` parameter to prioritize specific deployments. [See Deployment Or
 ## Quick Start - Load Balancing
 #### Step 1 - Set deployments on config
 
-**Example config below**. Here requests with `model=gpt-3.5-turbo` will be routed across multiple instances of `azure/gpt-3.5-turbo`
+**Example config below**. Here requests with `model={{openai_small}}` will be routed across multiple instances of `azure/{{openai_small}}`
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
       rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: <your-azure-api-key>
       rpm: 6
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-large
       api_base: https://openai-france-1234.openai.azure.com/
@@ -61,7 +61,7 @@ model_list:
 
 router_settings:
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
-  model_group_alias: {"gpt-4": "gpt-3.5-turbo"} # all requests with `gpt-4` will be routed to models with `gpt-3.5-turbo`
+  model_group_alias: {"{{openai_large}}": "{{openai_small}}"} # all requests with `{{openai_large}}` will be routed to models with `{{openai_small}}`
   num_retries: 2
   timeout: 30                                  # 30 seconds
   redis_host: <your redis host>                # set this when using multiple litellm proxy deployments, load balancing state stored in redis
@@ -85,9 +85,9 @@ By default, `rpm` and `tpm` values are only used for **routing decisions** (pick
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     rpm: 60     # 60 requests per minute
     tpm: 90000  # 90k tokens per minute
@@ -146,9 +146,9 @@ $ litellm --config /path/to/config.yaml
 
 ### Test - Simple Call
 
-Here requests with model=gpt-3.5-turbo will be routed across multiple instances of azure/gpt-3.5-turbo
+Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
-👉 Key Change: `model="gpt-3.5-turbo"`
+👉 Key Change: `model="{{openai_small}}"`
 
 **Check the `model_id` in Response Headers to make sure the requests are being load balanced**
 
@@ -164,7 +164,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -183,7 +183,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -206,7 +206,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
         {"role": "user", "content": "Hi there!"}
     ],
@@ -225,13 +225,13 @@ Example config
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
       rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -252,7 +252,7 @@ Expose an 'alias' for a 'model_name' on the proxy server.
 
 ```
 model_group_alias: {
-  "gpt-4": "gpt-3.5-turbo"
+  "{{openai_large}}": "{{openai_small}}"
 }
 ```
 
@@ -268,14 +268,14 @@ Example config with `router_settings`
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
 
 router_settings:
-  model_group_alias: {"gpt-4": "gpt-3.5-turbo"} # all requests with `gpt-4` will be routed to models 
+  model_group_alias: {"{{openai_large}}": "{{openai_small}}"} # all requests with `{{openai_large}}` will be routed to models 
 ```
 
 ### Hide Alias Models 
@@ -288,7 +288,7 @@ Use this if you want to set-up aliases for:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
@@ -296,8 +296,8 @@ model_list:
 
 router_settings:
   model_group_alias:
-    "GPT-3.5-turbo": # alias
-      model: "gpt-3.5-turbo"  # Actual model name in 'model_list'
+    "GPT-5.6-luna": # alias
+      model: "{{openai_small}}"  # Actual model name in 'model_list'
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
 
@@ -318,13 +318,13 @@ Set `order` in `litellm_params` to prioritize deployments. Lower values = higher
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
       order: 1  # 👈 Highest priority - always tried first
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
@@ -335,17 +335,17 @@ model_list:
 
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next.
 
-If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](#fallbacks).
+If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](./reliability.md).
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
       order: 1
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-secondary
       api_key: os.environ/AZURE_API_KEY_2
@@ -353,12 +353,12 @@ model_list:
 
   - model_name: gpt-4-fallback
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
   fallbacks:
-    - gpt-4:
+    - {{openai_large}}:
         - gpt-4-fallback  # tried after all order levels fail
 ```
 
@@ -401,17 +401,17 @@ When load balancing OpenAI's Responses API across deployments with **different A
 
 ```yaml
 model_list:
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://eastus.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_EASTUS
     model_info:
       id: "deployment-eastus"
   
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://westeurope.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_WESTEUROPE
     model_info:

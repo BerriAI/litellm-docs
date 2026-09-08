@@ -80,7 +80,7 @@ VoyageAI's `voyage-context-3` model provides contextualized chunk embeddings, wh
 - Chunks understand their position and role within the full document
 - Improved retrieval accuracy for long documents (outperforms competitors by 7-23%)
 - Better handling of ambiguous references and cross-chunk dependencies
-- Seamless drop-in replacement for standard embeddings in RAG pipelines
+- Drop-in replacement for standard embeddings in RAG pipelines
 
 ### Usage
 

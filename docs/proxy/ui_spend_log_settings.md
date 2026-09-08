@@ -2,11 +2,11 @@ import Image from '@theme/IdealImage';
 
 # UI Spend Log Settings
 
-Configure spend log behavior directly from the Admin UI—no config file edits or proxy restart required. This is especially useful for cloud deployments where updating the config is difficult or requires a long release process.
+Configure spend log behavior directly from the Admin UI, with no config file edits or proxy restart required. This helps for cloud deployments where updating the config is difficult or requires a long release process.
 
 ## Overview
 
-Previously, spend log options (such as storing request/response content and retention period) had to be set in `proxy_config.yaml` under `general_settings`. Changing them required editing the config and restarting the proxy, which was a pain point for users-especially in cloud environments—who don't have easy access to the config or whose deployment process makes config updates slow.
+Previously, spend log options (such as storing request/response content and retention period) had to be set in `proxy_config.yaml` under `general_settings`. Changing them required editing the config and restarting the proxy, which was a pain point for users, especially in cloud environments, who don't have easy access to the config or whose deployment process makes config updates slow.
 
 <Image img={require('../../img/ui_spend_logs_settings.png')} />
 

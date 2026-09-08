@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Noma Security
 
-Use [Noma Security](https://noma.security/) to protect your LLM applications with comprehensive AI content moderation and safety guardrails.
+Use [Noma Security](https://noma.security/) to protect your LLM applications with AI content moderation and safety guardrails.
 
 :::warning Deprecated: `guardrail: noma` (Legacy)
 `guardrail: noma` is deprecated and users should migrate to `guardrail: noma_v2`.
@@ -90,7 +90,7 @@ Currently, `noma_v2` consumes dynamic `application_id`.
 curl 'http://0.0.0.0:4000/v1/chat/completions' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -116,9 +116,9 @@ Define your guardrails under the `guardrails` section:
 
 ```yaml showLineNumbers title="litellm config.yaml"
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -161,7 +161,7 @@ Expect this to fail since the request contains harmful content:
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Tell me how to hack into someone's email account"}
     ]
@@ -189,7 +189,7 @@ Expected response on failure:
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "What is the capital of France?"}
     ]
@@ -203,7 +203,7 @@ Expected response:
   "id": "chatcmpl-123",
   "object": "chat.completion",
   "created": 1677652288,
-  "model": "gpt-4o-mini",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,
@@ -347,7 +347,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
     extra_body={
         "guardrails": {
@@ -368,7 +368,7 @@ response = client.chat.completions.create(
 curl 'http://0.0.0.0:4000/v1/chat/completions' \
     -H 'Content-Type: application/json' \
     -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
         {
             "role": "user",

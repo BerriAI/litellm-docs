@@ -2,17 +2,9 @@ import Image from '@theme/IdealImage';
 
 # Team Soft Budget Alerts
 
-:::info
+<EnterpriseFeature>Email budget alerts require an enterprise license.</EnterpriseFeature>
 
-✨ This is an Enterprise feature. Email budget alerts require an enterprise license.
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
-
-Set a soft budget on a team and get email alerts when spending crosses the threshold — without blocking any requests.
+Set a soft budget on a team and get email alerts when spending crosses the threshold, without blocking any requests.
 
 ## Overview
 
@@ -32,7 +24,7 @@ Team soft budget alerts are sent via email. You must have an active email integr
 :::
 
 :::info Automatically active
-Team soft budget alerts are **automatically active** once you configure a soft budget and at least one alerting email on a team. No additional proxy configuration or restart is needed — alerts are checked on every request.
+Team soft budget alerts are **automatically active** once you configure a soft budget and at least one alerting email on a team. No additional proxy configuration or restart is needed; alerts are checked on every request.
 :::
 
 ## How It Works
@@ -91,7 +83,7 @@ Click the **Soft Budget Alerting Emails** field and enter one or more comma-sepa
 
 ### 8. Save Changes
 
-Click **Save Changes**. The soft budget alert is now active — no proxy restart required.
+Click **Save Changes**. The soft budget alert is now active, with no proxy restart required.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-02-07/865ba6f1-3fc6-4c19-8e08-433561d6c3f7/ascreenshot_b2f0503ada3a479a83dc8b7d01c1f8da_text_export.jpeg)
 
@@ -110,8 +102,8 @@ Once the team's spend crosses the soft budget, an email alert is sent to the con
 
 :::tip Soft Budget vs. Max Budget
 
-- **Soft Budget**: Advisory threshold — sends email alerts but does **not** block requests.
-- **Max Budget**: Hard limit — blocks requests once the budget is exceeded.
+- **Soft Budget**: Advisory threshold. Sends email alerts but does **not** block requests.
+- **Max Budget**: Hard limit. Blocks requests once the budget is exceeded.
 
 You can set both on the same team to get early warnings (soft) and a hard stop (max).
 :::

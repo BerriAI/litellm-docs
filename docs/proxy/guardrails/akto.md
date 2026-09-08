@@ -10,8 +10,8 @@ Akto's key capabilities include:
 - **AI Security Posture Management** - unified visibility into risk scores, compliance gaps, and security metrics, with support for 10+ standards including OWASP GenAI, NIST AI RMF, and MITRE ATLAS
 
 The integration with akto uses a **two-entry guardrail pattern**:
-- `akto-validate` (`pre_call`) — validates requests against your security policies before they reach the LLM
-- `akto-ingest` (`post_call`) — ingests requests and responses into Akto for monitoring and analysis
+- `akto-validate` (`pre_call`): validates requests against your security policies before they reach the LLM
+- `akto-ingest` (`post_call`): ingests requests and responses into Akto for monitoring and analysis
 
 ## Quick Start
 
@@ -76,7 +76,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your litellm key>" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]

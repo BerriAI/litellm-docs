@@ -67,15 +67,15 @@ pip install litellm==1.83.10
 
 #### Caller-supplied `tags` are stripped unless the key/team opts in
 
-- **What changed:** Tags supplied by the caller — `metadata.tags`, `litellm_metadata.tags`, root-level `tags`, and the `x-litellm-tags` header — are stripped from the request before [tag-based routing](../../docs/proxy/tag_routing) and [tag-based spend attribution](../../docs/proxy/cost_tracking#custom-tags) run, unless the calling key or its parent team carries `metadata.allow_client_tags: true`. Tags configured on the model deployment, key metadata, or team metadata are unaffected. The proxy logs a `WARNING` line on each strip:
+- **What changed:** Tags supplied by the caller (`metadata.tags`, `litellm_metadata.tags`, root-level `tags`, and the `x-litellm-tags` header) are stripped from the request before [tag-based routing](../../docs/proxy/tag_routing) and [tag-based spend attribution](../../docs/proxy/cost_tracking#custom-tags) run, unless the calling key or its parent team carries `metadata.allow_client_tags: true`. Tags configured on the model deployment, key metadata, or team metadata are unaffected. The proxy logs a `WARNING` line on each strip:
   ```
   Stripped caller-supplied tags from metadata, tags (root): this key/team does not have `allow_client_tags: true` in its metadata. Set it to opt into client-supplied routing/budget tags.
   ```
-  — [PR #25905](https://github.com/BerriAI/litellm/pull/25905)
+  See [PR #25905](https://github.com/BerriAI/litellm/pull/25905).
 
 - **Who is affected:** Any deployment that relied on clients passing `tags` in the request body or `x-litellm-tags` header for tag-based cost tracking, tag budgets, or tag-based routing. After upgrade, those tags will silently fall through to the default bucket / default deployment, and per-tag spend reports will appear empty.
 
-- **Restore prior behavior:** Set `allow_client_tags: true` in the metadata of the affected key (or the team owning it). Either flag is sufficient — if the key or its parent team carries the flag, caller-supplied tags pass through.
+- **Restore prior behavior:** Set `allow_client_tags: true` in the metadata of the affected key (or the team owning it). Either flag is sufficient; if the key or its parent team carries the flag, caller-supplied tags pass through.
   ```bash
   # Per key
   curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
@@ -94,11 +94,11 @@ pip install litellm==1.83.10
 
 #### `os.environ/…` values in the UI or API
 
-- **What changed:** Values such as `os.environ/OPENAI_API_KEY` (and other `os.environ/…` patterns) are no longer expanded when they come from **request-supplied** fields—including the Admin UI and the same proxy APIs the UI calls. — [PR #25592](https://github.com/BerriAI/litellm/pull/25592)
+- **What changed:** Values such as `os.environ/OPENAI_API_KEY` (and other `os.environ/…` patterns) are no longer expanded when they come from **request-supplied** fields, including the Admin UI and the same proxy APIs the UI calls. See [PR #25592](https://github.com/BerriAI/litellm/pull/25592).
 
 - **Who is affected:** Anyone who entered literal `os.environ/SECRET_NAME` strings in the UI or API and expected the proxy to substitute the host environment at runtime.
 
-- **What to use instead:** Provider API keys and similar secrets should be stored with [**Reusable Credentials**](../../docs/proxy/model_management#reusable-provider-credentials) and attached to models (for example via `litellm_credential_name`). For observability callbacks (Langfuse, LangSmith, etc.), set keys and endpoints in proxy `config.yaml` or in environment variables the process reads at startup—not as `os.environ/…` strings inside per-request metadata.
+- **What to use instead:** Provider API keys and similar secrets should be stored with [**Reusable Credentials**](../../docs/proxy/model_management#reusable-provider-credentials) and attached to models (for example via `litellm_credential_name`). For observability callbacks (Langfuse, LangSmith, etc.), set keys and endpoints in proxy `config.yaml` or in environment variables the process reads at startup, not as `os.environ/…` strings inside per-request metadata.
 
 ---
 
@@ -149,7 +149,7 @@ pip install litellm==1.83.10
     - Populate `standard_logging_object` for Azure passthrough via logging hook - [PR #25679](https://github.com/BerriAI/litellm/pull/25679)
 
 - **[OpenAI](../../docs/providers/openai)**
-    - Omit null `encoding_format` for OpenAI embedding requests - [PR #25395](https://github.com/BerriAI/litellm/pull/25395) (later reverted in [PR #25698](https://github.com/BerriAI/litellm/pull/25698) — see Bug Fixes)
+    - Omit null `encoding_format` for OpenAI embedding requests - [PR #25395](https://github.com/BerriAI/litellm/pull/25395) (later reverted in [PR #25698](https://github.com/BerriAI/litellm/pull/25698); see Bug Fixes)
 
 - **[xAI](../../docs/providers/xai)**
     - Add `xai/grok-4.20-0309-reasoning` cost map entry - [PR #25930](https://github.com/BerriAI/litellm/pull/25930)
@@ -206,7 +206,7 @@ pip install litellm==1.83.10
 - **[Video Generation](../../docs/proxy/veo_video_generation)**
     - Veo 3.1 Lite resolution-aware tiered cost tracking - [PR #25348](https://github.com/BerriAI/litellm/pull/25348)
 
-- **General — `litellm.compress()`**
+- **General: `litellm.compress()`**
     - New BM25-based [prompt compression API](../../docs/completion/prompt_compression) with retrieval tool, exposed via `litellm.compress()` for trimming long prompts before model invocation - [PR #25637](https://github.com/BerriAI/litellm/pull/25637)
 
 #### Bugs
@@ -239,7 +239,7 @@ pip install litellm==1.83.10
     - Persist default router end-budget across restarts - [PR #25991](https://github.com/BerriAI/litellm/pull/25991)
     - Enforce team membership in team-scoped key management checks - [PR #25686](https://github.com/BerriAI/litellm/pull/25686)
     - Agent endpoint and routing permission checks - [PR #25922](https://github.com/BerriAI/litellm/pull/25922)
-    - JWT-auth `key_alias=user_id` for Prometheus metrics — initial fix and revert - [PR #25340](https://github.com/BerriAI/litellm/pull/25340), [PR #25438](https://github.com/BerriAI/litellm/pull/25438)
+    - JWT-auth `key_alias=user_id` for Prometheus metrics: initial fix and revert - [PR #25340](https://github.com/BerriAI/litellm/pull/25340), [PR #25438](https://github.com/BerriAI/litellm/pull/25438)
     - Gate post-custom-auth DB lookups behind opt-in flag - [PR #25634](https://github.com/BerriAI/litellm/pull/25634)
     - Align field-level checks in user and key update endpoints - [PR #25541](https://github.com/BerriAI/litellm/pull/25541)
     - `/spend/logs` filter handling aligned with user scoping - [PR #25594](https://github.com/BerriAI/litellm/pull/25594)
@@ -305,7 +305,7 @@ pip install litellm==1.83.10
 
 ### Logging
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add 7m and 10m latency histogram buckets - [PR #25071](https://github.com/BerriAI/litellm/pull/25071)
     - Performance improvements for Prometheus exporter - [PR #25934](https://github.com/BerriAI/litellm/pull/25934)
     - Resolve `prometheus_helpers` file/package shadow breaking `/global/spend/logs` - [PR #26026](https://github.com/BerriAI/litellm/pull/26026)

@@ -81,11 +81,11 @@ Create `~/.config/opencode/opencode.json` (global config):
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-4": {
-          "name": "GPT-4"
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra"
         },
-        "claude-3-5-sonnet-20241022": {
-          "name": "Claude 3.5 Sonnet"
+        "{{anthropic}}": {
+          "name": "Claude Sonnet 5"
         },
         "deepseek-chat": {
           "name": "DeepSeek Chat"
@@ -97,7 +97,9 @@ Create `~/.config/opencode/opencode.json` (global config):
 ```
 
 :::tip
-The keys in the "models" object (e.g., "gpt-4", "claude-3-5-sonnet-20241022") should match the `model_name` values from your LiteLLM configuration. The "name" field provides a friendly display name that will appear as an alias in OpenCode.
+The keys in the "models" object (e.g., "gpt-5.6-terra", "claude-sonnet-5") should match the `model_name` values from your LiteLLM configuration. The "name" field provides a friendly display name that will appear as an alias in OpenCode.
+
+If a model accepts images, it also needs a `modalities` entry; see [Enabling image and vision input](#enabling-image-and-vision-input).
 :::
 
 ### Step 3: Connect to LiteLLM Provider
@@ -145,18 +147,18 @@ You can customize model parameters like context limits:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-4": {
-          "name": "GPT-4",
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra",
           "limit": {
-            "context": 128000,
-            "output": 4096
+            "context": 922000,
+            "output": 128000
           }
         },
-        "claude-3-5-sonnet-20241022": {
-          "name": "Claude 3.5 Sonnet",
+        "{{anthropic}}": {
+          "name": "Claude Sonnet 5",
           "limit": {
-            "context": 200000,
-            "output": 8192
+            "context": 1000000,
+            "output": 128000
           }
         }
       }
@@ -164,6 +166,75 @@ You can customize model parameters like context limits:
   }
 }
 ```
+
+### Enabling image and vision input
+
+OpenCode does **not** discover model capabilities from the `/v1/models` endpoint. The OpenAI
+model-listing schema has no field for modalities, so there is nothing for it to read. Models under a
+custom `@ai-sdk/openai-compatible` provider therefore fall back to text-only input.
+
+The effect is client-side and silent: OpenCode checks the model's declared input modalities, sees no
+`image`, and **strips image attachments out of the request before it is sent**. LiteLLM never
+receives the image, and the model replies as though you had pasted nothing.
+
+Declare `modalities` on every vision-capable model in your OpenCode config:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM",
+      "options": {
+        "baseURL": "http://localhost:4000/v1"
+      },
+      "models": {
+        "{{anthropic}}": {
+          "name": "Claude Sonnet 5",
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra",
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "deepseek-chat": {
+          "name": "DeepSeek Chat"
+        }
+      }
+    }
+  }
+}
+```
+
+Leave `modalities` off text-only models such as `deepseek-chat`; declaring `image` input for a model
+that cannot accept it moves the failure from the client to the provider.
+
+:::warning
+Setting `supports_vision: true` under `model_info` in your LiteLLM `config.yaml` does **not** fix
+this. That flag drives LiteLLM's own routing and cost logic and is not exposed on `/v1/models`, and
+OpenCode would not read it if it were. `modalities` in the OpenCode config is the only place this
+can be declared.
+:::
+
+#### Auto Router and other model groups
+
+A model group is just another model name to OpenCode, so an [Auto Router](../proxy/auto_routing)
+entry needs the same declaration even though the models behind it are vision-capable:
+
+```json
+{
+  "models": {
+    "smart-router": {
+      "name": "Smart Router",
+      "modalities": { "input": ["text", "image"], "output": ["text"] }
+    }
+  }
+}
+```
+
+Declare `image` input only when every tier the router can select accepts images. If one tier is
+text-only, an image-bearing request will fail once the router lands on that tier.
 
 ### Multi-Provider Setup
 
@@ -183,8 +254,8 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "https://your-prod-instance.com/v1"
       },
       "models": {
-        "gpt-4": {
-          "name": "GPT-4 (Production)"
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra (Production)"
         }
       }
     },
@@ -195,8 +266,8 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-4": {
-          "name": "GPT-4 (Development)"
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra (Development)"
         }
       }
     }
@@ -218,11 +289,11 @@ You can configure multiple LiteLLM instances or mix with other providers:
         "baseURL": "http://localhost:4000/v1"
       },
       "models": {
-        "gpt-4": {
-          "name": "GPT-4 via LiteLLM"
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra via LiteLLM"
         },
-        "claude-3-5-sonnet-20241022": {
-          "name": "Claude 3.5 Sonnet via LiteLLM"
+        "{{anthropic}}": {
+          "name": "Claude Sonnet 5 via LiteLLM"
         }
       }
     },
@@ -230,8 +301,8 @@ You can configure multiple LiteLLM instances or mix with other providers:
       "npm": "@ai-sdk/openai",
       "name": "OpenAI Direct",
       "models": {
-        "gpt-4o": {
-          "name": "GPT-4o (Direct)"
+        "{{openai_large}}": {
+          "name": "GPT-5.6 Terra (Direct)"
         }
       }
     }
@@ -249,20 +320,20 @@ Here's an example LiteLLM `config.yaml` that works well with OpenCode:
 ```yaml
 model_list:
   # OpenAI models
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
   # Anthropic models
-  - model_name: claude-3-5-sonnet-20241022
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # DeepSeek models
@@ -274,13 +345,13 @@ model_list:
 
 ### Dropping OpenCode-specific parameters
 
-OpenCode sends a `reasoningSummary` parameter with reasoning-capable models such as `gpt-5`. This parameter is not supported by the Chat Completions API and will cause errors. Add `additional_drop_params` to every model entry in your `model_list` that will receive requests from OpenCode with reasoning enabled:
+OpenCode sends a `reasoningSummary` parameter with reasoning-capable models such as `{{openai_large}}`. This parameter is not supported by the Chat Completions API and will cause errors. Add `additional_drop_params` to every model entry in your `model_list` that will receive requests from OpenCode with reasoning enabled:
 
 ```yaml
 model_list:
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       additional_drop_params: ["reasoningSummary"]
 ```
@@ -307,12 +378,25 @@ model_list:
 - Validate JSON syntax using a JSON validator
 - Ensure the `$schema` URL is accessible
 
+**Images and screenshots are ignored:**
+- OpenCode defaults custom OpenAI-compatible provider models to text-only input and strips image
+  attachments before sending, so the request reaching LiteLLM contains no image. Declare
+  `modalities` on the model in your OpenCode config:
+  ```json
+  "{{anthropic}}": {
+    "name": "Claude Sonnet 5",
+    "modalities": { "input": ["text", "image"], "output": ["text"] }
+  }
+  ```
+- `model_info: supports_vision: true` in your LiteLLM `config.yaml` has no effect here. See
+  [Enabling image and vision input](#enabling-image-and-vision-input).
+
 **`Unknown parameter: 'reasoningSummary'` error:**
 - OpenCode sends a `reasoningSummary` parameter that is not supported by the Chat Completions API. Add `additional_drop_params: ["reasoningSummary"]` to each affected model entry in your `litellm_params`:
   ```yaml
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       additional_drop_params: ["reasoningSummary"]
   ```

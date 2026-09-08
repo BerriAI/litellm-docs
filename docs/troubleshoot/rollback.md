@@ -55,7 +55,7 @@ If you are rolling back to a version that did not have a specific migration, you
 
 > LiteLLM uses `prisma migrate deploy` for production by default. If a migration partially failed or you are reverting code that expects an older schema, you need to clean up the migration history in the `_prisma_migrations` table. See [Best Practices for Production](../proxy/prod#use-prisma-migrate-deploy).
 
-### Option A — Delete stale migration entries (recommended)
+### Option A: Delete stale migration entries (recommended)
 
 Connect to your PostgreSQL database and remove migration entries that belong to the version you are rolling back from. This lets LiteLLM re-apply them cleanly if you upgrade again later.
 
@@ -71,11 +71,11 @@ DELETE FROM "_prisma_migrations"
 WHERE migration_name = '<migration_name_from_newer_version>';
 ```
 
-After deleting the entries, restart LiteLLM — it will re-apply the correct migrations for its version on startup.
+After deleting the entries, restart LiteLLM and it will re-apply the correct migrations for its version on startup.
 
 > **Note:** If you have `DISABLE_SCHEMA_UPDATE=true` set on your pods, migrations will not auto-run. You need to either temporarily set it to `false`, or re-run the Helm PreSync migration job targeting the older version.
 
-### Option B — Use `prisma migrate resolve` (if you have CLI access)
+### Option B: Use `prisma migrate resolve` (if you have CLI access)
 
 If you have access to the Prisma CLI (e.g., in a local development environment or a debug container with the `litellm-proxy-extras` package installed):
 
@@ -93,7 +93,7 @@ LiteLLM's internal `ProxyExtrasDBManager` automatically attempts to handle idemp
 After rolling back, verify the health of the system:
 
 - [ ] **Health Endpoint**: Confirm the `/health` endpoint returns `200 OK`.
-- [ ] **Check Logs**: Ensure no Prisma errors appear — look for `relation "..." does not exist`, `column "..." does not exist`, or `prisma migrate` failures in the logs.
+- [ ] **Check Logs**: Confirm no Prisma errors appear. Look for `relation "..." does not exist`, `column "..." does not exist`, or `prisma migrate` failures in the logs.
 - [ ] **Spend Tracking**: Run a test completion and confirm the spend is recorded in the `LiteLLM_SpendLogs` table.
 - [ ] **Billing (Lago)**: If using Lago for billing (e.g., Lago → Stripe), check proxy logs for `Logged Lago Object` to confirm usage events are being sent.
 - [ ] **State Consistency**: If using Redis for caching or rate limiting, consider clearing the cache if the newer version changed the cache key structure.

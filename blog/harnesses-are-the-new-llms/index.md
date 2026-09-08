@@ -21,7 +21,7 @@ The reason is that companies will not run every agent on one runtime. Coding age
 
 But a registry alone is not enough. Anyone can build a list of agents.
 
-The harder problem is invocation. Agent runtimes expose similar primitives — agents, sessions, events, tools — but they do not expose them through the same APIs. So if you want one place to actually use these agents, not just list them, the control plane has to manage agent runtimes, schedules, memory, and sessions.
+The harder problem is invocation. Agent runtimes expose similar primitives (agents, sessions, events, tools) but they do not expose them through the same APIs. So if you want one place to actually use these agents, not just list them, the control plane has to manage agent runtimes, schedules, memory, and sessions.
 
 This is the same pattern LiteLLM saw with models. Companies did not just need a catalog of models. They needed one interface to call them. The only change, is that the primitive is now the agent session, not the model call.
 
@@ -52,7 +52,7 @@ At LiteLLM, we are already seeing our team work across multiple agent runtimes. 
 
 This fragmentation makes it hard for agents built on these platforms to be shareable, and everyone to benefit from the work done so far. 
 
-By having the agents live in 1 place, everyone can leverage these agents - even if the PR Babysitter Agent was written in Claude Managed Agents, which not everyone has direct access to. 
+By having the agents live in 1 place, everyone can use these agents - even if the PR Babysitter Agent was written in Claude Managed Agents, which not everyone has direct access to. 
 
 That is the control plane problem.
 

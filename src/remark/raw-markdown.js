@@ -1,7 +1,11 @@
+const {substitute} = require('./docs-models');
+
+// The copy-as-markdown button gets the source with {{role}} model ids filled in.
 function remarkRawMarkdown() {
   return (tree, vfile) => {
     vfile.data.frontMatter = vfile.data.frontMatter ?? {};
-    vfile.data.frontMatter.rawMarkdownB64 = Buffer.from(String(vfile.value)).toString('base64');
+    const source = substitute(String(vfile.value));
+    vfile.data.frontMatter.rawMarkdownB64 = Buffer.from(source).toString('base64');
   };
 }
 

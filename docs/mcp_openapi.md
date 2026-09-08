@@ -4,9 +4,9 @@ import Image from '@theme/IdealImage';
 
 # MCP from OpenAPI Specs
 
-LiteLLM can convert any OpenAPI/Swagger spec into an MCP server — no custom MCP server code required.
+LiteLLM can convert any OpenAPI/Swagger spec into an MCP server, with no custom MCP server code required.
 
-## Step 1 — Add the MCP Server
+## Step 1: Add the MCP Server
 
 Add your OpenAPI-based server in `config.yaml`:
 
@@ -44,7 +44,7 @@ Or from the UI: go to **MCP Servers → Add New MCP Server**, fill in the URL an
 | `allowed_tools` | No | Allowlist of specific tools |
 | `disallowed_tools` | No | Blocklist of specific tools |
 
-**Supported spec versions:** OpenAPI 3.0.x, 3.1.x, Swagger 2.0. Each operation's `operationId` becomes the tool name — make sure they're unique.
+**Supported spec versions:** OpenAPI 3.0.x, 3.1.x, Swagger 2.0. Each operation's `operationId` becomes the tool name, so make sure they're unique.
 
 ## Internal spec URLs (SSRF)
 
@@ -52,8 +52,8 @@ When `spec_path` is an `http://` or `https://` URL, the LiteLLM proxy fetches it
 
 Typical cases:
 
-- Spec URL uses `https://api.example.com/...` but DNS inside your network returns a private IP — add `api.example.com` to the allowlist (or `api.example.com:443` if you pin the port).
-- Spec URL is `http://127.0.0.1:8080/openapi.json` — add `127.0.0.1` or `127.0.0.1:8080`.
+- Spec URL uses `https://api.example.com/...` but DNS inside your network returns a private IP. Add `api.example.com` to the allowlist (or `api.example.com:443` if you pin the port).
+- Spec URL is `http://127.0.0.1:8080/openapi.json`. Add `127.0.0.1` or `127.0.0.1:8080`.
 
 Configure under **`litellm_settings`** in your proxy `config.yaml` (this is **not** read from `general_settings`):
 
@@ -66,7 +66,7 @@ litellm_settings:
     - "127.0.0.1:8080"
 ```
 
-For a full reference of these fields, see [config settings — `litellm_settings`](./proxy/config_settings.md#litellm_settings---reference).
+For a full reference of these fields, see [config settings: `litellm_settings`](./proxy/config_settings.md#litellm_settings---reference).
 
 Once tools are loaded, you'll see them in the Tool Configuration section:
 
@@ -77,9 +77,9 @@ Once tools are loaded, you'll see them in the Tool Configuration section:
 
 <br/>
 
-## Step 2 — Optionally Override Tool Names and Descriptions
+## Step 2: Optionally Override Tool Names and Descriptions
 
-By default, tool names and descriptions come from the `operationId` and description fields in your spec. You can rename or rewrite them so MCP clients see something cleaner — without touching the upstream spec.
+By default, tool names and descriptions come from the `operationId` and description fields in your spec. You can rename or rewrite them so MCP clients see something cleaner, without touching the upstream spec.
 
 ### From the UI
 
@@ -142,7 +142,7 @@ curl -X PUT http://localhost:4000/v1/mcp/server/{server_id} \
   }'
 ```
 
-The map key is the **original `operationId`** from the spec — not the prefixed tool name. LiteLLM strips the server prefix before doing the lookup.
+The map key is the **original `operationId`** from the spec, not the prefixed tool name. LiteLLM strips the server prefix before doing the lookup.
 
 For example, if your server is `petstore_mcp`, the tool is exposed as `petstore_mcp-getPetById`. The map key is still `getPetById`.
 
@@ -227,7 +227,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
