@@ -16,7 +16,7 @@ Set your credentials and endpoint as environment variables:
 ```python
 import os
 os.environ['GRADIENT_AI_API_KEY'] = "your-api-key"
-os.environ['GRADIENT_AI_AGENT_ENDPOINT'] = "https://api.gradient_ai.com/api/v1/chat"  # default endpoint
+os.environ['GRADIENT_AI_AGENT_ENDPOINT'] = "https://your-agent-endpoint"  # optional: base URL of your agent, no path; LiteLLM appends /api/v1/chat/completions. Defaults to serverless inference at https://inference.do-ai.run
 ```
 
 ## Sample Usage
