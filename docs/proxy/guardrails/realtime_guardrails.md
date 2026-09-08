@@ -169,19 +169,11 @@ When the guardrail fires, the proxy:
 
 The LLM never processes the injected instruction.
 
-## Using with any guardrail provider
+## Using with other guardrail providers
 
-`realtime_input_transcription` mode works with any guardrail that implements `apply_guardrail`. Just swap `litellm_content_filter` for your provider:
+The proxy runs realtime guardrails through the provider's `apply_guardrail` method, but a guardrail can only be configured with `mode: realtime_input_transcription` if that hook is listed in its `get_supported_event_hooks()`. Currently only `litellm_content_filter` declares it. Setting the mode on another provider (for example `lakera_v2`, which supports only `pre_call`, `during_call`, and `post_call`) raises a `ValueError` at proxy startup. Setting `LITELLM_STRICT_GUARDRAIL_MODES=false` downgrades that error to a warning, but the guardrail is still not supported for this mode.
 
-```yaml
-guardrails:
-  - guardrail_name: "voice-lakera"
-    litellm_params:
-      guardrail: lakera_ai
-      mode: realtime_input_transcription
-      default_on: true
-      api_key: os.environ/LAKERA_API_KEY
-```
+To add realtime support to a custom guardrail, include `GuardrailEventHooks.realtime_input_transcription` in its `get_supported_event_hooks()` and implement `apply_guardrail`.
 
 ## Per-key guardrail control
 
