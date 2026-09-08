@@ -1293,6 +1293,8 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
    - If found → decodes `model_id`, pins to originating deployment, bypasses rate limits
    - If no encoded items → normal load balancing
 
+3. **Model group change** (before request): when the follow-up is routed to a different model group than the one that produced the encrypted items, for example an auto-router that classified this turn into another tier, or a client that switched `model` between turns, and no deployment in the new group shares the originating `(api_base, api_key)`, LiteLLM strips the encrypted reasoning items (keeping their readable summary text) and sends the visible conversation to the new group. The new model reasons fresh on that turn instead of the request failing. Reasoning continuity across turns is preserved only while the router keeps the session on the originating group; on an auto-router, `session_affinity` pins the tier for the session if that matters more than per-turn routing
+
 ### Configuration
 
 <Tabs>

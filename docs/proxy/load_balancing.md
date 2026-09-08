@@ -424,4 +424,6 @@ router_settings:
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
 
+If a follow-up is routed to a different model group entirely (an auto-router tier change, or a client switching `model` mid-session) and no deployment there shares the originating `(api_base, api_key)`, the encrypted reasoning items are dropped and the visible conversation is forwarded, so the request succeeds on the new group with fresh reasoning.
+
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**
