@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 A shared agent should not mean a shared identity.
 
-When a finance agent serves multiple business units, platform teams still need to know who initiated each request, which models and tools that caller can access, and whose budget should be charged. Without that context, a shared agent becomes a shared account: access controls get broader, spend is harder to attribute, and one team's usage can affect everyone else.
+When a finance agent serves multiple business units, platform teams need a consistent way to identify who initiated each request, apply the right model and tool permissions, and attribute spend. LiteLLM keeps this context available across shared-agent workflows so each business unit can operate under its own access and budget policies.
 
 LiteLLM provides one control plane for this workflow across the Agent Gateway, Model Gateway, and MCP Gateway. Teams can share the same agent infrastructure while keeping access, credentials, spend, and audit data tied to the right caller.
 
@@ -39,7 +39,7 @@ flowchart LR
     AG2 --> Agent2["Summarizer Agent"]
 ```
 
-The [Agent Gateway](../../docs/a2a) authenticates callers, controls which teams and keys can invoke each agent, and records request, response, latency, and cost data. The Model Gateway routes LLM traffic and applies budgets and rate limits. The MCP Gateway centralizes tool access and upstream authentication.
+The [Agent Gateway](../../docs/a2a) authenticates callers, controls which users and teams can invoke each agent, and records request, response, latency, and cost data. The Model Gateway routes LLM traffic and applies budgets and rate limits. The MCP Gateway centralizes tool access and upstream authentication.
 
 Together, they let platform teams operate agents as shared services without giving up per-user governance.
 
@@ -49,15 +49,15 @@ Start by registering each agent in the Agent Gateway. Agents appear in the Admin
 
 ![Agents tab showing the finance-agent and summarizer-agent registered on the Agent Gateway](/img/a2a_gateway_poc_agents_tab.png)
 
-Users can have personal virtual keys while belonging to the same shared team. In this example, two business units use separate keys under `shared-agents-team`:
+Users can authenticate through OIDC or another supported LiteLLM credential while sharing the same team policy. In this example, two business units belong to `shared-agents-team`:
 
-![Virtual Keys tab showing two personal keys, op-unit-a and op-unit-b, sharing one team](/img/a2a_gateway_poc_virtual_keys_tab.png)
+![LiteLLM Admin UI showing op-unit-a and op-unit-b under the shared-agents-team policy](/img/a2a_gateway_poc_virtual_keys_tab.png)
 
-The team's object permissions define which agents and MCP servers its keys can access. This lets both business units use the same finance agent without duplicating the agent registration or distributing its upstream credentials.
+The team's object permissions define which agents and MCP servers its members can access. This lets both business units use the same finance agent without duplicating the agent registration or distributing its upstream credentials.
 
 ![Teams tab showing shared-agents-team with its resources and combined spend against a $5 budget](/img/a2a_gateway_poc_teams_tab.png)
 
-When a request reaches the Agent Gateway, LiteLLM authenticates the virtual key and resolves its user and team. The gateway forwards that verified context to the agent as `X-LiteLLM-User-Id` and `X-LiteLLM-Team-Id`.
+When a request reaches the Agent Gateway, LiteLLM validates the caller's authentication and resolves the associated user and team. The gateway forwards that verified context to the agent as `X-LiteLLM-User-Id` and `X-LiteLLM-Team-Id`.
 
 ```mermaid
 sequenceDiagram
@@ -65,20 +65,20 @@ sequenceDiagram
     participant AG as LiteLLM Agent Gateway
     participant FA as Finance Agent
 
-    U->>AG: message/send with personal virtual key
-    AG->>AG: Authenticate key and resolve user + team
+    U->>AG: message/send with OIDC or API credential
+    AG->>AG: Authenticate caller and resolve user + team
     AG->>FA: Forward request with verified identity
     FA-->>AG: Agent response
     AG-->>U: Agent response
 ```
 
-The identity comes from LiteLLM's authenticated key context. A caller cannot replace it by supplying a different LiteLLM identity header.
+The agent can use this authenticated context for downstream authorization, attribution, and budget enforcement.
 
 Clients invoke the shared agent through the standard A2A JSON-RPC interface:
 
 ```bash
 curl -X POST "$LITELLM_BASE_URL/a2a/$AGENT_ID" \
-  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -99,13 +99,13 @@ curl -X POST "$LITELLM_BASE_URL/a2a/$AGENT_ID" \
 
 ## Keep user attribution on model calls
 
-The finance agent calls the Model Gateway with its own agent-owned virtual key. That keeps the agent's service credentials separate from the user's credentials.
+The finance agent calls the Model Gateway with its own workload identity. This keeps service authentication separate from the end user's authentication.
 
 For per-user attribution, the agent reads the verified `X-LiteLLM-User-Id` value from the inbound request and supplies it as the `user` field on its outbound model request. It also forwards LiteLLM trace and agent context headers so calls remain grouped under the same execution and spend is attributed to the correct agent.
 
 This gives LiteLLM two useful dimensions at the same time:
 
-- The agent-owned key identifies the workload making the model call.
+- The workload identity identifies the agent making the model call.
 - The `user` field identifies the customer or business unit whose budget applies.
 
 Multiple teams can therefore share one agent and one model route while LiteLLM maintains separate usage and budget records for each caller.
@@ -123,22 +123,20 @@ In this example, the finance MCP server exposes two tools:
 
 For interactive per-user OAuth, configure the MCP server with `auth_type: oauth2` and `oauth2_flow: authorization_code`. The user completes a PKCE sign-in with the organization's identity provider. LiteLLM stores the resulting credential for that user and MCP server, then attaches it to later tool calls for the same user.
 
-The upstream MCP server remains the authorization authority. It evaluates the token's claims and decides whether the user can access payroll details or only the broader revenue summary. LiteLLM centralizes the OAuth flow and credential handling without flattening every user into one shared upstream identity.
+The upstream MCP server remains the authorization authority. It evaluates the token's claims and decides whether the user can access payroll details or only the broader revenue summary. LiteLLM centralizes the OAuth flow and credential handling while preserving each user's upstream identity.
 
 See [MCP OAuth](../../docs/mcp_oauth) for configuration options, including machine-to-machine and on-behalf-of flows.
 
-## Preserve the original user across agent-to-agent calls
+## Keep user and agent attribution across multi-agent calls
 
-An agent-to-agent call has two identities:
+An agent-to-agent workflow includes two useful attribution dimensions:
 
-- The immediate caller, such as the finance agent's service key
+- The immediate workload identity, such as the finance agent
 - The originating user who started the workflow
 
-LiteLLM authenticates and records the immediate caller at every gateway hop. It does not silently treat a service key as the original human. This keeps the trust boundary clear and prevents an arbitrary caller from asserting another user's LiteLLM identity.
+LiteLLM records the immediate workload identity at every gateway hop. When a downstream agent also needs the originating user, the calling agent passes that authenticated user context as application metadata or a supported forwarded header.
 
-If a downstream agent needs the originating user's context, the calling agent carries that verified context explicitly as application metadata or a permitted forwarded header. The downstream agent can then use it for business logic, while LiteLLM continues to authenticate the service identity that made the hop.
-
-This distinction is useful for multi-agent systems: platform logs show which agent made each call, and application context shows which user initiated the overall workflow.
+Together, these dimensions give platform teams a complete view of the workflow: gateway logs show which agent made each call, while the propagated user context connects the workflow to the business unit that initiated it.
 
 ## Enforce independent budgets below the shared team
 
@@ -175,7 +173,7 @@ This gives FinOps teams both views they need: consolidated spend for the shared 
 
 LiteLLM Logs gives platform, security, and FinOps teams a single operational view of shared-agent activity. When an agent carries the authenticated end-user context into its downstream calls, operators can filter by **End User** to follow one business unit across A2A agent invocations, model requests, and MCP tool operations.
 
-Each log row includes the team, key alias, model or tool, token usage, cost, duration, and end-user ID. This makes it easy to start with a customer or business unit and trace the resources used throughout its workflow.
+Each log row includes the team, model or tool, token usage, cost, duration, and end-user ID. This makes it easy to start with a customer or business unit and trace the resources used throughout its workflow.
 
 ![LiteLLM Request Logs filtered by end user, showing A2A, model, and MCP activity for one business unit](/img/a2a_gateway_poc_logs_end_user_attribution.png)
 
@@ -189,7 +187,7 @@ For shared-agent environments, these views answer three common operational quest
 - Which agents, models, and tools handled its requests?
 - Was a request served successfully or stopped by its customer budget?
 
-The team and service key remain visible for infrastructure-level reporting, while the end-user field provides the business-unit-level attribution needed for access reviews, incident investigation, and spend management.
+Team and workload attribution support infrastructure-level reporting, while the end-user field provides the business-unit-level detail needed for access reviews, incident investigation, and spend management.
 
 ## A practical deployment pattern
 
@@ -197,8 +195,8 @@ To apply this architecture:
 
 1. Register shared agents in the Agent Gateway.
 2. Grant teams access to the required agents and MCP servers through object permissions.
-3. Issue user-scoped virtual keys under the appropriate team.
-4. Read the verified inbound user context and pass it as `user` on model calls.
+3. Configure OIDC or another supported authentication method that resolves end-user identity and team membership.
+4. Read the authenticated inbound user context and pass it as `user` on model calls.
 5. Configure per-user OAuth for MCP servers that enforce user-specific permissions.
 6. Create customer budgets for each business unit, with an optional aggregate team budget.
 7. Use LiteLLM Logs to audit the user, key, team, agent, latency, and cost for each request.
