@@ -49,7 +49,7 @@ If a reload succeeds but a newly added model still does not show up, work throug
 
 ## Checking which revision is loaded
 
-The pricing file carries a top-level `_metadata` entry, stamped by the sync bots that write it, with `generated_at` (when the file was written, UTC) and `source_revision` (the commit the file was generated from). The proxy records both when it loads the map, together with the `etag` GitHub served for the fetch, and reports them on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
+Every time the proxy loads the pricing map it records the git blob id of the bytes it parsed, the same id `git rev-parse <commit>:model_prices_and_context_window.json` prints for that file in a litellm checkout. It reports that id as `source_revision`, together with the `etag` GitHub served for the fetch and `loaded_at`, on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
 
 ```bash
 curl -s "https://your-proxy-url/model/cost_map/source" \
@@ -62,15 +62,14 @@ curl -s "https://your-proxy-url/model/cost_map/source" \
   "url": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
   "is_env_forced": false,
   "fallback_reason": null,
-  "loaded_at": "2026-09-07T23:59:20.508051+00:00",
-  "generated_at": "2026-09-07T23:38:47Z",
-  "source_revision": "cd681a573fd9f5b6f15a1355f46178e4e9d374d2",
-  "etag": "W/\"adb2c10e22f905be5b7362b73dbb589d02751b720db9024218900cca9fc7d2de\"",
+  "loaded_at": "2026-09-08T00:49:21.311283+00:00",
+  "source_revision": "b1ffc1583e46583bb4becd34cf85ec70c6930828",
+  "etag": "W/\"6523ba12ad8daed03f7c879bc2c079d11b111d1ebdee2c27a34c0c756af30445\"",
   "model_count": 3850
 }
 ```
 
-`source_revision` is the one-line answer to "which pricing map is my proxy on": compare it against the commit that added the model you are looking for. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and both stamp fields are `null` on a file written before the stamp existed. `_metadata` is metadata only: it never shows up in `/v1/models`, `/model/info`, `/public/litellm_model_cost_map`, or cost lookups
+`source_revision` is the one-line answer to "which pricing map is my proxy on". To check it against `main`, run `git rev-parse origin/main:model_prices_and_context_window.json` in a litellm checkout: a match means the proxy is on the current file. To see which commits shipped that exact file, run `git log --find-object=<source_revision> -- model_prices_and_context_window.json`. Two proxies reporting the same `source_revision` are serving byte-identical maps, whatever URL each fetched from. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and `source_revision` is then the bundled file's id. Nothing is stamped into the JSON itself, so the file has no `_metadata` entry and no `generated_at`
 
 ## Python Example
 
