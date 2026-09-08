@@ -1262,7 +1262,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/chat/completions' \
   "tools": [
     {
       "type": "mcp",
-      "server_url": "litellm_proxy/github/mcp",
+      "server_url": "litellm_proxy/mcp/github",
       "server_label": "github_mcp",
       "require_approval": "never"
     }
