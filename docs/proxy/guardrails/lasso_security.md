@@ -232,28 +232,35 @@ Lasso supports automatic PII detection and masking using the `/classifix` endpoi
 
 ### Enabling PII Masking
 
-To enable PII masking, add the `mask: true` parameter to your guardrail configuration:
+Masking is controlled by the `mask` argument of the `LassoGuardrail` class and is off by default.
 
-```yaml showLineNumbers title="config.yaml"
-model_list:
-  - model_name: claude-3.5
-    litellm_params:
-      model: anthropic/claude-3.5
-      api_key: os.environ/ANTHROPIC_API_KEY
+:::warning
+`mask: true` under `litellm_params` for `guardrail: lasso` in `config.yaml` is currently **not** forwarded to the guardrail. The built-in `lasso` initializer only passes `api_key`, `api_base`, `lasso_user_id`, `lasso_conversation_id`, `mode`, and `default_on`, so the guardrail always runs with masking disabled when configured this way.
+:::
 
-guardrails:
-  - guardrail_name: "lasso-pre-guard-with-masking"
-    litellm_params:
-      guardrail: lasso
-      mode: "pre_call"
-      api_key: os.environ/LASSO_API_KEY
-      mask: true  # Enable PII masking
-  - guardrail_name: "lasso-post-guard-with-masking"
-    litellm_params:
-      guardrail: lasso
-      mode: "post_call"
-      api_key: os.environ/LASSO_API_KEY
-      mask: true  # Enable PII masking
+To enable PII masking, instantiate `LassoGuardrail` directly with `mask=True` and register it as a callback:
+
+```python showLineNumbers title="lasso_masking.py"
+import os
+
+import litellm
+from litellm.proxy.guardrails.guardrail_hooks.lasso.lasso import LassoGuardrail
+
+lasso_pre_guard = LassoGuardrail(
+    guardrail_name="lasso-pre-guard-with-masking",
+    api_key=os.environ["LASSO_API_KEY"],
+    event_hook="pre_call",
+    mask=True,
+)
+lasso_post_guard = LassoGuardrail(
+    guardrail_name="lasso-post-guard-with-masking",
+    api_key=os.environ["LASSO_API_KEY"],
+    event_hook="post_call",
+    mask=True,
+)
+
+litellm.logging_callback_manager.add_litellm_callback(lasso_pre_guard)
+litellm.logging_callback_manager.add_litellm_callback(lasso_post_guard)
 ```
 
 ### Masking Behavior
