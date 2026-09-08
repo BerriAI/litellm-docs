@@ -206,7 +206,7 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
         return ImageResponse(
             created=int(time.time()),
             data=[ImageObject(url="https://example.com/image.png")],
@@ -481,7 +481,7 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
         assert optional_params == {"my_custom_param": "my-custom-param"} # 👈 CHECK HERE
         return ImageResponse(
             created=int(time.time()),
@@ -576,6 +576,8 @@ class CustomLLM(BaseLLM):
         self,
         model: str,
         prompt: str,
+        api_key: Optional[str],
+        api_base: Optional[str],
         model_response: ImageResponse,
         optional_params: dict,
         logging_obj: Any,
@@ -589,6 +591,8 @@ class CustomLLM(BaseLLM):
         model: str,
         prompt: str,
         model_response: ImageResponse,
+        api_key: Optional[str],
+        api_base: Optional[str],
         optional_params: dict,
         logging_obj: Any,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
