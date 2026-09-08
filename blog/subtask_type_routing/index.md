@@ -69,7 +69,7 @@ Exploration goes to a fast, cheap model. Verification, where the model mostly ne
 
 ## Results
 
-We ran mini-SWE-agent on 12 SWE-bench Verified tasks, once against fixed `anthropic/claude-opus-5` and once against the router above, and scored both with the official SWE-bench harness. Costs are the sum of every LLM call as reported by the gateway.
+We ran mini-SWE-agent on 9 SWE-bench Verified tasks, once against fixed `anthropic/claude-opus-5` and once against the router above, and scored both with the official SWE-bench harness. Costs are the sum of every LLM call as reported by the gateway.
 
 Across the 9 tasks both configurations solved:
 
@@ -92,8 +92,6 @@ Where the money went with the router, over all 382 turns of the full 12-task run
 | claude-opus-5 (implement) | 55 | 14% | $2.56 |
 
 86% of the agent's turns never touched Opus. The 14% that did were the edits, which is exactly the part of the job a frontier model should own. Worth sitting with the first row: 73% of all turns cost $0.14 in total. Exploration is nearly free once it is on the right model.
-
-Over the full 12-task run the numbers were $6.00 for fixed Opus against $3.12 for the router, a 48% reduction.
 
 ## Why phase, not difficulty
 
