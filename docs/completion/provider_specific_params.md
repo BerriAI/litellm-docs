@@ -127,7 +127,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.AnthropicConfig(max_tokens_to_sample=200)
+litellm.AnthropicConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
