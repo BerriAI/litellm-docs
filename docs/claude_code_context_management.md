@@ -386,24 +386,27 @@ data: {"type":"message_stop"}
 
 Simply don't include `context_management` in the request body.
 
-### Proxy-wide - `drop_params: true`
+### Per-model - `additional_drop_params`
 
-When `drop_params: true` is set in your proxy config (or passed as a litellm setting), LiteLLM will silently strip `context_management` from any request instead of running the polyfill:
+To opt a model out of the polyfill, list `context_management` in that model's `additional_drop_params`. LiteLLM will silently strip `context_management` from requests to that model instead of running the polyfill:
 
 ```yaml
 # proxy_server_config.yaml
-litellm_settings:
-  drop_params: true
+model_list:
+  - model_name: gpt-4.1
+    litellm_params:
+      model: openai/gpt-4.1
+      additional_drop_params: ["context_management"]
 ```
 
 Or at call time:
 
 ```python
 import litellm
-litellm.drop_params = True
+litellm.completion(..., additional_drop_params=["context_management"])
 ```
 
-This is useful when you have a global `drop_params` policy to suppress unsupported parameters - context management is treated like any other unsupported parameter and dropped rather than polyfilled.
+`drop_params: true` does not disable the polyfill. `context_management` is a LiteLLM-supported parameter (native on Anthropic, polyfilled elsewhere), and `drop_params` only drops genuinely unsupported parameters.
 
 ## Provider Support Matrix
 
