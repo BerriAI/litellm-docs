@@ -29,12 +29,14 @@ Snowflake Cortex REST API supports three authentication methods.
 
 The simplest approach. Generate a PAT in Snowsight under **User Menu → My Profile → Programmatic Access Tokens**.
 
+LiteLLM reads the token from the `SNOWFLAKE_JWT` environment variable (or the `api_key` parameter). Prefix a PAT with `pat/` so LiteLLM sends it as a `PROGRAMMATIC_ACCESS_TOKEN` instead of a key-pair JWT.
+
 ```python
 import os
 from litellm import completion
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-programmatic-access-token>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-programmatic-access-token>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -92,8 +94,8 @@ For all authentication options, see [Authenticating to Cortex REST API](https://
 from litellm import completion
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -159,8 +161,8 @@ tools, tool_choice
 from litellm import completion
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -200,8 +202,8 @@ Supported on Claude and select models. LiteLLM automatically transforms OpenAI t
 from litellm import completion
 import os, json
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 tools = [
     {
@@ -305,8 +307,8 @@ See [Cortex REST API Billing & Cost Analysis](https://www.snowflake.com/en/devel
 from litellm import embedding
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = embedding(
     model="snowflake/snowflake-arctic-embed-l-v2.0",
