@@ -16,7 +16,8 @@ uv add litellm python-dotenv
 
 ```python
 import litellm
-from litellm import load_test_model, testing_batch_completion
+from litellm import testing_batch_completion
+from litellm.utils import load_test_model
 import time
 ```
 
@@ -44,7 +45,7 @@ result = testing_batch_completion(models=models, messages=messages)
 
 ## Load Test endpoint
 
-Run 100+ simultaneous queries across multiple providers to see when they fail + impact on latency
+Run 100+ simultaneous queries across multiple providers to see when they fail + impact on latency. `load_test_model` takes a single `model`, so call it once per provider.
 
 
 ```python
@@ -52,7 +53,7 @@ models=["{{openai_small}}", "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da
 context = """Paul Graham (/ɡræm/; born 1964)[3] is an English computer scientist, essayist, entrepreneur, venture capitalist, and author. He is best known for his work on the programming language Lisp, his former startup Viaweb (later renamed Yahoo! Store), cofounding the influential startup accelerator and seed capital firm Y Combinator, his essays, and Hacker News. He is the author of several computer programming books, including: On Lisp,[4] ANSI Common Lisp,[5] and Hackers & Painters.[6] Technology journalist Steven Levy has described Graham as a "hacker philosopher".[7] Graham was born in England, where he and his family maintain permanent residence. However he is also a citizen of the United States, where he was educated, lived, and worked until 2016."""
 prompt = "Where does Paul Graham live?"
 final_prompt = context + prompt
-result = load_test_model(models=models, prompt=final_prompt, num_calls=5)
+result = {model: load_test_model(model=model, prompt=final_prompt, num_calls=5) for model in models}
 ```
 
 ### Visualize the data
@@ -62,14 +63,9 @@ result = load_test_model(models=models, prompt=final_prompt, num_calls=5)
 import matplotlib.pyplot as plt
 
 ## calculate avg response time
-unique_models = set(result["response"]['model'] for result in result["results"])
-model_dict = {model: {"response_time": []} for model in unique_models}
-for completion_result in result["results"]:
-    model_dict[completion_result["response"]["model"]]["response_time"].append(completion_result["response_time"])
-
 avg_response_time = {}
-for model, data in model_dict.items():
-    avg_response_time[model] = sum(data["response_time"]) / len(data["response_time"])
+for model, load_result in result.items():
+    avg_response_time[model] = load_result["total_response_time"] / load_result["calls_made"]
 
 models = list(avg_response_time.keys())
 response_times = list(avg_response_time.values())
@@ -91,7 +87,7 @@ plt.show()
 
 ## Duration Test endpoint
 
-Run load testing for 2 mins. Hitting endpoints with 100+ queries every 15 seconds.
+Run load testing for 2 mins. Hitting endpoints with 100+ queries every 15 seconds. `load_test_model` has no interval or duration options, so loop over it yourself.
 
 
 ```python
@@ -99,7 +95,13 @@ models=["{{openai_small}}", "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da
 context = """Paul Graham (/ɡræm/; born 1964)[3] is an English computer scientist, essayist, entrepreneur, venture capitalist, and author. He is best known for his work on the programming language Lisp, his former startup Viaweb (later renamed Yahoo! Store), cofounding the influential startup accelerator and seed capital firm Y Combinator, his essays, and Hacker News. He is the author of several computer programming books, including: On Lisp,[4] ANSI Common Lisp,[5] and Hackers & Painters.[6] Technology journalist Steven Levy has described Graham as a "hacker philosopher".[7] Graham was born in England, where he and his family maintain permanent residence. However he is also a citizen of the United States, where he was educated, lived, and worked until 2016."""
 prompt = "Where does Paul Graham live?"
 final_prompt = context + prompt
-result = load_test_model(models=models, prompt=final_prompt, num_calls=100, interval=15, duration=120)
+interval = 15
+duration = 120
+result = []
+end_time = time.time() + duration
+while time.time() < end_time:
+    result.append({model: load_test_model(model=model, prompt=final_prompt, num_calls=100) for model in models})
+    time.sleep(interval)
 ```
 
 
@@ -107,11 +109,10 @@ result = load_test_model(models=models, prompt=final_prompt, num_calls=100, inte
 import matplotlib.pyplot as plt
 
 ## calculate avg response time
-unique_models = set(unique_result["response"]['model'] for unique_result in result[0]["results"])
-model_dict = {model: {"response_time": []} for model in unique_models}
+model_dict = {model: {"response_time": []} for model in models}
 for iteration in result:
-  for completion_result in iteration["results"]:
-    model_dict[completion_result["response"]["model"]]["response_time"].append(completion_result["response_time"])
+  for model, load_result in iteration.items():
+    model_dict[model]["response_time"].append(load_result["total_response_time"] / load_result["calls_made"])
 
 avg_response_time = {}
 for model, data in model_dict.items():
