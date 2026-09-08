@@ -123,8 +123,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       # Append to the built-in technical keyword list
       custom_technical_keywords: [kafka, redis, postgresql, udp, dns]
 
-      # Marker pair whose blocks are stripped before classification
-      reminder_markers: ["<system-reminder>", "</system-reminder>"]   # default
+      # Marker pairs whose blocks are stripped before classification; replaces the built-in default
+      reminder_markers:
+        - open: "<system-reminder>"    # default
+          close: "</system-reminder>"
 
       # Escalate a prompt that provably does not fit the decided tier, before dispatch
       enable_context_window_escalation: true   # default
