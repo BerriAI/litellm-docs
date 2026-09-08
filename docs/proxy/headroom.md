@@ -227,14 +227,15 @@ Headroom protects two message types by default, set on the Headroom container it
 
 ## Configuration reference
 
-| Param        | Type   | Description                                                                                          |
-| ------------ | ------ | ---------------------------------------------------------------------------------------------------- |
-| `guardrail`  | str    | Must be `headroom`.                                                                                  |
-| `mode`       | str    | Use `pre_call`. The guardrail is a no-op on responses.                                                |
-| `api_base`   | str    | Base URL of the headroom service. Falls back to the `HEADROOM_API_BASE` env var. Required.            |
-| `api_key`    | str    | Bearer token for the headroom service. Falls back to `HEADROOM_API_KEY`. Optional.                    |
-| `model`      | str    | Model name forwarded to `/v1/compress`. Defaults to the request's `model` field.                      |
-| `default_on` | bool   | Run the guardrail on every request without needing to opt in per call. Defaults to `false`.           |
+| Param           | Type | Description                                                                                           |
+| --------------- | ---- | ----------------------------------------------------------------------------------------------------- |
+| `guardrail`     | str  | Must be `headroom`.                                                                                   |
+| `mode`          | str  | Use `pre_call`. The guardrail is a no-op on responses.                                                |
+| `api_base`      | str  | Base URL of the headroom service. Falls back to the `HEADROOM_API_BASE` env var. Required.             |
+| `api_key`       | str  | Bearer token for the headroom service. Falls back to `HEADROOM_API_KEY`. Optional.                     |
+| `model`         | str  | Model name forwarded to `/v1/compress`. Defaults to the request's `model` field.                       |
+| `default_on`    | bool | Run the guardrail on every request without needing to opt in per call. Defaults to `false`.            |
+| `ccr_retrieval` | bool | Inject `headroom_retrieve` for hashes reported in `ccr_hashes`. Set `false` for marker-free sidecars. Defaults to `true`. |
 
 ## Environment variables
 
