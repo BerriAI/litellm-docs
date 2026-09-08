@@ -34,7 +34,7 @@ response = litellm.ocr(
 
 # Access extracted text
 for page in response.pages:
-    print(page.text)
+    print(page.markdown)
 ```
 
 ### **LiteLLM PROXY**
@@ -179,8 +179,8 @@ response.usage_info     # Token usage information
 
 # Access page content
 for page in response.pages:
-    print(f"Page {page.page_number}:")
-    print(page.text)
+    print(f"Page {page.index}:")
+    print(page.markdown)
 ```
 
 ## Async Support
