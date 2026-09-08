@@ -114,10 +114,10 @@ Learning signals are inspired by [Signals: Trajectory Sampling and Triage for Ag
 ## Inspect the current state
 
 ```
-GET /adaptive_router/{router_name}/state
+GET /adaptive_router/state
 ```
 
-Returns current quality estimates per model per request type. Useful for understanding why a model is or isn't being picked.
+Admin-only. Returns one snapshot per configured adaptive router (the `router_name` field identifies each) with current quality estimates per model per request type. Useful for understanding why a model is or isn't being picked.
 
 ```json
 {
