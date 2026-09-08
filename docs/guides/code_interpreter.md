@@ -155,7 +155,7 @@ files = litellm.list_container_files(
 
 # 4. Download each file
 for file in files.data:
-    content = litellm.retrieve_container_file_content(
+    content = litellm.containers.retrieve_container_file_content(
         container_id=container_id,
         file_id=file.id,
         custom_llm_provider="openai"
