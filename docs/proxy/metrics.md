@@ -1,44 +1,37 @@
 # 💸 GET Daily Spend, Usage Metrics
 
+Use the `/global/spend/report` endpoint to get daily spend, grouped by team (default), `customer`, or `api_key`. `start_date` and `end_date` are required, and this endpoint requires an enterprise license. See [Generate Spend Reports](./cost_tracking.md#-enterprise-generate-spend-reports) for the other `group_by` options.
+
 ## Request Format
 ```shell
-curl -X GET "http://0.0.0.0:4000/daily_metrics" -H "Authorization: Bearer sk-1234"
+curl -X GET "http://0.0.0.0:4000/global/spend/report?start_date=2024-02-01&end_date=2024-02-02&group_by=team" -H "Authorization: Bearer sk-1234"
 ```
 
 ## Response format 
 ```json
-{
-    "daily_spend": [
-        {
-            "daily_spend": 7.9261938052047e+16,
-            "day": "2024-02-01T00:00:00",
-            "spend_per_model": {"azure/{{openai_large}}": 7.9261938052047e+16},
-            "spend_per_api_key": {
-                "76": 914495704992000.0,
-                "12": 905726697912000.0,
-                "71": 866312628003000.0,
-                "28": 865461799332000.0,
-                "13": 859151538396000.0
+[
+    {
+        "group_by_day": "2024-02-01T00:00:00+00:00",
+        "teams": [
+            {
+                "team_name": "Prod Team",
+                "total_spend": 0.0015265,
+                "metadata": [
+                    {
+                        "model": "{{openai_large}}",
+                        "spend": 0.00123,
+                        "total_tokens": 28,
+                        "api_key": "88dc28.."
+                    },
+                    {
+                        "model": "{{openai_small}}",
+                        "spend": 0.0002965,
+                        "total_tokens": 85,
+                        "api_key": "84dc28.."
+                    }
+                ]
             }
-        },
-        {
-            "daily_spend": 7.938489251309491e+16,
-            "day": "2024-02-02T00:00:00",
-            "spend_per_model": {"{{openai_small}}": 7.938489251309491e+16},
-            "spend_per_api_key": {
-                "91": 896805036036000.0,
-                "78": 889692646082000.0,
-                "49": 885386687861000.0,
-                "28": 873869890984000.0,
-                "56": 867398637692000.0
-            }
-        }
-
-    ],
-    "total_spend": 200,
-    "top_models": {"{{openai_large}}": 0.2, "vertexai/{{gemini_flash}}":10},
-    "top_api_keys": {"899922": 0.9, "838hcjd999seerr88": 20}
-
-}
-
+        ]
+    }
+]
 ```
