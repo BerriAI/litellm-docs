@@ -75,13 +75,14 @@ Add this optional service to the Compose project running LiteLLM:
 services:
   mongodb-sidecar:
     image: ghcr.io/berriai/litellm-mongodb:v0.1.0-beta.1
+    network_mode: service:litellm
     environment:
       MONGODB_CONNECTION_STRING: ${MONGODB_CONNECTION_STRING:?required}
       MONGODB_SIDECAR_API_KEY: ${MONGODB_SIDECAR_API_KEY:?required}
     restart: unless-stopped
 ```
 
-Connect both services to the same private Compose network and pass `MONGODB_SIDECAR_API_KEY` to the LiteLLM service. Use `http://mongodb-sidecar:8080` as `api_base`; `localhost` inside a LiteLLM container points to that container. No host port is needed for the sidecar in this deployment.
+Replace `litellm` in `network_mode` with the name of your existing LiteLLM service, and pass `MONGODB_SIDECAR_API_KEY` to that service. Sharing the network namespace lets LiteLLM use `http://127.0.0.1:8080` as `api_base`. No host port is needed for the sidecar in this deployment. For separate network namespaces, expose the sidecar through HTTPS instead.
 
 </TabItem>
 <TabItem value="helm" label="Kubernetes / Helm">
@@ -140,7 +141,9 @@ Monitor `/health/readiness` for MongoDB connectivity. A MongoDB readiness probe 
 
 Each secret can alternatively be mounted read-only and referenced with `MONGODB_CONNECTION_STRING_FILE` or `MONGODB_SIDECAR_API_KEY_FILE`. Set either the value or its file variable, never both. Files must be readable by container user 10001. For MongoDB TLS, include options such as `tlsCAFile` or `tlsCertificateKeyFile` in the URI and mount the files at those paths inside the sidecar. Certificate verification remains enabled by default.
 
-Keep the service on a private network. If the HTTP hop crosses an untrusted network, use an HTTPS reverse proxy. `api_base` can include that proxy's path prefix; omit `/v1`. Check `/health/liveness` for the HTTP process and `/health/readiness` for a bounded MongoDB ping. See the [sidecar operations guide](https://github.com/BerriAI/litellm-mongodb#operations) for timeouts, connection pooling, and releases.
+LiteLLM requires HTTPS for remote sidecars. HTTP is accepted only for a literal loopback IP, such as `127.0.0.1` or `[::1]`, when both processes share a host or network namespace. This keeps the sidecar bearer key and query data off unencrypted network hops. For a separate sidecar host or Deployment, use an HTTPS reverse proxy with a certificate trusted by LiteLLM; `api_base` can include the proxy's path prefix, without `/v1`. Keep the service's HTTP port private behind that proxy.
+
+Check `/health/liveness` for the HTTP process and `/health/readiness` for a bounded MongoDB ping. See the [sidecar operations guide](https://github.com/BerriAI/litellm-mongodb#operations) for timeouts, connection pooling, and releases.
 
 ## Connect your index
 
@@ -183,7 +186,7 @@ vector_store_registry:
     litellm_params:
       vector_store_id: "<index-name>"
       custom_llm_provider: mongodb
-      api_base: http://mongodb-sidecar:8080
+      api_base: http://127.0.0.1:8080
       api_key: os.environ/MONGODB_SIDECAR_API_KEY
       mongodb_database: "<database-name>"
       mongodb_collection: "<collection-name>"
@@ -214,7 +217,7 @@ curl -X POST 'http://localhost:4000/vector_store/new' \
     "custom_llm_provider": "mongodb",
     "vector_store_name": "<display-name>",
     "litellm_params": {
-      "api_base": "http://mongodb-sidecar:8080",
+      "api_base": "http://127.0.0.1:8080",
       "api_key": "<sidecar-api-key>",
       "mongodb_database": "<database-name>",
       "mongodb_collection": "<collection-name>",
@@ -379,7 +382,7 @@ Pass these in the registered store's `litellm_params`, or as keyword arguments i
 |---|---|---|
 | `vector_store_id` | Yes | Exact MongoDB Vector Search index name. |
 | `custom_llm_provider` | Yes | Set to `mongodb`. |
-| `api_base` | Yes | Sidecar HTTP(S) origin or reverse-proxy path prefix. Do not append `/v1`. |
+| `api_base` | Yes | Sidecar HTTPS origin or reverse-proxy path prefix. HTTP is supported only for literal loopback IPs. Do not append `/v1`. |
 | `api_key` | Yes | Sidecar bearer key. Can also be supplied through `MONGODB_SIDECAR_API_KEY` in the LiteLLM environment. |
 | `mongodb_database` | Yes | Database containing the collection. Required even if the URI contains a database name. |
 | `mongodb_collection` | Yes | Collection containing the documents and vectors. |

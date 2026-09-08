@@ -116,7 +116,7 @@ Wait until it is **READY** and queryable. If you change the database, collection
 
 Follow the [sidecar deployment guide](../providers/mongodb_vector_stores.md#deploy-the-sidecar) for Docker, Compose, or Kubernetes. Set the sidecar's `MONGODB_CONNECTION_STRING` to the URI used by the setup script, and set `MONGODB_SIDECAR_API_KEY` to a strong secret shared with LiteLLM. The URI and any MongoDB TLS files stay in the sidecar.
 
-For a proxy running on the Docker host, use `http://127.0.0.1:8080` as the Sidecar URL. For Compose, use `http://mongodb-sidecar:8080` on the shared network. Confirm the sidecar's `/health/readiness` endpoint returns HTTP 200 before registering the index.
+For a proxy running on the Docker host, use `http://127.0.0.1:8080` as the Sidecar URL. The Compose example shares LiteLLM's network namespace and uses the same loopback URL. Remote sidecars require HTTPS. Confirm the sidecar's `/health/readiness` endpoint returns HTTP 200 before registering the index.
 
 ## Register the index in the Admin UI
 
