@@ -82,13 +82,20 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-Expected response on failure - user message gets replaced with reject prompt
+Expected response on failure - the request is rejected with HTTP 500 and the reject prompt is returned in the error detail
 
 ```json
 {
-  "messages": [
-    {"role": "user", "content": "Unable to complete request, prompt injection/jailbreak detected"}
-  ]
+  "error": {
+    "message": {
+      "error": "Violated guardrail policy",
+      "javelin_guardrail_response": { ... },
+      "reject_prompt": "Unable to complete request, prompt injection/jailbreak detected"
+    },
+    "type": "None",
+    "param": "None",
+    "code": "500"
+  }
 }
 ```
 
@@ -115,9 +122,16 @@ Expected response on failure
 
 ```json
 {
-  "messages": [
-    {"role": "user", "content": "Unable to complete request, trust & safety violation detected"}
-  ]
+  "error": {
+    "message": {
+      "error": "Violated guardrail policy",
+      "javelin_guardrail_response": { ... },
+      "reject_prompt": "Unable to complete request, trust & safety violation detected"
+    },
+    "type": "None",
+    "param": "None",
+    "code": "500"
+  }
 }
 ```
 
@@ -144,9 +158,16 @@ Expected response on failure
 
 ```json
 {
-  "messages": [
-    {"role": "user", "content": "Unable to complete request, language violation detected"}
-  ]
+  "error": {
+    "message": {
+      "error": "Violated guardrail policy",
+      "javelin_guardrail_response": { ... },
+      "reject_prompt": "Unable to complete request, language violation detected"
+    },
+    "type": "None",
+    "param": "None",
+    "code": "500"
+  }
 }
 ```
 
@@ -312,15 +333,14 @@ export JAVELIN_API_BASE="https://api-dev.javelin.live"  # Optional, defaults to 
 
 When a guardrail detects a violation:
 
-1. The **last message content** is replaced with the appropriate reject prompt
-2. The message role remains unchanged
-3. The request continues with the modified message
-4. The original violation is logged for monitoring
+1. The request is rejected with an HTTP 500 error and is **not** forwarded to the LLM
+2. The error detail contains `"error": "Violated guardrail policy"`, the full `javelin_guardrail_response`, and the `reject_prompt`
+3. The original violation is logged for monitoring
 
 **How it works:**
 - Javelin guardrails check the last message for violations
-- If a violation is detected (`request_reject: true`), the content of the last message is replaced with the reject prompt
-- The message structure remains intact, only the content changes
+- If a violation is detected (`request_reject: true`), LiteLLM raises an `HTTPException` with status code 500 and returns the reject prompt in the error detail
+- If Javelin does not return a `reject_prompt`, LiteLLM falls back to `"Request blocked by Javelin guardrails due to <guardrail_name> violation."`
 
 **Reject Prompts:**
 Can be configured from javelin portal.
