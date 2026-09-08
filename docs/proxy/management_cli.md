@@ -205,7 +205,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Keys Management
 
-- List, generate, get info, delete, and import API keys.
+- List, generate, delete, and import API keys.
 - Example:
 
   ```bash
@@ -215,7 +215,6 @@ lite logout             # clear the keychain entry and the token file, and revok
     --spend=100 \
     --duration=24h \
     --key-alias=my-key
-  lite keys info --key sk-key1
   lite keys delete --keys sk-key1,sk-key2 --key-aliases alias1,alias2
   ```
 
