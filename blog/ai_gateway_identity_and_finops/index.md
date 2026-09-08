@@ -1,25 +1,32 @@
 ---
 slug: ai-gateway-identity-and-finops
-title: "Identity and FinOps for shared agents on the LiteLLM AI Gateway"
+title: "Secure shared AI agents with identity-aware access and spend controls"
 date: 2026-09-08T10:00:00
 authors:
   - yassin
-description: "How LiteLLM's Agent Gateway, Model Gateway, and MCP Gateway carry a caller's identity to a shared agent, and how that identity drives per-team FinOps budgets, proved against a real running proxy."
-tags: [product, agents, mcp, security]
+description: "How LiteLLM preserves caller identity across shared agents, governs model and MCP access, and enforces independent budgets for each business unit."
+tags: [product, agents, mcp, security, finops]
 hide_table_of_contents: false
 ---
 
-A customer running agents behind LiteLLM's AI Gateway asked us two questions that come up constantly once an agent stops being a toy and starts being shared infrastructure. First: when an agent, not a human, calls an MCP server on LiteLLM's behalf, how does that call get scoped to the identity of whoever is actually talking to the agent, so a finance agent can hand back payroll data to a manager and a redacted summary to everyone else? Second: if one agent is shared by two business units, how do you split its spend cleanly per unit and cap one without throttling the other, when keys and budgets are normally scoped one team per credential?
+A shared agent should not mean a shared identity.
 
-We built a real, live proof of concept to answer both questions against a running LiteLLM proxy, using a real model behind it and paying for real tokens. Along the way we found and fixed a genuine bug in how LiteLLM's Agent Gateway forwards caller identity.
+When a finance agent serves multiple business units, platform teams still need to know who initiated each request, which models and tools that caller can access, and whose budget should be charged. Without that context, a shared agent becomes a shared account: access controls get broader, spend is harder to attribute, and one team's usage can affect everyone else.
+
+LiteLLM provides one control plane for this workflow across the Agent Gateway, Model Gateway, and MCP Gateway. Teams can share the same agent infrastructure while keeping access, credentials, spend, and audit data tied to the right caller.
 
 {/* truncate */}
 
-## The architecture: three gateways, one identity
+## One gateway for the complete agent workflow
 
-LiteLLM's AI Gateway is really three gateways behind one proxy. The [Agent Gateway](../../docs/a2a) speaks the A2A protocol and lets a caller invoke an agent the same way it would invoke a model; the Model Gateway is the core LLM routing layer behind `/v1/chat/completions` and friends; the MCP Gateway hosts and proxies MCP servers so an agent can call tools without holding its own credentials for each one. An agent registered on LiteLLM sits behind the Agent Gateway and, on the way to answering a request, typically calls back out through the other two: it asks the Model Gateway for a completion and the MCP Gateway for tool results, all using its own agent-owned virtual key.
+A typical agent request crosses four boundaries:
 
-The four request patterns we set out to prove all sit on top of this:
+1. A user calls an agent.
+2. The agent calls a model.
+3. The agent calls an MCP tool.
+4. The agent calls another agent.
+
+LiteLLM governs each boundary through a single proxy:
 
 ```mermaid
 flowchart LR
@@ -32,112 +39,150 @@ flowchart LR
     AG2 --> Agent2["Summarizer Agent"]
 ```
 
-The question in both cases is the same: does the identity of the human at the left edge of that diagram survive all the way to the right edge, and if it does, what can LiteLLM do with it once it's there.
+The [Agent Gateway](../../docs/a2a) authenticates callers, controls which teams and keys can invoke each agent, and records request, response, latency, and cost data. The Model Gateway routes LLM traffic and applies budgets and rate limits. The MCP Gateway centralizes tool access and upstream authentication.
 
-## Interaction 1: a user calls a shared agent
+Together, they let platform teams operate agents as shared services without giving up per-user governance.
 
-We registered a finance agent and a second, trivial summarizer agent on the Agent Gateway. Both show up in the Admin UI's Agents tab with their own spend and status:
+## Authenticate every call to a shared agent
+
+Start by registering each agent in the Agent Gateway. Agents appear in the Admin UI with their status and spend data:
 
 ![Agents tab showing the finance-agent and summarizer-agent registered on the Agent Gateway](/img/a2a_gateway_poc_agents_tab.png)
 
-Two personal, user-scoped keys sit under one shared team, `shared-agents-team`, one per business unit:
+Users can have personal virtual keys while belonging to the same shared team. In this example, two business units use separate keys under `shared-agents-team`:
 
 ![Virtual Keys tab showing two personal keys, op-unit-a and op-unit-b, sharing one team](/img/a2a_gateway_poc_virtual_keys_tab.png)
 
-Either unit calls the finance agent the same way, over the Agent Gateway's JSON-RPC surface:
+The team's object permissions define which agents and MCP servers its keys can access. This lets both business units use the same finance agent without duplicating the agent registration or distributing its upstream credentials.
+
+![Teams tab showing shared-agents-team with its resources and combined spend against a $5 budget](/img/a2a_gateway_poc_teams_tab.png)
+
+When a request reaches the Agent Gateway, LiteLLM authenticates the virtual key and resolves its user and team. The gateway forwards that verified context to the agent as `X-LiteLLM-User-Id` and `X-LiteLLM-Team-Id`.
 
 ```mermaid
 sequenceDiagram
-    participant U as Op Unit User
-    participant AG as Agent Gateway (LiteLLM)
+    participant U as Business Unit User
+    participant AG as LiteLLM Agent Gateway
     participant FA as Finance Agent
 
-    U->>AG: POST /a2a/{agent_id} message/send (Bearer: personal key)
-    AG->>AG: authenticate key, resolve user_id and team_id
-    AG->>FA: forward JSON-RPC + X-LiteLLM-User-Id header
-    FA-->>AG: agent response
-    AG-->>U: agent response
+    U->>AG: message/send with personal virtual key
+    AG->>AG: Authenticate key and resolve user + team
+    AG->>FA: Forward request with verified identity
+    FA-->>AG: Agent response
+    AG-->>U: Agent response
 ```
 
+The identity comes from LiteLLM's authenticated key context. A caller cannot replace it by supplying a different LiteLLM identity header.
+
+Clients invoke the shared agent through the standard A2A JSON-RPC interface:
+
 ```bash
-curl -X POST http://localhost:4600/a2a/0abb13e9-e195-4e80-a2c9-c293e4bcb60d \
-  -H "Authorization: Bearer sk-wGq5WeqU3EC63f-0OirBCw" \
+curl -X POST "$LITELLM_BASE_URL/a2a/$AGENT_ID" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
-    "id": "demo-1",
+    "id": "request-1",
     "method": "message/send",
     "params": {
       "message": {
         "kind": "message",
-        "messageId": "msg-1",
+        "messageId": "message-1",
         "role": "user",
-        "parts": [{"kind": "text", "text": "Give me a one sentence finance status update."}]
+        "parts": [
+          {"kind": "text", "text": "Give me a one-sentence finance status update."}
+        ]
       }
     }
   }'
 ```
 
-The team's `object_permission` grants both agents and the MCP server to `shared-agents-team`, independent of which member is calling; a key can only use what its team already allows, so the two op units share access without either one needing its own separate agent registration.
+## Keep user attribution on model calls
 
-![Teams tab showing shared-agents-team with its resources and combined spend against a $5 budget](/img/a2a_gateway_poc_teams_tab.png)
+The finance agent calls the Model Gateway with its own agent-owned virtual key. That keeps the agent's service credentials separate from the user's credentials.
 
-## Interaction 2: the agent calls the model
+For per-user attribution, the agent reads the verified `X-LiteLLM-User-Id` value from the inbound request and supplies it as the `user` field on its outbound model request. It also forwards LiteLLM trace and agent context headers so calls remain grouped under the same execution and spend is attributed to the correct agent.
 
-Once the finance agent has a request, it answers it the same way any LiteLLM client would: a plain `POST /v1/chat/completions` against the Model Gateway, authenticated with its own agent-owned virtual key rather than the caller's key. The one thing it does differently is read the `X-LiteLLM-User-Id` header LiteLLM attached to the inbound request and pass that value through as the `user` field on its own outbound call. That single field is what lets a request placed by op-unit-a and a request placed by op-unit-b, both flowing through the identical agent using the identical model key, still be billed and budgeted separately on the way out.
+This gives LiteLLM two useful dimensions at the same time:
 
-## Interaction 3: the agent calls MCP
+- The agent-owned key identifies the workload making the model call.
+- The `user` field identifies the customer or business unit whose budget applies.
 
-The finance agent also calls a finance MCP server through the MCP Gateway for two tools: `get_revenue_summary`, open to any caller, and `get_payroll_details`, gated on a JWT `groups` claim that requires `finance-payroll-access`. The MCP server itself enforces that gate; LiteLLM's job is making sure the right per-user credential reaches it in the first place.
+Multiple teams can therefore share one agent and one model route while LiteLLM maintains separate usage and budget records for each caller.
+
+## Apply each user's permissions to MCP tools
+
+The same finance agent can access tools through the MCP Gateway without storing separate credentials for every upstream system.
+
+In this example, the finance MCP server exposes two tools:
+
+- `get_revenue_summary`, available to any authorized caller
+- `get_payroll_details`, restricted to users with the `finance-payroll-access` group
 
 ![MCP Servers tab showing the finance_mcp server registered on the MCP Gateway](/img/a2a_gateway_poc_mcp_servers_tab.png)
 
-LiteLLM supports exactly this through `delegate_auth_to_upstream` OAuth2 delegation: an end user completes an interactive PKCE login against the customer's own identity provider once, and LiteLLM stores the resulting per-user token, keyed by user id and MCP server, and attaches it on every subsequent call that user makes through that server. We wired this up and confirmed the storage and attachment mechanism, and confirmed the MCP server's own role check correctly denies `get_payroll_details` to a caller without the right group, which is the enforcement point that actually matters. What we did not get working live in this session was the interactive login itself: our sandbox Okta tenant kept returning "User is not assigned to the client application" despite app assignment, sign-on policy, and authorization server access policy all looking correct, and we ran out of things to try. So the tool-gating and token-storage halves of this story are proven; the human clicking through an Okta login screen is a gap we're leaving open for a follow-up.
+For interactive per-user OAuth, configure the MCP server with `auth_type: oauth2` and `oauth2_flow: authorization_code`. The user completes a PKCE sign-in with the organization's identity provider. LiteLLM stores the resulting credential for that user and MCP server, then attaches it to later tool calls for the same user.
 
-## Interaction 4: agent calls agent, and where identity stops
+The upstream MCP server remains the authorization authority. It evaluates the token's claims and decides whether the user can access payroll details or only the broader revenue summary. LiteLLM centralizes the OAuth flow and credential handling without flattening every user into one shared upstream identity.
 
-The finance agent's last step is a second Agent Gateway call, this time to the summarizer agent, using its own service key rather than a human's. This worked exactly like interaction 1 in one respect and differently in another. It worked because the Agent Gateway authenticates that call the same way: it looks at whoever is calling it right now (the finance agent's key) and stamps that caller's identity onto the forwarded request. It differed because the finance agent's own key isn't tied to any end user, so there is no user id to stamp; the summarizer agent receives no `X-LiteLLM-User-Id` at all.
+See [MCP OAuth](../../docs/mcp_oauth) for configuration options, including machine-to-machine and on-behalf-of flows.
 
-That's deliberate, not a residual gap. LiteLLM never relays a client-asserted identity header past the gateway; it only ever attaches the identity of whoever the gateway itself just authenticated. A malicious or buggy caller cannot hand the gateway an `X-LiteLLM-User-Id` and have it forwarded verbatim to a downstream agent. If a multi-hop agent chain needs to preserve the original human's identity across every hop, that has to be an explicit design decision on the calling agent's side (carrying it forward itself, the way our finance agent does when it forwards the header it received to the model and MCP calls), not something the gateway does implicitly for a hop it has no reason to trust.
+## Preserve the original user across agent-to-agent calls
 
-## The bug: identity that only worked half the time
+An agent-to-agent call has two identities:
 
-While wiring up interaction 4 with real, personal, user-scoped keys, we noticed the finance agent's own logs never showed a user id at all, on any interaction, not just the agent-to-agent one. Digging into `litellm/proxy/agent_endpoints/a2a_endpoints.py` turned up the cause: a helper, `_forwarding_headers()`, stamps `X-LiteLLM-User-Id` and `X-LiteLLM-Team-Id` from the authenticated caller onto the outbound request, but it was only ever called from the `tasks/*` and `tasks/resubscribe` JSON-RPC branches. The primary conversational path, `message/send` and `message/stream`, the one every one of our four interactions actually uses, forwarded the request untouched. Every agent invoked the normal way was silently blind to who was calling it; only the rarer task-management calls carried identity at all.
+- The immediate caller, such as the finance agent's service key
+- The originating user who started the workflow
 
-We reproduced this directly against our running proxy. With the unfixed code (commit `35451ecc7b`), calling the finance agent with op-unit-b's key produced a normal `200` response, but the agent's own log read:
+LiteLLM authenticates and records the immediate caller at every gateway hop. It does not silently treat a service key as the original human. This keeps the trust boundary clear and prevents an arbitrary caller from asserting another user's LiteLLM identity.
 
-```
-[agent_backend] message_send text='Give me a one sentence finance status update.' end_user_id=None
-```
+If a downstream agent needs the originating user's context, the calling agent carries that verified context explicitly as application metadata or a permitted forwarded header. The downstream agent can then use it for business logic, while LiteLLM continues to authenticate the service identity that made the hop.
 
-With the fix applied (commit `fff3efa5c5`), the identical request against the identical agent produced:
+This distinction is useful for multi-agent systems: platform logs show which agent made each call, and application context shows which user initiated the overall workflow.
 
-```
-[agent_backend] message_send text='Give me a one sentence finance status update.' end_user_id='81767727-927c-4b93-81b6-5896ede23d5e'
-```
+## Enforce independent budgets below the shared team
 
-that value being op-unit-b's real customer id. The fix moves the identity stamp so it applies uniformly across every A2A method, matching what `tasks/*` already did, and we added regression tests covering both the forwarding itself and that a client cannot spoof the header to claim someone else's identity. The change is up for review in [PR #40305](https://github.com/BerriAI/litellm/pull/40305); the underlying gap is tracked as [LIT-7342](https://linear.app/litellm-ai/issue/LIT-7342/a2a-messagesend-does-not-forward-caller-identity-to-downstream-agents).
+Shared infrastructure does not require a shared spend limit.
 
-## The FinOps answer: budgets that live below the team
+LiteLLM supports budgets at multiple levels, including keys, teams, agents, and customers. For a shared-agent deployment, create a customer record for each business unit and pass that customer ID in the model request's `user` field.
 
-With identity actually reaching the agent, the FinOps question has a concrete answer. LiteLLM tracks a `LiteLLM_EndUserTable` "Customer" record per end user, each with its own budget that's checked and hard-enforced independently of whatever team or key budget also applies; a customer's spend hitting its cap raises a `429` regardless of how much headroom the team above it still has. We created one customer per business unit, `op-unit-a` capped at `$0.01` and `op-unit-b` at `$5.00`, both billed against calls made through the same shared finance agent and the same shared team budget.
+For example:
+
+- `op-unit-a`: $0.01 budget
+- `op-unit-b`: $5.00 budget
+- Both units: the same finance agent and `shared-agents-team`
 
 ```mermaid
 sequenceDiagram
-    participant A as Op Unit A ($0.01 budget, exhausted)
+    participant A as Op Unit A ($0.01 budget)
     participant B as Op Unit B ($5.00 budget)
-    participant Agent as Finance Agent (shared)
-    participant MG as Model Gateway
+    participant Agent as Shared Finance Agent
+    participant MG as LiteLLM Model Gateway
 
     A->>Agent: message/send
-    Agent->>MG: /v1/chat/completions (user=op-unit-a)
-    MG-->>Agent: 429 Too Many Requests
+    Agent->>MG: chat completion with user=op-unit-a
+    MG-->>Agent: 429 when Op Unit A is over budget
     B->>Agent: message/send
-    Agent->>MG: /v1/chat/completions (user=op-unit-b)
-    MG-->>Agent: 200, real answer
+    Agent->>MG: chat completion with user=op-unit-b
+    MG-->>Agent: 200 while Op Unit B has budget
 ```
 
-That is exactly what we saw once the fix was live. Op-unit-a's key, whose budget was already spent down from earlier testing, got a `429` on both the model call and the second agent hop, while op-unit-b's identical request, through the identical shared agent, went through end to end: a real model answer, a successful `get_revenue_summary` call returning real MCP tool output, and a successful relay to the summarizer agent. One business unit's cap does not touch the other's throughput, because the enforcement point is the individual customer's own budget, not the shared team's.
+When one unit reaches its limit, LiteLLM rejects that unit's model requests without consuming the other unit's budget or throttling its traffic. The shared team budget can still provide an aggregate ceiling across both units.
 
-## Where this leaves the two questions
+This gives FinOps teams both views they need: consolidated spend for the shared service and independent controls for each business unit using it.
 
-Per-user MCP scoping on a shared agent works the same way the model call does: LiteLLM's job is delivering the calling user's identity to the agent, and from there the agent (and the MCP server's own auth) decides what that identity is allowed to see; we proved the token storage and role-gating mechanics work, with the interactive Okta login itself as the one piece still on our list. FinOps isolation on a shared agent works today, per customer, orthogonally to team and key budgets, and we proved it live: one exhausted business unit throttled, the other one, sharing the same agent and the same team, completely unaffected.
+## A practical deployment pattern
+
+To apply this architecture:
+
+1. Register shared agents in the Agent Gateway.
+2. Grant teams access to the required agents and MCP servers through object permissions.
+3. Issue user-scoped virtual keys under the appropriate team.
+4. Read the verified inbound user context and pass it as `user` on model calls.
+5. Configure per-user OAuth for MCP servers that enforce user-specific permissions.
+6. Create customer budgets for each business unit, with an optional aggregate team budget.
+7. Use LiteLLM Logs to audit the user, key, team, agent, latency, and cost for each request.
+
+The result is a shared agent platform with clear security and financial boundaries: users see only the tools and data they are authorized to access, spend is attributed to the correct business unit, and each unit can be governed independently without duplicating agent infrastructure.
+
+Explore the [Agent Gateway](../../docs/a2a), [MCP Gateway](../../docs/mcp), and [budget and rate-limit controls](../../docs/proxy/users) to build this pattern in your LiteLLM deployment.
