@@ -189,7 +189,7 @@ Marengo Embed 3.0 (`twelvelabs.marengo-embed-3-0-v1:0`, with the `us.` and `eu.`
 | `multi_input` | The text, referencing each image as `<@name>` | `media_sources`: a mapping of name to base64 image or `s3://` uri |
 | `video`, `audio` | An `s3://` uri or base64 media, async invoke only | `startSec`, `endSec`, `segmentation`, `embeddingOption`, `embeddingType`, `embeddingScope`, as documented by [AWS](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-marengo-3.html) |
 
-`inferenceId` and `bucketOwner` (for an `s3://` uri owned by another account) are passed through on every input type. A `text_image` request without `media_source`, or a `multi_input` request without `media_sources`, is rejected with a 400 naming the missing parameter
+`inferenceId` and `bucketOwner` (for an `s3://` uri owned by another account) are passed through on every input type. A `text_image` request without `media_source`, or a `multi_input` request without `media_sources`, is rejected with a 400 naming the missing parameter. Marengo 2.7's `textTruncate`, `lengthSec`, `useFixedLengthSec`, and `minClipSec`, and the video and audio options on any other input type, are rejected with a 400 on 3.0 unless `drop_params` is set, which drops them instead
 
 ### Proxy config
 
