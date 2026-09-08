@@ -321,7 +321,7 @@ curl -X DELETE "http://localhost:4000/v1/files/s3://litellm-proxy/litellm-batch-
 </TabItem>
 </Tabs>
 
-Listing by `target_model_names` and deleting by `?model=` are scoped to the deployment, not to the caller, the same way OpenAI's file list is org-wide. Set [`require_managed_files: true`](../proxy/litellm_managed_files) to make every caller go through LiteLLM managed file ids, which are checked against the caller's user and team
+Listing by `target_model_names` and deleting by `?model=` are scoped to the deployment, not to the caller, the same way OpenAI's file list is org-wide: any key allowed to call the model sees, and can delete, every file under the deployment's prefixes. The [LiteLLM managed file ids](../proxy/litellm_managed_files) that `POST /v1/files` with `target_model_names` returns are checked against the uploading user, so hand end users those ids and keep the batch model itself on the keys that should administer its bucket
 
 ## FAQ
 
