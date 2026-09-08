@@ -16,7 +16,8 @@ uv add litellm python-dotenv
 
 ```python
 import litellm
-from litellm import load_test_model, testing_batch_completion
+from litellm import batch_completion_models_all_responses
+from litellm.utils import load_test_model
 import time
 ```
 
@@ -38,7 +39,7 @@ models = ["{{openai_small}}", "{{openai_large}}", "{{anthropic}}", "replicate/ll
 context = """Paul Graham (/ɡræm/; born 1964)[3] is an English computer scientist, essayist, entrepreneur, venture capitalist, and author. He is best known for his work on the programming language Lisp, his former startup Viaweb (later renamed Yahoo! Store), cofounding the influential startup accelerator and seed capital firm Y Combinator, his essays, and Hacker News. He is the author of several computer programming books, including: On Lisp,[4] ANSI Common Lisp,[5] and Hackers & Painters.[6] Technology journalist Steven Levy has described Graham as a "hacker philosopher".[7] Graham was born in England, where he and his family maintain permanent residence. However he is also a citizen of the United States, where he was educated, lived, and worked until 2016."""
 prompts = ["Who is Paul Graham?", "What is Paul Graham known for?" , "Is paul graham a writer?" , "Where does Paul Graham live?", "What has Paul Graham done?"]
 messages =  [[{"role": "user", "content": context + "\n" + prompt}] for prompt in prompts] # pass in a list of messages we want to test
-result = testing_batch_completion(models=models, messages=messages)
+results = [batch_completion_models_all_responses(models=models, messages=message) for message in messages]
 ```
 
 
