@@ -57,11 +57,16 @@ model_list:
 | `aws_batch_role_arn` | IAM role ARN for Bedrock batch operations. Bedrock Batch APIs require an IAM role ARN to be set. |
 | `mode: batch` | Indicates to LiteLLM this is a batch model |
 
+**S3 permissions the credentials need:**
+
+The AWS identity LiteLLM signs with needs `s3:PutObject` (upload), `s3:GetObject` (download results), `s3:ListBucket` (`GET /v1/files`), and `s3:DeleteObject` (`DELETE /v1/files/{file_id}`) on `s3_bucket_name`, and on `s3_output_bucket_name` when you set one. Listing and deleting only ever touch the key prefixes LiteLLM writes under (`litellm-bedrock-files-` for batch inputs, `litellm-bedrock-files/` for other uploads, `litellm-batch-outputs/` for results), so you can scope the policy to those
+
 **Optional Parameters:**
 
 | Parameter | Description |
 |-----------|-------------|
 | `s3_encryption_key_id` | Custom KMS encryption key ID for the batch input file LiteLLM uploads to S3 and for the batch output data. Requires `kms:GenerateDataKey` on that key for the credentials LiteLLM signs the upload with. If not specified, Bedrock uses AWS managed encryption keys. |
+| `s3_output_bucket_name` | Bucket (optionally `bucket/prefix`) Bedrock writes batch results to. Defaults to `s3_bucket_name`. `GET /v1/files?purpose=batch_output` lists this bucket. |
 
 ### 2. Create Virtual Key
 
@@ -262,6 +267,61 @@ The batch output file is in JSONL format with each line containing:
   }
 }
 ```
+
+### 5. List and delete files
+
+`GET /v1/files` with `target_model_names` lists what LiteLLM has written under the deployment's bucket, straight from S3. `purpose=batch` lists the inputs you uploaded, `purpose=batch_output` lists the results finished batch jobs wrote (both `<jobId>/input.jsonl.out` and `<jobId>/manifest.json.out`), and leaving `purpose` out lists both when they share a bucket. Any other purpose returns an empty list: every upload lands under the same prefixes and is listed as `batch` whatever purpose it was uploaded with, and job results are `batch_output`. The response is the same page shape OpenAI returns (`object: list`, `data`, `has_more`), and it stops at 10,000 files, OpenAI's own ceiling; `limit` and `after` are not applied
+
+`DELETE /v1/files/{file_id}` removes the S3 object behind a LiteLLM managed file id (and forgets the id), or, for proxy admin keys, with `?model=<model-name>`, the raw `s3://` object a batch result points at. Other keys get a 403 on a raw id, and an id outside the deployment's configured bucket is answered with a 400 rather than touched
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python showLineNumbers title="bedrock_batch.py"
+...
+# List the inputs uploaded for this deployment
+page = client.files.list(
+    purpose="batch",
+    extra_query={"target_model_names": "bedrock-batch-claude"},
+)
+print([f.id for f in page.data])
+
+# List the results finished batch jobs wrote
+outputs = client.files.list(
+    purpose="batch_output",
+    extra_query={"target_model_names": "bedrock-batch-claude"},
+)
+
+# Delete a managed file (the S3 object goes with it)
+deleted = client.files.delete(batch_input_file.id)
+print(deleted.deleted)  # True
+```
+
+</TabItem>
+<TabItem value="curl" label="Curl">
+
+```bash showLineNumbers title="List and delete files"
+# Inputs uploaded for this deployment
+curl "http://localhost:4000/v1/files?purpose=batch&target_model_names=bedrock-batch-claude" \
+    -H "Authorization: Bearer sk-1234"
+
+# Results finished batch jobs wrote
+curl "http://localhost:4000/v1/files?purpose=batch_output&target_model_names=bedrock-batch-claude" \
+    -H "Authorization: Bearer sk-1234"
+
+# Delete a managed file
+curl -X DELETE http://localhost:4000/v1/files/{file_id} \
+    -H "Authorization: Bearer sk-1234"
+
+# Delete a batch result by its s3:// id (proxy admin keys only)
+curl -X DELETE "http://localhost:4000/v1/files/s3://litellm-proxy/litellm-batch-outputs/{jobId}/input.jsonl.out?model=bedrock-batch-claude" \
+    -H "Authorization: Bearer sk-1234"
+```
+
+</TabItem>
+</Tabs>
+
+Listing by `target_model_names` is scoped to the deployment, not to the caller, the same way OpenAI's file list is org-wide: any key allowed to call the model sees every file under the deployment's prefixes, raw `s3://` ids included. Deleting by a raw `s3://` id is limited to proxy admin keys, so that listing is inventory for everyone else. The [LiteLLM managed file ids](../proxy/litellm_managed_files) that `POST /v1/files` with `target_model_names` returns are checked against the uploading user, so hand end users those ids and keep the batch model itself on the keys that should see its bucket
 
 ## FAQ
 
