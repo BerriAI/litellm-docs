@@ -177,7 +177,7 @@ The LLM never processes the injected instruction.
 guardrails:
   - guardrail_name: "voice-lakera"
     litellm_params:
-      guardrail: lakera_ai
+      guardrail: lakera_v2
       mode: realtime_input_transcription
       default_on: true
       api_key: os.environ/LAKERA_API_KEY
