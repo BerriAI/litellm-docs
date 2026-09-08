@@ -291,6 +291,14 @@ curl -X POST http://localhost:4000/v1/agents \
 </TabItem>
 </Tabs>
 
+### Updating or rotating credentials
+
+Any credential-bearing field in `litellm_params` (`aws_access_key_id`, `aws_secret_access_key`, `aws_session_token`, `api_key`, and similar) is write-only. `GET`/`POST`/`PUT`/`PATCH /v1/agents` responses, and the Admin UI's agent edit form, always show these fields as a redacted placeholder rather than the stored value.
+
+- Editing an unrelated field (name, description, rate limits) and saving leaves the stored credential unchanged, even though the form round-trips the placeholder for every credential field it didn't touch.
+- To rotate a credential, submit the new value for that field; the update is applied immediately and, again, never echoed back.
+- Submitting a field as an empty string clears the stored credential (for example, to fall back to the proxy's ambient AWS credential chain).
+
 ### 2. Invoke via A2A
 
 ```bash showLineNumbers
