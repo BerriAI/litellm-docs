@@ -251,9 +251,11 @@ To use Parallel Search, set `search_tool_name: parallel-search` in `websearch_in
 
 ```python
 import litellm
+from litellm.integrations.websearch_interception.handler import WebSearchInterceptionLogger
 
-# Configure callbacks
-litellm.callbacks = ["websearch_interception"]
+# The "websearch_interception" string is only resolved by the proxy config loader.
+# In the SDK, register an instance of the logger directly.
+litellm.callbacks = [WebSearchInterceptionLogger(enabled_providers=["openai"])]
 
 # Make completion with web search tool
 response = await litellm.acompletion(
