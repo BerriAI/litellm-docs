@@ -319,7 +319,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.PalmConfig(maxOutputTokens=10)
+litellm.PalmConfig(max_output_tokens=10)
 response_2 = litellm.completion(
             model="palm/chat-bison",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
