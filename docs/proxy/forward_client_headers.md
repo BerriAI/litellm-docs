@@ -112,7 +112,7 @@ general_settings:
   forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
-For **Claude Code** with `/login` and your own Anthropic key, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: sk-12345"` to pass your LiteLLM key while your Anthropic key (from `/login`) is forwarded as `x-api-key`.
+For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: sk-12345"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting.
 
 Client request:
 ```bash
