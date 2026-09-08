@@ -118,7 +118,7 @@ $ litellm --model azure/sora-2
 <TabItem value="Curl" label="Curl Request">
 
 ```shell
-curl --location 'http://0.0.0.0:4000/videos/generations' \
+curl --location 'http://0.0.0.0:4000/v1/videos' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer sk-1234' \
 --data '{
