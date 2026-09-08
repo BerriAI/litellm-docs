@@ -85,7 +85,7 @@ guardrails:
         select_system: false           # default; opt in for system prompts
         min_chars_to_select: 500       # default; shorter messages skipped
         max_context_tokens: 4000       # default; budget per message
-        operating_point: np-2026-07-r2 # default; pinned, see below
+        operating_point: np-2026-08-r4 # default; pinned, see below
 ```
 
 ### 2. Start the LiteLLM gateway
@@ -194,7 +194,7 @@ The response carries an `x-litellm-applied-guardrails: needlepath-selection` hea
 
 ## The pinned operating point
 
-`operating_point` is an immutable engine label. The guardrail pins `np-2026-07-r2` by default instead of inheriting whatever the service currently treats as its default, so the behaviour of a given proxy build does not change underneath a deployment. Change it only deliberately, and change it in config rather than relying on a service-side default.
+`operating_point` is an immutable engine label. The guardrail pins `np-2026-08-r4` by default instead of inheriting whatever the service currently treats as its default, so the behaviour of a given proxy build does not change underneath a deployment. Change it only deliberately, and change it in config rather than relying on a service-side default.
 
 ## Why nothing was selected
 
@@ -237,7 +237,7 @@ Nested `optional_params` (each is also accepted directly under `litellm_params`;
 | `select_system` | bool | `false` | Select over system messages. |
 | `min_chars_to_select` | int | `500` | Messages shorter than this are skipped. |
 | `max_context_tokens` | int | `4000` | Token budget requested for the selected block of a single message. |
-| `operating_point` | str | `np-2026-07-r2` | Immutable engine label sent with every request. |
+| `operating_point` | str | `np-2026-08-r4` | Immutable engine label sent with every request. |
 
 ## Environment variables
 
