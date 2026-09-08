@@ -159,48 +159,9 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/ENKRYPTAI_API_KEY
       policy_name: "my-custom-policy"  # Sent via x-enkrypt-policy header
-      detectors:
-        toxicity:
-          enabled: true
 ```
 
-### Using Deployments
-
-Specify an EnkryptAI deployment:
-
-```yaml
-guardrails:
-  - guardrail_name: "enkryptai-deployment"
-    litellm_params:
-      guardrail: enkryptai
-      mode: "pre_call"
-      api_key: os.environ/ENKRYPTAI_API_KEY
-      deployment_name: "production"  # Sent via X-Enkrypt-Deployment header
-      detectors:
-        toxicity:
-          enabled: true
-```
-
-### Monitor Mode (Logging Without Blocking)
-
-Set `block_on_violation: false` to log violations without blocking requests:
-
-```yaml
-guardrails:
-  - guardrail_name: "enkryptai-monitor"
-    litellm_params:
-      guardrail: enkryptai
-      mode: "pre_call"
-      api_key: os.environ/ENKRYPTAI_API_KEY
-      block_on_violation: false  # Log violations but don't block
-      detectors:
-        toxicity:
-          enabled: true
-        nsfw:
-          enabled: true
-```
-
-In monitor mode, all violations are logged but requests are never blocked.
+Detection is controlled entirely by the policy referenced in `policy_name`; LiteLLM sends only the text and this header to EnkryptAI, so per-detector settings must be configured in the EnkryptAI policy itself. Any detected violation blocks the request.
 
 ### Input and Output Guardrails
 
@@ -241,9 +202,6 @@ guardrails:
 | `api_key` | string | EnkryptAI API key | `ENKRYPTAI_API_KEY` env var |
 | `api_base` | string | EnkryptAI API base URL | `https://api.enkryptai.com` |
 | `policy_name` | string | Custom policy name (sent via `x-enkrypt-policy` header) | None |
-| `deployment_name` | string | Deployment name (sent via `X-Enkrypt-Deployment` header) | None |
-| `detectors` | object | Detector configuration | `{}` |
-| `block_on_violation` | boolean | Block requests on violations | `true` |
 | `mode` | string | When to run: `pre_call`, `post_call`, or `during_call` | Required |
 
 ## Observability
@@ -265,8 +223,7 @@ The guardrail handles errors gracefully:
 - **API Failures**: Logs error and raises exception
 - **Rate Limits (429)**: Logs error and raises exception
 - **Invalid Configuration**: Raises `ValueError` on initialization
-
-Set `block_on_violation: false` to continue processing even when violations are detected (monitor mode).
+- **Violations Detected**: Raises an exception and blocks the request
 
 ## Support
 
