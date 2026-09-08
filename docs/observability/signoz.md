@@ -303,33 +303,33 @@ Your LiteLLM commands should now automatically emit traces, logs, and metrics.
 
 You should be able to view traces in Signoz Cloud under the traces tab:
 
-![LiteLLM SDK Trace View](https://signoz.io/img/docs/llm/litellm/litellmsdk-traces.webp)
+![LiteLLM SDK Trace View](/img/observability/signoz_sdk_traces.webp)
 
 When you click on a trace in SigNoz, you'll see a detailed view of the trace, including all associated spans, along with their events and attributes.
 
-![LiteLLM SDK Detailed Trace View](https://signoz.io/img/docs/llm/litellm/litellmsdk-detailed-traces.webp)
+![LiteLLM SDK Detailed Trace View](/img/observability/signoz_sdk_detailed_traces.webp)
 
 You should be able to view logs in Signoz Cloud under the logs tab. You can also view logs by clicking on the “Related Logs” button in the trace view to see correlated logs:
 
-![LiteLLM SDK Logs View](https://signoz.io/img/docs/llm/litellm/litellmsdk-logs.webp)
+![LiteLLM SDK Logs View](/img/observability/signoz_sdk_logs.webp)
 
 When you click on any of these logs in SigNoz, you'll see a detailed view of the log, including attributes:
 
-![LiteLLM SDK Detailed Logs View](https://signoz.io/img/docs/llm/litellm/litellmsdk-detailed-logs.webp)
+![LiteLLM SDK Detailed Logs View](/img/observability/signoz_sdk_detailed_logs.webp)
 
 You should be able to see LiteLLM related metrics in Signoz Cloud under the metrics tab:
 
-![LiteLLM SDK Metrics View](https://signoz.io/img/docs/llm/litellm/litellmsdk-metrics.webp)
+![LiteLLM SDK Metrics View](/img/observability/signoz_sdk_metrics.webp)
 
 When you click on any of these metrics in SigNoz, you'll see a detailed view of the metric, including attributes:
 
-![LiteLLM Detailed Metrics View](https://signoz.io/img/docs/llm/litellm/litellmsdk-detailed-metrics.webp)
+![LiteLLM Detailed Metrics View](/img/observability/signoz_sdk_detailed_metrics.webp)
 
 ## Dashboard
 
 You can also check out our custom LiteLLM SDK dashboard [here](https://signoz.io/docs/dashboards/dashboard-templates/litellm-sdk-dashboard/) which provides specialized visualizations for monitoring your LiteLLM usage in applications. The dashboard includes pre-built charts specifically tailored for LLM usage, along with import instructions to get started quickly.
 
-![LiteLLM SDK Dashboard Template](https://signoz.io/img/docs/llm/litellm/litellm-sdk-dashboard.webp)
+![LiteLLM SDK Dashboard Template](/img/observability/signoz_sdk_dashboard.webp)
 
 </TabItem>
 
@@ -382,17 +382,17 @@ Now any calls made through your LiteLLM proxy server will be traced and sent to 
 
 You should be able to view traces in Signoz Cloud under the traces tab:
 
-![LiteLLM Proxy Trace View](https://signoz.io/img/docs/llm/litellm/litellmproxy-traces.webp)
+![LiteLLM Proxy Trace View](/img/observability/signoz_proxy_traces.webp)
 
 When you click on a trace in SigNoz, you'll see a detailed view of the trace, including all associated spans, along with their events and attributes.
 
-![LiteLLM Proxy Detailed Trace View](https://signoz.io/img/docs/llm/litellm/litellmproxy-detailed-traces.webp)
+![LiteLLM Proxy Detailed Trace View](/img/observability/signoz_proxy_detailed_traces.webp)
 
 ## Dashboard
 
 You can also check out our custom LiteLLM Proxy dashboard [here](https://signoz.io/docs/dashboards/dashboard-templates/litellm-proxy-dashboard/) which provides specialized visualizations for monitoring your LiteLLM Proxy usage in applications. The dashboard includes pre-built charts specifically tailored for LLM usage, along with import instructions to get started quickly.
 
-![LiteLLM Proxy Dashboard Template](https://signoz.io/img/docs/llm/litellm/litellm-proxy-dashboard.webp)
+![LiteLLM Proxy Dashboard Template](/img/observability/signoz_proxy_dashboard.webp)
 
 </TabItem>
 </Tabs>
