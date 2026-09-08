@@ -8,7 +8,10 @@ description: "Bound large file reads and delegate boilerplate codegen to a cheap
 keywords: [auto router, shunt, claude code, token savings, cost, bulk read, code generation, agentic coding, llm gateway, litellm]
 tags: [routing, cost, claude-code, engineering]
 hide_table_of_contents: false
+image: ./hero.png
 ---
+
+![hero](./hero.png)
 
 **A new `auto_router_shunt_min_lines` field bounds large file reads and delegates boilerplate codegen to a cheap worker model, on any Auto-Router, for any client. Off by default.**
 
