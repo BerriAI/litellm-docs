@@ -66,7 +66,7 @@ To prioritize requests on LiteLLM Proxy add `priority` to the request.
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
--D '{
+-d '{
     "model": "gpt-3.5-turbo-fake-model",
     "messages": [
         {
@@ -171,7 +171,7 @@ $ litellm --config /path/to/config.yaml
 curl -X POST 'http://localhost:4000/queue/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
--D '{
+-d '{
     "model": "gpt-3.5-turbo-fake-model",
     "messages": [
         {
