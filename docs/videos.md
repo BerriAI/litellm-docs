@@ -192,7 +192,7 @@ from litellm import video_generation
 import os
 
 os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_OPENAI_API_BASE"] = "https://your-resource.openai.azure.com/"
+os.environ["AZURE_API_BASE"] = "https://your-resource.openai.azure.com/"
 os.environ["AZURE_OPENAI_API_VERSION"] = "2024-02-15-preview"
 
 response = video_generation(
@@ -228,7 +228,7 @@ model_list:
     litellm_params:
       model: azure/sora-2
       api_key: os.environ/AZURE_OPENAI_API_KEY
-      api_base: os.environ/AZURE_OPENAI_API_BASE
+      api_base: os.environ/AZURE_API_BASE
 ```
 
 Start litellm
