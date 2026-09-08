@@ -270,7 +270,7 @@ The batch output file is in JSONL format with each line containing:
 
 ### 5. List and delete files
 
-`GET /v1/files` with `target_model_names` lists what LiteLLM has written under the deployment's bucket, straight from S3. `purpose=batch` lists the inputs you uploaded, `purpose=batch_output` lists the results finished batch jobs wrote (both `<jobId>/input.jsonl.out` and `<jobId>/manifest.json.out`), and leaving `purpose` out lists both. Any other purpose returns an empty list, since Bedrock batch only ever stores those two kinds of object. The response is the same page shape OpenAI returns (`object: list`, `data`, `has_more`), and it stops at 10,000 files, OpenAI's own ceiling; `limit` and `after` are not applied
+`GET /v1/files` with `target_model_names` lists what LiteLLM has written under the deployment's bucket, straight from S3. `purpose=batch` lists the inputs you uploaded, `purpose=batch_output` lists the results finished batch jobs wrote (both `<jobId>/input.jsonl.out` and `<jobId>/manifest.json.out`), and leaving `purpose` out lists both when they share a bucket. Any other purpose returns an empty list, since Bedrock batch only ever stores those two kinds of object. The response is the same page shape OpenAI returns (`object: list`, `data`, `has_more`), and it stops at 10,000 files, OpenAI's own ceiling; `limit` and `after` are not applied
 
 `DELETE /v1/files/{file_id}` removes the S3 object behind a LiteLLM managed file id (and forgets the id), or, with `?model=<model-name>`, the raw `s3://` object a batch result points at. An id outside the deployment's configured bucket is answered with a 400 rather than touched
 
