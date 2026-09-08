@@ -1078,25 +1078,7 @@ This allows any user to access any response ID.
 
 ### Response IDs this proxy did not issue
 
-The proxy can only tell who owns a response when it issued that response's ID itself. An ID in any other shape, a raw provider ID or one handed out before response ID encryption was on, carries no owner, so the proxy refuses it with 403 on retrieve, cancel, delete, input items, and on `previous_response_id`:
-
-```json
-{
-  "error": {
-    "message": "Forbidden. This response id was not issued by this proxy, so the proxy cannot tell who owns it.",
-    "code": 403
-  }
-}
-```
-
-Deployments that pass provider response IDs straight through on purpose, or that still have clients holding older IDs, turn the refusal off with `allow_unmanaged_response_ids`:
-
-```yaml
-general_settings:
-  allow_unmanaged_response_ids: true
-```
-
-IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
+The owner check only applies to IDs the proxy issued itself. An ID in any other shape, such as a raw provider ID or one handed out before response ID encryption was on, carries no owner information, so the proxy passes it through to the provider unchanged on retrieve, cancel, delete, input items, and `previous_response_id`. Proxy admin keys are exempt from the owner check.
 
 ## Supported Responses API Parameters
 
