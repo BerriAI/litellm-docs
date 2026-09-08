@@ -110,6 +110,8 @@ result = await litellm.acount_tokens(
 print(result.tokenizer_type)  # "local_tokenizer"
 ```
 
+On the proxy, local counting runs in a worker thread, so a large payload does not hold up other requests. Strings longer than `TOKEN_COUNTER_MAX_EXACT_CHARS` characters (default 4,000,000, roughly a million tokens) are counted by tokenizing that many characters exactly and scaling the result by the string's length, which keeps the cost of the largest payloads bounded.
+
 ## Proxy Usage
 
 ### OpenAI Format: `/v1/responses/input_tokens`
