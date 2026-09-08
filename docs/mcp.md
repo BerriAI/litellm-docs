@@ -1008,7 +1008,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include server-specific 
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "http://localhost:4000/mcp/",
       "headers": {
         "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
         "x-mcp-github-authorization": "Bearer $GITHUB_TOKEN",
@@ -1033,7 +1033,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include your MCP authent
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "http://localhost:4000/mcp/",
       "headers": {
         "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
         "x-mcp-auth": "$MCP_AUTH_TOKEN"
@@ -1053,7 +1053,7 @@ Connect to LiteLLM MCP using HTTP transport with server-specific authentication:
 
 **Server URL:**
 ```text showLineNumbers
-litellm_proxy
+http://localhost:4000/mcp/
 ```
 
 **Headers:**
@@ -1069,7 +1069,7 @@ Connect to LiteLLM MCP using HTTP transport with MCP authentication:
 
 **Server URL:**
 ```text showLineNumbers
-litellm_proxy
+http://localhost:4000/mcp/
 ```
 
 **Headers:**
@@ -1096,7 +1096,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
 # Create the transport with your LiteLLM MCP server URL and server-specific auth headers
-server_url = "litellm_proxy"
+server_url = "http://localhost:4000/mcp/"
 transport = StreamableHttpTransport(
     server_url,
     headers={
@@ -1149,7 +1149,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
 # Create the transport with your LiteLLM MCP server URL and auth headers
-server_url = "litellm_proxy"
+server_url = "http://localhost:4000/mcp/"
 transport = StreamableHttpTransport(
     server_url,
     headers={
