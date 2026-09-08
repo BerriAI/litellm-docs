@@ -9,7 +9,7 @@ tags: [product, agents, mcp, security, finops]
 hide_table_of_contents: false
 ---
 
-A shared agent should not mean a shared identity.
+Shared agents can preserve individual identity, access, and spend controls.
 
 When a finance agent serves multiple business units, platform teams need a consistent way to identify who initiated each request, apply the right model and tool permissions, and attribute spend. LiteLLM keeps this context available across shared-agent workflows so each business unit can operate under its own access and budget policies.
 
@@ -41,7 +41,7 @@ flowchart LR
 
 The [Agent Gateway](../../docs/a2a) authenticates callers, controls which users and teams can invoke each agent, and records request, response, latency, and cost data. The Model Gateway routes LLM traffic and applies budgets and rate limits. The MCP Gateway centralizes tool access and upstream authentication.
 
-Together, they let platform teams operate agents as shared services without giving up per-user governance.
+Together, they let platform teams operate agents as shared services with per-user governance across every request.
 
 ## Authenticate every call to a shared agent
 
@@ -53,7 +53,7 @@ Users can authenticate through OIDC or another supported LiteLLM credential whil
 
 ![LiteLLM Admin UI showing op-unit-a and op-unit-b under the shared-agents-team policy](/img/a2a_gateway_poc_virtual_keys_tab.png)
 
-The team's object permissions define which agents and MCP servers its members can access. This lets both business units use the same finance agent without duplicating the agent registration or distributing its upstream credentials.
+The team's object permissions define which agents and MCP servers its members can access. Both business units use a single finance agent registration with centrally managed upstream credentials.
 
 ![Teams tab showing shared-agents-team with its resources and combined spend against a $5 budget](/img/a2a_gateway_poc_teams_tab.png)
 
@@ -112,7 +112,7 @@ Multiple teams can therefore share one agent and one model route while LiteLLM m
 
 ## Apply each user's permissions to MCP tools
 
-The same finance agent can access tools through the MCP Gateway without storing separate credentials for every upstream system.
+The same finance agent accesses tools through the MCP Gateway with centrally managed credentials for upstream systems.
 
 In this example, the finance MCP server exposes two tools:
 
@@ -140,7 +140,7 @@ Together, these dimensions give platform teams a complete view of the workflow: 
 
 ## Enforce independent budgets below the shared team
 
-Shared infrastructure does not require a shared spend limit.
+Shared infrastructure can support an independent spend limit for every business unit.
 
 LiteLLM supports budgets at multiple levels, including keys, teams, agents, and customers. For a shared-agent deployment, create a customer record for each business unit and pass that customer ID in the model request's `user` field.
 
@@ -159,13 +159,13 @@ sequenceDiagram
 
     A->>Agent: message/send
     Agent->>MG: chat completion with user=op-unit-a
-    MG-->>Agent: 429 when Op Unit A is over budget
+    MG-->>Agent: 429 after Op Unit A reaches its limit
     B->>Agent: message/send
     Agent->>MG: chat completion with user=op-unit-b
     MG-->>Agent: 200 while Op Unit B has budget
 ```
 
-When one unit reaches its limit, LiteLLM rejects that unit's model requests without consuming the other unit's budget or throttling its traffic. The shared team budget can still provide an aggregate ceiling across both units.
+When one unit reaches its limit, LiteLLM applies that unit's budget policy independently. Other units continue using their own budgets, and the shared team budget provides an aggregate ceiling across them.
 
 This gives FinOps teams both views they need: consolidated spend for the shared service and independent controls for each business unit using it.
 
@@ -177,15 +177,15 @@ Each log row includes the team, model or tool, token usage, cost, duration, and 
 
 ![LiteLLM Request Logs filtered by end user, showing A2A, model, and MCP activity for one business unit](/img/a2a_gateway_poc_logs_end_user_attribution.png)
 
-Request details also show when a customer budget blocks a call. The entry records the `429` status, the end-user ID, current spend, and configured budget limit. Because the request is rejected before reaching the model provider, it records zero model tokens and cost.
+Request details make customer budget enforcement visible. The entry records the `429` status, the end-user ID, current spend, and configured budget limit. Budget evaluation occurs before model-provider invocation, so the entry shows zero model tokens and cost.
 
-![LiteLLM request details for a budget rejection, including status 429, end-user ID, current spend, and budget limit](/img/a2a_gateway_poc_logs_budget_exceeded.png)
+![LiteLLM request details for a budget enforcement event, including status 429, end-user ID, current spend, and budget limit](/img/a2a_gateway_poc_logs_budget_exceeded.png)
 
 For shared-agent environments, these views answer three common operational questions:
 
 - Which business unit initiated the workflow?
 - Which agents, models, and tools handled its requests?
-- Was a request served successfully or stopped by its customer budget?
+- How did the applicable customer budget govern the request?
 
 Team and workload attribution support infrastructure-level reporting, while the end-user field provides the business-unit-level detail needed for access reviews, incident investigation, and spend management.
 
@@ -201,6 +201,6 @@ To apply this architecture:
 6. Create customer budgets for each business unit, with an optional aggregate team budget.
 7. Use LiteLLM Logs to audit the user, key, team, agent, latency, and cost for each request.
 
-The result is a shared agent platform with clear security and financial boundaries: users see only the tools and data they are authorized to access, spend is attributed to the correct business unit, and each unit can be governed independently without duplicating agent infrastructure.
+The result is a shared agent platform with clear security and financial boundaries: users access their approved tools and data, spend is attributed to the correct business unit, and each unit is governed independently through one shared agent deployment.
 
 Explore the [Agent Gateway](../../docs/a2a), [MCP Gateway](../../docs/mcp), and [budget and rate-limit controls](../../docs/proxy/users) to build this pattern in your LiteLLM deployment.
