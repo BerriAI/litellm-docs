@@ -72,7 +72,7 @@ Exploration goes to a fast, cheap model. Verification, where the model mostly ne
 
 ## Results
 
-We ran mini-SWE-agent on 9 SWE-bench Verified tasks, once against fixed `anthropic/claude-opus-5` and once against the router above, and scored both with the official SWE-bench harness. Costs are the sum of every LLM call as reported by the gateway.
+We ran mini-SWE-agent on 12 SWE-bench Verified tasks, once against fixed `anthropic/claude-opus-5` and once against the router above, and scored both with the official SWE-bench harness. Costs are the sum of every LLM call as reported by the gateway. Fixed Opus only resolved 9 of the 12, so the head-to-head comparison below is restricted to those 9 for a fair fight.
 
 Across the 9 tasks both configurations solved:
 
