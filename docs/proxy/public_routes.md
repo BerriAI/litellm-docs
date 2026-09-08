@@ -185,14 +185,16 @@ general_settings:
     - "/health/*"       # All health check routes
 ```
 
-#### Restrict Admin Routes with Wildcards
+#### Admin Only Routes Do Not Support Wildcards
+
+`admin_only_routes` is an exact-match list. A pattern like `/key/*` will not match anything, so list each route explicitly:
 
 ```yaml
 general_settings:
   master_key: sk-1234
   admin_only_routes:
-    - "/admin/*"        # All admin routes
-    - "/internal/*"     # All internal routes
+    - "/key/generate"
+    - "/key/delete"
 ```
 
 ### Testing Wildcard Routes
