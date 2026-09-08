@@ -22,7 +22,7 @@ LiteLLM supports [Microsoft Purview](https://learn.microsoft.com/en-us/purview/p
 
 2. **A DLP policy in Microsoft Purview** targeting your app registration's `client_id` as a Protected App. Without an active policy, `policyActions` in the API response will always be empty.
 
-3. **Entra user object IDs** — each request must carry the Entra object ID of the end-user (not a username or email). The guardrail skips the DLP check and logs a warning when no user ID can be resolved.
+3. **Entra user object IDs** — the LiteLLM API key (or JWT) used for the request must have a `user_id` bound to it that is the Entra object ID of the end-user (not a username or email). Blocking hooks (`pre_call` / `post_call`) reject the request with HTTP 400 when the key has no bound user ID; the logging-only hook skips the audit instead.
 
 ## Quick Start
 
@@ -103,7 +103,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test request
 
-Pass the Entra object ID of the end-user in `metadata`:
+Send the request with a LiteLLM key whose bound `user_id` is the Entra object ID of the end-user (see User ID resolution). `metadata.user_id` is shown for reference but is not used to pick the Purview identity:
 
 ```shell
 curl -X POST http://localhost:4000/v1/chat/completions \
@@ -141,20 +141,15 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 | `client_id` | `str` | Yes | Entra app registration client ID (also used as the Protected App identifier in Purview) |
 | `default_on` | `bool` | No | Run this guardrail for every request. Default: `false` |
 | `purview_app_name` | `str` | No | App name reported to Purview in `processContent`. Default: `"LiteLLM"` |
-| `user_id_field` | `str` | No | Metadata field used **only when** no stronger identity exists (see User ID resolution). Default: `"user_id"` |
+| `user_id_field` | `str` | No | Caller-supplied metadata field. Not used as the identity sent to Purview; only detected to return a more specific error message (see User ID resolution). Default: `"user_id"` |
 
 ## User ID resolution
 
-The Entra object ID used for Purview `protectionScopes` / `processContent` is resolved in **trust order** (strongest first) so a client cannot override the authenticated LiteLLM user by setting `metadata[user_id_field]`:
+The Entra object ID used for Purview `protectionScopes` / `processContent` comes **only** from `user_api_key_dict.user_id`, the user bound to the LiteLLM API key or JWT. Caller-influenceable sources (`user_api_key_dict.end_user_id`, `metadata["user_api_key_user_id"]`, and `metadata[user_id_field]`) are intentionally ignored so a client cannot run the DLP check under another Entra user's policy.
 
-1. `user_api_key_dict.user_id` — user tied to the LiteLLM API key
-2. `user_api_key_dict.end_user_id` — end-user on the key
-3. `metadata["user_api_key_user_id"]` — value the proxy injects from the key (when present)
-4. `metadata[user_id_field]` — caller-supplied (e.g. default `metadata["user_id"]`); used only when none of the above are set
+If the key has no bound `user_id`, the blocking hooks (`pre_call` / `post_call`) **fail closed** and reject the request with HTTP 400. When only caller-supplied identity fields are present, the error message notes that caller-supplied metadata cannot be used for blocking DLP.
 
-If none of these resolve to a value, the DLP check is **skipped** and a warning is logged.
-
-The **logging-only** hook uses the same order via proxy metadata (`litellm_params.metadata`).
+The **logging-only** hook reads the proxy-injected `user_api_key_user_id` from `litellm_params.metadata` (populated from the same key-bound `user_id`). If it is absent, the audit is skipped rather than misattributed.
 
 ## Enabling per request
 
