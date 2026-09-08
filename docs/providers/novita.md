@@ -163,13 +163,13 @@ messages = [
     }
 ]
 
-completion(
+response = completion(
     model="novita/deepseek/deepseek-r1-turbo", 
     messages=messages, 
     response_format={"type": "json_object"} # 👈 KEY CHANGE
 )
 
-print(json.loads(completion.choices[0].message.content))
+print(json.loads(response.choices[0].message.content))
 ```
 
 </TabItem>
