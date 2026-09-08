@@ -8,7 +8,10 @@ description: "Routing each agent turn by what the agent is doing, exploring, imp
 keywords: [auto router, subtask routing, swe-bench, agent cost, llm routing, coding agents, complexity router, litellm, phase routing]
 tags: [routing, complexity-router, cost, benchmarks, engineering]
 hide_table_of_contents: false
+image: ./hero.png
 ---
+
+![Route by what subtask the agent is doing: 46% lower cost](./hero.png)
 
 **An experimental router that picks a model per agent phase matched fixed Claude Opus-5 quality on a SWE-bench Verified subset for 46% less money.**
 
