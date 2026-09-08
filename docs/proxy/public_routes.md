@@ -13,7 +13,7 @@ Control which routes require authentication and which routes are publicly access
 |------------|---------------|-------------|
 | `public_routes` | No | Routes accessible without any authentication |
 | `admin_only_routes` | Yes (Admin only) | Routes only accessible by [Proxy Admin](./self_serve#available-roles) |
-| `allowed_routes` | Yes | Routes exposed on the proxy. If not set, all routes are exposed |
+| `allowed_routes` | Yes | Routes exposed on the proxy. If not set, all routes are exposed. Exact path match only |
 
 ## Quick Start
 
@@ -44,8 +44,10 @@ Only expose specific routes on the proxy:
 ```yaml
 general_settings:
   master_key: sk-1234
-  allowed_routes: ["/chat/completions", "/embeddings", "LiteLLMRoutes.public_routes"]
+  allowed_routes: ["/chat/completions", "/embeddings", "/health/liveliness", "/health/readiness"]
 ```
+
+`allowed_routes` is an exact-match list of paths. It does not expand `LiteLLMRoutes.*` enum names and does not support wildcards, and it is checked before `public_routes`, so any public route you still want reachable (for example `/health/liveliness`) must be listed explicitly. Enum names like `LiteLLMRoutes.public_routes` only work in `public_routes`.
 
 ## Usage Examples
 
@@ -56,10 +58,10 @@ general_settings:
   master_key: sk-1234
   public_routes: ["LiteLLMRoutes.public_routes", "/spend/calculate"]
   admin_only_routes: ["/key/generate"]
-  allowed_routes: ["/chat/completions", "/spend/calculate", "LiteLLMRoutes.public_routes"]
+  allowed_routes: ["/chat/completions", "/spend/calculate", "/health/liveliness", "/health/readiness"]
 ```
 
-`LiteLLMRoutes.public_routes` is an ENUM corresponding to the default public routes on LiteLLM. [View the source](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/_types.py).
+`LiteLLMRoutes.public_routes` is an ENUM corresponding to the default public routes on LiteLLM. It is only expanded in `public_routes`, not in `allowed_routes`. [View the source](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/_types.py).
 
 ### Testing
 
@@ -163,7 +165,7 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 
 ## Advanced: Wildcard Patterns
 
-Use wildcard patterns to match multiple routes at once.
+Use wildcard patterns to match multiple routes at once. Wildcards are not supported in `allowed_routes`, which requires exact paths.
 
 ### Syntax
 
