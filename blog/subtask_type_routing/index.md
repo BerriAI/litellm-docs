@@ -10,7 +10,7 @@ tags: [routing, complexity-router, cost, benchmarks, engineering]
 hide_table_of_contents: false
 ---
 
-**An experimental router that picks a model per agent phase matched fixed Claude Opus-5 quality on a SWE-bench Verified subset for 46% less money.** Same quality, roughly half the bill.
+**An experimental router that picks a model per agent phase matched fixed Claude Opus-5 quality on a SWE-bench Verified subset for 46% less money.**
 
 {/* truncate */}
 
