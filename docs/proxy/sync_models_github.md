@@ -41,10 +41,36 @@ curl -X POST "https://your-proxy-url/schedule/model_cost_map_reload?hours=6" \
 | `/schedule/model_cost_map_reload?hours={hours}` | POST | Schedule periodic sync |
 | `/schedule/model_cost_map_reload` | DELETE | Cancel scheduled sync |
 | `/schedule/model_cost_map_reload/status` | GET | Check sync status |
+| `/model/cost_map/source` | GET | Where the loaded map came from and which revision it is |
 
 **Authentication:** Requires admin role or master key
 
 If a reload succeeds but a newly added model still does not show up, work through [Model missing after Reload Price Data](../troubleshoot/missing_model) before changing anything on the deployment.
+
+## Checking which revision is loaded
+
+The pricing file carries a top-level `_metadata` entry, stamped by the sync bots that write it, with `generated_at` (when the file was written, UTC) and `source_revision` (the commit the file was generated from). The proxy records both when it loads the map, together with the `etag` GitHub served for the fetch, and reports them on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
+
+```bash
+curl -s "https://your-proxy-url/model/cost_map/source" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+```json
+{
+  "source": "remote",
+  "url": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
+  "is_env_forced": false,
+  "fallback_reason": null,
+  "loaded_at": "2026-09-07T23:59:20.508051+00:00",
+  "generated_at": "2026-09-07T23:38:47Z",
+  "source_revision": "cd681a573fd9f5b6f15a1355f46178e4e9d374d2",
+  "etag": "W/\"adb2c10e22f905be5b7362b73dbb589d02751b720db9024218900cca9fc7d2de\"",
+  "model_count": 3850
+}
+```
+
+`source_revision` is the one-line answer to "which pricing map is my proxy on": compare it against the commit that added the model you are looking for. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and both stamp fields are `null` on a file written before the stamp existed. `_metadata` is metadata only: it never shows up in `/v1/models`, `/model/info`, `/public/litellm_model_cost_map`, or cost lookups
 
 ## Python Example
 
