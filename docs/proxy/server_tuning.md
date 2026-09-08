@@ -181,8 +181,6 @@ docker run docker.litellm.ai/berriai/litellm:latest \
 
 Or set `KEEPALIVE_TIMEOUT=75` as an env var.
 
-This is Uvicorn's idle timeout on a kept-alive TCP connection between requests. It does nothing for a stream that has gone quiet mid-response while the provider is still thinking; that case is what `sse_keepalive_ping_interval_seconds` is for. See [Keep streams alive across the ingress idle timeout](./prod.md#keep-streams-alive-across-the-ingress-idle-timeout) for the SSE ping controls and the Helm and Terraform inputs that set them.
-
 ## Load config.yaml from S3 or GCS
 
 Use this if you cannot mount a config file on your deployment service (AWS Fargate, Railway, etc.). LiteLLM reads `config.yaml` from the bucket at startup.
