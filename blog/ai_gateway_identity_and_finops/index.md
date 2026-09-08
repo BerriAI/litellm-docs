@@ -171,6 +171,18 @@ When one unit reaches its limit, LiteLLM rejects that unit's model requests with
 
 This gives FinOps teams both views they need: consolidated spend for the shared service and independent controls for each business unit using it.
 
+## Audit attribution in the request logs
+
+Every hop above lands in LiteLLM Logs with the same verified identity attached, so attribution is not something you have to take on faith. Filtering the shared team's logs by end user isolates exactly one business unit's traffic, across every request type the finance agent generates on its behalf: the agent invocation itself, the model call, and each MCP tool call.
+
+![Request logs filtered to one end user, showing the same identity attached to Agent, LLM, and MCP request types under the shared team and agent-owned key](/img/a2a_gateway_poc_logs_end_user_attribution.png)
+
+When a unit's budget is exhausted, the rejected request's own log entry names the caller directly, not just the shared key or team that made the call:
+
+![Expanded log entry for a rejected request, showing a 429 error naming the specific end user, their spend, and their budget](/img/a2a_gateway_poc_logs_budget_exceeded.png)
+
+That single log line, `ExceededBudget: End User=... over budget. Spend=..., Budget=...`, is the FinOps answer made concrete: the enforcement decision is scoped to the business unit that made the call, not the shared team or the shared agent's key, so it is auditable after the fact the same way it is enforced in real time.
+
 ## A practical deployment pattern
 
 To apply this architecture:
