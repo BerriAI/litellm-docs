@@ -14,6 +14,7 @@ Merged after the v1.101.0 release candidate was cut. These changes are in `v1.10
 - **Faster semantic cold start.** Build the first route layer once, off the event loop. [#39954](https://github.com/BerriAI/litellm/pull/39954)
 - **Adaptive router fixes.** Read model pricing from `model_info` and preserve bandit priors across restarts. [#39957](https://github.com/BerriAI/litellm/pull/39957), [#39955](https://github.com/BerriAI/litellm/pull/39955)
 - **Cross-provider tool history.** `/v1/messages` can replay `tool_use` blocks across OpenAI and Anthropic tiers. [#39967](https://github.com/BerriAI/litellm/pull/39967)
+- **Shunt.** `auto_router_shunt_min_lines` bounds large file reads and delegates boilerplate codegen to a cheap worker model, server-side, for any client. Off by default. [#40158](https://github.com/BerriAI/litellm/pull/40158). [Post](/blog/auto-router-shunt)
 
 ## v1.101.0 (release candidate)
 

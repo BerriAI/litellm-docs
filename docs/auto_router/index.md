@@ -124,6 +124,7 @@ items={[
 
 ## Release posts
 
+- [Shunt](/blog/auto-router-shunt): bounds large file reads and delegates boilerplate codegen to a cheap worker model
 - [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation): bumps a request one tier when it's stuck in a retry loop
 - [Auto Router v2](/blog/autorouter-v2): one router for complexity, semantic, and adaptive routing
 - [1-click presets and Test Routing](/blog/auto-router-setup-and-testing)
