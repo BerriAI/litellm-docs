@@ -602,7 +602,7 @@ litellm_settings:
 ** Expected Behavior **
 
 - Send a `/key/generate` request with `max_budget=200`
-- Key will be created with `max_budget=100` since 100 is the upper bound
+- The request is rejected with HTTP 400: `max_budget is over max limit set in config - user_value=200; max_value=100`. Values above the upper bound are not clamped. The same applies to `max_parallel_requests`, `tpm_limit`, `rpm_limit`, and to `duration` / `budget_duration` longer than the configured bound
 - Omit `budget_duration`, or send it as `null`: the key is created with `budget_duration="10d"`. Upperbounds also act as defaults and cannot be opted out of
 
 ### Default /key/generate params
