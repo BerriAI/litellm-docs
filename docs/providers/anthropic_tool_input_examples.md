@@ -389,7 +389,7 @@ Input examples work together with other Anthropic tool features:
 LiteLLM supports input examples across the following Anthropic-compatible providers:
 
 - **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
-- **Azure Anthropic / Microsoft Foundry** (`azure/{{anthropic}}`) ✅
+- **Azure Anthropic / Microsoft Foundry** (`azure_ai/{{anthropic}}`) ✅
 - **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only)
 - **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
