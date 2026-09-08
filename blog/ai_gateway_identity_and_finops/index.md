@@ -171,17 +171,25 @@ When one unit reaches its limit, LiteLLM rejects that unit's model requests with
 
 This gives FinOps teams both views they need: consolidated spend for the shared service and independent controls for each business unit using it.
 
-## Audit attribution in the request logs
+## Monitor identity and budgets in LiteLLM Logs
 
-Every hop above lands in LiteLLM Logs with the same verified identity attached, so attribution is not something you have to take on faith. Filtering the shared team's logs by end user isolates exactly one business unit's traffic, across every request type the finance agent generates on its behalf: the agent invocation itself, the model call, and each MCP tool call.
+LiteLLM Logs gives platform, security, and FinOps teams a single operational view of shared-agent activity. When an agent carries the authenticated end-user context into its downstream calls, operators can filter by **End User** to follow one business unit across A2A agent invocations, model requests, and MCP tool operations.
 
-![Request logs filtered to one end user, showing the same identity attached to Agent, LLM, and MCP request types under the shared team and agent-owned key](/img/a2a_gateway_poc_logs_end_user_attribution.png)
+Each log row includes the team, key alias, model or tool, token usage, cost, duration, and end-user ID. This makes it easy to start with a customer or business unit and trace the resources used throughout its workflow.
 
-When a unit's budget is exhausted, the rejected request's own log entry names the caller directly, not just the shared key or team that made the call:
+![LiteLLM Request Logs filtered by end user, showing A2A, model, and MCP activity for one business unit](/img/a2a_gateway_poc_logs_end_user_attribution.png)
 
-![Expanded log entry for a rejected request, showing a 429 error naming the specific end user, their spend, and their budget](/img/a2a_gateway_poc_logs_budget_exceeded.png)
+Request details also show when a customer budget blocks a call. The entry records the `429` status, the end-user ID, current spend, and configured budget limit. Because the request is rejected before reaching the model provider, it records zero model tokens and cost.
 
-That single log line, `ExceededBudget: End User=... over budget. Spend=..., Budget=...`, is the FinOps answer made concrete: the enforcement decision is scoped to the business unit that made the call, not the shared team or the shared agent's key, so it is auditable after the fact the same way it is enforced in real time.
+![LiteLLM request details for a budget rejection, including status 429, end-user ID, current spend, and budget limit](/img/a2a_gateway_poc_logs_budget_exceeded.png)
+
+For shared-agent environments, these views answer three common operational questions:
+
+- Which business unit initiated the workflow?
+- Which agents, models, and tools handled its requests?
+- Was a request served successfully or stopped by its customer budget?
+
+The team and service key remain visible for infrastructure-level reporting, while the end-user field provides the business-unit-level attribution needed for access reviews, incident investigation, and spend management.
 
 ## A practical deployment pattern
 
