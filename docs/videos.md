@@ -161,12 +161,11 @@ print(f"Video ID: {response.id}")
 ```python
 from litellm import video_remix
 
-# Video remix with reference image
+# Remix an existing video by its ID with a new prompt
 response = video_remix(
-    model="openai/sora-2",
+    video_id="video_1234567890",
     prompt="Make the cat jump higher",
-    input_reference=open("path/to/image.jpg", "rb"),  # Reference image as file object
-    seconds="8"
+    custom_llm_provider="openai"
 )
 
 print(f"Video ID: {response.id}")
@@ -592,7 +591,7 @@ See the [official OpenAI Video Generation documentation](https://platform.openai
 | `prompt` | string | Yes | Text description of the desired video |
 | `seconds` | string | No | Video duration in seconds (e.g., "8", "16") |
 | `size` | string | No | Video dimensions (e.g., "720x1280", "1280x720") |
-| `input_reference` | file object | No | Reference image for video generation or editing (both generation and remix) |
+| `input_reference` | file object | No | Reference image for video generation (not supported by remix) |
 | `user` | string | No | User identifier for tracking |
 | `video_id` | string | Yes (status/retrieval) | Video ID for status checking or retrieval |
 
