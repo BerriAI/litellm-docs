@@ -7,7 +7,7 @@
 | Amazon Titan | `bedrock/amazon.titan-*` | [Amazon Titan Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) | ✅ |
 | Amazon Nova | `bedrock/amazon.nova-*` | [Amazon Nova Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/nova-embed.html) | ✅ |
 | Cohere | `bedrock/cohere.*` | [Cohere Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-embed.html) | ✅ |
-| TwelveLabs | `bedrock/twelvelabs.*`, `bedrock/us.twelvelabs.*`, `bedrock/eu.twelvelabs.*` | [TwelveLabs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-twelvelabs.html), [Marengo Embed 3.0](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-marengo-3.html) | ✅ |
+| TwelveLabs | `bedrock/twelvelabs.*`, `bedrock/us.twelvelabs.*`, `bedrock/eu.twelvelabs.*` | [TwelveLabs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-twelvelabs.html) | ✅ |
 
 ## Async Invoke Support
 
@@ -19,18 +19,17 @@ LiteLLM supports AWS Bedrock's async-invoke feature for embedding models that re
 |----------|-------------------|----------|
 | Amazon Nova | `bedrock/async_invoke/amazon.nova-2-multimodal-embeddings-v1:0` | Multimodal embeddings with segmentation for long text, video, and audio |
 | TwelveLabs Marengo Embed 2.7 | `bedrock/async_invoke/twelvelabs.marengo-embed-2-7-v1:0` | Video, audio, image, and text embeddings |
-| TwelveLabs Marengo Embed 3.0 | `bedrock/async_invoke/twelvelabs.marengo-embed-3-0-v1:0` | Video and audio embeddings (text and image run synchronously, see [Marengo Embed 3.0](#twelvelabs-marengo-embed-30)) |
 
 ### Required Parameters
 
-Bedrock's async invoke only accepts base model ids, so use `twelvelabs.marengo-embed-2-7-v1:0` or `twelvelabs.marengo-embed-3-0-v1:0` here rather than a `us.` or `eu.` inference profile, which Bedrock rejects with `The provided model doesn't support async inference`
+Bedrock's async invoke only accepts base model ids, so use `twelvelabs.marengo-embed-2-7-v1:0` here rather than a `us.` or `eu.` inference profile, which Bedrock rejects with `The provided model doesn't support async inference`
 
 When using async-invoke, you must provide:
 
 | Parameter | Description | Required |
 |-----------|-------------|----------|
 | `output_s3_uri` | S3 URI where the embedding results will be stored | ✅ Yes |
-| `input_type` | Type of input: `"text"`, `"image"`, `"video"`, or `"audio"` (Marengo Embed 3.0 also takes `"text_image"` and `"multi_input"`) | ✅ Yes |
+| `input_type` | Type of input: `"text"`, `"image"`, `"video"`, or `"audio"` | ✅ Yes |
 | `aws_region_name` | AWS region for the request | ✅ Yes |
 
 ### Usage
@@ -174,85 +173,6 @@ print(f"Results available at: {output_s3_uri}")
 ```
 
 **Note:** The actual embedding results are stored in S3. When the job is completed, download the results from the S3 location specified in `status.metadata['output_file_id']`. The results will be in JSON/JSONL format containing the embedding vectors.
-
-## TwelveLabs Marengo Embed 3.0
-
-Marengo Embed 3.0 (`twelvelabs.marengo-embed-3-0-v1:0`, with the `us.` and `eu.` inference profiles for us-east-1 and eu-west-1) returns 512-dimensional vectors and takes text of up to 500 tokens. Text, image, text plus image, and multi-image inputs run synchronously through `bedrock/<model id>`; video and audio go through `bedrock/async_invoke/twelvelabs.marengo-embed-3-0-v1:0` with an `output_s3_uri`, using the base model id because Bedrock's async invoke rejects inference profiles. 3.0 sends Bedrock a different request body than 2.7, and LiteLLM builds it from the same `input_type` parameter, so moving from 2.7 (scheduled for deprecation on 2026-11-30) is a model id change
-
-### Input types
-
-| `input_type` | `input` | Extra parameters |
-|--------------|---------|------------------|
-| `text` (default) | The text to embed | |
-| `image` | A base64 image or an `s3://` uri | |
-| `text_image` | The text | `media_source`: a base64 image or an `s3://` uri |
-| `multi_input` | The text, referencing each image as `<@name>` | `media_sources`: a mapping of name to base64 image or `s3://` uri |
-| `video`, `audio` | An `s3://` uri or base64 media, async invoke only | `startSec`, `endSec`, `segmentation`, `embeddingOption`, `embeddingType`, `embeddingScope`, as documented by [AWS](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-marengo-3.html) |
-
-`inferenceId` and `bucketOwner` (for an `s3://` uri owned by another account) are passed through on every input type. A `text_image` request without `media_source`, or a `multi_input` request without `media_sources`, is rejected with a 400 naming the missing parameter. Marengo 2.7's `textTruncate`, `lengthSec`, `useFixedLengthSec`, and `minClipSec`, and the video and audio options on any other input type, are rejected with a 400 on 3.0 unless `drop_params` is set, which drops them instead
-
-### Proxy config
-
-```yaml
-model_list:
-  - model_name: marengo-3
-    litellm_params:
-      model: bedrock/us.twelvelabs.marengo-embed-3-0-v1:0
-      aws_region_name: us-east-1
-  - model_name: marengo-3-async
-    litellm_params:
-      model: bedrock/async_invoke/twelvelabs.marengo-embed-3-0-v1:0
-      aws_region_name: us-east-1
-```
-
-### Text
-
-```bash
-curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
-  -d '{"model": "marengo-3", "input": "a dog running on the beach", "input_type": "text"}'
-```
-
-### Image
-
-```bash
-curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
-  -d '{"model": "marengo-3", "input": "<base64 image>", "input_type": "image"}'
-```
-
-### Text plus image
-
-```bash
-curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
-  -d '{"model": "marengo-3", "input": "a duck", "input_type": "text_image", "media_source": "s3://your-bucket/duck.png"}'
-```
-
-### Multiple images
-
-```bash
-curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
-  -d '{"model": "marengo-3", "input": "a photo of <@bird> on water", "input_type": "multi_input", "media_sources": {"bird": "<base64 image>"}}'
-```
-
-### Video through async invoke
-
-```python
-from litellm import embedding
-
-response = embedding(
-    model="bedrock/async_invoke/twelvelabs.marengo-embed-3-0-v1:0",
-    input=["s3://your-bucket/video.mp4"],
-    aws_region_name="us-east-1",
-    input_type="video",
-    embeddingOption=["visual", "audio"],
-    segmentation={"method": "fixed", "fixed": {"durationSec": 10}},
-    output_s3_uri="s3://your-bucket/async-invoke-output/",
-)
-print(response._hidden_params._invocation_arn)
-```
 
 ## Amazon Nova Multimodal Embeddings
 
@@ -503,7 +423,6 @@ print(response)
 | Titan Embeddings - V1 | `embedding(model="bedrock/amazon.titan-embed-text-v1", input=input)` | [here](https://github.com/BerriAI/litellm/blob/f5905e100068e7a4d61441d7453d7cf5609c2121/litellm/llms/bedrock/embed/amazon_titan_g1_transformation.py#L53)
 | Titan Multimodal Embeddings | `embedding(model="bedrock/amazon.titan-embed-image-v1", input=input)` | [here](https://github.com/BerriAI/litellm/blob/f5905e100068e7a4d61441d7453d7cf5609c2121/litellm/llms/bedrock/embed/amazon_titan_multimodal_transformation.py#L28) |
 | TwelveLabs Marengo Embed 2.7 | `embedding(model="bedrock/us.twelvelabs.marengo-embed-2-7-v1:0", input=input)` | Supports multimodal input (text, video, audio, image) |
-| TwelveLabs Marengo Embed 3.0 | `embedding(model="bedrock/us.twelvelabs.marengo-embed-3-0-v1:0", input=input)` | Text, image, `text_image`, and `multi_input` synchronously, video and audio through async invoke, 512 dimensions |
 | Cohere Embeddings - English | `embedding(model="bedrock/cohere.embed-english-v3", input=input)` | [here](https://github.com/BerriAI/litellm/blob/f5905e100068e7a4d61441d7453d7cf5609c2121/litellm/llms/bedrock/embed/cohere_transformation.py#L18)
 | Cohere Embeddings - Multilingual | `embedding(model="bedrock/cohere.embed-multilingual-v3", input=input)` | [here](https://github.com/BerriAI/litellm/blob/f5905e100068e7a4d61441d7453d7cf5609c2121/litellm/llms/bedrock/embed/cohere_transformation.py#L18)
 | Cohere Embed v4 | `embedding(model="bedrock/cohere.embed-v4:0", input=input)` | Supports text and image input, configurable dimensions (256, 512, 1024, 1536), 128k context length |
