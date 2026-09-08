@@ -21,9 +21,10 @@ items={[
 
 ## Dashboard presets
 
-![Auto Router templates in the Add Model form](../../blog/autorouter_setup_and_testing/presets.png)
+![Auto Router setup form with the Configure automatically button and generated tier summary](../../blog/autorouter_setup_and_testing/auto-setup.png)
 
 - Models + Endpoints, Add Model, Auto Router tab.
+- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four complexity tiers, and fills in the form for you. Review the generated tiers before saving.
 - Templates: 1M Context, Anthropic Family, OpenAI Family, Gemini Family, Lite. Each fills all four tiers from models your proxy already serves.
 - A template whose models are not deployed is greyed out with the missing names listed.
 - **Test Routing** sends one prompt through the classifier and shows the model it would pick. Nothing is created and the picked model is not called.

@@ -41,7 +41,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 ## Quick start
 
-- **Dashboard:** Models + Endpoints, Add Model, Auto Router tab, pick a template, Test Routing, save.
+- **Dashboard:** Models + Endpoints, Add Model, Auto Router tab, enter a name, then click **Configure automatically** or pick a template. Review the tiers, Test Routing, and save.
 - **Agent:** tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`.
 - **config.yaml:** one router entry whose tiers name other models in the same file.
 

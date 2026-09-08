@@ -37,9 +37,10 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 ## 1-Click Presets for Anthropic and OpenAI Families
 
-![Add Auto Router form with the Anthropic Family template applied and the detailed configuration collapsed to a tier summary](./presets.png)
+![Add Auto Router form with the Configure automatically button and generated tier summary](./auto-setup.png)
 
-- Add Auto Router now opens on a name field and a **Template** dropdown: Anthropic family, OpenAI family, or Custom
+- Add Auto Router now opens on a name field, a **Configure automatically** button, and a **Template** dropdown
+- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four tiers, and fills in the form for you. Review the generated tiers before saving
 - Picking a family builds the whole config for you with the **latest models** in that family, so every tier is on current models without writing any YAML
 - The detail collapses behind a one-line tier summary; presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
 - More families are coming; today Anthropic and OpenAI are covered, and Custom is there for everything else
