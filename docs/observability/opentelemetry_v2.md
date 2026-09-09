@@ -732,7 +732,7 @@ Existing keys take the same field on `/key/update`. You can also fill both of th
 
 ### What the tenant receives
 
-A key or team that names its own backend gets the **whole trace** — the HTTP request, the auth step, the model call with its tokens and cost, and the spend write — under one root. Before, it received a single loose span with no request around it.
+A key or team that names its own backend gets the **whole trace** under one root: the HTTP request, the auth step, the model call with its tokens and cost, and the spend write. Before, it received a single loose span with no request around it.
 
 Your own exporter for that same backend stops receiving those requests. If a team points `langfuse_otel` at its own project, your Langfuse project holds nothing for that team; exporters on other backends, a plain `otel` collector for instance, still receive everything.
 
@@ -753,7 +753,7 @@ litellm_settings:
 
 ### Send a tenant to its own Langfuse host
 
-`langfuse_host` on a key or team moves that tenant's traces to their own Langfuse server. Pass it with the key pair it belongs to — a host on its own is ignored — and allowlist the host, or the proxy logs a warning and leaves the request on your exporters:
+`langfuse_host` on a key or team moves that tenant's traces to their own Langfuse server. Pass it with the key pair it belongs to, because a host on its own is ignored. Allowlist the host too, or the proxy logs a warning and leaves the request on your exporters:
 
 ```yaml
 litellm_settings:
