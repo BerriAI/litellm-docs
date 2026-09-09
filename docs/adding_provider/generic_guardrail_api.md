@@ -319,6 +319,25 @@ guardrails:
 
 See the [Pillar Security documentation](../proxy/guardrails/pillar_security.md) for full configuration options.
 
+### Example: Dash Security
+
+[Dash Security](https://www.dash.security/) uses the Generic Guardrail API to provide AI gateway visibility and policy enforcement for LiteLLM proxy traffic, including pre-LLM blocking and post-response redaction.
+
+```yaml
+guardrails:
+  - guardrail_name: "dash-security"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: [pre_call, post_call]
+      api_base: os.environ/DASH_API_BASE
+      api_key: os.environ/DASH_LITELLM_TOKEN
+      default_on: true
+      unreachable_fallback: fail_open
+      fail_on_error: false
+```
+
+Set `DASH_API_BASE` and `DASH_LITELLM_TOKEN` to the values from the LiteLLM integration wizard in Dash. See the [Dash Security documentation](../proxy/guardrails/dash_security.md) for failure controls, tool coverage, and identity guidance.
+
 ## Usage
 
 Users apply your guardrail by name:
