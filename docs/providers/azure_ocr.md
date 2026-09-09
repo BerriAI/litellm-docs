@@ -182,7 +182,7 @@ model_list:
       mode: ocr
 ```
 
-Any Azure AI OCR model name containing both `cohere` and `parse`, case-insensitively, routes to Cohere Parse. This allows a custom Foundry deployment name as long as it contains both strings
+The `azure_ai` provider fronts several OCR backends and picks one from the model name in `litellm_params.model`. Any name containing both `cohere` and `parse`, case-insensitively, routes to Cohere Parse, so a custom Foundry deployment name works as long as it contains both strings. A name missing either string falls through to the Mistral OCR route and fails against a Cohere endpoint, so keep `litellm_params.model` as `azure_ai/Cohere-parse-v5` if your deployment is named differently; the `model_name` alias can be anything
 
 Cohere Parse accepts image inputs only. Use an `image_url` document with an image URL or a base64 image data URI. `document_url` and PDF inputs raise an error. Local image files passed with `{"type": "file", ...}` are converted to data URIs by LiteLLM
 
