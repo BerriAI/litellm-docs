@@ -21,11 +21,55 @@ The LiteLLM credential travels separately in the `x-litellm-api-key` header, whi
 
 ## Prerequisites
 
-1. **An Entra app registration for your gateway** (a confidential client with a client secret) that
-   - exposes an API scope (for example `api://<client_id>/access_as_user`) so client apps can mint user tokens audienced to the gateway
-   - has the delegated `ThreatProtection.Evaluate.All` permission on the Agent 365 resource app, with admin consent granted
+Everything below is one-time setup in your Entra tenant, done by a tenant administrator. Step 6 is a check you can run to confirm the setup works before you configure LiteLLM at all
 
-2. **Tenant onboarding to Agent 365.** Your tenant must be onboarded to Microsoft Agent 365 for the evaluation endpoint to accept requests
+### 1. Onboard your tenant to Agent 365
+
+Ask your Microsoft Agent 365 contact to onboard your Entra tenant id. Until that is done, the evaluation endpoint rejects every request with `409 BAPForbiddenTenantAccess` no matter how the app registration is configured
+
+### 2. Register the gateway app
+
+In the Azure portal, under **Microsoft Entra ID → App registrations → New registration**
+
+- Name it for the gateway, for example `litellm-agent365-gateway`
+- Supported account types: **Accounts in this organizational directory only**
+- Leave the redirect URI empty. The gateway never signs users in itself
+
+Record the **Application (client) ID** and **Directory (tenant) ID**. Then under **Certificates & secrets → New client secret**, create a secret and record its value. These three become the guardrail's `client_id`, `tenant_id` and `client_secret`
+
+### 3. Expose an API scope on the gateway app
+
+Under **Expose an API** on that app registration
+
+- Set the Application ID URI to `api://<client_id>`
+- **Add a scope** named `access_as_user`, consentable by admins and users, state Enabled
+
+This scope is what your MCP client requests. The user token it receives is audienced to the gateway app, which is what makes the On-Behalf-Of exchange possible
+
+### 4. Pre-authorize your MCP client applications
+
+Still under **Expose an API**, choose **Add a client application** and enter the client id of each application your users run the agent from, selecting the `access_as_user` scope. Without this, users hit a consent prompt or the token request fails outright
+
+For a quick test you can pre-authorize the Azure CLI (`04b07795-8ddb-461a-bbee-02f9e1bf7b46`), which lets you mint a user token from a terminal with no browser flow
+
+### 5. Grant the Agent 365 permission and consent it
+
+Under **API permissions → Add a permission → APIs my organization uses**, search for **Agent Tools** (application id `ea9ffc3e-8a23-4a7d-836d-234d7c7565c1`), choose **Delegated permissions**, and select `ThreatProtection.Evaluate.All`. Then choose **Grant admin consent**
+
+The permission must be delegated, not application. The guardrail evaluates as the signed-in user, so an application permission mints a token Agent 365 rejects
+
+### 6. Verify the tenant setup before configuring LiteLLM
+
+Sign in as a user in the tenant and mint a token for the gateway app
+
+```bash
+az login --tenant <tenant_id>
+az account get-access-token \
+  --tenant <tenant_id> \
+  --resource api://<gateway_client_id>
+```
+
+A token here confirms steps 2 through 4. Decode it and check that `aud` is `api://<gateway_client_id>` and that `scp` contains `access_as_user`. This is exactly the token your MCP client will send in the `Authorization` header
 
 ## Quick Start
 
@@ -81,6 +125,68 @@ curl -X POST http://localhost:4000/mcp-rest/tools/call \
 ```
 
 An allowed call returns the tool result. A call blocked by Defender returns HTTP 400 with the Defender message and a `correlation_id` for the Microsoft audit trail
+
+## End-to-end user workflow
+
+Once the guardrail is on, nothing about the user's experience changes until Defender blocks something. Here is the full round trip
+
+### What the user does
+
+They point an MCP-capable agent — Claude Code, VS Code, or your own client — at LiteLLM's MCP endpoint and ask an ordinary question. They sign in to Entra once and the client holds the token
+
+Registering LiteLLM as an MCP server in Claude Code, for example
+
+```bash
+claude mcp add --transport http litellm-agent365 \
+  http://localhost:4000/mcp \
+  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "Authorization: Bearer $ENTRA_USER_TOKEN"
+```
+
+The user then types something like *"use the deepwiki tool on microsoft/vscode: what is the extension host?"*. The agent decides on its own which MCP tool to call
+
+### What happens on each tool call
+
+1. The agent sends `tools/call` to LiteLLM, carrying the LiteLLM key in `x-litellm-api-key` and the user's Entra token in `Authorization`
+2. The `pre_mcp_call` hook reads the user's Entra token off the `Authorization` header
+3. The guardrail exchanges it On-Behalf-Of for a delegated Agent 365 token, cached for the token's lifetime so later calls in the same session skip the exchange
+4. It posts the pending call to the Agent 365 evaluation endpoint: tool name, arguments, server name, and `conversationId`
+5. Microsoft Defender returns a verdict
+6. On allow, LiteLLM executes the tool and returns its result. On block, LiteLLM returns HTTP 400 and never contacts the MCP server
+
+The user's prompt is not sent to Agent 365. Only the pending tool call is evaluated
+
+### What comes back
+
+An allowed evaluation
+
+```json
+{
+  "allowed": true,
+  "defender": {"status": "Evaluated", "verdict": "Allow"},
+  "observability": {"status": "Emitted"},
+  "correlationId": "9f2c41d8-7b60-4e1a-9a3f-2c5d8e40b117"
+}
+```
+
+A blocked one, which the caller receives as HTTP 400
+
+```json
+{
+  "error": "Blocked by Microsoft Defender",
+  "message": "Invocation of 'ask_question' is blocked by Microsoft Threat Detection policies configured by your administrator.",
+  "tool": "ask_question",
+  "correlation_id": "9f2c41d8-7b60-4e1a-9a3f-2c5d8e40b117"
+}
+```
+
+The agent surfaces that message to the user in its own words, and there is no tool result to report
+
+### Where to see it afterwards
+
+Every evaluated tool call writes a request log row on the proxy, visible under **Logs → Request Logs** in the LiteLLM UI, carrying the guardrail name, the `pre_mcp_call` mode, the evaluation latency and the verdict. Blocked calls appear as failures with a `guardrail_intervened` status and the correlation id in the error detail
+
+Use that correlation id to line a call up with the matching record on the Microsoft side
 
 ## Configuration parameters
 
