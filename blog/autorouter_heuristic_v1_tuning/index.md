@@ -4,7 +4,7 @@ title: "AutoRouter: Tune Heuristics for Your Traffic"
 date: 2026-09-08T10:00:00
 authors:
   - tin
-description: "Tune AutoRouter heuristics for specific workloads, measure cost per correct task, track classifier overhead, and configure tiers from models you already serve."
+description: "Tune AutoRouter heuristic dimensions for specific workloads, improve classification accuracy, and configure tiers from models you already serve."
 image: ./hero.png
 keywords: [auto router, heuristic routing, dimension weights, model routing, llm benchmark, litellm]
 tags: [routing, complexity-router, benchmarks, engineering, product]
@@ -31,18 +31,15 @@ Share benchmark results in [discussion #32168](https://github.com/BerriAI/litell
 
 We tested that idea on a balanced 240-prompt mix:
 
-| Configuration | Accuracy | Cost / 1K prompts | Estimated cost / 1K correct tasks |
-| --- | ---: | ---: | ---: |
-| Default Heuristic v1 | 90.8% | $2.90 | **$3.19** |
-| Workload-tuned Heuristic v1 | **95.2%** | **$3.85** | **$4.04** |
-| All Opus | 94.9% | $9.53 | $10.04 |
-
-We calculate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`.
+| Configuration | Accuracy |
+| --- | ---: |
+| Default Heuristic v1 | 90.8% |
+| Workload-tuned Heuristic v1 | **95.2%** |
+| All Opus | 94.9% |
 
 - The tuned configuration cut the classification error rate from **9.2% to 4.8%**, a **48% reduction**.
-- That gain cost **26.6% more per correct task** than the default.
-- The tuned configuration matched all-Opus accuracy at **59.7% lower cost per correct task**.
-- A separate held-out search kept accuracy at **91.3%** while cutting cost per correct task by **12%**.
+- It slightly exceeded the all-Opus reference on this benchmark.
+- The model ladder and test set stayed fixed, so tuning the heuristic dimensions drove the change.
 
 A useful profile depends on your traffic. Code-heavy workloads and support questions reward different routing choices.
 
@@ -60,18 +57,17 @@ For a useful comparison:
 - Start with a held-out sample from your traffic.
 - Keep the model ladder and test set fixed.
 - Change one signal family at a time and inspect which prompts move tiers.
-- Compare accuracy, cost per completed task, latency, and tier distribution.
+- Compare accuracy, latency, and tier distribution.
 
 The [shadow evaluation workflow](/docs/auto_router/evaluate) tests a candidate on sampled production traffic without changing the response your user receives.
 
-## See classifier overhead per 1,000 turns
+## See LLM classifier activity per 1,000 turns
 
-An LLM classifier adds one model call before the routed request. You can now track that overhead:
+You can now separate LLM classifier activity from routed requests:
 
-- AutoRouter records the charge as `classifier_cost`.
-- The `x-litellm-classifier-cost` header covers Chat Completions, Responses, and Messages APIs.
-- Our 5,600-call classifier-context benchmark topped out at **$0.61 per 1,000 requests**.
-- The Auto-Router Usage tab shows classifier cost next to routed spend, estimated savings, sessions, and turns.
+- Normalize classifier activity per 1,000 routed turns.
+- Use sessions, turns, and tier distribution to compare routing changes.
+- See how often an LLM classifier runs alongside the traffic it routes.
 
 ## Start from current models
 
