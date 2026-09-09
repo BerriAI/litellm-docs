@@ -12,9 +12,9 @@ hide_table_of_contents: false
 
 # AutoRouter: Tune Heuristics for Your Traffic
 
-Heuristic v1 scores seven prompt signals, including reasoning language, code, technical terms, and prompt length. You can tune those dimensions for the traffic your router serves.
+Heuristic v1 scores seven prompt signals, including reasoning language, code, technical terms, and prompt length. You can tune those signals for the traffic your router serves.
 
-On a balanced 240-prompt mix, a workload-tuned configuration raised accuracy from 90.8% to 95.2%. It also scored above the all-Opus reference at less than half the cost.
+We tested that idea on a balanced 240-prompt mix:
 
 | Configuration | Accuracy | Cost / 1K prompts | Estimated cost / 1K correct tasks |
 | --- | ---: | ---: | ---: |
@@ -22,27 +22,43 @@ On a balanced 240-prompt mix, a workload-tuned configuration raised accuracy fro
 | Workload-tuned Heuristic v1 | **95.2%** | **$3.85** | **$4.04** |
 | All Opus | 94.9% | $9.53 | $10.04 |
 
-We estimate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`. The tuned configuration improved accuracy by 4.4 percentage points and raised cost per correct task by 26.6% against the default. Against all Opus, it delivered similar accuracy at 59.7% lower cost per correct task.
+We calculate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`.
 
-A separate held-out search found another useful tradeoff: 91.3% accuracy with 12% lower cost than the comparison profile. Equal accuracy means cost per correct task also fell 12%.
+- The tuned configuration raised accuracy by **4.4 percentage points** over the default.
+- That gain cost **26.6% more per correct task** than the default.
+- The tuned configuration matched all-Opus accuracy at **59.7% lower cost per correct task**.
+- A separate held-out search kept accuracy at **91.3%** while cutting cost per correct task by **12%**.
 
-These results show why teams should tune against their own workload. A profile that helps code traffic may waste spend on support questions. Keep the model ladder and test set fixed, then compare accuracy, cost per completed task, latency, and tier distribution.
+A useful profile depends on your traffic. Code-heavy workloads and support questions reward different routing choices.
 
 {/* truncate */}
 
 ## Tune the signals your workload uses
 
-Heuristic v1 exposes `reasoningMarkers`, `codePresence`, `technicalTerms`, `tokenCount`, `simpleIndicators`, `multiStepPatterns`, and `questionComplexity`. You can also add a custom dimension for vocabulary or structure that the built-in scorer does not know.
+You can tune:
 
-Start with a held-out sample from your traffic. Change one family of signals at a time, inspect which prompts move tiers, and keep a change when it improves the metric you care about. For agent benchmarks, cost per solved task gives a better comparison than cost per request.
+- `reasoningMarkers`, `multiStepPatterns`, and `questionComplexity` for reasoning-heavy prompts.
+- `codePresence` and `technicalTerms` for code and domain-specific traffic.
+- `tokenCount` and `simpleIndicators` for prompt length and low-complexity cues.
+- A custom dimension for workload-specific vocabulary or structure.
 
-The [shadow evaluation workflow](/docs/auto_router/evaluate) can test a candidate on sampled production traffic without changing the response your user receives.
+For a useful comparison:
+
+- Start with a held-out sample from your traffic.
+- Keep the model ladder and test set fixed.
+- Change one signal family at a time and inspect which prompts move tiers.
+- Compare accuracy, cost per completed task, latency, and tier distribution.
+
+The [shadow evaluation workflow](/docs/auto_router/evaluate) tests a candidate on sampled production traffic without changing the response your user receives.
 
 ## See classifier overhead per 1,000 turns
 
-An LLM classifier adds a model call before the routed request. AutoRouter records that charge as `classifier_cost` and returns it in the `x-litellm-classifier-cost` header across Chat Completions, Responses, and Messages APIs.
+An LLM classifier adds one model call before the routed request. You can now track that overhead:
 
-Teams can sum that field and report classifier overhead per 1,000 routed turns. In our 5,600-call classifier-context benchmark, the classifier cost topped out at **$0.61 per 1,000 requests**. The Auto-Router Usage tab puts that charge next to routed spend, estimated savings, sessions, and turns.
+- AutoRouter records the charge as `classifier_cost`.
+- The `x-litellm-classifier-cost` header covers Chat Completions, Responses, and Messages APIs.
+- Our 5,600-call classifier-context benchmark topped out at **$0.61 per 1,000 requests**.
+- The Auto-Router Usage tab shows classifier cost next to routed spend, estimated savings, sessions, and turns.
 
 ## Start from current models
 
@@ -50,14 +66,12 @@ The family presets now use current reasoning models:
 
 - Anthropic Family sends reasoning traffic to **Claude Fable 5.1 at high effort**.
 - OpenAI Family sends reasoning traffic to **GPT-6 Astra at xhigh effort**.
-
-Presets match the underlying provider model behind each deployment, so your deployment names do not need to match the catalog.
-
-You can also click **Configure automatically**. The dashboard checks the models your proxy serves, fills all four tiers, and opens the detailed configuration for review before you save.
+- Presets match the provider model behind each deployment, so deployment names do not need to match the catalog.
+- **Configure automatically** checks the models your proxy serves, fills all four tiers, and opens the configuration for review.
 
 ## More controls for agent traffic
 
-Recent AutoRouter changes also cover the less visible parts of long-running agent sessions:
+Recent AutoRouter changes also cover long-running agent sessions:
 
 - **A `NON_REASONING` tier below Simple** handles tool-result relays, acknowledgements, and reformatting work.
 - **Output limits from the selected tier** replace a caller's cap with the chosen model's output ceiling. An explicit per-tier cap still wins.
