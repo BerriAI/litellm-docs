@@ -50,6 +50,8 @@ Two things are required:
 - `api_base` has to be the resource's custom subdomain endpoint, such as `https://your-resource.cognitiveservices.azure.com`. Regional endpoints like `https://australiaeast.api.cognitive.microsoft.com` do not accept Entra ID tokens
 - The identity LiteLLM runs as needs the **Cognitive Services User** role on the resource
 
+An Entra ID token is valid for every Cognitive Services resource the identity can reach, so LiteLLM only sends one to an HTTPS Azure endpoint and refuses at startup otherwise. If you front Content Safety with your own gateway, set `api_key` for that guardrail instead, since a resource key is scoped to the one resource
+
 Credentials come from the standard Azure credential chain, so the same config works everywhere LiteLLM runs:
 
 - a service principal, from `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` and `AZURE_TENANT_ID`
