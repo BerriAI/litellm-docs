@@ -80,7 +80,9 @@ The family presets now use current reasoning models:
 - Anthropic Family sends reasoning traffic to **Claude Fable 5.1 at high effort**.
 - OpenAI Family sends reasoning traffic to **GPT-6 Astra at xhigh effort**.
 - Presets match the provider model behind each deployment, so deployment names do not need to match the catalog.
-- **Configure automatically** checks the models your proxy serves, fills all four tiers, and opens the configuration for review.
+- **Configure automatically** checks the models your proxy serves, fills the tier configuration, and opens it for review.
+
+![Add Auto Router form with the new Configure automatically button](./auto-configure-button.png)
 
 ## More controls for agent traffic
 
