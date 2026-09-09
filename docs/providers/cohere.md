@@ -207,6 +207,74 @@ print(response)
 </TabItem>
 </Tabs>
 
+## Parse (OCR)
+
+LiteLLM supports Cohere Parse v5 for image OCR through the direct Cohere route `cohere/parse-v5.0`. The direct route uses `COHERE_API_KEY`, sends requests to `https://api.cohere.com/v2/parse`, and is available through `litellm.ocr()`, `litellm.aocr()`, and the proxy OCR endpoint
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM SDK Usage">
+
+```python
+import litellm
+import os
+
+os.environ["COHERE_API_KEY"] = "cohere key"
+
+response = litellm.ocr(
+    model="cohere/parse-v5.0",
+    document={
+        "type": "image_url",
+        "image_url": "https://example.com/image.png",
+    },
+    output_format="markdown",
+)
+
+for page in response.pages:
+    print(page.index)
+    print(page.markdown)
+```
+
+Set `output_format="blocks"` to include `pages[].blocks` in the standard `OCRResponse`. The default output format is `markdown`. Set `req_format="native"` to return the raw Cohere response
+
+</TabItem>
+
+<TabItem value="proxy" label="LiteLLM Proxy Usage">
+
+Add this to your LiteLLM proxy config.yaml
+
+```yaml
+model_list:
+  - model_name: cohere-parse-v5
+    litellm_params:
+      model: cohere/parse-v5.0
+      api_key: os.environ/COHERE_API_KEY
+    model_info:
+      mode: ocr
+```
+
+Call the proxy at `/v1/ocr` or `/ocr`
+
+```bash
+curl http://0.0.0.0:4000/v1/ocr \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "cohere-parse-v5",
+    "document": {
+      "type": "image_url",
+      "image_url": "https://example.com/image.png"
+    },
+    "output_format": "markdown"
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Cohere Parse accepts images only. Use an `image_url` document with an image URL or a base64 image data URI. `document_url` and PDF inputs raise an error. Local image files passed with `{"type": "file", ...}` are converted to data URIs by LiteLLM
+
+The standard OCR response includes `pages[].index`, `pages[].markdown`, `pages[].images`, and `usage_info.pages_processed`. Cohere Parse costs $0.0015 per page
+
 
 ## Supported Models
 | Model Name | Function Call |

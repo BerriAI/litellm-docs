@@ -1,4 +1,4 @@
-# Azure AI OCR (Mistral)
+# Azure AI OCR
 
 ## Overview
 
@@ -146,9 +146,51 @@ response = await litellm.aocr(
 Azure AI OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Azure AI.
 :::
 
+## Cohere Parse
+
+LiteLLM supports Cohere Parse v5 through Azure AI Foundry with the `azure_ai/Cohere-parse-v5` route. Set `AZURE_AI_API_KEY` and `AZURE_AI_API_BASE`, for example `https://<resource>.services.ai.azure.com/models`. LiteLLM rewrites this base URL to `/providers/cohere/v2/parse`
+
+### LiteLLM SDK
+
+```python showLineNumbers title="Cohere Parse SDK Usage"
+import litellm
+import os
+
+os.environ["AZURE_AI_API_KEY"] = "your Azure AI key"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource>.services.ai.azure.com/models"
+
+response = litellm.ocr(
+    model="azure_ai/Cohere-parse-v5",
+    document={
+        "type": "image_url",
+        "image_url": "https://example.com/image.png",
+    },
+    output_format="markdown",
+)
+```
+
+### LiteLLM Proxy
+
+```yaml showLineNumbers title="proxy_config.yaml"
+model_list:
+  - model_name: cohere-parse-v5
+    litellm_params:
+      model: azure_ai/Cohere-parse-v5
+      api_key: "os.environ/AZURE_AI_API_KEY"
+      api_base: "os.environ/AZURE_AI_API_BASE"
+    model_info:
+      mode: ocr
+```
+
+Any Azure AI OCR model name containing both `cohere` and `parse`, case-insensitively, routes to Cohere Parse. This allows a custom Foundry deployment name as long as it contains both strings
+
+Cohere Parse accepts image inputs only. Use an `image_url` document with an image URL or a base64 image data URI. `document_url` and PDF inputs raise an error. Local image files passed with `{"type": "file", ...}` are converted to data URIs by LiteLLM
+
+Foundry cannot fetch external image URLs, so LiteLLM downloads remote images and inlines them as base64 data URIs before sending the request. The response uses the standard OCR format with `pages[].index`, `pages[].markdown`, `pages[].images`, and `usage_info.pages_processed`
+
 ## Supported Models
 
 - `mistral-document-ai-2505` - Latest Mistral OCR model on Azure AI
+- `Cohere-parse-v5` - Cohere Parse v5 OCR model on Azure AI
 
 Use the Azure AI provider prefix: `azure_ai/<model-name>`
-
