@@ -5,12 +5,13 @@ date: 2026-09-08T10:00:00
 authors:
   - tin
 description: "Tune AutoRouter heuristics for specific workloads, measure cost per correct task, track classifier overhead, and configure tiers from models you already serve."
+image: ./hero.png
 keywords: [auto router, heuristic routing, dimension weights, model routing, llm benchmark, litellm]
 tags: [routing, complexity-router, benchmarks, engineering, product]
 hide_table_of_contents: false
 ---
 
-# AutoRouter: Tune Heuristics for Your Traffic
+![AutoRouter Heuristic v1: tune built-in signals, add custom dimensions, and configure routing tiers automatically](./hero.png)
 
 Heuristic v1 scores seven prompt signals, including reasoning language, code, technical terms, and prompt length. You can tune those signals for the traffic your router serves.
 
@@ -24,7 +25,7 @@ We tested that idea on a balanced 240-prompt mix:
 
 We calculate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`.
 
-- The tuned configuration raised accuracy by **4.4 percentage points** over the default.
+- The tuned configuration cut the classification error rate from **9.2% to 4.8%**, a **48% reduction**.
 - That gain cost **26.6% more per correct task** than the default.
 - The tuned configuration matched all-Opus accuracy at **59.7% lower cost per correct task**.
 - A separate held-out search kept accuracy at **91.3%** while cutting cost per correct task by **12%**.
@@ -32,6 +33,18 @@ We calculate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`
 A useful profile depends on your traffic. Code-heavy workloads and support questions reward different routing choices.
 
 {/* truncate */}
+
+:::info[🚀 Help shape the Auto-Router]
+
+Test heuristic tuning on your production traffic with the LiteLLM team and influence the roadmap.
+
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+
+<br /><br />
+
+Share benchmark results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
 
 ## Tune the signals your workload uses
 
@@ -78,4 +91,4 @@ Recent AutoRouter changes also cover long-running agent sessions:
 - **Classifier timeout protection** opens a circuit breaker after a timeout and uses the configured fallback during the cooldown.
 - **Cross-provider tool history** lets the Messages API replay `tool_use` history when a session moves between OpenAI and Anthropic tiers.
 
-Start with a preset or automatic configuration, test it on your traffic, and tune from measured misses. Share benchmark results in [GitHub discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+Start with a preset or automatic configuration, test it on your traffic, and tune from measured misses. Share benchmark results in [GitHub discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To test tuning with the LiteLLM team, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
