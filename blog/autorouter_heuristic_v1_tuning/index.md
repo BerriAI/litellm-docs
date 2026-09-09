@@ -11,7 +11,7 @@ tags: [routing, complexity-router, benchmarks, engineering, product]
 hide_table_of_contents: false
 ---
 
-![AutoRouter Heuristic v1: tune built-in signals, add custom dimensions, and configure routing tiers automatically](./hero.png)
+![Tune AutoRouter Heuristic v1 dimensions to improve routing accuracy for your traffic](./hero.png)
 
 Heuristic v1 scores seven prompt signals, including reasoning language, code, technical terms, and prompt length. You can tune those signals for the traffic your router serves.
 
