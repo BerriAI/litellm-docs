@@ -61,6 +61,19 @@ For a useful comparison:
 
 The [shadow evaluation workflow](/docs/auto_router/evaluate) tests a candidate on sampled production traffic without changing the response your user receives.
 
+## Auto-configure from models you already have
+
+Select **Configure automatically**. LiteLLM checks the models your proxy can access and, using current family presets, picks the best available model for each routing tier.
+
+- Each tier uses a model from your existing deployments.
+- The configuration opens for review before you save it.
+- Anthropic Family uses **Claude Fable 5.1 at high effort** for reasoning traffic.
+- OpenAI Family uses **GPT-6 Astra at xhigh effort** for reasoning traffic.
+
+Deployment names do not need to match the catalog. AutoRouter identifies the provider model behind each deployment.
+
+![Add Auto Router form with the new Configure automatically button](./auto-configure-button.png)
+
 ## See LLM classifier activity per 1,000 turns
 
 You can now separate LLM classifier activity from routed requests:
@@ -68,17 +81,6 @@ You can now separate LLM classifier activity from routed requests:
 - Normalize classifier activity per 1,000 routed turns.
 - Use sessions, turns, and tier distribution to compare routing changes.
 - See how often an LLM classifier runs alongside the traffic it routes.
-
-## Start from current models
-
-The family presets now use current reasoning models:
-
-- Anthropic Family sends reasoning traffic to **Claude Fable 5.1 at high effort**.
-- OpenAI Family sends reasoning traffic to **GPT-6 Astra at xhigh effort**.
-- Presets match the provider model behind each deployment, so deployment names do not need to match the catalog.
-- **Configure automatically** checks the models your proxy serves, fills the tier configuration, and opens it for review.
-
-![Add Auto Router form with the new Configure automatically button](./auto-configure-button.png)
 
 ## More controls for agent traffic
 
