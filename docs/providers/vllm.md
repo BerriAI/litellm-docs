@@ -357,6 +357,64 @@ curl -L -X POST 'http://0.0.0.0:4000/rerank' \
 </TabItem>
 </Tabs>
 
+## Image Edits
+
+vLLM-Omni serves OpenAI-compatible `/v1/images/edits` for image editing models such as `Qwen/Qwen-Image-Edit-2511`. Use the `hosted_vllm/` prefix and point `api_base` at the vLLM-Omni server; extra provider fields such as `seed` or `negative_prompt` are passed through as form fields.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import image_edit
+import os
+
+os.environ["HOSTED_VLLM_API_BASE"] = "http://localhost:8091"
+
+response = image_edit(
+    model="hosted_vllm/Qwen/Qwen-Image-Edit-2511",
+    image=open("original_image.png", "rb"),
+    prompt="Add a red hat to the person in the image",
+)
+
+print(response)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. Setup config.yaml
+
+```yaml
+model_list:
+    - model_name: qwen-image-edit
+      litellm_params:
+        model: hosted_vllm/Qwen/Qwen-Image-Edit-2511  # add hosted_vllm/ prefix to route as OpenAI provider
+        api_base: http://localhost:8091              # your vLLM-Omni server
+      model_info:
+        mode: image_edit
+```
+
+2. Start the proxy 
+
+```bash
+$ litellm --config /path/to/config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+3. Test it! 
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
+-H 'Authorization: Bearer sk-1234' \
+-F 'model=qwen-image-edit' \
+-F 'image=@original_image.png' \
+-F 'prompt=Add a red hat to the person in the image'
+```
+
+</TabItem>
+</Tabs>
+
 ## Send Video URL to VLLM
 
 Example Implementation from VLLM [here](https://github.com/vllm-project/vllm/pull/10020)
