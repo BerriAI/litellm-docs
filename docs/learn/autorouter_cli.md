@@ -57,3 +57,15 @@ claude
 ```
 
 For the full reference, including recovery from an unclean shutdown and important caveats, see the [autorouter CLI README](https://github.com/BerriAI/litellm/blob/litellm_internal_staging/litellm/proxy/client/cli/README.md#qa-complexity-based-auto-routing-against-your-real-proxy).
+
+## 6. Watch the Routed Model and Savings in the Status Line
+
+`lite autoroute up` also installs a status line for Claude Code (`~/.litellm/statusline.py`, registered as `statusLine` in `~/.claude/settings.json` unless you already run one). After each turn it names the tier model that actually answered and, once the proxy has recorded the session, what the session cost against the router's savings baseline, the priciest model in the hardest tier:
+
+```
+autorouter · Routed to: claude-haiku-4-5  -80% vs Claude Opus 5
+LiteLLM       █████░░░░░░░░░░░░░░░░░░░ $0.03
+Claude Opus 5 ████████████████████████ $0.15
+```
+
+The wizard's generated router sets `return_raw_model_name: true`, which is what lets the transcript, and so the status line, name the tier model rather than the `autorouter` alias. The cost lines come from [`GET /auto_router/session`](/docs/proxy/auto_routing#per-session-savings), cached for five seconds. `lite autoroute down` restores your previous settings, status line included.
