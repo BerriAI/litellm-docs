@@ -734,8 +734,6 @@ Existing keys take the same field on `/key/update`. You can also fill both of th
 
 A key or team that names its own backend gets the **whole trace** — the HTTP request, the auth step, the model call with its tokens and cost, and the spend write — under one root. Before, it received a single loose span with no request around it.
 
-![A team's own Langfuse project, before and after](/img/observability/otel_v2_tenant_destination.png)
-
 Your own exporter for that same backend stops receiving those requests. If a team points `langfuse_otel` at its own project, your Langfuse project holds nothing for that team; exporters on other backends, a plain `otel` collector for instance, still receive everything.
 
 The tenant's copy is stripped of your side of the request: the proxy's database endpoint, exception text and stack traces, an unreachable guardrail's error, and the query string on any URL.
