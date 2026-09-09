@@ -2321,11 +2321,11 @@ response = completion(
 
 #### Session tags
 
-`aws_session_tags` attaches [STS session tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html) to the AssumeRole call. Each tag lands on the assumed session as `aws:PrincipalTag/<Key>`, so the role's trust policy and downstream resource policies can key on it. The AssumeRole event in CloudTrail lists the tags under `requestParameters.tags`, and they can feed [AWS cost allocation](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html) reports
+`aws_session_tags` attaches [STS session tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html) to the AssumeRole call. Each tag lands on the assumed session as `aws:PrincipalTag/<Key>`, so the role's trust policy and downstream resource policies can key on it. The AssumeRole event in CloudTrail lists the tags under `requestParameters.tags`, so role sessions can be attributed by tag
 
 Tags are set per deployment, so every request routed to that model entry carries the same tags. Tag order does not matter, and deployments with the same tags on the same role share one cached STS session. This applies to Bedrock chat and invoke, embeddings, batches and SageMaker deployments, anywhere LiteLLM performs the AssumeRole itself. The target role's trust policy must allow `sts:TagSession` next to `sts:AssumeRole`; see [Trust policy for session tags](#trust-policy-for-session-tags)
 
-Like `aws_role_name`, `aws_session_name` and `aws_external_id`, this is an operator-side setting. The proxy rejects `aws_session_tags` in client request bodies with HTTP 401 unless the admin opts in with `general_settings.allow_client_side_credentials: true` or lists it under `configurable_clientside_auth_params` on the deployment. See [Clientside LLM Credentials](../proxy/clientside_auth.md)
+Like `aws_role_name`, `aws_session_name` and `aws_external_id`, this is an operator-side setting. The proxy rejects `aws_session_tags` in client request bodies with HTTP 401 unless the admin opts in with `general_settings.allow_client_side_credentials: true` or lists it under `configurable_clientside_auth_params` on the deployment. See [Clientside LLM Credentials](../proxy/clientside_auth.md). On the proxy's model management endpoints (`/model/new`, `/model/update` and `PATCH /model/{model_id}/update`), only a proxy admin can set or change `aws_session_tags`. A team admin editing a team model gets HTTP 403 unless the tags stay the same
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
