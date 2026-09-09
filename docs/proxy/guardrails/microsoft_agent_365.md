@@ -132,7 +132,7 @@ Once the guardrail is on, nothing about the user's experience changes until Defe
 
 ### What the user does
 
-They point an MCP-capable agent — Claude Code, VS Code, or your own client — at LiteLLM's MCP endpoint and ask an ordinary question. They sign in to Entra once and the client holds the token
+They point an MCP-capable agent at LiteLLM's MCP endpoint and ask an ordinary question. That agent can be Claude Code, VS Code, or your own client. They sign in to Entra once and the client holds the token
 
 Registering LiteLLM as an MCP server in Claude Code, for example
 
