@@ -29,7 +29,7 @@ OpenInfer model IDs use an `@oi/` prefix. LiteLLM catalog keys are `openinfer/@o
 | `openinfer/@oi/Llama-3.2-1B-Instruct` | 128,000 | 8,192 |
 | `openinfer/@oi/Qwen3.5-9B` | 262,144 | 8,192 |
 | `openinfer/@oi/Qwen3.5-27B` | 262,144 | 8,192 |
-| `openinfer/@oi/Gemma4-31B` | 262,144 | 8,192 |
+| `openinfer/@oi/Gemma4-31B-It` | 262,144 | 8,192 |
 
 ## Required Variables
 
