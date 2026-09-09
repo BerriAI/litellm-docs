@@ -15,6 +15,20 @@ hide_table_of_contents: false
 
 Heuristic v1 scores seven prompt signals, including reasoning language, code, technical terms, and prompt length. You can tune those signals for the traffic your router serves.
 
+{/* truncate */}
+
+:::info[🚀 Help shape the Auto-Router]
+
+Test heuristic tuning on your production traffic with the LiteLLM team and influence the roadmap.
+
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+
+<br /><br />
+
+Share benchmark results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+
+:::
+
 We tested that idea on a balanced 240-prompt mix:
 
 | Configuration | Accuracy | Cost / 1K prompts | Estimated cost / 1K correct tasks |
@@ -31,20 +45,6 @@ We calculate cost per 1,000 correct tasks as `cost per 1,000 prompts / accuracy`
 - A separate held-out search kept accuracy at **91.3%** while cutting cost per correct task by **12%**.
 
 A useful profile depends on your traffic. Code-heavy workloads and support questions reward different routing choices.
-
-{/* truncate */}
-
-:::info[🚀 Help shape the Auto-Router]
-
-Test heuristic tuning on your production traffic with the LiteLLM team and influence the roadmap.
-
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
-
-<br /><br />
-
-Share benchmark results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
-
-:::
 
 ## Tune the signals your workload uses
 
@@ -91,4 +91,45 @@ Recent AutoRouter changes also cover long-running agent sessions:
 - **Classifier timeout protection** opens a circuit breaker after a timeout and uses the configured fallback during the cooldown.
 - **Cross-provider tool history** lets the Messages API replay `tool_use` history when a session moves between OpenAI and Anthropic tiers.
 
-Start with a preset or automatic configuration, test it on your traffic, and tune from measured misses. Share benchmark results in [GitHub discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To test tuning with the LiteLLM team, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+## Try the AutoRouter
+
+:::info
+
+Open **Add Model → Auto Router** and select **Configure automatically**. Review the generated tiers, then test them against your traffic. Share results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) to work with the LiteLLM team.
+
+:::
+
+You can also start with a file-based config:
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-fable-5-1-high
+    litellm_params:
+      model: anthropic/claude-fable-5-1
+      api_key: os.environ/ANTHROPIC_API_KEY
+      reasoning_effort: high
+
+  - model_name: smart-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        classifier_type: heuristic
+        tiers:
+          SIMPLE: claude-haiku-4-5
+          MEDIUM: claude-sonnet-5
+          COMPLEX: claude-fable-5-1-high
+          REASONING: claude-fable-5-1-high
+      complexity_router_default_model: claude-sonnet-5
+```
+
+Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
