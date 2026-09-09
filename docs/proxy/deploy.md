@@ -233,6 +233,67 @@ The componentized chart scales each component on its own, under `gateway.hpa`, `
 
 Whichever mechanism you use, set the maximum against what your database can serve. The connection pool is per worker, so the ceiling on replicas is also a ceiling on Postgres connections; `litellm-helm` defaults `maxReplicas` to 100, which at the default pool limit of 10 asks for roughly 1000 connections at full scale-out. See [bounding database connections](./prod.md#bound-database-connections).
 
+#### Scale on requests and tokens per pod
+
+CPU lags LLM traffic: a pod streaming forty responses is mostly waiting on providers, so its CPU stays low while its capacity is gone. Both charts can scale on the two counters the proxy already exports, `litellm_proxy_total_requests_metric_total` and `litellm_total_tokens_metric_total`, expressed as requests per minute (RPM) and tokens per minute (TPM) per pod. The targets are opt-in and empty by default, so nothing changes until you set one, and they sit next to the CPU and memory targets: an HPA follows whichever metric asks for the most replicas.
+
+```yaml
+# litellm-helm
+autoscaling:
+  enabled: true
+  targetRequestsPerMinute: "600"
+  targetTokensPerMinute: "400000"
+metricsServer:
+  enabled: true
+serviceMonitor:
+  enabled: true
+
+# componentized chart
+gateway:
+  metricsServer:
+    enabled: true
+  serviceMonitor:
+    enabled: true
+  hpa:
+    targetRequestsPerMinute: "600"
+    targetTokensPerMinute: "400000"
+```
+
+Each target renders an `autoscaling/v2` `Pods` metric, `litellm_requests_per_minute` or `litellm_tokens_per_minute`, with an `AverageValue` target. Kubernetes cannot read Prometheus by itself, so two things have to be in place. The chart's ServiceMonitor (Prometheus Operator) scrapes every pod on its own so each sample carries the `pod` label. Turn on the dedicated metrics listener with it (`gateway.metricsServer.enabled` on the componentized chart, `metricsServer.enabled` on `litellm-helm`): the main port serves `/metrics/` behind virtual-key auth and answers an unauthenticated scrape with 401, so the componentized chart refuses to render a ServiceMonitor without it. Then a [Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) has to serve those two names on `custom.metrics.k8s.io`, grouped by pod:
+
+```yaml
+rules:
+  - seriesQuery: 'litellm_proxy_total_requests_metric_total{namespace!="",pod!=""}'
+    resources: { overrides: { namespace: { resource: namespace }, pod: { resource: pod } } }
+    name: { as: litellm_requests_per_minute }
+    metricsQuery: sum by (<<.GroupBy>>) (rate(<<.Series>>{<<.LabelMatchers>>}[1m])) * 60
+  - seriesQuery: 'litellm_total_tokens_metric_total{namespace!="",pod!=""}'
+    resources: { overrides: { namespace: { resource: namespace }, pod: { resource: pod } } }
+    name: { as: litellm_tokens_per_minute }
+    metricsQuery: sum by (<<.GroupBy>>) (rate(<<.Series>>{<<.LabelMatchers>>}[1m])) * 60
+```
+
+Both counters are split by model, key, and team labels, so the `sum by (pod)` folds a pod's series into one number. `kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/<ns>/pods/*/litellm_tokens_per_minute` shows what the HPA sees. Worked example: three gateway pods serving 1,800,000 tokens a minute between them average 600,000 TPM against a target of 400,000, so the HPA asks for `ceil(3 * 600000 / 400000) = 5` replicas. The request metric does the same arithmetic with `sum by (pod) (rate(litellm_proxy_total_requests_metric_total[1m])) * 60`.
+
+Tokens are counted when a response finishes, so a long stream shows up in TPM only once it completes. RPM reacts first and TPM catches up, which is fine for scale-out but means a burst of long streams is under-counted for as long as they run. Do not set a TPM target alone if your traffic is dominated by multi-minute streams.
+
+On `litellm-helm` the same signals are available through KEDA without an adapter. `keda.prometheus.requestsPerMinute` and `keda.prometheus.tokensPerMinute` are the load one replica should carry, and each adds a Prometheus trigger on the counters, selected by release namespace and the `job` label the chart's ServiceMonitor produces. KEDA divides the release-wide rate by the per-replica target to pick the replica count, so the result matches the HPA path for the same traffic.
+
+```yaml
+keda:
+  enabled: true
+  prometheus:
+    serverAddress: http://prometheus-operated.monitoring.svc:9090
+    requestsPerMinute: "600"
+    tokensPerMinute: "400000"
+metricsServer:
+  enabled: true
+serviceMonitor:
+  enabled: true
+```
+
+On AWS ECS the Terraform module scales on `ALBRequestCountPerTarget` through `gateway_requests_per_target`, and on tokens through `gateway_tokens_per_target` once you publish the token counter to CloudWatch; the [module README](https://github.com/BerriAI/litellm/blob/main/terraform/litellm/aws/README.md#scaling-the-gateway-on-requests-and-tokens) covers both. Cloud Run scales on request concurrency and has no custom-metric input, so there is no TPM path on GCP outside GKE.
+
 ### Kubernetes without Helm
 
 If you manage raw manifests, the equivalent deployment is a ConfigMap for `config.yaml`, a Secret for keys, a Deployment with health probes, and a Service.
