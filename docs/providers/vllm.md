@@ -359,7 +359,7 @@ curl -L -X POST 'http://0.0.0.0:4000/rerank' \
 
 ## Image Edits
 
-vLLM-Omni serves OpenAI-compatible `/v1/images/edits` for image editing models such as `Qwen/Qwen-Image-Edit-2511`. Use the `hosted_vllm/` prefix and point `api_base` at the vLLM-Omni server; extra provider fields such as `seed` or `negative_prompt` are passed through as form fields. vLLM-Omni has no `mask`, `quality`, or `input_fidelity` form field, so LiteLLM rejects those three for `hosted_vllm/` models unless `drop_params: true` is set, in which case they are dropped before the request is sent.
+vLLM-Omni serves OpenAI-compatible `/v1/images/edits` for image editing models such as `Qwen/Qwen-Image-Edit-2511`. Use the `hosted_vllm/` prefix and point `api_base` at the vLLM-Omni server; extra provider fields such as `seed` or `negative_prompt` are passed through as form fields. vLLM-Omni has no `quality` or `input_fidelity` form field and takes its mask as `mask_image` (a URL string) rather than OpenAI's `mask` file, so LiteLLM rejects `mask`, `quality`, and `input_fidelity` for `hosted_vllm/` models unless `drop_params: true` is set, in which case they are dropped before the request is sent. To mask an edit, pass `mask_image` as an extra field with the mask's URL.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
