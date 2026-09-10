@@ -235,14 +235,14 @@ Whichever mechanism you use, set the maximum against what your database can serv
 
 #### Scale on requests and tokens per pod
 
-CPU lags LLM traffic: a pod streaming forty responses is mostly waiting on providers, so its CPU stays low while its capacity is gone. Both charts can scale on the two counters the proxy already exports, `litellm_proxy_total_requests_metric_total` and `litellm_total_tokens_metric_total`, expressed as requests per minute (RPM) and tokens per minute (TPM) per pod. The targets are opt-in and empty by default, so nothing changes until you set one, and they sit next to the CPU and memory targets: an HPA follows whichever metric asks for the most replicas.
+CPU lags LLM traffic: a pod streaming forty responses is mostly waiting on providers, so its CPU stays low while its capacity is gone. Both charts can scale on the two counters the proxy already exports, `litellm_proxy_total_requests_metric_total` and `litellm_total_tokens_metric_total`, expressed as requests per second (RPS) and tokens per second (TPS) per pod, the way load is usually quoted (1k rps, 75M tok/s). The targets are opt-in and empty by default, so nothing changes until you set one, and they sit next to the CPU and memory targets: an HPA follows whichever metric asks for the most replicas. `averageValue` is a Kubernetes quantity, so `"6M"` and `"6000000"` are the same tokens per second.
 
 ```yaml
 # litellm-helm
 autoscaling:
   enabled: true
-  targetRequestsPerMinute: "600"
-  targetTokensPerMinute: "400000"
+  targetRequestsPerSecond: "90"
+  targetTokensPerSecond: "6M"
 metricsServer:
   enabled: true
 serviceMonitor:
@@ -255,44 +255,46 @@ gateway:
   serviceMonitor:
     enabled: true
   hpa:
-    targetRequestsPerMinute: "600"
-    targetTokensPerMinute: "400000"
+    targetRequestsPerSecond: "90"
+    targetTokensPerSecond: "6M"
 ```
 
-Each target renders an `autoscaling/v2` `Pods` metric, `litellm_requests_per_minute` or `litellm_tokens_per_minute`, with an `AverageValue` target. Kubernetes cannot read Prometheus by itself, so two things have to be in place. The chart's ServiceMonitor (Prometheus Operator) scrapes every pod on its own so each sample carries the `pod` label. Turn on the dedicated metrics listener with it (`gateway.metricsServer.enabled` on the componentized chart, `metricsServer.enabled` on `litellm-helm`): the main port serves `/metrics/` behind virtual-key auth and answers an unauthenticated scrape with 401, so the componentized chart refuses to render a ServiceMonitor without it. Then a [Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) has to serve those two names on `custom.metrics.k8s.io`, grouped by pod:
+Each target renders an `autoscaling/v2` `Pods` metric, `litellm_requests_per_second` or `litellm_tokens_per_second`, with an `AverageValue` target. Kubernetes cannot read Prometheus by itself, so two things have to be in place. The chart's ServiceMonitor (Prometheus Operator) scrapes every pod on its own so each sample carries the `pod` label. Turn on the dedicated metrics listener with it (`gateway.metricsServer.enabled` on the componentized chart, `metricsServer.enabled` on `litellm-helm`): the main port serves `/metrics/` behind virtual-key auth and answers an unauthenticated scrape with 401, so the componentized chart refuses to render a ServiceMonitor without it. Then a [Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) has to serve those two names on `custom.metrics.k8s.io`, grouped by pod. `rate()` already returns a per-second value, so there is no `* 60`:
 
 ```yaml
 rules:
   - seriesQuery: 'litellm_proxy_total_requests_metric_total{namespace!="",pod!=""}'
     resources: { overrides: { namespace: { resource: namespace }, pod: { resource: pod } } }
-    name: { as: litellm_requests_per_minute }
-    metricsQuery: sum by (<<.GroupBy>>) (rate(<<.Series>>{<<.LabelMatchers>>}[1m])) * 60
+    name: { as: litellm_requests_per_second }
+    metricsQuery: sum(rate(<<.Series>>{<<.LabelMatchers>>}[1m])) by (<<.GroupBy>>)
   - seriesQuery: 'litellm_total_tokens_metric_total{namespace!="",pod!=""}'
     resources: { overrides: { namespace: { resource: namespace }, pod: { resource: pod } } }
-    name: { as: litellm_tokens_per_minute }
-    metricsQuery: sum by (<<.GroupBy>>) (rate(<<.Series>>{<<.LabelMatchers>>}[1m])) * 60
+    name: { as: litellm_tokens_per_second }
+    metricsQuery: sum(rate(<<.Series>>{<<.LabelMatchers>>}[1m])) by (<<.GroupBy>>)
 ```
 
-Both counters are split by model, key, and team labels, so the `sum by (pod)` folds a pod's series into one number. `kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/<ns>/pods/*/litellm_tokens_per_minute` shows what the HPA sees. Worked example: three gateway pods serving 1,800,000 tokens a minute between them average 600,000 TPM against a target of 400,000, so the HPA asks for `ceil(3 * 600000 / 400000) = 5` replicas. The request metric does the same arithmetic with `sum by (pod) (rate(litellm_proxy_total_requests_metric_total[1m])) * 60`.
+The unit is a constant factor and does not make the HPA react any faster. What sets the lag is the `rate()` window in the adapter rule, the scrape interval, and the HPA sync period (15s by default). Keep the window at `[1m]` and the ServiceMonitor interval at the chart default of 15s or faster so the window always holds at least four samples: after a traffic step the signal moves on the next scrape and reaches its full value 60s later, where a `[2m]` window is still at half.
 
-Tokens are counted when a response finishes, so a long stream shows up in TPM only once it completes. RPM reacts first and TPM catches up, which is fine for scale-out but means a burst of long streams is under-counted for as long as they run. Do not set a TPM target alone if your traffic is dominated by multi-minute streams.
+Both counters are split by model, key, and team labels, so the `sum by (pod)` folds a pod's series into one number. `kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/<ns>/pods/*/litellm_tokens_per_second` shows what the HPA sees. Worked example: 1,000 rps across 10 gateway pods is 100 rps per pod against a target of 90, so the HPA asks for `ceil(10 * 100 / 90) = 12` replicas. The token metric does the same arithmetic: ten pods serving 70,000,000 tokens per second between them average 7,000,000 TPS against a target of 6,000,000, so `ceil(10 * 7000000 / 6000000) = 12`.
 
-On `litellm-helm` the same signals are available through KEDA without an adapter. `keda.prometheus.requestsPerMinute` and `keda.prometheus.tokensPerMinute` are the load one replica should carry, and each adds a Prometheus trigger on the counters, selected by release namespace and the `job` label the chart's ServiceMonitor produces. KEDA divides the release-wide rate by the per-replica target to pick the replica count, so the result matches the HPA path for the same traffic.
+Tokens are counted when a response finishes, so a long stream shows up in TPS only once it completes. RPS reacts first and TPS catches up, which is fine for scale-out but means a burst of long streams is under-counted for as long as they run. Do not set a TPS target alone if your traffic is dominated by multi-minute streams.
+
+On `litellm-helm` the same signals are available through KEDA without an adapter. `keda.prometheus.requestsPerSecond` and `keda.prometheus.tokensPerSecond` are the load one replica should carry, and each adds a Prometheus trigger on `sum(rate(<counter>{namespace="<release namespace>",job="<release>-metrics"}[1m]))`, selected by release namespace and the `job` label the chart's ServiceMonitor produces. KEDA divides the release-wide rate by the per-replica threshold to pick the replica count, so the result matches the HPA path for the same traffic. Keep `keda.pollingInterval` at 15s or lower for the same reason as the scrape interval above.
 
 ```yaml
 keda:
   enabled: true
   prometheus:
     serverAddress: http://prometheus-operated.monitoring.svc:9090
-    requestsPerMinute: "600"
-    tokensPerMinute: "400000"
+    requestsPerSecond: "90"
+    tokensPerSecond: "6000000"
 metricsServer:
   enabled: true
 serviceMonitor:
   enabled: true
 ```
 
-On AWS ECS the Terraform module scales on `ALBRequestCountPerTarget` through `gateway_requests_per_target`, and on tokens through `gateway_tokens_per_target` once you publish the token counter to CloudWatch; the [module README](https://github.com/BerriAI/litellm/blob/main/terraform/litellm/aws/README.md#scaling-the-gateway-on-requests-and-tokens) covers both. Cloud Run scales on request concurrency and has no custom-metric input, so there is no TPM path on GCP outside GKE.
+On AWS ECS the Terraform module takes the same per-second inputs, `gateway_target_requests_per_second` on `ALBRequestCountPerTarget` and `gateway_target_tokens_per_second` once you publish the token counter to CloudWatch, and converts them itself because the ALB publishes a per-minute count. CloudWatch target tracking aggregates every metric over 60-second periods with no period setting, so ECS reacts on a roughly one-minute cadence whatever the unit; the [module README](https://github.com/BerriAI/litellm/blob/main/terraform/litellm/aws/README.md#scaling-the-gateway-on-requests-and-tokens) covers both policies. Cloud Run scales on request concurrency and has no custom-metric input, so there is no TPS path on GCP outside GKE.
 
 ### Kubernetes without Helm
 
