@@ -278,9 +278,9 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.model_name`, `llm.provider` | model, provider |
 | `llm.token_count.prompt`, `completion`, `total` | usage split |
 | `llm.invocation_parameters` | JSON blob of request params |
-| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on) |
-| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on) |
-| `input.value`, `output.value` | JSON arrays of the same (content capture on) |
+| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on), [capped](#chat-messages-are-capped) |
+| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on), [capped](#chat-messages-are-capped) |
+| `input.value`, `output.value` | JSON arrays of the complete prompt and response (content capture on) |
 | `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
@@ -511,6 +511,12 @@ Only the leading declared tools get `gen_ai.tool.{idx}.*` attributes. Tool defin
 The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quarter of the span's attribute budget in total, and that allowance is split across the vocabularies that emit them, so the number of tools detailed depends on how many are active: 5 tools each under the default `genai` plus `legacy` pair, 3 tools each once a vendor vocabulary such as `openinference` is layered on. Splitting it this way is what stops three vocabularies spelling the same tools out from summing back past the limit.
 
 `litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring fewer tools than the allowance keep full detail.
+
+#### Chat messages are capped
+
+The `openinference` mapper's `llm.input_messages.{idx}.*` and `llm.output_messages.{idx}.*` keys are the other unbounded family: two attributes per message, for the prompt and the response alike, on the same span. Past a few dozen turns they alone exceed the 128-attribute default and evict the `gen_ai.*` model, usage, cost, and finish-reason attributes written before them. The per-index keys therefore share one span-wide allowance of an eighth of the budget, 8 messages total under the default limit, with at least half of it reserved for the response so a long prompt can never push the completion off the span. A 60-turn conversation with one reply indexes the first 7 prompt messages and the reply.
+
+The cap only touches the per-index convenience keys. `input.value`, `output.value`, and the canonical `gen_ai.input.messages` and `gen_ai.output.messages` blobs still carry every message, so the full conversation stays on the span and Arize keeps rendering it. Conversations shorter than the allowance are indexed in full.
 
 Response, usage, cost, identity:
 
