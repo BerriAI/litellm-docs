@@ -263,7 +263,8 @@ using it vs. redis_host, port, etc.
 
 For GCP Memorystore Redis with IAM authentication, install the required dependency:
 
-:::info IAM authentication for redis is only supported via GCP and only on Redis Clusters for now.
+:::info GCP IAM authentication for redis is only supported on Redis Clusters for now. For AWS
+ElastiCache and Valkey, see [AWS ElastiCache IAM Authentication](./elasticache_iam.md).
 :::
 
 ```shell
@@ -321,6 +322,14 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 </TabItem>
 
 </Tabs> 
+
+#### AWS ElastiCache IAM Authentication
+
+For AWS ElastiCache and Valkey, set `aws_iam_auth` and LiteLLM signs a short-lived SigV4 token for
+each connection instead of using a Redis password. See
+[AWS ElastiCache IAM Authentication](./elasticache_iam.md) for the settings, a walkthrough for
+setting it up on EKS, and the failure messages to expect
+
 #### Step 2: Add Redis Credentials to .env
 Set either `REDIS_URL` or the `REDIS_HOST` in your os environment, to enable caching.
 
