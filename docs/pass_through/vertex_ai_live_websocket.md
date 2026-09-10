@@ -43,8 +43,7 @@ litellm_settings:
 
 ### WebSocket Endpoints
 
-- `ws://your-proxy-host/v1/vertex-ai/live`
-- `ws://your-proxy-host/vertex-ai/live`
+- `ws://your-proxy-host/vertex_ai/live`
 
 ### Query Parameters
 
@@ -55,10 +54,10 @@ litellm_settings:
 
 ```javascript
 // If project_id and location are set in config, you can connect without query params
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live');
 
 // Or specify them explicitly
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id&location=us-central1');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?project_id=your-project-id&location=us-central1');
 ```
 
 ## Cost Tracking
@@ -170,7 +169,7 @@ import json
 import websockets
 
 async def chat_with_gemini():
-    uri = "ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id"
+    uri = "ws://localhost:4000/vertex_ai/live?project_id=your-project-id"
     
     async with websockets.connect(uri) as websocket:
         # Setup
@@ -209,7 +208,7 @@ asyncio.run(chat_with_gemini())
 ### JavaScript Client
 
 ```javascript
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?project_id=your-project-id');
 
 ws.onopen = function() {
     // Send setup
