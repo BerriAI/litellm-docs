@@ -327,22 +327,8 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 
 For AWS ElastiCache and Valkey, set `aws_iam_auth` and LiteLLM signs a short-lived SigV4 token for
 each connection instead of using a Redis password. See
-[AWS ElastiCache IAM Authentication](./elasticache_iam.md) for the full walkthrough
-
-```yaml
-litellm_settings:
-  cache: true
-  cache_params:
-    type: redis
-    redis_startup_nodes:
-      [{ "host": "litellm-cache-abc123.serverless.use1.cache.amazonaws.com", "port": 6379 }]
-    ssl: true
-    aws_iam_auth: true
-    aws_iam_user_name: litellm-cache
-    aws_iam_cache_name: litellm-cache
-    aws_iam_region: us-east-1
-    aws_iam_serverless: true
-```
+[AWS ElastiCache IAM Authentication](./elasticache_iam.md) for the settings, a walkthrough for
+setting it up on EKS, and the failure messages to expect
 
 #### Step 2: Add Redis Credentials to .env
 Set either `REDIS_URL` or the `REDIS_HOST` in your os environment, to enable caching.

@@ -637,8 +637,12 @@ const sidebars = {
             "proxy/budget_fallbacks",
           ],
         },
-        "proxy/caching",
-        "proxy/elasticache_iam",
+        {
+          type: "category",
+          label: "Caching",
+          link: { type: "doc", id: "proxy/caching" },
+          items: ["proxy/elasticache_iam"],
+        },
         "proxy/memory",
         {
           type: "category",
