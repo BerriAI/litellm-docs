@@ -204,6 +204,10 @@ curl http://0.0.0.0:4000/v1/ocr \
   -F "include_image_base64=true"
 ```
 
+## **Batch OCR**
+
+Mistral's Batch API accepts `/v1/ocr` as a batch endpoint and bills it at half the synchronous per-page price. Upload a JSONL of OCR requests to `/v1/files` and create a batch with `"endpoint": "/v1/ocr"`; completed batches are priced per page. See [Mistral - Batch + Files API](./providers/mistral_batches).
+
 ## **Request/Response Format**
 
 :::info
@@ -344,7 +348,7 @@ The response follows Mistral's OCR format with the following structure:
 
 | Provider    | Link to Usage      |
 |-------------|--------------------|
-| Mistral AI  |   [Usage](#quick-start)                 |
+| Mistral AI  |   [Usage](#quick-start), [Batch OCR](./providers/mistral_batches)                 |
 | Azure AI    |   [Usage](../docs/providers/azure_ocr)                 |
 | Vertex AI   |   [Usage](../docs/providers/vertex_ocr)                 |
 

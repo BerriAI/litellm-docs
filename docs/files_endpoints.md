@@ -328,6 +328,8 @@ print("file content=", content.text)
 
 ### [Anthropic](./providers/anthropic#files-api)
 
+### [Mistral](./providers/mistral_batches#4-upload-the-file)
+
 :::note
 Anthropic Files API has a different purpose than OpenAI's. Rather than serving Batches or Fine-tuning, it lets you upload a file once and reference it by `file_id` in multiple messages, avoiding re-uploads. File API operations are free; file content used in Messages requests is priced as input tokens.
 :::

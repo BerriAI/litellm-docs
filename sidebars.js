@@ -1178,7 +1178,14 @@ const sidebars = {
         "providers/meta",
         "providers/meta_llama",
         "providers/milvus_vector_stores",
-        "providers/mistral",
+        {
+          type: "category",
+          label: "Mistral",
+          items: [
+            "providers/mistral",
+            "providers/mistral_batches",
+          ]
+        },
         "providers/minimax",
         "providers/mongodb_vector_stores",
         "providers/moonshot",
