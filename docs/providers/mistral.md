@@ -384,6 +384,10 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --form 'model="voxtral"'
 ```
 
+## Batch + Files API
+
+Mistral's Batch API, including OCR batches at half the synchronous per-page price, is supported through `/v1/files` and `/v1/batches`. See [Mistral - Batch + Files API](./mistral_batches).
+
 ## Sample Usage - Embedding
 ```python
 from litellm import embedding
