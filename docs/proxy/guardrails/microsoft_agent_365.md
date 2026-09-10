@@ -15,7 +15,9 @@ This guardrail only runs on MCP tool calls. It does not inspect chat completions
 
 ## How authentication works
 
-The guardrail uses the Entra On-Behalf-Of (OBO) flow. The caller sends their own Entra access token, audienced to your gateway's app registration, in the `Authorization` header of the MCP request. The guardrail exchanges that token for a delegated Agent 365 token and evaluates the tool call as that user, so Defender policies and audit records apply to the real person, not to the gateway
+The guardrail has two authentication modes. The default, `on_behalf_of`, evaluates every tool call as the human who is signed in to the MCP client. The second, `agent_identity`, evaluates as a [Microsoft Entra Agent ID](https://learn.microsoft.com/en-us/entra/agent-id/) that the gateway owns, for agents that run headless or behind a shared LiteLLM key with no Entra user in the loop. The rest of this page describes `on_behalf_of`; see [Agent identity mode](#agent-identity-mode) for the other
+
+In `on_behalf_of` mode the guardrail uses the Entra On-Behalf-Of (OBO) flow. The caller sends their own Entra access token, audienced to your gateway's app registration, in the `Authorization` header of the MCP request. The guardrail exchanges that token for a delegated Agent 365 token and evaluates the tool call as that user, so Defender policies and audit records apply to the real person, not to the gateway
 
 The LiteLLM credential travels separately in the `x-litellm-api-key` header, which leaves the `Authorization` header free to carry the user's Entra token
 
@@ -188,13 +190,60 @@ Every evaluated tool call writes a request log row on the proxy, visible under *
 
 Use that correlation id to line a call up with the matching record on the Microsoft side
 
+## Agent identity mode
+
+Set `auth_mode: agent_identity` when the callers of your MCP endpoint have no Entra user token to send: a scheduled agent, a CI job, a service that talks to LiteLLM with a shared key. The guardrail then acts as an Entra Agent ID of its own and mints the Agent 365 token itself, so the MCP request needs only `x-litellm-api-key`. Defender evaluates and audits as the agent's user account, which shows up in the Microsoft audit trail under its own name rather than as a human or a bare app registration
+
+### Tenant setup
+
+Everything here is one-time Graph or portal work by a tenant administrator, after steps 1 and 5 of the prerequisites above (tenant onboarded, `ThreatProtection.Evaluate.All` visible in the tenant). Create an agent identity blueprint (`POST /applications` with `@odata.type` `Microsoft.Graph.AgentIdentityBlueprint`, then `POST /servicePrincipals` with `Microsoft.Graph.AgentIdentityBlueprintPrincipal` for its `appId`) and add a client secret to it; the blueprint's application id and that secret become the guardrail's `client_id` and `client_secret`. Create an agent identity from the blueprint (`POST /servicePrincipals/microsoft.graph.agentIdentity` with `agentIdentityBlueprintId` set to the blueprint's application id); its `appId` becomes `agent_identity_client_id`. Create an agent user parented by that identity (`POST /users/microsoft.graph.agentUser` with `identityParentId` set to the agent identity's object id); its `userPrincipalName` becomes `agent_user_upn`. Finally grant the agent identity the delegated `ThreatProtection.Evaluate.All` scope on the Agent Tools resource (`POST /oauth2PermissionGrants` with `clientId` the agent identity's object id, `resourceId` the Agent Tools service principal in your tenant, `consentType` `AllPrincipals`)
+
+### Configure and call
+
+```yaml
+guardrails:
+  - guardrail_name: agent365-mcp
+    litellm_params:
+      guardrail: agent_365
+      mode: pre_mcp_call
+      default_on: true
+      auth_mode: agent_identity
+      tenant_id: os.environ/AGENT365_TENANT_ID
+      client_id: os.environ/AGENT365_BLUEPRINT_CLIENT_ID
+      client_secret: os.environ/AGENT365_BLUEPRINT_CLIENT_SECRET
+      agent_identity_client_id: os.environ/AGENT365_AGENT_IDENTITY_CLIENT_ID
+      agent_user_upn: os.environ/AGENT365_AGENT_USER_UPN
+```
+
+```bash
+curl -X POST http://localhost:4000/mcp-rest/tools/call \
+  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_id": "<server_id from /mcp-rest/tools/list>",
+    "name": "read_wiki_structure",
+    "arguments": {"repoName": "BerriAI/litellm"}
+  }'
+```
+
+No `Authorization` header is needed, and one sent anyway is ignored by the guardrail. Registering LiteLLM in Claude Code is the same `claude mcp add` command as above without the `Authorization` header
+
+### What happens on each tool call
+
+On the first tool call the guardrail runs the Entra Agent ID token chain: a client-credentials token for the blueprint with `fmi_path` set to the agent identity, an agent identity token obtained with that blueprint token as a client assertion, and finally a delegated `ThreatProtection.Evaluate.All` token for the agent user through the `user_fic` grant. The final token is cached until shortly before it expires and shared by concurrent calls, so later calls skip the chain. The evaluation request and the verdict handling are the same as in `on_behalf_of` mode
+
+A rejected chain (wrong blueprint secret, agent user disabled, missing permission grant) is a gateway-side problem rather than a caller problem, so `unreachable_fallback` decides: `fail_closed` returns HTTP 503 with the Entra error code in the message, `fail_open` lets the call through unscanned and records it as such. Startup fails with a clear message when `auth_mode` is `agent_identity` and `agent_identity_client_id` or `agent_user_upn` is missing
+
 ## Configuration parameters
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `tenant_id` | Yes | Entra tenant id used for the On-Behalf-Of token exchange. Falls back to `AGENT365_TENANT_ID` |
-| `client_id` | Yes | Client id of the gateway's Entra app registration. Falls back to `AGENT365_CLIENT_ID` |
-| `client_secret` | Yes | Client secret of the gateway's app registration. Also accepted via the standard `api_key` field. Falls back to `AGENT365_CLIENT_SECRET` |
+| `auth_mode` | No | `on_behalf_of` (default) exchanges the caller's Entra token; `agent_identity` mints the token as an Entra Agent ID, see [Agent identity mode](#agent-identity-mode) |
+| `tenant_id` | Yes | Entra tenant id used for the token exchange. Falls back to `AGENT365_TENANT_ID` |
+| `client_id` | Yes | Client id of the gateway's Entra app registration, or of the agent identity blueprint in `agent_identity` mode. Falls back to `AGENT365_CLIENT_ID` |
+| `client_secret` | Yes | Client secret of that app registration or blueprint. Also accepted via the standard `api_key` field. Falls back to `AGENT365_CLIENT_SECRET` |
+| `agent_identity_client_id` | In `agent_identity` mode | Client id of the Entra agent identity created from the blueprint. Falls back to `AGENT365_AGENT_IDENTITY_CLIENT_ID` |
+| `agent_user_upn` | In `agent_identity` mode | User principal name of the agent user parented by the agent identity. Falls back to `AGENT365_AGENT_USER_UPN` |
 | `api_base` | No | Agent 365 endpoint. Defaults to the production endpoint `https://agent365.svc.cloud.microsoft`. Falls back to `AGENT365_API_BASE` |
 | `resource_app_id` | No | Application id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
 | `agent_id` | No | Agent identity reported to Agent 365 with every evaluation. Defaults to the caller's key alias |
@@ -207,8 +256,9 @@ Use that correlation id to line a call up with the matching record on the Micros
 |-----------|--------|
 | Defender verdict is block | HTTP 400 with the Defender message and correlation id. Always blocks |
 | Agent 365 rejects the evaluation request (HTTP 4xx other than 408/429) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
-| Caller sent no Entra bearer token | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
-| OBO exchange rejected by Entra | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| Caller sent no Entra bearer token (`on_behalf_of` mode) | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| OBO exchange rejected by Entra (`on_behalf_of` mode) | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| Agent identity token chain rejected by Entra (`agent_identity` mode) | `fail_closed`: HTTP 503 with the Entra error code. `fail_open`: allowed, recorded as unscanned |
 | Agent 365 or Entra returns 408 or 429 (throttled) | HTTP 503, recorded as Throttled. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
