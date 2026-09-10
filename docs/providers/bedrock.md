@@ -2317,6 +2317,50 @@ response = completion(
 | `aws_secret_access_key` | `aws_secret_access_key` | AWS secret key associated with the access key | [Credentials](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) |
 | `aws_role_name` | `RoleArn` | The Amazon Resource Name (ARN) of the role to assume | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
 | `aws_session_name` | `RoleSessionName` | An identifier for the assumed role session | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+| `aws_session_tags` | `Tags` | Optional. A list of `{"Key": <str>, "Value": <str>}` pairs sent as session tags on the AssumeRole call, for example `[{"Key": "team", "Value": "genai"}]` | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+
+#### Session tags
+
+`aws_session_tags` attaches [STS session tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html) to the AssumeRole call. Each tag lands on the assumed session as `aws:PrincipalTag/<Key>`, so the role's trust policy and downstream resource policies can key on it. The AssumeRole event in CloudTrail lists the tags under `requestParameters.tags`, so role sessions can be attributed by tag
+
+Tags are set per deployment, so every request routed to that model entry carries the same tags. Tag order does not matter, and deployments with the same tags on the same role share one cached STS session. This applies to Bedrock chat and invoke, embeddings, batches and SageMaker deployments, anywhere LiteLLM performs the AssumeRole itself. The target role's trust policy must allow `sts:TagSession` next to `sts:AssumeRole`; see [Trust policy for session tags](#trust-policy-for-session-tags)
+
+Like `aws_role_name`, `aws_session_name` and `aws_external_id`, this is an operator-side setting. The proxy rejects `aws_session_tags` in client request bodies with HTTP 401 unless the admin opts in with `general_settings.allow_client_side_credentials: true` or lists it under `configurable_clientside_auth_params` on the deployment. See [Clientside LLM Credentials](../proxy/clientside_auth.md). On the proxy's model management endpoints (`/model/new`, `/model/update` and `PATCH /model/{model_id}/update`), only a proxy admin can set or change `aws_session_tags`. A team admin editing a team model gets HTTP 403 unless the tags stay the same
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.{{anthropic_large}}",
+    messages=[{"role": "user", "content": "Hello!"}],
+    aws_region_name="us-east-1",
+    aws_role_name="arn:aws:iam::123456789012:role/litellm-bedrock",
+    aws_session_name="litellm-proxy",
+    aws_session_tags=[{"Key": "team", "Value": "genai"}],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic_large}}
+      aws_region_name: us-east-1
+      aws_role_name: arn:aws:iam::123456789012:role/litellm-bedrock
+      aws_session_name: litellm-proxy
+      aws_session_tags:
+        - Key: team
+          Value: genai
+```
+
+</TabItem>
+</Tabs>
 
 ### IAM Roles Anywhere (On-Premise / External Workloads)
 
@@ -2399,6 +2443,24 @@ Replace `<TARGET_ROLE_ARN>` with the ARN of the role you want to assume (e.g., `
 ```
 
 **Note:** The target role itself must also trust the calling IAM identity (via its trust policy) for AssumeRole to succeed. See [AWS AssumeRole docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-api.html) for more details.
+
+#### Trust policy for session tags
+
+When a deployment sets `aws_session_tags`, the target role's trust policy must also allow `sts:TagSession`. Without it, AssumeRole fails with `AccessDenied ... is not authorized to perform: sts:TagSession`. Replace `<LITELLM_IDENTITY_ARN>` with the IAM identity running LiteLLM. The `Condition` is optional and makes the role admit only sessions that carry the expected tag:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "<LITELLM_IDENTITY_ARN>"},
+      "Action": ["sts:AssumeRole", "sts:TagSession"],
+      "Condition": {"StringEquals": {"aws:RequestTag/team": "genai"}}
+    }
+  ]
+}
+```
 
 ---
 
