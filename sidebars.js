@@ -1233,6 +1233,7 @@ const sidebars = {
         "providers/snowflake",
         "providers/tencent",
         "providers/tensormesh",
+        "providers/thunderphone_realtime",
         "providers/togetherai",
         "providers/topaz",
         "providers/triton-inference-server",
@@ -1243,7 +1244,6 @@ const sidebars = {
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
-        "providers/thunderphone_realtime",
         {
           type: "category",
           label: "WatsonX",
