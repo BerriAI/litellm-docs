@@ -1243,6 +1243,7 @@ const sidebars = {
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
+        "providers/thunderphone_realtime",
         {
           type: "category",
           label: "WatsonX",
