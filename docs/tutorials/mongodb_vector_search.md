@@ -11,8 +11,8 @@ MongoDB vector stores are a **BETA** feature in LiteLLM. The integration searche
 You need:
 
 - An Atlas cluster with Vector Search and capacity for an additional search index, a database user allowed to create and read the demo collection, and permission to create the index.
-- A connection string and network access to the cluster from both your setup script and LiteLLM proxy.
-- A running LiteLLM proxy with `litellm[proxy,mongodb]` installed, a database configured for saved registrations, and access to the Admin UI.
+- A connection string and network access to the cluster from both your setup script and the MongoDB sidecar.
+- A running LiteLLM proxy with `litellm[proxy]` installed, a database configured for saved registrations, and access to the Admin UI.
 - An OpenAI API key for the embedding and chat models used in this example. Other providers can be used when both document and query embeddings use the same model and dimensions.
 
 ## Add the models to LiteLLM
@@ -28,9 +28,11 @@ For configuration files, the LiteLLM model identifiers are `openai/text-embeddin
 
 ## Prepare the sample documents
 
-Install the dependencies for the setup script:
+Install the dependencies in a separate setup environment. PyMongo is used to prepare the sample data; it is not a dependency of the LiteLLM proxy or SDK:
 
 ```bash
+python -m venv .venv-mongodb-setup
+source .venv-mongodb-setup/bin/activate
 pip install openai pymongo
 ```
 
@@ -110,16 +112,23 @@ In Atlas, create a **Vector Search** index on `litellm_docs_demo.policies` named
 
 Wait until it is **READY** and queryable. If you change the database, collection, or index name, use those values throughout the remaining steps.
 
+## Deploy the MongoDB sidecar
+
+Follow the [sidecar deployment guide](../providers/mongodb_vector_stores.md#deploy-the-sidecar) for Docker, Compose, or Kubernetes. Set the sidecar's `MONGODB_CONNECTION_STRING` to the URI used by the setup script, and set `MONGODB_SIDECAR_API_KEY` to a strong secret shared with LiteLLM. The URI and any MongoDB TLS files stay in the sidecar.
+
+For a proxy running on the Docker host, use `http://127.0.0.1:8080` as the Sidecar URL. The Compose example shares LiteLLM's network namespace and uses the same loopback URL. Remote sidecars require HTTPS. Confirm the sidecar's `/health/readiness` endpoint returns HTTP 200 before registering the index.
+
 ## Register the index in the Admin UI
 
 Open **Tools > Vector Stores > Manage Vector Stores > + Add Vector Store**, then enter:
 
 | UI field | Value |
 |---|---|
-| Provider | MongoDB Atlas |
+| Provider | MongoDB (BETA) |
 | Vector Store Name | `MongoDB Demo Policies` |
 | Vector Store ID | `litellm_demo_policy_idx` |
-| Connection String | The same `MONGODB_CONNECTION_STRING` value used for the setup script. |
+| Sidecar URL | The sidecar address reachable from your LiteLLM proxy. |
+| Sidecar API Key | The sidecar's `MONGODB_SIDECAR_API_KEY` value. |
 | Database | `litellm_docs_demo` |
 | Collection | `policies` |
 | Embedding Model | `text-embedding-3-small` |

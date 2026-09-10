@@ -12,6 +12,10 @@ With auto-sync, LiteLLM automatically pulls the latest model data from GitHub's 
 - **Always accurate pricing** for cost tracking and budgets
 - **Automatic updates** - set it once and forget it
 
+:::info Startup behavior (no configuration needed)
+The endpoints on this page only control **re-syncing while the proxy is running**. Independently of them, every LiteLLM process already fetches the remote `model_prices_and_context_window.json` from GitHub `main` (or `LITELLM_MODEL_COST_MAP_URL` if set) **once at startup**, and falls back to the copy bundled with the package (`litellm/model_prices_and_context_window_backup.json`) only if that fetch fails or fails validation. If you ship your own copy of the pricing file in your image and want the proxy to use it instead of the remote file, you must set `LITELLM_LOCAL_MODEL_COST_MAP=True`. See [Custom model cost map](./custom_model_cost_map) for details and `GET /model/cost_map/source` to check which copy is loaded.
+:::
+
 <iframe width="840" height="500" src="https://www.loom.com/embed/ba41acc1882d41b284bbddbb0e9c27ce?sid=bdae351e-2026-4e39-932b-fcb185ff612c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 <br/>
@@ -49,7 +53,7 @@ If a reload succeeds but a newly added model still does not show up, work throug
 
 ## Checking which revision is loaded
 
-The pricing file carries a top-level `_metadata` entry, stamped by the sync bots that write it, with `generated_at` (when the file was written, UTC) and `source_revision` (the commit the file was generated from). The proxy records both when it loads the map, together with the `etag` GitHub served for the fetch, and reports them on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
+Every time the proxy loads the pricing map it records the git blob id of the bytes it parsed, the same id `git rev-parse <commit>:model_prices_and_context_window.json` prints for that file in a litellm checkout. It reports that id as `source_revision`, together with the `etag` GitHub served for the fetch and `loaded_at`, on `GET /model/cost_map/source`, `POST /reload/model_cost_map`, and `GET /schedule/model_cost_map_reload/status`. The Admin UI shows the same three values on the Price Data Reload card under Models and Endpoints
 
 ```bash
 curl -s "https://your-proxy-url/model/cost_map/source" \
@@ -62,15 +66,14 @@ curl -s "https://your-proxy-url/model/cost_map/source" \
   "url": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
   "is_env_forced": false,
   "fallback_reason": null,
-  "loaded_at": "2026-09-07T23:59:20.508051+00:00",
-  "generated_at": "2026-09-07T23:38:47Z",
-  "source_revision": "cd681a573fd9f5b6f15a1355f46178e4e9d374d2",
-  "etag": "W/\"adb2c10e22f905be5b7362b73dbb589d02751b720db9024218900cca9fc7d2de\"",
+  "loaded_at": "2026-09-08T00:49:21.311283+00:00",
+  "source_revision": "b1ffc1583e46583bb4becd34cf85ec70c6930828",
+  "etag": "W/\"6523ba12ad8daed03f7c879bc2c079d11b111d1ebdee2c27a34c0c756af30445\"",
   "model_count": 3850
 }
 ```
 
-`source_revision` is the one-line answer to "which pricing map is my proxy on": compare it against the commit that added the model you are looking for. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and both stamp fields are `null` on a file written before the stamp existed. `_metadata` is metadata only: it never shows up in `/v1/models`, `/model/info`, `/public/litellm_model_cost_map`, or cost lookups
+`source_revision` is the one-line answer to "which pricing map is my proxy on". To check it against `main`, run `git rev-parse origin/main:model_prices_and_context_window.json` in a litellm checkout: a match means the proxy is on the current file. To see when `main` shipped that exact file, run `git log --first-parent --find-object=<source_revision> --format='%h %cs %s' origin/main -- model_prices_and_context_window.json`: the older line is the merge that shipped it and the newer line, when there is one, the merge that replaced it. `--first-parent` matters because most revisions reach `main` through merges from `litellm_internal_staging`, and plain `git log` leaves those merges out. Without a checkout, `gh api 'repos/BerriAI/litellm/contents/model_prices_and_context_window.json?ref=main' --jq .sha` prints the id `main` serves right now. Two proxies reporting the same `source_revision` are serving byte-identical maps, whatever URL each fetched from. `etag` is `null` when the map came from the bundled copy (`LITELLM_LOCAL_MODEL_COST_MAP=True` or a failed fetch), and `source_revision` is then the bundled file's id. Nothing is stamped into the JSON itself, so the file has no `_metadata` entry and no `generated_at`
 
 ## Python Example
 
@@ -91,12 +94,14 @@ print(result['message'])
 
 ## Configuration
 
-**Custom model cost map URL:**
+Both variables apply to the startup fetch and to every reload triggered by the endpoints above.
+
+**Custom model cost map URL** (default shown; the remote fetch happens even when this is unset):
 ```bash
 export LITELLM_MODEL_COST_MAP_URL="https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
 ```
 
-**Use local model cost map:**
+**Use local model cost map only** (disables the remote fetch at startup and on reload; the bundled backup file is used):
 ```bash
 export LITELLM_LOCAL_MODEL_COST_MAP=True
 ```

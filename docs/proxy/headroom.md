@@ -153,6 +153,12 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 The response includes an `x-litellm-applied-guardrails: headroom-compression` header so the caller can confirm compression actually ran.
 
+### `x-headroom-bypass` only ever switches compression off
+
+LiteLLM decides whether `headroom-compression` runs on a given request before the guardrail's own code ever sees a header: that decision comes from `default_on` in `config.yaml`, whether the guardrail is attached to the caller's key or team, or the per-request `guardrails` / `litellm_metadata.guardrails` opt-in shown above. Only after that decision comes back "run it" does the guardrail check `x-headroom-bypass`, and the only value it treats as a bypass is the literal string `true`, matched case-insensitively. Any other value, including `false`, an empty header, or no header at all, has no effect and leaves the guardrail running as already scheduled.
+
+Concretely: with `default_on: false` and no `headroom-compression` attached to the caller's key, sending `x-headroom-bypass: false` does not turn compression on for that request, and there is no per-request header that does. Skipping compression per request works (`x-headroom-bypass: true`, as in the Claude Code section above); enabling it per request without admin involvement requires the `guardrails` / `litellm_metadata.guardrails` field, not a header.
+
 ## Compression behind an auto router
 
 A request an [auto router](./auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails above for them, whether they were attached to a key, a team, or the request body. See [Compression](./auto_routing.md#compression).
