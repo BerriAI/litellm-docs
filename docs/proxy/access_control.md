@@ -354,9 +354,13 @@ Here's the quick version:
 | Create organizations | ❌ | ❌ |
 | View all platform spend | ❌ | ❌ |
 
-## Onboarding Organizations 
+## Onboarding Organizations
 
-✨ **This is a Premium Feature**
+<EnterpriseFeature feature="Organization management">
+
+On a proxy without `LITELLM_LICENSE`, every `/organization/*` endpoint and `PATCH /v2/organization/{organization_id}` return a 403, including read-only calls such as `/organization/list` and `/organization/info`. Existing organizations stay in the database and their budgets keep applying to requests. Setting `LITELLM_LICENSE` restores access with no migration; see [how to set up and verify an Enterprise license](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
+
+</EnterpriseFeature>
 
 ### 1. Creating a new Organization
 
