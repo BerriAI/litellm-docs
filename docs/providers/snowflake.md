@@ -269,13 +269,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## Thinking / Reasoning
 
-Claude 3.7 Sonnet, Claude 4 Opus, and DeepSeek R1 on Cortex support extended thinking. LiteLLM translates `reasoning_effort` to the provider's thinking parameter.
-
-| `reasoning_effort` | `budget_tokens` |
-|---|---|
-| `"low"` | 1024 |
-| `"medium"` | 2048 |
-| `"high"` | 4096 |
+Claude models on Cortex support extended thinking. Pass the provider's `thinking` parameter directly; `reasoning_effort` is not a supported param for Snowflake and raises an `UnsupportedParamsError` unless `drop_params` is set.
 
 ```python
 from litellm import completion
@@ -283,7 +277,7 @@ from litellm import completion
 response = completion(
     model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Solve: what is 127 * 389?"}],
-    reasoning_effort="low",
+    thinking={"type": "enabled", "budget_tokens": 1024},
 )
 print(response.choices[0].message.content)
 ```
