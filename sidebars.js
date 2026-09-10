@@ -638,6 +638,7 @@ const sidebars = {
           ],
         },
         "proxy/caching",
+        "proxy/elasticache_iam",
         "proxy/memory",
         {
           type: "category",
