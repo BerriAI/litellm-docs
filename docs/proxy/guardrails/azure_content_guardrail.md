@@ -12,6 +12,69 @@ LiteLLM supports Azure Content Safety guardrails via the [Azure Content Safety A
 - [Prompt Shield](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/quickstart-jailbreak?pivots=programming-language-rest)
 - [Text Moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/quickstart-text?tabs=visual-studio%2Clinux&pivots=programming-language-rest)
 
+## Authentication
+
+Both guardrails reach Azure Content Safety with either an API key or Microsoft Entra ID
+
+<Tabs>
+<TabItem value="api-key" label="API key">
+
+Set `api_key` to one of the resource keys. LiteLLM sends it as the `Ocp-Apim-Subscription-Key` header
+
+```yaml
+guardrails:
+  - guardrail_name: azure-text-moderation
+    litellm_params:
+      guardrail: azure/text_moderations
+      mode: [pre_call, post_call]
+      api_key: os.environ/AZURE_GUARDRAIL_API_KEY
+      api_base: os.environ/AZURE_GUARDRAIL_API_BASE
+```
+
+</TabItem>
+<TabItem value="entra-id" label="Microsoft Entra ID">
+
+Leave `api_key` out entirely. LiteLLM then requests a token for the `https://cognitiveservices.azure.com/.default` scope and sends it as `Authorization: Bearer`. Use this when your organisation blocks key based access to Azure AI resources
+
+```yaml
+guardrails:
+  - guardrail_name: azure-text-moderation
+    litellm_params:
+      guardrail: azure/text_moderations
+      mode: [pre_call, post_call]
+      api_base: os.environ/AZURE_GUARDRAIL_API_BASE
+```
+
+Two things are required:
+
+- `api_base` has to be the resource's custom subdomain endpoint, such as `https://your-resource.cognitiveservices.azure.com`. Regional endpoints like `https://australiaeast.api.cognitive.microsoft.com` do not accept Entra ID tokens
+- The identity LiteLLM runs as needs the **Cognitive Services User** role on the resource
+
+An Entra ID token is valid for every Cognitive Services resource the identity can reach, so LiteLLM only sends one to an HTTPS Azure endpoint and refuses at startup otherwise. If you front Content Safety with your own gateway, set `api_key` for that guardrail instead, since a resource key is scoped to the one resource
+
+Credentials come from the standard Azure credential chain, so the same config works everywhere LiteLLM runs:
+
+- a service principal, from `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` and `AZURE_TENANT_ID`
+- workload identity on AKS
+- a system or user assigned managed identity on Azure VMs, Container Apps and App Service
+- `az login`, on a developer machine
+
+Assign the role to whichever principal that is:
+
+```shell
+az role assignment create \
+  --assignee <principal-id> \
+  --role "Cognitive Services User" \
+  --scope $(az cognitiveservices account show --name <your-resource> --resource-group <your-rg> --query id -o tsv)
+```
+
+Entra ID authentication needs the `azure-identity` package, which ships with the `litellm[proxy]` install. If it is missing, the proxy says so at startup rather than failing on the first request
+
+To stop keys working at all, [disable local authentication](https://learn.microsoft.com/en-us/azure/ai-services/disable-local-auth) on the resource
+
+</TabItem>
+</Tabs>
+
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
 
@@ -75,8 +138,8 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### Common Params
 
-- `api_key` - str - Azure Content Safety API key
-- `api_base` - str - Azure Content Safety API base URL
+- `api_key` - Optional[str] - Azure Content Safety API key. Omit it to authenticate with Microsoft Entra ID instead, see [Authentication](#authentication)
+- `api_base` - str - Azure Content Safety API base URL. Required
 - `default_on` - bool - Whether to run the guardrail by default. Default is `false`.
 - `mode` - Union[str, list[str]] - Mode to run the guardrail. Either `pre_call` or `post_call`. Default is `pre_call`.
 
