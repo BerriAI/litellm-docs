@@ -160,7 +160,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.HuggingfaceConfig(max_new_tokens=200)
+litellm.HuggingFaceChatConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="huggingface/mistralai/Mistral-7B-Instruct-v0.1",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
