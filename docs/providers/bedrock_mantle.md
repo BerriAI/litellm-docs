@@ -313,11 +313,15 @@ asyncio.run(main())
 
 The API base URL is `https://bedrock-mantle.{region}.api.aws/v1`. Region is resolved in this order:
 
-1. `BEDROCK_MANTLE_REGION` env var
-2. `AWS_REGION` env var
-3. Default: `us-east-1`
+1. `aws_region_name` on the deployment (or passed as a kwarg)
+2. A region prefix in the model name, e.g. `bedrock_mantle/us-gov-west-1/xai.grok-4.3`
+3. `BEDROCK_MANTLE_REGION` env var
+4. `AWS_REGION_NAME` env var, then `AWS_REGION`
+5. Default: `us-east-1`
 
-**Supported regions:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `eu-south-1`, `eu-north-1`, `ap-northeast-1`, `ap-south-1`, `ap-southeast-3`, `sa-east-1`
+An explicit `api_base` (or `BEDROCK_MANTLE_API_BASE`) replaces the derived URL entirely. The model-name prefix is stripped before the request is sent, so `bedrock_mantle/us-gov-west-1/xai.grok-4.3` calls `xai.grok-4.3` in `us-gov-west-1`; it is recognized for the regions LiteLLM knows for Bedrock, and `aws_region_name` works for every region
+
+**Supported regions:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `eu-south-1`, `eu-north-1`, `ap-northeast-1`, `ap-south-1`, `ap-southeast-3`, `sa-east-1`, and `us-gov-west-1` (AWS GovCloud)
 
 ```python
 import os
@@ -330,6 +334,27 @@ response = completion(
     api_base="https://bedrock-mantle.eu-west-1.api.aws/v1",
 )
 ```
+
+### GovCloud pricing
+
+Cost tracking uses the served region. When the price map has a row for `bedrock_mantle/{region}/{model}` (today the `us-gov-west-1` rows), that row prices the call instead of the commercial one, whether the region came from `aws_region_name` or from the model prefix. Both of these deployments bill `xai.grok-4.3` at the GovCloud rate:
+
+```yaml
+model_list:
+  - model_name: grok-4.3-gov
+    litellm_params:
+      model: bedrock_mantle/xai.grok-4.3
+      aws_region_name: us-gov-west-1
+      aws_access_key_id: os.environ/AWS_GOV_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_GOV_SECRET_ACCESS_KEY
+  - model_name: grok-4.3-gov-prefixed
+    litellm_params:
+      model: bedrock_mantle/us-gov-west-1/xai.grok-4.3
+      aws_access_key_id: os.environ/AWS_GOV_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_GOV_SECRET_ACCESS_KEY
+```
+
+A deployment that sets `base_model` or its own `input_cost_per_token` / `output_cost_per_token` is priced from that row alone; the served region is not applied on top of it
 
 ## Usage with LiteLLM Proxy
 
