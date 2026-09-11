@@ -309,7 +309,7 @@ Entra does not support dynamic client registration, so the client needs a regist
 }
 ```
 
-On the first call Claude Code opens the browser, the user signs in to Entra, and the tool call proceeds. `/mcp` in Claude Code then shows the server as connected and authenticated. You can see the raw challenge yourself
+On the first call Claude Code opens the browser, the user signs in to Entra, and the tool call proceeds. `/mcp` in Claude Code then shows the server as connected and authenticated. The challenge names the metadata document for the route the client connected to (`/.well-known/oauth-protected-resource/<server>/mcp` for `/<server>/mcp`, `/.well-known/oauth-protected-resource/mcp/<server>` for `/mcp/<server>`), and that document's `resource` equals the URL the client used. MCP clients built on the TypeScript SDK check that equality before starting sign-in, so keep the client's server URL, the Application ID URI, and the scope on the same form. You can see the raw challenge yourself
 
 ```bash
 curl -i -X POST https://litellm.example.com/deepwiki/mcp \
@@ -320,17 +320,17 @@ curl -i -X POST https://litellm.example.com/deepwiki/mcp \
 
 ```text
 HTTP/1.1 401 Unauthorized
-WWW-Authenticate: Bearer resource_metadata="https://litellm.example.com/.well-known/oauth-protected-resource/mcp/deepwiki", error="invalid_token", error_description="Missing or invalid subject token; authenticate with the IdP and retry"
+WWW-Authenticate: Bearer resource_metadata="https://litellm.example.com/.well-known/oauth-protected-resource/deepwiki/mcp", error="invalid_token", error_description="Missing or invalid subject token; authenticate with the IdP and retry"
 ```
 
 ```bash
-curl -s https://litellm.example.com/.well-known/oauth-protected-resource/mcp/deepwiki
+curl -s https://litellm.example.com/.well-known/oauth-protected-resource/deepwiki/mcp
 ```
 
 ```json
 {
   "authorization_servers": ["https://login.microsoftonline.com/<tenant id>/v2.0"],
-  "resource": "https://litellm.example.com/mcp/deepwiki",
+  "resource": "https://litellm.example.com/deepwiki/mcp",
   "scopes_supported": ["https://litellm.example.com/deepwiki/mcp/access_as_user"]
 }
 ```
