@@ -954,7 +954,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 ```
 
 **Expected Response**

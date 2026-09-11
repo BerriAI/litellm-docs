@@ -422,7 +422,7 @@ model_list:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "llama-3-8b-instruct",
   "messages": [

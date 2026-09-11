@@ -136,7 +136,7 @@ Any other `size` value maps to an aspect ratio only and leaves the resolution to
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
   "model": "veo-3.1-lite-generate-001",
   "prompt": "A slow aerial shot of a lighthouse at sunrise",
@@ -225,7 +225,7 @@ Start the proxy and make requests:
 # Step 1: Generate video
 curl --location 'http://0.0.0.0:4000/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
   "model": "veo-3",
   "prompt": "Aerial shot over a futuristic city at sunrise",

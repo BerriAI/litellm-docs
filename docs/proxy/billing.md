@@ -56,7 +56,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data-raw '{"team_id": "my-unique-id"}' # 👈 Internal Team's ID
 ```

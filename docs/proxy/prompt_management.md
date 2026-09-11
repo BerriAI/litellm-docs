@@ -320,7 +320,7 @@ After loading prompts via config.yaml, use them in your API requests:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
@@ -336,7 +336,7 @@ You can also use the same `prompt_id` with the Responses API:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/responses' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
@@ -426,7 +426,7 @@ litellm --config config.yaml --detailed_debug
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-langfuse-model",
     "messages": [

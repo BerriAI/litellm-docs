@@ -324,7 +324,7 @@ flowchart TD
 ```bash
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM Enterprise Gateway"}]
@@ -513,7 +513,7 @@ flowchart TD
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "max_budget": 0.01,
@@ -569,7 +569,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 
 ```bash
 curl -X GET 'http://localhost:4000/spend/tags' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Verify:** response lists `poc:chat-app` with `total_spend` and `log_count`.

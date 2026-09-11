@@ -223,7 +223,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Black Forest Labs via Proxy - cURL"
 curl -X POST 'http://localhost:4000/v1/images/generations' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "flux-pro",
     "prompt": "A beautiful garden with colorful flowers",

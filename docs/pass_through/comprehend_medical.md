@@ -35,7 +35,7 @@ litellm
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/comprehendmedical/DetectEntitiesV2' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"Text": "Patient is taking 40mg of atorvastatin daily for hyperlipidemia."}'
 ```

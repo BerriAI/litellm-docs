@@ -367,7 +367,7 @@ general_settings:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
-  -H 'x-api-key: $LITELLM_API_KEY' \
+  -H "x-api-key: $LITELLM_API_KEY" \
   -H 'anthropic-version: 2023-06-01' \
   -H 'content-type: application/json' \
   -d '{

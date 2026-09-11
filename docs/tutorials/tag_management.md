@@ -65,7 +65,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -119,7 +119,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "us.anthropic.{{anthropic}}",
   "messages": [

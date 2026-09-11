@@ -697,7 +697,7 @@ Register the callback on the team; every key on that team then exports with thes
 
 ```shell
 curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
     "callback_name": "langfuse_otel",
     "callback_type": "success",
@@ -716,7 +716,7 @@ A key can carry its own credentials in `metadata.logging`, including a key with 
 
 ```shell
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
     "metadata": {
       "logging": [{

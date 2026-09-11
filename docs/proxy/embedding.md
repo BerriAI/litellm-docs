@@ -49,7 +49,7 @@ $ litellm --config /path/to/config.yaml
 
 ```shell
 curl --location 'http://0.0.0.0:4000/v1/embeddings' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "input": "The food was delicious and the waiter..",
@@ -71,7 +71,7 @@ You can still override per request from any OpenAI-compatible client:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/embeddings' \
-  --header 'Authorization: Bearer $LITELLM_API_KEY' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{"model": "my-embedding-model", "input": "hello", "encoding_format": "base64"}'
 ```

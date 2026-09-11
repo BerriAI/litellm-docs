@@ -69,7 +69,7 @@ litellm --config config.yaml
 ```bash showLineNumbers
 curl --location 'http://0.0.0.0:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "sd3",
     "prompt": "A beautiful sunset over a calm ocean"

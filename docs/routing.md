@@ -145,7 +145,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_small}}",
   "messages": [
@@ -423,7 +423,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]

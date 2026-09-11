@@ -307,19 +307,19 @@ The `unreachable` deployment above needs no mock server at all; port 9 refuses c
 ```bash showLineNumbers
 # 403 key_model_access_denied
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "restricted", "models": ["{{openai_small}}"]}'
 
 # 429 throttling_error, on the second call within the same minute
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "capped", "rpm_limit": 1}'
 
 # 429 budget_exceeded, once accrued spend passes the cap
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "tiny-budget", "max_budget": 0.05}'
 ```

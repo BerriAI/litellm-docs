@@ -525,7 +525,7 @@ Per-minute windows fit batches poorly: a batch runs for hours, but its whole inp
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
 ```

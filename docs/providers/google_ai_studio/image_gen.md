@@ -179,7 +179,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Google AI Studio Image Generation via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "google-imagen",
     "prompt": "A cozy coffee shop interior with warm lighting",
@@ -213,7 +213,7 @@ print(response.data[0].b64_json)
 ```bash showLineNumbers title="Proxy request with web_search_options"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "gemini-3.1-flash-image-preview",
     "prompt": "Generate an image of the latest iPhone design",
@@ -253,7 +253,7 @@ print(response.data[0].b64_json)
 ```bash showLineNumbers title="imageConfig via Proxy"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "gemini-3.1-flash-image-preview",
     "prompt": "A nano banana on a desk",

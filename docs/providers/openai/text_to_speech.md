@@ -121,7 +121,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
 Make a test Request with a valid file
 ```shell
 curl --location 'http://localhost:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/ishaanjaffer/Github/litellm/tests/gettysburg.wav"' \
 --form 'model="whisper"'
 ```

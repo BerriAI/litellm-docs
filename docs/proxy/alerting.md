@@ -72,7 +72,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/health/services?service=slack' \
--H 'Authorization: Bearer $LITELLM_API_KEY'
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## Advanced
@@ -320,7 +320,7 @@ Call the proxy `/health/services` endpoint to test if your alerting connection i
 
 ```bash
 curl --location 'http://0.0.0.0:4000/health/services?service=slack' \
---header 'Authorization: Bearer $LITELLM_API_KEY'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 
@@ -392,7 +392,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
---header 'Authorization: Bearer $LITELLM_API_KEY'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Expected Response**

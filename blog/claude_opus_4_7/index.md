@@ -252,7 +252,7 @@ Use the `thinking` parameter with `type: "adaptive"` to enable adaptive thinking
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: $LITELLM_API_KEY' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-7",
@@ -335,7 +335,7 @@ You can combine `reasoning_effort` with `output_config` for even more fine-grain
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: $LITELLM_API_KEY' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-7",

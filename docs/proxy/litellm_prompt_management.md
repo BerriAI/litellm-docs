@@ -92,7 +92,7 @@ Call a prompt using just the prompt ID and model:
 ```bash showLineNumbers title="Basic Prompt Call"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id"
@@ -156,7 +156,7 @@ Add custom messages to your prompt:
 ```bash showLineNumbers title="Prompt with Custom Messages"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
@@ -232,7 +232,7 @@ Pass variables to your prompt template using `prompt_variables`:
 ```bash showLineNumbers title="Prompt with Variables"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
@@ -376,7 +376,7 @@ By default, API calls use the latest version of a prompt. To use a specific vers
 ```bash showLineNumbers title="Use Specific Prompt Version"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "jack-sparrow",

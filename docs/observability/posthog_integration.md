@@ -61,7 +61,7 @@ Configure different PostHog credentials per team using the team callback setting
 
 ```bash
 curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "callback_name": "posthog",

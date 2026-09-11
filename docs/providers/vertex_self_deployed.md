@@ -72,7 +72,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "llama3-1-8b-instruct", # 👈 the 'model_name' in config

@@ -16,7 +16,7 @@ Just replace `https://api.mistral.ai/v1` with `LITELLM_PROXY_BASE_URL/mistral` ð
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/ocr' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "mistral-ocr-latest",
     "document": {
@@ -54,7 +54,7 @@ Let's call the Mistral `/ocr` endpoint
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/ocr' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "mistral-ocr-latest",
     "document": {
@@ -85,7 +85,7 @@ Key Changes:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/ocr' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "mistral-ocr-latest",
     "document": {
@@ -181,7 +181,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -201,7 +201,7 @@ Expected Response
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
     "messages": [
         {

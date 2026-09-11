@@ -126,7 +126,7 @@ model_list:
 #### Chat Completion
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "volcengine-model",
@@ -142,7 +142,7 @@ curl --location 'http://localhost:4000/chat/completions' \
 #### Embedding
 ```shell
 curl --location 'http://localhost:4000/embeddings' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "volcengine-embedding",

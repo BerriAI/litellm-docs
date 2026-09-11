@@ -67,7 +67,7 @@ litellm --config config.yaml
 ```bash showLineNumbers
 curl --location 'http://0.0.0.0:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "recraft-v3",
     "prompt": "A beautiful sunset over a calm ocean",
@@ -202,7 +202,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers
 curl --location 'http://0.0.0.0:4000/v1/images/edits' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="recraft-v3"' \
 --form 'prompt="Create a studio ghibli style image that combines all the reference images. Make sure the person looks like a CTO."' \
 --form 'image=@"reference_image.png"'

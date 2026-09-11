@@ -238,7 +238,7 @@ print(response.data[0].url)
 
 ```bash showLineNumbers title="Black Forest Labs via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="bfl-kontext-pro"' \
 --form 'prompt="Add a sunset in the background"' \
 --form 'image=@"path/to/your/image.png"'

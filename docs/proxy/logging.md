@@ -31,7 +31,7 @@ mentioned in this page.
 
 ```shell
 curl -i -sSL --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
       "model": "{{openai_small}}",
@@ -276,7 +276,7 @@ Send the list of callbacks to disable in the request header `x-litellm-disable-c
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
     "model": "{{anthropic}}",
@@ -534,7 +534,7 @@ Pass `metadata` as part of the request body
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "llama3",
     "messages": [
@@ -1276,7 +1276,7 @@ litellm --config config.yaml --debug
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -1904,7 +1904,7 @@ litellm --config proxy_config.yaml
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "{{openai_small}}",
     "messages": [
@@ -1928,7 +1928,7 @@ On Success
     Usage: {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21},
     Cost: 1.42e-05,
     Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': '{{openai_small}}', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
-    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer $LITELLM_API_KEY', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': '{{openai_small}}', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
+    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': "Bearer $LITELLM_API_KEY", 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': '{{openai_small}}', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
 ```
 
 #### Logging Proxy Request Object, Header, Url
@@ -2123,7 +2123,7 @@ litellm --config /path/to/config.yaml
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "openai/{{openai_large}}",
     "messages": [

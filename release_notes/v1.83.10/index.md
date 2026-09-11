@@ -79,13 +79,13 @@ pip install litellm==1.83.10
   ```bash
   # Per key
   curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer $LITELLM_API_KEY' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
 
   # Per team
   curl -L -X POST 'http://0.0.0.0:4000/team/new' \
-    -H 'Authorization: Bearer $LITELLM_API_KEY' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
   ```

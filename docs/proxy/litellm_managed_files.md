@@ -265,7 +265,7 @@ Let's create a user with the id `user_123`.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/user/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"models": ["gpt-4o-mini-openai"], "user_id": "user_123"}'
 ```

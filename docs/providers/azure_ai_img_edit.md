@@ -222,7 +222,7 @@ path.write_bytes(img_bytes)
 
 ```bash showLineNumbers title="Azure AI Image Editing via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="azure-flux-kontext-edit"' \
 --form 'prompt="Convert this image to a vintage sepia tone with old-fashioned effects"' \
 --form 'image=@"path/to/your/image.png"'

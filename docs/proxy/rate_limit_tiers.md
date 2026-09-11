@@ -10,7 +10,7 @@ Use this to control access and budgets across a lot of keys.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier",
@@ -22,7 +22,7 @@ curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier"

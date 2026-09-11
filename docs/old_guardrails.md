@@ -53,7 +53,7 @@ Test it with this request -> expect it to get rejected by LiteLLM Proxy
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",
@@ -105,7 +105,7 @@ console.log(message);
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -210,7 +210,7 @@ If you need to switch `pii_masking` off for an API Key set `"permissions": {"pii
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer $LITELLM_API_KEY' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
         "permissions": {"pii_masking": true}
@@ -226,7 +226,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/update' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",
@@ -265,7 +265,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -D '{
     "team_id": "4198d93c-d375-4c83-8d5a-71e7c5473e50",

@@ -132,7 +132,7 @@ model_list:
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -157,7 +157,7 @@ With override allowed, a request can change the deployment's default, including 
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -173,7 +173,7 @@ If `allow_client_keepalive_override` isn't set, that same request body is silent
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'x-litellm-keepalive-seconds: 1' \
   -d '{
     "model": "claude-opus",
@@ -285,7 +285,7 @@ This is currently only supported on `/chat/completions` and `/completions` endpo
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     -H 'Content-Type: application/json' \
-    -H 'Authorization: Bearer $LITELLM_API_KEY' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     --data-raw '{
         "model": "gemini/{{gemini_flash}}",
         "messages": [

@@ -32,7 +32,7 @@ Use the `/anthropic` passthrough endpoint to create a file.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/anthropic/v1/files' \
--H 'x-api-key: $LITELLM_API_KEY' \
+-H "x-api-key: $LITELLM_API_KEY" \
 -H 'anthropic-version: 2023-06-01' \
 -H 'anthropic-beta: files-api-2025-04-14' \
 -F 'file=@"/path/to/your/file.csv"'
@@ -59,7 +59,7 @@ Expected response:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "claude-opus",
     "messages": [

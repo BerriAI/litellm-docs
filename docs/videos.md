@@ -316,7 +316,7 @@ LiteLLM proxy also supports these OpenAI-compatible video routes:
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'name=hero' \
 -F 'target_model_names={{openai_large}}' \
 -F 'video=@/path/to/character.mp4'
@@ -337,14 +337,14 @@ Example response (encoded `id`):
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters/character_...' \
---header 'Authorization: Bearer $LITELLM_API_KEY'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Video edit with encoded `video.id`
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/edits' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Make this brighter",
@@ -356,7 +356,7 @@ curl --location 'http://localhost:4000/v1/videos/edits' \
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/extensions' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Continue this scene",

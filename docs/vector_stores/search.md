@@ -308,7 +308,7 @@ print(search_results)
 ```bash showLineNumbers title="Search Vector Store via curl"
 curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "query": "What is the capital of France?",
   "filters": {

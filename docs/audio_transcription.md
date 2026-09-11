@@ -94,7 +94,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Test with cURL"
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 --form 'model="whisper"'
 ```
@@ -141,7 +141,7 @@ You can configure fallbacks for audio transcription to automatically retry with 
 
 ```bash showLineNumbers title="Test with cURL and Fallbacks"
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"gettysburg.wav"' \
 --form 'model="groq/whisper-large-v3"' \
 --form 'fallbacks[]="openai/whisper-1"'

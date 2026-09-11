@@ -54,7 +54,7 @@ litellm /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Autherization: Bearer $LITELLM_API_KEY' \
+    --header "Autherization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",
@@ -143,7 +143,7 @@ Create a user with `user_id=ishaan`
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan"
@@ -156,7 +156,7 @@ Set `max_budget_in_team` when adding a User to a team. We use the same `user_id`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "max_budget_in_team": 0.000000000001, "member": {"role": "user", "user_id": "ishaan"}}'
 ```
@@ -167,7 +167,7 @@ Set `user_id=ishaan` from step 1
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan",
@@ -207,7 +207,7 @@ Update `max_budget_in_team` for an existing team member with `/team/member_updat
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_update' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
 ```
@@ -218,7 +218,7 @@ Reset the spend tracked against a member's in-team budget without changing the b
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"reset_to": 0}'
 ```
@@ -615,7 +615,7 @@ Set `tpm_limit` and `rpm_limit` on the agent to cap total throughput across all 
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -637,7 +637,7 @@ Set `session_tpm_limit` and `session_rpm_limit` to cap throughput per individual
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -659,7 +659,7 @@ Set `max_iterations` and `max_budget_per_session` in agent `litellm_params` to c
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -690,7 +690,7 @@ You can also update rate limits on existing agents using `PATCH /v1/agents/{agen
 
 ```bash
 curl -X PATCH 'http://localhost:4000/v1/agents/<agent_id>' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "tpm_limit": 200000,
@@ -711,7 +711,7 @@ Use this to budget `user` passed to `/chat/completions`, **without needing to cr
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
         "budget_id": "default-customer-budget",
@@ -939,7 +939,7 @@ Declare what your models actually emit with `default_estimated_output_tokens` (o
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -956,7 +956,7 @@ The same two fields work on `/team/new` and `/team/update`, and both are editabl
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -998,7 +998,7 @@ Use `/team/new` or `/team/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1026,7 +1026,7 @@ Use `/team/new` or `/team/update` with `model_rpm_limit` and `model_tpm_limit` a
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1039,7 +1039,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1054,7 +1054,7 @@ You can also pass per-model limits via the `metadata` field:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1079,7 +1079,7 @@ Use `/user/new` or `/user/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1103,7 +1103,7 @@ Use `/key/generate`, if you want them for just that key.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1129,7 +1129,7 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
 ```
@@ -1181,7 +1181,7 @@ Set rate limits on agents registered with the [Agent Gateway](../a2a.md).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "tpm_limit": 100000, "rpm_limit": 100}'
 ```
@@ -1190,7 +1190,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/agents' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "session_tpm_limit": 50000, "session_rpm_limit": 50}'
 ```
@@ -1214,7 +1214,7 @@ Set a `tpm_limit` on the budget (You can also pass `rpm_limit` if needed)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "budget_id" : "free-tier",
@@ -1229,7 +1229,7 @@ We use `budget_id="free-tier"` from Step 1 when creating this new customers
 
 ```shell
 curl --location 'http://0.0.0.0:4000/customer/new' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id" : "palantir",
@@ -1244,7 +1244,7 @@ Pass the `user_id` from Step 2 as `user="palantir"`
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -1288,7 +1288,7 @@ litellm_settings:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

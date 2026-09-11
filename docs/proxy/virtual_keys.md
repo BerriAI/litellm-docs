@@ -631,7 +631,7 @@ Rotate an existing API Key, while optionally updating its parameters.
 
 curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
   -X POST \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "max_budget": 100,
@@ -752,7 +752,7 @@ Use the `/key/update` endpoint to increase the budget of an existing key.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
 ```

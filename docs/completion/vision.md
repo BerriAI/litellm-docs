@@ -158,7 +158,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: $LITELLM_API_KEY'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 

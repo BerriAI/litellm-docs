@@ -34,7 +34,7 @@ If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer 
 ```bash showLineNumbers title="Make request with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'x-litellm-end-user-id: ishaan3' \
         --data '{
         "model": "azure-gpt-3.5",
@@ -49,7 +49,7 @@ Both `x-litellm-customer-id` and `x-litellm-end-user-id` are supported and alway
 ```bash showLineNumbers title="Make request with customer ID in body"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
         "model": "azure-gpt-3.5",
         "user": "ishaan3",
@@ -69,7 +69,7 @@ general_settings:
 ```bash showLineNumbers title="Make request with custom header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'x-my-app-user-id: ishaan3' \
         --data '{
         "model": "azure-gpt-3.5",
@@ -82,7 +82,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ```bash showLineNumbers title="Make request with litellm_metadata.user"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
         "model": "{{anthropic}}",
         "messages": [{"role": "user", "content": "what time is it"}],
@@ -95,7 +95,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ```bash showLineNumbers title="Make request with metadata.user_id"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer $LITELLM_API_KEY' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
         "model": "azure-gpt-3.5",
         "messages": [{"role": "user", "content": "what time is it"}],
@@ -118,7 +118,7 @@ Call `/customer/info` to get a customer's all up spend
 # end_user_id: 👈 CUSTOMER ID
 # Authorization: 👈 YOUR PROXY KEY
 curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
-        -H 'Authorization: Bearer $LITELLM_API_KEY'
+        -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Expected Response:
@@ -160,7 +160,7 @@ general_settings:
 ```bash showLineNumbers title="Test webhook"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "mistral",
     "messages": [
@@ -253,7 +253,7 @@ Object permissions allow you to restrict customer access to specific:
 
 ```bash showLineNumbers title="Create customer with object permissions"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "user_1",
@@ -286,7 +286,7 @@ You can update object permissions for existing customers:
 
 ```bash showLineNumbers title="Update customer object permissions"
 curl -L -X POST 'http://localhost:4000/customer/update' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "user_1",
@@ -303,7 +303,7 @@ When you query customer info, object permissions are included in the response:
 
 ```bash showLineNumbers title="Get customer info with object permissions"
 curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=user_1' \
-    -H 'Authorization: Bearer $LITELLM_API_KEY'
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Response:**
@@ -336,7 +336,7 @@ Create different permission tiers for your customers:
 ```bash showLineNumbers title="Free tier customer"
 # Free tier - limited access
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "free_user",
@@ -351,7 +351,7 @@ curl -L -X POST 'http://localhost:4000/customer/new' \
 ```bash showLineNumbers title="Premium tier customer"
 # Premium tier - full access
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "premium_user",
@@ -369,7 +369,7 @@ Restrict customers to resources relevant to their department:
 
 ```bash showLineNumbers title="Sales team customer"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "sales_user",
@@ -386,7 +386,7 @@ Grant access to specific tools within an MCP server:
 
 ```bash showLineNumbers title="Limited tool access"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "restricted_user",
@@ -412,7 +412,7 @@ Apply budget limits to all customers without explicit budgets. This is useful fo
 ```bash showLineNumbers title="Create default budget"
 curl -X POST 'http://localhost:4000/budget/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "max_budget": 10,
     "rpm_limit": 2,
@@ -432,7 +432,7 @@ litellm_settings:
 ```bash showLineNumbers title="Make request with customer ID"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -453,7 +453,7 @@ Create / Update a customer with budget
 **Create New Customer w/ budget**
 ```bash showLineNumbers title="Create customer with budget"
 curl -X POST 'http://0.0.0.0:4000/customer/new'         
-    -H 'Authorization: Bearer $LITELLM_API_KEY'         
+    -H "Authorization: Bearer $LITELLM_API_KEY"         
     -H 'Content-Type: application/json'         
     -d '{
         "user_id" : "my-customer-id",
@@ -472,7 +472,7 @@ Customer budgets are global per deployment. Spend is tracked against the custome
 ```bash showLineNumbers title="Test customer budget"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "mistral",
     "messages": [
@@ -508,7 +508,7 @@ Use the `/budget/new` endpoint for creating a new budget. [API Reference](https:
 ```bash showLineNumbers title="Create budget via API"
 curl -X POST 'http://localhost:4000/budget/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "budget_id": "my-free-tier", 
     "max_budget": 4 
@@ -528,7 +528,7 @@ Just use the `budget_id` used when creating the budget. In our example, this is 
 ```bash showLineNumbers title="Assign budget to customer"
 curl -X POST 'http://localhost:4000/customer/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
     "budget_id": "my-free-tier" # 👈 KEY CHANGE
@@ -543,7 +543,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 ```bash showLineNumbers title="Test with curl"
 curl -X POST 'http://localhost:4000/customer/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
     "budget_id": "my-free-tier" # 👈 KEY CHANGE

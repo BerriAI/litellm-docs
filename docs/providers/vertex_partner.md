@@ -86,7 +86,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "anthropic-vertex", # 👈 the 'model_name' in config
@@ -287,7 +287,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "glm-4.7",
@@ -371,7 +371,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "anthropic-llama", # 👈 the 'model_name' in config
@@ -465,7 +465,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "vertex-mistral", # 👈 the 'model_name' in config
@@ -550,7 +550,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/completions' \
-      -H 'Authorization: Bearer $LITELLM_API_KEY' \
+      -H "Authorization: Bearer $LITELLM_API_KEY" \
       -H 'Content-Type: application/json' \
       -d '{
             "model": "vertex-codestral", # 👈 the 'model_name' in config
@@ -631,7 +631,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "jamba-1.5-large",
@@ -717,7 +717,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "vertex-qwen", # 👈 the 'model_name' in config
@@ -797,7 +797,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "gpt-oss", # 👈 the 'model_name' in config
@@ -934,7 +934,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
             "model": "grok-vertex",

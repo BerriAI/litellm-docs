@@ -263,7 +263,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Azure AI Image Generation via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "azure-flux-kontext",
     "prompt": "A cozy coffee shop interior with warm lighting and rustic wooden furniture",
@@ -342,7 +342,7 @@ asyncio.run(edit_image())
 
 ```bash showLineNumbers title="Image Edit via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="azure-flux-2-pro"' \
 --form 'prompt="Add sunglasses to the person"' \
 --form 'image=@"input_image.png"'

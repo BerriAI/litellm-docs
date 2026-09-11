@@ -753,7 +753,7 @@ print(response)
 ```shell
 curl --location 'http://0.0.0.0:4000/moderations' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{"input": "Sample text goes here", "model": "text-moderation-stable"}'
 ```
 </TabItem>
@@ -1069,7 +1069,7 @@ Get a list of responses when `model` is passed as a list
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3,{{openai_small}}",

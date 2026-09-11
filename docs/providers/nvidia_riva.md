@@ -123,7 +123,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
-  --header 'Authorization: Bearer $LITELLM_API_KEY' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --form 'file=@"/path/to/speech.mp3"' \
   --form 'model="parakeet-asr"'
 ```

@@ -706,7 +706,7 @@ litellm --config /path/to/config.yaml
 ```bash title="Test Logging Only" showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
   "model": "{{openai_small}}",
   "messages": [

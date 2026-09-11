@@ -673,7 +673,7 @@ asyncio.run(main())
 ```bash title="cURL with Custom Headers" showLineNumbers
 curl --location 'http://localhost:4000/github_mcp/mcp' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: Bearer $LITELLM_API_KEY' \
+--header "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
 --header 'Authorization: Bearer gho_token' \
 --header 'custom_key: custom_value' \
 --header 'x-custom-header: additional_data' \

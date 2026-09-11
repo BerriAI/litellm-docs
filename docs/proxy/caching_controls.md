@@ -392,7 +392,7 @@ You can view the cache_key in the response headers, on cache hits the cache key 
 
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer $LITELLM_API_KEY' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",

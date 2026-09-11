@@ -34,7 +34,7 @@ Make a `/chat/completions` call with the `user` field containing your customer I
 ```bash showLineNumbers title="Track spend with customer ID in body"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer $LITELLM_API_KEY' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
     "model": "{{openai_small}}",
     "user": "customer-123",
@@ -61,7 +61,7 @@ LiteLLM automatically recognizes these standard headers (no configuration requir
 ```bash showLineNumbers title="Track spend with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer $LITELLM_API_KEY' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'x-litellm-customer-id: customer-123' \
   --data '{
     "model": "{{openai_small}}",

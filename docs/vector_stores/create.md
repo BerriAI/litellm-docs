@@ -153,7 +153,7 @@ print(vector_store)
 ```bash showLineNumbers title="Create Vector Store via curl"
 curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "name": "My Document Store",
   "file_ids": ["file-abc123", "file-def456"],
@@ -186,7 +186,7 @@ Use the same base URL and API key as for create. Replace `vs_abc123` with your v
 ```bash
 curl -L 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123' \
   -H 'Accept: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **List** (optional query params: `after`, `before`, `limit`, `order`)
@@ -194,7 +194,7 @@ curl -L 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123' \
 ```bash
 curl -L 'http://0.0.0.0:4000/v1/vector_stores?limit=20&order=desc' \
   -H 'Accept: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Update** (`POST` with JSON body)
@@ -202,7 +202,7 @@ curl -L 'http://0.0.0.0:4000/v1/vector_stores?limit=20&order=desc' \
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{ "name": "Renamed store", "metadata": { "env": "staging" } }'
 ```
 
@@ -211,7 +211,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123' \
 ```bash
 curl -L -X DELETE 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123' \
   -H 'Accept: application/json' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 See [Vector store management and routing on the proxy](#vector-store-management-and-routing-on-the-proxy) for provider routing details and OpenAI API references.
@@ -250,7 +250,7 @@ For **search**, see [Search vector store](./search.md). For **files** on a store
 Use your LiteLLM proxy virtual key with either:
 
 ```bash
--H 'Authorization: Bearer $LITELLM_API_KEY'
+-H "Authorization: Bearer $LITELLM_API_KEY"
 # or
 -H 'x-litellm-api-key: sk-<your-litellm-api-key>'
 ```

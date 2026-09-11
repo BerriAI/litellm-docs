@@ -88,7 +88,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer $LITELLM_API_KEY' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",
@@ -147,7 +147,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/embeddings' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"input": ["hello world"], "model": "my-model"}'
 ```

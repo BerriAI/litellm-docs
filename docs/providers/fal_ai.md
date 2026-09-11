@@ -246,7 +246,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Generate via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer $LITELLM_API_KEY' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "stable-diffusion",
     "prompt": "A serene Japanese garden with cherry blossoms",

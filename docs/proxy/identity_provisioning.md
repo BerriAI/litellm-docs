@@ -150,7 +150,7 @@ That first request mints the user's virtual key and the claim-to-key mapping. Co
 ```bash
 # The mapping now exists, keyed on the claim value (the user's email here)
 curl 'https://your-litellm-proxy:4000/jwt/key/mapping/list?page=1&size=50' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 In the Admin UI, the auto-registered key appears under the user with `auto_registered: true` in its metadata, and spend, rate limits, and model access now track per user. From here every subsequent request from that user reuses the same key. This is the point where the flow is self-sustaining; you only step back in to adjust a specific user's budget or model set, which you do by updating the underlying key.

@@ -190,7 +190,7 @@ All keys within a team will inherit the team's priority. This is useful when you
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_alias": "production-team",
@@ -201,7 +201,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 Create a key for this team:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_id": "team-id-from-previous-response"
@@ -215,7 +215,7 @@ Set priority directly on the key. This is useful when you need fine-grained cont
 **Production Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "prod"}
@@ -225,7 +225,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Development Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "dev"}
@@ -235,7 +235,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Key Without Priority (uses default_priority weight):**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

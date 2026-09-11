@@ -364,7 +364,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'x-litellm-api-key: Bearer $LITELLM_API_KEY' \
+-H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

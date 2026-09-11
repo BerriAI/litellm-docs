@@ -31,7 +31,7 @@ Call it through the proxy with your LiteLLM key:
 
 ```shell
 curl -i -X POST 'http://localhost:4000/internal-api/summarize' \
-  -H 'Authorization: Bearer $LITELLM_API_KEY' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"document_id": "doc-9931"}'
 ```
