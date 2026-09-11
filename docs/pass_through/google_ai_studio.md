@@ -274,7 +274,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -282,7 +282,7 @@ Expected Response
 
 
 ```bash
-http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-1234ewknldferwedojwojw' \
+http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-<virtual-key>' \
 -H 'Content-Type: application/json' \
 -d '{
     "contents": [{

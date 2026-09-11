@@ -483,7 +483,7 @@ Expected Response
 ```bash showLineNumbers
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -492,7 +492,7 @@ Expected Response
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/cohere.command-r-v1:0/converse' \
--H 'Authorization: Bearer sk-1234ewknldferwedojwojw' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [

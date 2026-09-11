@@ -176,7 +176,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -186,7 +186,7 @@ Expected Response
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/vllm/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234ewknldferwedojwojw' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
   --data '{
     "messages": [
         {

@@ -690,7 +690,7 @@ general_settings:
 
 ```bash
 export GEMINI_API_KEY="your-gemini-api-key"
-export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  # Generate a secure key
 ```
 
 **3. Start LiteLLM Proxy:**

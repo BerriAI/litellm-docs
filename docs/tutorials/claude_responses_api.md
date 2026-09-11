@@ -61,7 +61,7 @@ Set your environment variables:
 
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
-export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  # Generate a secure key
 ```
 
 :::tip

@@ -53,7 +53,7 @@ Set your environment variables:
 
 ```bash
 export OPENAI_API_KEY="your-openai-api-key"
-export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  # Generate a secure key
 ```
 
 </TabItem>
@@ -72,7 +72,7 @@ Set your environment variables:
 
 ```bash
 export GEMINI_API_KEY="your-gemini-api-key"
-export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  # Generate a secure key
 ```
 
 </TabItem>
@@ -101,7 +101,7 @@ Set your environment variables:
 
 ```bash
 export VERTEX_FILE_PATH_ENV_VAR="/path/to/service_account.json"
-export LITELLM_MASTER_KEY="sk-1234567890"  
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  
 ```
 
 </TabItem>
@@ -123,7 +123,7 @@ Set your environment variables:
 ```bash
 export AZURE_API_KEY="your-azure-api-key"
 export AZURE_API_BASE="https://your-resource.openai.azure.com"
-export LITELLM_MASTER_KEY="sk-1234567890"
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
 ```
 
 </TabItem>

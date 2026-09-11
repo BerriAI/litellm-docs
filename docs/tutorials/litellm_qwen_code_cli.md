@@ -51,7 +51,7 @@ Configure the Qwen Code CLI to point to your LiteLLM Proxy instance by setting t
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:4000"
-export OPENAI_API_KEY=sk-1234567890
+export OPENAI_API_KEY=sk-<your-litellm-api-key>
 export OPENAI_MODEL="your-configured-model"
 ```
 

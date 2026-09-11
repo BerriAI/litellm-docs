@@ -374,7 +374,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 

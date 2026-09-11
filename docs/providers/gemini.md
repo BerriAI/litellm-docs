@@ -2075,7 +2075,7 @@ from openai import OpenAI
 import os
 import base64
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-12345")
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>")
 base64_image = base64.b64encode(open("closeup-object-on-table-many-260nw-1216144471.webp", "rb").read()).decode()
 
 import json

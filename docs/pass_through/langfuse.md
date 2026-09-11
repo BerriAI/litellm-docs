@@ -105,7 +105,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -118,7 +118,7 @@ from langfuse import Langfuse
 langfuse = Langfuse(
     host="http://localhost:4000/langfuse", # your litellm proxy endpoint
     public_key="anything",        # no key required since this is a pass through
-    secret_key="sk-1234ewknldferwedojwojw",        # no key required since this is a pass through
+    secret_key="sk-<your-litellm-api-key>",        # no key required since this is a pass through
 )
 
 print("sending langfuse trace request")

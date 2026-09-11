@@ -214,7 +214,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-5",

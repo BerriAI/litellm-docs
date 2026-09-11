@@ -71,17 +71,17 @@ export ANTHROPIC_MODEL="{{anthropic}}"
 # LiteLLM proxy auth: this is added to every request
 # Use x-litellm-api-key so the proxy authenticates you; your Anthropic credential goes
 # via Authorization (from /login) or x-api-key (if you configured a key directly)
-export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: sk-12345"
+export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"
 ```
 
-Replace `sk-12345` with your actual LiteLLM virtual key.
+Replace `sk-<your-litellm-api-key>` with your actual LiteLLM virtual key.
 
 :::tip Multiple headers
 
 For multiple headers, use newline-separated values:
 
 ```bash
-export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: sk-12345
+export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY
 x-litellm-user-id: my-user-id"
 ```
 

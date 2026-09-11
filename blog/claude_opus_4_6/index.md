@@ -264,7 +264,7 @@ Enable compaction to reduce context size while preserving key information. LiteL
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-6",
@@ -414,7 +414,7 @@ Use the `thinking` parameter with `type: "adaptive"` to enable adaptive thinking
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-6",
@@ -483,7 +483,7 @@ Four effort levels available: `low`, `medium`, `high` (default), and `max`. Pass
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-6",
@@ -553,7 +553,7 @@ general_settings:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'anthropic-beta: context-1m-2025-08-07' \
 --header 'content-type: application/json' \
 --data '{
@@ -612,7 +612,7 @@ Use the `inference_geo` parameter to specify US-only inference:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-6",
@@ -700,7 +700,7 @@ LiteLLM automatically tracks the higher costs for fast mode in usage and cost ca
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header 'x-api-key: $LITELLM_API_KEY' \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-6",

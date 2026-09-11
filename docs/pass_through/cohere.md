@@ -234,7 +234,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -246,7 +246,7 @@ curl --request POST \
   --url http://0.0.0.0:4000/cohere/v1/rerank \
   --header 'accept: application/json' \
   --header 'content-type: application/json' \
-  --header "Authorization: bearer sk-1234ewknldferwedojwojw" \
+  --header "Authorization: bearer $LITELLM_API_KEY" \
   --data '{
     "model": "rerank-english-v3.0",
     "query": "What is the capital of the United States?",
