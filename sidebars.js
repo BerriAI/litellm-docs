@@ -995,6 +995,7 @@ const sidebars = {
             "search/agentcore",
             "search/nimble",
             "search/bing_grounding",
+            "search/search1api",
           ]
         },
         "skills",
