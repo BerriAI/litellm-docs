@@ -1,4 +1,4 @@
-# Scale the LiteLLM Gateway for high-throughput workloads
+# Scale for high-throughput workloads
 
 Large prompts put meaningful work on the gateway before a request reaches the model provider. Authentication, budget checks, token counting, spend tracking, metrics collection, and database connections can all compete with request processing.
 
