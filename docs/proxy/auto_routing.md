@@ -530,6 +530,32 @@ writes = 0 if warm else cache_creation
 
 :::
 
+## Per-session savings
+
+`GET /auto_router/session?session_id=<id>` returns the reported savings for one session: what its last turn ran on and what the session has cost against the router's baseline. It reads the per-session rollup the spend flush maintains, never the spend logs, and it is scoped to the caller's own key, so any virtual key can ask about its own sessions and gets a 404 for everyone else's. The session id is the one the client sent, for example Claude Code's `x-claude-code-session-id` header or Codex's thread id; see [session tracking](./logging_spec.md).
+
+```bash
+curl "$LITELLM_PROXY_URL/auto_router/session?session_id=cf712ab8-4c7c-4d48-ba91-eed54bc2956b" \
+  -H "Authorization: Bearer sk-..."
+```
+
+```json
+{
+  "session_id": "cf712ab8-4c7c-4d48-ba91-eed54bc2956b",
+  "router_name": "smart-router",
+  "router_type": "complexity",
+  "turns": 3,
+  "last_model": "{{openai_large}}",
+  "spend": 0.14,
+  "saved_spend": 0.08,
+  "baseline_spend": 0.22,
+  "baseline_model": "{{openai_large}}",
+  "baseline_models": {"{{openai_large}}": 3}
+}
+```
+
+`baseline_spend` is `spend` plus `saved_spend`, the estimated single-model cost. `baseline_model` is the baseline those turns were actually priced against, recorded turn by turn on the rollup, so it keeps naming the right counterfactual after the router is reconfigured or removed; `baseline_models` counts the turns priced against each baseline, and more than one entry means the baseline changed mid-session and `baseline_spend` mixes both. `baseline_model` is `null` when no turn recorded a baseline: sessions from before the proxy recorded it, and adaptive or quality routers, which derive no baseline. A session with no flushed auto-routed turn yet is a 404, which is also what an older proxy returns, so a client can treat both the same way. The `lite` CLI's [Claude Code status line and Codex hook](../tutorials/claude_code_autorouter.md#show-the-routed-model-and-savings-in-the-status-line) are built on this endpoint.
+
 ## Alias `litellm_params` on the router
 
 `drop_params`, `cache_control_injection_points`, and any other `litellm_params` set on the auto router deployment itself are merged into the outbound request when the router picks a tier. Values the caller passes explicitly on a request win over the alias defaults.

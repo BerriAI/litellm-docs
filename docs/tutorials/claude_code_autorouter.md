@@ -85,6 +85,26 @@ curl -X POST $LITELLM_PROXY_URL/key/generate \
 
 Model discovery lists whatever the key can reach, and Claude Desktop's **Test connection** then probes `/v1/messages` with one of the discovered models rather than with the one you selected. A broadly scoped key turns that into a connection failure on some unrelated deployment, which reads as a broken router. Scoping the key to `claude-auto` makes discovery return exactly one model and the probe hit the router itself. Wildcard route names are worth checking here too, since a literal `claude-*` entry in `model_list` is published verbatim in `/v1/models` and 404s when a client probes it.
 
+## Show the routed model and savings in the status line
+
+Claude Code's own status line only knows the model name it requested, `claude-auto`. To see the tier that actually answered, and what the session has cost against the router's savings baseline, let the `lite` CLI wire Claude Code up instead of exporting the variables by hand:
+
+```bash
+lite --base-url https://your-litellm-proxy.com configure claude --api-key sk-... --model claude-auto
+```
+
+Besides the proxy URL and key (written as a static `ANTHROPIC_AUTH_TOKEN`; the command needs a long-lived virtual key and refuses a `lite login` credential, which expires within a day), this installs `~/.litellm/statusline.py` and registers it as Claude Code's `statusLine` (unless you already run one). `--model` pins `claude-auto` both as the row Claude Code starts on and as `ANTHROPIC_MODEL`, so `claude -c` and `claude --resume` stay on the router: a resumed session otherwise re-sends the tier model its transcript recorded, which a key scoped to `claude-auto` cannot reach. Each turn then ends with:
+
+```
+claude-auto · Routed to: claude-haiku-4-5  -80% vs Claude Opus 5
+LiteLLM       █████░░░░░░░░░░░░░░░░░░░ $0.03
+Claude Opus 5 ████████████████████████ $0.15
+```
+
+Two things make this work. The routed model is read from Claude Code's transcript, which records the `model` field of each response, so the router needs `return_raw_model_name: true` (see [reading the picked model from the response](../proxy/auto_routing.md#reading-the-picked-model-from-the-response)); without it the line shows `claude-auto`. The cost lines come from [`GET /auto_router/session`](../proxy/auto_routing.md#per-session-savings), which any virtual key may call for its own sessions, and the baseline is the priciest model in the router's hardest tier, the same counterfactual the [reported savings](../proxy/auto_routing.md#reported-savings) use. The spend flush is asynchronous, so the numbers land a second or two after each turn.
+
+`lite codex` registers the same script as a Codex `Stop` hook for that launch, so Codex prints the same block as a system message after every turn. Codex asks once to trust the hook and remembers the answer. `lite unconfigure claude` removes the status line only while it still points at that script.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
