@@ -27,6 +27,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **Three classifiers.** Sub-millisecond heuristic scorer, a small LLM, or keyword rules.
 - **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
 - **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
+- **Harness-aware classification.** Recognize Claude Code and Codex request formats, preserve delegated tasks, and inspect what the classifier received. [Coming in the next release](/docs/auto_router/feature_history#coming-in-next-release)
 
 ## Results
 
@@ -124,6 +125,7 @@ items={[
 
 ## Release posts
 
+- [Harness-Aware Routing](/blog/auto-router-harness-aware-classification): Claude Code and Codex context handling, encrypted delegated tasks, and classifier logs
 - [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation): bumps a request one tier when it's stuck in a retry loop
 - [Auto Router v2](/blog/autorouter-v2): one router for complexity, semantic, and adaptive routing
 - [1-click presets and Test Routing](/blog/auto-router-setup-and-testing)

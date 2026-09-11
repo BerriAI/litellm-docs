@@ -10,10 +10,15 @@ Every release links to its GitHub release and full release notes. Newest first. 
 
 Merged after the v1.101.0 release candidate was cut. These changes are in `v1.102.0-dev` builds.
 
+- **Harness-aware classification.** Omit Claude Code system text and strip Codex reminder envelopes from classification while preserving delegated tasks and the original routed request. [#40655](https://github.com/BerriAI/litellm/pull/40655), [#40599](https://github.com/BerriAI/litellm/pull/40599)
+- **Encrypted delegated tasks.** Preserve encrypted task blocks in native OpenAI or Azure OpenAI Responses classifier calls. Unsupported deployments and decryption errors follow `classifier_fallback`. [#40608](https://github.com/BerriAI/litellm/pull/40608)
+- **Classifier input logs.** Inspect the provider-bound classifier input, masked originating request, and classifier response separately in the Classify row. [#40604](https://github.com/BerriAI/litellm/pull/40604)
 - **Heuristic v1 tuning.** One tuned router stays editable without the `auto_router` license feature. [#39952](https://github.com/BerriAI/litellm/pull/39952)
 - **Faster semantic cold start.** Build the first route layer once, off the event loop. [#39954](https://github.com/BerriAI/litellm/pull/39954)
 - **Adaptive router fixes.** Read model pricing from `model_info` and preserve bandit priors across restarts. [#39957](https://github.com/BerriAI/litellm/pull/39957), [#39955](https://github.com/BerriAI/litellm/pull/39955)
 - **Cross-provider tool history.** `/v1/messages` can replay `tool_use` blocks across OpenAI and Anthropic tiers. [#39967](https://github.com/BerriAI/litellm/pull/39967)
+
+Use a build containing the linked PRs; earlier development builds may not include every change. [Harness-aware routing update](/blog/auto-router-harness-aware-classification)
 
 ## v1.101.0 (release candidate)
 
