@@ -80,7 +80,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -170,7 +170,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -259,7 +259,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -320,7 +320,7 @@ assert response is not None
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "mistral/mistral-large-latest",
     "messages": [
@@ -385,7 +385,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H 'x-api-key: $LITELLM_API_KEY'
 ```
 
 Expected Response 

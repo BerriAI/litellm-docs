@@ -486,7 +486,7 @@ litellm --config config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/transcriptions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F file=@speech.wav \
   -F model=gemini-3.5-transcribe \
   -F response_format=verbose_json \
@@ -512,7 +512,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://0.0.0.0:4000/v1/realtime?model=gemini-3.5-transcribe-live",
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
     ) as ws:
         await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": "<base64 pcm16 audio>"}))
         async for message in ws:
@@ -591,7 +591,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -662,7 +662,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -752,7 +752,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -812,7 +812,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -956,7 +956,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1050,7 +1050,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in Buenos Aires?"}],
@@ -1177,7 +1177,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1234,7 +1234,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1349,7 +1349,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-computer-use",
     "messages": [
@@ -1453,7 +1453,7 @@ response = completion(
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What'\''s the weather in Tokyo?"}],
@@ -1476,7 +1476,7 @@ When building conversation history for multi-turn function calling, you must inc
 from openai import OpenAI
 import json
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 def get_current_temperature(location: str) -> dict:
     """Gets the current weather temperature for a given location."""
@@ -1549,7 +1549,7 @@ print(response2.choices[0].message.content)
 # Step 1: Initial request
 curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header 'Authorization: Bearer $LITELLM_API_KEY' \
   --data '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1622,7 +1622,7 @@ The response will include tool calls with thought signatures in `provider_specif
 # Include the assistant message from Step 1 (with thought signatures in provider_specific_fields)
 curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header 'Authorization: Bearer $LITELLM_API_KEY' \
   --data '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1759,7 +1759,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -2635,7 +2635,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "gemini-2.0-flash-exp-image-generation",
     "messages": [{"role": "user", "content": "Generate an image of a cat"}],

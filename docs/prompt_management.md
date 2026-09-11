@@ -10,7 +10,7 @@ Use LiteLLM Prompt Management with `/v1/responses` by passing `prompt_id` and op
 
 ```bash
 curl -X POST "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",
@@ -26,7 +26,7 @@ To send follow-up turns in one request, pass message history in `input`.
 
 ```bash
 curl -X POST "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",

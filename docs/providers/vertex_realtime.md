@@ -218,8 +218,8 @@ async def main():
     async with websockets.connect(
         PROXY_URL,
         additional_headers={
-            "Authorization": "Bearer sk-1234",
-            "X-Serverless-Authorization": "Bearer sk-1234",
+            "Authorization": "Bearer $LITELLM_API_KEY",
+            "X-Serverless-Authorization": "Bearer $LITELLM_API_KEY",
         },
     ) as ws:
         _ = json.loads(await ws.recv())  # session.created

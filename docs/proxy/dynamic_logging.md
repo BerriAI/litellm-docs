@@ -33,7 +33,7 @@ Start by viewing all currently enabled callbacks on your proxy to see what's ava
 curl -X 'GET' \
   'http://localhost:4000/callbacks/list' \
   -H 'accept: application/json' \
-  -H 'x-litellm-api-key: sk-1234'
+  -H 'x-litellm-api-key: sk-<your-litellm-api-key>'
 ```
 
 #### Response
@@ -78,7 +78,7 @@ Use the `x-litellm-disable-callbacks` header to disable specific callbacks for i
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
     "model": "{{anthropic}}",
@@ -98,7 +98,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -131,7 +131,7 @@ You can disable multiple callbacks by providing a comma-separated list in the he
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'x-litellm-disable-callbacks: langfuse,datadog,prometheus' \
     --data '{
     "model": "{{anthropic}}",
@@ -151,7 +151,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 

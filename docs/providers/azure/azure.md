@@ -851,7 +851,7 @@ file_id = batch_input_file.id
 
 ```bash
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@mydata.jsonl"
 ```
@@ -1061,7 +1061,7 @@ Just set `model: batch-gpt-4o-mini` in your .jsonl.
 
 ```bash
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@mydata.jsonl"
 ```
@@ -1276,7 +1276,7 @@ litellm --config config.yaml
 ```bash
 curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "azure-gpt-3.5",
     "messages": [

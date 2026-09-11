@@ -238,7 +238,7 @@ print(response.choices[0].message.content)  # direct answer, no reasoning_conten
 
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen/Qwen3.5-9B",
@@ -344,7 +344,7 @@ Test request
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Salesforce/Llama-Rank-V1",

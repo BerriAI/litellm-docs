@@ -63,7 +63,7 @@ $ BYTEZ_API_KEY=YOUR_BYTEZ_API_KEY_HERE litellm --config /path/to/config.yaml --
 ```py
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+    api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
     base_url="http://0.0.0.0:4000" # litellm-proxy-base url
 )
 
@@ -90,7 +90,7 @@ print(response)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "gemma-3",

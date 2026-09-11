@@ -334,7 +334,7 @@ litellm_settings:
   forward_client_headers_to_llm_api: ["anthropic-version"]
 
 general_settings:
-  master_key: "sk-1234" # Enter here your desired master key starting with 'sk-'.
+  master_key: "sk-<your-litellm-master-key>" # Enter here your desired master key starting with 'sk-'.
   
   # UI Admin is not required but helpful including the management of keys for your team(s). If you are using a database, these parameters are required:
   database_url: "Enter you database URL."
@@ -363,7 +363,7 @@ The proxy will start on `http://localhost:4000` by default.
 ```bash showLineNumbers title="Test Request"
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
@@ -378,7 +378,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 response = client.chat.completions.create(
@@ -395,7 +395,7 @@ print(response.choices[0].message.content)
 import os
 import litellm
 
-os.environ["LITELLM_PROXY_API_KEY"] = "sk-1234"
+os.environ["LITELLM_PROXY_API_KEY"] = "sk-<your-litellm-api-key>"
 litellm.use_litellm_proxy = True
 
 response = litellm.completion(

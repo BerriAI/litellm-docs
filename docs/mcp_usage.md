@@ -26,7 +26,7 @@ Demo Video Using Responses API with LiteLLM Proxy: [Demo video here](https://www
 ```bash title="cURL Example" showLineNumbers
 curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "{{openai_large}}",
     "input": [
@@ -61,7 +61,7 @@ When using LiteLLM Proxy, you can use the same MCP tools across all your LLM pro
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234", # paste your litellm proxy api key here
+    api_key="sk-<your-litellm-api-key>", # paste your litellm proxy api key here
     base_url="http://localhost:4000" # paste your litellm proxy base url here
 )
 print("Making API request to Responses API with MCP tools")
@@ -106,7 +106,7 @@ To get the list of allowed tools when using LiteLLM MCP Gateway, you can naigate
 ```bash title="cURL Example with allowed_tools" showLineNumbers
 curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "{{openai_large}}",
     "input": [
@@ -137,7 +137,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

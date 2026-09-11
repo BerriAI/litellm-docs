@@ -135,7 +135,7 @@ model_list:
       vertex_location: us-central1
 
 general_settings:
-  master_key: sk-1234  # Your proxy API key
+  master_key: os.environ/LITELLM_MASTER_KEY  # Your proxy API key
 ```
 
 2. **Start the proxy server:**
@@ -155,7 +155,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",  # Your proxy API key
+    api_key="sk-<your-litellm-api-key>",  # Your proxy API key
     base_url="http://0.0.0.0:4000"
 )
 
@@ -175,7 +175,7 @@ print(response.choices[0].message.image)    # Image data
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "gemini-image-gen",
   "messages": [

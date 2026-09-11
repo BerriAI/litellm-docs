@@ -202,7 +202,7 @@ model_list:
       mode: image_generation
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -224,7 +224,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",  # Your proxy URL
-    api_key="sk-1234"                  # Your proxy API key
+    api_key="sk-<your-litellm-api-key>"                  # Your proxy API key
 )
 
 # Generate image with FLUX Kontext Pro
@@ -250,7 +250,7 @@ response = litellm.image_generation(
     model="litellm_proxy/azure-flux-11-pro",
     prompt="A cyberpunk warrior in a neon-lit alleyway",
     api_base="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 print(response.data[0].url)
@@ -263,7 +263,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Azure AI Image Generation via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --data '{
     "model": "azure-flux-kontext",
     "prompt": "A cozy coffee shop interior with warm lighting and rustic wooden furniture",
@@ -342,7 +342,7 @@ asyncio.run(edit_image())
 
 ```bash showLineNumbers title="Image Edit via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --form 'model="azure-flux-2-pro"' \
 --form 'prompt="Add sunglasses to the person"' \
 --form 'image=@"input_image.png"'
@@ -357,7 +357,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 response = client.images.edit(

@@ -53,7 +53,7 @@ Try sending a bad request to proxy
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --data ' {
       "model": "{{openai_large}}",
       "user": "hi",
@@ -78,7 +78,7 @@ Since our hanging threshold is 0.0000001 seconds, you should see an alert.
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --data ' {
       "model": "{{openai_large}}",
       "user": "hi",

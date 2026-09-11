@@ -342,7 +342,7 @@ If the server already has permissions, use its current id from `GET /v1/mcp/serv
 
 ```bash
 curl -s http://localhost:4000/v1/mcp/server \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 `server_id` must be a non-empty string. Config entries cannot reuse an id or another entry's name or alias. Clashes with a database-backed server only log a warning: if the id matches, the database server wins and the config one is unreachable, and if it matches that server's name or alias, permissions naming it reach the config server instead.
@@ -558,7 +558,7 @@ config = {
             "url": "http://localhost:4000/mcp/",
             "headers": {
                 "x-mcp-servers": "dev_group", # assume this gives access to github, zapier and deepwiki
-                "x-litellm-api-key": "Bearer sk-1234",
+                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
                 "x-mcp-github-authorization": "Bearer gho_token", 
                 "x-mcp-zapier-x-api-key": "sk-xxxxxxxxx",
                 "x-mcp-deepwiki-authorization": "Basic base64_encoded_creds",
@@ -619,7 +619,7 @@ config = {
         "github": {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer sk-1234",
+                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
                 "Authorization": "Bearer gho_token", 
                 "custom_key": "custom_value",
                 "x-custom-header": "additional_data"
@@ -673,7 +673,7 @@ asyncio.run(main())
 ```bash title="cURL with Custom Headers" showLineNumbers
 curl --location 'http://localhost:4000/github_mcp/mcp' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: Bearer sk-1234' \
+--header 'x-litellm-api-key: Bearer $LITELLM_API_KEY' \
 --header 'Authorization: Bearer gho_token' \
 --header 'custom_key: custom_value' \
 --header 'x-custom-header: additional_data' \
@@ -741,7 +741,7 @@ config = {
         "github": {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer sk-1234",
+                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
                 "x-litellm-end-user-id": "customer_123",  # 👈 CUSTOMER ID
                 "Authorization": "Bearer gho_token"
             }
@@ -864,7 +864,7 @@ When the servers in an access group share one credential, pass `x-mcp-{access_gr
 curl -X POST http://localhost:4000/mcp/dev_group \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -H "x-mcp-dev_group-authorization: Bearer SHARED_TOKEN" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```

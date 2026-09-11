@@ -329,11 +329,11 @@ litellm --config config.yaml --port 4000
 # https://docs.litellm.ai/docs/mcp_rest_api
 
 curl http://localhost:4000/mcp-rest/tools/list \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 
 curl http://localhost:4000/mcp-rest/tools/call \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "server_id": "test_oauth2",
     "name": "echo",

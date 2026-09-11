@@ -62,7 +62,7 @@ print(response)
 ```shell
 curl --location 'http://0.0.0.0:4000/moderations' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --data '{"input": "Sample text goes here", "model": "text-moderation-stable"}'
 ```
 </TabItem>

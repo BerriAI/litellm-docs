@@ -136,7 +136,7 @@ Any other `size` value maps to an aspect ratio only and leaves the resolution to
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --data '{
   "model": "veo-3.1-lite-generate-001",
   "prompt": "A slow aerial shot of a lighthouse at sunrise",
@@ -225,7 +225,7 @@ Start the proxy and make requests:
 # Step 1: Generate video
 curl --location 'http://0.0.0.0:4000/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --data '{
   "model": "veo-3",
   "prompt": "Aerial shot over a futuristic city at sunrise",
@@ -234,11 +234,11 @@ curl --location 'http://0.0.0.0:4000/videos' \
 
 # Step 2: Poll status
 curl --location 'http://localhost:4000/v1/videos/{video_id}' \
---header 'x-litellm-api-key: sk-1234'
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>'
 
 # Step 3: Download video
 curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --output video.mp4
 ```
 
@@ -249,7 +249,7 @@ curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
 import litellm
 
 litellm.api_base = "http://0.0.0.0:4000"
-litellm.api_key = "sk-1234"
+litellm.api_key = "sk-<your-litellm-api-key>"
 
 response = litellm.video_generation(
     model="veo-3",

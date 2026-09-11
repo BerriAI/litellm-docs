@@ -32,7 +32,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: postgresql://llmproxy:dbpassword9090@db:5432/litellm
 ```
 
@@ -49,7 +49,7 @@ You should see the proxy start on `http://0.0.0.0:4000`.
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -d '{
     "model": "{{openai_small}}",
     "messages": [

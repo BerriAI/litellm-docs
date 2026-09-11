@@ -46,7 +46,7 @@ Track spend, set budgets for your Internal Team
 Create a new team and set `max_budget` and `budget_duration`
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/new' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H 'Authorization: Bearer $LITELLM_API_KEY' \
      -H 'Content-Type: application/json' \
      -d '{
             "team_alias": "QA Prod Bot", 
@@ -98,7 +98,7 @@ Create a key for Team=`QA Prod Bot` and `team_id="de35b29e-6ca8-4f47-b804-2b79d0
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H 'Authorization: Bearer $LITELLM_API_KEY' \
      -H 'Content-Type: application/json' \
      -d '{"team_id": "de35b29e-6ca8-4f47-b804-2b79d07aa99a"}'
 ```

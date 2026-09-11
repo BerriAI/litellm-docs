@@ -47,7 +47,7 @@ vector_store_registry:
 
 ```bash showLineNumbers title="Register a Vertex AI Search datastore"
 curl -X POST 'http://localhost:4000/vector_store/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "vector_store_id": "my-datastore_1234567890",
@@ -76,7 +76,7 @@ Search it through the unified endpoint. LiteLLM resolves the provider and creden
 
 ```bash showLineNumbers title="Unified search"
 curl -X POST 'http://localhost:4000/v1/vector_stores/my-datastore_1234567890/search' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"query": "How do I authenticate?"}'
 ```
@@ -87,7 +87,7 @@ Or attach it to a chat completion, and LiteLLM will search the store and inject 
 
 ```bash showLineNumbers title="RAG in /chat/completions"
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "gpt-5.6",
@@ -118,7 +118,7 @@ Set `object_permission.vector_stores` when creating a key or team to control whi
 
 ```bash showLineNumbers title="Key limited to one store"
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "object_permission": {"vector_stores": ["my-datastore_1234567890"]}

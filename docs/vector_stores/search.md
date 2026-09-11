@@ -290,7 +290,7 @@ from openai import OpenAI
 # Point OpenAI SDK to LiteLLM proxy
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
 )
 
 search_results = client.beta.vector_stores.search(
@@ -308,7 +308,7 @@ print(search_results)
 ```bash showLineNumbers title="Search Vector Store via curl"
 curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "query": "What is the capital of France?",
   "filters": {

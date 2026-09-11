@@ -156,7 +156,7 @@ litellm_settings:
   request_timeout: 30
 
 general_settings:
-  master_key: "sk-1234"
+  master_key: "sk-<your-litellm-master-key>"
 ```
 
 **2. Start the proxy:**

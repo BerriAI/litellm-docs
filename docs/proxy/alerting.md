@@ -72,7 +72,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/health/services?service=slack' \
--H 'Authorization: Bearer sk-1234'
+-H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 ## Advanced
@@ -103,7 +103,7 @@ Set the `soft_budget` to 0.001
 curl -X 'POST' \
   'http://localhost:4000/key/generate' \
   -H 'accept: application/json' \
-  -H 'x-goog-api-key: sk-1234' \
+  -H 'x-goog-api-key: sk-<your-litellm-api-key>' \
   -H 'Content-Type: application/json' \
   -d '{
   "key_alias": "prod-app1",
@@ -213,7 +213,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   alerting: ["slack"]
   alerting_threshold: 0.0001 # (Seconds) set an artificially low threshold for testing alerting
   alert_to_webhook_url: {
@@ -247,7 +247,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   alerting: ["slack"]
   alerting_threshold: 0.0001 # (Seconds) set an artificially low threshold for testing alerting
   alert_to_webhook_url: {
@@ -276,7 +276,7 @@ Test it - send a valid llm request - expect to see a `llm_too_slow` alert in it'
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -320,7 +320,7 @@ Call the proxy `/health/services` endpoint to test if your alerting connection i
 
 ```bash
 curl --location 'http://0.0.0.0:4000/health/services?service=slack' \
---header 'Authorization: Bearer sk-1234'
+--header 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 
@@ -392,7 +392,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
---header 'Authorization: Bearer sk-1234'
+--header 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 **Expected Response**

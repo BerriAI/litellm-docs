@@ -43,7 +43,7 @@ Set trace-id enforcement on the agent itself:
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -64,7 +64,7 @@ Budget controls are set on the agent's `litellm_params` (not on individual keys)
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -127,7 +127,7 @@ Create an agent with max 25 iterations and a $5 budget cap:
 ```bash
 # 1. Create the agent with trace-id enforcement
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -144,7 +144,7 @@ curl -X POST 'http://localhost:4000/v1/agents' \
 
 # 2. Create a key for the agent
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_id": "<agent_id_from_step_1>",

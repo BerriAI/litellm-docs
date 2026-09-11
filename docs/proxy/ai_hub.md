@@ -262,7 +262,7 @@ Navigate to AI Hub page, and select the MCP tab (`PROXY_BASE_URL/ui/?login=succe
 
 ```bash
 curl -L -X POST 'http://localhost:4000/v1/mcp/make_public' \
--H 'Authorization: Bearer sk-1234' \ 
+-H 'Authorization: Bearer $LITELLM_API_KEY' \ 
 -H 'Content-Type: application/json' \
 -d '{"mcp_server_ids":["e856f9a3-abc6-45b1-9d06-62fa49ac293d"]}'
 ```
@@ -285,7 +285,7 @@ Users can now discover the MCP server via the public endpoint (`PROXY_BASE_URL/u
 
 ```bash
 curl -L -X GET 'http://0.0.0.0:4000/public/mcp_hub' \
--H 'Authorization: Bearer sk-1234'
+-H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 **Expected Response**

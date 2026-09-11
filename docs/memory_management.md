@@ -39,7 +39,7 @@ No additional `config.yaml` entries required. Endpoints are available automatica
 
 ```shell title="Create memory"
 curl -X POST "http://localhost:4000/v1/memory" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "key": "user:123:preferences",
@@ -56,7 +56,7 @@ import httpx
 
 client = httpx.Client(
     base_url="http://localhost:4000",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
 )
 
 response = client.post("/v1/memory", json={
@@ -94,17 +94,17 @@ print(response.json())
 
 ```shell title="List all memories"
 curl "http://localhost:4000/v1/memory" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```shell title="Filter by key prefix"
 curl "http://localhost:4000/v1/memory?key_prefix=user:123:" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```shell title="Paginate results"
 curl "http://localhost:4000/v1/memory?page=2&page_size=10" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -156,7 +156,7 @@ print(response.json())
 
 ```shell title="Get memory by key"
 curl "http://localhost:4000/v1/memory/user:123:preferences" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -179,7 +179,7 @@ If the key exists, updates it. If not, creates a new entry.
 
 ```shell title="Upsert memory"
 curl -X PUT "http://localhost:4000/v1/memory/user:123:preferences" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "value": "Prefers concise responses. Timezone: EST. Language: English.",
@@ -208,7 +208,7 @@ print(response.json())
 
 ```shell title="Delete memory"
 curl -X DELETE "http://localhost:4000/v1/memory/user:123:preferences" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -384,7 +384,7 @@ Use `key_prefix` in the list endpoint to scan all entries in a namespace:
 ```shell
 # Get all entries for a user
 curl "http://localhost:4000/v1/memory?key_prefix=user:123:" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## Error Codes

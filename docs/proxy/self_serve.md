@@ -176,7 +176,7 @@ This walks through setting up sso auto-add for **Okta, Google SSO**
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # 👈 CAN BE ANY FIELD
 ```

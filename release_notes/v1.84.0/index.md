@@ -186,7 +186,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 - **Restore prior behavior:** Set the opt-in on the key that sends the header (or on its team):
   ```shell
   curl -X POST 'http://0.0.0.0:4000/key/update' \
-      -H 'Authorization: Bearer sk-1234' \
+      -H 'Authorization: Bearer $LITELLM_API_KEY' \
       -H 'Content-Type: application/json' \
       -d '{"key": "<admin key that sends the header>", "metadata": {"allow_litellm_changed_by_header": true}}'
   ```

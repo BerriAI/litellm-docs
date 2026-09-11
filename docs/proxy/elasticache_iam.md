@@ -185,7 +185,7 @@ ElastiCache, and a write round-tripped
 
 ```shell
 curl -s -X GET 'http://localhost:4000/cache/ping' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 ```json
@@ -202,7 +202,7 @@ call returns the same response id and comes back in a fraction of the time
 
 ```shell
 curl -s -X POST 'http://localhost:4000/v1/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "temperature": 0}'
 ```

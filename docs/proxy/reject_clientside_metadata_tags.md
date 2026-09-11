@@ -27,7 +27,7 @@ general_settings:
 **Rejected Request Example:**
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_small}}",
@@ -53,7 +53,7 @@ curl -X POST http://localhost:4000/chat/completions \
 **Allowed Request Example:**
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_small}}",
@@ -95,7 +95,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: "postgresql://user:password@localhost:5432/litellm"
   
   # Reject client-side tags

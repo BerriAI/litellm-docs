@@ -32,7 +32,7 @@ Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/
 ```python title="Send Request with Spend Tracking" showLineNumbers
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -64,7 +64,7 @@ Pass `metadata` as part of the request body
 ```shell title="Curl Request with Spend Tracking" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --data '{
     "model": "llama3",
     "messages": [
@@ -93,7 +93,7 @@ from langchain.prompts.chat import (
 from langchain.schema import HumanMessage, SystemMessage
 import os
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
@@ -140,8 +140,8 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
 ```json title="Spend Log Entry Format" showLineNumbers
 {
   "api_key": "fe6b0cab4ff5a5a8df823196cc8a450*****",                            # Hash of API Key used
-  "user": "default_user",                                                       # Internal User (LiteLLM_UserTable) that owns `api_key=sk-1234`.
-  "team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32",                            # Team (LiteLLM_TeamTable) that owns `api_key=sk-1234`
+  "user": "default_user",                                                       # Internal User (LiteLLM_UserTable) that owns `api_key=sk-<your-litellm-api-key>`.
+  "team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32",                            # Team (LiteLLM_TeamTable) that owns `api_key=sk-<your-litellm-api-key>`
   "request_tags": ["jobID:214590dsff09fds", "taskName:run_page_classification"],# Tags sent in request
   "end_user": "palantir",                                                       # Customer - the `user` sent in the request
   "model_group": "llama3",                                                      # "model" passed to LiteLLM
@@ -181,7 +181,7 @@ Create Key with with `permissions={"get_spend_routes": true}`
 
 ```shell title="Generate Key with Spend Route Permissions" showLineNumbers
 curl --location 'http://0.0.0.0:4000/key/generate' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header 'Authorization: Bearer $LITELLM_API_KEY' \
         --header 'Content-Type: application/json' \
         --data '{
             "permissions": {"get_spend_routes": true}
@@ -212,7 +212,7 @@ Only the `LITELLM_MASTER_KEY` you set can access this route
 ```shell
 curl -X POST \
   'http://localhost:4000/global/spend/reset' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json'
 ```
 
@@ -416,7 +416,7 @@ Requirements:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -432,7 +432,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -483,7 +483,7 @@ const openai = require("openai");
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://0.0.0.0:4000",
   });
 
@@ -606,7 +606,7 @@ Use the `/global/spend/report` endpoint to get spend reports
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=team' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 #### Example Response
@@ -668,7 +668,7 @@ params = {
 }
 
 headers = {
-    'Authorization': 'Bearer sk-1234'
+    'Authorization': 'Bearer $LITELLM_API_KEY'
 }
 
 # Make the GET request
@@ -736,7 +736,7 @@ Customer [this is `user` passed to `/chat/completions` request](#how-to-track-sp
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=customer' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 #### Example Response
@@ -785,11 +785,11 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="per key" label="Spend for Specific API Key">
 
-👉 Key Change: Specify `api_key=sk-1234`
+👉 Key Change: Specify `api_key=sk-<your-litellm-api-key>`
 
 ```shell
-curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-1234' \
-  -H 'Authorization: Bearer sk-1234'
+curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-<your-litellm-api-key>' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 #### Example Response
@@ -833,7 +833,7 @@ Internal User (Key Owner): This is the value of `user_id` passed when calling [`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-12-30&internal_user_id=ishaan' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 #### Example Response
@@ -917,14 +917,14 @@ The `/spend/logs` endpoint now supports a `summarize` parameter to control data 
 
 ```bash title="Get Individual Transaction Logs" showLineNumbers
 curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=2024-01-02&summarize=false" \
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Get summarized data (default):**
 
 ```bash title="Get Summarized Spend Data" showLineNumbers
 curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=2024-01-02" \
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Use Cases:**
@@ -950,7 +950,7 @@ Requirements:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -968,7 +968,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -1020,7 +1020,7 @@ print(response)
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -1051,7 +1051,7 @@ const openai = require('openai');
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: 'sk-1234',
+    apiKey: 'sk-<your-api-key>',
     baseURL: 'http://0.0.0.0:4000'
   });
 
@@ -1088,7 +1088,7 @@ const openai = require('openai');
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: 'sk-1234',
+    apiKey: 'sk-<your-api-key>',
     baseURL: 'http://0.0.0.0:4000'
   });
 
@@ -1151,7 +1151,7 @@ Pass `x-litellm-spend-logs-metadata` as a request header with JSON string
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
     "model": "{{openai_small}}",
@@ -1213,7 +1213,7 @@ print(response)
 ```bash
 # request_id: e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
 curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### `/spend/logs` Response Format

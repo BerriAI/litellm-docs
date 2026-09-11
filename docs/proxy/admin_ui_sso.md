@@ -378,7 +378,7 @@ For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the to
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
 ```

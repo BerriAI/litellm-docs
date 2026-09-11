@@ -112,7 +112,7 @@ Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which wou
 If you use the database, set a salt key for encrypting and decrypting stored variables. Do not change it after adding a model; it encrypts your LLM API key credentials, and changing it makes them unreadable. Use a [password generator](https://1password.com/password-generator/) to get a random hash.
 
 ```bash
-export LITELLM_SALT_KEY="sk-1234"
+export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
@@ -353,7 +353,7 @@ Plain Docker:
 docker run \
   -v /path/to/global-bundle.pem:/certs/global-bundle.pem:ro \
   -e DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem" \
-  -e LITELLM_MASTER_KEY="sk-1234" \
+  -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
   -p 4000:4000 \
   ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
 ```

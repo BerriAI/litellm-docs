@@ -178,7 +178,7 @@ config = {
         "petstore": {
             "url": "http://localhost:4000/petstore_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer sk-1234"
+                "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
             }
         }
     }

@@ -57,7 +57,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"ttl": 300},
@@ -103,7 +103,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"s-maxage": 600},
@@ -149,7 +149,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"no-cache": true},
@@ -195,7 +195,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"no-store": true},
@@ -241,7 +241,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"namespace": "my-custom-namespace"},
@@ -262,7 +262,7 @@ the cache while leaving it on everywhere else.
 
 ```shell
 curl http://localhost:4000/key/generate \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "metadata": {"cache": {"no-cache": true}}
@@ -323,7 +323,7 @@ chat_completion = client.chat.completions.create(
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "cache": {"use-cache": True}
@@ -377,7 +377,7 @@ Example
 
 ```shell
 curl -X POST "http://0.0.0.0:4000/cache/delete" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{"keys": ["586bf3f3c1bf5aecb55bd9996494d3bbc69eb58397163add6d49537762a7548d", "key2"]}'
 ```
 
@@ -392,7 +392,7 @@ You can view the cache_key in the response headers, on cache hits the cache key 
 
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",

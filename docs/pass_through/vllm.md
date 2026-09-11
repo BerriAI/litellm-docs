@@ -16,7 +16,7 @@ Just replace `https://my-vllm-server.com` with `LITELLM_PROXY_BASE_URL/vllm` ðŸš
 ```bash
 curl -L -X GET 'http://0.0.0.0:4000/vllm/metrics' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 ```
 
 Supports **ALL** VLLM Endpoints (including streaming).
@@ -166,7 +166,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

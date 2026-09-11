@@ -66,7 +66,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",
     "messages": [{"role": "user", "content": "Hello!"}],
@@ -203,7 +203,7 @@ print()  # New line
 from openai import OpenAI
 import json
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 # Define tools
 tools = [
@@ -269,7 +269,7 @@ print(response2.choices[0].message.content)
 # Step 1: Initial request
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",
     "messages": [
@@ -322,7 +322,7 @@ curl http://localhost:4000/v1/chat/completions \
 # Step 2: Follow-up request (include assistant message with thought signature)
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",
     "messages": [
@@ -388,7 +388,7 @@ When you switch from a model that doesn't use thought signatures (e.g., `gemini-
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 # Step 1: Start with gemini-2.5-flash (no thought signatures)
 messages = [{"role": "user", "content": "What's the weather?"}]
@@ -423,7 +423,7 @@ print(response2.choices[0].message.content)
 # Step 1: Start with gemini-2.5-flash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-2.5-flash",
     "messages": [{"role": "user", "content": "What'\''s the weather?"}],
@@ -435,7 +435,7 @@ curl http://localhost:4000/v1/chat/completions \
 # LiteLLM automatically handles the missing thought signature
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",  # 👈 Switched model
     "messages": [
@@ -512,7 +512,7 @@ response = completion(
 # Low thinking level
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",
     "messages": [{"role": "user", "content": "What'\''s the weather?"}],
@@ -522,7 +522,7 @@ curl http://localhost:4000/v1/chat/completions \
 # High thinking level
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-3-pro-preview",
     "messages": [{"role": "user", "content": "Solve this complex problem."}],

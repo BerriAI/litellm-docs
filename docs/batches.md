@@ -40,7 +40,7 @@ $ litellm
 
 ```shell
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@mydata.jsonl"
 ```
@@ -49,7 +49,7 @@ curl http://localhost:4000/v1/files \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-        -H "Authorization: Bearer sk-1234" \
+        -H "Authorization: Bearer $LITELLM_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{
             "input_file_id": "file-abc123",
@@ -62,7 +62,7 @@ curl http://localhost:4000/v1/batches \
 
 ```bash
 curl http://localhost:4000/v1/batches/batch_abc123 \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -71,7 +71,7 @@ curl http://localhost:4000/v1/batches/batch_abc123 \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -221,7 +221,7 @@ When you upload a file with a model parameter, LiteLLM encodes the model informa
 ```bash
 # Step 1: Upload file with model
 curl http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-1" \
   -F purpose="batch" \
   -F file="@batch.jsonl"
@@ -234,7 +234,7 @@ curl http://localhost:4000/v1/files \
 
 # Step 2: Create batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
@@ -251,7 +251,7 @@ curl http://localhost:4000/v1/batches \
 
 # Step 3: Retrieve batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxncHQtNG8tYWNjb3VudC0x \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Benefits:**
@@ -266,7 +266,7 @@ Specify the model for each request without encoding it in the ID.
 ```bash
 # Create batch with model header
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-2" \
   -H "Content-Type: application/json" \
   -d '{
@@ -277,7 +277,7 @@ curl http://localhost:4000/v1/batches \
 
 # Or use query parameter
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -287,7 +287,7 @@ curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
 
 # List batches for specific model
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Use Case:**
@@ -303,7 +303,7 @@ Traditional approach using environment variables when no model is specified.
 export OPENAI_API_KEY="sk-env-key"
 
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -453,7 +453,7 @@ Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch i
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   max_batch_file_size_mb: 10
 ```
 
@@ -525,7 +525,7 @@ Per-minute windows fit batches poorly: a batch runs for hours, but its whole inp
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
 ```

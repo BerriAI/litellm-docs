@@ -11,7 +11,7 @@ This tutorial shows how to create and analyze files with Claude-4 on Anthropic v
 
 Add the following to your `.env` file:
 ```
-ANTHROPIC_API_KEY=sk-1234
+ANTHROPIC_API_KEY=sk-<your-api-key>
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ Use the `/anthropic` passthrough endpoint to create a file.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/anthropic/v1/files' \
--H 'x-api-key: sk-1234' \
+-H 'x-api-key: $LITELLM_API_KEY' \
 -H 'anthropic-version: 2023-06-01' \
 -H 'anthropic-beta: files-api-2025-04-14' \
 -F 'file=@"/path/to/your/file.csv"'

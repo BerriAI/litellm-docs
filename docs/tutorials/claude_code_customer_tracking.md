@@ -24,7 +24,7 @@ Choose how you want to attribute costs:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `ANTHROPIC_BASE_URL` | LiteLLM proxy URL | `http://localhost:4000` |
-| `ANTHROPIC_API_KEY` | LiteLLM API key | `sk-1234` |
+| `ANTHROPIC_API_KEY` | LiteLLM API key | `sk-<your-api-key>` |
 | `ANTHROPIC_CUSTOM_HEADERS` | Custom headers (`header-name: value` format) | See examples below |
 
 ## Option 1: Track by Customer
@@ -33,7 +33,7 @@ Use this to attribute costs to specific customers or end-users.
 
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_API_KEY=sk-1234
+export ANTHROPIC_API_KEY=sk-<your-api-key>
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-id: claude-ishaan-local"
 ```
 
@@ -43,7 +43,7 @@ Use this to attribute costs to projects, cost centers, or environments. Pass com
 
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_API_KEY=sk-1234
+export ANTHROPIC_API_KEY=sk-<your-api-key>
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-tags: project:acme,env:prod,team:backend"
 ```
 
@@ -54,7 +54,7 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-tags: project:acme,env:prod,team:back
 
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_API_KEY=sk-1234
+export ANTHROPIC_API_KEY=sk-<your-api-key>
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-id: claude-ishaan-local"
 ```
 

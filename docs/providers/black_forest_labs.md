@@ -181,7 +181,7 @@ model_list:
       mode: image_generation
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -203,7 +203,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Generate image with FLUX Pro
@@ -223,7 +223,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Black Forest Labs via Proxy - cURL"
 curl -X POST 'http://localhost:4000/v1/images/generations' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -d '{
     "model": "flux-pro",
     "prompt": "A beautiful garden with colorful flowers",

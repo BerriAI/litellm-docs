@@ -209,7 +209,7 @@ model_list:
 
 ```bash
 curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H "Content-Type: application/json" \
   -d '{"model": "marengo-3", "input": "a dog running on the beach", "input_type": "text"}'
 ```
 
@@ -217,7 +217,7 @@ curl http://0.0.0.0:4000/v1/embeddings \
 
 ```bash
 curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H "Content-Type: application/json" \
   -d '{"model": "marengo-3", "input": "<base64 image>", "input_type": "image"}'
 ```
 
@@ -225,7 +225,7 @@ curl http://0.0.0.0:4000/v1/embeddings \
 
 ```bash
 curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H "Content-Type: application/json" \
   -d '{"model": "marengo-3", "input": "a duck", "input_type": "text_image", "media_source": "s3://your-bucket/duck.png"}'
 ```
 
@@ -233,7 +233,7 @@ curl http://0.0.0.0:4000/v1/embeddings \
 
 ```bash
 curl http://0.0.0.0:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H "Content-Type: application/json" \
   -d '{"model": "marengo-3", "input": "a photo of <@bird> on water", "input_type": "multi_input", "media_sources": {"bird": "<base64 image>"}}'
 ```
 

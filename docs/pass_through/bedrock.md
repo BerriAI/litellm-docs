@@ -32,7 +32,7 @@ model_list:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{"messages": [{"role": "user", "content": [{"text": "Hello"}]}]}'
 ```
@@ -51,7 +51,7 @@ export AWS_REGION_NAME="us-west-2"
 
 ```bash showLineNumbers
 curl "http://0.0.0.0:4000/bedrock/guardrail/my-guardrail-id/version/1/apply" \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{"contents": [{"text": {"text": "Hello"}}], "source": "INPUT"}'
 ```
@@ -96,7 +96,7 @@ Let's call the Bedrock converse endpoint using the model name from config:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -146,7 +146,7 @@ Use the `model_name` from config in the URL path:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -168,7 +168,7 @@ For streaming responses, use the `/converse-stream` endpoint:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse-stream' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -232,7 +232,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/invoke' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "max_tokens": 100,
@@ -260,7 +260,7 @@ import os
 # Set dummy AWS credentials (required by boto3, but not used by LiteLLM proxy)
 os.environ['AWS_ACCESS_KEY_ID'] = 'dummy'
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'dummy'
-os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-1234"  # your litellm proxy api key
+os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-<your-litellm-api-key>"  # your litellm proxy api key
 
 # Point boto3 to the LiteLLM proxy
 bedrock_runtime = boto3.client(
@@ -473,7 +473,7 @@ litellm
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -532,7 +532,7 @@ import boto3
 # Set dummy AWS credentials (required by boto3, but not used by LiteLLM proxy)
 os.environ["AWS_ACCESS_KEY_ID"] = "dummy"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "dummy"
-os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "sk-1234"  # your litellm proxy api key
+os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "sk-<your-litellm-api-key>"  # your litellm proxy api key
 
 # Create the client
 runtime_client = boto3.client(
@@ -600,7 +600,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer sk-1234"
+API_KEY = "Bearer $LITELLM_API_KEY"
 
 # Initialize ChatBedrockConverse pointing to LiteLLM proxy
 llm = ChatBedrockConverse(
@@ -629,7 +629,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer sk-1234"
+API_KEY = "Bearer $LITELLM_API_KEY"
 
 def get_llm() -> ChatBedrockConverse:
     """Initialize LLM pointing to LiteLLM proxy"""
@@ -698,5 +698,5 @@ All LangChain AWS features work with LiteLLM:
 
 **Solution**: Ensure your API key is in the correct format:
 ```python
-aws_access_key_id="Bearer sk-1234"  # Include "Bearer " prefix
+aws_access_key_id="Bearer $LITELLM_API_KEY"  # Include "Bearer " prefix
 ```

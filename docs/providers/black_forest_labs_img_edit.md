@@ -197,7 +197,7 @@ model_list:
       mode: image_edit
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -219,7 +219,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Edit image with FLUX Kontext Pro
@@ -238,7 +238,7 @@ print(response.data[0].url)
 
 ```bash showLineNumbers title="Black Forest Labs via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --form 'model="bfl-kontext-pro"' \
 --form 'prompt="Add a sunset in the background"' \
 --form 'image=@"path/to/your/image.png"'

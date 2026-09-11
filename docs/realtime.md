@@ -85,7 +85,7 @@ const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
 // const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
 const ws = new WebSocket(url, {
     headers: {
-        "api-key": `sk-1234`,
+        "api-key": `sk-<your-litellm-api-key>`,
         "OpenAI-Beta": "realtime=v1",
     },
 });
@@ -134,7 +134,7 @@ const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&gu
 
 const ws = new WebSocket(url, {
     headers: {
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer $LITELLM_API_KEY",
     },
 });
 
@@ -166,7 +166,7 @@ async def main():
     url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
     ) as ws:
         print("Connected — guardrail active")
         async for msg in ws:

@@ -47,7 +47,7 @@ View which tools were provided and called in your completion requests.
 
 ```bash
 curl -X POST 'http://localhost:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "{{openai_large}}",

@@ -38,7 +38,7 @@ This walkthrough shows how to create a project, generate an API key, make reques
 
 ```bash showLineNumbers
 curl --location 'http://0.0.0.0:4000/project/new' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "project_alias": "flight-search-assistant",
@@ -68,7 +68,7 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 
 ```bash showLineNumbers
 curl 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "models": ["{{openai_small}}", "{{openai_large}}"],
@@ -133,7 +133,7 @@ Create a new project.
 
 ```bash
 curl --location 'http://0.0.0.0:4000/project/new' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "project_alias": "hotel-recommendations",
@@ -188,7 +188,7 @@ Update an existing project.
 
 ```bash
 curl --location 'http://0.0.0.0:4000/project/update' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "project_id": "project-abc",
@@ -211,7 +211,7 @@ Get information about a specific project.
 
 ```bash
 curl --location 'http://0.0.0.0:4000/project/info?project_id=project-abc' \
---header 'Authorization: Bearer sk-1234'
+--header 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 **Response**:
@@ -247,7 +247,7 @@ List all projects the user has access to.
 
 ```bash
 curl --location 'http://0.0.0.0:4000/project/list' \
---header 'Authorization: Bearer sk-1234'
+--header 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 **Response**:
@@ -282,7 +282,7 @@ Delete one or more projects.
 
 ```bash
 curl --location --request DELETE 'http://0.0.0.0:4000/project/delete' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "project_ids": ["project-abc", "project-def"]
@@ -297,7 +297,7 @@ You can set different quotas for different models within a project:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/project/new' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "project_alias": "multi-model-project",

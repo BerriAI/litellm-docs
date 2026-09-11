@@ -94,7 +94,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Create Interaction"
 curl -X POST "http://localhost:4000/v1beta/interactions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini/{{gemini_flash}}",
@@ -106,7 +106,7 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
 
 ```bash showLineNumbers title="Streaming Interaction"
 curl -N -X POST "http://localhost:4000/v1beta/interactions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini/{{gemini_flash}}",
@@ -119,7 +119,7 @@ curl -N -X POST "http://localhost:4000/v1beta/interactions" \
 
 ```bash showLineNumbers title="Get Interaction by ID"
 curl "http://localhost:4000/v1beta/interactions/{interaction_id}" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -133,7 +133,7 @@ from google import genai
 
 # Point SDK to LiteLLM Proxy
 client = genai.Client(
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
     http_options={"base_url": "http://localhost:4000"},
 )
 
@@ -152,7 +152,7 @@ print(interaction.outputs[-1].text)
 from google import genai
 
 client = genai.Client(
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
     http_options={"base_url": "http://localhost:4000"},
 )
 
@@ -252,7 +252,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="non-Interactions API Model Request"
 curl http://localhost:4000/v1beta/interactions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "openai-model",
     "input": "Tell me a short joke about programming."

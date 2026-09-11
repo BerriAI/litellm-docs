@@ -11,7 +11,7 @@ Request with guardrail:
 
 ```bash
 curl --location 'http://localhost:4000/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "model": "{{openai_large}}",
@@ -116,7 +116,7 @@ guardrails:
 
 ```bash
 curl --location 'http://localhost:4000/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
     "model": "{{openai_large}}",

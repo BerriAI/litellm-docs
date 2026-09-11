@@ -114,7 +114,7 @@ You can also configure team soft budgets via the API when creating or updating a
 
 ```bash
 curl -X POST 'http://localhost:4000/team/update' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header 'Authorization: Bearer $LITELLM_API_KEY' \
   --header 'Content-Type: application/json' \
   --data '{
     "team_id": "your-team-id",

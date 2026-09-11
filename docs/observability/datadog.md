@@ -220,7 +220,7 @@ litellm --config config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --data '{
     "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "hello"}]

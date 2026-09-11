@@ -33,7 +33,7 @@ model_list:
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
-  master_key: sk-1234  # alternatively use the env var - LITELLM_MASTER_KEY
+  master_key: os.environ/LITELLM_MASTER_KEY  # alternatively use the env var - LITELLM_MASTER_KEY
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # alternatively use the env var - DATABASE_URL
 
 litellm_settings:
@@ -80,7 +80,7 @@ Check `/v1/models` to see the list of available model names for a key.
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 
 # Download and save the PDF locally 
@@ -167,7 +167,7 @@ import base64
 import requests
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 
 # Download and save the PDF locally
@@ -249,7 +249,7 @@ model_list:
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
-  master_key: sk-1234  # alternatively use the env var - LITELLM_MASTER_KEY
+  master_key: os.environ/LITELLM_MASTER_KEY  # alternatively use the env var - LITELLM_MASTER_KEY
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # alternatively use the env var - DATABASE_URL
 ```
 
@@ -265,7 +265,7 @@ Let's create a user with the id `user_123`.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/user/new' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{"models": ["gpt-4o-mini-openai"], "user_id": "user_123"}'
 ```
@@ -354,7 +354,7 @@ except Exception as e:
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 # Download and save the PDF locally
 url = (
@@ -378,7 +378,7 @@ file = client.files.create(
 #### Retrieve a file - `/files/{file_id}`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 file = client.files.retrieve(file_id=file.id)
 ```
@@ -386,7 +386,7 @@ file = client.files.retrieve(file_id=file.id)
 #### Delete a file - `/files/{file_id}/delete`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 file = client.files.delete(file_id=file.id)
 ```
@@ -394,7 +394,7 @@ file = client.files.delete(file_id=file.id)
 #### List files - `/files`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 files = client.files.list(extra_body={"target_model_names": "gpt-4o-mini-openai"})
 

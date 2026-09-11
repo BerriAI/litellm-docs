@@ -63,7 +63,7 @@ litellm_settings:
   callbacks: ["rubrik"]
 
 environment_variables:
-  RUBRIK_API_KEY: sk-1234
+  RUBRIK_API_KEY: sk-<your-api-key>
   RUBRIK_WEBHOOK_URL: https://webhook.site/efc57707-9018-478c-bdf1-2ffaabb2b315
 ```
 
@@ -78,7 +78,7 @@ c. Test it!
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{openai_small}}",
   "messages": [

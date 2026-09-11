@@ -130,7 +130,7 @@ When `default_on` is not set, compression runs only for requests that opt in. Th
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
         "guardrails": ["compresr-compression"]
@@ -195,7 +195,7 @@ A platform admin can turn on compression for a whole team without any client cha
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
         "key_alias": "support-agent-alice",

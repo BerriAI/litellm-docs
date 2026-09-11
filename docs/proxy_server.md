@@ -174,7 +174,7 @@ OPENAI_REVERSE_PROXY=http://host.docker.internal:4000/v1/chat/completions
 
 #### 3. Save fake OpenAI key in `.env`
 ```env
-OPENAI_API_KEY=sk-1234
+OPENAI_API_KEY=sk-<your-api-key>
 ```
 
 #### 4. Run LibreChat: 
@@ -333,7 +333,7 @@ uv add -r requirements.txt
 ```
 ### Run ChatDev w/ Proxy
 ```shell 
-export OPENAI_API_KEY="sk-1234"
+export OPENAI_API_KEY="sk-<your-api-key>"
 ```
 
 ```shell 
@@ -568,7 +568,7 @@ uv add -r requirements.txt
 ```
 ### Run ChatDev w/ Proxy
 ```shell 
-export OPENAI_API_KEY="sk-1234"
+export OPENAI_API_KEY="sk-<your-api-key>"
 ```
 
 ```shell 

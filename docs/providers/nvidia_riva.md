@@ -105,7 +105,7 @@ model_list:
       mode: audio_transcription
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### 2. Start the proxy
@@ -123,7 +123,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header 'Authorization: Bearer $LITELLM_API_KEY' \
   --form 'file=@"/path/to/speech.mp3"' \
   --form 'model="parakeet-asr"'
 ```
@@ -135,7 +135,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000",
 )
 

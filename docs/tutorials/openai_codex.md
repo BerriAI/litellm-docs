@@ -119,7 +119,7 @@ Set the required environment variables to point Codex to your LiteLLM Proxy:
 
 ```bash
 # Use your LiteLLM API key (if you've set up authentication)
-export LITELLM_API_KEY="sk-1234"
+export LITELLM_API_KEY="sk-<your-litellm-api-key>"
 ```
 
 You can also configure Codex directly via `~/.codex/config.toml`:
@@ -165,7 +165,7 @@ Two caveats specific to the app:
 **API key visibility.** The app resolves `env_key` from its own environment. On macOS, apps launched from Finder or the Dock do not inherit variables exported in your shell profile, so `LITELLM_API_KEY` can be missing even though `codex` works fine in your terminal. Either launch the app from a terminal or set the variable at the login session level and restart the app:
 
 ```bash showLineNumbers
-launchctl setenv LITELLM_API_KEY sk-1234
+launchctl setenv LITELLM_API_KEY sk-<your-litellm-api-key>
 ```
 
 **Model selection.** With a custom provider there is no UI for changing the model of a session in the app (see [openai/codex#15364](https://github.com/openai/codex/issues/15364)). A session uses whatever `model` was set in `config.toml` when the session was created. To use a different LiteLLM model, update `model` in `config.toml` and start a new session.

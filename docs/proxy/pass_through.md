@@ -115,7 +115,7 @@ You can also create pass through endpoints using the `config.yaml` file. Here's 
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   pass_through_endpoints:
     - path: "/v1/rerank"                                  # Route on LiteLLM Proxy
       target: "https://api.cohere.com/v1/rerank"          # Target endpoint
@@ -355,7 +355,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   pass_through_endpoints:
     - path: "/v1/messages"
       target: custom_callbacks.anthropic_adapter
@@ -367,7 +367,7 @@ general_settings:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
-  -H 'x-api-key: sk-1234' \
+  -H 'x-api-key: $LITELLM_API_KEY' \
   -H 'anthropic-version: 2023-06-01' \
   -H 'content-type: application/json' \
   -d '{

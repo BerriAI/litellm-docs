@@ -83,7 +83,7 @@ guardrails:
           description: "Prompt injection attempt"
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Step 2: Start proxy
@@ -103,7 +103,7 @@ Connect your client to the proxy instead of directly to OpenAI:
 const ws = new WebSocket(
   "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
   [],
-  { headers: { Authorization: "Bearer sk-1234" } }
+  { headers: { Authorization: "Bearer $LITELLM_API_KEY" } }
 )
 
 ws.onopen = () => {
@@ -136,7 +136,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
     ) as ws:
         await ws.recv()  # session.created
 

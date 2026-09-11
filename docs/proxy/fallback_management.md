@@ -47,7 +47,7 @@ Create or update fallbacks for a specific model.
 **Example using cURL:**
 ```bash
 curl -X POST "http://localhost:4000/fallback" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_small}}",
@@ -63,7 +63,7 @@ import requests
 response = requests.post(
     "http://localhost:4000/fallback",
     headers={
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer $LITELLM_API_KEY",
         "Content-Type": "application/json"
     },
     json={
@@ -96,7 +96,7 @@ Get fallback configuration for a specific model.
 **Example using cURL:**
 ```bash
 curl -X GET "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Example using Python:**
@@ -105,7 +105,7 @@ import requests
 
 response = requests.get(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
     params={"fallback_type": "general"}
 )
 
@@ -132,7 +132,7 @@ Delete fallback configuration for a specific model.
 **Example using cURL:**
 ```bash
 curl -X DELETE "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Example using Python:**
@@ -141,7 +141,7 @@ import requests
 
 response = requests.delete(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
     params={"fallback_type": "general"}
 )
 
@@ -159,7 +159,7 @@ To validate the fallback through the Proxy, make the primary deployment unavaila
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "model": "{{openai_small}}",
   "messages": [

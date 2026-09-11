@@ -161,7 +161,7 @@ import os
 
 # Configure Google GenAI SDK to use LiteLLM proxy
 os.environ["GOOGLE_GEMINI_BASE_URL"] = "http://localhost:4000"
-os.environ["GEMINI_API_KEY"] = "sk-1234"
+os.environ["GEMINI_API_KEY"] = "sk-<your-litellm-api-key>"
 
 client = Client()
 
@@ -187,7 +187,7 @@ response = client.models.generate_content(
 ```bash showLineNumbers title="generateContent via LiteLLM Proxy"
 curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateContent' \
 -H 'content-type: application/json' \
--H 'authorization: Bearer sk-1234' \
+-H 'authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "contents": [
     {
@@ -210,7 +210,7 @@ curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateConten
 ```bash showLineNumbers title="streamGenerateContent via LiteLLM Proxy"
 curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:streamGenerateContent' \
 -H 'content-type: application/json' \
--H 'authorization: Bearer sk-1234' \
+-H 'authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "contents": [
     {
@@ -242,7 +242,7 @@ The `generateContent` endpoint is a drop-in for Google's [Generative Language RE
 ```bash showLineNumbers title="Native top-level fields via LiteLLM Proxy"
 curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateContent' \
 -H 'content-type: application/json' \
--H 'authorization: Bearer sk-1234' \
+-H 'authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "contents": [
     {

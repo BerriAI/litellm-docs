@@ -215,7 +215,7 @@ model_list:
 
 ```bash showLineNumbers title="Generate Key for Wildcard Access Group"
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{
     "models": ["default-models"],
@@ -281,7 +281,7 @@ First, add some models to the database:
 ```bash showLineNumbers title="Add Models to Database"
 # Add {{openai_large}} to database
 curl -X POST 'http://localhost:4000/model/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "model_name": "{{openai_large}}",
@@ -293,7 +293,7 @@ curl -X POST 'http://localhost:4000/model/new' \
 
 # Add Claude to database
 curl -X POST 'http://localhost:4000/model/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "model_name": "{{anthropic}}",
@@ -310,7 +310,7 @@ Create an access group containing multiple models:
 
 ```bash showLineNumbers title="Create Access Group"
 curl -X POST 'http://localhost:4000/access_group/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "access_group": "production-models",
@@ -333,7 +333,7 @@ Check the access group details:
 
 ```bash showLineNumbers title="Get Access Group Info"
 curl -X GET 'http://localhost:4000/access_group/production-models/info' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 **Response:**
@@ -351,7 +351,7 @@ Create an API key that can access all models in the group:
 
 ```bash showLineNumbers title="Create Key with Access Group"
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "models": ["production-models"],
@@ -394,7 +394,7 @@ Add or remove models from the access group:
 
 ```bash showLineNumbers title="Update Access Group"
 curl -X PUT 'http://localhost:4000/access_group/production-models/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "model_names": ["{{openai_large}}", "{{anthropic}}", "{{gemini_flash}}"]

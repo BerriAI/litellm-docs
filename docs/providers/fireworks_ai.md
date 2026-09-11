@@ -521,7 +521,7 @@ litellm --config config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/audio/transcriptions' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -F 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 -F 'model="whisper-v3"' \
 -F 'response_format="verbose_json"' \
@@ -588,7 +588,7 @@ litellm --config config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen3-reranker-8b",

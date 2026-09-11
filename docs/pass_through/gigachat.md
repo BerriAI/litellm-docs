@@ -42,7 +42,7 @@ litellm
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/gigachat/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "GigaChat-2",
     "messages": [{"role": "user", "content": "Hello!"}]

@@ -77,7 +77,7 @@ Requests with image URLs exceeding 50MB will receive a helpful error message:
 ```bash
 curl -X POST 'https://your-litellm-proxy.com/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer $LITELLM_API_KEY' \
   -d '{
     "model": "gpt-4o",
     "messages": [
@@ -140,7 +140,7 @@ docker run \
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   
 # Set via environment variable
 environment_variables:

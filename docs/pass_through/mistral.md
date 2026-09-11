@@ -16,7 +16,7 @@ Just replace `https://api.mistral.ai/v1` with `LITELLM_PROXY_BASE_URL/mistral` ð
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/ocr' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "mistral-ocr-latest",
     "document": {
@@ -36,7 +36,7 @@ Let's call the Mistral [`/chat/completions` endpoint](https://docs.mistral.ai/ap
 1. Add MISTRAL_API_KEY to your environment 
 
 ```bash
-export MISTRAL_API_KEY="sk-1234"
+export MISTRAL_API_KEY="sk-<your-litellm-api-key>"
 ```
 
 2. Start LiteLLM Proxy 
@@ -54,7 +54,7 @@ Let's call the Mistral `/ocr` endpoint
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/mistral/v1/ocr' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "model": "mistral-ocr-latest",
     "document": {
@@ -181,7 +181,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

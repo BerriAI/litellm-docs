@@ -134,7 +134,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-collection-name/search' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
   "query": "What is the capital of France?"
 }'
@@ -237,7 +237,7 @@ vector_store_registry:
 
 general_settings:
     database_url: "postgresql://user:password@host:port/database"
-    master_key: "sk-1234"
+    master_key: "sk-<your-litellm-master-key>"
 ```
 
 Add your vector store credentials to LiteLLM.
@@ -255,7 +255,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/indexes' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{ 
     "index_name": "dall-e-6",
     "litellm_params": {
@@ -272,7 +272,7 @@ This is a virtual index, which the developer can use to create and search vector
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -d '{
     "allowed_vector_store_indexes": [{"index_name": "dall-e-6", "index_permissions": ["write", "read"]}],
     "models": ["embedding-model"]

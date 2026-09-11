@@ -222,7 +222,7 @@ Test with curl:
 
 ```bash
 curl http://localhost:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "rerank-2.5",

@@ -122,7 +122,7 @@ On the proxy, local counting runs in a worker thread, so a large payload does no
 ```bash
 curl -X POST "http://localhost:4000/v1/responses/input_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "input": "Hello, how are you?"
@@ -139,7 +139,7 @@ response = httpx.post(
     "http://localhost:4000/v1/responses/input_tokens",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer sk-1234"
+        "Authorization": "Bearer $LITELLM_API_KEY"
     },
     json={
         "model": "{{openai_large}}",
@@ -166,7 +166,7 @@ See [Anthropic Token Counting](./anthropic_count_tokens.md) for full documentati
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{anthropic}}",
     "messages": [

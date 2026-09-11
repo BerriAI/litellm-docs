@@ -137,7 +137,7 @@ Expect this to mask `Jane Doe` since it's PII
 ```shell title="Masked PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -184,7 +184,7 @@ Expected response on failure
 ```shell title="No PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -319,7 +319,7 @@ When using the masking configuration, entities will be replaced with placeholder
 ```shell title="Masking PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -357,7 +357,7 @@ When using the blocking configuration, requests containing the configured entity
 ```shell title="Blocking PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -420,7 +420,7 @@ Test the MCP guardrail with a request:
 ```shell title="Test MCP Guardrail" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -444,7 +444,7 @@ The Presidio API [supports passing the `language` param](https://microsoft.githu
 ```shell title="Language Parameter - curl" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -557,7 +557,7 @@ guardrails:
 ```shell title="Override with per-request language" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -706,7 +706,7 @@ litellm --config /path/to/config.yaml
 ```bash title="Test Logging Only" showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -D '{
   "model": "{{openai_small}}",
   "messages": [

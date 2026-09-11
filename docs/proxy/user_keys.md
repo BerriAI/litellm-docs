@@ -138,14 +138,14 @@ llm = AzureOpenAI(
     engine="azure-gpt-3.5",               # model_name on litellm proxy
     temperature=0.0,
     azure_endpoint="http://0.0.0.0:4000", # litellm proxy endpoint
-    api_key="sk-1234",                    # litellm proxy API Key
+    api_key="sk-<your-litellm-api-key>",                    # litellm proxy API Key
     api_version="2023-07-01-preview",
 )
 
 embed_model = AzureOpenAIEmbedding(
     deployment_name="azure-embedding-model",
     azure_endpoint="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     api_version="2023-07-01-preview",
 )
 
@@ -235,7 +235,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   modelName: "{{openai_large}}",
-  openAIApiKey: "sk-1234",
+  openAIApiKey: "sk-<your-litellm-api-key>",
   modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
 }, {
   basePath: "http://0.0.0.0:4000",
@@ -254,7 +254,7 @@ console.log(message);
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234", // This is the default and can be omitted
+  apiKey: "sk-<your-api-key>", // This is the default and can be omitted
   baseURL: "http://0.0.0.0:4000"
 });
 
@@ -311,7 +311,7 @@ from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
 
 
-client = MistralClient(api_key="sk-1234", endpoint="http://0.0.0.0:4000")
+client = MistralClient(api_key="sk-<your-litellm-api-key>", endpoint="http://0.0.0.0:4000")
 chat_response = client.chat(
     model="mistral-small-latest",
     messages=[
@@ -330,7 +330,7 @@ from openai import OpenAI
 import instructor
 from pydantic import BaseModel
 
-my_proxy_api_key = "" # e.g. sk-1234 - LITELLM KEY
+my_proxy_api_key = "" # e.g. sk-<your-litellm-api-key> - LITELLM KEY
 my_proxy_base_url = "" # e.g. http://0.0.0.0:4000 - LITELLM PROXY BASE URL
 
 # This enables response_model keyword
@@ -431,7 +431,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   baseURL: "http://0.0.0.0:4000"
 });
 
@@ -513,7 +513,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```python 
 from openai import OpenAI
 client = OpenAI(
-    api_key="sk-1234", # [OPTIONAL] set if you set one on proxy, else set ""
+    api_key="sk-<your-litellm-api-key>", # [OPTIONAL] set if you set one on proxy, else set ""
     base_url="http://0.0.0.0:4000",
 )
 
@@ -584,7 +584,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```python 
 from openai import OpenAI
 client = OpenAI(
-    api_key="sk-1234", # [OPTIONAL] set if you set one on proxy, else set ""
+    api_key="sk-<your-litellm-api-key>", # [OPTIONAL] set if you set one on proxy, else set ""
     base_url="http://0.0.0.0:4000",
 )
 
@@ -753,7 +753,7 @@ print(response)
 ```shell
 curl --location 'http://0.0.0.0:4000/moderations' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --data '{"input": "Sample text goes here", "model": "text-moderation-stable"}'
 ```
 </TabItem>
@@ -852,7 +852,7 @@ OPENAI_REVERSE_PROXY=http://host.docker.internal:4000/v1/chat/completions
 
 Copy Librechat's `.env.example` to `.env` and overwrite the default OPENAI_API_KEY (by default it requires the user to pass a key).
 ```env
-OPENAI_API_KEY=sk-1234
+OPENAI_API_KEY=sk-<your-api-key>
 ```
 
 #### 4. Run LibreChat: 
@@ -986,7 +986,7 @@ This same request will be sent to the following model groups on the [litellm pro
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
     model="{{openai_small}},llama3",
@@ -1069,7 +1069,7 @@ Get a list of responses when `model` is passed as a list
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header 'Authorization: Bearer $LITELLM_API_KEY' \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3,{{openai_small}}",

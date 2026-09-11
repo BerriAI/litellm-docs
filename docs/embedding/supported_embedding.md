@@ -47,7 +47,7 @@ model_list:
     model: vertex_ai/textembedding-gecko
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Start proxy 
@@ -65,7 +65,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/embeddings' \
---header 'Authorization: Bearer sk-1234' \
+--header 'Authorization: Bearer $LITELLM_API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{"input": ["Academia.edu uses"], "model": "textembedding-gecko", "encoding_format": "base64"}'
 ```
@@ -76,7 +76,7 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 ```python
 from openai import OpenAI
 client = OpenAI(
-  api_key="sk-1234",
+  api_key="sk-<your-litellm-api-key>",
   base_url="http://0.0.0.0:4000"
 )
 
@@ -92,7 +92,7 @@ client.embeddings.create(
 ```python
 from langchain_openai import OpenAIEmbeddings
 
-embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-1234")
+embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-<your-api-key>")
 
 text = "This is a test document."
 
@@ -556,7 +556,7 @@ print(response)
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",
@@ -609,7 +609,7 @@ response = embedding(
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",

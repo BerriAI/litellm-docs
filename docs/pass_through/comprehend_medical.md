@@ -35,7 +35,7 @@ litellm
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/comprehendmedical/DetectEntitiesV2' \
--H 'Authorization: Bearer sk-1234' \
+-H 'Authorization: Bearer $LITELLM_API_KEY' \
 -H 'Content-Type: application/json' \
 -d '{"Text": "Patient is taking 40mg of atorvastatin daily for hyperlipidemia."}'
 ```
@@ -58,7 +58,7 @@ client = boto3.client(
 )
 client.meta.events.register(
     "before-send.comprehendmedical.*",
-    lambda request, **kwargs: request.headers.__setitem__("x-litellm-api-key", "sk-1234"),
+    lambda request, **kwargs: request.headers.__setitem__("x-litellm-api-key", "sk-<your-litellm-api-key>"),
 )
 
 response = client.detect_phi(Text="John Smith was admitted on 2026-08-01.")

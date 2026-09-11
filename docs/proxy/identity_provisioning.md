@@ -59,7 +59,7 @@ export JWT_ISSUER="https://your-idp.example.com"  # optional but recommended
 
 ```yaml title="config.yaml"
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_id_jwt_field: "sub"        # stable per-user id from your IdP
@@ -92,7 +92,7 @@ Add two settings to `litellm_jwtauth`: the claim that identifies each client, an
 
 ```yaml title="config.yaml"
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_id_jwt_field: "sub"
@@ -150,7 +150,7 @@ That first request mints the user's virtual key and the claim-to-key mapping. Co
 ```bash
 # The mapping now exists, keyed on the claim value (the user's email here)
 curl 'https://your-litellm-proxy:4000/jwt/key/mapping/list?page=1&size=50' \
-  -H 'Authorization: Bearer sk-1234'
+  -H 'Authorization: Bearer $LITELLM_API_KEY'
 ```
 
 In the Admin UI, the auto-registered key appears under the user with `auto_registered: true` in its metadata, and spend, rate limits, and model access now track per user. From here every subsequent request from that user reuses the same key. This is the point where the flow is self-sustaining; you only step back in to adjust a specific user's budget or model set, which you do by updating the underlying key.

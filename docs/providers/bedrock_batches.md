@@ -107,7 +107,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 # Upload file
@@ -124,7 +124,7 @@ print(batch_input_file)
 
 ```bash showLineNumbers title="Upload File"
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@bedrock_batch_completions.jsonl" \
     -F extra_body='{"target_model_names": "bedrock-batch-claude"}'
@@ -159,7 +159,7 @@ print(batch)
 
 ```bash showLineNumbers title="Create Batch Request"
 curl http://localhost:4000/v1/batches \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "input_file_id": "file-abc123",
@@ -208,11 +208,11 @@ if batch_status.status == "completed":
 ```bash showLineNumbers title="Download Batch Results"
 # First retrieve batch to get output_file_id
 curl http://localhost:4000/v1/batches/batch_abc123 \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 
 # Then download the output file
 curl http://localhost:4000/v1/files/{output_file_id}/content \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: bedrock" \
     -o batch_output.jsonl
 ```

@@ -120,7 +120,7 @@ Call the dry run endpoint to test your CloudZero configuration without sending d
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/dry-run" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "limit": 10
   }' | jq
@@ -150,7 +150,7 @@ Call the export endpoint to send data immediately to CloudZero. We suggest setti
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/export" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "limit": 10
   }' | jq
@@ -221,7 +221,7 @@ Export data for a specific time range:
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/export" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "start_time_utc": "2024-01-15T00:00:00Z",
     "end_time_utc": "2024-01-15T23:59:59Z",

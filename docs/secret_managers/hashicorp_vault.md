@@ -169,7 +169,7 @@ For example, for `AZURE_API_KEY`, the secret should be stored as:
 
 ```json
 {
-  "key": "sk-1234"
+  "key": "sk-<virtual-key>"
 }
 ```
 

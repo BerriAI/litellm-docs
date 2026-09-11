@@ -57,7 +57,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Gemini Transcribe Quick Start"
 curl http://0.0.0.0:4000/v1/audio/transcriptions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F file=@speech.wav \
   -F model=gemini-transcribe \
   -F language=en
@@ -69,7 +69,7 @@ curl http://0.0.0.0:4000/v1/audio/transcriptions \
 ```python showLineNumbers title="Gemini Transcribe Quick Start"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 audio_file = open("speech.wav", "rb")
 response = client.audio.transcriptions.create(
