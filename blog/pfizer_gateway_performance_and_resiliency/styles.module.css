@@ -209,13 +209,32 @@
   justify-content: center;
 }
 
-.kicker {
+/* The section eyebrow sits tight above its own heading and well clear of the
+   section before it, so it reads as belonging to what follows. custom.css sets
+   blog paragraph and h2 margins at `.blog-wrapper article .markdown p` and
+   `... h2`, which no selector available here outranks, so the two margins that
+   close the gap are forced. */
+:global(.markdown) .kicker {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ifm-color-emphasis-700);
-  margin: 28px 0 8px;
+  margin: 48px 0 8px !important;
+}
+
+:global(.markdown) .kicker + h2 {
+  margin-top: 0 !important;
+}
+
+/* The rule the source document drew under the standfirst, where the byline
+   used to sit. It marks the end of the opening and the start of the story. */
+.introRule {
+  border: 0;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+  margin: 24px 0 0;
+  background: none;
+  height: 0;
 }
 
 .lede {

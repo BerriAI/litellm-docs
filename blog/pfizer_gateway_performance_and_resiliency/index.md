@@ -48,6 +48,8 @@ A LiteLLM version bump exposed a long-standing Redis configuration bug that cut 
 
 {/* truncate */}
 
+<hr className={styles.introRule} />
+
 <div className={styles.stats}>
 <div className={styles.card}>
 <div className={styles.num}>~48%</div>
