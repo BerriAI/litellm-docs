@@ -810,7 +810,9 @@ router_settings:
 | SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
 | STABILITY_API_BASE | Base URL for Stability AI image generation and editing
 | TAVILY_API_BASE | Base URL for the Tavily search provider
+| TINYFISH_AGENT_API_BASE | Base URL for the TinyFish Agent provider. Default is https://agent.tinyfish.ai
 | TINYFISH_API_BASE | Base URL for the TinyFish search provider
+| TINYFISH_API_KEY | API key for TinyFish (Agent and search providers)
 | TOGETHER_AI_API_BASE | Base URL for Together AI. Default is https://api.together.xyz/v1
 | TOGETHER_AI_API_KEY | Alias for the Together AI API key, read after `TOGETHER_API_KEY` and before `TOGETHERAI_API_KEY`
 | TOGETHER_AI_TOKEN | Last of the four accepted names for the Together AI API key, after `TOGETHER_API_KEY`, `TOGETHER_AI_API_KEY` and `TOGETHERAI_API_KEY`
