@@ -544,7 +544,7 @@ general_settings:
 
 ### Custom /key/update
 
-If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, and `/team/key/bulk_update`. The Admin UI edit key flow calls `/key/update`, so this also covers edits made from the UI.
+If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and `/key/{key}/regenerate` when the regenerate request changes key settings (a plain rotate with no body does not call it). The Admin UI edit key and regenerate key flows call these routes, so this also covers changes made from the UI.
 
 #### 1. Write a custom `custom_update_key_fn`
 
