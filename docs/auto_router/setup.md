@@ -11,7 +11,7 @@ Five ways in. All of them create the same `auto_router/complexity_router` deploy
 <NavigationCards
 columns={5}
 items={[
-  { title: "Add an Auto Router", description: "Models + Endpoints → Auto Router, then test and save.", to: "#add-an-auto-router" },
+  { title: "Add an Auto Router", description: "Models + Endpoints → Auto Router, then test and save.", to: "#add-an-auto-router-models--endpoints--auto-router" },
   { title: "Agent skill", description: "One line to your coding agent.", to: "#agent-skill" },
   { title: "config.yaml", description: "One router entry in model_list.", to: "#configyaml" },
   { title: "Model-management API", description: "POST /model/new, for CI/CD.", to: "#model-management-api" },
