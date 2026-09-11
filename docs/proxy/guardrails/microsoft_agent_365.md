@@ -33,7 +33,7 @@ In the Azure portal, under **Microsoft Entra ID → App registrations → New re
 
 - Name it for the gateway, for example `litellm-agent365-gateway`
 - Supported account types: **Accounts in this organizational directory only**
-- Leave the redirect URI empty. The gateway never signs users in itself
+- Leave the redirect URI empty. The gateway never signs users in itself. The one exception is the loopback redirect described under [Browser sign-in from the MCP client](#browser-sign-in-from-the-mcp-client), which belongs to the MCP client, not the gateway
 
 Record the **Application (client) ID** and **Directory (tenant) ID**. Then under **Certificates & secrets → New client secret**, create a secret and record its value. These three become the guardrail's `client_id`, `tenant_id` and `client_secret`
 
@@ -134,7 +134,7 @@ Once the guardrail is on, nothing about the user's experience changes until Defe
 
 They point an MCP-capable agent at LiteLLM's MCP endpoint and ask an ordinary question. That agent can be Claude Code, VS Code, or your own client. They sign in to Entra once and the client holds the token
 
-Registering LiteLLM as an MCP server in Claude Code, for example
+The simplest way to register LiteLLM in Claude Code is with a token the user minted themselves
 
 ```bash
 claude mcp add --transport http litellm-agent365 \
@@ -143,6 +143,8 @@ claude mcp add --transport http litellm-agent365 \
   -H "Authorization: Bearer $ENTRA_USER_TOKEN"
 ```
 
+That token expires after about an hour, so for day-to-day use let the client sign the user in itself. See [Browser sign-in from the MCP client](#browser-sign-in-from-the-mcp-client) below
+
 The user then types something like *"use the deepwiki tool on microsoft/vscode: what is the extension host?"*. The agent decides on its own which MCP tool to call
 
 ### What happens on each tool call
@@ -150,9 +152,9 @@ The user then types something like *"use the deepwiki tool on microsoft/vscode: 
 1. The agent sends `tools/call` to LiteLLM, carrying the LiteLLM key in `x-litellm-api-key` and the user's Entra token in `Authorization`
 2. The `pre_mcp_call` hook reads the user's Entra token off the `Authorization` header
 3. The guardrail exchanges it On-Behalf-Of for a delegated Agent 365 token, cached for the token's lifetime so later calls in the same session skip the exchange
-4. It posts the pending call to the Agent 365 evaluation endpoint: tool name, arguments, server name, and `conversationId`
+4. It posts the pending call to the Agent 365 evaluation endpoint: tool name, arguments, server name, and `conversationId`, plus the tool's description and input schema when the MCP server published them in `tools/list`, so Defender can judge the call against what the tool claims to do
 5. Microsoft Defender returns a verdict
-6. On allow, LiteLLM executes the tool and returns its result. On block, LiteLLM returns HTTP 400 and never contacts the MCP server
+6. On allow with `defender.status` `Evaluated`, LiteLLM executes the tool and returns its result. On block, LiteLLM returns HTTP 400 and never contacts the MCP server. When Agent 365 says `allowed: true` but Defender did not evaluate (`defender.status` is `Skipped` or `FailedOpen`), the call is treated as unscanned and `unreachable_fallback` decides
 
 The user's prompt is not sent to Agent 365. Only the pending tool call is evaluated
 
@@ -199,7 +201,7 @@ Use that correlation id to line a call up with the matching record on the Micros
 | `resource_app_id` | No | Application id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
 | `agent_id` | No | Agent identity reported to Agent 365 with every evaluation. Defaults to the caller's key alias |
 | `timeout` | No | Per-request timeout in seconds for the token exchange and the evaluation call. Defaults to 10 |
-| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block |
+| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached, or when Agent 365 allows the call without Defender evaluating it; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block |
 
 ## Failure behavior
 
@@ -207,11 +209,70 @@ Use that correlation id to line a call up with the matching record on the Micros
 |-----------|--------|
 | Defender verdict is block | HTTP 400 with the Defender message and correlation id. Always blocks |
 | Agent 365 rejects the evaluation request (HTTP 4xx other than 408/429) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
-| Caller sent no Entra bearer token | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| Agent 365 allows but Defender did not evaluate (`defender.status` is `Skipped` or `FailedOpen`) | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| Caller sent no Entra bearer token | HTTP 401 with a `WWW-Authenticate` challenge pointing at the server's protected resource metadata, so a compatible client can sign the user in and retry. Always blocks, regardless of `unreachable_fallback` |
 | OBO exchange rejected by Entra | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra returns 408 or 429 (throttled) | HTTP 503, recorded as Throttled. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
 ## Conversation grouping
 
-Evaluations are grouped into conversations on the Microsoft side by `conversationId`. The guardrail uses the `Mcp-Session-Id` header of a stateful MCP session when present, and falls back to the request's call id, so multi-turn MCP sessions share Defender chat history
+Evaluations are grouped on the Microsoft side by `conversationId`. The guardrail sends LiteLLM's own request id for the tool call, the same id the Logs page shows for that row, so every Defender record lines up with exactly one proxy log entry. Only when the proxy has not assigned a request id does it fall back to the MCP session id (the `Mcp-Session-Id` header of a stateful session), and it generates a fresh id if neither exists. Client-supplied headers never override a proxy-owned id
+
+## Browser sign-in from the MCP client
+
+When the guardrail applies to an MCP server and the request carries no Entra bearer token, LiteLLM answers `tools/list` and `tools/call` with HTTP 401 and a `WWW-Authenticate: Bearer resource_metadata="..."` header that points at that server's [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) protected resource metadata. The metadata names your Entra tenant as the authorization server and lists the scope the client should request. MCP clients that implement the MCP authorization spec (Claude Code does) follow that pointer, open a browser for Entra sign-in, cache the token and refresh it on their own, then retry the call. The user never handles a token, and the `x-litellm-api-key` header keeps carrying the LiteLLM key exactly as before
+
+Three things have to be true for the challenge to appear. The MCP server must have `scopes` set to the full scope string the client should request, the server must not use its own `oauth2` auth (that mode advertises its own sign-in), and an Agent 365 guardrail must apply to the caller (default on, or attached to their key, team, or policy)
+
+```yaml
+mcp_servers:
+  deepwiki:
+    transport: http
+    url: https://mcp.deepwiki.com/mcp
+    scopes:
+      - https://litellm.example.com/deepwiki/mcp/access_as_user
+```
+
+Entra checks that the scope the client requests belongs to the resource the client says it is calling, so name the scope after the URL the client uses for that MCP server. Under **Expose an API** on the gateway app registration, add an Application ID URI equal to that URL (`https://litellm.example.com/deepwiki/mcp` for the example above) and add the `access_as_user` scope under it. A token minted for that scope is still audienced to the gateway app, so the On-Behalf-Of exchange works unchanged
+
+Entra does not support dynamic client registration, so the client needs a registered client id. Add a **Mobile and desktop applications** platform to the gateway app registration (or a separate public client app) with the loopback redirect the client uses, `http://localhost:51001/callback` in the Claude Code example below, and pre-authorize that client id for the scope as in prerequisite step 4. Then register the server in the client with the client id and no `Authorization` header
+
+```json
+{
+  "mcpServers": {
+    "deepwiki": {
+      "type": "http",
+      "url": "https://litellm.example.com/deepwiki/mcp",
+      "headers": {"x-litellm-api-key": "Bearer sk-1234"},
+      "oauth": {"clientId": "<public client id>", "callbackPort": 51001}
+    }
+  }
+}
+```
+
+On the first call Claude Code opens the browser, the user signs in to Entra, and the tool call proceeds. `/mcp` in Claude Code then shows the server as connected and authenticated. You can see the raw challenge yourself
+
+```bash
+curl -i -X POST https://litellm.example.com/deepwiki/mcp \
+  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
+```
+
+```text
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer resource_metadata="https://litellm.example.com/.well-known/oauth-protected-resource/mcp/deepwiki", error="invalid_token", error_description="Missing or invalid subject token; authenticate with the IdP and retry"
+```
+
+```bash
+curl -s https://litellm.example.com/.well-known/oauth-protected-resource/mcp/deepwiki
+```
+
+```json
+{
+  "authorization_servers": ["https://login.microsoftonline.com/<tenant id>/v2.0"],
+  "resource": "https://litellm.example.com/mcp/deepwiki",
+  "scopes_supported": ["https://litellm.example.com/deepwiki/mcp/access_as_user"]
+}
+```
