@@ -122,20 +122,40 @@ litellm_settings:
 
 ### Attribute Management changes to Users
 
-Call management endpoints on behalf of a user. (Useful when connecting proxy to your development platform).
+Call management endpoints on behalf of a user, and have the audit log attribute the change to them instead of to the calling key's `user_id`. (Useful when connecting proxy to your development platform).
 
-## 1. Set `LiteLLM-Changed-By` in request headers
+:::warning Opt in required since v1.84.0
+
+Before v1.84.0 the `LiteLLM-Changed-By` header was honored unconditionally, which let any caller rewrite audit attribution. Since v1.84.0 the proxy ignores the header unless the calling key, or its team, has `allow_litellm_changed_by_header: true` in its metadata; without the opt in, `changed_by` falls back to the calling key's `user_id`. The master key cannot opt in because it has no stored metadata, so send the header with an admin virtual key
+
+:::
+
+#### 1. Allow your admin key to set the header
+
+Set `allow_litellm_changed_by_header: true` in the metadata of the admin virtual key that will send the header. Setting it on the key's team metadata instead opts in every key on that team
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/key/update' \
+    -H 'Authorization: Bearer sk-1234' \
+    -H 'Content-Type: application/json' \
+    -d '{
+        "key": "sk-my-admin-key",
+        "metadata": {"allow_litellm_changed_by_header": true}
+    }'
+```
+
+#### 2. Set `LiteLLM-Changed-By` in request headers
 
 Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://litellm-api.up.railway.app/#/team%20management).
 
-- Update Team budget with master key. 
+- Update Team budget with the opted-in admin key. 
 - Attribute change to 'krrish@berri.ai'. 
 
-**👉 Key change:** Passing `-H 'LiteLLM-Changed-By: krrish@berri.ai'`
+**Key change:** Passing `-H 'LiteLLM-Changed-By: krrish@berri.ai'`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/update' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H 'Authorization: Bearer sk-my-admin-key' \
     -H 'LiteLLM-Changed-By: krrish@berri.ai' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -144,7 +164,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
     }'
 ```
 
-## 2. Emitted Audit Log 
+#### 3. Emitted Audit Log 
 
 ```bash
 {
@@ -179,7 +199,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
 
 ### `changed_by`
 - **Type:** `String`
-- **Description:** The `user_id` that performed the audited action. If `LiteLLM-Changed-By` Header is passed then `changed_by=<value passed for LiteLLM-Changed-By header>`
+- **Description:** The `user_id` that performed the audited action. If the `LiteLLM-Changed-By` header is passed and the calling key or its team has `allow_litellm_changed_by_header: true` in its metadata, then `changed_by=<value passed for LiteLLM-Changed-By header>`
 
 ### `changed_by_api_key`
 - **Type:** `String`
