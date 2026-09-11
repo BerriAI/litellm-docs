@@ -8,6 +8,86 @@ Benchmarks for LiteLLM Gateway (Proxy Server) tested against a fake OpenAI endpo
 
 LiteLLM Gateway has **8ms P95 latency** at 1k RPS (See benchmarks [here](#4-instances))
 
+## High-throughput profile: 3,000 RPS with 50K to 100K-token prompts
+
+Large prompts create a different gateway workload than short chat requests. Token counting, budget checks, spend tracking, and metrics collection all happen before or after the model-provider call and can become bottlenecks at high request volume.
+
+This benchmark compares the [high-throughput deployment profile](./proxy/high_throughput.md) with `v1.101.0`. The profile combines Rust token counting, shared database connections, isolated metrics and spend processing, and traffic-based autoscaling.
+
+:::info Nightly benchmark
+The high-throughput profile is still in development and is available in nightly builds. These results used the earliest available version of the complete profile.
+:::
+
+### Results
+
+| Category | Metric | High-throughput profile | `v1.101.0` | Change |
+|---|---|---:|---:|---:|
+| Deployment | Gateway pods | 33 | 132 | 4x fewer |
+|  | Workers per pod | 4 | 1 | |
+|  | Total workers | 132 | 132 | same |
+| Throughput | Requests/sec | 3.00K | 0.19K | 16x |
+|  | Tokens/sec | 224.61M | 6.92M | 32x |
+|  | Projected tokens/30 days | 582.20T | 17.94T | 32x |
+| Reliability | HTTP 200 rate (Locust) | 100.00% | 92.07% | |
+| Request latency | p50 | 30.581 ms | 6.950 s | 227x |
+|  | p95 | 54.029 ms | 27.451 s | 508x |
+|  | p99 | 91.645 ms | 29.826 s | 325x |
+| Time to first token | p50 | 31.667 ms | 9.400 s | 297x |
+
+The profile reached the full 3,000 RPS target with 100 percent client-visible success. The baseline settled near 190 RPS and returned a successful response for 92.07 percent of requests.
+
+### Test setup
+
+| Test dimension | Configuration |
+|---|---|
+| Load generator | Distributed Locust with one master and 30 workers |
+| Traffic | 3,000 simulated users at one request per second each |
+| Request mix | 50K, 75K, and 100K-token prompts in equal shares |
+| Streaming | 50 percent of requests |
+| Endpoint | `/v1/chat/completions` with `max_tokens: 16` |
+| Authentication | Virtual key with a budget, so admission token counting and budget reservation ran |
+| Model | In-process mock model with response caching disabled |
+| Network path | Public AWS Application Load Balancer |
+| Client timeout | 60 seconds |
+| Run duration | High-throughput profile: 24m 22s. Baseline: 5m 7s. |
+
+The mock model removes provider cost and provider latency while keeping the gateway request path active. The test still includes authentication, budgets, token counting, spend tracking, and metrics.
+
+Both deployments ran 132 total gateway workers and requested 528 GiB of memory. The high-throughput profile used 33 pods with four workers per pod and requested 132 vCPU. The baseline used 132 pods with one worker per pod and requested 264 vCPU.
+
+### What made the difference
+
+Each change below was measured separately before the complete profile was tested.
+
+| Change | Customer impact | Measured effect |
+|---|---|---|
+| Rust admission token counting | Reduces CPU spent counting large prompts before dispatch. | 50K / 75K / 100K counts fell from 46 / 53 / 100 ms to 4.9 / 6.8 / 10.2 ms. |
+| PgBouncer per pod | Prevents database connections from multiplying with every worker. | Postgres held 86 to 175 connections across 11 to 29 pods, with no waiting PgBouncer clients. |
+| Spend collector sidecar | Keeps spend processing away from inference workers. | At 700 RPS, p99 fell from 1.8 s to 830 ms. Total compute stayed roughly the same. |
+| Metrics sidecar | Keeps Prometheus scrapes away from inference workers. | The sidecar used about 2 millicores per pod at 700 RPS. |
+| Higher CPU burst limit | Prevents all workers in a pod from being throttled together. | At 700 RPS, p99 fell from 830 ms to 670 ms. |
+| Gateway keep-alive | Keeps load-balancer connections valid during scaling. | ALB-generated 502 responses fell from 15 to zero in the 200 RPS test. |
+| RPS and TPS autoscaling | Reacts to traffic before CPU becomes saturated. | A new replica was added about 48 seconds after a 200-user load step. |
+| Admission token-count reuse | Avoids counting the same large streaming prompt twice in mock tests. | Streaming mock requests finished within about 30 ms of non-streaming requests. |
+
+### How to read the metrics
+
+- Requests per second, tokens per second, projected tokens, and request latency come from the gateway's Prometheus metrics.
+- Time to first token comes from Locust and measures the time from sending the request to receiving the first streaming event. It includes request upload, the load balancer, and gateway admission work.
+- The HTTP 200 rate comes from Locust because it includes failures that never reached the gateway.
+
+The `v1.101.0` run had 5,118 client-visible failures: 4,546 client timeouts or dropped connections, 457 HTTP 504 responses, and 115 HTTP 502 responses. The gateway did not receive these requests, so its own success metric showed 100 percent while Locust showed 92.07 percent.
+
+Use the `POST` rows when reading Locust throughput. Each streaming request also creates a `TTFT` row, so the Locust `Aggregated` row counts more entries than real requests when streaming is enabled.
+
+### Benchmark scope
+
+This is a before-and-after comparison of the complete profile, not a single-variable test. The deployments used different pod shapes and ran for different lengths of time. The individual effects in the table above come from separate A/B tests at 200 to 1,000 RPS.
+
+The in-process mock model excludes provider latency. These results measure gateway capacity for this specific traffic shape and should not be treated as universal production sizing guidance. Measure a representative workload before choosing worker counts, pod resources, and HPA targets.
+
+The sections below use short request bodies against a fake OpenAI endpoint on 4 CPU / 8 GB machines. They are not directly comparable with this large-prompt benchmark.
+
 ## Machine Spec used for testing
 
 Each machine deploying LiteLLM had the following specs:

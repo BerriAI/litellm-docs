@@ -425,6 +425,7 @@ const sidebars = {
             "proxy/security_best_practices",
             "proxy/rust_gateway",
             "proxy/server_tuning",
+            "proxy/high_throughput",
             "proxy/multi_region",
             "proxy/db_read_replica",
             "proxy/global_control_plane",
