@@ -107,6 +107,17 @@ The customer_id will be upserted into the DB with the new spend.
 
 If the customer_id already exists, spend will be incremented.
 
+### Default the end user from the virtual key
+
+If a request carries no end-user ID at all, `general_settings.default_end_user_from` fills it in from a field on the authenticated virtual key.
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  default_end_user_from: "key_alias" # one of: key_alias, team_alias, key_name, user_id
+```
+
+The chosen field is copied into the request `user` and the SpendLogs `end_user`, so spend is attributed to that value. An explicit `user` in the request body, customer headers (`x-litellm-customer-id`, `x-litellm-end-user-id`), and `user_header_mappings` always win; this only applies when none of them produced an end-user ID.
+
 ### 2. Get Customer Spend 
 
 <Tabs>

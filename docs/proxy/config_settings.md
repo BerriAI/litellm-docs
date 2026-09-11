@@ -396,6 +396,7 @@ router_settings:
 | use_shared_health_check | boolean | If true, uses Redis-backed shared health check state across multiple proxy instances |
 | user_header_mappings | dict | Map custom request headers to user IDs using lookup rules |
 | user_header_name | string | HTTP header name to extract user identity from requests |
+| default_end_user_from | string | Populate the end user (request `user` and SpendLogs `end_user`) from this field of the authenticated virtual key when the request carries no end-user ID. One of `key_alias`, `team_alias`, `key_name`, `user_id`. Explicit `user`, customer headers and `user_header_mappings` always win. See [Customers / End-Users](customers#default-the-end-user-from-the-virtual-key) |
 
 ### worker_registry - Reference
 
