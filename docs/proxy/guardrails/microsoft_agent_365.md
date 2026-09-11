@@ -201,7 +201,7 @@ Use that correlation id to line a call up with the matching record on the Micros
 | `resource_app_id` | No | Application id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
 | `agent_id` | No | Agent identity reported to Agent 365 with every evaluation. Defaults to the caller's key alias |
 | `timeout` | No | Per-request timeout in seconds for the token exchange and the evaluation call. Defaults to 10 |
-| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached, or when Agent 365 allows the call without Defender evaluating it; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block |
+| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached, or when Agent 365 allows the call without Defender evaluating it; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block. Entra rejecting the gateway's own credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) counts as unavailable, since the caller cannot fix it by signing in again |
 
 ## Failure behavior
 
@@ -211,7 +211,8 @@ Use that correlation id to line a call up with the matching record on the Micros
 | Agent 365 rejects the evaluation request (HTTP 4xx other than 408/429) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 allows but Defender did not evaluate (`defender.status` is `Skipped` or `FailedOpen`) | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 | Caller sent no Entra bearer token | HTTP 401 with a `WWW-Authenticate` challenge pointing at the server's protected resource metadata, so a compatible client can sign the user in and retry. Always blocks, regardless of `unreachable_fallback` |
-| OBO exchange rejected by Entra | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| OBO exchange rejected because of the caller's token (`invalid_grant`, consent missing, token expired) | HTTP 401. Always blocks, regardless of `unreachable_fallback` |
+| OBO exchange rejected because of the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed`: HTTP 503 naming the guardrail setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt the user to sign in |
 | Agent 365 or Entra returns 408 or 429 (throttled) | HTTP 503, recorded as Throttled. Always blocks, regardless of `unreachable_fallback` |
 | Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
@@ -223,7 +224,7 @@ Evaluations are grouped on the Microsoft side by `conversationId`. The guardrail
 
 When the guardrail applies to an MCP server and the request carries no Entra bearer token, LiteLLM answers `tools/list` and `tools/call` with HTTP 401 and a `WWW-Authenticate: Bearer resource_metadata="..."` header that points at that server's [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) protected resource metadata. The metadata names your Entra tenant as the authorization server and lists the scope the client should request. MCP clients that implement the MCP authorization spec (Claude Code does) follow that pointer, open a browser for Entra sign-in, cache the token and refresh it on their own, then retry the call. The user never handles a token, and the `x-litellm-api-key` header keeps carrying the LiteLLM key exactly as before
 
-Three things have to be true for the challenge to appear. The MCP server must have `scopes` set to the full scope string the client should request, the server must not use its own `oauth2` auth (that mode advertises its own sign-in), and an Agent 365 guardrail must apply to the caller (default on, or attached to their key, team, or policy)
+Two things have to be true for the challenge to appear. The server must not use its own `oauth2` auth (that mode advertises its own sign-in), and an Agent 365 guardrail must apply to the caller (default on, or attached to their key, team, or policy). The scope the metadata advertises is the server's `scopes` when set, otherwise `api://<client_id>/access_as_user` for the guardrail's gateway app, which is the scope prerequisite step 3 creates. Set `scopes` when you expose a different Application ID URI, for example one per MCP server
 
 ```yaml
 mcp_servers:
