@@ -798,6 +798,8 @@ router_settings:
 | REDIS_AZURE_AD_TOKEN | Flag enabling Azure AD authentication for Redis. Set it to `true`, not to a token. Ignored with a warning when a GCP IAM service account is configured as well. **Default is False**
 | REDUCTO_API_KEY | API key for Reducto OCR
 | REPLICATE_API_BASE | Base URL for Replicate. Default is https://api.replicate.com/v1
+| REQUESTY_API_BASE | Base URL for Requesty. Default is https://router.requesty.ai/v1. Set it to https://router.eu.requesty.ai/v1 for the EU router
+| REQUESTY_API_KEY | API key for Requesty
 | RUNWAYML_API_BASE | Base URL for RunwayML
 | RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
 | SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
