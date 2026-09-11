@@ -180,6 +180,17 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
   )
   ```
 
+#### `LiteLLM-Changed-By` audit attribution requires opt-in
+- **What changed:** Audit logs only honor the `LiteLLM-Changed-By` header when the calling key (or its team) carries `allow_litellm_changed_by_header: true` in its metadata. Without the opt-in, `changed_by` falls back to the calling key's `user_id`. Previously the header was honored unconditionally, which let any caller rewrite audit attribution.
+- **Who is affected:** Platforms that call management endpoints on behalf of users and rely on the header for the audit trail's Changed By value. The master key cannot opt in (it has no stored metadata); send the header with an admin virtual key instead.
+- **Restore prior behavior:** Set the opt-in on the key that sends the header (or on its team):
+  ```shell
+  curl -X POST 'http://0.0.0.0:4000/key/update' \
+      -H 'Authorization: Bearer sk-1234' \
+      -H 'Content-Type: application/json' \
+      -d '{"key": "<admin key that sends the header>", "metadata": {"allow_litellm_changed_by_header": true}}'
+  ```
+
 #### Error responses no longer leak re-raised local parameters
 - **What changed:** Broad `except` handlers in the response-utils path used to render the captured request parameters into the re-raised error message. Those parameters can carry credentials, so they're now dropped from the rendered message.
 - **Who is affected:** Any client that parsed credential-shaped fields out of a 5xx error body. The error response shape is otherwise unchanged.
