@@ -121,7 +121,7 @@ async fn run_bench(url: String, total: usize, conc: usize) {
                 let t = Instant::now();
                 let r = client
                     .post(&url)
-                    .header("authorization", "Bearer $LITELLM_API_KEY")
+                    .header("authorization", "Bearer sk-<your-litellm-api-key>")
                     .json(&payload)
                     .send()
                     .await;

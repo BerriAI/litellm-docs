@@ -512,7 +512,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://0.0.0.0:4000/v1/realtime?model=gemini-3.5-transcribe-live",
-        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": "<base64 pcm16 audio>"}))
         async for message in ws:

@@ -668,7 +668,7 @@ params = {
 }
 
 headers = {
-    'Authorization': 'Bearer $LITELLM_API_KEY'
+    'Authorization': 'Bearer sk-<your-litellm-api-key>'
 }
 
 # Make the GET request

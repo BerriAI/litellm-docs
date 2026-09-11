@@ -836,7 +836,7 @@ from websocket import create_connection  # uv add websocket-client
 # Connect to LiteLLM proxy WebSocket endpoint
 ws = create_connection(
     "ws://localhost:4000/v1/responses?model={{gemini_flash}}",
-    header=["Authorization: Bearer $LITELLM_API_KEY"]
+    header=["Authorization: Bearer sk-<your-litellm-api-key>"]
 )
 
 try:
@@ -900,7 +900,7 @@ const ws = new WebSocket(
     'ws://localhost:4000/v1/responses?model={{gemini_flash}}',
     {
         headers: {
-            'Authorization': 'Bearer $LITELLM_API_KEY'
+            'Authorization': 'Bearer sk-<your-litellm-api-key>'
         }
     }
 );

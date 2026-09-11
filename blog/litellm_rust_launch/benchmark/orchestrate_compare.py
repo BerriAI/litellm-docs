@@ -22,7 +22,7 @@ def wait_port(port, timeout=90):
 
 def post_ok(url):
     body = json.dumps({"model": "mock", "messages": [{"role": "user", "content": "hi"}]}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer $LITELLM_API_KEY"})
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer sk-<your-litellm-api-key>"})
     try:
         with urllib.request.urlopen(req, timeout=5) as r:
             return r.status == 200

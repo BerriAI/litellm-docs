@@ -51,7 +51,7 @@ response = httpx.post(
     "http://localhost:4000/v1/messages/count_tokens",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer $LITELLM_API_KEY"
+        "Authorization": "Bearer sk-<your-litellm-api-key>"
     },
     json={
         "model": "{{anthropic}}",

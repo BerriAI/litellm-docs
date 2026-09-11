@@ -362,7 +362,7 @@ client = openai.OpenAI(
     base_url="https://api-gateway-url.com/llmservc/api/litellmp",
     default_headers={
         "Authorization": f"Bearer {API_GATEWAY_TOKEN}", # (optional) For your API Gateway
-        "X-Litellm-Key": f"Bearer $LITELLM_API_KEY"              # For LiteLLM Proxy
+        "X-Litellm-Key": f"Bearer sk-<your-litellm-api-key>"              # For LiteLLM Proxy
     }
 )
 ```

@@ -103,7 +103,7 @@ Connect your client to the proxy instead of directly to OpenAI:
 const ws = new WebSocket(
   "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
   [],
-  { headers: { Authorization: "Bearer $LITELLM_API_KEY" } }
+  { headers: { Authorization: "Bearer sk-<your-litellm-api-key>" } }
 )
 
 ws.onopen = () => {
@@ -136,7 +136,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
-        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         await ws.recv()  # session.created
 

@@ -56,7 +56,7 @@ import httpx
 
 client = httpx.Client(
     base_url="http://localhost:4000",
-    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
 )
 
 response = client.post("/v1/memory", json={

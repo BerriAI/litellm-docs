@@ -432,7 +432,7 @@ This example uses the `x-mcp-servers` header to access all servers in the "dev_g
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/github_mcp,zapier/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }
@@ -533,7 +533,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/mcp/",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "alias_1,Server2"
       }
     }
@@ -627,7 +627,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "alias_1,Server2"
       }
     }
@@ -684,7 +684,7 @@ Include the access group name in the `x-mcp-servers` header:
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "dev_group"
       }
     }

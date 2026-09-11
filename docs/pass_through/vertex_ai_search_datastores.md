@@ -76,7 +76,7 @@ url = "http://localhost:4000/vertex_ai/discovery/v1/projects/my-project/location
 response = requests.post(url, 
     headers={
         "Content-Type": "application/json",
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
     },
     json={"query": "pricing", "pageSize": 10}
 )

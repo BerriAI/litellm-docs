@@ -63,7 +63,7 @@ import requests
 response = requests.post(
     "http://localhost:4000/fallback",
     headers={
-        "Authorization": "Bearer $LITELLM_API_KEY",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
         "Content-Type": "application/json"
     },
     json={
@@ -105,7 +105,7 @@ import requests
 
 response = requests.get(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     params={"fallback_type": "general"}
 )
 
@@ -141,7 +141,7 @@ import requests
 
 response = requests.delete(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     params={"fallback_type": "general"}
 )
 

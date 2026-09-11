@@ -134,7 +134,7 @@ const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&gu
 
 const ws = new WebSocket(url, {
     headers: {
-        "Authorization": "Bearer $LITELLM_API_KEY",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
     },
 });
 
@@ -166,7 +166,7 @@ async def main():
     url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
-        additional_headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         print("Connected — guardrail active")
         async for msg in ws:

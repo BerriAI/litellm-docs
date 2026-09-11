@@ -600,7 +600,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer $LITELLM_API_KEY"
+API_KEY = "Bearer sk-<your-litellm-api-key>"
 
 # Initialize ChatBedrockConverse pointing to LiteLLM proxy
 llm = ChatBedrockConverse(
@@ -629,7 +629,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer $LITELLM_API_KEY"
+API_KEY = "Bearer sk-<your-litellm-api-key>"
 
 def get_llm() -> ChatBedrockConverse:
     """Initialize LLM pointing to LiteLLM proxy"""
@@ -698,5 +698,5 @@ All LangChain AWS features work with LiteLLM:
 
 **Solution**: Ensure your API key is in the correct format:
 ```python
-aws_access_key_id="Bearer $LITELLM_API_KEY"  # Include "Bearer " prefix
+aws_access_key_id="Bearer sk-<your-litellm-api-key>"  # Include "Bearer " prefix
 ```

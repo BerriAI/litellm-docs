@@ -53,7 +53,7 @@ import httpx
 
 response = httpx.post(
     "http://localhost:4000/v1/responses/compact",
-    headers={"Authorization": "Bearer $LITELLM_API_KEY"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     json={
         "model": "openai/{{openai_large}}",
         "input": [{"role": "user", "content": "Hello"}],

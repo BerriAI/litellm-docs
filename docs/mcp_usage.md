@@ -185,7 +185,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP:
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }

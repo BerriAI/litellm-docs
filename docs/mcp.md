@@ -558,7 +558,7 @@ config = {
             "url": "http://localhost:4000/mcp/",
             "headers": {
                 "x-mcp-servers": "dev_group", # assume this gives access to github, zapier and deepwiki
-                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+                "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
                 "x-mcp-github-authorization": "Bearer gho_token", 
                 "x-mcp-zapier-x-api-key": "sk-xxxxxxxxx",
                 "x-mcp-deepwiki-authorization": "Basic base64_encoded_creds",
@@ -619,7 +619,7 @@ config = {
         "github": {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+                "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
                 "Authorization": "Bearer gho_token", 
                 "custom_key": "custom_value",
                 "x-custom-header": "additional_data"
@@ -656,7 +656,7 @@ asyncio.run(main())
     "GitHub": {
       "url": "http://localhost:4000/github_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "Authorization": "Bearer $GITHUB_TOKEN",
         "custom_key": "custom_value",
         "x-custom-header": "additional_data"
@@ -741,7 +741,7 @@ config = {
         "github": {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+                "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
                 "x-litellm-end-user-id": "customer_123",  # 👈 CUSTOMER ID
                 "Authorization": "Bearer gho_token"
             }
@@ -769,7 +769,7 @@ asyncio.run(main())
     "GitHub": {
       "url": "http://localhost:4000/github_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-litellm-end-user-id": "customer_123"
       }
     }
@@ -1010,7 +1010,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include server-specific 
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-github-authorization": "Bearer $GITHUB_TOKEN",
         "x-mcp-zapier-x-api-key": "$ZAPIER_API_KEY"
       }
@@ -1035,7 +1035,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP and include your MCP authent
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-auth": "$MCP_AUTH_TOKEN"
       }
     }
