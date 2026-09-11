@@ -143,6 +143,8 @@ The proxy admin does the Entra work under [Prerequisites](#prerequisites) once, 
 
 The user's prompt is not sent to Agent 365. Only the pending tool call is evaluated. Ordinary LLM routes such as `/v1/chat/completions` and MCP servers the guardrail is not attached to are untouched; a key-only call to an unguarded server keeps working as before
 
+Attach the guardrail only to MCP servers whose `Authorization` header is free to carry the user's Entra token: servers with `auth_type` `none`, `api_key`, `bearer_token`, `basic`, `token` or `aws_sigv4` (with no `Authorization` entry in `extra_headers`), and `oauth2_token_exchange` servers, where that same Entra token is what LiteLLM exchanges for the upstream. On servers where the client's `Authorization` header already carries the upstream or gateway OAuth token (`auth_type: oauth2`, passthrough or delegated auth), there is no Entra user token to exchange, so the guardrail fails closed: every call is refused with HTTP 401 and no sign-in challenge is advertised for that server. Leave the guardrail off those servers or move them to `oauth2_token_exchange`
+
 ### Caller scenarios
 
 #### A. Applications on a proxy with Entra JWT auth
