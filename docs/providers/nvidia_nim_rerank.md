@@ -127,7 +127,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "nvidia-rerank",
@@ -183,7 +183,7 @@ model_list:
 
 ```bash title="Request to LiteLLM Proxy"
 curl -X POST http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "nvidia-ranking",

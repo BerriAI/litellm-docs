@@ -102,7 +102,7 @@ Create a key with Headroom attached:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
         "guardrails": ["headroom-compression"]
@@ -175,7 +175,7 @@ The flow has three steps.
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
         "key_alias": "claude-code-alice",

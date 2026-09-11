@@ -210,7 +210,7 @@ import TabItem from '@theme/TabItem';
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -233,7 +233,7 @@ from openai import OpenAI
 
 # Initialize the OpenAI client pointing to your LiteLLM proxy
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy API key
     base_url="http://0.0.0.0:4000"  # Your LiteLLM proxy URL
 )
 

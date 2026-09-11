@@ -41,7 +41,7 @@ curl 'http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-    apiKey: "sk-1234", // litellm proxy API key
+    apiKey: "sk-<your-api-key>", // litellm proxy API key
     httpOptions: {
         baseUrl: "http://localhost:4000/gemini", // http://<proxy-base-url>/gemini
     },
@@ -264,7 +264,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -274,7 +274,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -282,7 +282,7 @@ Expected Response
 
 
 ```bash
-http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-1234ewknldferwedojwojw' \
+http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:countTokens?key=sk-<virtual-key>' \
 -H 'Content-Type: application/json' \
 -d '{
     "contents": [{
@@ -327,7 +327,7 @@ curl 'http://0.0.0.0:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     httpOptions: {
         baseUrl: "http://localhost:4000/gemini", // http://<proxy-base-url>/gemini
         headers: {

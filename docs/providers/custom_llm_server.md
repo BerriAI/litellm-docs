@@ -110,7 +110,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "messages": [{"role": "user", "content": "Say \"this is a test\" in JSON!"}],
@@ -248,7 +248,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",
@@ -326,7 +326,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'model=my-custom-image-edit-model' \
 -F 'image=@/path/to/image.png' \
 -F 'prompt=Make the sky blue'
@@ -398,7 +398,7 @@ litellm --config /path/to/config.yaml
 curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 -H 'anthropic-version: 2023-06-01' \
 -H 'content-type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
    "model": "my-custom-model",
      "max_tokens": 1024,
@@ -525,7 +525,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",

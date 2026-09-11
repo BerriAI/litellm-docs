@@ -37,7 +37,7 @@ model_list:
       api_version: "2023-07-01-preview"
 
 general_settings:
-  master_key: sk-1234 # [OPTIONAL] if set all calls to proxy will require either this key or a valid generated token
+  master_key: os.environ/LITELLM_MASTER_KEY # [OPTIONAL] if set all calls to proxy will require either this key or a valid generated token
 ```
 
 2. Start the proxy
@@ -49,7 +49,7 @@ $ litellm --config /path/to/config.yaml
 
 ```shell
 curl --location 'http://0.0.0.0:4000/v1/embeddings' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "input": "The food was delicious and the waiter..",
@@ -71,7 +71,7 @@ You can still override per request from any OpenAI-compatible client:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/embeddings' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{"model": "my-embedding-model", "input": "hello", "encoding_format": "base64"}'
 ```

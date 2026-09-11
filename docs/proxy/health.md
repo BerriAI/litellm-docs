@@ -41,7 +41,7 @@ The primary way to check whether your models are serving is the Admin UI. Go to 
 The API equivalent is `GET /health`, which accepts any valid key. It runs a real test request against every configured model, so it costs a few tokens per model.
 
 ```shell
-curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer sk-1234"
+curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json

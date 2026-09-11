@@ -56,7 +56,7 @@ agent = Agent(
     instructions="You are a helpful assistant.",
     model=LitellmModel(
         model="claude-sonnet",  # Model from config.yaml
-        api_key="sk-1234",      # LiteLLM API key
+        api_key="sk-<your-litellm-api-key>",      # LiteLLM API key
         base_url="http://localhost:4000"
     )
 )
@@ -99,7 +99,7 @@ from agents.extensions.models.litellm_model import LitellmModel
 
 agent = Agent(
     name="Assistant",
-    model=LitellmModel(model="claude-sonnet", api_key="sk-1234"),
+    model=LitellmModel(model="claude-sonnet", api_key="sk-<your-litellm-api-key>"),
     model_settings=ModelSettings(include_usage=True)
 )
 
@@ -112,7 +112,7 @@ print(result.context_wrapper.usage)  # Token counts
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `LITELLM_BASE_URL` | `http://localhost:4000` | LiteLLM proxy URL |
-| `LITELLM_API_KEY` | `sk-1234` | Your LiteLLM API key |
+| `LITELLM_API_KEY` | `sk-<your-litellm-api-key>` | Your LiteLLM API key |
 
 ## Related Resources
 

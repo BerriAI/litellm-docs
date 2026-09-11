@@ -32,7 +32,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{anthropic}}",
     "messages": [
@@ -51,7 +51,7 @@ response = httpx.post(
     "http://localhost:4000/v1/messages/count_tokens",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer sk-1234"
+        "Authorization": "Bearer sk-<your-litellm-api-key>"
     },
     json={
         "model": "{{anthropic}}",
@@ -151,7 +151,7 @@ The `/v1/messages/count_tokens` endpoint automatically routes to the appropriate
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{anthropic}}",
     "messages": [
@@ -165,7 +165,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{anthropic}}",
     "messages": [
@@ -181,7 +181,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-vertex",
     "messages": [
@@ -195,7 +195,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-bedrock",
     "messages": [

@@ -47,7 +47,7 @@ Pass `custom_llm_provider: "s3_vectors"` in the `vector_store` block. Setting `a
 
 ```bash showLineNumbers title="Ingest into S3 Vectors"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -86,7 +86,7 @@ The index dimension is fixed at creation time from the ingest embedding model (a
 
 ```bash showLineNumbers title="Search"
 curl -X POST "http://localhost:4000/v1/vector_stores/my-embeddings:litellm-index-a1b2c3d4/search" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{"query": "What does the document say about pricing?", "max_num_results": 5}'
 ```
@@ -113,7 +113,7 @@ curl -X POST "http://localhost:4000/v1/vector_stores/my-embeddings:litellm-index
 
 ```bash showLineNumbers title="file_search tool"
 curl -X POST "http://localhost:4000/v1/chat/completions" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_large}}",

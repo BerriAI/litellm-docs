@@ -133,7 +133,7 @@ The OpenAI SDK keeps working unchanged. Point it at the proxy, declare `code_int
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 response = client.responses.create(
     model="gpt-5",

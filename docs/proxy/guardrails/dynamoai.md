@@ -56,7 +56,7 @@ litellm --config config.yaml --detailed_debug
 ```shell showLineNumbers title="Successful Request"
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -77,7 +77,7 @@ Content passes all policy checks and is allowed through.
 ```shell showLineNumbers title="Blocked Request"
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [

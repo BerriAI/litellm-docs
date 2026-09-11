@@ -196,7 +196,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl "http://localhost:4000/v1/assistants" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "instructions": "You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
     "name": "Math Tutor",
@@ -211,7 +211,7 @@ curl "http://localhost:4000/v1/assistants" \
 ```bash
 curl "http://0.0.0.0:4000/v1/assistants?order=desc&limit=20" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Create a Thread**
@@ -219,7 +219,7 @@ curl "http://0.0.0.0:4000/v1/assistants?order=desc&limit=20" \
 ```bash
 curl http://0.0.0.0:4000/v1/threads \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d ''
 ```
 
@@ -228,7 +228,7 @@ curl http://0.0.0.0:4000/v1/threads \
 ```bash
 curl http://0.0.0.0:4000/v1/threads/{thread_id} \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Add Messages to the Thread**
@@ -236,7 +236,7 @@ curl http://0.0.0.0:4000/v1/threads/{thread_id} \
 ```bash
 curl http://0.0.0.0:4000/v1/threads/{thread_id}/messages \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
       "role": "user",
       "content": "How does AI work? Explain it in simple terms."
@@ -247,7 +247,7 @@ curl http://0.0.0.0:4000/v1/threads/{thread_id}/messages \
 
 ```bash
 curl http://0.0.0.0:4000/v1/threads/thread_abc123/runs \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "assistant_id": "asst_abc123"
@@ -285,7 +285,7 @@ with run as run:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/threads/{thread_id}/runs' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
       "assistant_id": "asst_6xVZQFFy1Kw87NbnYeNebxTf",
@@ -315,7 +315,7 @@ assistant_settings:
 ```bash
 curl -X POST "http://localhost:4000/v1/assistants" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "instructions": "You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
     "name": "Math Tutor",
@@ -343,7 +343,7 @@ assistant_settings:
 ```bash
 curl -X POST "http://localhost:4000/v1/assistants" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "instructions": "You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
     "name": "Math Tutor",

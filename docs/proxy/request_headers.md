@@ -41,7 +41,7 @@ Send two chat completion requests with the same `x-litellm-trace-id` value to gr
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
     "model": "{{openai_large}}",
@@ -50,7 +50,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-trace-id: my-conversation-123" \
   -d '{
     "model": "{{openai_large}}",

@@ -30,7 +30,7 @@ model_list:
       api_version: "2023-07-01-preview"
 
 general_settings: 
-    master_key: sk-1234
+    master_key: os.environ/LITELLM_MASTER_KEY
     database_url: "postgresql://..." # 👈 Connect proxy to DB
 ```
 
@@ -45,7 +45,7 @@ litellm --config /path/to/config.yaml
 ```bash
 # Authorization: 👈 Master Key
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_alias": "my-new-team_4",
@@ -59,7 +59,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 
 ```bash 
 curl --location 'http://localhost:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "team_id": "my-team-id",  # 👈 YOUR TEAM ID

@@ -48,7 +48,7 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-1234` in the quickstart compose file).
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-<your-litellm-master-key>` in the quickstart compose file).
 
 <Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
 
@@ -186,7 +186,7 @@ model_list:
 docker run \
   -v $(pwd)/litellm_config.yaml:/app/config.yaml \
   -e OPENAI_API_KEY=<your-openai-key> \
-  -e LITELLM_MASTER_KEY=sk-1234 \
+  -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \
   -p 4000:4000 \
   docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml

@@ -197,7 +197,7 @@ from openai import OpenAI
 import base64
 
 # Initialize client with your proxy URL
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
     model="{{openai_large}}",

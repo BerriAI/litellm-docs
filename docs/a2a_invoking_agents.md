@@ -47,7 +47,7 @@ from a2a.utils.constants import TransportProtocol
 
 # === CONFIGURE THESE ===
 LITELLM_BASE_URL = "http://localhost:4000"  # Your LiteLLM proxy URL
-LITELLM_VIRTUAL_KEY = "sk-1234"             # Your LiteLLM Virtual Key
+LITELLM_VIRTUAL_KEY = "sk-<your-litellm-api-key>"             # Your LiteLLM Virtual Key
 # =======================
 
 
@@ -132,7 +132,7 @@ from a2a.utils.constants import TransportProtocol
 
 # === CONFIGURE THESE ===
 LITELLM_BASE_URL = "http://localhost:4000"  # Your LiteLLM proxy URL
-LITELLM_VIRTUAL_KEY = "sk-1234"             # Your LiteLLM Virtual Key
+LITELLM_VIRTUAL_KEY = "sk-<your-litellm-api-key>"             # Your LiteLLM Virtual Key
 LITELLM_AGENT_NAME = "ij-local"             # Agent name registered in LiteLLM
 # =======================
 
@@ -189,7 +189,7 @@ You can also invoke A2A agents using the familiar OpenAI SDK by using the `a2a/`
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM Virtual Key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM Virtual Key
     base_url="http://localhost:4000"  # Your LiteLLM proxy URL
 )
 
@@ -210,7 +210,7 @@ print(response.choices[0].message.content)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'sk-1234',  // Your LiteLLM Virtual Key
+  apiKey: 'sk-<your-api-key>',  // Your LiteLLM Virtual Key
   baseURL: 'http://localhost:4000'  // Your LiteLLM proxy URL
 });
 
@@ -229,7 +229,7 @@ console.log(response.choices[0].message.content);
 
 ```bash showLineNumbers title="curl_non_streaming.sh"
 curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "a2a/my-agent",
@@ -251,7 +251,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM Virtual Key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM Virtual Key
     base_url="http://localhost:4000"  # Your LiteLLM proxy URL
 )
 
@@ -275,7 +275,7 @@ for chunk in stream:
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'sk-1234',  // Your LiteLLM Virtual Key
+  apiKey: 'sk-<your-api-key>',  // Your LiteLLM Virtual Key
   baseURL: 'http://localhost:4000'  // Your LiteLLM proxy URL
 });
 
@@ -300,7 +300,7 @@ for await (const chunk of stream) {
 
 ```bash showLineNumbers title="curl_streaming.sh"
 curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "a2a/my-agent",
@@ -320,7 +320,7 @@ Agents that return a `submitted` task from `message/send` expect clients to poll
 
 ```bash showLineNumbers title="tasks_get.sh"
 curl -X POST "http://localhost:4000/a2a/${AGENT_ID}" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",

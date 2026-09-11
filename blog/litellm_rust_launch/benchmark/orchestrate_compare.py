@@ -22,7 +22,7 @@ def wait_port(port, timeout=90):
 
 def post_ok(url):
     body = json.dumps({"model": "mock", "messages": [{"role": "user", "content": "hi"}]}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer sk-1234"})
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer sk-<your-litellm-api-key>"})
     try:
         with urllib.request.urlopen(req, timeout=5) as r:
             return r.status == 200
@@ -48,7 +48,7 @@ mock = subprocess.Popen([BIN, "mock"])
 gw = subprocess.Popen([BIN, "gateway"])
 assert wait_port(9001) and wait_port(9000), "rust servers failed"
 
-env = dict(os.environ, LITELLM_MASTER_KEY="sk-1234")
+env = dict(os.environ, LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>")
 env.pop("DATABASE_URL", None)
 litellm = subprocess.Popen([VENVPY, APP], env=env, cwd=HERE,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

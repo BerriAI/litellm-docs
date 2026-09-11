@@ -84,7 +84,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -148,7 +148,7 @@ Every key on the team sends its LLM spans to the named project.
 
 ```bash
 curl -X POST 'http://localhost:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_alias": "payments", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -157,7 +157,7 @@ Update an existing team the same way:
 
 ```bash
 curl -X POST 'http://localhost:4000/team/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -166,7 +166,7 @@ Then generate a key for that team and call the proxy as usual:
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>"}'
 ```
@@ -185,7 +185,7 @@ A single key can name its own project, including keys that do not belong to a te
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"phoenix_project_name": "payments-canary"}}'
 ```

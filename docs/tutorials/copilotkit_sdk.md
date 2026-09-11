@@ -40,7 +40,7 @@ import { NextRequest } from "next/server";
 const model = "{{anthropic}}";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "sk-12345",
+  apiKey: process.env.OPENAI_API_KEY || "sk-<your-litellm-api-key>",
   baseURL: process.env.OPENAI_BASE_URL || "http://localhost:4000/v1",
 });
 
@@ -89,7 +89,7 @@ curl -X POST http://localhost:3000/api/copilotkit \
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `OPENAI_API_KEY` | `sk-12345` | Your LiteLLM API key |
+| `OPENAI_API_KEY` | `sk-<your-litellm-api-key>` | Your LiteLLM API key |
 | `OPENAI_BASE_URL` | `http://localhost:4000/v1` | LiteLLM proxy URL |
 
 

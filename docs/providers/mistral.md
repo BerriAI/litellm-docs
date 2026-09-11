@@ -379,7 +379,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"audio.wav"' \
 --form 'model="voxtral"'
 ```

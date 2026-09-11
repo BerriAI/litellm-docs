@@ -185,7 +185,7 @@ In practice this is why a single bearer that is valid for several upstreams can 
 ```bash title="Aggregate tools/list with per-server tokens" showLineNumbers
 curl -X POST "https://litellm.example.com/mcp" \
   -H "Content-Type: application/json" \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -H "x-mcp-servers: jira,confluence" \
   -H "x-mcp-jira-authorization: Bearer <token-for-jira>" \
   -H "x-mcp-confluence-authorization: Bearer <token-for-confluence>" \

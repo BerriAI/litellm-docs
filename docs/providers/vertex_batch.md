@@ -43,7 +43,7 @@ Upload your JSONL file. For `vertex_ai`, the file will be stored in your configu
 from openai import OpenAI
 
 oai_client = OpenAI(
-    api_key="sk-1234",               # litellm proxy API key
+    api_key="sk-<your-litellm-api-key>",               # litellm proxy API key
     base_url="http://localhost:4000" # litellm proxy base url
 )
 
@@ -176,7 +176,7 @@ if retrieved_batch.status == "completed":
 ```bash showLineNumbers title="Retrieve Batch Status"
 curl --request GET \
   --url 'http://localhost:4000/batches/7814463557919047680?provider=vertex_ai' \
-  --header 'Authorization: Bearer sk-1234'
+  --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -248,7 +248,7 @@ for line in file_content.text.strip().split('\n'):
 # Note: The file ID must be URL encoded
 curl --request GET \
   --url 'http://localhost:4000/files/gs%253A%252F%252Fmy-batch-bucket%252Flitellm-vertex-files%252Fpublishers%252Fgoogle%252Fmodels%252Fgemini-2.5-flash-lite%252Fprediction-model-2025-09-19T21%253A26%253A51.569037Z%252Fpredictions.jsonl/content?provider=vertex_ai' \
-  --header 'Authorization: Bearer sk-1234'
+  --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>

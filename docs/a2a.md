@@ -443,7 +443,7 @@ Agent JSON-RPC errors are returned in the `error` field with the same `id` as th
 
 ```bash title="Poll task after message/send"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",

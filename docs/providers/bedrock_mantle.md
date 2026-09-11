@@ -214,7 +214,7 @@ curl -X POST http://0.0.0.0:4000/v1/responses \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000",
 )
 

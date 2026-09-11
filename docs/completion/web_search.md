@@ -139,7 +139,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -269,7 +269,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -348,7 +348,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -391,7 +391,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -572,7 +572,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 

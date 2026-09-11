@@ -98,7 +98,7 @@ Generate images through the proxy:
 ```bash showLineNumbers title="Proxy Request"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "model": "runwayml/gen4_image",
     "prompt": "A serene mountain landscape at sunset",

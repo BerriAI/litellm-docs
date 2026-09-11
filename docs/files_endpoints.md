@@ -51,7 +51,7 @@ model_list:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 

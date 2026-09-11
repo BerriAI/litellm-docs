@@ -227,7 +227,7 @@ export default function WebRTCTester() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('logs');
   const [proxyUrl, setProxyUrl] = useState('http://localhost:4000');
-  const [apiKey, setApiKey] = useState('sk-1234');
+  const [apiKey, setApiKey] = useState('sk-<your-litellm-api-key>');
   const [model, setModel] = useState('gpt-4o-realtime-preview');
   const [status, setStatus] = useState('idle');
   const [flowStep, setFlowStep] = useState(0);
@@ -459,7 +459,7 @@ export default function WebRTCTester() {
                 </div>
                 <div className="wrt-field">
                   <label>API Key</label>
-                  <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-1234" />
+                  <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-<your-litellm-api-key>" />
                 </div>
                 <div className="wrt-field">
                   <label>Model</label>

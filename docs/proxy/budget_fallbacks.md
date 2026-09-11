@@ -29,7 +29,7 @@ Router-level fallbacks (`fallbacks: [{model: [...]}]` in `config.yaml`) are unaf
 
 ```bash
 curl 'http://0.0.0.0:4000/key/generate' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model_max_budget": {
@@ -69,7 +69,7 @@ Each list entry is tried in order; the first fallback still within its own `mode
 
 ```bash
 curl 'http://0.0.0.0:4000/key/generate' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model_max_budget": {
@@ -93,7 +93,7 @@ Use `/key/update` to change the fallback chain without regenerating the key:
 
 ```bash
 curl 'http://0.0.0.0:4000/key/update' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "key": "sk-generated-key",

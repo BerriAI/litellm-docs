@@ -51,7 +51,7 @@ $ litellm --config /path/to/config.yaml
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="snowflake-arctic-embed-m-long-1731622468876", 
@@ -112,7 +112,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -163,7 +163,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -232,7 +232,7 @@ $ litellm --config /path/to/config.yaml
 ```python showLineNumbers title="Making requests to BGE"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="bge-embedding",
@@ -321,7 +321,7 @@ model_list:
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-gemini-embedding-2-preview",
@@ -396,7 +396,7 @@ Requests with GCS Image / Video URI
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -412,7 +412,7 @@ Requests with base64 encoded images
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -436,7 +436,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -457,7 +457,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -500,7 +500,7 @@ from vertexai.vision_models import VideoSegmentConfig
 from google.auth.credentials import Credentials
 
 
-LITELLM_PROXY_API_KEY = "sk-1234"
+LITELLM_PROXY_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_PROXY_BASE = "http://0.0.0.0:4000/vertex-ai"
 
 import datetime
@@ -618,7 +618,7 @@ Text + Image
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -633,7 +633,7 @@ Text + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -648,7 +648,7 @@ Image + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(

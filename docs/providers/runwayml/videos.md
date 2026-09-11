@@ -158,7 +158,7 @@ Generate videos through the proxy:
 ```bash showLineNumbers title="Proxy Request"
 curl --location 'http://localhost:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "model": "runwayml/gen4_turbo",
     "prompt": "A high quality demo video of litellm ai gateway",
@@ -171,14 +171,14 @@ Check video status:
 
 ```bash showLineNumbers title="Check Status"
 curl --location 'http://localhost:4000/v1/videos/{video_id}' \
---header 'x-litellm-api-key: sk-1234'
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>'
 ```
 
 Download video content:
 
 ```bash showLineNumbers title="Download Video"
 curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --output video.mp4
 ```
 

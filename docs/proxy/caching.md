@@ -168,7 +168,7 @@ LiteLLM Proxy exposes a `/cache/ping` endpoint to test if the cache is working a
 **Usage**
 
 ```shell
-curl --location 'http://0.0.0.0:4000/cache/ping'  -H "Authorization: Bearer sk-1234"
+curl --location 'http://0.0.0.0:4000/cache/ping'  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Expected Response - when cache healthy**

@@ -16,7 +16,7 @@ Step 1: run the diagnostic below against the named endpoint for the failing serv
 curl -sS -D - -X POST http://localhost:4000/deepwiki/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-mcp-debug: true" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
@@ -227,7 +227,7 @@ During `/v1/responses` or `/v1/chat/completions`, LiteLLM executes MCP tool call
 ```bash
 curl -sS http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gpt-4o-mini",
     "input": "List the top-level wiki pages for BerriAI/litellm",

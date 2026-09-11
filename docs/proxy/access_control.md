@@ -212,7 +212,7 @@ You need to be a LiteLLM Enterprise user to assign team admins. [Get a 30 day tr
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"team_id": "team-123", "member": {"role": "admin", "user_id": "user@company.com"}}'
 ```
@@ -278,7 +278,7 @@ By default, team members can only:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/permissions_list?team_id=team-123' \
-    --header 'Authorization: Bearer sk-1234'
+    --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Expected Response:
@@ -294,7 +294,7 @@ Expected Response:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "team_id": "team-123",
@@ -368,7 +368,7 @@ Any user with role=`proxy_admin` can create a new organization
 
 ```shell
 curl --location 'http://0.0.0.0:4000/organization/new' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "organization_alias": "marketing_department",
@@ -406,7 +406,7 @@ Users with the following roles can call `/organization/member_add`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/organization/member_add' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23", "member": {"role": "org_admin", "user_id": "ishaan@berri.ai"}}'
 ```
@@ -417,7 +417,7 @@ Create a Virtual Key for user_id = `ishaan@berri.ai`. The User can then use the 
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
             "user_id": "ishaan@berri.ai"

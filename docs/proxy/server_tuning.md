@@ -120,7 +120,7 @@ docker run \
     -v $(pwd)/proxy_config.yaml:/app/config.yaml \
     -p 4000:4000 \
     -e DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname> \
-    -e LITELLM_MASTER_KEY="sk-1234" \
+    -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
     your_custom_docker_image \
     --config /app/config.yaml \
     --run_hypercorn

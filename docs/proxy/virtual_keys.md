@@ -48,7 +48,7 @@ model_list:
         model: ollama/llama2
 
 general_settings: 
-  master_key: sk-1234 
+  master_key: os.environ/LITELLM_MASTER_KEY 
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # 👈 KEY CHANGE
 ```
 
@@ -320,7 +320,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234 
+  master_key: os.environ/LITELLM_MASTER_KEY 
   litellm_key_header_name: "X-Litellm-Key" # 👈 Key Change
 
 ```
@@ -335,7 +335,7 @@ In this request, litellm will use the Virtual key in the `X-Litellm-Key` header
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "X-Litellm-Key: Bearer sk-1234" \
+  -H "X-Litellm-Key: Bearer $LITELLM_API_KEY" \
   -H "Authorization: Bearer bad-key" \
   -d '{
     "model": "fake-openai-endpoint",
@@ -362,7 +362,7 @@ client = openai.OpenAI(
     base_url="https://api-gateway-url.com/llmservc/api/litellmp",
     default_headers={
         "Authorization": f"Bearer {API_GATEWAY_TOKEN}", # (optional) For your API Gateway
-        "X-Litellm-Key": f"Bearer sk-1234"              # For LiteLLM Proxy
+        "X-Litellm-Key": f"Bearer sk-<your-litellm-api-key>"              # For LiteLLM Proxy
     }
 )
 ```
@@ -629,9 +629,9 @@ Rotate an existing API Key, while optionally updating its parameters.
 
 ```bash
 
-curl 'http://localhost:4000/key/sk-1234/regenerate' \
+curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
   -X POST \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "max_budget": 100,
@@ -752,7 +752,7 @@ Use the `/key/update` endpoint to increase the budget of an existing key.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
 ```

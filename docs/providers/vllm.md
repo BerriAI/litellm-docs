@@ -66,7 +66,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -88,7 +88,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",
@@ -195,7 +195,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/embeddings' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"input": ["hello world"], "model": "my-model"}'
 ```
@@ -289,7 +289,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/rerank' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "model": "my-rerank-model",
@@ -343,7 +343,7 @@ print(response)
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/rerank' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "model": "my-rerank-model",
@@ -406,7 +406,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'model=qwen-image-edit' \
 -F 'image=@original_image.png' \
 -F 'prompt=Add a red hat to the person in the image'
@@ -509,7 +509,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST http://0.0.0.0:4000/chat/completions \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H "Content-Type: application/json" \
 -d '{
     "model": "my-model",
@@ -602,7 +602,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST http://0.0.0.0:4000/chat/completions \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H "Content-Type: application/json" \
 -d '{
     "model": "my-model",

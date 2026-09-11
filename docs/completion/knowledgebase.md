@@ -236,12 +236,12 @@ LiteLLM provides a server that exposes OpenAI-compatible `vector_store` endpoint
 
 ```env
 DATABASE_URL="postgresql://neondb_owner:xxxx"
-SERVER_API_KEY="sk-1234"
+SERVER_API_KEY="sk-<your-litellm-api-key>"
 HOST="0.0.0.0"
 PORT=8001
 EMBEDDING__MODEL="text-embedding-ada-002"
 EMBEDDING__BASE_URL="http://localhost:4000"
-EMBEDDING__API_KEY="sk-1234"
+EMBEDDING__API_KEY="sk-<your-litellm-api-key>"
 EMBEDDING__DIMENSIONS=1536
 DB_FIELDS__ID_FIELD="id"
 DB_FIELDS__CONTENT_FIELD="content"

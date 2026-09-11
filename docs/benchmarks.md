@@ -156,7 +156,7 @@ litellm_settings:
   request_timeout: 30
 
 general_settings:
-  master_key: "sk-1234"
+  master_key: "sk-<your-litellm-master-key>"
 ```
 
 **2. Start the proxy:**
@@ -271,7 +271,7 @@ class MyUser(HttpUser):
     wait_time = between(0.5, 1)  # Random wait time between requests
 
     def on_start(self):
-        self.api_key = os.getenv('API_KEY', 'sk-1234567890')
+        self.api_key = os.getenv('API_KEY', 'sk-<your-litellm-api-key>')
         self.client.headers.update({'Authorization': f'Bearer {self.api_key}'})
 
     @task

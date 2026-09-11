@@ -182,7 +182,7 @@ litellm --config config.yaml
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -212,7 +212,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -376,7 +376,7 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -446,7 +446,7 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

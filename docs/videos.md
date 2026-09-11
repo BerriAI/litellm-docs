@@ -244,7 +244,7 @@ Test video generation request
 ```bash
 curl --location 'http://localhost:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "model": "sora-2",
     "prompt": "A beautiful sunset over the ocean"
@@ -255,14 +255,14 @@ Test video status request
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/{video_id}' \
---header 'x-litellm-api-key: sk-1234'
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>'
 ```
 
 Test video retrieval request
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --output video.mp4
 ```
 
@@ -271,7 +271,7 @@ Test video remix request
 ```bash
 curl --location --request POST 'http://localhost:4000/v1/videos/{video_id}/remix' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "prompt": "New remix instructions"
 }'
@@ -282,11 +282,11 @@ Test video list request (requires custom_llm_provider)
 ```bash
 # Note: video_list requires custom_llm_provider since there's no video_id to decode from
 curl --location 'http://localhost:4000/v1/videos?custom_llm_provider=openai' \
---header 'x-litellm-api-key: sk-1234'
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>'
 
 # Or using header
 curl --location 'http://localhost:4000/v1/videos' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --header 'custom-llm-provider: azure'
 ```
 
@@ -316,7 +316,7 @@ LiteLLM proxy also supports these OpenAI-compatible video routes:
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'name=hero' \
 -F 'target_model_names={{openai_large}}' \
 -F 'video=@/path/to/character.mp4'
@@ -337,14 +337,14 @@ Example response (encoded `id`):
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters/character_...' \
---header 'Authorization: Bearer sk-1234'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Video edit with encoded `video.id`
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Make this brighter",
@@ -356,7 +356,7 @@ curl --location 'http://localhost:4000/v1/videos/edits' \
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/extensions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Continue this scene",
@@ -370,7 +370,7 @@ Test Azure video generation request
 
 ```bash
 curl http://localhost:4000/v1/videos \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "azure-sora-2",
@@ -393,7 +393,7 @@ from openai import OpenAI
 
 # Point the OpenAI client to your LiteLLM proxy
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy API key
     base_url="http://localhost:4000/v1"  # Your LiteLLM proxy URL
 )
 ```
@@ -511,7 +511,7 @@ import time
 
 # Initialize client
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000/v1"
 )
 

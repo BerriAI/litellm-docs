@@ -115,7 +115,7 @@ The gateway serves each server at `http://localhost:4000/{server_name}/mcp`, so 
     "slack": {
       "url": "http://localhost:4000/slack_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }
