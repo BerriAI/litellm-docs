@@ -54,6 +54,15 @@ In the Okta admin console create an app integration of type **OIDC, Native Appli
 The issuer is `https://YOUR_ORG.okta.com`, the plain org URL rather than the metadata URI ending in `/.well-known/openid-configuration` (a custom authorization server's issuer is `https://YOUR_ORG.okta.com/oauth2/AUTH_SERVER_ID`), and the signing keys are at `https://YOUR_ORG.okta.com/oauth2/v1/keys`. The stable user id claim is `sub`. Add a `groups` claim to the ID token for team mapping.
 
 </TabItem>
+<TabItem value="cognito" label="AWS Cognito">
+
+In the Cognito console open your user pool and create an app client with the **Mobile app** application type. That is the console's public client type (PKCE, no client secret), and it is the one a desktop app needs: the **Traditional web application** type generates a client secret, Cognito then demands that secret on every token request, Claude Desktop never sends one because it is a public client, and a secret cannot be removed after creation, so sign-in with a web-type client always dies at token exchange. Cognito matches the redirect URI exactly, port included, so pick a fixed port such as `53180`, enter `http://127.0.0.1:53180/callback` as the return URL (Cognito allows plain `http` for `127.0.0.1`), and set the same port in Claude Desktop below.
+
+After creation, open the app client's **Login pages** configuration and enable the OpenID Connect scopes `openid`, `profile`, and `email`. The user pool also needs a domain under **Branding > Domain**, because Cognito's authorize and token endpoints live on that domain; the discovery document at the issuer URL points to them automatically.
+
+The issuer is `https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID` and the signing keys are at `https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID/.well-known/jwks.json`. The stable user id claim is `sub`, and group memberships arrive in the `cognito:groups` claim for users in user pool groups.
+
+</TabItem>
 </Tabs>
 
 ### 2. Configure LiteLLM to validate the token
@@ -123,9 +132,42 @@ model_list:
 ```
 
 </TabItem>
+<TabItem value="cognito" label="AWS Cognito">
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_upsert: true
+    issuers:
+      - issuer: https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID
+        jwks_url: https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID/.well-known/jwks.json
+        audience: YOUR_CLIENT_ID
+        user_id_jwt_field: sub
+        user_email_jwt_field: email
+        team_ids_jwt_field: cognito:groups
+
+model_list:
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: {{anthropic_large}}
+    litellm_params:
+      model: anthropic/{{anthropic_large}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+```
+
+This validates the ID token, the default bearer. If you set `bearerTokenType: access_token` in Claude Desktop instead, replace `audience: YOUR_CLIENT_ID` with `disable_audience_validation: true`, because Cognito access tokens carry a `client_id` claim but no `aud` claim; LiteLLM refuses a config that sets both keys on one entry.
+
+</TabItem>
 </Tabs>
 
-`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. LiteLLM adds the user to the team the first time a token carries that group, so they also show up under the team's members, and a user who belongs to exactly one team keeps resolving to it even when a later token omits the claim. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
+`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. Either way LiteLLM fetches the signing keys from the identity provider over the network, so the proxy needs outbound HTTPS to it from wherever it runs; in a locked-down VPC, allow that egress or the first authenticated requests fail waiting for keys. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. LiteLLM adds the user to the team the first time a token carries that group, so they also show up under the team's members, and a user who belongs to exactly one team keeps resolving to it even when a later token omits the claim. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
 
 :::warning `public_key_url` and `audience` are not `litellm_jwtauth` keys
 Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `audience` directly under it. LiteLLM has no such keys and refuses to start with `ValueError: Invalid arguments provided: ...` naming `public_key_url` and `audience`. Put them in an `issuers` entry as above, or set `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` as environment variables.
@@ -133,7 +175,7 @@ Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `aud
 
 ### 3. Configure Claude Desktop
 
-Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access`, and fill **Redirect port** only for Okta (`53180`). **Apply locally** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
+Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply locally** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
 
 The exported keys, in a macOS `.mobileconfig` payload:
 
@@ -148,7 +190,7 @@ The exported keys, in a macOS `.mobileconfig` payload:
 <string>{"issuer":"https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0","clientId":"YOUR_CLIENT_ID"}</string>
 ```
 
-For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLIENT_ID","redirectPort":53180}`. `inferenceGatewayOidc` is one key whose value is a JSON string (a `REG_SZ` on Windows, a native object in Linux's `managed-settings.json`); dotted keys such as `inferenceGatewayOidc.clientId` are never read. Leave `bearerTokenType` at its default `id_token`, which is what the `issuers` entry validates; Google Workspace needs `access_token` there, because it issues no fresh ID token on refresh and re-prompts users about hourly otherwise.
+For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLIENT_ID","redirectPort":53180}`; for Cognito it is `{"issuer":"https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID","clientId":"YOUR_CLIENT_ID","redirectPort":53180,"scopes":"openid profile email"}`. `inferenceGatewayOidc` is one key whose value is a JSON string (a `REG_SZ` on Windows, a native object in Linux's `managed-settings.json`); dotted keys such as `inferenceGatewayOidc.clientId` are never read. Leave `bearerTokenType` at its default `id_token`, which is what the `issuers` entry validates; Google Workspace needs `access_token` there, because it issues no fresh ID token on refresh and re-prompts users about hourly otherwise.
 
 ### 4. Verify
 
@@ -254,6 +296,12 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **The model picker is empty, or the connection test passes but no Claude model appears.** Discovery keeps only ids containing `claude` or `anthropic`; rename the `model_name` or set `inferenceModels`. LiteLLM older than v1.98.0 answers `/v1/models` in OpenAI shape only, which the app cannot parse; upgrade, or set `inferenceModels` so the app skips discovery.
 
+**Sign-in succeeds and the tab closes, but `GET /v1/models` answers 401.** The proxy has no `enable_jwt_auth: true` under `general_settings`, so the bearer token fell through to virtual key auth and failed the key lookup; sign-in still looks fine because the browser step only involves the identity provider. Recent LiteLLM versions say so in the 401 body: "This key has the structure of a JWT, but JWT auth is not enabled on this proxy". Add the JWT config from step 2.
+
+**The browser lands on the identity provider's own error page with `redirect_mismatch`.** The callback is not registered on the client, or the provider matches the port exactly while Claude Desktop picked an ephemeral one. Register `http://127.0.0.1:PORT/callback` with a fixed port and set that port as **Redirect port**; Okta and Cognito both match exactly.
+
+**Sign-in bounces straight back to `127.0.0.1` with `error=invalid_request&error_description=invalid_scope` (Cognito).** The request asked for a scope the app client does not have. Either **Scopes** was left empty, so the default set requested `offline_access`, which Cognito does not support, or the OIDC scopes are not enabled on the app client's **Login pages** configuration. Set **Scopes** to `openid profile email` and enable those three on the app client.
+
 **`Authentication Error, Missing JWT Public Key URL from environment.` on every request.** The token's `iss` matched no `issuers` entry (compare the `iss` claim in the token with the `issuer` value; Entra tokens carry `/v2.0` at the end) and no `JWT_PUBLIC_KEY_URL` fallback is set.
 
 **`ValueError: Invalid arguments provided` naming `public_key_url` and `audience` at startup.** The config followed Anthropic's snippet. Move those values into an `issuers` entry.
@@ -266,7 +314,9 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **`OIDC discovery failed (HTTP 404)` or `(HTTP 405)`.** The `issuer` value is the metadata URI instead of the issuer base URL; remove the `/.well-known/openid-configuration` suffix.
 
-**The browser shows Connected but the app reports `Token exchange failed (HTTP 401)`.** The identity provider registration is a confidential (Web) client expecting a secret. Register a Native application (Okta) or a Mobile and desktop applications platform (Entra) instead; the type cannot be changed after creation.
+**The browser shows Connected but the app reports `Token exchange failed (HTTP 401)`.** The identity provider registration is a confidential (Web) client expecting a secret. Register a Native application (Okta), a Mobile and desktop applications platform (Entra), or a Mobile app client (Cognito) instead; the client type cannot be changed after creation, and a Cognito client secret cannot be removed after creation, so create a new client.
+
+**`GET /v1/models` was unreachable or timed out right after enabling JWT auth, on a gateway that answered instantly before.** The first validated request makes the proxy fetch the signing keys from `jwks_url`, and blocked egress from the proxy's network to the identity provider stalls that fetch. From inside the proxy container, `curl -m 5 <jwks_url>` should return the key set; if it hangs, open that egress.
 
 **`tools/list` on the LiteLLM MCP endpoint comes back empty.** The signed-in user has no grant on any server: the token's groups match no team, or the team's `object_permission` lists no `mcp_servers`. Add the servers to the team or set `allow_all_keys: true` on the server.
 
