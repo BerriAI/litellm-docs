@@ -1,7 +1,7 @@
 ---
 title: Setup
 sidebar_label: Setup
-description: Every way to stand up an Auto Router, from a one-click preset in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
+description: Every way to set up an Auto Router, from adding one in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
@@ -11,7 +11,7 @@ Five ways in. All of them create the same `auto_router/complexity_router` deploy
 <NavigationCards
 columns={5}
 items={[
-  { title: "Dashboard presets", description: "Pick a template, Test Routing, save.", to: "#dashboard-presets" },
+  { title: "Add an Auto Router", description: "Models + Endpoints → Auto Router, then test and save.", to: "#add-an-auto-router-models--endpoints--auto-router" },
   { title: "Agent skill", description: "One line to your coding agent.", to: "#agent-skill" },
   { title: "config.yaml", description: "One router entry in model_list.", to: "#configyaml" },
   { title: "Model-management API", description: "POST /model/new, for CI/CD.", to: "#model-management-api" },
@@ -19,12 +19,13 @@ items={[
 ]}
 />
 
-## Dashboard presets
+## Add an Auto Router (Models + Endpoints → Auto Router)
 
-![Auto Router setup form with the Configure automatically button and generated tier summary](../../blog/autorouter_setup_and_testing/auto-setup.png)
+![The Add Auto Router dialog in Models + Endpoints, with Configure automatically and template options](../../blog/autorouter_setup_and_testing/auto-setup.png)
 
-- Models + Endpoints, Add Model, Auto Router tab.
-- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four complexity tiers, and fills in the form for you. Review the generated tiers before saving.
+- In the LiteLLM Dashboard, go to **Models + Endpoints** and open the **Auto Router** tab. Add a new Auto Router model, or enable and configure an existing one.
+- Enter an Auto Router name, then select **Configure automatically** or choose a template. Review the generated tiers, test routing, and save.
+- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four complexity tiers, and fills in the form for you.
 - Templates: 1M Context, Anthropic Family, OpenAI Family, Gemini Family, Lite. Each fills all four tiers from models your proxy already serves.
 - A template whose models are not deployed is greyed out with the missing names listed.
 - **Test Routing** sends one prompt through the classifier and shows the model it would pick. Nothing is created and the picked model is not called.
