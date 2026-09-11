@@ -336,6 +336,7 @@ router_settings:
 | key_management_settings | List[Dict[str, Any]] | Settings for key management system (e.g. AWS KMS, Azure Key Vault) [Doc on key management](../secret.md) |
 | allow_user_auth | boolean | (Deprecated) old approach for user authentication. |
 | user_api_key_cache_ttl | int | The time (in seconds) to cache user api keys in memory. |
+| user_api_key_cache_max_size | int | Max number of entries (virtual keys, teams, users, end users, memberships, ...) each worker keeps in its in-memory auth cache. Defaults to 200. Raise it when you have more active keys than that, otherwise entries are evicted between requests and every auth lookup hits the DB. Editable at runtime from the Admin UI under Settings > Router Settings > General. |
 | disable_prisma_schema_update | boolean | If true, turns off automatic schema updates to DB |
 | litellm_key_header_name | str | If set, allows passing LiteLLM keys as a custom header. [Doc on custom headers](./virtual_keys.md#pass-litellm-key-in-custom-header) |
 | moderation_model | str | The default model to use for moderation. |

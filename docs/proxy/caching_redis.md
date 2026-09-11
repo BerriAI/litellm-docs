@@ -310,4 +310,15 @@ general_settings:
   user_api_key_cache_ttl: <your-number> #time in seconds
 ```
 
+### Cache capacity for the key object
+
+The in-memory tier holds 200 entries per worker by default, shared by virtual keys, teams, users, end users and memberships. With more active keys than that, entries get evicted between requests and every auth lookup falls through to the DB. Raise the cap to fit your key count:
+
+```yaml
+general_settings:
+  user_api_key_cache_max_size: 5000 # entries per worker, must be a positive integer
+```
+
+The same knob is editable at runtime from the Admin UI under Settings > Router Settings > General, or via `POST /config/field/update`; the running cache is resized on the next config reload without a restart. A value set in `config.yaml` takes precedence over the DB value
+
 By default this value is set to 60s.
