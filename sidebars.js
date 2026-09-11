@@ -641,7 +641,15 @@ const sidebars = {
           type: "category",
           label: "Caching",
           link: { type: "doc", id: "proxy/caching" },
-          items: ["proxy/elasticache_iam"],
+          items: [
+            "proxy/caching_redis",
+            "proxy/elasticache_iam",
+            "proxy/gcp_memorystore_iam",
+            "proxy/caching_semantic",
+            "proxy/caching_object_storage",
+            "proxy/caching_controls",
+            "proxy/caching_settings",
+          ],
         },
         "proxy/memory",
         {

@@ -248,3 +248,9 @@ the user ARN
 
 `Unable to resolve AWS credentials for ElastiCache IAM Redis authentication` means the boto3 chain
 came back empty, so the pod has no role attached or the environment has no credentials
+
+## See also
+
+Everything else about the Redis cache, including cluster topology, namespaces and TLS, lives on
+[Redis and Valkey](./caching_redis.md). For Memorystore, see
+[GCP Memorystore IAM Authentication](./gcp_memorystore_iam.md)

@@ -305,6 +305,6 @@ general_settings:
 ## Related Features
 
 - [Background Health Checks](./health.md#background-health-checks)
-- [Redis Caching](./caching.md)
+- [Redis Caching](./caching_redis.md)
 - [Redis Transaction Buffer](./prod.md#redis-transaction-buffer)
 - [Health Check Endpoints](./health.md#other-health-endpoints)
