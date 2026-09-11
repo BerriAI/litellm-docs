@@ -35,7 +35,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
-## Enable an Auto Router in the Dashboard
+## Add an Auto Router (Models + Endpoints → Auto Router)
 
 ![The Add Auto Router dialog in Models + Endpoints, with Configure automatically and template options](./auto-setup.png)
 

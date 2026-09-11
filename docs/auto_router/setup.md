@@ -1,7 +1,7 @@
 ---
 title: Setup
 sidebar_label: Setup
-description: Every way to set up an Auto Router, from enabling one in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
+description: Every way to set up an Auto Router, from adding one in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
@@ -11,7 +11,7 @@ Five ways in. All of them create the same `auto_router/complexity_router` deploy
 <NavigationCards
 columns={5}
 items={[
-  { title: "Enable in the dashboard", description: "Add or enable an Auto Router model, then test and save.", to: "#enable-in-the-dashboard" },
+  { title: "Add an Auto Router", description: "Models + Endpoints → Auto Router, then test and save.", to: "#add-an-auto-router" },
   { title: "Agent skill", description: "One line to your coding agent.", to: "#agent-skill" },
   { title: "config.yaml", description: "One router entry in model_list.", to: "#configyaml" },
   { title: "Model-management API", description: "POST /model/new, for CI/CD.", to: "#model-management-api" },
@@ -19,7 +19,7 @@ items={[
 ]}
 />
 
-## Enable in the dashboard
+## Add an Auto Router (Models + Endpoints → Auto Router)
 
 ![The Add Auto Router dialog in Models + Endpoints, with Configure automatically and template options](../../blog/autorouter_setup_and_testing/auto-setup.png)
 
