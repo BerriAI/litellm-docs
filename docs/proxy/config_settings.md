@@ -504,7 +504,7 @@ router_settings:
 | AGENT365_CLIENT_ID | Client id of the gateway's Entra app registration (or of the agent identity blueprint) for the `agent_365` guardrail token exchange
 | AGENT365_CLIENT_SECRET | Client secret of the gateway's Entra app registration (or of the agent identity blueprint) for the `agent_365` guardrail
 | AGENT365_RESOURCE_APP_ID | Application id of the Agent 365 resource the `agent_365` guardrail mints delegated tokens for. Defaults to the production resource
-| AGENT365_TENANT_ID | Entra tenant id used by the `agent_365` guardrail for the On-Behalf-Of token exchange
+| AGENT365_TENANT_ID | Entra tenant id the `agent_365` guardrail requests its Agent 365 tokens from, in either auth mode
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
