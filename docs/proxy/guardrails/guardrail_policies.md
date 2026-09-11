@@ -305,6 +305,24 @@ Response:
 </TabItem>
 </Tabs>
 
+## Policy Execution Order
+
+When several policies match one request, LiteLLM runs them from the broadest attachment to the narrowest: `scope: "*"` first, then `teams`, then `keys`, then `tags`, then `models`. An attachment that combines several of these is ranked by its narrowest one and after the single-constraint attachments in that tier (`models: [gpt-4o]` before `teams: [finance], models: [gpt-4o]`). Attachments that still tie keep their `config.yaml` order, followed by attachments created through the API or UI, newest first. Policies passed in the request body (`"policies": [...]`) run after every attachment match, in the order given. Across tiers, the order does not depend on how attachments are listed in `config.yaml` or on which proxy worker handles the request.
+
+This is the order pipelines execute in, so a global blocking policy always rejects a request before a model-scoped one gets to run. It is also the order of `x-litellm-applied-policies` and of `matched_policies` in `/policies/resolve` and the Policy Simulator. When the same policy is attached at more than one matching scope, it runs once, ranked by its broadest attachment, and `matched_via` reports that attachment (`scope:*` rather than `model:gpt-4o`).
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: model-policy
+    models: [gpt-4o]
+  - policy: team-policy
+    teams: [finance]
+  - policy: global-policy
+    scope: "*"
+```
+
+A `gpt-4o` request from a `finance` key runs `global-policy`, then `team-policy`, then `model-policy`, and returns `x-litellm-applied-policies: global-policy,team-policy,model-policy`.
+
 ## Policy Flow Builder
 
 For conditional execution (e.g., run a second guardrail only if the first fails), use the [Policy Flow Builder](./policy_flow_builder) to define pipelines with per-step **pass**, **fail**, and optional **error** actions (`on_pass`, `on_fail`, `on_error`).
