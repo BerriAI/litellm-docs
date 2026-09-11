@@ -193,11 +193,15 @@ ingress:
 ```bash
 helm upgrade --install litellm \
   oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.102.0-dev.2 \
+  --version 1.89.2 \
   -f values.yaml
 ```
 
-This deploys `gateway`, `backend`, and `ui` as separate services with per-component autoscaling, so you can run many gateway replicas against a small fixed backend. It requires external Postgres and Redis (no bundled subcharts) and supports reader/writer database splits, IAM database auth, and Redis Cluster mode. Pin the chart to `1.89.0` or newer: the component images (`ghcr.io/berriai/litellm-gateway`, `-backend`, `-ui`, `-migrations`) are published to GHCR from `v1.89.0` onward, and each component's image tag defaults to the chart version, so older chart versions resolve to image tags that were never pushed. Every knob (per-component scaling and probes, read replica routing, Redis Cluster, migrations job, ingress) is documented in the [chart's values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml); see [Autoscaling](#autoscaling) for the scaling blocks and [Isolate Prometheus scraping from inference traffic](./prometheus.md#isolate-prometheus-scraping-from-inference-traffic) for `gateway.metricsServer.*`. Chart `1.102.0-dev.2` and newer add `database.connectionPool` (an in-pod PgBouncer), the `gateway.collector` spend sidecar, and the RPS/TPS HPA targets; the [high-throughput profile](./high_throughput.md) shows them configured together with the benchmark that produced it.
+This deploys `gateway`, `backend`, and `ui` as separate services. You can scale the gateway for inference traffic without scaling the management API or Admin UI. The chart requires external Postgres and Redis and supports database read replicas, IAM database authentication, Redis Cluster, per-component probes, and per-component autoscaling.
+
+Pin the chart to `1.89.0` or newer. Each component image tag defaults to the chart version. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) for every option, [Autoscaling](#autoscaling) for scaling configuration, and [Prometheus metrics isolation](./prometheus.md#isolate-prometheus-scraping-from-inference-traffic) for the gateway metrics sidecar.
+
+The [high-throughput deployment profile](./high_throughput.md) adds shared database connections, isolated spend processing, and RPS/TPS autoscaling. This profile is currently available in nightly builds.
 
 </TabItem>
 </Tabs>
@@ -545,4 +549,4 @@ Then open the Admin UI at `https://llm.example.com/ui`, log in with your master 
 
 ## Next steps
 
-Harden the deployment with the [production checklist](./prod.md) (worker counts, machine sizing, Redis settings, server tuning, graceful degradation). Verify image signatures with the [Docker Image Security Guide](./docker_image_security.md). Add regions with [Multi-Region Deployment](./multi_region.md). For very high throughput (1000+ RPS), enable the [Redis transaction buffer](./prod.md#redis-transaction-buffer) and see the [high-throughput gateway profile](./high_throughput.md) for the componentized chart settings measured at 3,000 rps with 50k to 100k-token prompts.
+Use the [production checklist](./prod.md) to configure workers, resources, Redis, graceful degradation, and server tuning. Verify images with the [Docker Image Security Guide](./docker_image_security.md). Add regions with [Multi-Region Deployment](./multi_region.md). For workloads above 1,000 RPS, enable the [Redis transaction buffer](./prod.md#redis-transaction-buffer) and evaluate the [high-throughput deployment profile](./high_throughput.md).
