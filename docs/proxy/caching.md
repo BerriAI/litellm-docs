@@ -72,7 +72,9 @@ REDIS_PASSWORD = ""   # REDIS_PASSWORD='liteLlmIsAmazing'
 ```
 
 For namespaces, ACL users, cluster and sentinel topologies, TLS, IAM authentication and the full
-list of `REDIS_*` variables, see [Redis and Valkey](./caching_redis.md).
+list of `REDIS_*` variables, see [Redis and Valkey](./caching_redis.md). The per-command timeout
+of the cache client is `cache_params.socket_timeout` (default 5 s), not `REDIS_SOCKET_TIMEOUT`;
+see [Redis socket_timeout](./caching_redis.md#redis-socket_timeout).
 
 ### Step 3: Run proxy with config
 
