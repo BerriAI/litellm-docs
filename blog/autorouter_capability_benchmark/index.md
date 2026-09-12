@@ -31,7 +31,14 @@ Share your results in [discussion #32168](https://github.com/BerriAI/litellm/dis
 
 We compare four configurations on the same 25 tasks. We measure quality by solve rate and include unsuccessful attempts and classifier calls in total cost.
 
-![Quality versus total cost: LiteLLM capability router, 92% at $11.15; Opus 5, 92% at $20.27; Sonnet 5, 88% at $13.19; NeMo Switchyard, 84% at $17.03.](./quality-vs-total-cost.svg)
+| Configuration | Tasks solved | Solve rate | Total cost | Cost / solved task |
+| --- | ---: | ---: | ---: | ---: |
+| **LiteLLM capability router** | **23/25** | **92%** | **$11.15** | **$0.48** |
+| Opus 5 | 23/25 | 92% | $20.27 | $0.88 |
+| Sonnet 5 | 22/25 | 88% | $13.19 | $0.60 |
+| NeMo Switchyard | 21/25 | 84% | $17.03 | $0.81 |
+
+Cost per solved task divides total run cost by the number of solved tasks.
 
 - **45% lower cost than Opus 5 at the same solve count.** We solved 23/25 tasks in each run, spending $11.15 with capability routing versus $20.27 with Opus 5.
 - **One more task solved than Sonnet 5, for $2.04 less.** We solved 23/25 tasks with capability routing versus 22/25 with Sonnet 5.
