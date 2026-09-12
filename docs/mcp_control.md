@@ -794,6 +794,34 @@ curl -X PATCH "http://localhost:4000/v1/agents/{agent_id}" \
   }'
 ```
 
+The same grant is editable in the Admin UI: open the agent under **Agentic > Agents**, choose **Settings > Edit Settings**, pick the server under **MCP Servers** and toggle individual tools. Tools left off are removed from `tools/list` and refused at `tools/call` for every key bound to that agent.
+
+<Image
+  img={require('../img/mcp_agent_tool_permissions.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+  alt="Agent edit form with per-tool toggles for one MCP server"
+/>
+
+</TabItem>
+<TabItem value="end-user" label="On an End User (customer)">
+
+An end user (customer) is the caller an application asserts on each request through `x-litellm-customer-id`, `x-litellm-end-user-id` or the request-body `user` field. Its `object_permission.mcp_tool_permissions` caps what that end user may run, whatever key or agent carries the request.
+
+```bash title="Customer limited to one tool on a server" showLineNumbers
+curl -X POST "http://localhost:4000/customer/new" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "op-unit-a",
+    "object_permission": {
+      "mcp_servers": ["finance_mcp"],
+      "mcp_tool_permissions": {"finance_mcp": ["get_revenue_summary"]}
+    }
+  }'
+```
+
+A request that carries `x-litellm-customer-id: op-unit-a` now sees and can call only `get_revenue_summary` on `finance_mcp`, even when the key itself is unrestricted. A request with no end-user id gets the key's scope unchanged.
+
 </TabItem>
 <TabItem value="user" label="On an Internal User">
 
@@ -863,6 +891,33 @@ The same grant is editable from the Admin UI on the internal user's detail page 
 :::note An admin role is not a waiver
 A caller with an admin role and no explicit key-level `mcp_servers` list normally sees the whole MCP server registry. Once that human carries an entitlement of their own, that shortcut no longer applies and the entitlement binds them; the admin role widens what the credential reaches, and leaves the scope attached to the person in place.
 :::
+
+### Which user may run which tool through which agent {#user-agent-tool}
+
+A shared agent serves many callers, so the question "can this user invoke this tool from this agent" has two independent answers in LiteLLM, and the request must pass both
+
+The agent's own grant is the first. A key bound to an agent (`agent_id` on `/key/generate`) or a request carrying `x-litellm-agent-id` is capped by the agent's `mcp_servers` and `mcp_tool_permissions`, so an agent granted only `get_revenue_summary` on `finance_mcp` can never reach `get_payroll_details` there, no matter how broad the key is. An agent with a server grant but no tool list keeps the key's full tool scope on that server
+
+The caller's grant is the second. When the agent forwards the user it is acting for as `x-litellm-customer-id` (or the internal user authenticated the request), that user's `mcp_tool_permissions` are intersected with the running set. A user entitled to `get_revenue_summary` only is refused `get_payroll_details` through any agent, including one whose own grant allows it
+
+Both ceilings are applied at `tools/list` and again at `tools/call`, and neither can widen what the key, team or organization already allow. This is gateway-side admission control and it runs before the request reaches the upstream MCP server. Upstream OAuth (see [MCP OAuth](./mcp_oauth)) stays an independent layer: the upstream still judges the user's own token, so a tool LiteLLM lets through can still be refused upstream, and a tool LiteLLM removes is never attempted
+
+The table below shows the finance example with an unrestricted key, an agent granted only `get_revenue_summary`, and a customer granted only `get_revenue_summary`
+
+| Request | `tools/list` | `tools/call get_payroll_details` |
+|---|---|---|
+| Unrestricted key, no agent, no customer | both tools | allowed |
+| Key bound to the restricted agent | `get_revenue_summary` | refused, `isError: true` |
+| Unrestricted key with `x-litellm-customer-id` of the restricted customer | `get_revenue_summary` | refused, `isError: true` |
+| Key bound to an agent with a server grant but no tool list | both tools | allowed |
+
+The agent's grant is visible on its detail page under **Agentic > Agents**, and is edited from **Settings > Edit Settings** on the same page
+
+<Image
+  img={require('../img/mcp_agent_tool_permissions_overview.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+  alt="Agent overview showing the bound key and the per-server tool permissions"
+/>
 
 
 ## Rate Limiting per MCP Server
