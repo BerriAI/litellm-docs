@@ -1098,6 +1098,34 @@ general_settings:
 
 IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
 
+## Background Mode
+
+LiteLLM passes OpenAI's `background: true` parameter through to the provider. The provider returns immediately with a response in `queued` or `in_progress` status, and you fetch the result later with `GET /v1/responses/{response_id}`:
+
+```bash showLineNumbers title="Create a background response"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6",
+    "input": "Write a detailed comparison of the Responses API and the Chat Completions API",
+    "background": true
+  }'
+```
+
+```bash showLineNumbers title="Poll for the result"
+curl http://localhost:4000/v1/responses/{response_id} \
+  -H "Authorization: Bearer sk-1234"
+```
+
+### Cost tracking for background responses
+
+The create call returns before the model has produced any tokens, so there is no usage to record at request time. To close that gap, the proxy stores every queued background response and prices it with a background polling job, the same machinery the [managed batches cost poller](./proxy/managed_batches#observability) uses for completed batches. It requires a Postgres database and ships with the enterprise package
+
+Every `proxy_batch_polling_interval` seconds (a `general_settings` key, also settable via the `PROXY_BATCH_POLLING_INTERVAL` env var; default `3600`, plus up to 30s of jitter) the job reads pending background responses from the database, oldest first and up to `MAX_OBJECTS_PER_POLL_CYCLE` (default `50`) per cycle, and retrieves each one from the provider with the deployment credentials in your config. Once a response reaches a terminal status (`completed`, `failed`, `cancelled`, or `incomplete`), that retrieval writes a spend log with the final usage, attributed to the user who created the response, and the row stops being polled. Your own `GET /v1/responses/{response_id}` reads are never billed; only the poller's retrieval prices the response
+
+Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7`) days are marked stale and dropped from polling. Set the polling interval to something small like `30` while testing, and set `PROXY_BATCH_POLLING_ENABLED=false` to disable this job and the batch cost poller entirely
+
 ## Supported Responses API Parameters
 
 | Provider | Supported Parameters |
