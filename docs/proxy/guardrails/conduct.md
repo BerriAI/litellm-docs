@@ -12,7 +12,7 @@ The integration wraps the [`conduct-litellm-guard`](https://pypi.org/project/con
 ### 1. Install the plugin and get an agent token
 
 ```shell
-pip install "conduct-litellm-guard>=0.2.4"
+pip install "conduct-litellm-guard>=0.2.5"
 ```
 
 Create an agent token in the Conduct console and note the workspace id if your tenant needs one. The token is sent as the bearer credential to the Conduct MCP endpoint at `<api_base>/mcp`.
