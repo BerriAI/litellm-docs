@@ -50,7 +50,7 @@ Permissions can be set at six distinct levels. When more than one level applies 
 
 If no level has a list, the request can access **every** MCP server (open by default).
 
-A key bound to an agent (`agent_id` passed to `/key/generate`) gets the same treatment as a request carrying `x-litellm-agent-id`: the agent's list is intersected with the key's on every request the key makes. Granting a server to the key alone is not enough; the agent must also hold the grant (via the Admin UI agent edit form or `PATCH /v1/agents/{agent_id}`), otherwise requests scoped to that server are denied with an error naming the agent.
+A key bound to an agent (`agent_id` passed to `/key/generate`) gets the same treatment as a request carrying `x-litellm-agent-id`: the agent's list is intersected with the key's on every request the key makes. Granting a server to the key alone is not enough; the agent must also hold the grant (via the Admin UI agent edit form or `PATCH /v1/agents/{agent_id}`), otherwise requests scoped to that server are denied with an error naming the agent. See [Denied Scoped Access](#denied-scoped-access) for the exact error and how a scoped denial differs from an unscoped one.
 
 ```mermaid
 flowchart TD
@@ -639,6 +639,20 @@ This configuration in Cursor IDE settings will limit tool access to only the spe
 
 </TabItem>
 </Tabs>
+
+---
+
+### Denied Scoped Access
+
+An unscoped request, one with no `/mcp/<server_or_group>` URL path and no `x-mcp-servers` header, that resolves to an empty set of allowed servers still returns a normal `200` with `tools: []`; the caller simply has no MCP tools available. A scoped request, one that names a server, access group, or comma-separated list through either method above, is held to a stricter rule: if it resolves to zero allowed servers, LiteLLM raises `403` instead of returning an empty tool list, since a silent `200` on a scoped request reads as "this server exists and has no tools" rather than "you cannot reach it."
+
+The `403` body is `{"error": "<message>"}`. A name that matches no registered server at all and a name that matches a real server or access group the caller cannot reach both raise the same generic message, `The key is not allowed to access the requested MCP servers: <names>`, so scoping can never be used to probe whether a server name exists. The one case that gets a more specific message is a key bound to an agent (via `x-litellm-agent-id` or a key-level `agent_id`): if the request would have resolved once the agent's binding is set aside, the error names the agent and the exact server or access group it withholds, for example:
+
+```text
+MCP server 'github' is not available to this key: the key is bound to agent 'agent-123', whose MCP grants do not include this server. Add the server to the agent's object_permission.mcp_servers (edit the agent in the Admin UI or PATCH /v1/agents/agent-123), or use a key that is not bound to the agent.
+```
+
+An access group produces the same message shape, naming the group and `object_permission.mcp_access_groups` instead. If the request would still resolve to nothing with the agent's binding set aside, for instance because the key or team itself denies the server, or the name matches nothing at all, LiteLLM falls back to the generic message.
 
 ### Grouping MCPs (Access Groups)
 
