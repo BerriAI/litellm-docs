@@ -854,6 +854,21 @@ Added an additional non-OpenAI standard "disable" value for non-reasoning Gemini
 | "medium"         | "budget_tokens": 2048 |
 | "high"           | "budget_tokens": 4096 |
 
+**Mapping for Gemini 3.x models (thinking level)**
+
+For Gemini 3+ models, LiteLLM maps `reasoning_effort` to Gemini's `thinking_level` instead of a token budget. The resulting level depends on the specific model. [Code](https://github.com/BerriAI/litellm/blob/999637883ce34d3944c614f38f32cfbe0bc9062d/litellm/llms/vertex_ai/gemini/vertex_and_google_ai_studio_gemini.py#L868-L913)
+
+| reasoning_effort | Gemini 3.x `*-flash`         | `gemini-3.1-pro-preview`     | Other Gemini 3+ (e.g. `gemini-3-pro`) |
+| ---------------- | ---------------------------- | ---------------------------- | ------------------------------------- |
+| "minimal"        | "thinkingLevel": "minimal"   | "thinkingLevel": "low"       | "thinkingLevel": "low"                |
+| "low"            | "thinkingLevel": "low"       | "thinkingLevel": "low"       | "thinkingLevel": "low"                |
+| "medium"         | "thinkingLevel": "medium"    | "thinkingLevel": "medium"    | "thinkingLevel": "high"               |
+| "high"           | "thinkingLevel": "high"      | "thinkingLevel": "high"      | "thinkingLevel": "high"               |
+| "disable"        | "thinkingLevel": "minimal"   | "thinkingLevel": "low"       | "thinkingLevel": "low"                |
+| "none"           | "thinkingLevel": "minimal"   | "thinkingLevel": "low"       | "thinkingLevel": "low"                |
+
+All levels above are sent with `includeThoughts: true`, except `"disable"` and `"none"`, which set `includeThoughts: false`. Gemini 3 cannot fully disable thinking, so the lowest available level is used with thoughts hidden.
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
