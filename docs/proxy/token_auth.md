@@ -1360,6 +1360,40 @@ curl -X POST http://localhost:4000/jwt/key/mapping/delete \
 | 404 | Mapping not found (for update/delete/info) |
 | 403 | Non-admin user attempted a mapping operation |
 
+## Bind JWTs to Registered Agents
+
+Provision agent identities in your identity provider (for example, one Microsoft Entra ID app registration per agent) and let LiteLLM enforce the agent's policies on every JWT that agent presents. When `agent_id_jwt_field` is set, LiteLLM reads that claim from the verified token, matches it against a registered agent (first by `agent_id`, then by `agent_name`), and sets `agent_id` on the authenticated identity. Everything that already applies to a virtual key bound to an agent then applies to the JWT caller too: `require_trace_id_on_calls_by_agent`, per-agent MCP server and tool restrictions, and `agent_id` spend attribution.
+
+### Setup
+
+Register the agent under the name your identity provider will send. For an Entra app token that is the client id, which Entra puts in the `azp` claim (v2 tokens) or `appid` (v1 tokens).
+
+```yaml
+agents:
+  - agent_name: 2f5c9b1e-6a4d-4c8e-9f0b-7d1a3e5c9b21   # Entra client id of the agent's app registration
+    agent_card_params:
+      name: research-agent
+      url: http://localhost:9999/a2a
+      version: "1.0.0"
+    litellm_params:
+      require_trace_id_on_calls_by_agent: true
+
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    agent_id_jwt_field: "azp"   # supports dot notation for nested claims
+    team_id_jwt_field: "team"
+    user_id_jwt_field: "sub"
+```
+
+### Behavior
+
+A token whose claim matches a registered agent is bound to that agent and inherits its restrictions, so with the config above a call without `x-litellm-trace-id` is rejected with `400`. A token whose claim matches no registered agent is rejected with `403` rather than falling back to an unbound identity, the same way an unknown `team_id_jwt_field` value is rejected; this applies to admin-scoped tokens as well. A token that does not carry the claim at all is authenticated exactly as before. When `agent_id_jwt_field` is unset nothing changes.
+
+Every token that carries the configured claim is treated as an agent. Entra puts `azp` on delegated (user) tokens too, so if humans and agents obtain tokens for the same audience, `azp` will bind or reject the human callers as well. In that setup point `agent_id_jwt_field` at a claim that only agent tokens carry, such as an optional claim or a custom claim added through a claims mapping policy on the agents' app registrations, and leave `azp` for a proxy whose JWT callers are all agents.
+
+If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#beta-jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
+
 ## All JWT Params
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/b204f0c01c703317d812a1553363ab0cb989d5b6/litellm/proxy/_types.py#L95)
