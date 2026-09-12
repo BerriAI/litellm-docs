@@ -1,0 +1,35 @@
+model_list:
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-opus-5
+    litellm_params:
+      model: anthropic/claude-opus-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: routing-classifier
+    litellm_params:
+      model: openai/gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-capability-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        classifier_type: capability
+        classifier_llm_config:
+          model: routing-classifier
+          timeout_ms: 30000
+        tiers:
+          SIMPLE: [claude-sonnet-5]
+          REASONING: [claude-opus-5]
+        capability_classifier_config:
+          efficient_tier: SIMPLE
+          capable_tier: REASONING
+          base_threshold: 0.5  # Example value; tune on your tasks.
+          threshold_step: 0.1
+        adaptive: false
+        session_affinity: false
+        route_housekeeping_to_cheapest_tier: false
