@@ -121,9 +121,19 @@ In this example, the finance MCP server exposes two tools:
 
 ![MCP Servers tab showing the finance_mcp server registered on the MCP Gateway](/img/a2a_gateway_poc_mcp_servers_tab.png)
 
+LiteLLM decides at the gateway whether a given user may invoke a given tool through a given agent, before anything is forwarded upstream. Two grants combine on every MCP request. The agent's own `object_permission.mcp_tool_permissions` caps what the finance agent can do on `finance_mcp`, so a key bound to the agent inherits that cap regardless of how broad the key is. The customer's `object_permission.mcp_tool_permissions` caps what the business unit the agent is acting for can do, resolved from the `x-litellm-customer-id` the agent forwards. Each grant only narrows: the effective tool set is the intersection of key, team, customer, agent, internal user and organization, applied at `tools/list` and again at `tools/call`.
+
+In this example, `reporting-agent` is granted only `get_revenue_summary` and `op-unit-a` is granted only `get_revenue_summary`. A call to `get_payroll_details` through that agent, or on behalf of that unit through any agent, is removed from the tool list and refused with an `isError: true` result naming the tool and server. `hr-agent`, granted the server with no tool list, keeps both tools.
+
+The agent grant is set from the agent's edit form in the Admin UI by toggling tools under the selected MCP server:
+
+![Agent edit form with get_revenue_summary allowed and get_payroll_details disabled on finance_mcp](/img/a2a_gateway_poc_agent_tool_permissions.png)
+
+See [Which user may run which tool through which agent](../../docs/mcp_control#user-agent-tool) for the API calls and the full resolution order.
+
 For interactive per-user OAuth, configure the MCP server with `auth_type: oauth2` and `oauth2_flow: authorization_code`. The user completes a PKCE sign-in with the organization's identity provider. LiteLLM stores the resulting credential for that user and MCP server, then attaches it to later tool calls for the same user.
 
-The upstream MCP server remains the authorization authority. It evaluates the token's claims and decides whether the user can access payroll details or only the broader revenue summary. LiteLLM centralizes the OAuth flow and credential handling while preserving each user's upstream identity.
+The upstream MCP server remains the authority for its own token. It evaluates the token's claims and decides whether the user can access payroll details or only the broader revenue summary. LiteLLM centralizes the OAuth flow and credential handling while preserving each user's upstream identity, and its own agent and customer grants above run first, so a tool LiteLLM removes is never attempted upstream.
 
 See [MCP OAuth](../../docs/mcp_oauth) for configuration options, including machine-to-machine and on-behalf-of flows.
 
