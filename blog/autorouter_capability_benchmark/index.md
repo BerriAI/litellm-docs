@@ -9,8 +9,6 @@ description: "We solved 23 of 25 SWE-bench Verified tasks with LiteLLM's experim
 tags: [routing, cost, benchmarks]
 ---
 
-import styles from './styles.module.css';
-
 ![Cost comparison: Opus 5 at $20.27 and the capability router at $11.15, with 23 of 25 SWE-bench Verified tasks solved in each run.](./auto-router-capability-hero.svg)
 
 We solved 23 of 25 SWE-bench Verified tasks with LiteLLM's experimental capability router for **$11.15**. With Opus 5 for all solver calls, we solved 23 tasks for **$20.27**. We spent **45% less**, including classifier calls, with prompt caching on in both runs.
@@ -64,55 +62,9 @@ For a comparison on your workload, use the same tasks and verifier, enable promp
 
 For related experiments, read [Prompt Caching Works with Auto Router](https://docs.litellm.ai/blog/auto-router-prompt-caching-benchmark) and [Subtask-Specific Routing: Same Quality, 46% Less Cost](https://docs.litellm.ai/blog/subtask-type-routing).
 
-## Try it
+## An experimental classifier
 
-Use this example with a LiteLLM build that supports capability routing. Set `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` in your environment, then save this as `config.yaml` or [download the configuration](./capability-router-config.yaml):
-
-<div className={styles.configuration}>
-
-```yaml title="config.yaml" keep-model-ids
-model_list:
-  - model_name: claude-sonnet-5
-    litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: claude-opus-5
-    litellm_params:
-      model: anthropic/claude-opus-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: routing-classifier
-    litellm_params:
-      model: openai/gpt-5.4-mini
-      api_key: os.environ/OPENAI_API_KEY
-
-  - model_name: claude-capability-router
-    litellm_params:
-      model: auto_router/complexity_router
-      complexity_router_config:
-        classifier_type: capability
-        classifier_llm_config:
-          model: routing-classifier
-          timeout_ms: 30000
-        tiers:
-          SIMPLE: [claude-sonnet-5]
-          REASONING: [claude-opus-5]
-        capability_classifier_config:
-          efficient_tier: SIMPLE
-          capable_tier: REASONING
-          base_threshold: 0.5  # Example value; tune on your tasks.
-          threshold_step: 0.1
-        adaptive: false
-        session_affinity: false
-        route_housekeeping_to_cheapest_tier: false
-```
-
-</div>
-
-Start the gateway with `litellm --config config.yaml` and use `claude-capability-router` as your client's model. Keep prompt caching enabled in your agent.
-
-With these example thresholds, we choose Sonnet at a success probability of 0.5 for supported tasks, 0.6 for uncertain or unmatched tasks, and 0.7 for unsupported tasks. Below those thresholds, we use Opus. Tune these values on your own evaluation set.
+Capability forecasting is an experimental approach to Auto Router. It estimates whether a cheaper model can complete a task using the requirements, available information, and verification tools. We are evaluating this idea and how it can work with complexity assessment
 
 :::info[Help shape the Auto-Router]
 
