@@ -1161,6 +1161,7 @@ router_settings:
 | LITELLM_DEV_ENV_HOT_RELOAD | Internal flag the proxy sets on itself when started with `--reload`, signalling reloaded workers to re-read `.env` with `override=True` so edits to existing keys take effect on reload. Not meant to be set by users
 | LITELLM_DONT_SHOW_FEEDBACK_BOX | Flag to hide feedback box in LiteLLM UI
 | LITELLM_DROP_PARAMS | Parameters to drop in LiteLLM requests
+| LITELLM_ENFORCE_SAFETY_IDENTIFIER | When set to `true`, hash the authenticated `user_id` with SHA-256 and enforce it as the safety identifier for `acompletion` and `aresponses` requests. Client-provided values are overwritten. Defaults to disabled
 | LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
 | LITELLM_EMAIL | Email associated with LiteLLM account
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
