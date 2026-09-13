@@ -50,7 +50,7 @@ model_list:
       api_key: os.environ/META_API_KEY
 ```
 
-`api_key` is the only required credential. `api_base` is optional and must be an absolute `wss://` or `https://` URL: LiteLLM keeps its host and port, replaces the path with `/v1/asr/realtime`, and rejects `http://`, `ws://`, embedded credentials and URL fragments. `META_API_BASE` is not consulted for realtime sessions.
+`api_key` can be omitted when `META_API_KEY` is set in the proxy environment. `api_base` is optional and must be an absolute `wss://` or `https://` URL: LiteLLM keeps its host and port, replaces the path with `/v1/asr/realtime`, and rejects `http://`, `ws://`, embedded credentials and URL fragments. `META_API_BASE` is not consulted for realtime sessions.
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
 litellm --config config.yaml
@@ -64,11 +64,11 @@ litellm --config config.yaml
 ws://localhost:4000/v1/realtime?model=muse-voice-transcribe&intent=transcription
 ```
 
-Send your proxy key as `Authorization: Bearer <key>`. `model` is the `model_name` from your config, and `intent=transcription` marks the session as transcription-only and pins any model named in a later `session.update` to the one you were authorized for. LiteLLM emits a `session.created` event with `object: realtime.transcription_session` as soon as the socket opens, before the Muse handshake, so clients that wait for it do not stall.
+Send your proxy key as `Authorization: Bearer <key>`. `model` is the `model_name` from your config and must be present: with `intent=transcription` alone the proxy routes to its default OpenAI transcription model. `intent=transcription` marks the session as transcription-only and pins any model named in a later `session.update` to the one you were authorized for. Once the proxy has connected to Meta, and before the Muse handshake, LiteLLM emits a `session.created` event with `object: realtime.transcription_session` so clients that wait for it do not stall.
 
 ### 3. Configure the session
 
-Send one `session.update` (or `transcription_session.update`). Muse's own handshake acknowledgement is relayed as `session.updated`; any further `session.update` is ignored for the rest of the session. The GA layout below is recommended. The beta layout (`input_audio_format: "pcm16"` plus `input_audio_transcription`) is also accepted at 24 kHz, but one update cannot mix the two layouts.
+Send one `session.update` (or `transcription_session.update`). Muse's own handshake acknowledgement is relayed as `session.updated`; any further `session.update` is ignored for the rest of the session. The GA layout below is recommended. The beta layout (`input_audio_format: "pcm16"` plus `input_audio_transcription`) is also accepted at 24 kHz; do not mix the two layouts in one update. Audio events sent before `session.updated` arrives are buffered and replayed once Muse acknowledges the session, so you can start streaming right after `session.update`.
 
 ```json showLineNumbers title="session.update"
 {
@@ -86,9 +86,9 @@ Send one `session.update` (or `transcription_session.update`). Muse's own handsh
 }
 ```
 
-`format.type` must be `audio/pcm`, `rate` must be `16000` or `24000`, and `channels` must be `1`; when `format` is omitted LiteLLM assumes mono 24 kHz. `transcription.model` is optional; the proxy rewrites it to the model you connected with, so any other value is overwritten rather than honored. `transcription.language` is optional and biases recognition toward one language, given as a name or an ISO 639 code; a region suffix is ignored, so `en-US`, `zh-Hans` and `pt-BR` all work. Muse Voice supports Arabic, Bengali, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Italian, Japanese, Kannada, Korean, Malay, Mandarin Chinese, Marathi, Polish, Portuguese, Spanish, Tagalog, Tamil, Telugu, Thai, Turkish and Vietnamese. Any other transcription setting, such as `prompt`, is dropped with a warning in the proxy log.
+`format.type` must be `audio/pcm`, `rate` must be `16000` or `24000`, and `channels` must be `1`; when `format` is omitted LiteLLM assumes mono 24 kHz. `transcription.model` is optional. With `intent=transcription` the proxy replaces whatever you send with the provider model from your config, `muse-voice-transcribe-1.0`, and `session.updated` echoes that value; without `intent=transcription` only `muse-voice-transcribe-1.0` or `meta/muse-voice-transcribe-1.0` is accepted. `transcription.language` is optional and biases recognition toward one language, given as a name or an ISO 639 code; a region suffix is ignored, so `en-US`, `zh-Hans` and `pt-BR` all work. Muse Voice supports Arabic, Bengali, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Italian, Japanese, Kannada, Korean, Malay, Mandarin Chinese, Marathi, Polish, Portuguese, Spanish, Tagalog, Tamil, Telugu, Thai, Turkish and Vietnamese. Any other transcription setting, such as `prompt`, is dropped with a warning in the proxy log.
 
-`turn_detection` selects the mode. LiteLLM rejects every `turn_detection.type` other than `server_vad`.
+`turn_detection` selects the mode. LiteLLM rejects any `turn_detection.type` other than `server_vad`; an object without `type` is treated as server VAD.
 
 | | Push to talk | Server VAD |
 | --- | --- | --- |
@@ -96,35 +96,35 @@ Send one `session.update` (or `transcription_session.update`). Muse's own handsh
 | Turn boundaries | One turn per session; you decide when it ends | Muse detects utterances; each gets its own `item_id` |
 | Ending the turn | `input_audio_buffer.commit` flushes buffered audio and ends the Muse stream | `input_audio_buffer.commit` only flushes; send `input_audio_buffer.end` when you are done |
 
-An invalid `session.update` (unsupported rate, channel count, turn detection type or language) is rejected and the connection is dropped; the reason is written to the proxy debug log.
+An invalid `session.update` (unsupported rate, channel count, turn detection type or language) ends the session without an `error` event: the proxy drops the connection and the client sees close code `1006` with an empty reason. The validation message appears only in the proxy log at debug level, as `Error in client ack messages: ...`. Protocol violations after setup, such as an append over four seconds, invalid base64 or an odd number of PCM bytes, end the session the same way.
 
 ### 4. Stream audio
 
 Send `input_audio_buffer.append` events whose `audio` field is base64 mono PCM16 at the configured rate. Each append may carry at most four seconds of audio; LiteLLM repackets the stream into 80 ms binary frames and paces them to Muse at real time. `input_audio_buffer.clear` drops any partial frame LiteLLM is still holding; audio already forwarded to Muse cannot be recalled. Every other client event, including `response.create`, is dropped because the session is transcription-only.
 
-In server VAD mode Muse expects audio to keep arriving at real time. Stream silence during pauses and send `input_audio_buffer.end` when you are finished; when a client simply stops sending, Meta closes the upstream socket with code `1008` (`Ingress below real-time`) and the proxy relays that as an `error` event followed by a `1008` close.
+In server VAD mode Muse expects audio to keep arriving at real time. Stream silence during pauses and send `input_audio_buffer.end` (a LiteLLM event, not part of the OpenAI protocol) when you are finished; when a client simply stops sending, Meta closes the upstream socket with code `1008` (`Ingress below real-time`) and the proxy relays that as an `error` event followed by a `1008` close.
 
 ### 5. Read transcripts
 
 | Event | Fields | When |
 | --- | --- | --- |
 | `session.created` | `session.object: realtime.transcription_session` | On connect, before the Muse handshake |
-| `session.updated` | Configured `audio.input.format`, `transcription` and `turn_detection` | After Muse accepts your `session.update` |
+| `session.updated` | Normalized session: `format` without `channels`, `model` as `muse-voice-transcribe-1.0`, `language` as its full name (`en` becomes `English`) | After Muse accepts your `session.update` |
 | `input_audio_buffer.speech_started` | `item_id` | Muse detects the start of a turn |
 | `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | Partial transcript text |
 | `input_audio_buffer.speech_stopped` | `item_id` | Muse detects the end of a turn |
-| `conversation.item.input_audio_transcription.completed` | `item_id`, `transcript`, `usage: {"type": "duration", "seconds": 1.36}` | Final transcript for the turn |
-| `error` | `error.type: server_error`, `error.message: Meta Muse realtime transcription failed` | Muse reported a failure |
+| `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`, and `usage: {"type": "duration", "seconds": 1.36}` when Muse reported newly processed audio since the previous `completed` | Final transcript for the turn |
+| `error` | `error.type: server_error` with `error.message` either `Meta Muse realtime transcription failed` or, before a non-1000 close, `upstream websocket closed with code <N>: <reason>` | Muse reported a failure or closed abnormally |
 
-Overlapping turns are emitted independently as their frames arrive, correlated by `item_id`. When Muse has no more segments the proxy closes the socket with code `1000` and reason `No more transcript segments`.
+Overlapping turns are emitted independently as their frames arrive, correlated by `item_id`. When Muse has no more segments it closes the session with code `1000` and the proxy relays that close, normally with Meta's reason `No more transcript segments`.
 
 ### Pricing and usage
 
-`meta/muse-voice-transcribe-1.0` is priced per second of input audio (`input_cost_per_second` in the model cost map). Each `completed` event carries the billed duration of its turn in `usage.seconds`, and audio Muse consumed after the last turn, such as trailing silence, is billed when the session closes so the spend log matches what Meta charged. LiteLLM's debug log never contains transcript text or raw Muse frames.
+`meta/muse-voice-transcribe-1.0` is priced per second of input audio (`input_cost_per_second` in the model cost map). `usage.seconds` on a `completed` event is the audio Muse processed since the last billed point, silence included, so it can exceed the length of the utterance. Audio processed after the last `completed` event, such as trailing silence, is billed when the session closes so the spend log matches what Meta charged. The proxy log does not contain transcript text, apart from the first 80 characters of a guardrail-blocked transcript at warning level; transcripts are stored in the spend log's messages unless message logging is turned off.
 
 ### Guardrails
 
-Guardrails with `mode: realtime_input_transcription` run on every completed transcript; see [Realtime Guardrails](/docs/proxy/guardrails/realtime_guardrails). A blocked transcript produces an `error` event with `type: guardrail_violation` and `code: content_policy_violation`, and `on_violation: end_session` then closes the socket with code `1000`.
+Guardrails with `mode: realtime_input_transcription` run on every completed transcript; see [Realtime Guardrails](/docs/proxy/guardrails/realtime_guardrails). The `completed` event reaches the client before the guardrail runs and partial deltas are not checked. A block then produces an `error` event with `type: guardrail_violation` and `code: content_policy_violation`, and `on_violation: end_session` closes the socket with code `1000`. Guardrails can also be selected per connection with a `guardrails=name1,name2` query parameter.
 
 :::warning
 When a `realtime_input_transcription` guardrail is configured, LiteLLM's shared realtime guardrail code rewrites a client's `turn_detection: null` into `{"create_response": false}` before Muse sees it. That runs push to talk clients in server VAD mode: `input_audio_buffer.commit` no longer ends the Muse stream, and a client that stops streaming after it is disconnected with close code `1008`. Server VAD clients are unaffected.
@@ -181,7 +181,8 @@ async def main():
                 if event["type"] == "conversation.item.input_audio_transcription.delta":
                     print(event["delta"], end="", flush=True)
                 elif event["type"] == "conversation.item.input_audio_transcription.completed":
-                    print(f"\n{event['transcript']} ({event['usage']['seconds']} s)")
+                    seconds = event.get("usage", {}).get("seconds")  # absent when Muse reported no new audio
+                    print(f"\n{event['transcript']} ({seconds} s)")
         except websockets.exceptions.ConnectionClosedOK:
             pass  # close code 1000: no more transcript segments
 
