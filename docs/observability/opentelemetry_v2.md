@@ -223,6 +223,21 @@ AGENTOPS_API_KEY="your-api-key"
 
 </TabItem>
 
+<TabItem value="openlayer" label="Openlayer">
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["openlayer"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+OPENLAYER_API_KEY="your-api-key"
+OPENLAYER_INFERENCE_PIPELINE_ID="your-inference-pipeline-id"
+```
+
+</TabItem>
+
 </Tabs>
 
 :::tip Send to several backends at once
@@ -251,6 +266,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
 | Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
+| Openlayer | `openlayer` | `OPENLAYER_API_KEY`, `OPENLAYER_INFERENCE_PIPELINE_ID` | `OPENLAYER_OTEL_ENDPOINT` (self-hosted collector; default `https://api.openlayer.com/v1/otel`) | Openlayer | canonical `gen_ai.*` only | No |
 
 Notes:
 
