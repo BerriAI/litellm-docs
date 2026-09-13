@@ -1133,6 +1133,7 @@ const sidebars = {
         "providers/black_forest_labs_img_edit",
         "providers/bytez",
         "providers/cerebras",
+        "providers/cheaperinference",
         "providers/chutes",
         "providers/clarifai",
         "providers/clf_ai_gateway",
