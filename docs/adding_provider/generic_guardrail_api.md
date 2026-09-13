@@ -231,7 +231,7 @@ The `structured_messages` parameter provides the full input in OpenAI chat compl
 
 #### Returning rewritten messages
 
-To rewrite the request per message, return `structured_messages` in the response with one row per row you received, in the same order, keeping each row's `role` and shape and changing only the content you want rewritten. LiteLLM writes the rows back onto the original request on every supported endpoint, including `/v1/responses` turns that carry `instructions` or tool items, where a per-message `texts` array cannot be placed. A row you return exactly as you received it counts as unchanged, so you can echo the rows you did not touch. A returned array whose length differs from the one you received replaces the conversation as a whole
+To rewrite the request per message, return `structured_messages` in the response with one row per row you received, in the same order, keeping each row's `role` and shape and changing only the content you want rewritten. LiteLLM writes the rows back onto the original request on every supported endpoint, including `/v1/responses` turns that carry `instructions` or tool items, where a per-message `texts` array cannot be placed. A row you return exactly as you received it counts as unchanged, so you can echo the rows you did not touch; when every row comes back unchanged, LiteLLM applies `texts` instead. A returned array whose length differs from the one you received replaces the conversation as a whole
 
 **Example:**
 ```json
