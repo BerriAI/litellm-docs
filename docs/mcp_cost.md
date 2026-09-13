@@ -12,6 +12,14 @@ LiteLLM provides two ways to track costs for MCP tool calls:
 | **Config-based Cost Tracking** | Simple cost tracking with fixed costs per tool/server | Automatically tracks costs based on configuration |
 | **Custom Post-MCP Hook** | Dynamic cost tracking with custom logic | Allows custom cost calculations and response modifications |
 
+### Identity and budget attribution
+
+For authenticated MCP requests, including `oauth_delegate`, spend is attributed to the LiteLLM admission identity. The upstream OAuth token is not a LiteLLM user identity; upstream authorization and LiteLLM budget attribution are separate concerns.
+
+In builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923), successful anonymous `true_passthrough` tool calls are also recorded in spend logs using the configured tool cost. These records are **unattributed**: key, user, and team fields are empty. They do not debit those identities' budgets or establish per-key rate limits. Older builds may omit these successful anonymous calls from spend logs.
+
+For example, a successful anonymous tool call priced at `$0.01` appears as `call_mcp_tool` with `spend: 0.01` and empty identity fields. Recording that cost does not create a LiteLLM principal. Use authenticated delegation when you need caller-specific budget enforcement. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough) for the upcoming migration.
+
 ### Config-based Cost Tracking
 
 Configure fixed costs for MCP servers directly in your config.yaml:
