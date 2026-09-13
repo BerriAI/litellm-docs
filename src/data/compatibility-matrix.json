@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-31T06:14:29Z",
-  "litellm_version": "v1.98.0",
+  "generated_at": "2026-09-13T06:43:27Z",
+  "litellm_version": "v1.100.1",
   "claude_code_version": "2.1.228",
   "providers": [
     "anthropic",
@@ -16,13 +16,15 @@
       "name": "Basic messaging (non-streaming)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -37,13 +39,15 @@
       "name": "Basic messaging (streaming)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -58,13 +62,15 @@
       "name": "Tool use",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -79,13 +85,15 @@
       "name": "Prompt caching (5m TTL)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -100,13 +108,15 @@
       "name": "Vision",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -121,13 +131,15 @@
       "name": "Thinking",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -142,13 +154,15 @@
       "name": "Tool use (streaming / fine-grained)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -163,13 +177,15 @@
       "name": "Extended thinking + tool use",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -184,13 +200,15 @@
       "name": "PDF document input",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -205,13 +223,15 @@
       "name": "Prompt caching (1h TTL)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -226,13 +246,15 @@
       "name": "Web search (server tool)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -247,13 +269,15 @@
       "name": "Structured outputs",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI timed out after 120.0s"
         },
         "vertex_ai": {
           "status": "pass"
@@ -289,13 +313,15 @@
       "name": "Tool search (MCP discovery)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5] tool_search probe failed: status 400: {\"error\":{\"message\":\"litellm.BadRequestError: AnthropicException - {\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\\\"},\\\"request_id\\\":\\\"req_011CezyFj85Y78nH4YFKmBfV\\\"}. Received Model Group=claude-haiku-4-5\\nAvailable Model Group Fallbacks=None\",\"t"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-haiku-4-5-bedrock-converse] tool_search probe failed: status 500: {\"error\":{\"message\":\"litellm.APIConnectionError: 'NoneType' object has no attribute 'access_key'\\nTraceback (most recent call last):\\n  File \\\"/home/mateo/litellm-cron-worktree/litellm/main.py\\\", line 5782, in completion\\n    response = _complete_bedrock(_dispatch_ctx)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/mateo/litellm-cron-worktree/litellm/main.py\\\", line 4059, in _com"
         },
         "vertex_ai": {
           "status": "pass"
@@ -310,13 +336,15 @@
       "name": "Long context (1M)",
       "providers": {
         "anthropic": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6] claude CLI failed: exit=1; api_status=400; text=Credit balance is too low"
         },
         "bedrock_invoke": {
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6-bedrock-converse] claude CLI failed: exit=1; api_status=500; text=API Error: 500 litellm.APIConnectionError: 'NoneType' object has no attribute 'access_key'\nTraceback (most recent call last):\n  File \"/home/mateo/litellm-cron-worktree/litellm/main.py\", line 5782, in completion\n    response = _complete_bedrock(_dispatch_ctx)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/mateo/litellm-cron-worktree/litellm/main.py\", line 4059, in _complete_bedrock\n    response = bedrock_converse_chat_completion.completion(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/mateo/litellm-cron-worktree/litellm/llms/bedrock/chat/converse_handler.py\", line 377, in completion\n    (\"aws_access_key_id\", credentials.access_key),\n                          ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'access_key'\n. R...(truncated)"
         },
         "vertex_ai": {
           "status": "pass"
