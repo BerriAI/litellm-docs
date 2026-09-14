@@ -151,6 +151,74 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
   </Tabs>
 
 
+## Forwarding assistant reasoning
+
+This option requires a LiteLLM release containing [PR #41050](https://github.com/BerriAI/litellm/pull/41050).
+
+Set `forward_reasoning_content: true` to send previous assistant `reasoning_content` to a compatible hosted vLLM server. This is useful when continuing a conversation after tool calls. The default is false: omitting the option or setting it to false keeps the existing removal of assistant reasoning history.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+response = completion(
+    model="hosted_vllm/your-served-model",
+    api_base="http://localhost:8000/v1",
+    forward_reasoning_content=True,
+    messages=[
+        {"role": "user", "content": "What is 2 + 2?"},
+        {"role": "assistant", "content": "4", "reasoning_content": "Add two pairs."},
+        {"role": "user", "content": "Multiply that result by 10."},
+    ],
+)
+```
+
+The same option is supported by `litellm.acompletion`.
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+Configure the option separately for each model alias:
+
+```yaml
+model_list:
+  - model_name: reasoning-history
+    litellm_params:
+      model: hosted_vllm/your-served-model
+      api_base: http://localhost:8000/v1
+      forward_reasoning_content: true
+  - model_name: default-history
+    litellm_params:
+      model: hosted_vllm/your-served-model
+      api_base: http://localhost:8000/v1
+      forward_reasoning_content: false
+```
+
+Send Chat Completions requests with the chosen alias as `model`. For Responses requests routed through Chat Completions, also set `use_chat_completions_api: true` in that alias's `litellm_params`.
+
+</TabItem>
+</Tabs>
+
+The option applies only to `hosted_vllm` and is not sent to the backend. When enabled, LiteLLM forwards the supplied field without trimming it or inserting it into visible `content`. Content and tool calls retain their existing transformations. Missing reasoning is not reconstructed, and handling of Anthropic `thinking_blocks`, signatures, and redacted thinking is unchanged.
+
+The Responses-to-Chat bridge can forward supported raw reasoning input, including `reasoning.content` with an empty `summary`, through the same option. Native vLLM Responses requests are unchanged, and opaque encrypted reasoning does not become portable.
+
+### Backend and template compatibility
+
+Check both the vLLM request parser and the model's chat template before enabling forwarding. A backend returning reasoning does not necessarily accept it in previous assistant messages.
+
+The [vLLM v0.12.0](https://github.com/vllm-project/vllm/blob/v0.12.0/vllm/entrypoints/chat_utils.py#L1532) and [v0.13.0](https://github.com/vllm-project/vllm/blob/v0.13.0/vllm/entrypoints/chat_utils.py) parsers accept `reasoning_content` and expose it to the template. Newer versions may normalize that input name to `reasoning`. LiteLLM forwards `reasoning_content` without adding a duplicate `reasoning` field or selecting behavior by model name. Older versions, vendor forks, and custom templates need separate verification.
+
+`forward_reasoning_content` controls transport. A setting such as `chat_template_kwargs.preserve_thinking` controls which received history the template uses. In [Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next#disable-preserved-thinking), `preserve_thinking: false` removes reasoning from earlier user turns but retains reasoning within the current tool sequence. It does not mean every assistant reasoning field should be deleted before reaching vLLM.
+
+### Caching
+
+When LiteLLM response caching is enabled, the effective forwarding setting separates enabled requests from requests using the default or false setting. Omitting the option and setting it to false share the existing behavior. Semantic caching retains its existing similarity rules within each setting.
+
+Backend prefix caching is separate from LiteLLM response caching. Forwarding history can change rendered tokens, while whitespace changes may have no effect if the template trims the field. Check the rendered tokens with the actual tokenizer and template before drawing cache conclusions. This option provides no measured latency, cache-hit, or reasoning-quality guarantee.
+
 ## Embeddings
 
 vLLM serves OpenAI-compatible `/v1/embeddings`. When clients omit `encoding_format`, LiteLLM defaults it for OpenAI-compatible embedding routing (request → model `litellm_params` → `LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT` → `float`). See [Embeddings](../proxy/embedding.md#embedding-encoding-format).
