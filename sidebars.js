@@ -1152,6 +1152,7 @@ const sidebars = {
         "providers/deepseek",
         "providers/docker_model_runner",
         "providers/elevenlabs",
+        "providers/flowspeech",
         "providers/empiriolabs",
         "providers/fal_ai",
         "providers/featherless_ai",
