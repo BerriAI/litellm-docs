@@ -71,3 +71,15 @@ general_settings:
 ```
 
 Without one of these configured, a deployment behind TLS termination gets cookies without `Secure`, since LiteLLM has no trusted way to tell it is being reached over HTTPS. Neither setting is MCP-specific despite the `mcp_` prefix; both are the general request trust boundary LiteLLM uses for `X-Forwarded-*` headers.
+
+## 9. Disable API documentation in production
+
+By default the proxy serves Swagger UI at `/`, ReDoc at `/redoc`, and the raw OpenAPI schema at `/openapi.json` without authentication. Security scanners flag this as a reconnaissance surface because it lists every route and request schema. Disable all three in production:
+
+```env
+NO_DOCS="True"
+NO_REDOC="True"
+NO_OPENAPI="True"
+```
+
+Each variable controls a separate surface, so setting only `NO_DOCS` still leaves `/redoc` and `/openapi.json` readable; set all three and restart the proxy. `/redoc` and `/openapi.json` then return 404 and `/` returns only the plain `"LiteLLM: RUNNING"` status string, while inference and management routes are unaffected. See [Restrict all API documentation](./configs#restrict-all-api-documentation-for-productionair-gapped-deployments) for the per-surface variables and for moving the docs to a different path instead of disabling them.
