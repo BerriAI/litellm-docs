@@ -1,7 +1,7 @@
 ---
-title: "v1.101.0rc1 - Heuristic Auto Router, Semantic MCP Tool Search & Off-Peak Pricing"
-slug: "v1-101-0-rc-1"
-date: 2026-09-06T10:00:00
+title: "v1.101.0 - Heuristic Auto Router, Semantic MCP Tool Search & Off-Peak Pricing"
+slug: "v1-101-0"
+date: 2026-09-14T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,20 +30,24 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.101.0-rc.1
+docker.litellm.ai/berriai/litellm:1.101.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.101.0rc1
+pip install litellm==1.101.0
 ```
 
 </TabItem>
 </Tabs>
 
 :::danger Breaking Changes
+
+**MongoDB Vector Search requires an optional sidecar.** Existing configurations must supply the sidecar URL and key; move MongoDB connection strings and TLS files into the sidecar. PyMongo is no longer installed in LiteLLM SDK extras or images. See the [setup guide](../../docs/providers/mongodb_vector_stores) and [PR #40316](https://github.com/BerriAI/litellm/pull/40316).
+
+**Tenant trace destinations override the operator destination for the same backend by default.** Team-configured tracing now receives the request trace with its model call; use `additive` mode to retain the operator copy. Tenant Langfuse hosts require the operator allowlist. See [PR #40321](https://github.com/BerriAI/litellm/pull/40321).
 
 **The OpenAI WebSocket passthrough routes are off by default.** The `/openai_passthrough/*` and `/openai/*` WebSocket relays refuse connections until `general_settings.enable_openai_websocket_passthrough: true` is set in YAML or through `POST /config/field/update`; the proxy's own `/v1/realtime` routes are unaffected. See [PR #39841](https://github.com/BerriAI/litellm/pull/39841).
 
@@ -106,6 +110,16 @@ pip install litellm==1.101.0rc1
 - **Spend controls** - time-based off-peak pricing, `usage.cost` on the final streamed usage chunk, per-model budgets enforced across replicas, per-user daily and monthly Slack spend thresholds with anomaly detection, guardrail cost rolled up per usage unit, and per-user spend within a team on `/team/spend/by_user`
 - **Proxy hardening** - per-worker admission control that answers overload with an immediate 503, Prometheus `/metrics` served from its own process, a default password policy with optional SSO-only login, agent and vector store listings scoped to grants, libpq TLS parameters honored on the database URL, and the new Alice guardrail
 - **411 new models** - day-0 `claude-fable-5-1` across Anthropic, Bedrock, Vertex AI, and Azure AI, `gpt-6-astra` on OpenAI and Azure, `gemini-3.8-flash` on Gemini and Vertex, Bedrock GovCloud Claude and Nova Sonic realtime, Cohere Parse OCR, 160 OpenRouter entries, and `qwencloud/` and `qwen_ai_platform/` aliases over DashScope
+
+## Included after the v1.101.0-rc.1 cut
+
+The stable tag includes these release-line additions, including changes after rc.2:
+
+- **MongoDB Vector Search** moves database connections into an optional sidecar, removing PyMongo from LiteLLM SDK extras and images. See the upgrade instructions above - [PR #40316](https://github.com/BerriAI/litellm/pull/40316).
+- **Tenant tracing** routes the request trace and model call to the team's configured destination; a follow-up restores Datadog auth spans and last-wins callback credential merging - [PR #40321](https://github.com/BerriAI/litellm/pull/40321), [PR #40346](https://github.com/BerriAI/litellm/pull/40346).
+- **Team callback management** lets team admins read, add, and remove callbacks for their own teams through the callback API, with credentials redacted on reads - [PR #40325](https://github.com/BerriAI/litellm/pull/40325).
+- **Dashboard dependencies** move to Next.js 16.3.3 and Vitest 4.1.11 - [PR #40324](https://github.com/BerriAI/litellm/pull/40324).
+- **Redis reliability** pipelines spend-counter operations, quiets circuit-breaker refusals, guards breaker recovery, and adds Redis-chaos load qualification - [PR #40886](https://github.com/BerriAI/litellm/pull/40886).
 
 ## New Providers and Endpoints
 
@@ -728,7 +742,7 @@ Documentation now lives in [BerriAI/litellm-docs](https://github.com/BerriAI/lit
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 458)
+PRs by ownership area for the original rc.1 notes (total: 458). The release-line additions listed above are separate from this existing roll-up.
 
 - Other (CI / chore / tests / build / version bumps): 87
 - Performance: 72
@@ -780,4 +794,4 @@ These pull requests are not customer facing. They are listed here so the counts 
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.100.0-rc.1...v1.101.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.100.0...v1.101.0
