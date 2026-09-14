@@ -1194,6 +1194,7 @@ const sidebars = {
         "providers/moonshot",
         "providers/morph",
         "providers/nebius",
+        "providers/neosantara",
         "providers/nlp_cloud",
         "providers/nano-gpt",
         "providers/novita",
