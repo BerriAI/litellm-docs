@@ -726,7 +726,7 @@ NO_REDOC="True"
 NO_OPENAPI="True"
 ```
 
-Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` then all 404 with no schema in the response, while inference and management routes are unaffected.
+Restart the proxy after setting these. `/redoc` and `/openapi.json` then 404 with no schema in the response, `/` returns only the plain `"LiteLLM: RUNNING"` status string, and inference and management routes are unaffected.
 
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 

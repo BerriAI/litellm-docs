@@ -518,6 +518,20 @@ curl -X POST 'http://localhost:4000/budget/new' \
 </TabItem>
 </Tabs>
 
+:::info
+
+`tpm_limit` and `rpm_limit` are optional on a budget. Leaving them unset stores `null` and LiteLLM enforces no per-customer TPM or RPM limit for customers on that budget; only your provider's own rate limits apply. Set them only when you want LiteLLM to cap the customer
+
+```bash
+curl -X POST 'http://localhost:4000/budget/info' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"budgets": ["my-free-tier"]}'
+```
+
+`tpm_limit` and `rpm_limit` come back as `null` when no LiteLLM limit is set
+
+:::
 
 #### 2. Assign Budget to Customer 
 

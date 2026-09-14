@@ -1212,6 +1212,8 @@ Use this to set rate limits for `user` passed to `/chat/completions`, without ne
 
 Set a `tpm_limit` on the budget (You can also pass `rpm_limit` if needed)
 
+Both are optional; a budget with neither set applies no LiteLLM TPM or RPM limit to its customers, and only provider rate limits apply
+
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
 --header 'Authorization: Bearer sk-1234' \

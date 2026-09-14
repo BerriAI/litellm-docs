@@ -12,6 +12,7 @@ Supported Providers:
 - Google AI Studio (Gemini)
 - Vertex AI
 - Bedrock
+- Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 
 ## Proxy Usage
 
