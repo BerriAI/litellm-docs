@@ -9,7 +9,7 @@ Fallbacks | ✅ (Between supported models) |
 | Guardrails Support | ✅ Content moderation and safety checks |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
 | Spend Management | ✅ Budget tracking and rate limiting |
-| Supported Providers | `openai`, `azure`, `gemini`, `vertex_ai`, `runwayml` |
+| Supported Providers | `openai`, `azure`, `gemini`, `vertex_ai`, `runwayml`, `black_forest_labs` |
 
 :::tip
 
@@ -682,3 +682,4 @@ The response follows OpenAI's video generation format with the following structu
 | Gemini       |   [Usage](providers/gemini/videos)   |
 | Vertex AI   |   [Usage](providers/vertex_ai/videos) |
 | RunwayML    |   [Usage](providers/runwayml/videos) |
+| Black Forest Labs |   [Usage](providers/black_forest_labs_video) |
