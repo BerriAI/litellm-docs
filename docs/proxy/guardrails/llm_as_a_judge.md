@@ -8,16 +8,16 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Score every user request or LLM response 0-100 against weighted criteria using a judge model, and block or log the ones that fall below a threshold. |
+| Description | Score every incoming request or LLM response 0-100 against weighted criteria using a judge model, and block or log the ones that fall below a threshold. |
 | Provider | LiteLLM native (any chat model on your proxy or any provider model can act as the judge) |
 | Supported Actions | `block` (raises HTTP 422 when the score is below the threshold), `log` (records the verdict, lets the request or response through) |
-| Supported Modes | `pre_call` (the judge evaluates the user request before it reaches the LLM), `during_call` (same as `pre_call`, but the judge runs in parallel with the LLM call), `post_call` (the judge evaluates the LLM response) |
+| Supported Modes | `pre_call` (the judge evaluates the request messages before they reach the LLM), `during_call` (same as `pre_call`, but the judge runs in parallel with the LLM call), `post_call` (the judge evaluates the LLM response) |
 | Streaming Support | Yes. A failing verdict terminates the stream. |
 | API Requirements | Credentials for the judge model, either a proxy deployment or provider environment variables |
 
 ## How it works
 
-In `post_call` mode the guardrail sends the conversation and the LLM response to the judge model with your criteria. In `pre_call` and `during_call` mode it sends the user request text instead, before any response exists, so the judge can reject an off-topic or disallowed request without spending tokens on the main model (`during_call` still runs the main call in parallel and discards its result when the judge rejects). The judge returns a verdict per criterion (score 0-100, reasoning, pass/fail) plus a weighted overall score. If the overall score is below `overall_threshold` and `on_failure` is `block`, the request fails with HTTP 422 carrying the full verdicts; with `on_failure: log` the call proceeds and the verdict is recorded in the request's logging metadata (`eval_information`), visible in spend logs and logging integrations.
+In `post_call` mode the guardrail sends the conversation and the LLM response to the judge model with your criteria. In `pre_call` and `during_call` mode it sends the text extracted from the request messages instead (system, user, assistant and tool messages alike, unless `skip_system_message_in_guardrail` drops the system prompt), before any response exists, so the judge can reject an off-topic or disallowed request without spending tokens on the main model (`during_call` still runs the main call in parallel and discards its result when the judge rejects). The judge returns a verdict per criterion (score 0-100, reasoning, pass/fail) plus a weighted overall score. If the overall score is below `overall_threshold` and `on_failure` is `block`, the request fails with HTTP 422 carrying the full verdicts; with `on_failure: log` the call proceeds and the verdict is recorded in the request's logging metadata (`eval_information`), visible in spend logs and logging integrations.
 
 Every judged request or response costs one extra LLM call to the judge model.
 
@@ -58,7 +58,7 @@ guardrails:
 
 Criterion weights must sum to 100. `overall_threshold` defaults to 80 and `on_failure` defaults to `block`.
 
-To judge the user request instead of the response, set `mode: pre_call` and write the criteria about the request, for example `description: Is the request about cooking or recipes?`. A rejected request returns HTTP 422 with `"message": "LLM judge rejected request: score below threshold"` and the same `verdicts` payload as below, and the main model is never called.
+To judge the request instead of the response, set `mode: pre_call` (or `mode: [pre_call, post_call]` to judge both sides) and write the criteria about the request, for example `description: Is the request about cooking or recipes?`. A rejected request returns HTTP 422 with `"message": "LLM judge rejected request: score below threshold"` and the same `verdicts` payload as below, and the main model is never called.
 
 ### 2. Start LiteLLM Gateway
 
