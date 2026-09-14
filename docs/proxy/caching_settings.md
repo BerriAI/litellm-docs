@@ -43,6 +43,7 @@ cache_params:
   default_in_memory_ttl: Optional[float]
   default_in_redis_ttl: Optional[float]
   max_connections: Optional[Int]
+  socket_timeout: Optional[float] # seconds per Redis command, default 5.0 (see caching_redis#redis-socket_timeout)
 
   # Type of cache (options: "local", "redis", "s3", "gcs")
   type: s3

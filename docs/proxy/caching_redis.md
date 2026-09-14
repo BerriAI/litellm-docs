@@ -268,6 +268,20 @@ litellm_settings:
     max_connections: 100
 ```
 
+## Redis socket_timeout
+
+The proxy cache client waits at most `socket_timeout` seconds for each Redis command before it raises a timeout. The default is **5.0 s**, set by `RedisCache.__init__` in `litellm/caching/redis_cache.py`. Set it with `cache_params.socket_timeout`; the value is passed to the Redis client as is and applies to every topology (standalone, `REDIS_URL`, cluster and Sentinel):
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis
+    socket_timeout: 1.0 # seconds per Redis command, default 5.0
+```
+
+The `REDIS_SOCKET_TIMEOUT` environment variable (default `0.1`) does not change the cache client's timeout. LiteLLM only applies it to Redis clients built without an explicit `socket_timeout`, which today is the Sentinel connection path in `litellm/_redis.py`. The proxy cache client always passes its own `socket_timeout` (the 5.0 s default or your `cache_params` value), and a caller kwarg outranks the `REDIS_*` environment mapping, so with `REDIS_SOCKET_TIMEOUT` set the cache client still runs at 5.0 s. That holds when the cache client connects through Sentinel too, since its kwarg is already present when the Sentinel default would apply. The one exception is `socket_timeout: null` in `cache_params`, which drops the kwarg and lets `REDIS_SOCKET_TIMEOUT` through
+
 ## Virtual Key Authentication Cache (Redis)
 
 When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.

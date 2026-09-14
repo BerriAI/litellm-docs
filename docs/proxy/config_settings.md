@@ -1394,7 +1394,7 @@ router_settings:
 | REDIS_HOST | Hostname for Redis server
 | REDIS_PASSWORD | Password for Redis service
 | REDIS_PORT | Port number for Redis server
-| REDIS_SOCKET_TIMEOUT | Timeout in seconds for Redis socket operations. Default is 0.1
+| REDIS_SOCKET_TIMEOUT | Socket timeout in seconds for Redis clients that LiteLLM builds without an explicit `socket_timeout`, which today means the Sentinel connection path. **The proxy cache client does not read it**: it always passes its own `socket_timeout` (default 5.0 s), so change that with `cache_params.socket_timeout` instead. See [Redis socket_timeout](./caching_redis#redis-socket_timeout). Default is 0.1
 | REDIS_TIMEOUT_LOG_INTERVAL | Seconds between Redis timeout log lines. The first timeout of a streak logs at the normal level, later ones log at DEBUG, and once the interval passes one line reports how many were suppressed. Non-timeout Redis errors are not throttled. Default is 5.0
 | REDIS_GCP_SERVICE_ACCOUNT | GCP service account for IAM authentication with Redis. Format: "projects/-/serviceAccounts/name@project.iam.gserviceaccount.com"
 | REDIS_GCP_SSL_CA_CERTS | Path to SSL CA certificate file for secure GCP Memorystore Redis connections
