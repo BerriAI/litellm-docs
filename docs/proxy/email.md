@@ -127,9 +127,29 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 With the key above, spend of $50 emails the owner, $75 emails the owner and finance, and $100 emails on-call. Recipients can be a list or a comma separated string, and the key owner's email is always included alongside whoever you configure. Each threshold sends at most one email per key per `EMAIL_BUDGET_ALERT_TTL`. A 100% threshold still fires on the request that exhausts the budget, because the alert check runs before the request is rejected.
 
-Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. To change thresholds on an existing key, send the same `metadata` block to `/key/update`.
+Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
 
-There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
+To add thresholds to a key that already exists, read the key's current metadata first and send it back with the new field included. `/key/update` replaces the whole `metadata` object rather than merging into it, so posting only `max_budget_alert_emails` drops every other metadata field the key already had.
+
+```shell showLineNumbers
+KEY="sk-your-existing-key"
+
+MERGED=$(curl -s -X GET "http://0.0.0.0:4000/key/info?key=$KEY" \
+  -H 'Authorization: Bearer sk-1234' | python3 -c '
+import sys, json
+metadata = json.load(sys.stdin)["info"].get("metadata") or {}
+metadata["max_budget_alert_emails"] = {
+    "50": ["owner@your-company.com"],
+    "75": ["owner@your-company.com", "finance@your-company.com"],
+    "100": ["oncall@your-company.com"],
+}
+print(json.dumps(metadata))')
+
+curl -X POST 'http://0.0.0.0:4000/key/update' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d "{\"key\": \"$KEY\", \"metadata\": $MERGED}"
+```
 
 #### Default thresholds for every key
 
