@@ -328,7 +328,7 @@ os.environ["AZURE_AI_API_KEY"] = "your-azure-ai-api-key"
 os.environ["AZURE_AI_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
 
 response = completion(
-    model="azure_ai/claude-opus-4-1",
+    model="azure_ai/{{anthropic_large}}",
     messages=[{"role": "user", "content": "Explain how Azure Anthropic hosts Claude Opus differently from the public Anthropic API."}],
     max_tokens=1200,
     temperature=0.7,
@@ -356,7 +356,7 @@ export AZURE_AI_API_BASE="https://my-resource.services.ai.azure.com/anthropic"
 model_list:
   - model_name: claude-4-azure
     litellm_params:
-      model: azure_ai/claude-opus-4-1
+      model: azure_ai/{{anthropic_large}}
       api_key: os.environ/AZURE_AI_API_KEY
       api_base: os.environ/AZURE_AI_API_BASE
 ```

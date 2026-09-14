@@ -88,7 +88,7 @@ Because the provider needs no third-party key, it is a natural backend for [web 
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
 
 search_tools:

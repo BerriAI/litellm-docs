@@ -31,7 +31,7 @@ model_list:
 ## Key Features
 
 - **Automatic Model Selection**: Azure Model Router dynamically selects the best model for your request
-- **Cost Tracking**: LiteLLM automatically tracks costs based on the actual model used (e.g., `gpt-4.1-nano`), plus the Model Router infrastructure fee
+- **Cost Tracking**: LiteLLM automatically tracks costs based on the actual model used (e.g., `{{openai_small}}`), plus the Model Router infrastructure fee
 - **Streaming Support**: Full support for streaming responses with accurate cost calculation
 - **Simple Configuration**: Easy to set up via UI or config file
 
@@ -249,7 +249,7 @@ Test your model and verify cost tracking is working.
 
 ##### Verify Cost Tracking
 
-Cost is tracked based on the actual model used (e.g., `gpt-4.1-nano`), plus a flat infrastructure cost of $0.14 per million input tokens for using the Model Router.
+Cost is tracked based on the actual model used (e.g., `{{openai_small}}`), plus a flat infrastructure cost of $0.14 per million input tokens for using the Model Router.
 
 ![Verify Cost](./img/azure_model_router_24.jpeg)
 
@@ -270,7 +270,7 @@ When you use Azure Model Router, LiteLLM computes **two cost components**:
 
 1. **Request model detection**: LiteLLM records the model you requested (e.g., `azure_ai/model_router/model-router`). If it contains `model_router` or `model-router`, the request is treated as a router request.
 
-2. **Response model extraction**: Azure returns the actual model used in the response (e.g., `gpt-5-nano-2025-08-07`). LiteLLM uses this for the model cost lookup.
+2. **Response model extraction**: Azure returns the actual model used in the response (e.g., `{{openai_small}}`). LiteLLM uses this for the model cost lookup.
 
 3. **Model cost**: LiteLLM looks up the response model in its pricing table and computes cost from prompt tokens and completion tokens.
 
@@ -299,7 +299,7 @@ model_list:
 
 When you use Azure Model Router, the total cost includes:
 
-- **Model Cost**: Based on the actual model that handled your request (e.g., `gpt-5-nano`, `gpt-4.1-nano`)
+- **Model Cost**: Based on the actual model that handled your request (e.g., `{{openai_small}}`, `{{openai_large}}`)
 - **Router Flat Cost**: $0.14 per million input tokens (Azure AI Foundry infrastructure fee)
 
 ### Example Response with Cost
@@ -315,7 +315,7 @@ response = litellm.completion(
 )
 
 # The response will show the actual model used
-print(f"Model used: {response.model}")  # e.g., "azure_ai/gpt-4.1-nano-2025-04-14"
+print(f"Model used: {response.model}")  # e.g., "azure_ai/{{openai_small}}"
 
 # Get cost (includes both model cost and router flat cost)
 from litellm import completion_cost

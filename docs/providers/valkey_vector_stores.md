@@ -236,4 +236,4 @@ Defaults cover most of this table. What decides whether a search finds anything 
 
 Valkey vector stores are search-only. LiteLLM cannot create an index (`POST /v1/vector_stores`), upload files, or run `/rag/ingest` against Valkey, which is why Valkey is absent from the Create Vector Store tab in the Admin UI; build and populate the index with `FT.CREATE` and `HSET` yourself. The `filters` parameter on search is not implemented either, and passing it raises an error rather than being silently ignored.
 
-A Valkey server with the same module can also back LiteLLM's [semantic cache](../proxy/caching.md), which is a separate feature with its own index that LiteLLM does create and write to.
+A Valkey server with the same module can also back LiteLLM's [semantic cache](../proxy/caching_semantic.md), which is a separate feature with its own index that LiteLLM does create and write to.

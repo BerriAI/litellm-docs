@@ -2,11 +2,7 @@
 
 Use this if you want to use an Oauth2.0 token to make `/chat`, `/embeddings` requests to the LiteLLM Proxy
 
-:::info
-
-This is an Enterprise Feature - [get in touch with us if you want a free trial to test if this feature meets your needs](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 ## Usage 
 
@@ -30,7 +26,7 @@ Set this on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -47,7 +43,7 @@ general_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",

@@ -157,9 +157,7 @@ An internal user viewer can view their own information but cannot create or dele
 
 ## Organization/Team Specific Roles
 
-:::info 
-Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 30 day trial here](https://www.litellm.ai/#trial).
-:::
+<EnterpriseFeature />
 
 These roles are scoped to specific organizations or teams. Users with these roles can only manage resources within their assigned organization or team.
 
@@ -374,7 +372,7 @@ curl --location 'http://0.0.0.0:4000/organization/new' \
     --header 'Content-Type: application/json' \
     --data '{
         "organization_alias": "marketing_department",
-        "models": ["gpt-4"],
+        "models": ["{{openai_large}}"],
         "max_budget": 20
     }'
 ```
@@ -388,7 +386,7 @@ Expected Response
   "budget_id": "98754244-3a9c-4b31-b2e9-c63edc8fd7eb",
   "metadata": {},
   "models": [
-    "gpt-4"
+    "{{openai_large}}"
   ],
   "created_by": "109010464461339474872",
   "updated_by": "109010464461339474872",
@@ -433,7 +431,7 @@ Expected Response
   "models": [],
   "user_id": "ishaan@berri.ai",
   "key": "sk-7shH8TGMAofR4zQpAAo6kQ",
-  "key_name": "sk-...o6kQ",
+  "key_name": "sk-...o6kQ"
 }
 ```
 
@@ -459,7 +457,7 @@ Expected Response
 {
   "team_alias": "engineering_team",
   "team_id": "01044ee8-441b-45f4-be7d-c70e002722d8",
-  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23",
+  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23"
 }
 ```
 

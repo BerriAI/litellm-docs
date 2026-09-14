@@ -23,7 +23,7 @@ POST /v1/chat/completions                  ← HTTP request (server span)
 │   ├── postgres get_key_object            ← DB lookups during auth
 │   └── postgres get_team_membership
 ├── execute_guardrail presidio-pii         ← each guardrail that runs
-├── chat gpt-4o                            ← the LLM call (model, tokens, cost)
+├── chat {{openai_large}}                     ← the LLM call (model, tokens, cost)
 └── batch_write_to_db                      ← spend/usage written to DB
 ```
 
@@ -278,9 +278,9 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.model_name`, `llm.provider` | model, provider |
 | `llm.token_count.prompt`, `completion`, `total` | usage split |
 | `llm.invocation_parameters` | JSON blob of request params |
-| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on) |
-| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on) |
-| `input.value`, `output.value` | JSON arrays of the same (content capture on) |
+| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on), [capped](#chat-messages-are-capped) |
+| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on), [capped](#chat-messages-are-capped) |
+| `input.value`, `output.value` | JSON arrays of every message's role and text (content capture on) |
 | `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
@@ -512,6 +512,12 @@ The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quart
 
 `litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring fewer tools than the allowance keep full detail.
 
+#### Chat messages are capped
+
+The `openinference` mapper's `llm.input_messages.{idx}.*` and `llm.output_messages.{idx}.*` keys are the other unbounded family: two attributes per message, for the prompt and the response alike, on the same span. Past a few dozen turns they alone exceed the 128-attribute default and evict the `gen_ai.*` model, usage, cost, and finish-reason attributes written before them. The per-index keys therefore share one span-wide allowance of an eighth of the budget, 8 messages total under the default limit, with at least half of it reserved for the response so a long prompt can never push the completion off the span. The prompt's share goes to message 0 and the most recent turns, under their original indices: a 60-turn conversation with one reply indexes `llm.input_messages.0`, `llm.input_messages.54` through `.59`, and `llm.output_messages.0`. The selection is by position, not role: message 0 and the newest prompt messages always keep a short key of their own, which matters when `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` clips the `input.value` blob before it reaches the end of the conversation.
+
+The cap only touches the per-index convenience keys. `input.value` and `output.value` still list every message's role and text, and the canonical `gen_ai.input.messages` and `gen_ai.output.messages` blobs carry the full message objects (tool calls and non-text parts included), so the whole conversation stays on the span and Arize keeps rendering it. Conversations shorter than the allowance are indexed in full. Phoenix compacts the per-index keys into a dense list when it renders a span, so the gap in indices shows up there as a shorter message list, in the same order.
+
 Response, usage, cost, identity:
 
 | Attribute | When set |
@@ -524,6 +530,7 @@ Response, usage, cost, identity:
 | `litellm.call_id` | always |
 | `litellm.provider.model` | always (the model string actually sent to the provider) |
 | `litellm.request.streaming` | when true |
+| `litellm.request.route` | on the proxy (the same route the root span reports as `http.route`: the FastAPI route template, e.g. `/v1/responses/{response_id}`, or the literal path on a passthrough prefix such as `/openai/...`; when no server span exists, for example the route is in `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or the FastAPI instrumentation is not installed, it falls back to the route the proxy recorded at auth) |
 | `litellm.cost.total` | on success |
 | `litellm.cost.input`, `output`, `cache_read`, `cache_creation`, `tool_usage` | when the source reported the breakdown |
 | `litellm.cost.original`, `discount_amount`, `discount_percent`, `margin_fixed_amount`, `margin_percent`, `margin_total_amount` | when reported |
@@ -683,7 +690,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 
 | Preset | Callback | Fields on the key or team | What varies per tenant |
 |---|---|---|---|
-| Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key` | The Langfuse project traces land in |
+| Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key`, `langfuse_host` | The Langfuse project traces land in, and the server they are sent to |
 | Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
@@ -729,13 +736,43 @@ curl -X POST 'http://localhost:4000/key/generate' \
 
 Existing keys take the same field on `/key/update`. You can also fill both of these in from the Admin UI, on the team's or the key's logging settings.
 
+### What the tenant receives
+
+A key or team that names its own backend gets the **whole trace** under one root: the HTTP request, the auth step, the model call with its tokens and cost, and the spend write. Before, it received a single loose span with no request around it.
+
+Your own exporter for that same backend stops receiving those requests. If a team points `langfuse_otel` at its own project, your Langfuse project holds nothing for that team; exporters on other backends, a plain `otel` collector for instance, still receive everything.
+
+The tenant's copy is stripped of your side of the request: the proxy's database endpoint, exception text and stack traces, an unreachable guardrail's error, and the query string on any URL.
+
+If the tenant's backend is unreachable, its spans are not re-routed to your exporters. The point of the override is that you stop holding that team's traffic.
+
+### Keep your own copy as well
+
+Switch the mode to `additive` and your exporter keeps every request too, so an org-wide view stays complete:
+
+```yaml
+litellm_settings:
+  otel_tenant_destination_mode: additive   # default: "override"
+```
+
+`LITELLM_OTEL_TENANT_DESTINATION_MODE=additive` does the same. When a team happens to name a project you already export to, the request is written once, not twice.
+
+### Send a tenant to its own Langfuse host
+
+`langfuse_host` on a key or team moves that tenant's traces to their own Langfuse server. Pass it with the key pair it belongs to, because a host on its own is ignored. Allowlist the host too, or the proxy logs a warning and leaves the request on your exporters:
+
+```yaml
+litellm_settings:
+  provider_url_destination_allowed_hosts: ["langfuse.acme.com"]
+```
+
+Your own `LANGFUSE_HOST` needs no allowlist entry. The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
+
 ### Good to know
 
 The key wins outright over the team. If a key has any `metadata.logging` entry, the team's callbacks are not consulted at all rather than merged with the key's, so a key that overrides one backend has to restate the others it still wants.
 
-Only the OTLP headers vary per tenant, plus New Relic's region endpoint, which is picked from a fixed us/eu table. The exporter's host stays whatever the preset resolved at boot, so `langfuse_host` on a key or team does not move that tenant's traces to a different Langfuse host under v2.
-
-Credentials scope to the exporter their own preset contributed. A request carrying one tenant's Arize key never rewrites the headers of a co-configured Langfuse or self-hosted collector exporter, so a tenant's key cannot leak to a backend it was not meant for. Those other exporters do still receive the request's spans, with their own proxy-wide credentials.
+Credentials scope to the exporter their own preset contributed. A request carrying one tenant's Arize key never rewrites the headers of a co-configured Langfuse or self-hosted collector exporter, so a tenant's key cannot leak to a backend it was not meant for. Exporters on backends the tenant did not name do still receive the request's spans, with their own proxy-wide credentials.
 
 The proxy caches one tracer provider per distinct credential set, up to 256 at a time, and flushes the least recently used one when it evicts. Tenant churn costs an exporter rebuild, not a lost span.
 
@@ -755,6 +792,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | Variable | Default | Purpose |
 |---|---|---|
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
+| `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. |
 | `OTEL_HEADERS` (alias `OTEL_EXPORTER_OTLP_HEADERS`) | none | Comma-separated `key=value` auth headers for your backend. |

@@ -150,7 +150,7 @@ Any non-openai params, will be treated as provider-specific params, and sent in 
 
 ### Output from `litellm.image_generation()`
 
-```json
+```python
 
 {
     "created": 1703658209,
@@ -185,9 +185,9 @@ response = image_generation(model='gpt-image-1', prompt="cute baby otter")
 This can be set as env variables or passed as **params to litellm.image_generation()**
 ```python showLineNumbers
 import os
-os.environ['AZURE_API_KEY'] = 
-os.environ['AZURE_API_BASE'] = 
-os.environ['AZURE_API_VERSION'] = 
+os.environ['AZURE_API_KEY'] = ""
+os.environ['AZURE_API_BASE'] = ""
+os.environ['AZURE_API_VERSION'] = ""
 ```
 
 ### Usage
@@ -269,7 +269,7 @@ Use this for calling `/image_generation` endpoints on OpenAI Compatible Servers,
 from litellm import image_generation
 response = image_generation(
   model = "openai/<your-llm-name>",     # add `openai/` prefix to model so litellm knows to route to OpenAI
-  api_base="http://0.0.0.0:8000/"       # set API Base of your Custom OpenAI Endpoint
+  api_base="http://0.0.0.0:8000/",      # set API Base of your Custom OpenAI Endpoint
   prompt="cute baby otter"
 )
 ```

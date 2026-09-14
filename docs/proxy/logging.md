@@ -34,7 +34,7 @@ curl -i -sSL --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'Content-Type: application/json' \
     --data '{
-      "model": "gpt-3.5-turbo",
+      "model": "{{openai_small}}",
       "messages": [{"role": "user", "content": "what llm are you"}]
     }' | grep 'x-litellm'
 ```
@@ -70,9 +70,9 @@ Set `litellm.turn_off_message_logging=True` This will prevent the messages and r
 **1. Setup config.yaml**
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["langfuse"]
   turn_off_message_logging: True # 👈 Key Change
@@ -83,7 +83,7 @@ litellm_settings:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -116,9 +116,9 @@ Example config.yaml
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 ```
 
 **2. Setup per request header**
@@ -176,7 +176,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'LiteLLM-Disable-Message-Redaction: true' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -209,7 +209,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <litellm-api-key>' \
 -d '{
-    "model": "openai/gpt-3.5-turbo",
+    "model": "openai/{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -238,7 +238,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -264,13 +264,7 @@ LiteLLM.Info: "no-log request, skipping logging"
 
 ### ✨ Dynamically Disable specific callbacks
 
-:::info
-
-This is an enterprise feature.
-
-[Proceed with LiteLLM Enterprise](https://www.litellm.ai/enterprise)
-
-:::
+<EnterpriseFeature />
 
 For some use cases, you may want to disable specific callbacks for a request. You can do this by passing `x-litellm-disable-callbacks: <callback_name>` in the request headers.
 
@@ -285,7 +279,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "{{anthropic}}",
     "messages": [
         {
         "role": "user",
@@ -307,7 +301,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -340,7 +334,7 @@ Use this to:
 
 ## What gets logged?
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Intermediate streaming events and callbacks where payload construction fails can omit it.
 
 [👉 **Standard Logging Payload Specification**](./logging_spec)
 
@@ -358,9 +352,9 @@ uv add "langfuse>=4.7"
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["langfuse"]
 ```
@@ -404,7 +398,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -434,7 +428,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -468,7 +462,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -625,7 +619,7 @@ Specify `langfuse_default_tags` to control what litellm fields get logged on Lan
 Example config.yaml 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -652,7 +646,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -679,7 +673,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -710,7 +704,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -793,7 +787,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -873,7 +867,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -919,7 +913,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -966,7 +960,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1015,7 +1009,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1117,12 +1111,7 @@ litellm_settings:
 
 Log LLM Logs to [Google Cloud Storage Buckets](https://cloud.google.com/storage?hl=en)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property                     | Details                                                        |
 | ---------------------------- | -------------------------------------------------------------- |
@@ -1202,12 +1191,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Log LLM Logs/SpendLogs to [Google Cloud Storage PubSub Topic](https://cloud.google.com/pubsub/docs/reference/rest)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property    | Details                                                            |
 | ----------- | ------------------------------------------------------------------ |
@@ -1271,9 +1255,9 @@ LiteLLM supports logging on [Confidential AI](https://documentation.confident-ai
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 litellm_settings:
   success_callback: ["deepeval"]
   failure_callback: ["deepeval"]
@@ -1298,7 +1282,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "system",
@@ -1336,9 +1320,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["s3_v2"]
   s3_callback_params:
@@ -1452,9 +1436,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 
 litellm_settings:
   callbacks: ["aws_sqs"]
@@ -1492,7 +1476,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -1507,12 +1491,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Log LLM Logs to [Azure Data Lake Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 | Property                        | Details                                                                                                         |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -1552,9 +1531,22 @@ AZURE_STORAGE_TENANT_ID="985efd7cxxxxxxxxxx" # The Application Tenant ID to use 
 AZURE_STORAGE_CLIENT_ID="abe66585xxxxxxxxxx" # The Application Client ID to use for Authentication
 AZURE_STORAGE_CLIENT_SECRET="uMS8Qxxxxxxxxxx" # The Application Client Secret to use for Authentication
 
+# Option 3: Use the identity the deployment already runs as
+# Leave the AZURE_STORAGE_* service principal variables unset. LiteLLM authenticates with
+# Workload Identity Federation or with a managed identity, and with nothing else: a developer
+# sign-in such as the Azure CLI is never used, and neither is the AZURE_CLIENT_SECRET service
+# principal you may have configured for Azure OpenAI. Assign Storage Blob Data Contributor to
+# the identity on the storage account, container, or resource group.
+# Workload Identity Federation reads AZURE_CLIENT_ID, AZURE_TENANT_ID and
+# AZURE_FEDERATED_TOKEN_FILE, which the AKS webhook injects into the pod. A user assigned
+# managed identity reads AZURE_CLIENT_ID. AZURE_AUTHORITY_HOST selects a sovereign cloud.
+# AZURE_CLIENT_ID names one identity for the whole proxy, so if the identity that holds Storage
+# Blob Data Contributor is not the one you use for Azure OpenAI, or if you authenticate with a
+# plain service principal rather than a federated or managed identity, use Option 2 instead
+
 # Sovereign Clouds (optional, defaults to the Azure commercial cloud)
 AZURE_STORAGE_ENDPOINT_SUFFIX="core.usgovcloudapi.net" # The storage endpoint suffix to use. Defaults to core.windows.net
-AZURE_AUTHORITY_HOST="https://login.microsoftonline.us" # The Entra ID login authority to use. Only needed with Option 2
+AZURE_AUTHORITY_HOST="https://login.microsoftonline.us" # The Entra ID login authority to use. Needed with Option 2 and Option 3
 ```
 
 3. Start Proxy
@@ -1634,7 +1626,7 @@ litellm --config config.yaml
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {
         "role": "system",
@@ -1771,9 +1763,9 @@ In the config below, we pass
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -1818,9 +1810,9 @@ custom_handler = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: ["s3://litellm-proxy/custom_callbacks.custom_handler"]
@@ -1830,9 +1822,9 @@ litellm_settings:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: ["gcs://my-gcs-bucket/custom_callbacks.custom_handler"]
@@ -1918,7 +1910,7 @@ litellm --config proxy_config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Authorization: Bearer sk-1234' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1934,13 +1926,13 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ```shell
 On Success
-    Model: gpt-3.5-turbo,
+    Model: {{openai_small}},
     Messages: [{'role': 'user', 'content': 'good morning good sir'}],
     User: ishaan-app,
     Usage: {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21},
-    Cost: 3.65e-05,
-    Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': 'gpt-3.5-turbo-0613', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
-    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': 'gpt-3.5-turbo', 'deployment': 'gpt-3.5-turbo-ModelID-gpt-3.5-turbo'}
+    Cost: 1.42e-05,
+    Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': '{{openai_small}}', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
+    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': '{{openai_small}}', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
 ```
 
 #### Logging Proxy Request Object, Header, Url
@@ -2002,7 +1994,7 @@ class MyCustomHandler(CustomLogger):
 
 **Expected Output**
 
-```json
+```python
 {'mode': 'embedding', 'input_cost_per_token': 0.002}
 ```
 
@@ -2022,7 +2014,7 @@ class MyCustomHandler(CustomLogger):
 
 **Expected Output /chat/completion [for both `stream` and `non-stream` responses]**
 
-```json
+```python
 ModelResponse(
     id='chatcmpl-8Tfu8GoMElwOZuj2JlHBhNHG01PPo',
     choices=[
@@ -2049,7 +2041,7 @@ ModelResponse(
 
 **Expected Output /embeddings**
 
-```json
+```python
 {
     'model': 'ada',
     'data': [
@@ -2078,11 +2070,7 @@ ModelResponse(
   Send LiteLLM logs to a custom API endpoint
 </p>
 
-:::info
-
-This is an Enterprise only feature [Get Started with Enterprise here](https://github.com/BerriAI/litellm/tree/main/enterprise)
-
-:::
+<EnterpriseFeature />
 
 | Property       | Details                                                                                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2102,9 +2090,9 @@ Use this if you:
 
 ```yaml showLineNumbers title="litellm config.yaml"
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -2141,7 +2129,7 @@ curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --header 'Authorization: Bearer sk-1234' \
     --data '{
-    "model": "openai/gpt-4o",
+    "model": "openai/{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -2204,7 +2192,7 @@ Expect to see your log on Langfuse
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -2251,7 +2239,7 @@ Expect to see your logs in Arize.
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
@@ -2439,9 +2427,9 @@ AWS_REGION_NAME = ""
 
 ```yaml
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["dynamodb"]
   dynamodb_table_name: your-table-name
@@ -2493,13 +2481,13 @@ Your logs should be available on DynamoDB
     "S": "{}"
   },
   "model": {
-    "S": "gpt-3.5-turbo"
+    "S": "{{openai_small}}"
   },
   "modelParameters": {
     "S": "{'temperature': 0.7, 'max_tokens': 100, 'user': 'ishaan-2'}"
   },
   "response": {
-    "S": "ModelResponse(id='chatcmpl-8W15J4480a3fAQ1yQaMgtsKJAicen', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Great! What can I assist you with?', role='assistant'))], created=1702641357, model='gpt-3.5-turbo-0613', object='chat.completion', system_fingerprint=None, usage=Usage(completion_tokens=9, prompt_tokens=11, total_tokens=20))"
+    "S": "ModelResponse(id='chatcmpl-8W15J4480a3fAQ1yQaMgtsKJAicen', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Great! What can I assist you with?', role='assistant'))], created=1702641357, model='{{openai_small}}', object='chat.completion', system_fingerprint=None, usage=Usage(completion_tokens=9, prompt_tokens=11, total_tokens=20))"
   },
   "startTime": {
     "S": "2023-12-15 17:25:56.047035"
@@ -2539,7 +2527,7 @@ Your logs should be available on DynamoDB
     "S": "{'user': 'ishaan-2'}"
   },
   "response": {
-    "S": "EmbeddingResponse(model='text-embedding-ada-002-v2', data=[{'embedding': [-0.03503197431564331, -0.020601635798811913, -0.015375726856291294,
+    "S": "EmbeddingResponse(model='text-embedding-ada-002-v2', data=[{'embedding': [-0.03503197431564331, -0.020601635798811913, -0.015375726856291294,"
   }
 }
 ```
@@ -2566,9 +2554,9 @@ export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (defau
 
 ```yaml 
 model_list:
- - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   # other settings
   failure_callback: ["sentry"]
@@ -2606,9 +2594,9 @@ ATHINA_API_KEY = "your-athina-api-key"
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   success_callback: ["athina"]
 ```
@@ -2627,7 +2615,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -2660,9 +2648,9 @@ AZURE_CONTENT_SAFETY_KEY = "<your-azure-content-safety-key>"
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["azure_content_safety"]
   azure_content_safety_params:
@@ -2684,7 +2672,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data ' {
-        "model": "gpt-3.5-turbo",
+        "model": "{{openai_small}}",
         "messages": [
             {
                 "role": "user",
@@ -2707,9 +2695,9 @@ You can customize the thresholds for each category by setting the `thresholds` i
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 litellm_settings:
   callbacks: ["azure_content_safety"]
   azure_content_safety_params:

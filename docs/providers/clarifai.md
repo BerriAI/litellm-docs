@@ -79,7 +79,6 @@ tools = [{
             "additionalProperties": False
         },
     }
-  }
 }]
 
 response = litellm.completion(

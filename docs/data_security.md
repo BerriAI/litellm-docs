@@ -66,7 +66,7 @@ Point of contact email address for security incidents: krrish@berri.ai
 Point of contact email address for general security-related questions: krrish@berri.ai 
 
 Has the Vendor been audited / certified? 
-- SOC 2 Type II. In progress. ETA September 15th, 2026.
+- SOC 2 Type II. Our current report is available through the [LiteLLM Trust Center](https://trust.litellm.ai/).
 
 Has an information security management system been implemented? 
 - Yes - [CodeQL](https://codeql.github.com/) and an ISMS covering multiple security domains.

@@ -42,8 +42,8 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
         "message": {
             "error": "Rejected message. This is a prompt injection attack."
         },
-        "type": None, 
-        "param": None, 
+        "type": null,
+        "param": null,
         "code": 400
     }
 }

@@ -32,7 +32,7 @@ Here's how to give developers access to your Bedrock Batch models.
 model_list:
   - model_name: "bedrock-batch-claude"
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       #########################################################
       ########## batch specific params ########################
       s3_bucket_name: litellm-proxy
@@ -91,7 +91,7 @@ Here's how to create a LiteLLM managed file and execute Bedrock Batch CRUD opera
 
 Expectation:
 
-- LiteLLM translates this to the bedrock deployment specific value (e.g. `bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0`)
+- LiteLLM translates this to the bedrock deployment specific value (e.g. `bedrock/us.anthropic.{{anthropic}}`)
 
 ### 2. Upload File
 
@@ -112,7 +112,7 @@ client = OpenAI(
 
 # Upload file
 batch_input_file = client.files.create(
-    file=open("./bedrock_batch_completions.jsonl", "rb"), # {"model": "bedrock-batch-claude"} <-> {"model": "bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0"}
+    file=open("./bedrock_batch_completions.jsonl", "rb"), # {"model": "bedrock-batch-claude"} <-> {"model": "bedrock/us.anthropic.{{anthropic}}"}
     purpose="batch",
     extra_body={"target_model_names": "bedrock-batch-claude"}
 )
@@ -252,7 +252,7 @@ The batch output file is in JSONL format with each line containing:
   "modelOutput": {
     "content": [...],
     "id": "msg_abc123",
-    "model": "claude-3-5-sonnet-20240620-v1:0",
+    "model": "us.anthropic.{{anthropic}}",
     "role": "assistant",
     "stop_reason": "end_turn",
     "usage": {
@@ -271,7 +271,39 @@ When a `target_model_names` is specified, the file is written to the S3 bucket c
 
 ### What models are supported?
 
-LiteLLM only supports Bedrock Anthropic Models for Batch API. If you want other bedrock models file an issue [here](https://github.com/BerriAI/litellm/issues/new/choose).
+Any Bedrock model that AWS lists for [batch inference](https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-supported.html) works, as long as LiteLLM can translate the OpenAI-format records in your input file into that model's request body. Today that covers Anthropic Claude models, Amazon Nova models (each record is written in the Converse request shape Nova expects), Amazon Titan Text Embeddings V2 for `/v1/embeddings` records, and the OpenAI-compatible Bedrock models such as `openai.gpt-oss-120b-1:0`, Qwen, and DeepSeek, whose records are passed through as OpenAI-style chat bodies. Chat records can use `/v1/chat/completions`, `/v1/completions`, or `/v1/responses` as their `url`; completions and responses records are converted to chat requests before upload. Titan Text Embeddings V2 is the only embedding model translated today.
+
+Use the model id AWS accepts for batch jobs in your region. Most current models only run batch jobs through a cross-region inference profile, so the id usually carries the `us.` (or `eu.`, `apac.`) prefix, for example `us.amazon.nova-lite-v1:0` rather than `amazon.nova-lite-v1:0`. Bedrock also rejects jobs with fewer than 100 records regardless of the model.
+
+A non-Anthropic batch model is configured the same way as the Claude example above:
+
+```yaml showLineNumbers title="litellm_config.yaml"
+model_list:
+  - model_name: "bedrock-batch-nova"
+    litellm_params:
+      model: bedrock/us.amazon.nova-lite-v1:0
+      s3_bucket_name: litellm-proxy
+      s3_region_name: us-east-1
+      s3_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      s3_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+      aws_batch_role_arn: arn:aws:iam::123456789012:role/LiteLLMBedrockBatchRole
+    model_info:
+      mode: batch
+  - model_name: "bedrock-batch-titan-embeddings"
+    litellm_params:
+      model: bedrock/amazon.titan-embed-text-v2:0
+      s3_bucket_name: litellm-proxy
+      s3_region_name: us-east-1
+      s3_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      s3_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+      aws_batch_role_arn: arn:aws:iam::123456789012:role/LiteLLMBedrockBatchRole
+    model_info:
+      mode: batch
+```
+
+Records in the input file then reference the `model_name` (`{"model": "bedrock-batch-nova", ...}`), the upload sets `target_model_names` to that same name, and the batch is created with `endpoint` set to `/v1/chat/completions` for chat models or `/v1/embeddings` for the embeddings model. The IAM role in `aws_batch_role_arn` needs `bedrock:InvokeModel` on every model you run batch jobs with.
+
+If you need a Bedrock model LiteLLM does not translate yet, for example another embedding model, file an issue [here](https://github.com/BerriAI/litellm/issues/new/choose).
 
 ### How do I use a custom KMS encryption key?
 
@@ -286,7 +318,7 @@ You can set the encryption key in 2 ways:
 model_list:
   - model_name: "bedrock-batch-claude"
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       s3_encryption_key_id: arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012
       # ... other params
 ```

@@ -73,8 +73,8 @@ model_list:
       model: xinference/stabilityai/stable-diffusion-3.5-large
       api_base: http://127.0.0.1:9997/v1
       api_key: anything
-  model_info:
-    mode: image_generation
+    model_info:
+      mode: image_generation
 
 general_settings:
   master_key: sk-1234

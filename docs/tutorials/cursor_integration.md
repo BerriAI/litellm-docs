@@ -7,7 +7,7 @@ Route Cursor IDE requests through LiteLLM for unified logging, budget controls, 
 :::info
 **Supported modes:** Ask, Plan, Agent. With the base URL override, agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
 
-Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs.
+Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs. The Cursor CLI (`agent` / `cursor-agent`) cannot target LiteLLM at all, see [Cursor CLI](#cursor-cli-cursor-agent).
 :::
 
 :::warning Override OpenAI Base URL missing?
@@ -37,6 +37,8 @@ Enable **Override OpenAI Base URL** and enter your proxy URL with `/cursor`:
 ```
 https://your-litellm-proxy.com/cursor
 ```
+
+The proxy must be reachable from the internet: Cursor sends the requests from its own servers, not from your machine, with `User-Agent: Cursor/1.0`. A proxy behind a VPN or an IP allowlist, or on a private address, fails from Cursor's side before any request reaches LiteLLM; [Troubleshooting](#troubleshooting) lists what Cursor shows in each case.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2025-12-13/6580de2b-3a59-45b2-b7b6-3ab105d87e74/ascreenshot.jpeg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2JDELI43356LVVTC%2F20251213%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20251213T224156Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=5a1af4ff63d38d51e06d398ed50f10161d690e3e57e9d67c1d23ce5b7ffdefd5)
 
@@ -77,9 +79,9 @@ Cursor rejects a custom model whose name matches one of its built-in models with
 
 ```yaml
 model_list:
-  - model_name: litellm-claude-haiku-4-5
+  - model_name: litellm-claude-sonnet-5
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/{{anthropic}}
 ```
 :::
 
@@ -116,7 +118,7 @@ Open **Cursor → Settings → Cursor Settings → Models**, expand **API Keys**
 Fill in the fields:
 
 - **Base URL**: your LiteLLM proxy URL, e.g. `https://your-litellm-proxy.com`. Do not append `/cursor`. The proxy must be reachable from the internet: Cursor sends requests from its backend, not from your machine.
-- **Deployment Name**: the LiteLLM public model name to use, e.g. `claude-sonnet-5`. This decides which model serves every request (see the warning below).
+- **Deployment Name**: the LiteLLM public model name to use, e.g. `{{anthropic}}`. This decides which model serves every request (see the warning below).
 - **API Key**: your LiteLLM virtual key.
 
 ### 2. Add a custom model
@@ -167,12 +169,35 @@ For official instructions on configuring MCP integration with Cursor, please ref
 
 LiteLLM can also front the Cursor Cloud Agents API, so agents launched over `api.cursor.com` get the same credential management and logging. See [Cursor Cloud Agents](../pass_through/cursor.md).
 
+## Cursor CLI (cursor-agent)
+
+The Cursor CLI (`agent`, also installed as `cursor-agent`) cannot target LiteLLM or any other gateway. Its `--endpoint` flag and `CURSOR_API_ENDPOINT` variable pick which Cursor backend the CLI logs in to, not an OpenAI-compatible API: on startup the CLI posts your key to `<endpoint>/auth/exchange_user_api_key` to trade it for Cursor session tokens, and every request after that is a Cursor-private RPC. Cursor does not document the flag and does not offer a custom endpoint or an OpenAI-compatible key in the CLI ([open feature request](https://forum.cursor.com/t/cursor-cli-custom-endpoint-and-api-key-support/129424)); its one bring-your-own-credentials option, `agent bedrock`, still routes through Cursor's backend.
+
+Pointing the CLI at a proxy fails before any model is reached (verified on the public Cursor CLI 2026.08.31 build):
+
+```shell
+export CURSOR_API_KEY=<LITELLM_VIRTUAL_KEY>
+agent --endpoint https://your-litellm-proxy.com
+```
+
+```
+⚠ Warning: The provided API key is invalid.
+The API key was loaded from the CURSOR_API_KEY environment variable.
+Please check you have the right key, create a new one, or authenticate without it.
+```
+
+The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](./openai_codex.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
+
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
 | Model not responding | Check base URL ends with `/cursor` and key has model access |
-| Auth errors | Regenerate key; ensure it starts with `sk-` |
+| `The provided API key is invalid` from the Cursor CLI (`agent` / `cursor-agent`) | The Cursor CLI cannot use a gateway: `--endpoint` selects a Cursor backend, not an OpenAI-compatible API, so its login fails with this warning on any proxy that lacks Cursor's auth route. See [Cursor CLI](#cursor-cli-cursor-agent) |
+| `Invalid API key` / `Unauthorized User API key` | Cursor shows this when the proxy answers 401. The API Key field must hold a LiteLLM virtual key (it starts with `sk-`); a placeholder value is rejected |
+| `User API Key Rate limit exceeded` | Cursor shows this when its request to the proxy gets a 429 or a 5xx, and also when it gets no answer at all, which is what a VPN or an IP allowlist that drops traffic from Cursor's servers looks like (verified on Cursor 3.18.25: the chat sits on `Taking longer than expected` for about a minute, then shows this). So the cause is often not a rate limit. First, from a machine outside your network, run `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"`; if it hangs, the proxy is unreachable from the internet and LiteLLM never saw the requests. If it answers, look up the requests in the LiteLLM logs (they arrive with `User-Agent: Cursor/1.0`) for the real error. Frequent causes there are rpm or tpm limits on the key, since each Cursor request carries a system prompt of about 25k tokens, and provider 429s |
+| `Network Error` / `We're having trouble connecting to the model provider` | The base URL hostname does not resolve on the public internet, e.g. an internal DNS name. Cursor shows `Rate limited by model provider, retrying` while it retries for about a minute, then this. Use a hostname that public DNS resolves |
+| `Provider returned error: Access to private networks is forbidden` | The base URL points at a private address (`10.x`, `192.168.x`, `localhost`, and the like), which Cursor's servers refuse to call. Put the proxy on a public address |
 | Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys in Cursor |
 | Cursor does not list your LiteLLM models | Upgrade to LiteLLM v1.97.0+, which serves `GET /cursor/models`. Earlier versions do not serve that route and answer 401 or 404. Verify with `curl <LITELLM_PROXY_BASE_URL>/cursor/models -H "Authorization: Bearer <LITELLM_VIRTUAL_KEY>"` |
 | `The model "X" is already available as "Y"` | Cursor blocks names that match its built-in models. Add the model under a distinct public model name (see the warning in step 3) |

@@ -114,8 +114,8 @@ model_list:
     litellm_params:
       model: gemini/imagen-4.0-generate-001
       api_key: os.environ/GEMINI_API_KEY
-  model_info:
-    mode: image_generation
+    model_info:
+      mode: image_generation
 
 general_settings:
   master_key: sk-1234

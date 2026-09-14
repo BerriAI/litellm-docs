@@ -12,11 +12,11 @@ These model deployments are assigned to a "model group", via the "model_name" fi
 model_list:
   - model_name: my-custom-model
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
-In here, we onboard a model deployment for the model `gpt-4o` and assign it to the model group `my-custom-model`.
+In here, we onboard a model deployment for the model `{{openai_large}}` and assign it to the model group `my-custom-model`.
 
 ## Client-side request
 
@@ -52,11 +52,11 @@ Example:
 model_list:
   - model_name: my-custom-model
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: my-custom-model
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
       api_version: os.environ/AZURE_API_VERSION
@@ -74,11 +74,11 @@ Example:
 model_list:
   - model_name: my-custom-model
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: my-other-model
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:

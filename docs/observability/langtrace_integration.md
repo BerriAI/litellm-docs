@@ -39,7 +39,7 @@ litellm.callbacks = ["langtrace"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -53,9 +53,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -107,7 +107,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",

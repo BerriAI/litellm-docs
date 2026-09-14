@@ -29,9 +29,9 @@ For testing ahead of the stable cut, use the [v1.92.0-dev.1](https://github.com/
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-4
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 guardrails:
@@ -63,7 +63,7 @@ litellm --config config.yaml
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-4",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "system", "content": "You are a helpful assistant."},
       {"role": "user", "content": "Summarize the prior conversation..."}
@@ -80,7 +80,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
       {"role": "user", "content": "Summarize the prior conversation..."}
@@ -125,7 +125,7 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-4",
+    "model": "{{anthropic}}",
     "messages": [...],
     "guardrails": ["headroom-compression"]
   }'
@@ -141,7 +141,7 @@ curl -i http://0.0.0.0:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-..." \
   -d '{
-    "model": "claude-sonnet-4",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [...],
     "litellm_metadata": {"guardrails": ["headroom-compression"]}
@@ -152,6 +152,16 @@ curl -i http://0.0.0.0:4000/v1/messages \
 </Tabs>
 
 The response includes an `x-litellm-applied-guardrails: headroom-compression` header so the caller can confirm compression actually ran.
+
+### `x-headroom-bypass` only ever switches compression off
+
+LiteLLM decides whether `headroom-compression` runs on a given request before the guardrail's own code ever sees a header: that decision comes from `default_on` in `config.yaml`, whether the guardrail is attached to the caller's key or team, or the per-request `guardrails` / `litellm_metadata.guardrails` opt-in shown above. Only after that decision comes back "run it" does the guardrail check `x-headroom-bypass`, and the only value it treats as a bypass is the literal string `true`, matched case-insensitively. Any other value, including `false`, an empty header, or no header at all, has no effect and leaves the guardrail running as already scheduled.
+
+Concretely: with `default_on: false` and no `headroom-compression` attached to the caller's key, sending `x-headroom-bypass: false` does not turn compression on for that request, and there is no per-request header that does. Skipping compression per request works (`x-headroom-bypass: true`, as in the Claude Code section above); enabling it per request without admin involvement requires the `guardrails` / `litellm_metadata.guardrails` field, not a header.
+
+## Compression behind an auto router
+
+A request an [auto router](./auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails above for them, whether they were attached to a key, a team, or the request body. See [Compression](./auto_routing.md#compression).
 
 ## Claude Code usage
 
@@ -170,7 +180,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
   -d '{
         "key_alias": "claude-code-alice",
         "guardrails": ["headroom-compression"],
-        "models": ["claude-sonnet-4"],
+        "models": ["{{anthropic}}"],
         "metadata": {"team": "claude-code-rollout"}
       }'
 ```
@@ -200,7 +210,7 @@ In the Admin UI, open any request in **Logs**, scroll to the **Guardrails & Poli
 Here is the dockerfile for deploying the headroom proxy
 
 ```Dockerfile
-FROM python:3.12-slim
+FROM python:{{python_version}}-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \

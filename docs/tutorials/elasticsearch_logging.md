@@ -84,9 +84,9 @@ Create a `config.yaml` file:
 
 ```yaml
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -119,7 +119,7 @@ litellm.callbacks = ["otel"]
 
 # Make your LLM calls
 response = litellm.completion(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello, world!"}]
 )
 ```
@@ -139,7 +139,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4.1",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM!"}]
   }'
 ```
@@ -151,7 +151,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 import litellm
 
 response = litellm.completion(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello from LiteLLM!"}],
     user="test-user"
 )
@@ -237,9 +237,9 @@ services:
 **config.yaml:**
 ```yaml
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:

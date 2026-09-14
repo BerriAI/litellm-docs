@@ -21,3 +21,6 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock
 pnpm-lock.yaml
+
+# Python bytecode from scripts/
+__pycache__/

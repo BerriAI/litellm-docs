@@ -724,7 +724,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY # runs os.getenv("AZURE_API_KEY")
       api_version: "2023-07-01-preview"
 
-litellm_settings:
+general_settings:
   master_key: sk-1234
   database_url: postgres://
 ```

@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 # Setting Team Budgets
 
 
-# Pre-Requisites
+## Pre-Requisites
 
 - You must set up a Postgres database (e.g. Supabase, Neon, etc.)
 

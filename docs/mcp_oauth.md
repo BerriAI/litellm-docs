@@ -235,6 +235,45 @@ mcp_servers:
     scopes: ["mcp:read", "mcp:write"]  # optional
 ```
 
+### Sending the token on a different header
+
+By default the token LiteLLM resolves goes out as `Authorization: Bearer <token>`, which is what
+almost every MCP server expects. Some deployments put the MCP server behind an API gateway that
+reads its own credential from a private header, and the server behind the gateway still wants its
+own bearer on `Authorization`. That needs two credentials on the same request.
+
+Set `upstream_token_header` to name the header the resolved token should use. Anything you configure
+under `static_headers` is then left alone, so a second credential reaches the server behind the
+gateway untouched.
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  my_mcp_server:
+    url: "https://my-mcp-server.com/mcp"
+    auth_type: oauth2
+    oauth2_flow: client_credentials
+    client_id: os.environ/MCP_CLIENT_ID
+    client_secret: os.environ/MCP_CLIENT_SECRET
+    token_url: "https://auth.example.com/oauth/token"
+    upstream_token_header: "esb-oauth"
+    static_headers:
+      Authorization: "Bearer os.environ/UPSTREAM_MCP_TOKEN"
+```
+
+Each request to the MCP server then carries both:
+
+```
+esb-oauth: Bearer <the token LiteLLM minted>
+Authorization: Bearer <the token you configured>
+```
+
+Leaving `upstream_token_header` unset keeps the default, so existing servers are unaffected. The
+value must be a valid HTTP header name; the proxy refuses to start on a malformed one, and the
+management API rejects it with a 400.
+
+In the UI the same setting is the **Token Header** field in the OAuth section of the MCP server
+form, and it applies to the interactive flow and the token-exchange modes as well as M2M.
+
 ### How It Works
 
 1. On first MCP request, LiteLLM POSTs to `token_url` with `grant_type=client_credentials`

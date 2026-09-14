@@ -9,7 +9,7 @@
 # long random values, and pin the image to a release tag instead of `latest`.
 services:
   litellm:
-    image: docker.litellm.ai/berriai/litellm-database:latest
+    image: docker.litellm.ai/berriai/litellm:latest
     ports:
       - "4000:4000"
     environment:

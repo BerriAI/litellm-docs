@@ -10,7 +10,7 @@ Use prompt versions from [Arize Phoenix](https://phoenix.arize.com/) with LiteLL
 import litellm
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     prompt_id="UHJvbXB0VmVyc2lvbjox",
     prompt_integration="arize_phoenix",
     api_key="your-arize-phoenix-token",
@@ -42,7 +42,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "prompt_id": "simple_prompt",
     "prompt_variables": {
       "question": "Explain quantum computing"
@@ -98,7 +98,7 @@ prompt_variables = {
 
 ```python
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     prompt_id="UHJvbXB0VmVyc2lvbjox",
     prompt_integration="arize_phoenix",
     api_base="https://app.phoenix.arize.com/s/your-workspace",
@@ -115,7 +115,7 @@ response = litellm.completion(
 ```python
 try:
     response = litellm.completion(
-        model="gpt-4o",
+        model="{{openai_large}}",
         prompt_id="invalid-id",
         prompt_integration="arize_phoenix",
         api_base="https://app.phoenix.arize.com/s/workspace"

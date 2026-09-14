@@ -337,6 +337,51 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 
 [More information about what the Database is used for here](db_info)
 
+### Verify the database server certificate (custom CA, e.g. AWS RDS)
+
+Managed Postgres (AWS RDS, Cloud SQL, Azure Flexible Server, an internal PKI) serves a certificate issued by the provider's own CA, which is not in the stock image's trust store. You do not need a custom image to verify it: mount the CA bundle into the container and point the DB URL at it with the same libpq params the provider docs give you.
+
+```bash
+export DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem"
+```
+
+LiteLLM rewrites `sslmode=verify-full` (or `verify-ca`) and `sslrootcert` into the params its Postgres driver understands (`sslmode=require`, `sslcert=<bundle>`, `sslaccept=strict`) on `DATABASE_URL`, `DIRECT_URL` and `DATABASE_URL_READ_REPLICA`, so the server certificate chain and hostname are checked on every connection, including migrations. A server whose certificate does not chain to the mounted bundle fails at boot with `P1011: Error opening a TLS connection ... certificate verify failed`. The driver has no chain-only mode, so `verify-ca` also checks the hostname. Setting the driver params directly (`sslmode=require&sslcert=/certs/global-bundle.pem&sslaccept=strict`) works too, and any driver param you pin yourself wins over the translation. The same keys can be set from config instead of the URL through `database_extra_connection_params` (see [Cap Idle DB Connections + Pass Extra Prisma URL Params](./configs.md#cap-idle-db-connections--pass-extra-prisma-url-params)).
+
+Plain Docker:
+
+```bash
+docker run \
+  -v /path/to/global-bundle.pem:/certs/global-bundle.pem:ro \
+  -e DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem" \
+  -e LITELLM_MASTER_KEY="sk-1234" \
+  -p 4000:4000 \
+  ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
+```
+
+Helm: put the bundle in a ConfigMap or Secret and mount it with `volumes` / `volumeMounts`. Both the Deployment and the migrations Job get these mounts, so migrations verify the certificate too.
+
+```bash
+kubectl create configmap rds-ca --from-file=global-bundle.pem
+```
+
+```yaml title="values.yaml"
+db:
+  useExisting: true
+  endpoint: mydb.abc123.us-east-1.rds.amazonaws.com
+  database: litellm
+  url: postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST)/$(DATABASE_NAME)?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem
+volumes:
+  - name: rds-ca
+    configMap:
+      name: rds-ca
+volumeMounts:
+  - name: rds-ca
+    mountPath: /certs
+    readOnly: true
+```
+
+Download the RDS bundle from [AWS](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem); other providers publish theirs the same way. This is separate from `SSL_CERT_FILE`, which only affects LiteLLM's outbound HTTPS calls to LLM providers and callbacks; the DB driver does not read it. If you need both, mount one bundle and point both settings at it.
+
 ### Stagger scheduled background jobs
 
 LiteLLM runs a set of scheduled background jobs against the database: spend flushes, daily tag spend, budget resets, config-in-DB reloads, credential reloads, spend log retention cleanup, and any cost export integrations you enable. Every one of those is registered when the proxy starts, and an interval job's first run is one interval after that instant, so without staggering they all fire at the same moment, on every replica a rollout brought up together, for the life of the process. On a large deployment that shows up as a periodic database CPU spike that competes with request-path auth and budget queries.

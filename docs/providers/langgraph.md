@@ -181,7 +181,7 @@ Before using LiteLLM with LangGraph, you need a running LangGraph server.
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11+ (required by the LangGraph CLI's in-memory server) {/* keep-python-version */}
 - An LLM API key (OpenAI or Google Gemini)
 
 ### 1. Install the LangGraph CLI

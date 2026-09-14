@@ -205,7 +205,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         "images": [{
           "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
           "detail": "auto"
-        }
+        }]
       },
       "finish_reason": "stop"
     }

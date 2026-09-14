@@ -11,14 +11,14 @@ Write custom guardrail logic using Python-like code that runs in a sandboxed env
 
 ```yaml
 model_list:
-    - model_name: gpt-4
-        litellm_params:
-        model: gpt-4
+    - model_name: {{openai_large}}
+      litellm_params:
+        model: {{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
     - guardrail_name: block-ssn
-        litellm_params:
+      litellm_params:
         guardrail: custom_code
         mode: pre_call
         custom_code: |
@@ -42,7 +42,7 @@ curl -X POST http://localhost:4000/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "My SSN is 123-45-6789"}],
     "guardrails": ["block-ssn"]
   }'
@@ -70,7 +70,7 @@ def apply_guardrail(inputs, request_data, input_type):
     # request_data: {"model": "...", "user_id": "...", "team_id": "...", "metadata": {...}}
     # input_type: "request" or "response"
     
-    return allow()  # or block() or modify()
+    return allow()  # or block(), flag() or modify()
 
 # Async version (recommended when using HTTP primitives)
 async def apply_guardrail(inputs, request_data, input_type):
@@ -107,7 +107,48 @@ async def apply_guardrail(inputs, request_data, input_type):
 |----------|-------------|
 | `allow()` | Let request/response through |
 | `block(reason)` | Reject with message |
+| `flag(reason, metadata={})` | Let request/response through unchanged, but record a non-blocking violation |
 | `modify(texts=[], images=[], tool_calls=[])` | Transform content |
+
+### Flagging without blocking
+
+`flag(reason, metadata={...})` is for audit-only or monitor-mode guardrails. The request or response continues exactly as it would have with `allow()`, and the guardrail records a `guardrail_flagged` entry in the request's guardrail information with the guardrail name, the configured `mode`, the `input_type` it evaluated (`request` or `response`), the `reason`, and your structured `metadata`. It works the same way for streaming and non-streaming requests.
+
+In the Guardrails Monitor a flagged request counts as flagged rather than passed or blocked, and in Request Logs the guardrail row shows `flagged` (when a guardrail runs on both `pre_call` and `post_call`, the row shows the most severe of the two outcomes). The request-level `guardrail_status` becomes `guardrail_flagged` unless another guardrail on the same request blocked or failed, in which case that status wins.
+
+```yaml
+guardrails:
+  - guardrail_name: audit-competitor-mentions
+    litellm_params:
+      guardrail: custom_code
+      mode: [pre_call, post_call]
+      default_on: true
+      custom_code: |
+        def apply_guardrail(inputs, request_data, input_type):
+            for text in inputs["texts"]:
+                if contains_any(lower(text), ["acme", "globex"]):
+                    return flag(
+                        "competitor mentioned",
+                        metadata={"category": "competitor", "phase": input_type},
+                    )
+            return allow()
+```
+
+The recorded entry looks like this in `standard_logging_guardrail_information`:
+
+```json
+{
+  "guardrail_name": "audit-competitor-mentions",
+  "guardrail_mode": ["pre_call", "post_call"],
+  "guardrail_status": "guardrail_flagged",
+  "guardrail_response": {
+    "action": "flag",
+    "reason": "competitor mentioned",
+    "input_type": "request",
+    "metadata": {"category": "competitor", "phase": "request"}
+  }
+}
+```
 
 ## Built-in Primitives
 
@@ -308,7 +349,7 @@ curl -X POST http://localhost:4000/chat/completions \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["block-ssn"]
   }'

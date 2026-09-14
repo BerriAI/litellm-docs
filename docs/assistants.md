@@ -57,7 +57,7 @@ os.environ["OPENAI_API_KEY"] = "sk-.."
 
 assistant = litellm.create_assistants(
             custom_llm_provider="openai",
-            model="gpt-4-turbo",
+            model="{{openai_large}}",
             instructions="You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
             name="Math Tutor",
             tools=[{"type": "code_interpreter"}],
@@ -66,7 +66,7 @@ assistant = litellm.create_assistants(
 ### ASYNC USAGE ### 
 # assistant = await litellm.acreate_assistants(
 #             custom_llm_provider="openai",
-#             model="gpt-4-turbo",
+#             model="{{openai_large}}",
 #             instructions="You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
 #             name="Math Tutor",
 #             tools=[{"type": "code_interpreter"}],
@@ -201,7 +201,7 @@ curl "http://localhost:4000/v1/assistants" \
     "instructions": "You are a personal math tutor. When asked a question, write and run Python code to answer the question.",
     "name": "Math Tutor",
     "tools": [{"type": "code_interpreter"}],
-    "model": "gpt-4-turbo"
+    "model": "{{openai_large}}"
   }'
 ```
 

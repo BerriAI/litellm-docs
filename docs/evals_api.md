@@ -73,7 +73,7 @@ eval_obj = client.evals.create(
     testing_criteria=[
         {
             "type": "label_model",
-            "model": "gpt-4o-mini",
+            "model": "{{openai_small}}",
             "input": [
                 {
                     "role": "developer",
@@ -133,7 +133,7 @@ Summary: {{sample.output_text}}
 push_notification_grader = {
     "name": "Push Notification Summary Grader",
     "type": "label_model",
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "input": [
         {
             "role": "developer",
@@ -287,7 +287,7 @@ tasks = []
 for notifications in push_notification_data:
     for (prompt, version) in PROMPTS:
         tasks.append(client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="{{openai_small}}",
             messages=[
                 {"role": "developer", "content": prompt},
                 {"role": "user", "content": notifications},
@@ -347,19 +347,19 @@ print(f"Report URL: {eval_run_result_v2.report_url}")
 Test how different models perform on the same inputs:
 
 ```python
-# Test with GPT-4o using stored completions as input
+# Test with {{openai_large}} using stored completions as input
 tasks = []
 for prompt_version in ["v1", "v2"]:
     tasks.append(client.evals.runs.create(
         eval_id=eval_id,
-        name=f"gpt-4o-run-{prompt_version}",
+        name=f"gpt-5.6-terra-run-{prompt_version}",
         data_source={
             "type": "completions",
             "input_messages": {
                 "type": "item_reference",
                 "item_reference": "item.input",
             },
-            "model": "gpt-4o",
+            "model": "{{openai_large}}",
             "source": {
                 "type": "stored_completions",
                 "metadata": {

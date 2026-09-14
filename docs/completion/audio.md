@@ -216,8 +216,8 @@ Use `litellm.supports_audio_input(model="")` -> returns `True` if model can acce
 assert litellm.supports_audio_output(model="gpt-4o-audio-preview") == True
 assert litellm.supports_audio_input(model="gpt-4o-audio-preview") == True
 
-assert litellm.supports_audio_output(model="gpt-3.5-turbo") == False
-assert litellm.supports_audio_input(model="gpt-3.5-turbo") == False
+assert litellm.supports_audio_output(model="{{openai_small}}") == False
+assert litellm.supports_audio_input(model="{{openai_small}}") == False
 ```
 </TabItem>
 
@@ -269,7 +269,7 @@ Expected Response
       "max_output_tokens": 16384,
       "mode": "chat",
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     },
     {
       "model_group": "llava-hf",
@@ -278,7 +278,7 @@ Expected Response
       "max_output_tokens": null,
       "mode": null,
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     }
   ]
 }

@@ -70,9 +70,9 @@ Define your guardrails under the `guardrails` section
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -139,7 +139,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello my name is Jane Doe"}
     ],
@@ -165,7 +165,7 @@ Expected response on failure
    }
  ],
  "created": 1725479980,
- "model": "gpt-3.5-turbo-2024-07-18",
+ "model": "{{openai_small}}",
  "object": "chat.completion",
  "system_fingerprint": "fp_5bd87c427a",
  "usage": {
@@ -186,7 +186,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello good morning"}
     ],
@@ -247,9 +247,9 @@ Define your guardrails with specific entity type configuration:
 
 ```yaml title="config.yaml with Entity Types" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -283,6 +283,21 @@ guardrails:
 - `presidio_score_thresholds.<ENTITY>`: apply only to that entity
 - If both `ALL` and an entity override exist, `ALL` applies globally and the entity override takes precedence for that entity
 
+### Large content chunking
+
+Presidio analyzer deployments commonly cap the `/analyze` request body size (for example at 1 MB), and analyzer latency grows with payload size. LiteLLM automatically splits any single content block whose serialized `/analyze` body would exceed `presidio_analyze_chunk_size_bytes` (default: `500000` bytes, measured on the JSON-escaped form the analyzer receives) into overlapping chunks, analyzes the chunks with a bounded fan-out, and merges the detections back onto the original text, so large content blocks are masked correctly instead of failing with `HTTP 413`.
+
+```yaml
+guardrails:
+  - guardrail_name: "presidio-pii"
+    litellm_params:
+      guardrail: presidio
+      mode: "pre_call"
+      presidio_analyze_chunk_size_bytes: 500000 # optional, default 500000
+```
+
+Set it below your analyzer deployment's request body limit, leaving headroom for the rest of the analyze payload (entities list, ad-hoc recognizers).
+
 ### Supported Entity Types
 
 LiteLLM Supports all Presidio entity types. See the complete list of presidio entity types [here](https://microsoft.github.io/presidio/supported_entities/).
@@ -306,7 +321,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My credit card is 4111-1111-1111-1111 and my email is test@example.com"}
     ],
@@ -328,7 +343,7 @@ Example response with masked entities:
       "index": 0,
       "finish_reason": "stop"
     }
-  ],
+  ]
   // ... other response fields
 }
 ```
@@ -344,7 +359,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My credit card is 4111-1111-1111-1111"}
     ],
@@ -407,7 +422,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My credit card is 4111-1111-1111-1111 and my medical license is ABC123"}
     ],
@@ -431,7 +446,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "is this credit card number 9283833 correct?"}
     ],
@@ -454,7 +469,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -481,9 +496,9 @@ You can configure a default language for PII analysis in your YAML configuration
 
 ```yaml title="Default Language Configuration" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -544,7 +559,7 @@ curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Mi tarjeta de crédito es 4111-1111-1111-1111"}
     ],
@@ -565,9 +580,9 @@ For presidio 'replace' operations, LiteLLM can check the LLM response and replac
 Define your guardrails under the `guardrails` section
 ```yaml title="Output Parsing Config" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -600,9 +615,9 @@ Send ad-hoc recognizers to presidio `/analyze` by passing a json file to the pro
 Define your guardrails under the `guardrails` section
 ```yaml title="Ad Hoc Recognizers Config" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -631,7 +646,7 @@ Make a chat completions request, example:
 
 ```json title="Custom PII Request" showLineNumbers
 {
-  "model": "azure-gpt-3.5",
+  "model": "{{openai_small}}",
   "messages": [{"role": "user", "content": "John Smith AHV number is 756.3026.0705.92. Zip code: 1334023"}]
 }
 ```
@@ -660,9 +675,9 @@ This is currently only applied for
 Define your guardrails under the `guardrails` section
 ```yaml title="Logging Only Config" showLineNumbers
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -693,7 +708,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -D '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",

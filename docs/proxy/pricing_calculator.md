@@ -100,7 +100,7 @@ curl -X POST "http://localhost:4000/cost/estimate" \
   -H "Authorization: Bearer sk-1234" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "input_tokens": 1000,
     "output_tokens": 500,
     "num_requests_per_day": 1000,
@@ -111,25 +111,25 @@ curl -X POST "http://localhost:4000/cost/estimate" \
 **Response:**
 ```json
 {
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "input_tokens": 1000,
   "output_tokens": 500,
   "num_requests_per_day": 1000,
   "num_requests_per_month": 30000,
-  "cost_per_request": 0.045,
-  "input_cost_per_request": 0.03,
-  "output_cost_per_request": 0.015,
+  "cost_per_request": 0.008,
+  "input_cost_per_request": 0.002,
+  "output_cost_per_request": 0.006,
   "margin_cost_per_request": 0.0,
-  "daily_cost": 45.0,
-  "daily_input_cost": 30.0,
-  "daily_output_cost": 15.0,
+  "daily_cost": 8.0,
+  "daily_input_cost": 2.0,
+  "daily_output_cost": 6.0,
   "daily_margin_cost": 0.0,
-  "monthly_cost": 1350.0,
-  "monthly_input_cost": 900.0,
-  "monthly_output_cost": 450.0,
+  "monthly_cost": 240.0,
+  "monthly_input_cost": 60.0,
+  "monthly_output_cost": 180.0,
   "monthly_margin_cost": 0.0,
-  "input_cost_per_token": 3e-05,
-  "output_cost_per_token": 6e-05,
+  "input_cost_per_token": 2e-06,
+  "output_cost_per_token": 1.2e-05,
   "provider": "openai"
 }
 ```

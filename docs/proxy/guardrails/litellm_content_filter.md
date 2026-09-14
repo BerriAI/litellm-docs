@@ -63,9 +63,9 @@ Test examples:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -98,9 +98,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -132,9 +132,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -184,7 +184,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My SSN is 123-45-6789"}
     ],
@@ -214,7 +214,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Contact me at john@example.com"}
     ],
@@ -381,7 +381,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me about yourself"}],
     stream=True,
     extra_body={"guardrails": ["streaming-filter"]}
@@ -411,7 +411,7 @@ This is because, each request containing images will be sent to the vision-capab
 model_list:
   - model_name: gpt-4-vision
     litellm_params:
-      model: openai/gpt-4-vision-preview
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -641,7 +641,7 @@ Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/lite
 ```yaml title="values.yaml (Helm)"
 extraVolumeMounts:
   - name: content-filter-categories
-    mountPath: /usr/local/lib/python3.13/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    mountPath: /usr/local/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
     subPath: <your-category-name>.yaml
     readOnly: true
 

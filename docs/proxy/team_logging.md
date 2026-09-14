@@ -24,11 +24,7 @@ Team 3 -> Disabled Logging (for GDPR compliance)
 
 ## [BETA] Team Logging
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 ### UI Usage
 
@@ -78,6 +74,13 @@ Navigate to your configured logging provider and check if you received the logs 
 <br />
 
 ### API Usage
+
+#### Who can call these
+
+A proxy admin, an org admin of the team's organization, and an admin of the team itself can list, set and remove that team's callbacks. Everyone else gets a `403`, and an admin of one team cannot read another team's.
+
+`POST /team/{team_id}/disable_logging` is the exception: it stays proxy-admin only. A team admin who wants to turn one integration off uses `DELETE /team/{team_id}/callback/{callback_name}`.
+
 ### Set Callbacks Per Team
 
 #### 1. Set callback for team 
@@ -135,7 +138,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -184,7 +187,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-KbUuE0WNptC0jXapyMmLBA" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -223,6 +226,10 @@ Every entry registered under that `callback_name` is removed, across callback ty
 
 Turn on/off logging and caching for a specific team id. 
 
+This section is team-scoped only: `litellm_settings.default_team_settings` configures callbacks for every key that belongs to a team id. There is no `config.yaml` surface for declaring individual virtual keys; per-key callbacks are provisioned through the `/key/generate` or `/key/update` API, documented in [Key Based Logging](#beta-key-based-logging).
+
+Because `config.yaml` is trusted operator-controlled configuration, `os.environ/...` references are supported here and are resolved from the proxy's environment at startup. The same references are rejected when sent through the management API (see [Secret handling for API-provisioned callbacks](#secret-handling-for-api-provisioned-callbacks)).
+
 **Example:**
 
 This config would send langfuse logs to 2 different langfuse projects, based on the team id 
@@ -256,11 +263,7 @@ All requests made with these keys will log data to their team-specific logging.
 
 Use the `/key/generate` or `/key/update` endpoints to add logging callbacks to a specific key.
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 **How key based logging works:**
 
@@ -320,8 +323,8 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
             "callback_name": "langfuse", # "otel", "gcs_bucket"
             "callback_type": "success", # "success", "failure", "success_and_failure"
             "callback_vars": {
-                "langfuse_public_key": "os.environ/LANGFUSE_PUBLIC_KEY", # [RECOMMENDED] reference key in proxy environment
-                "langfuse_secret_key": "os.environ/LANGFUSE_SECRET_KEY", # [RECOMMENDED] reference key in proxy environment
+                "langfuse_public_key": "pk-lf-...", # pass the resolved value, not an os.environ/ reference
+                "langfuse_secret_key": "sk-lf-...", # pass the resolved value, not an os.environ/ reference
                 "langfuse_host": "https://cloud.langfuse.com"
             }
         }]
@@ -329,6 +332,12 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 }'
 
 ```
+
+Each key can point at a different Langfuse project: generate one key per project and pass that project's credentials in `callback_vars`.
+
+#### Secret handling for API-provisioned callbacks
+
+`os.environ/...` references inside API-supplied `callback_vars` are rejected (since v1.84). Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
 
 <iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
@@ -353,7 +362,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
               "callback_type": "success", # "success", "failure", "success_and_failure"
               "callback_vars": {
                   "gcs_bucket_name": "my-gcs-bucket", # Name of your GCS Bucket to log to
-                  "gcs_path_service_account": "os.environ/GCS_SERVICE_ACCOUNT" # environ variable for this service account
+                  "gcs_path_service_account": "/path/to/service-account.json" # path to the service account json, not an os.environ/ reference
               }
           }]
       }
@@ -396,7 +405,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
               "callback_name": "langsmith", # "otel", "gcs_bucket"
               "callback_type": "success", # "success", "failure", "success_and_failure"
               "callback_vars": {
-                  "langsmith_api_key": "os.environ/LANGSMITH_API_KEY", # API Key for Langsmith logging
+                  "langsmith_api_key": "lsv2_pt_...", # resolved Langsmith API key, not an os.environ/ reference
                   "langsmith_project": "pr-brief-resemblance-72", # project name on langsmith
                   "langsmith_base_url": "https://api.smith.langchain.com"
               }
@@ -495,9 +504,9 @@ Use this to enable prompt logging for specific keys when you have globally disab
 Example config.yaml with globally disabled prompt logging (message redaction)
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 litellm_settings:
   callbacks: ["datadog"]
   turn_off_message_logging: True # 👈 Globally logging prompt / response is disabled
@@ -552,7 +561,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-9v6I-jf9-eYtg_PwM8OKgQ" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi my name is ishaan what key alias is this"}
     ]

@@ -2,11 +2,7 @@
 
 Route Claude Code through LiteLLM using each developer's Okta identity. Claude Code sends the developer's own Okta access token with every request, LiteLLM validates it against your Okta authorization server and creates the user automatically on first request, and usage, spend, and logs are attributed to that user. There are no per-user API keys to issue and no manual provisioning, so the setup works the same for 10 developers or 10,000.
 
-:::info
-
-JWT authentication is a LiteLLM Enterprise feature. [Get in touch](https://www.litellm.ai/enterprise) for a license key.
-
-:::
+<EnterpriseFeature feature="JWT authentication" />
 
 This guide uses Okta, but any OIDC provider that issues JWT access tokens (Azure AD, Keycloak, Auth0, etc.) works the same way; only the issuer URLs and app setup differ.
 
@@ -36,19 +32,14 @@ Enable JWT auth in your proxy config:
 
 ```yaml
 model_list:
-  - model_name: claude-opus-5
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/{{anthropic_large}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: claude-haiku-4-5
-    litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
@@ -94,7 +85,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
   -H "Authorization: Bearer $OKTA_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 100,
     "messages": [{"role": "user", "content": "Hello"}]
   }'

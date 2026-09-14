@@ -4,19 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # ✨ SSO for Admin UI
 
-:::info
-From v1.76.0, SSO is now Free for up to 5 users.
-:::
-
-:::info
-
-✨ SSO is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature feature="SSO">From v1.76.0, SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 ### Usage (Google, Microsoft, Okta, etc.)
 

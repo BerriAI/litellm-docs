@@ -28,7 +28,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -67,7 +67,7 @@ client = openai.OpenAI(
 print("Making API request to Responses API with MCP tools")
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",
@@ -108,7 +108,7 @@ curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer sk-1234" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -142,7 +142,7 @@ client = openai.OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",
@@ -203,6 +203,8 @@ When server_url="litellm_proxy", LiteLLM bridges non-MCP providers to your MCP t
 - Output: Complete response combining LLM reasoning with tool execution results
 
 This enables MCP tool usage with any LiteLLM-supported provider, regardless of native MCP support.
+
+If tool calls are missing from the response or fail, see [Responses and Chat Completions failures](./mcp_troubleshoot.md#responsescompletions-with-embedded-mcp-calls) in the troubleshooting runbook.
 
 #### Auto-execution for require_approval: "never"
 

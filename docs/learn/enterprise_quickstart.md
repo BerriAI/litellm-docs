@@ -37,7 +37,6 @@ All gateway and budget tests share one deployment and one org/team/key. Do this 
 Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
-docker pull ghcr.io/berriai/litellm-database:latest
 curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker-compose.yml
 ```
 
@@ -54,9 +53,9 @@ Create `config.yaml`:
 
 ```yaml title="config.yaml" showLineNumbers
 model_list:
-  - model_name: gpt-5.5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5.5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -88,9 +87,9 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      - model_name: gpt-5.5
+      - model_name: {{openai_large}}
         litellm_params:
-          model: openai/gpt-5.5
+          model: openai/{{openai_large}}
           api_key: os.environ/OPENAI_API_KEY
 
     litellm_settings:
@@ -135,7 +134,7 @@ spec:
     spec:
       containers:
         - name: litellm
-          image: docker.litellm.ai/berriai/litellm-database:latest
+          image: docker.litellm.ai/berriai/litellm:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 4000
@@ -233,9 +232,9 @@ proxyConfigMap:
 
 proxy_config:
   model_list:
-    - model_name: gpt-5.5
+    - model_name: {{openai_large}}
       litellm_params:
-        model: openai/gpt-5.5
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
   litellm_settings:
     callbacks: ["prometheus"]
@@ -318,7 +317,7 @@ flowchart TD
 
 ### Steps
 
-1. **Confirm model** `gpt-5.5` (or your model) appears in `model_list` (config or Admin UI → Models).
+1. **Confirm model** `{{openai_large}}` (or your model) appears in `model_list` (config or Admin UI → Models).
 
 2. **Test with your master key**:
 
@@ -327,7 +326,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-1234' \
   -d '{
-    "model": "gpt-5.5",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM Enterprise Gateway"}]
   }'
 ```
@@ -390,7 +389,7 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer sk-team-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.5",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "TLDR of BerriAI/litellm repo"}],
     "tools": [{
       "type": "mcp",
@@ -558,7 +557,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Authorization: Bearer sk-team-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-5.5",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["poc:chat-app"]}
   }'

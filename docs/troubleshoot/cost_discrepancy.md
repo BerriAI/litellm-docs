@@ -132,7 +132,7 @@ If any category is off by more than about 10%, LiteLLM may not be ingesting that
 1. Screenshots of both dashboards with the date range visible.
 2. Which category is off (input, output, cache reads, cache writes, or request count).
 3. Endpoints used (for example `/chat/completions`, `/responses`, `/embeddings`).
-4. Model names as sent in the request (for example `anthropic.claude-opus-4-5`, `gpt-4o`).
+4. Model names as sent in the request (for example `anthropic.{{anthropic_large}}`, `{{openai_large}}`).
 
 ### For maintainers debugging ingestion
 
@@ -203,3 +203,4 @@ If Path A and Path B do not close the case after triage, **you** should reach ou
 
 - [Spend tracking](../proxy/cost_tracking)
 - [Sync model pricing from GitHub](../proxy/sync_models_github)
+- [Model missing after Reload Price Data](./missing_model)

@@ -34,7 +34,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 response = completion(
   model="vertex_ai/<your-finetuned-model>",  # e.g. vertex_ai/4965075652664360960
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  base_model="vertex_ai/gemini-1.5-pro" # the base model - used for routing
+  base_model="vertex_ai/{{gemini_pro}}" # the base model - used for routing
 )
 ```
 
@@ -56,7 +56,7 @@ response = completion(
     vertex_project: <PROJECT_ID>
     vertex_location: <LOCATION>
   model_info:
-    base_model: vertex_ai/gemini-1.5-pro # IMPORTANT
+    base_model: vertex_ai/{{gemini_pro}} # IMPORTANT
 ```
 
 3. Test it! 

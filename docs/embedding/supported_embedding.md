@@ -210,8 +210,6 @@ input=["good morning from litellm"]
         -0.0022326677571982145,
         0.010749882087111473,
         ...
-        ...
-        ...
    
       ]
     }
@@ -255,7 +253,7 @@ Use this for calling `/embedding` endpoints on OpenAI Compatible Servers, exampl
 from litellm import embedding
 response = embedding(
   model = "openai/<your-llm-name>",     # add `openai/` prefix to model so litellm knows to route to OpenAI
-  api_base="http://0.0.0.0:4000/"       # set API Base of your Custom OpenAI Endpoint
+  api_base="http://0.0.0.0:4000/",      # set API Base of your Custom OpenAI Endpoint
   input=["good morning from litellm"]
 )
 ```
@@ -284,11 +282,11 @@ print(response)
 | Model Name           | Function Call                               |
 |----------------------|---------------------------------------------|
 | Amazon Nova Multimodal Embeddings | `embedding(model="bedrock/amazon.nova-2-multimodal-embeddings-v1:0", input=input)` | [Nova Docs](../providers/bedrock_embedding#amazon-nova-multimodal-embeddings) |
-| Amazon Nova (Async) | `embedding(model="bedrock/async_invoke/amazon.nova-2-multimodal-embeddings-v1:0", input=input, input_type="text", output_s3_uri="s3://bucket/")` | [Nova Async Docs](../providers/bedrock_embedding#asynchronous-embeddings-with-segmentation) |
+| Amazon Nova (Async) | `embedding(model="bedrock/async_invoke/amazon.nova-2-multimodal-embeddings-v1:0", input=input, input_type="text", output_s3_uri="s3://bucket/")` | [Nova Async Docs](../providers/bedrock_embedding#async-invoke-support) |
 | Titan Embeddings - G1 | `embedding(model="amazon.titan-embed-text-v1", input=input)` |
 | Cohere Embeddings - English | `embedding(model="cohere.embed-english-v3", input=input)` |
 | Cohere Embeddings - Multilingual | `embedding(model="cohere.embed-multilingual-v3", input=input)` |
-| TwelveLabs Marengo (Async) | `embedding(model="bedrock/async_invoke/us.twelvelabs.marengo-embed-2-7-v1:0", input=input, input_type="text")` | [Async Invoke Docs](../providers/bedrock_embedding#async-invoke-embedding) |
+| TwelveLabs Marengo (Async) | `embedding(model="bedrock/async_invoke/us.twelvelabs.marengo-embed-2-7-v1:0", input=input, input_type="text")` | [Async Invoke Docs](../providers/bedrock_embedding#async-invoke-support) |
 
 ## TwelveLabs Bedrock Embedding Models
 

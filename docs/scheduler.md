@@ -32,9 +32,9 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-3.5-turbo",
+            "model_name": "{{openai_small}}",
             "litellm_params": {
-                "model": "gpt-3.5-turbo",
+                "model": "{{openai_small}}",
                 "mock_response": "Hello world this is Macintosh!", # fakes the LLM API call
                 "rpm": 1,
             },
@@ -47,7 +47,7 @@ router = Router(
 
 try:
     _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
         priority=0, # 👈 LOWER IS BETTER
     )
@@ -89,7 +89,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -97,7 +97,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ 
-        "priority": 0 👈 SET VALUE HERE
+        "priority": 0 # 👈 SET VALUE HERE
     }
 )
 
@@ -118,9 +118,9 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-3.5-turbo",
+            "model_name": "{{openai_small}}",
             "litellm_params": {
-                "model": "gpt-3.5-turbo",
+                "model": "{{openai_small}}",
                 "mock_response": "Hello world this is Macintosh!", # fakes the LLM API call
                 "rpm": 1,
             },
@@ -134,7 +134,7 @@ router = Router(
 
 try:
     _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
         priority=0, # 👈 LOWER IS BETTER
     )
@@ -148,7 +148,7 @@ except Exception as e:
 model_list:
     - model_name: gpt-3.5-turbo-fake-model
       litellm_params:
-        model: gpt-3.5-turbo
+        model: {{openai_small}}
         mock_response: "hello world!" 
         api_key: my-good-key
 
@@ -156,7 +156,7 @@ litellm_settings:
     request_timeout: 600 # 👈 Will keep retrying until timeout occurs
 
 router_settings:
-    redis_host; os.environ/REDIS_HOST
+    redis_host: os.environ/REDIS_HOST
     redis_password: os.environ/REDIS_PASSWORD
     redis_port: os.environ/REDIS_PORT
 ```

@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.98.0: Provisioned Throughput Billing, Shadow Evals & Routing Groups](/release_notes/v1.98.0/v1-98-0)
+### [v1.100.0: Access Group Budgets, Together AI Sync & Custom Router Tiers](/release_notes/v1.100.0/v1-100-0)
 
-_August 22, 2026_
+_September 6, 2026_
 
-Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cost_per_ptu_per_hour` on a deployment driving a per-model flat cost by active hour while per-token billing is switched off there, so a team paying for reserved capacity is not charged twice for the same traffic; a shadow eval job that samples a slice of one key's successful traffic, replays it through the auto-router in a detached task that never serves a response or adds latency, and has an LLM judge compare both answers blind, so the router can be measured before it is adopted; routing groups that are callable models, where `model=<group_name>` routes across the union of member deployments with the group's own strategy, appears in `/v1/models` for Claude Code and Codex discovery, and is grantable on keys and teams; six `x-litellm-response-cost-*` headers that split a response's cost into input, cache read, cache creation, output, reasoning, and tool usage; TPM reservations that follow declared output size per key, per team, and per model instead of one static floor for every tenant; and the largest step yet in the Admin UI's move off antd and Tremor, with 75 UI pull requests carrying the navbar, playground, usage, cost tracking, the log details drawer, and much of the shared component library onto shadcn. Note that the Langfuse metadata blob is now sourced from a StandardLoggingPayload allowlist, so roughly 20 fields no longer appear on the generation.
+Model access groups can carry one shared budget enforced across every deployment in the group, tracked in a per-window spend table, settable from the dashboard, and with opt-in rollover of unused headroom; Together AI moves onto a dedicated config with `api.together.ai` as the default endpoint, `reasoning_effort` mapped per model class, cache-read pricing, and a daily sync that keeps the registry priced against the live serverless catalog; the complexity router's tier set becomes operator-defined end to end, with custom classifier tiers, a preview of the classifier prompt, heuristic-first chaining, a dry run on `/auto_router/test_routing`, and classifier cost counted in savings; the MCP gateway gains RFC 7662 `/introspect` for session tokens, RS256-signed session tokens, bulk import of Anthropic MCP connectors, and enforcement of toolsets attached to teams, organizations and users; Grounding with Bing Search arrives as a search provider alongside 242 new models, including `gemini-3.5-transcribe`, the xAI `grok-4.20` family, 24 Mistral entries, RunwayML `gen4.5` and the Seedance 2 family; and `GET /public/v1/model_hub` exposes a paginated public listing of the models the proxy serves. This stable also carries the Docker base image fix for glibc 2.44 that landed after the rc.1 cut.
 
 ---
 
@@ -22,6 +22,8 @@ Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cos
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |

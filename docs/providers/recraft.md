@@ -47,8 +47,8 @@ model_list:
     litellm_params:
       model: recraft/recraftv3
       api_key: os.environ/RECRAFT_API_KEY
-  model_info:
-    mode: image_generation
+    model_info:
+      mode: image_generation
 
 general_settings:
   master_key: sk-1234
@@ -183,8 +183,8 @@ model_list:
     litellm_params:
       model: recraft/recraftv3
       api_key: os.environ/RECRAFT_API_KEY
-  model_info:
-    mode: image_edit
+    model_info:
+      mode: image_edit
 
 general_settings:
   master_key: sk-1234

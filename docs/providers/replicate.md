@@ -145,7 +145,7 @@ os.environ["REPLICATE_API_KEY"] = ""
 # Create your own custom prompt template 
 litellm.register_prompt_template(
 	    model="togethercomputer/LLaMA-2-7B-32K",
-        initial_prompt_value="You are a good assistant" # [OPTIONAL]
+        initial_prompt_value="You are a good assistant", # [OPTIONAL]
 	    roles={
             "system": {
                 "pre_message": "[INST] <<SYS>>\n", # [OPTIONAL]
@@ -156,10 +156,10 @@ litellm.register_prompt_template(
                 "post_message": " [/INST]" # [OPTIONAL]
             }, 
             "assistant": {
-                "pre_message": "\n" # [OPTIONAL]
+                "pre_message": "\n", # [OPTIONAL]
                 "post_message": "\n" # [OPTIONAL]
             }
-        }
+        },
         final_prompt_value="Now answer as best you can:" # [OPTIONAL]
 )
 

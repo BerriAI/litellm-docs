@@ -34,7 +34,7 @@ litellm.vector_store_registry = VectorStoreRegistry(
 
 # Make a completion request using your Knowledge Base
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet", 
+    model="anthropic/{{anthropic}}", 
     messages=[{"role": "user", "content": "What does our company policy say about remote work?"}],
     tools=[
         {
@@ -56,9 +56,9 @@ print(response.choices[0].message.content)
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 vector_store_registry:
@@ -95,7 +95,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What does our company policy say about remote work?"}],
     "tools": [
         {
@@ -121,7 +121,7 @@ client = OpenAI(
 
 # Make a completion request with vector_store_ids parameter
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",
+    model="{{anthropic}}",
     messages=[{"role": "user", "content": "What does our company policy say about remote work?"}],
     tools=[
         {
@@ -153,7 +153,7 @@ Filter by metadata attributes.
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "What are the latest updates?"}],
     tools=[{
         "type": "file_search",
@@ -173,7 +173,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "What are the policies?"}],
     tools=[{
         "type": "file_search",
@@ -194,7 +194,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Show me technical docs"}],
     tools=[{
         "type": "file_search",
@@ -215,7 +215,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Find docs"}],
     tools=[{
         "type": "file_search",
@@ -239,7 +239,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What are our policies?"}],
     "tools": [{
         "type": "file_search",

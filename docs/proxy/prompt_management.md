@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Prompt Management
 
-Run experiments or change the specific model (e.g. from gpt-4o to gpt4o-mini finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
+Run experiments or change the specific model (e.g. from gpt-5.6-terra to a gpt-5.6-luna finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
 
 | Supported Integrations | Link |
 |------------------------|------|
@@ -26,9 +26,9 @@ Add a `prompts` field to your config.yaml:
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
@@ -83,7 +83,7 @@ prompts:
         my_inline_prompt:
           content: "Hello {{name}}! How can I help you with {{topic}}?"
           metadata:
-            model: "gpt-4"
+            model: "{{openai_large}}"
             temperature: 0.7
             max_tokens: 150
 ```
@@ -98,7 +98,7 @@ prompts:
       prompt_integration: "dotprompt"
       dotprompt_content: |
         ---
-        model: gpt-4
+        model: {{openai_large}}
         temperature: 0.7
         ---
         System: You are a helpful assistant.
@@ -108,10 +108,10 @@ prompts:
 
 Create `.prompt` files in your prompt directory:
 
-```yaml
+```yaml nolint
 # prompts/hello.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -163,10 +163,10 @@ litellm_settings:
 
 Your BitBucket repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_bitbucket_prompt.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -198,10 +198,10 @@ litellm_settings:
 
 Your GitLab repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_gitlab_prompt.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -244,7 +244,7 @@ A GET endpoint at `/beta/litellm_prompt_management` that returns:
       "content": "Help me with {task}"
     }
   ],
-  "prompt_template_model": "gpt-4",
+  "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
     "temperature": 0.7,
     "max_tokens": 500
@@ -269,9 +269,9 @@ Here's a complete example showing multiple prompts with different integrations:
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
@@ -291,7 +291,7 @@ prompts:
         simple_chat:
           content: "You are a {{personality}} assistant. User: {{message}}"
           metadata:
-            model: "gpt-4"
+            model: "{{openai_large}}"
             temperature: 0.8
   
   # Langfuse prompt
@@ -322,7 +322,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -338,7 +338,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/responses' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-1234' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -385,7 +385,7 @@ os.environ["LANGFUSE_SECRET_KEY"] = "secret_key" # [OPTIONAL] set here or in `.c
 litellm.set_verbose = True # see raw request to provider
 
 resp = litellm.completion(
-    model="langfuse/gpt-3.5-turbo",
+    model="langfuse/{{openai_small}}",
     prompt_id="test-chat-prompt",
     prompt_variables={"user_message": "this is used"}, # [OPTIONAL]
     messages=[{"role": "user", "content": "<IGNORED>"}],
@@ -408,7 +408,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
   - model_name: openai-model
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -452,7 +452,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -482,7 +482,7 @@ print(response)
 POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/ \
--d '{'model': 'gpt-3.5-turbo', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
+-d '{'model': '{{openai_small}}', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
 ```
 
 ## How to set model 
@@ -496,8 +496,8 @@ You can do `langfuse/<litellm_model_name>`
 
 ```python
 litellm.completion(
-    model="langfuse/gpt-3.5-turbo", # or `langfuse/anthropic/claude-3-5-sonnet`
-    ...
+    model="langfuse/{{openai_small}}", # or `langfuse/anthropic/{{anthropic}}`
+    # ...
 )
 ```
 
@@ -506,9 +506,9 @@ litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: langfuse/gpt-3.5-turbo # OR langfuse/anthropic/claude-3-5-sonnet
+      model: langfuse/{{openai_small}} # OR langfuse/anthropic/{{anthropic}}
       prompt_id: <langfuse_prompt_id>
       api_key: os.environ/OPENAI_API_KEY
 ```
@@ -524,7 +524,7 @@ If the model is specified in the Langfuse config, it will be used.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_key: os.environ/AZURE_API_KEY

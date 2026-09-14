@@ -18,7 +18,7 @@ uv tool install 'litellm[proxy]'
 ```shell 
 $ litellm --model ollama/codellama 
 
-#INFO: Ollama running on http://0.0.0.0:8000
+#INFO: Ollama running on http://0.0.0.0:4000
 ```
 
 ### Test
@@ -32,7 +32,7 @@ $ litellm --test
 ```python
 import openai 
 
-openai.api_base = "http://0.0.0.0:8000"
+openai.api_base = "http://0.0.0.0:4000"
 
 print(openai.ChatCompletion.create(model="test", messages=[{"role":"user", "content":"Hey!"}]))
 ```
@@ -56,7 +56,7 @@ $ litellm --model openai/<model_name> --api_base <your-api-base>
 
 ```shell
 $ export HUGGINGFACE_API_KEY=my-api-key #[OPTIONAL]
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -64,7 +64,7 @@ $ litellm --model claude-instant-1
 
 ```shell
 $ export ANTHROPIC_API_KEY=my-api-key
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -145,10 +145,10 @@ Replace openai base:
 import openai 
 
 openai.api_key = "any-string-here"
-openai.api_base = "http://0.0.0.0:8080" # your proxy url
+openai.api_base = "http://0.0.0.0:4000" # your proxy url
 
 # call openai
-response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hey"}])
+response = openai.ChatCompletion.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hey"}])
 
 print(response)
 
@@ -169,7 +169,7 @@ git clone https://github.com/danny-avila/LibreChat.git
 
 #### 2. Modify `docker-compose.yml`
 ```yaml
-OPENAI_REVERSE_PROXY=http://host.docker.internal:8000/v1/chat/completions
+OPENAI_REVERSE_PROXY=http://host.docker.internal:4000/v1/chat/completions
 ```
 
 #### 3. Save fake OpenAI key in `.env`
@@ -202,7 +202,7 @@ cp .env.local.example .env.local
 #### 4. Set the API Key and Base
 ```env
 OPENAI_API_KEY="my-fake-key"
-OPENAI_API_HOST="http://0.0.0.0:8000
+OPENAI_API_HOST="http://0.0.0.0:4000
 ```
 
 #### 5. Run with docker compose
@@ -212,7 +212,7 @@ docker compose up -d
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 
@@ -221,7 +221,7 @@ from autogen import AssistantAgent, UserProxyAgent, oai
 config_list=[
     {
         "model": "my-fake-model",
-        "api_base": "http://0.0.0.0:8000",  #litellm compatible endpoint
+        "api_base": "http://0.0.0.0:4000",  #litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL", # just a placeholder
     }
@@ -250,7 +250,7 @@ from autogen.agentchat import GroupChat
 config_list = [
     {
         "model": "ollama/mistralorca",
-        "api_base": "http://0.0.0.0:8000",  # litellm compatible endpoint
+        "api_base": "http://0.0.0.0:4000",  # litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL",  # just a placeholder
     }
@@ -260,7 +260,7 @@ llm_config = {"config_list": config_list, "seed": 42}
 code_config_list = [
     {
         "model": "ollama/phind-code",
-        "api_base": "http://0.0.0.0:8000",  # litellm compatible endpoint
+        "api_base": "http://0.0.0.0:4000",  # litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL",  # just a placeholder
     }
@@ -327,7 +327,7 @@ Credits [@Nathan](https://gist.github.com/CUexter) for this tutorial.
 ```shell
 git clone https://github.com/OpenBMB/ChatDev.git
 cd ChatDev
-conda create -n ChatDev_conda_env python=3.9 -y
+conda create -n ChatDev_conda_env python={{python_version}} -y
 conda activate ChatDev_conda_env
 uv add -r requirements.txt
 ```
@@ -337,7 +337,7 @@ export OPENAI_API_KEY="sk-1234"
 ```
 
 ```shell 
-export OPENAI_BASE_URL="http://0.0.0.0:8000"
+export OPENAI_BASE_URL="http://0.0.0.0:4000"
 ```
 ```shell
 python3 run.py --task "a script that says hello world" --name "hello world"
@@ -345,7 +345,7 @@ python3 run.py --task "a script that says hello world" --name "hello world"
 </TabItem>
 <TabItem value="langroid" label="Langroid">
 
-```python
+```bash
 uv add langroid
 ```
 
@@ -355,7 +355,7 @@ from langroid.language_models.openai_gpt import OpenAIGPTConfig, OpenAIGPT
 # configure the LLM
 my_llm_config = OpenAIGPTConfig(
     # where proxy server is listening 
-    api_base="http://0.0.0.0:8000", 
+    api_base="http://0.0.0.0:4000", 
 )
 
 # create llm, one-off interaction
@@ -399,7 +399,7 @@ $ litellm --model ollama/codellama --temperature 0.3 --max_tokens 2048
 ```shell 
 $ litellm
 
-#INFO: litellm proxy running on http://0.0.0.0:8000
+#INFO: litellm proxy running on http://0.0.0.0:4000
 ```
 
 #### Send a request to your proxy
@@ -407,10 +407,10 @@ $ litellm
 import openai 
 
 openai.api_key = "any-string-here"
-openai.api_base = "http://0.0.0.0:8080" # your proxy url
+openai.api_base = "http://0.0.0.0:4000" # your proxy url
 
-# call gpt-3.5-turbo
-response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hey"}])
+# call {{openai_small}}
+response = openai.ChatCompletion.create(model="{{openai_small}}", messages=[{"role": "user", "content": "Hey"}])
 
 print(response)
 
@@ -431,7 +431,7 @@ In the [config.py](https://continue.dev/docs/reference/Models/openai) set this a
       api_key="IGNORED",
       model="fake-model-name",
       context_length=2048, # customize if needed for your model
-      api_base="http://localhost:8000" # your proxy server url
+      api_base="http://localhost:4000" # your proxy server url
   ),
 ```
 
@@ -442,12 +442,12 @@ Credits [@vividfog](https://github.com/ollama/ollama/issues/305#issuecomment-175
 ```shell
 $ uv add aider 
 
-$ aider --openai-api-base http://0.0.0.0:8000 --openai-api-key fake-key
+$ aider --openai-api-base http://0.0.0.0:4000 --openai-api-key fake-key
 ```
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 
@@ -456,7 +456,7 @@ from autogen import AssistantAgent, UserProxyAgent, oai
 config_list=[
     {
         "model": "my-fake-model",
-        "api_base": "http://localhost:8000",  #litellm compatible endpoint
+        "api_base": "http://localhost:4000",  #litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL", # just a placeholder
     }
@@ -485,7 +485,7 @@ from autogen.agentchat import GroupChat
 config_list = [
     {
         "model": "ollama/mistralorca",
-        "api_base": "http://localhost:8000",  # litellm compatible endpoint
+        "api_base": "http://localhost:4000",  # litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL",  # just a placeholder
     }
@@ -495,7 +495,7 @@ llm_config = {"config_list": config_list, "seed": 42}
 code_config_list = [
     {
         "model": "ollama/phind-code",
-        "api_base": "http://localhost:8000",  # litellm compatible endpoint
+        "api_base": "http://localhost:4000",  # litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL",  # just a placeholder
     }
@@ -562,7 +562,7 @@ Credits [@Nathan](https://gist.github.com/CUexter) for this tutorial.
 ```shell
 git clone https://github.com/OpenBMB/ChatDev.git
 cd ChatDev
-conda create -n ChatDev_conda_env python=3.9 -y
+conda create -n ChatDev_conda_env python={{python_version}} -y
 conda activate ChatDev_conda_env
 uv add -r requirements.txt
 ```
@@ -572,7 +572,7 @@ export OPENAI_API_KEY="sk-1234"
 ```
 
 ```shell 
-export OPENAI_BASE_URL="http://0.0.0.0:8000"
+export OPENAI_BASE_URL="http://0.0.0.0:4000"
 ```
 ```shell
 python3 run.py --task "a script that says hello world" --name "hello world"
@@ -580,7 +580,7 @@ python3 run.py --task "a script that says hello world" --name "hello world"
 </TabItem>
 <TabItem value="langroid" label="Langroid">
 
-```python
+```bash
 uv add langroid
 ```
 
@@ -590,7 +590,7 @@ from langroid.language_models.openai_gpt import OpenAIGPTConfig, OpenAIGPT
 # configure the LLM
 my_llm_config = OpenAIGPTConfig(
     #format: "local/[URL where LiteLLM proxy is listening]
-    chat_model="local/localhost:8000", 
+    chat_model="local/localhost:4000", 
     chat_context_length=2048,  # adjust based on model
 )
 
@@ -618,7 +618,7 @@ GPT-Pilot helps you build apps with AI Agents. [For more](https://github.com/Pyt
 In your .env set the openai endpoint to your local server. 
 
 ```
-OPENAI_ENDPOINT=http://0.0.0.0:8000
+OPENAI_ENDPOINT=http://0.0.0.0:4000
 OPENAI_API_KEY=my-fake-key
 ```
 </TabItem>
@@ -639,7 +639,7 @@ import guidance
 
 # set api_base to your proxy
 # set api_key to anything
-gpt4 = guidance.llms.OpenAI("gpt-4", api_base="http://0.0.0.0:8000", api_key="anything")
+gpt4 = guidance.llms.OpenAI("{{openai_large}}", api_base="http://0.0.0.0:4000", api_key="anything")
 
 experts = guidance('''
 {{#system~}}
@@ -791,7 +791,7 @@ litellm --model ollama/llama2 \
   --max_tokens 250 \
   --temperature 0.5
 
-# OpenAI-compatible server running on http://0.0.0.0:8000
+# OpenAI-compatible server running on http://0.0.0.0:4000
 ```
 
 ### Performance

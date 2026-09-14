@@ -26,9 +26,9 @@ Credentials can be set directly in the YAML config or via environment variables.
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -68,9 +68,9 @@ With a minimal config:
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -97,7 +97,7 @@ curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "What is the weather in SF?"}],
     "tools": [
       {
@@ -163,7 +163,7 @@ On `post_call` the guardrail sends a JSON envelope:
 {
   "request": {
     "messages": [...],
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "tools": [...]
   },
   "response": {

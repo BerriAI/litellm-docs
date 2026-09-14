@@ -34,7 +34,7 @@ With `sticky_session` enabled (the default), the first time sensitive data is se
 model_list:
   - model_name: cloud-model
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: on-prem-model

@@ -18,8 +18,8 @@ Send LiteLLM Proxy users emails for specific events.
 
 | Category | Details |
 |----------|---------|
-| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user |
-| Supported Email Integrations | • Resend API<br/>• SMTP |
+| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget |
+| Supported Email Integrations | • Resend API<br/>• SendGrid API<br/>• SMTP |
 
 ## Usage
 
@@ -90,11 +90,11 @@ After creating a new user, they will receive an email invite a the email you spe
 
 ### 3. Configure Budget Alerts (Optional)
 
-Enable budget alert emails by adding "email" to the `alerts` list in your proxy configuration:
+Enable budget alert emails by adding "email" to the `alerting` list in your proxy configuration:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 general_settings:
-  alerts: ["email"]
+  alerting: ["email"]
 ```
 
 #### Budget Alert Types
@@ -105,12 +105,52 @@ general_settings:
 
 Both alert types send a maximum of one email per 24-hour period to prevent spam.
 
+#### Per-key thresholds and recipients
+
+By default a max budget alert fires at one threshold and goes only to the email of the user who owns the key, so a key with no owner email sends nothing. To choose your own thresholds and notify additional people, set `max_budget_alert_emails` in the key's metadata. Each entry maps a percentage of that key's `max_budget` to the recipients notified once spend crosses it.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "max_budget": 100,
+    "metadata": {
+      "max_budget_alert_emails": {
+        "50": ["owner@your-company.com"],
+        "75": ["owner@your-company.com", "finance@your-company.com"],
+        "100": ["oncall@your-company.com"]
+      }
+    }
+  }'
+```
+
+With the key above, spend of $50 emails the owner, $75 emails the owner and finance, and $100 emails on-call. Recipients can be a list or a comma separated string, and the key owner's email is always included alongside whoever you configure. Each threshold sends at most one email per key per `EMAIL_BUDGET_ALERT_TTL`. A 100% threshold still fires on the request that exhausts the budget, because the alert check runs before the request is rejected.
+
+Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. To change thresholds on an existing key, send the same `metadata` block to `/key/update`.
+
+There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
+
+#### Default thresholds for every key
+
+Set `default_key_max_budget_alert_emails` to apply a baseline to all keys. Per-key entries merge into the global config one threshold at a time, so a key inherits the global recipients for a threshold and adds its own on top rather than overwriting them.
+
+```yaml showLineNumbers title="proxy_config.yaml"
+general_settings:
+  alerting: ["email"]
+
+litellm_settings:
+  default_key_max_budget_alert_emails:
+    "80": ["platform-team@your-company.com"]
+```
+
 #### Configuration Options
 
 Customize budget alert behavior using these environment variables:
 
-```yaml showLineNumbers title=".env"
+```bash showLineNumbers title=".env"
 # Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%)
+# Only applies to keys without max_budget_alert_emails configured
 EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE=0.8
 
 # Time-to-live for alert deduplication in seconds (default: 24 hours)
@@ -195,11 +235,7 @@ After regenerating the key, the user will receive an email notification with:
 
 ## Email Customization
 
-:::info
-
-Customizing Email Branding is an Enterprise Feature [Get in touch with us for a Free Trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature feature="Customizing Email Branding" />
 
 LiteLLM allows you to customize various aspects of your email notifications. Below is a complete reference of all customizable fields:
 

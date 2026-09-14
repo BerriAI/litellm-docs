@@ -6,6 +6,10 @@ Track Claude Code usage by customer or tags using LiteLLM proxy. This enables gr
 
 Claude Code supports custom headers via `ANTHROPIC_CUSTOM_HEADERS`. LiteLLM automatically tracks requests with specific headers for cost attribution.
 
+## Why Set a Customer Header
+
+Without one, Claude Code still reaches customer tracking on its own. It sends a per-session JSON blob in `metadata.user_id`, which LiteLLM reads as a customer ID, so every session shows up as a separate customer and picks up its own copy of any default customer budget you have configured. Setting `x-litellm-customer-id` overrides that, since headers are checked before any request body field. If you would rather have that traffic carry no customer at all, see [Restricting Which IDs Become Customers](../proxy/customers.md#restricting-which-ids-become-customers).
+
 ## Tracking Options
 
 Choose how you want to attribute costs:
