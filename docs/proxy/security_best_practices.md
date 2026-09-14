@@ -83,3 +83,33 @@ NO_OPENAPI="True"
 ```
 
 Each variable controls a separate surface, so setting only `NO_DOCS` still leaves `/redoc` and `/openapi.json` readable; set all three and restart the proxy. `/redoc` and `/openapi.json` then return 404 and `/` returns only the plain `"LiteLLM: RUNNING"` status string, while inference and management routes are unaffected. See [Restrict all API documentation](./configs#restrict-all-api-documentation-for-productionair-gapped-deployments) for the per-surface variables and for moving the docs to a different path instead of disabling them.
+
+## 10. Restrict file uploads
+
+`POST /v1/files` requires a virtual key like every other proxy route, and the proxy only forwards the uploaded bytes to the configured provider. It never executes, unpacks, or serves the file itself. Even so, treat uploads as untrusted input and limit what the gateway accepts before it reaches the provider.
+
+Set `allowed_file_extensions` under `general_settings` to the extensions your workloads actually need. Matching is case-insensitive against the uploaded filename, so `.jsonl` also accepts `batch.JSONL`. Any other extension, and any filename with no extension, is rejected with a `400` before the file is forwarded. An empty list (`[]`) rejects every upload, and leaving the setting out keeps uploads unrestricted. Pair it with `max_file_size_mb` to cap any upload, `max_batch_file_size_mb` to cap batch input files, and `max_request_size_mb` to cap the whole request body on every route.
+
+```yaml
+general_settings:
+  master_key: sk-1234
+  allowed_file_extensions: [".jsonl", ".pdf", ".txt"]
+  max_file_size_mb: 50
+  max_batch_file_size_mb: 200
+  max_request_size_mb: 250
+```
+
+A rejected upload returns an OpenAI-shaped error:
+
+```json
+{
+  "error": {
+    "message": "File extension '.exe' is not in this proxy's allowed_file_extensions setting. The file was not forwarded to the provider.",
+    "type": "invalid_request_error",
+    "param": "file",
+    "code": "400"
+  }
+}
+```
+
+`blocked_file_extensions` is the older blocklist and is deprecated in favour of the allowlist. It still works, and when both are set the allowlist is checked first and the blocklist is still enforced on whatever passes it. Prefer the allowlist: a blocklist has to name every extension you want to keep out, while an allowlist only has to name the ones you use.
