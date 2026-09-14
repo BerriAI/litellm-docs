@@ -49,7 +49,7 @@ The published GitHub tag is `v1.102.0-rc.1`. These notes compare it with `v1.101
 
 These callouts cover changes to behavior available in `v1.100.1`, the latest stable release
 
-**Organization endpoints now require an enterprise license.** Unlicensed calls to organization APIs return 403 after authentication. Enable the license before using organization APIs. See [PR #40613](https://github.com/BerriAI/litellm/pull/40613)
+**Organization endpoints now require an enterprise license.** On a proxy without `LITELLM_LICENSE`, every `/organization/*` route and `PATCH /v2/organization/{organization_id}` return 403 after authentication, read-only calls such as `/organization/list` included, so automation that only lists organizations breaks too. Existing organizations stay in the database, their budgets keep applying to requests, and setting `LITELLM_LICENSE` restores access with no migration. See [PR #40613](https://github.com/BerriAI/litellm/pull/40613)
 
 **Responses IDs are authorized regardless of their format.** Provider IDs this proxy did not issue are refused by default for retrieval, cancellation, deletion, and chaining. Set `allow_unmanaged_response_ids` only on deployments that intentionally accept unmanaged IDs. See [PR #39548](https://github.com/BerriAI/litellm/pull/39548)
 
