@@ -19,6 +19,17 @@ items={[
 ]}
 />
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/blSVb26UQYg"
+    title="LiteLLM Auto Router: Send Each Prompt to the Right Model"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ## Add an Auto Router (Models + Endpoints → Auto Router)
 
 ![The Add Auto Router dialog in Models + Endpoints, with Configure automatically and template options](../../blog/autorouter_setup_and_testing/auto-setup.png)

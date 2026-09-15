@@ -53,6 +53,17 @@ items={[
 ]}
 />
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/dxlQ285M5C8"
+    title="LiteLLM: SDK, Gateway, and Enterprise, explained"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ---
 
 ## Common Tasks

@@ -10,6 +10,19 @@ This guide walks you through connecting OpenAI Codex to LiteLLM. Using LiteLLM w
 - Track spend and usage with LiteLLM's built-in analytics
 - Control model access with virtual keys
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/avKQz7VqJZE"
+    title="How to Connect Codex with LiteLLM"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
+One could use Codex CLI with LiteLLM as such:
+
 <Image img={require('../../img/litellm_codex.gif')} />
 
 ## Quickstart
