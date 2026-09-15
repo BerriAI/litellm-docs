@@ -654,7 +654,7 @@ litellm_settings:
 ### Default /key/generate params
 Use this, if you need to control the default `max_budget` or any `key/generate` param per key. 
 
-When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies).
+When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies). `allowed_routes` is applied the same way, so you can let every new key call `/key/spend/report` by setting it to `["llm_api_routes", "/key/spend/report"]`. A non-empty `allowed_routes` is an allowlist, so include the route groups the key still needs, and an explicit `key_type` preset on the request takes precedence.
 
 Set `litellm_settings:default_key_generate_params`:
 ```yaml
@@ -665,6 +665,7 @@ litellm_settings:
     duration:     # blank means `null`
     metadata: {"setting":"default"}
     team_id: "core-infra"
+    allowed_routes: ["llm_api_routes", "/key/spend/report"]
 ```
 
 ### ✨ Key Rotations 
@@ -901,7 +902,6 @@ class LitellmUserRoles(str, enum.Enum):
 ### Teams
 
 #### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/team%20management)
-
 
 
 
