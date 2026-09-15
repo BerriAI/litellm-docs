@@ -3,11 +3,10 @@ title: "Auto Router: Maximize Quality & Savings with Our Fuse LLM Classifier"
 slug: auto-router-fuse-v2
 date: 2026-09-14T10:00:00
 authors: [tin]
-draft: true
 image: ./hero.svg
 hide_table_of_contents: false
 description: "We’re improving Fuse V2 by combining complexity and capability assessment to learn where each model succeeds, fails, and needs an upgrade."
-tags: [routing, cost, benchmarks]
+tags: [auto-router, routing, cost, benchmarks]
 ---
 
 We’re improving Fuse V2 by combining complexity and capability assessment to learn where each model succeeds, fails, and needs an upgrade.
