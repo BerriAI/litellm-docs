@@ -113,15 +113,11 @@ You can control the truncation threshold:
 export MAX_BASE64_LENGTH_FOR_LOGGING=64
 ```
 
-### 3. Base64 and Oversized Lines in stdout Logs
+### 3. Oversized Lines in stdout Logs
 
-A provider error can echo the whole request, and at DEBUG level the request payload itself is printed, so one multi-megabyte upload can turn into log lines that take seconds to format and scrub, inline on the event loop. Two caps bound what reaches stdout. Neither changes what logging callbacks receive.
-
-`MAX_BASE64_LENGTH_STDOUT_LOG` (default `4096`) collapses any base64 run longer than that, at every log level and in tracebacks too, to a placeholder like `[base64_data truncated: 2.86MB]`, leaving the text around it in place. `MAX_STRING_LENGTH_STDOUT_LOG` (default `4096`) caps whole lines at INFO and above, keeping the head and tail around a `litellm_truncated skipped N chars` marker; DEBUG lines are left at full length so `--detailed_debug` still shows everything. Set either to `0` to turn it off.
+A provider error can echo the whole request, so one multi-megabyte upload can turn into a log line that takes seconds to format and scrub, inline on the event loop. `MAX_STRING_LENGTH_STDOUT_LOG` (default `4096`) caps what an INFO-or-higher line writes to stdout, keeping the head and tail around a `litellm_truncated skipped N chars` marker. DEBUG lines are left at full length so `--detailed_debug` still shows everything, and logging callbacks still receive the full record. Set it to `0` to turn it off.
 
 ```bash
-# Collapse base64 runs longer than this in stdout log lines (default: 4096, 0 disables)
-export MAX_BASE64_LENGTH_STDOUT_LOG=4096
 # Cap INFO and higher stdout log lines at this many chars (default: 4096, 0 disables)
 export MAX_STRING_LENGTH_STDOUT_LOG=4096
 ```
@@ -133,5 +129,4 @@ export MAX_STRING_LENGTH_STDOUT_LOG=4096
 | `LITELLM_DETAILED_TIMING` | `false` | Enable per-phase timing headers |
 | `MAX_PAYLOAD_SIZE_FOR_DEBUG_LOG` | `102400` | Max payload bytes for full DEBUG serialization |
 | `MAX_BASE64_LENGTH_FOR_LOGGING` | `64` | Max base64 chars before truncation in logging |
-| `MAX_BASE64_LENGTH_STDOUT_LOG` | `4096` | Max base64 chars in a stdout log line before the run collapses to a size placeholder |
 | `MAX_STRING_LENGTH_STDOUT_LOG` | `4096` | Max chars per INFO-or-higher stdout log line before the middle is cut |
