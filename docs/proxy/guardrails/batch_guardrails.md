@@ -61,7 +61,7 @@ The response is the usual file object with one extra field, `litellm_batch_guard
 
 ```bash
 curl -sS http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F purpose=batch \
   -F file=@batch_input.jsonl
 ```

@@ -73,7 +73,7 @@ A response that fails the criteria is rejected with HTTP 422 and the verdicts at
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "chat-model",

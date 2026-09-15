@@ -116,7 +116,7 @@ litellm --config config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "gpt-3.5-turbo-testing",
   "messages": [
@@ -175,7 +175,7 @@ return response
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_small}}",
   "messages": [
@@ -205,7 +205,7 @@ You can also pass the fields as part of the request header with a `opik_*` prefi
 ```shell
 curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'opik_project_name: your-opik-project-name' \
     --header 'opik_thread_id: your-thread-id' \
     --header 'opik_tags: ["streaming-test"]' \

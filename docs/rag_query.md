@@ -13,7 +13,7 @@ RAG Query endpoint: **Search Vector Store → (Rerank) → LLM Completion**
 
 ```bash showLineNumbers title="RAG Query with OpenAI"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -73,7 +73,7 @@ Add a `rerank` configuration to improve result quality:
 
 ```bash showLineNumbers title="RAG Query with Reranking"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -97,7 +97,7 @@ Enable streaming for real-time responses:
 
 ```bash showLineNumbers title="RAG Query with Streaming"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -146,7 +146,7 @@ First, ingest a document using the [/rag/ingest](./rag_ingest.md) endpoint:
 
 ```bash showLineNumbers title="Step 1: Ingest"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -178,7 +178,7 @@ Now query the ingested documents:
 
 ```bash showLineNumbers title="Step 2: Query"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -218,7 +218,7 @@ Response:
 
 ```bash showLineNumbers title="RAG Query with Bedrock"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "bedrock/us.anthropic.{{anthropic}}",
@@ -235,7 +235,7 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
 
 ```bash showLineNumbers title="RAG Query with Vertex AI"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "vertex_ai/{{gemini_pro}}",

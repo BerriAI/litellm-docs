@@ -105,13 +105,13 @@ Once configured, your AgentCore MCP tools are available through LiteLLM like any
 
 ```bash title="List available tools"
 curl http://localhost:4000/mcp-rest/tools/list \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```bash title="Call a tool"
 curl http://localhost:4000/mcp-rest/tools/call \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "server_id": "my_agentcore_mcp",
     "name": "my_agentcore_mcp-your_tool_name",

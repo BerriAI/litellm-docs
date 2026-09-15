@@ -171,7 +171,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "mistral-ocr",
@@ -188,7 +188,7 @@ Upload a file directly using multipart form data. No need to base64-encode the f
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@/path/to/document.pdf"
 ```
@@ -197,7 +197,7 @@ You can also pass optional parameters as additional form fields:
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@screenshot.png" \
   -F 'pages=[0,1,2]' \
@@ -282,7 +282,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 **For file uploads (Proxy, multipart form):**
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@document.pdf"
 ```

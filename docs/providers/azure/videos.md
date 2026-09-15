@@ -120,7 +120,7 @@ $ litellm --model azure/sora-2
 ```shell
 curl --location 'http://0.0.0.0:4000/videos/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "azure-sora-2",
     "prompt": "A cat playing with a ball of yarn in a sunny garden",

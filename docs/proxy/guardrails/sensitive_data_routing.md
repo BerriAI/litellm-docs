@@ -78,7 +78,7 @@ litellm --config config.yaml --detailed_debug
 
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "cloud-model",
@@ -93,7 +93,7 @@ The response `model` field reflects the cloud model.
 
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "cloud-model",

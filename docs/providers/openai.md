@@ -454,7 +454,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{ 
     "model": "openai-model",
     "messages": [
@@ -521,7 +521,7 @@ Then call normally, with no model prefix:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
@@ -553,7 +553,7 @@ response = litellm.completion(
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{ 
     "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
@@ -631,7 +631,7 @@ response = litellm.completion(
 # Option 1: String format (default - no summary)
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
@@ -642,7 +642,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 # summary options: "auto", "detailed", or "concise" (not all supported by all models)
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "openai/responses/{{openai_small}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
@@ -807,7 +807,7 @@ response = litellm.completion(
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Write a function to reverse a string"}],
@@ -890,7 +890,7 @@ response = litellm.completion(
 import litellm
 import os
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 response = litellm.completion(
     model="o3-deep-research-2025-06-26",
@@ -909,7 +909,7 @@ print(response)
 import litellm
 import os
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 # Use the openai/responses/ prefix to enable built-in tools
 response = litellm.completion(
@@ -953,7 +953,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "gpt-4o-with-tools",
     "messages": [
@@ -1012,7 +1012,7 @@ model_list:
     mode: audio_transcription
     
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 2. Start the proxy
@@ -1025,7 +1025,7 @@ litellm --config config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 --form 'model="gpt-4o-transcribe"'
 ```
@@ -1302,7 +1302,7 @@ litellm --config config.yaml --detailed_debug
 ```python
 from openai import OpenAI
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     organization="my-special-org",
     base_url="http://0.0.0.0:4000"
 )

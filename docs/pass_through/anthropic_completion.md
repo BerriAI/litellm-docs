@@ -304,7 +304,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -314,7 +314,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -326,7 +326,7 @@ curl --request POST \
   --url http://0.0.0.0:4000/anthropic/v1/messages \
   --header 'accept: application/json' \
   --header 'content-type: application/json' \
-  --header "Authorization: bearer sk-1234ewknldferwedojwojw" \
+  --header "Authorization: bearer $LITELLM_API_KEY" \
   --data '{
     "model": "{{anthropic}}",
     "max_tokens": 1024,
