@@ -169,6 +169,12 @@ For packing multiple workers into one container, alternative servers (Gunicorn, 
 
 ### Run background jobs on a dedicated worker
 
+:::warning Unreleased feature
+
+`LITELLM_JOB_ROLE` is not implemented on LiteLLM `main` or in a released version. The implementation is still under review in [LiteLLM PR #36618](https://github.com/BerriAI/litellm/pull/36618). The topology below is a preview; setting this variable on a current version has no effect. Do not use it until the release notes identify the first supporting version.
+
+:::
+
 At startup the proxy registers a scheduler of background jobs, and it does that once per Uvicorn worker process rather than once per pod. A pod started with `--num_workers 4` runs four copies of every job, so a deployment of ten such replicas runs forty, and the amount of work multiplies by replicas times processes even though most of these jobs exist to happen once.
 
 Jobs whose effect is shared, resetting budgets or pruning spend logs or pushing a usage export, elect a single owner through Redis before doing anything. Where Redis is not configured there is nothing to elect through, so each of them runs unguarded on every process that registered it. `LITELLM_JOB_ROLE` lets you register those jobs on one deployment instead of on every replica serving traffic, and for a multi-pod deployment without Redis it is the only way to get single execution.
