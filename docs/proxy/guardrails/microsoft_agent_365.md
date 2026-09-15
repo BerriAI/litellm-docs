@@ -3,75 +3,50 @@ import TabItem from '@theme/TabItem';
 
 # Microsoft Agent 365 Guardrail
 
-Send every MCP tool call through the [Microsoft Agent 365](https://learn.microsoft.com/en-us/agent-365/overview) tool evaluation API before LiteLLM executes it. Microsoft Defender scores the pending call and returns an allow or block verdict, and Agent 365 records the call for observability, both attributed to the signed-in user rather than to a service account
+Sends every MCP tool call to the [Microsoft Agent 365](https://learn.microsoft.com/en-us/agent-365/overview) evaluation API before LiteLLM runs it. Microsoft Defender returns allow or block, and the call is recorded on the Microsoft side under the signed-in user
 
 ## Supported modes
 
 | Mode | What it does |
 |------|-------------|
-| `pre_mcp_call` | Evaluates the MCP tool call (tool name, arguments, server) with Microsoft Defender before execution. Blocks when Defender returns a block verdict |
+| `pre_mcp_call` | Evaluates the tool name, arguments and server with Defender before execution. Blocks on a block verdict |
 
-This guardrail only runs on MCP tool calls. It does not inspect chat completions or other LLM traffic
+The guardrail only runs on MCP tool calls. Chat completions and other LLM routes are untouched
 
-## How authentication works
+## How it works
 
-The guardrail uses the Entra On-Behalf-Of (OBO) flow. The caller sends their own Entra access token, audienced to your gateway's app registration, in the `Authorization` header of the MCP request. The guardrail exchanges that token for a delegated Agent 365 token and evaluates the tool call as that user, so Defender policies and audit records apply to the real person, not to the gateway
+Agent 365 evaluates in the context of a signed-in user, so every guarded tool call needs that user's Entra access token, audienced to your gateway app registration, in the `Authorization` header. The guardrail exchanges it On-Behalf-Of (OBO) for a delegated Agent 365 token and evaluates as that user. There is no service or agent identity mode: a call without a user token gets HTTP 401
 
-The LiteLLM credential travels separately in the `x-litellm-api-key` header, which leaves the `Authorization` header free to carry the user's Entra token
+The LiteLLM key travels separately in `x-litellm-api-key`. On a proxy that already accepts Entra tokens through [JWT auth](/docs/proxy/token_auth), the Entra token is the LiteLLM credential too
 
-That only works on MCP servers where `Authorization` stays with the gateway. A server with `auth_type: oauth2`, `oauth_delegate` or `true_passthrough`, or one that lists `Authorization` under `extra_headers`, sends that header upstream or fills it with its own token, so the guardrail never sees an Entra user token there and every tool call on it fails closed with HTTP 401. Forwarding a client API key header such as `x-api-key`, `api-key` or `apikey` under `extra_headers` is fine: it travels upstream in its own header while the Entra token stays in `Authorization`, and sign-in discovery keeps working for that server
+Per tool call
+
+1. LiteLLM admission: key or JWT check, then the key's MCP server and tool permissions. A bad credential fails here with the usual 401 or 403
+2. The guardrail reads the Entra token from `Authorization`. Missing: HTTP 401. On the per-server `/mcp` route the 401 carries a sign-in challenge, see [Browser sign-in](#browser-sign-in-from-the-mcp-client)
+3. OBO exchange, cached for the token's lifetime
+4. The pending call goes to Agent 365: tool name, arguments, server name, `conversationId`, and the tool's description and input schema when the server published them. The user's prompt is never sent
+5. Allow with `defender.status: Evaluated`: LiteLLM runs the tool. Block: HTTP 400 with the Defender message and correlation id, and the MCP server is never contacted. Allowed but not evaluated (`Skipped`, `FailedOpen`): treated as unscanned, `unreachable_fallback` decides
+
+The guardrail can only be attached to MCP servers whose `Authorization` header stays with the gateway: `auth_type` `none`, `api_key`, `bearer_token`, `basic`, `authorization`, `token`, `aws_sigv4` (with no `Authorization` entry in `extra_headers`) and `oauth2_token_exchange`, where the same Entra token is what LiteLLM exchanges for the upstream. On `oauth2`, `oauth2_id_jag`, `oauth_delegate` and `true_passthrough` servers that header already carries an upstream or gateway OAuth token, so the guardrail never sees a user token and refuses every call with 401. Leave it off those servers or move them to `oauth2_token_exchange`. Forwarding a client key header such as `x-api-key` under `extra_headers` is fine, it travels in its own header
 
 ## Prerequisites
 
-Everything below is one-time setup in your Entra tenant, done by a tenant administrator. Step 6 is a check you can run to confirm the setup works before you configure LiteLLM at all
+One-time Entra setup by a tenant administrator
 
-### 1. Onboard your tenant to Agent 365
+1. Ask your Microsoft Agent 365 contact to onboard your tenant. Until then the evaluation endpoint answers `409 BAPForbiddenTenantAccess`
+2. Register a gateway app under **Microsoft Entra ID > App registrations**, single tenant, no redirect URI. Record the client id and tenant id, and create a client secret under **Certificates & secrets**. These are the guardrail's `client_id`, `tenant_id` and `client_secret`
+3. Under **Expose an API**, set the Application ID URI to `api://<client_id>` and add a scope named `access_as_user`. This is the scope your MCP clients request
+4. Still under **Expose an API**, pre-authorize the client id of each application your users call from. For terminal testing, pre-authorize the Azure CLI (Microsoft's public app id `04b07795-8ddb-461a-bbee-02f9e1bf7b46`)
+5. Under **API permissions > Add a permission > APIs my organization uses**, add the **Agent Tools** API (Microsoft's public app id `ea9ffc3e-8a23-4a7d-836d-234d7c7565c1`), delegated permission `ThreatProtection.Evaluate.All`, and grant admin consent. It must be delegated, not application: an application permission mints a token Agent 365 rejects
 
-Ask your Microsoft Agent 365 contact to onboard your Entra tenant id. Until that is done, the evaluation endpoint rejects every request with `409 BAPForbiddenTenantAccess` no matter how the app registration is configured
-
-### 2. Register the gateway app
-
-In the Azure portal, under **Microsoft Entra ID → App registrations → New registration**
-
-- Name it for the gateway, for example `litellm-agent365-gateway`
-- Supported account types: **Accounts in this organizational directory only**
-- Leave the redirect URI empty. The gateway never signs users in itself. The one exception is the loopback redirect described under [Browser sign-in from the MCP client](#browser-sign-in-from-the-mcp-client), which belongs to the MCP client, not the gateway
-
-Record the **Application (client) ID** and **Directory (tenant) ID**. Then under **Certificates & secrets → New client secret**, create a secret and record its value. These three become the guardrail's `client_id`, `tenant_id` and `client_secret`
-
-### 3. Expose an API scope on the gateway app
-
-Under **Expose an API** on that app registration
-
-- Set the Application ID URI to `api://<client_id>`
-- **Add a scope** named `access_as_user`, consentable by admins and users, state Enabled
-
-This scope is what your MCP client requests. The user token it receives is audienced to the gateway app, which is what makes the On-Behalf-Of exchange possible
-
-### 4. Pre-authorize your MCP client applications
-
-Still under **Expose an API**, choose **Add a client application** and enter the client id of each application your users run the agent from, selecting the `access_as_user` scope. Without this, users hit a consent prompt or the token request fails outright
-
-For a quick test you can pre-authorize the Azure CLI (`04b07795-8ddb-461a-bbee-02f9e1bf7b46`), which lets you mint a user token from a terminal with no browser flow
-
-### 5. Grant the Agent 365 permission and consent it
-
-Under **API permissions → Add a permission → APIs my organization uses**, search for **Agent Tools** (application id `ea9ffc3e-8a23-4a7d-836d-234d7c7565c1`), choose **Delegated permissions**, and select `ThreatProtection.Evaluate.All`. Then choose **Grant admin consent**
-
-The permission must be delegated, not application. The guardrail evaluates as the signed-in user, so an application permission mints a token Agent 365 rejects
-
-### 6. Verify the tenant setup before configuring LiteLLM
-
-Sign in as a user in the tenant and mint a token for the gateway app
+Check the setup before touching LiteLLM
 
 ```bash
 az login --tenant <tenant_id>
-az account get-access-token \
-  --tenant <tenant_id> \
-  --resource api://<gateway_client_id>
+az account get-access-token --tenant <tenant_id> --resource api://<gateway_client_id>
 ```
 
-A token here confirms steps 2 through 4. Decode it and check that `aud` is `api://<gateway_client_id>` and that `scp` contains `access_as_user`. This is exactly the token your MCP client will send in the `Authorization` header
+Decode the token and check `aud` is `api://<gateway_client_id>` and `scp` contains `access_as_user`. That is the token your MCP client sends
 
 ## Quick Start
 
@@ -104,20 +79,19 @@ mcp_servers:
 
 ```bash
 export AGENT365_TENANT_ID="<your Entra tenant id>"
-export AGENT365_CLIENT_ID="<gateway app registration client id>"
-export AGENT365_CLIENT_SECRET="<gateway app registration client secret>"
+export AGENT365_CLIENT_ID="<gateway app client id>"
+export AGENT365_CLIENT_SECRET="<gateway app client secret>"
 
 litellm --config config.yaml
 ```
 
 ### 3. Call an MCP tool
 
-The caller authenticates to LiteLLM with `x-litellm-api-key` and carries their Entra user token (audienced to the gateway app) in `Authorization`
-
 ```bash
+TOKEN=$(az account get-access-token --tenant <tenant_id> --resource api://<gateway_client_id> --query accessToken -o tsv)
 curl -X POST http://localhost:4000/mcp-rest/tools/call \
   -H "x-litellm-api-key: Bearer sk-1234" \
-  -H "Authorization: Bearer $ENTRA_USER_TOKEN" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "<server_id from /mcp-rest/tools/list>",
@@ -126,107 +100,104 @@ curl -X POST http://localhost:4000/mcp-rest/tools/call \
   }'
 ```
 
-An allowed call returns the tool result. A call blocked by Defender returns HTTP 400 with the Defender message and a `correlation_id` for the Microsoft audit trail
-
-## End-to-end user workflow
-
-Once the guardrail is on, nothing about the user's experience changes until Defender blocks something. Here is the full round trip
-
-### What the user does
-
-They point an MCP-capable agent at LiteLLM's MCP endpoint and ask an ordinary question. That agent can be Claude Code, VS Code, or your own client. They sign in to Entra once and the client holds the token
-
-The simplest way to register LiteLLM in Claude Code is with a token the user minted themselves
-
-```bash
-claude mcp add --transport http litellm-agent365 \
-  http://localhost:4000/mcp \
-  -H "x-litellm-api-key: Bearer sk-1234" \
-  -H "Authorization: Bearer $ENTRA_USER_TOKEN"
-```
-
-That token expires after about an hour, so for day-to-day use let the client sign the user in itself. See [Browser sign-in from the MCP client](#browser-sign-in-from-the-mcp-client) below
-
-The user then types something like *"use the deepwiki tool on microsoft/vscode: what is the extension host?"*. The agent decides on its own which MCP tool to call
-
-### What happens on each tool call
-
-1. The agent sends `tools/call` to LiteLLM, carrying the LiteLLM key in `x-litellm-api-key` and the user's Entra token in `Authorization`
-2. The `pre_mcp_call` hook reads the user's Entra token off the `Authorization` header
-3. The guardrail exchanges it On-Behalf-Of for a delegated Agent 365 token, cached for the token's lifetime so later calls in the same session skip the exchange
-4. It posts the pending call to the Agent 365 evaluation endpoint: tool name, arguments, server name, and `conversationId`, plus the tool's description and input schema when the MCP server published them in `tools/list`, so Defender can judge the call against what the tool claims to do
-5. Microsoft Defender returns a verdict
-6. On allow with `defender.status` `Evaluated`, LiteLLM executes the tool and returns its result. On block, LiteLLM returns HTTP 400 and never contacts the MCP server. When Agent 365 says `allowed: true` but Defender did not evaluate (`defender.status` is `Skipped` or `FailedOpen`), the call is treated as unscanned and `unreachable_fallback` decides
-
-The user's prompt is not sent to Agent 365. Only the pending tool call is evaluated
-
-### What comes back
-
-An allowed evaluation
-
-```json
-{
-  "allowed": true,
-  "defender": {"status": "Evaluated", "verdict": "Allow"},
-  "observability": {"status": "Emitted"},
-  "correlationId": "9f2c41d8-7b60-4e1a-9a3f-2c5d8e40b117"
-}
-```
-
-A blocked one, which the caller receives as HTTP 400
+An allowed call returns the tool result. A blocked one returns HTTP 400
 
 ```json
 {
   "error": "Blocked by Microsoft Defender",
   "message": "Invocation of 'ask_question' is blocked by Microsoft Threat Detection policies configured by your administrator.",
   "tool": "ask_question",
-  "correlation_id": "9f2c41d8-7b60-4e1a-9a3f-2c5d8e40b117"
+  "correlation_id": "<id to look the call up on the Microsoft side>"
 }
 ```
 
-The agent surfaces that message to the user in its own words, and there is no tool result to report
+Every evaluated call gets a row under **Logs** in the Admin UI ([UI logs](/docs/proxy/ui_logs)) with the guardrail name, latency and verdict. Blocked calls on the `/mcp` transport show as `guardrail_intervened`. Calls refused or blocked on `/mcp-rest/tools/call` have no Logs row yet ([litellm#40555](https://github.com/BerriAI/litellm/issues/40555))
 
-### Where to see it afterwards
+## Caller scenarios
 
-Every evaluated tool call writes a request log row on the proxy, visible under **Logs → Request Logs** in the LiteLLM UI, carrying the guardrail name, the `pre_mcp_call` mode, the evaluation latency and the verdict. Blocked calls appear as failures with a `guardrail_intervened` status and the correlation id in the error detail
+How the user token reaches the request
 
-Use that correlation id to line a call up with the matching record on the Microsoft side
+### A. Applications on a proxy with Entra JWT auth
+
+With `enable_jwt_auth` and Entra as the issuer ([OIDC JWT auth](/docs/proxy/token_auth)), the application's Entra bearer is both the LiteLLM credential and the OBO subject. No `x-litellm-api-key` is needed. The token must be issued for the gateway app (`aud` `api://<gateway_client_id>`, `scp` with `access_as_user`); a token for Microsoft Graph or another API fails JWT admission
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: oid
+    user_email_jwt_field: email
+    user_id_upsert: true
+    team_id_default: entra-users
+```
+
+```bash
+export JWT_PUBLIC_KEY_URL="https://login.microsoftonline.com/<tenant_id>/discovery/keys"
+export JWT_AUDIENCE="api://<gateway_client_id>"
+export JWT_ISSUER="https://sts.windows.net/<tenant_id>/"
+```
+
+`team_id_default` is the team whose MCP permissions JWT callers inherit. Use `https://login.microsoftonline.com/<tenant_id>/v2.0` as the issuer if the app issues v2 tokens
+
+### B. MCP clients that sign the user in (Claude Code, VS Code, Cursor)
+
+The user registers LiteLLM's per-server MCP URL with only the LiteLLM key. The first call gets a 401 with an [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) challenge, the client opens the Microsoft sign-in page, and from then on it attaches and refreshes the Entra token itself. Setup is under [Browser sign-in](#browser-sign-in-from-the-mcp-client); client-side mechanics are on [MCP OAuth](/docs/mcp_oauth)
+
+### C. Custom clients that mint the token themselves
+
+A script with no MCP OAuth support gets a gateway-audience token with MSAL or the Azure CLI (pre-authorized in prerequisite step 4) and sends it next to the LiteLLM key, exactly as in the Quick Start. The client owns refresh; Entra access tokens live about an hour. The same headers work on the `/mcp` transport and in `claude mcp add ... -H "Authorization: Bearer $TOKEN"`. The REST facade is documented on [MCP REST API](/docs/mcp_rest_api)
+
+### D. LiteLLM key only
+
+Admitted by LiteLLM, then refused by the guardrail with HTTP 401 and no tool execution
+
+```json
+{"detail": {"error": "Agent 365 guardrail rejected the tool call", "message": "Tool call 'read_wiki_structure' was blocked because the caller did not present an Entra bearer token; the Agent 365 guardrail authorizes tool calls On-Behalf-Of the signed-in user.", "tool": "read_wiki_structure", "guardrail_name": "agent365-mcp", "guardrail_mode": "pre_mcp_call"}}
+```
+
+On the per-server `/mcp` route the same 401 carries the sign-in challenge, so a capable client starts scenario B. The refusal only applies to servers the guardrail covers; the key keeps working on unguarded servers and on every LLM route
+
+### Two layers of authorization
+
+LiteLLM decides which keys, users and teams reach which servers and tools ([MCP permission management](/docs/mcp_control)). What the tool may do inside the upstream system is decided by the upstream from the credential LiteLLM presents. With a shared API key the upstream sees a service identity; to have it see the signed-in user, use `auth_type: oauth2_token_exchange` ([MCP OBO auth](/docs/mcp_obo_auth)) or per-user OAuth ([MCP OAuth](/docs/mcp_oauth)). The guardrail evaluates the call either way
 
 ## Configuration parameters
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `tenant_id` | Yes | Entra tenant id used for the On-Behalf-Of token exchange. Falls back to `AGENT365_TENANT_ID` |
-| `client_id` | Yes | Client id of the gateway's Entra app registration. Falls back to `AGENT365_CLIENT_ID` |
-| `client_secret` | Yes | Client secret of the gateway's app registration. Also accepted via the standard `api_key` field. Falls back to `AGENT365_CLIENT_SECRET` |
-| `api_base` | No | Agent 365 endpoint. Defaults to the production endpoint `https://agent365.svc.cloud.microsoft`. Falls back to `AGENT365_API_BASE` |
-| `resource_app_id` | No | Application id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
-| `agent_id` | No | Agent identity reported to Agent 365 with every evaluation. Defaults to the caller's key alias |
-| `timeout` | No | Per-request timeout in seconds for the token exchange and the evaluation call. Defaults to 10 |
-| `unreachable_fallback` | No | `fail_closed` (default) blocks the tool call when Agent 365 or Entra cannot be reached, or when Agent 365 allows the call without Defender evaluating it; `fail_open` allows it unscanned. Caller-side failures (missing or rejected bearer token, evaluation 4xx) always block. Entra rejecting the gateway's own credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) counts as unavailable, since the caller cannot fix it by signing in again |
+| `tenant_id` | Yes | Entra tenant id. Falls back to `AGENT365_TENANT_ID` |
+| `client_id` | Yes | Client id of the gateway app registration. Falls back to `AGENT365_CLIENT_ID` |
+| `client_secret` | Yes | Client secret of that app. Also accepted as `api_key`. Falls back to `AGENT365_CLIENT_SECRET` |
+| `api_base` | No | Agent 365 endpoint. Defaults to `https://agent365.svc.cloud.microsoft`. Falls back to `AGENT365_API_BASE` |
+| `resource_app_id` | No | App id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
+| `agent_id` | No | Agent identity reported with every evaluation. Defaults to the caller's key alias |
+| `timeout` | No | Seconds per token exchange and evaluation request. Defaults to 10 |
+| `unreachable_fallback` | No | `fail_closed` (default) blocks when Agent 365 or Entra is unreachable, when Entra rejects the gateway's own credentials, or when Defender did not evaluate. `fail_open` allows those calls unscanned. Caller-side failures always block |
 
 ## Failure behavior
 
 | Situation | Result |
 |-----------|--------|
-| Defender verdict is block | HTTP 400 with the Defender message and correlation id. Always blocks |
-| Agent 365 rejects the evaluation request (HTTP 4xx other than 408/429) | HTTP 400. Always blocks, regardless of `unreachable_fallback` |
-| Agent 365 allows but Defender did not evaluate (`defender.status` is `Skipped` or `FailedOpen`) | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
-| Caller sent no Entra bearer token | HTTP 401 with a `WWW-Authenticate` challenge pointing at the server's protected resource metadata, so a compatible client can sign the user in and retry. Always blocks, regardless of `unreachable_fallback` |
-| OBO exchange rejected because of the caller's token (`invalid_grant`, consent missing, token expired, wrong audience, or a malformed assertion Entra reports as `invalid_client` with an AADSTS50027xx code) | HTTP 401. Always blocks, regardless of `unreachable_fallback`. On a single-server streamable connect the 401 carries the same `WWW-Authenticate` challenge as a missing token, so the client signs the user in again instead of retrying with the bad token |
-| OBO exchange rejected because of the gateway's credentials (`invalid_client` without an AADSTS50027xx code, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed`: HTTP 503 naming the guardrail setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt the user to sign in |
-| Agent 365 or Entra returns 408 or 429 (throttled) | HTTP 503, recorded as Throttled. Always blocks, regardless of `unreachable_fallback` |
-| Agent 365 or Entra unreachable, timeout, or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| Defender blocks | HTTP 400 with the Defender message and correlation id. Always blocks |
+| Agent 365 rejects the request (4xx other than 408/429) | HTTP 400. Always blocks |
+| Allowed but Defender did not evaluate (`Skipped`, `FailedOpen`) | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| No Entra token, or Entra rejects the caller's token (`invalid_grant`, expired, wrong audience, consent missing, malformed assertion) | HTTP 401 naming the guardrail. Always blocks. On the per-server `/mcp` route the response carries the `WWW-Authenticate` challenge so the client signs the user in |
+| Entra rejects the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed`: HTTP 503 naming the setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt |
+| Agent 365 or Entra returns 408 or 429 | HTTP 503, recorded as Throttled. Always blocks |
+| Agent 365 or Entra unreachable, timeout or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
 ## Conversation grouping
 
-Evaluations are grouped on the Microsoft side by `conversationId`. The guardrail sends the MCP session id when the transport has one (the `Mcp-Session-Id` of a stateful streamable session), so every tool call a client makes in one session lands in one Defender conversation. Stateless calls, such as `/mcp-rest/tools/call` or a streamable request without a session, fall back to LiteLLM's own request id for the tool call, the same id the Logs page shows for that row, and the guardrail generates a fresh id only if neither exists. The Logs row for each call keeps its own request id either way
+Agent 365 groups evaluations by `conversationId`. The guardrail sends the `Mcp-Session-Id` when the transport has one, so all calls in one MCP session land in one Defender conversation. Stateless calls (`/mcp-rest/tools/call`, or a streamable request without a session) use LiteLLM's request id for that call, the same id the Logs row shows
 
 ## Browser sign-in from the MCP client
 
-When the guardrail applies to an MCP server and the request carries no Entra bearer token, LiteLLM answers `tools/list` and `tools/call` with HTTP 401 and a `WWW-Authenticate: Bearer resource_metadata="..."` header that points at that server's [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) protected resource metadata. The metadata names your Entra tenant as the authorization server and lists the scope the client should request. MCP clients that implement the MCP authorization spec (Claude Code does) follow that pointer, open a browser for Entra sign-in, cache the token and refresh it on their own, then retry the call. The user never handles a token, and the `x-litellm-api-key` header keeps carrying the LiteLLM key exactly as before
+On the per-server routes `/<server>/mcp` and `/mcp/<server>`, a request without an Entra token is answered with HTTP 401 and `WWW-Authenticate: Bearer resource_metadata="..."` pointing at that server's RFC 9728 metadata, which names your tenant as the authorization server and lists the scope to request. Clients that implement MCP authorization (Claude Code, VS Code, Cursor) open the browser, sign the user in, cache and refresh the token, and retry. The `x-litellm-api-key` header keeps carrying the LiteLLM key. The aggregate `/mcp` route and the REST facade do not challenge, so register each guarded server by its own URL
 
-Two things have to be true for the challenge to appear. The server must leave the caller's `Authorization` header with the gateway as described under How authentication works (an `oauth2` server advertises its own sign-in instead), and an Agent 365 guardrail with `default_on: true` must apply to the caller (a key or team that opted out of it is not challenged). A guardrail that is only attached to a key, team, or policy still enforces on every tool call and answers HTTP 401 when the token is missing or refused, but it does not challenge at connect time and the anonymous protected resource metadata does not advertise it, because the gateway cannot tell which key's guardrail an unauthenticated client is about to use. Give such a server a default-on guardrail if you want browser sign-in. The challenge also appears when the token the client presents is one Entra refuses to exchange, for example an expired token or one issued for another audience; the connect fails with the same 401 and the client signs the user in again. A key that has no grant to the server gets the ordinary HTTP 403 for that server before any sign-in challenge. The scope the metadata advertises is the server's `scopes` when set, otherwise `api://<client_id>/access_as_user` for the guardrail's gateway app, which is the scope prerequisite step 3 creates. Set `scopes` when you expose a different Application ID URI, for example one per MCP server. The connect-time challenge only exists on the single-server streamable routes `/<server>/mcp` and `/mcp/<server>`. A client connected to the aggregate `/mcp` route, or to a path that names several servers, initializes without a challenge and sees the missing-token failure as a tool-call error with no `WWW-Authenticate` header, so it has to send an Entra token on its own
+The challenge appears when the server keeps `Authorization` with the gateway (see How it works) and an Agent 365 guardrail with `default_on: true` applies to the caller. A guardrail attached only to a key, team or policy still enforces on every call but does not challenge at connect time, because the anonymous metadata cannot tell which key's guardrail a client is about to use. An expired or wrong-audience token gets the same challenge, so the client signs in again. A key with no grant to the server gets the ordinary 403 first
+
+The advertised scope is the server's `scopes` when set, otherwise `api://<client_id>/access_as_user`. Entra requires the scope to belong to the resource the client says it is calling, so for a public URL name the scope after it and add that URL as an Application ID URI on the gateway app with `access_as_user` under it
 
 ```yaml
 mcp_servers:
@@ -237,9 +208,7 @@ mcp_servers:
       - https://litellm.example.com/deepwiki/mcp/access_as_user
 ```
 
-Entra checks that the scope the client requests belongs to the resource the client says it is calling, so name the scope after the URL the client uses for that MCP server. Under **Expose an API** on the gateway app registration, add an Application ID URI equal to that URL (`https://litellm.example.com/deepwiki/mcp` for the example above) and add the `access_as_user` scope under it. A token minted for that scope is still audienced to the gateway app, so the On-Behalf-Of exchange works unchanged
-
-Entra does not support dynamic client registration, so the client needs a registered client id. Add a **Mobile and desktop applications** platform to the gateway app registration (or a separate public client app) with the loopback redirect the client uses, `http://localhost:51001/callback` in the Claude Code example below, and pre-authorize that client id for the scope as in prerequisite step 4. Then register the server in the client with the client id and no `Authorization` header
+Entra has no dynamic client registration, so the client needs a registered client id: add a **Mobile and desktop applications** platform (on the gateway app or a separate public client) with the loopback redirect the client uses, and pre-authorize it for the scope as in prerequisite step 4. Then register the server without an `Authorization` header
 
 ```json
 {
@@ -254,7 +223,7 @@ Entra does not support dynamic client registration, so the client needs a regist
 }
 ```
 
-On the first call Claude Code opens the browser, the user signs in to Entra, and the tool call proceeds. `/mcp` in Claude Code then shows the server as connected and authenticated. The challenge names the metadata document for the route the client connected to (`/.well-known/oauth-protected-resource/<server>/mcp` for `/<server>/mcp`, `/.well-known/oauth-protected-resource/mcp/<server>` for `/mcp/<server>`), and that document's `resource` equals the URL the client used. MCP clients built on the TypeScript SDK check that equality before starting sign-in, so keep the client's server URL, the Application ID URI, and the scope on the same form. You can see the raw challenge yourself
+On the first call Claude Code opens the browser, the user signs in, and the call proceeds. Keep the client's server URL, the Application ID URI and the scope on the same form: the metadata's `resource` equals the URL the client used and TypeScript SDK clients check that before signing in. To see the raw challenge
 
 ```bash
 curl -i -X POST https://litellm.example.com/deepwiki/mcp \
@@ -274,7 +243,7 @@ curl -s https://litellm.example.com/.well-known/oauth-protected-resource/deepwik
 
 ```json
 {
-  "authorization_servers": ["https://login.microsoftonline.com/<tenant id>/v2.0"],
+  "authorization_servers": ["https://login.microsoftonline.com/<tenant_id>/v2.0"],
   "resource": "https://litellm.example.com/deepwiki/mcp",
   "scopes_supported": ["https://litellm.example.com/deepwiki/mcp/access_as_user"]
 }
