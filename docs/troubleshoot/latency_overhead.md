@@ -113,6 +113,15 @@ You can control the truncation threshold:
 export MAX_BASE64_LENGTH_FOR_LOGGING=64
 ```
 
+### 3. Oversized Lines in stdout Logs
+
+A provider error can echo the whole request, so one multi-megabyte upload can turn into a log line that takes seconds to format and scrub, inline on the event loop. `MAX_STRING_LENGTH_STDOUT_LOG` (default `4096`) caps what an INFO-or-higher line writes to stdout, keeping the head and tail around a `litellm_truncated skipped N chars` marker. DEBUG lines are left at full length so `--detailed_debug` still shows everything, and logging callbacks still receive the full record. Set it to `0` to turn it off.
+
+```bash
+# Cap INFO and higher stdout log lines at this many chars (default: 4096, 0 disables)
+export MAX_STRING_LENGTH_STDOUT_LOG=4096
+```
+
 ## Environment Variables Reference
 
 | Variable | Default | Description |
@@ -120,3 +129,4 @@ export MAX_BASE64_LENGTH_FOR_LOGGING=64
 | `LITELLM_DETAILED_TIMING` | `false` | Enable per-phase timing headers |
 | `MAX_PAYLOAD_SIZE_FOR_DEBUG_LOG` | `102400` | Max payload bytes for full DEBUG serialization |
 | `MAX_BASE64_LENGTH_FOR_LOGGING` | `64` | Max base64 chars before truncation in logging |
+| `MAX_STRING_LENGTH_STDOUT_LOG` | `4096` | Max chars per INFO-or-higher stdout log line before the middle is cut |
