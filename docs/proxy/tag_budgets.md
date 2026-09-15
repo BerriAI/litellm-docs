@@ -180,6 +180,33 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 </Tabs>
 
+#### Setting the tag from a custom guardrail
+
+A [custom guardrail](guardrails/custom_guardrail.md) running in `pre_call` mode can decide which tag a request belongs to and set it on the request. Tags a pre-call guardrail adds are budget-checked right after the guardrails run and before the model is called, so an over-budget tag is rejected with the same 429 and message as a tag sent in the request body (the error `type` on that path is `rate_limit_error`):
+
+```python
+from litellm.integrations.custom_guardrail import CustomGuardrail
+
+
+class TeamTagGuardrail(CustomGuardrail):
+    async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+        metadata_key = "litellm_metadata" if "litellm_metadata" in data else "metadata"
+        metadata = data.setdefault(metadata_key, {})
+        metadata.setdefault("tags", []).append("engineering")
+        return data
+```
+
+```yaml
+guardrails:
+  - guardrail_name: team-tag
+    litellm_params:
+      guardrail: custom_guardrail.TeamTagGuardrail
+      mode: pre_call
+      default_on: true
+```
+
+Requests to a model with no configured pricing skip tag budget checks, whether the tag came from the body or from a guardrail.
+
 ### 4. Test It
 
 Make requests with the virtual key from step 2 until the tag budget is exceeded. You do **not** need to pass `metadata.tags` if the tag is already on the key:
@@ -217,7 +244,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
     "message": "Budget has been exceeded! Tag=engineering Current cost: 505.50, Max budget: 500.0",
     "type": "budget_exceeded",
     "param": null,
-    "code": "400"
+    "code": "429"
   }
 }
 ```
