@@ -1308,6 +1308,11 @@ router_settings:
 | OPENAI_ORGANIZATION | Organization identifier for OpenAI
 | OPENAI_SERVICE_ACCOUNT_ID | OpenAI platform service account ID (`user-...`) that workload identity federation authenticates as. Unrelated to LiteLLM virtual-key service accounts
 | OPENAPI_URL | The path to the OpenAPI JSON endpoint. **By default this is "/openapi.json"**
+| OPENCODE_API_KEY | Shared OpenCode API key, used as a fallback when no per-surface key is set
+| OPENCODE_GO_API_BASE | Base URL for the `opencode_go` provider, with or without a trailing `/v1`. **Default is `https://opencode.ai/zen/go/v1`**
+| OPENCODE_GO_API_KEY | API key for the `opencode_go` provider. Falls back to `OPENCODE_API_KEY` when unset
+| OPENCODE_ZEN_API_BASE | Base URL for the `opencode_zen` provider, with or without a trailing `/v1`. **Default is `https://opencode.ai/zen/v1`**
+| OPENCODE_ZEN_API_KEY | API key for the `opencode_zen` provider. Falls back to `OPENCODE_API_KEY` when unset
 | OPENID_BASE_URL | Base URL for OpenID Connect services
 | OPENID_CLIENT_ID | Client ID for OpenID Connect authentication
 | OPENID_CLIENT_SECRET | Client secret for OpenID Connect authentication
