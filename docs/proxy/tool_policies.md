@@ -1,8 +1,8 @@
 # Tool Policies
 
-Tool Policies is a proxy-managed registry of tools and their input and output policies. The proxy collects tool names during its spend update flow and asynchronously upserts them into `LiteLLM_ToolTable`. A newly created tool has `input_policy: "untrusted"` and `output_policy: "untrusted"`. The Tool Policy Guardrail reads this registry and enforces the policies for tool requests and responses
+Tool Policies is a registry of every tool the proxy has seen in traffic (OpenAI and Anthropic request `tools`, response tool calls, and MCP tool calls), with an input policy and an output policy per tool. Tools are discovered automatically as requests pass through the proxy, and a newly discovered tool starts with `input_policy: "untrusted"` and `output_policy: "untrusted"`. The Tool Policy Guardrail reads this registry and enforces the policies on requests and responses
 
-The registry stores the tool name, origin, policy values, call count, team and key metadata when available, user agent, and discovery and usage timestamps. Existing rows keep their policy values when the proxy increments their call count. The registry is synchronized into an in-memory policy registry for request-time enforcement. In practical terms, the input policy determines whether a tool call is allowed or denied
+The registry keeps the tool name, origin, policy values, call count, the team and key that used it when available, user agent, and first and last seen timestamps. Changing a policy never resets the call count, and later calls never reset a policy you set
 
 ## Tool Policies and the Tool Permission Guardrail
 
@@ -10,13 +10,13 @@ Tool Policies manages trust relationships between tools. Its input policy can al
 
 An `untrusted` input policy accepts any input, including data from untrusted tool outputs. A `trusted` input policy requires trusted input. A `blocked` input policy prohibits the tool. An `untrusted` output policy may contain unsafe content and can trigger downstream trust-chain blocks. A `trusted` output policy is treated as verified safe and does not trigger those blocks
 
-The [Tool Permission Guardrail](./guardrails/tool_permission) provides a separate rule-based control. It matches configured tool names and, optionally, tool types and arguments, then applies its configured allow or deny action. Use Tool Permission Guardrail rules when authorization depends on matching configured patterns. Use Tool Policies when the control is based on the trust classification of a discovered tool and the trust chain between tool outputs and inputs. The source does not define precedence or a combined decision algorithm between these guardrails
+The [Tool Permission Guardrail](./guardrails/tool_permission) provides a separate rule-based control. It matches configured tool names and, optionally, tool types and arguments, then applies its configured allow or deny action. Use Tool Permission Guardrail rules when authorization depends on matching configured patterns. Use Tool Policies when the control is based on the trust classification of a discovered tool and the trust chain between tool outputs and inputs. Both guardrails can run on the same proxy, and a request has to pass each one that is configured
 
 ## Quick start
 
 The current Admin UI route is `http://localhost:4000/ui/tool-policies`. The legacy URL `http://localhost:4000/ui/?page=tool-policies` redirects to this route
 
-Tool Policies is available only to users with the UI `viewToolPolicies` capability. The UI assigns that capability to its admin roles and displays an access message for users without it. The UI does not fetch the tool list when the capability is missing
+Tool Policies is only available to proxy admins. Other roles see a message that the page is admin only
 
 The overview displays counts for tools discovered today, total discovered tools, blocked tools, and active teams. It can also display newly discovered tools that still have the default untrusted input policy. The table supports search, policy and team or key filters, refresh, and client-side pagination. Its columns include discovery time, tool name, input policy, output policy, call count, team name, key hash, key name, and user agent
 
@@ -26,7 +26,7 @@ The detail view also displays team and key overrides that block the tool. To add
 
 ## Management API
 
-All Tool Policy management routes use the proxy's authenticated API dependency. Send the proxy master key or another credential accepted by `user_api_key_auth` in the `Authorization` header. The routes return `401` or another authentication error when authentication fails. The source does not apply the UI capability check to these route declarations, so API access should be evaluated separately from Admin UI visibility
+All Tool Policy management routes require proxy authentication. Send the proxy master key in the `Authorization` header
 
 ### List tools
 
@@ -46,7 +46,7 @@ curl "http://localhost:4000/v1/tool/list?input_policy=blocked" \
 
 ### Get one tool
 
-`GET /v1/tool/{tool_name}` returns a single `LiteLLM_ToolTableRow`. URL-encode the tool name when it contains characters that have meaning in a URL
+`GET /v1/tool/{tool_name}` returns a single tool row. URL-encode the tool name when it contains characters that have meaning in a URL
 
 ```bash
 curl "http://localhost:4000/v1/tool/example_tool" \
@@ -227,6 +227,4 @@ See [Proxy configuration settings](./config_settings) for the complete environme
 
 ## Discovery behavior
 
-The spend update flow queues tool names from MCP tool call metadata, OpenAI-format request tools, Anthropic Messages request tools, and response tool calls. The queue deduplicates each tool name within a flush cycle, and the registry writer increments `call_count` on later upserts while preserving existing policies
-
-The source contains different descriptions for registry discovery and usage indexing. The usage log and spend routes state that declaring a tool without invoking it does not create a usage entry, while the registry extraction code also scans request tool declarations. Because these paths do not establish the same behavior, this page does not promise whether a declared but unused tool creates a registry row
+Tools are registered asynchronously after the request completes, as part of the same background flush that records spend, so a tool can take a few seconds to appear in the registry. Tool names are taken from MCP tool call metadata, OpenAI-format request `tools`, Anthropic Messages request `tools`, and response tool calls. Usage logs on a tool's detail page only include requests where the model actually invoked the tool
