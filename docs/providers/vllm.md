@@ -205,17 +205,49 @@ The option applies only to `hosted_vllm` and is not sent to the backend. When en
 
 The Responses-to-Chat bridge can forward supported raw reasoning input, including `reasoning.content` with an empty `summary`, through the same option. Native vLLM Responses requests are unchanged, and opaque encrypted reasoning does not become portable.
 
-### Backend and template compatibility
+### Selecting the outgoing reasoning field
+
+Set `reasoning_content_field: reasoning` in a model's `litellm_params` to normalize supplied assistant history to the `reasoning` field. This is supported for `hosted_vllm` and `openai` Chat Completions, including Responses requests using `use_chat_completions_api: true`. The default, `reasoning_content`, keeps the existing message representation
+
+```yaml
+model_list:
+  - model_name: vllm-history
+    litellm_params:
+      model: hosted_vllm/your-served-model
+      api_base: http://localhost:8000/v1
+      forward_reasoning_content: true
+      reasoning_content_field: reasoning
+      use_chat_completions_api: true
+  - model_name: compatible-history
+    litellm_params:
+      model: openai/your-served-model
+      api_base: http://localhost:8000/v1
+      api_key: your-backend-key
+      reasoning_content_field: reasoning
+      use_chat_completions_api: true
+```
+
+A supplied non-null `reasoning` value wins, including an empty string. Otherwise, LiteLLM uses non-null `reasoning_content`. It removes `reasoning_content` from the outgoing copy without changing the original messages or moving reasoning into visible content. The option itself is never sent to the backend
+
+For `hosted_vllm`, this field selection does not grant permission to forward history: `forward_reasoning_content` must also be true. With normalization selected and forwarding disabled or omitted, both assistant reasoning field names are removed. The `openai` adapter retains its existing forwarding behavior and does not require the hosted-only permission
+
+The selection is independent of `chat_template_kwargs.preserve_thinking`. It does not change native Responses, client responses, or signed thinking-block handling. A compatible backend and template are still required
+
+In vLLM revision `2a02f6efe319c885e3ccbcecde402e0028f9ec1e`, Chat Completions already normalizes incoming `reasoning_content` to `reasoning`, while `/tokenize` lacks that normalization. Selecting the canonical field improves consistency between these endpoints; it does not establish a fix for lost Chat Completions history or a performance improvement. Direct `/tokenize` tests alone cannot establish what the Chat Completions request validator preserves
+
+### Backend versions
 
 Check both the vLLM request parser and the model's chat template before enabling forwarding. A backend returning reasoning does not necessarily accept it in previous assistant messages.
 
-The [vLLM v0.12.0](https://github.com/vllm-project/vllm/blob/v0.12.0/vllm/entrypoints/chat_utils.py#L1532) and [v0.13.0](https://github.com/vllm-project/vllm/blob/v0.13.0/vllm/entrypoints/chat_utils.py) parsers accept `reasoning_content` and expose it to the template. Newer versions may normalize that input name to `reasoning`. LiteLLM forwards `reasoning_content` without adding a duplicate `reasoning` field or selecting behavior by model name. Older versions, vendor forks, and custom templates need separate verification.
+The [vLLM v0.12.0](https://github.com/vllm-project/vllm/blob/v0.12.0/vllm/entrypoints/chat_utils.py#L1532) and [v0.13.0](https://github.com/vllm-project/vllm/blob/v0.13.0/vllm/entrypoints/chat_utils.py) parsers accept `reasoning_content` and expose it to the template. Newer versions may normalize that input name to `reasoning`. Keep the default field for backends requiring `reasoning_content`. Older versions, vendor forks, and custom templates need separate verification
 
 `forward_reasoning_content` controls transport. A setting such as `chat_template_kwargs.preserve_thinking` controls which received history the template uses. In [Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next#disable-preserved-thinking), `preserve_thinking: false` removes reasoning from earlier user turns but retains reasoning within the current tool sequence. It does not mean every assistant reasoning field should be deleted before reaching vLLM.
 
 ### Caching
 
 When LiteLLM response caching is enabled, the effective forwarding setting separates enabled requests from requests using the default or false setting. Omitting the option and setting it to false share the existing behavior. Semantic caching retains its existing similarity rules within each setting.
+
+Selecting `reasoning_content_field: reasoning` also uses a separate cache identity. Omitting field selection or explicitly selecting `reasoning_content` retains the existing keys
 
 Backend prefix caching is separate from LiteLLM response caching. Forwarding history can change rendered tokens, while whitespace changes may have no effect if the template trims the field. Check the rendered tokens with the actual tokenizer and template before drawing cache conclusions. This option provides no measured latency, cache-hit, or reasoning-quality guarantee.
 
