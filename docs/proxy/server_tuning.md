@@ -126,6 +126,17 @@ docker run \
     --run_hypercorn
 ```
 
+## Outbound HTTP/2 to providers
+
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+
+```yaml
+litellm_settings:
+  http2: true
+```
+
+Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2.
+
 ## Granian ASGI server [Beta]
 
 :::info Beta feature
