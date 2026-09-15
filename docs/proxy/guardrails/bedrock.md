@@ -174,22 +174,9 @@ These settings apply to both `/v1/chat/completions` and native `/v1/messages` st
 
 ## Contextual Grounding
 
-A Bedrock guardrail with a contextual grounding policy only scores a response when the ApplyGuardrail payload tags a reference text as `grounding_source` and the question as `query`. A payload holding the response text alone is never graded, so the grounding and relevance thresholds never fire and every answer passes. LiteLLM can supply those tags in two ways.
+Bedrock only scores contextual grounding when it is told what the reference text and the question are. By default LiteLLM sends just the model response, so a grounding policy never blocks anything.
 
-The explicit way is to tag the content parts in the request yourself. A `system` or `developer` message part with `"type": "grounding_source"` is sent as the reference text and a `user` message part with `"type": "query"` as the question. This works on `/v1/chat/completions` and on `/guardrails/apply_guardrail` with `"input_type": "response"`, with no guardrail config change.
-
-```json
-{
-  "model": "{{openai_small}}",
-  "guardrails": ["bedrock-grounding"],
-  "messages": [
-    {"role": "system", "content": [{"type": "grounding_source", "text": "Store policy: purchases can be returned within 30 days of delivery for a full refund."}]},
-    {"role": "user", "content": [{"type": "query", "text": "How long is the return window?"}]}
-  ]
-}
-```
-
-For plain requests that carry no tagged parts, set `contextual_grounding_from_messages: true` on the guardrail. Post-call and response scans then send the `system` and `developer` messages as `grounding_source` and the latest `user` message as `query`, with the model's answer as the text under review. Tagged parts still take precedence when both are present. Requests with no system or developer message, or no user message, keep the untagged payload and are not graded. Pre-call and during-call scans never derive grounding context.
+Set `contextual_grounding_from_messages: true` and post-call checks send the system prompt as the grounding source and the latest user message as the query. Answers that contradict the system prompt get blocked.
 
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 guardrails:
@@ -203,26 +190,7 @@ guardrails:
       contextual_grounding_from_messages: true
 ```
 
-An answer that contradicts the system prompt now comes back as HTTP 400:
-
-```json
-{
-  "error": {
-    "message": "Violated guardrail policy",
-    "type": "invalid_request_error",
-    "code": "400",
-    "provider_specific_fields": {
-      "error": "Violated guardrail policy",
-      "bedrock_guardrail_response": "Blocked by Bedrock Guardrails: response not grounded in the reference source.",
-      "assessments": [
-        {"policy": "contextualGroundingPolicy", "matches": [{"category": "filters", "type": "GROUNDING", "threshold": 0.7, "score": 0.03, "action": "BLOCKED"}]}
-      ]
-    }
-  }
-}
-```
-
-The flag defaults to `false`, so existing guardrails keep sending the untagged payload. Leave it off for guardrails without a contextual grounding policy: each graded scan bills one `contextualGroundingPolicyUnit`, and Bedrock rejects the whole call with a 400 when the `query` is longer than about 1,000 characters or the response longer than about 5,000 characters. Grounding payloads are sent in one piece rather than chunked, because splitting them changes the score.
+The flag defaults to `false`. Each scan with it on bills one Bedrock contextual grounding unit, and Bedrock rejects queries over roughly 1,000 characters, so only enable it on guardrails that have a grounding policy.
 
 ## Resource-less Checks: InvokeGuardrailChecks
 
