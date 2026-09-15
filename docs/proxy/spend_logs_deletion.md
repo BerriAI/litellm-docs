@@ -41,7 +41,7 @@ litellm_settings:
 
 The cleanup job exists only if you ask for it. It is registered at proxy startup when `maximum_spend_logs_retention_period` or `maximum_autorouter_session_retention_period` is set, and not otherwise. With neither set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
 
-When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
+When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`. The first run lands shortly after startup, 60 seconds plus a random offset of up to 300 seconds so a fleet of pods does not all fire at the same instant (tune with `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` and `SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS`), and later runs follow the interval from there. This matters for deployments that restart more often than the interval: the schedule lives in the process, so a proxy redeployed every few hours would otherwise never reach its first run. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
 
 ### What gets deleted
 
