@@ -114,7 +114,7 @@ print(response.choices[0].message.tool_calls)
 
 ### Responses API
 
-Cheaper Inference exposes a stateless OpenAI Responses layer, so `litellm.responses` works with the same prefix. Requests must be stateless: `previous_response_id`, stored responses, and provider-hosted tools are not supported by the gateway.
+Cheaper Inference exposes a stateless OpenAI Responses layer, so `litellm.responses` works with the same prefix. The gateway rejects a request that does not ask for a stateless response, so LiteLLM sends `store=false` for this provider and you do not need to pass it yourself. `previous_response_id`, stored responses, and provider-hosted tools are not supported by the gateway.
 
 ```python showLineNumbers title="Cheaper Inference Responses API"
 import os
@@ -125,7 +125,6 @@ os.environ["CHEAPERINFERENCE_API_KEY"] = ""  # your Cheaper Inference API key
 response = litellm.responses(
     model="cheaperinference/{{openai_small}}",
     input="Hello!",
-    store=False,
 )
 
 print(response)
