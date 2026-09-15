@@ -492,6 +492,7 @@ const sidebars = {
                 "mcp_guardrail",
                 "mcp_server_submissions",
                 "mcp_toolsets",
+                "proxy/tool_policies",
                 {
                   type: "link",
                   label: "MCP Troubleshooting Guide",
