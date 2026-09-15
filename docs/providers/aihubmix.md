@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `aihubmix/` |
 | Link to Provider Doc | [AIHubMix Documentation ↗](https://docs.aihubmix.com/en) |
 | Base URL | `https://aihubmix.com/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | `/chat/completions` |
 
 <br />
 <br />
