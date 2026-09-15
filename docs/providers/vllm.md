@@ -233,6 +233,8 @@ For `hosted_vllm`, this field selection does not grant permission to forward his
 
 Omitting either transport option from a model update preserves its stored value
 
+Use `reasoning_content` or `reasoning` as the field selector. Other supplied values return HTTP 400 before contacting the backend on these Chat Completions routes
+
 The selection is independent of `chat_template_kwargs.preserve_thinking`. It does not change native Responses, client responses, or signed thinking-block handling. A compatible backend and template are still required
 
 In vLLM revision `2a02f6efe319c885e3ccbcecde402e0028f9ec1e`, Chat Completions already normalizes incoming `reasoning_content` to `reasoning`, while `/tokenize` lacks that normalization. Selecting the canonical field improves consistency between these endpoints; it does not establish a fix for lost Chat Completions history or a performance improvement. Direct `/tokenize` tests alone cannot establish what the Chat Completions request validator preserves
