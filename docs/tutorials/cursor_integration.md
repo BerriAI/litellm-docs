@@ -14,6 +14,17 @@ Cursor does not officially support AI Gateways, our work here is best effort fro
 Newer Cursor builds no longer show the **Override OpenAI Base URL** setting on every plan. If your Cursor does not have it, use the [Azure OpenAI fallback](#fallback-azure-openai-settings) below instead of the setup in this section.
 :::
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/oNkMgelVsEA"
+    title="How to Connect Cursor to a LiteLLM Gateway"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ## Quick Reference
 
 | Setting | Value |

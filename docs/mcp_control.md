@@ -6,6 +6,17 @@ import Image from '@theme/IdealImage';
 
 Control which MCP servers and tools can be accessed by specific keys, teams, or organizations in LiteLLM. When a client attempts to list or call tools, LiteLLM enforces access controls based on configured permissions.
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/D0LjEDVuTTM"
+    title="Enterprise MCP with LiteLLM: auth, tool permissions and budget"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ## Overview
 
 LiteLLM provides fine-grained permission management for MCP servers, allowing you to:
