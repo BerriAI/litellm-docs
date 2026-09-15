@@ -1258,6 +1258,7 @@ const sidebars = {
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
+        "providers/wallaby",        
         {
           type: "category",
           label: "WatsonX",
