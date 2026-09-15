@@ -936,6 +936,7 @@ router_settings:
 | DEFAULT_SQS_FLUSH_INTERVAL_SECONDS | Default flush interval for SQS logging. Default is 10
 | DEFAULT_S3_BATCH_SIZE | Default batch size for S3 logging. Default is 512
 | DEFAULT_S3_FLUSH_INTERVAL_SECONDS | Default flush interval for S3 logging. Default is 10
+| DEFAULT_S3_MAX_CONCURRENT_UPLOADS | Maximum simultaneous S3 PUT uploads per flush for s3_v2 logging. Default is 16
 | DEFAULT_SLACK_ALERTING_THRESHOLD | Default threshold for Slack alerting. Default is 300
 | DEFAULT_SOFT_BUDGET | Default soft budget for LiteLLM proxy keys. Default is 50.0
 | DEFAULT_TRIM_RATIO | Default ratio of tokens to trim from prompt end. Default is 0.75
