@@ -1246,6 +1246,7 @@ router_settings:
 | LOGGING_WORKER_MAX_TIME_PER_COROUTINE | Maximum time in seconds allowed for each coroutine in the logging worker before timing out. Default is 20.0
 | LOGGING_WORKER_CLEAR_PERCENTAGE | Percentage of the queue to extract when clearing. Default is 50% 
 | MAX_BASE64_LENGTH_FOR_LOGGING | Maximum number of base64 characters to keep in logging payloads. Data URIs exceeding this are replaced with a size placeholder. Set to 0 to disable truncation. Default is 64
+| MAX_BASE64_LENGTH_STDOUT_LOG | Maximum length, in characters, of a base64 run kept as is in a log line written to stdout, at every log level including DEBUG. A longer run is replaced with a size placeholder such as `[base64_data truncated: 2.86MB]`, in the message and in any traceback, and the text around it stays. Hex and decimal runs (digests, numeric ids) are left alone. Logging callbacks (OTEL, Datadog, etc.) still receive the full record. Set to 0 to disable. Default is 4096
 | MAX_COMPETITOR_NAMES | Maximum number of competitor names allowed in policy template enrichment. Default is 100
 | MAX_EXCEPTION_MESSAGE_LENGTH | Maximum length for exception messages. Default is 2000
 | MAX_ITERATIONS_TO_CLEAR_QUEUE | Maximum number of iterations to attempt when clearing the logging worker queue during shutdown. Default is 200
