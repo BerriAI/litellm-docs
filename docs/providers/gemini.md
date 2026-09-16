@@ -83,7 +83,7 @@ Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
 :::tip Gemini 3 Models
-For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
+For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model: Flash-family models also support `medium`, and `minimal` up to 3.6 Flash. 3.7 and 3.8 Flash reject `minimal`, so LiteLLM sends `low` for `minimal`, `none` and `disable` on them, driven by `supports_minimal_reasoning_effort: false` on their cost-map entries. If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
 :::warning Image Models
@@ -104,12 +104,12 @@ For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effor
 
 | reasoning_effort | thinking_level | Notes |
 | ---------------- | -------------- | ----- |
-| "minimal"        | `"minimal"` (Flash / some 3.1) or `"low"` | Flash-family IDs use `minimal` when supported |
+| "minimal"        | `"minimal"` (Flash up to 3.6 / some 3.1) or `"low"` | Flash-family IDs use `minimal` unless their cost-map entry sets `supports_minimal_reasoning_effort: false` (3.7 and 3.8 Flash), which maps to `low` |
 | "low"            | "low" | Best for simple instruction following or chat |
 | "medium"         | `"medium"` or `"high"` | `"medium"` where the API supports it; otherwise `"high"` |
 | "high"           | "high" | Maximizes reasoning depth |
-| "disable"        | `"minimal"` (Flash) or `"low"` | Cannot fully disable thinking in Gemini 3 |
-| "none"           | `"minimal"` (Flash) or `"low"` | Cannot fully disable thinking in Gemini 3 |
+| "disable"        | `"minimal"` (Flash up to 3.6) or `"low"` | Cannot fully disable thinking in Gemini 3; 3.7 and 3.8 Flash reject `minimal`, so they get `low` |
+| "none"           | `"minimal"` (Flash up to 3.6) or `"low"` | Cannot fully disable thinking in Gemini 3; 3.7 and 3.8 Flash reject `minimal`, so they get `low` |
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
