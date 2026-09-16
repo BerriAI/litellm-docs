@@ -99,6 +99,8 @@ Then install any skill:
 | `keywords` | Tags for search and filtering |
 | `version` | Semver string |
 
+The optional `installation_preference` string, such as `auto_install`, is emitted as `installationPreference` in `marketplace.json` so Claude Desktop can auto-install plugins from a same-origin marketplace
+
 ## API reference
 
 | Endpoint | Auth | Description |
