@@ -29,7 +29,7 @@ Claude Desktop treats LiteLLM the way it treats Anthropic's own API: it discover
 | Credential, static key | a LiteLLM virtual key |
 | Endpoints used | `GET /v1/models`, `POST /v1/messages`, and `POST /mcp` for MCP servers |
 | LiteLLM version | v1.98.0 or later for model discovery, v1.89.0 or later for the `issuers` JWT config |
-| Claude Desktop version | 1.6889.0 or later for single sign-on |
+| Claude Desktop version | 1.6889.0 or later for single sign-on, 1.10628.0 or later for the claude.ai import |
 
 ## Option A: Single sign-on with your identity provider
 
@@ -288,6 +288,21 @@ Claude Desktop's built-in connectors (`"server": "microsoft365"`, `"github"`, `"
 
 Two more keys matter behind LiteLLM. `inferenceCustomHeaders`, a JSON object of extra headers sent on every inference and discovery request (routing and tenant headers only, never credentials), is how a profile stamps `x-litellm-tags` on every request, which [tag budgets](../proxy/tag_budgets.md), [tag routing](../proxy/tag_routing.md), and the Usage page all group by; `{"x-litellm-tags": "claude-desktop,finance"}` gives a department its own budget without a separate key or team. `inferenceStreamIdleTimeoutSec` (300 to 1800) extends how long a Cowork or Code session waits for model output on a streaming response, but only when LiteLLM writes SSE keep-alive pings while the upstream model is silent; a response with nothing on it still times out at the default.
 
+## Bringing users' claude.ai chats over
+
+A user who moves from a personal Claude subscription to the gateway starts with an empty sidebar. Standard Claude Desktop keeps chats on claude.ai under that account, while Claude Desktop on third-party inference has no Anthropic account and keeps Chat and Cowork history on the device, under `~/Library/Application Support/Claude-3p/` on macOS. The switch deletes nothing: the old chats stay readable at claude.ai, and the two modes coexist on one machine, so the Anthropic option on the sign-in screen brings the standard app back without touching the gateway data. They just do not show up in the gateway app on their own.
+
+Anthropic ships an import for exactly this move, off by default. Add `claudeAiImport` to the managed configuration (an MDM profile or a bootstrap response, which is where Anthropic's reference says the key is read from), and `chatTabEnabled` unless Chat is already on, since the Chat surface is off by default on third-party inference. `claudeAiImport` is one key whose value is a JSON object, the same form as `inferenceGatewayOidc` above (a JSON string in a `.mobileconfig` or `.reg`, a native object in a bootstrap response or `managed-settings.json`), on Claude Desktop 1.10628.0 or later:
+
+```json
+{
+  "chatTabEnabled": true,
+  "claudeAiImport": {"enabled": true, "exportEnabled": true}
+}
+```
+
+Each user then opens **Settings > Import & export**, clicks **Import…**, and signs in to claude.ai from the wizard; **Fetch export** pulls their chats and projects and copies them into the gateway app. Users who would rather not sign in from the app download the zip from **Settings > Privacy > Export data** on claude.ai (the emailed link lasts 24 hours) and pick it with **Choose file…**, and the same wizard picks up Cowork and Code sessions left on the machine by an earlier standard install. An imported chat opens from the sidebar and continues against your proxy after **Trust and resume**. The import is a one-time copy that can be rerun without creating duplicates, attachments and project knowledge files never come over (a claude.ai policy that applies to both paths), and members of a claude.ai Team or Enterprise workspace can only export once an owner turns on **Allow members to export their own data** under the workspace's data and privacy settings. `exportEnabled` adds **Export…** to the same settings page, a zip of this computer's chats and sessions for moving to another device through the same wizard. Anthropic's [import guide](https://claude.com/docs/third-party/claude-desktop/import) has screenshots of each step.
+
 ## Usage attribution
 
 Under single sign-on every request is attributed to the LiteLLM user upserted from the token, and to the team when a groups claim maps to one, so **Usage** breaks spend down by person and by team and budgets apply at both levels. Under a static key the key is the unit, and one key per team or per purpose with its own `max_budget` is the practical granularity. Either way, `x-litellm-tags` from `inferenceCustomHeaders` adds a third axis, such as a department or cost center, without changing who authenticates.
@@ -324,6 +339,10 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **The 1M context window entry is missing.** `supports1m` sits on an `inferenceModels` entry whose `name` does not match the discovered id exactly.
 
+**A user who moved from a personal Claude subscription to the gateway sees none of their old chats.** Nothing was deleted; the chats live on claude.ai under that account, and the gateway app keeps its own local history. Turn on `claudeAiImport` and have the user run **Settings > Import & export > Import…** ([Bringing users' claude.ai chats over](#bringing-users-claudeai-chats-over)).
+
+**Settings > Import & export says import is not enabled for this deployment.** `claudeAiImport` is missing from the managed configuration or its `enabled` is not `true`; a managed profile on the device wins over anything applied locally, so the key has to be in the profile.
+
 ## Related
 
 - [JWT auth](../proxy/token_auth.md) for every `litellm_jwtauth` option, including role mappings and JWT-to-virtual-key mapping
@@ -331,4 +350,4 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 - [MCP gateway](../mcp.md), [MCP access control](../mcp_control.md), and [MCP OAuth passthrough](../mcp_oauth_passthrough.md)
 - [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md)
 - [Claude Code with LiteLLM](./claude_responses_api.md)
-- Anthropic's [gateway guide](https://claude.com/docs/third-party/claude-desktop/gateway), [configuration reference](https://claude.com/docs/third-party/claude-desktop/configuration), and [MCP servers and extensions](https://claude.com/docs/third-party/claude-desktop/extensions) for Claude Desktop on third-party inference
+- Anthropic's [gateway guide](https://claude.com/docs/third-party/claude-desktop/gateway), [configuration reference](https://claude.com/docs/third-party/claude-desktop/configuration), [MCP servers and extensions](https://claude.com/docs/third-party/claude-desktop/extensions), and [import guide](https://claude.com/docs/third-party/claude-desktop/import) for Claude Desktop on third-party inference
