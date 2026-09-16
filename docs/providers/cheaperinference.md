@@ -191,31 +191,79 @@ print(response.choices[0].message.content)
 
 ## Supported Models
 
-Pricing is USD per 1M tokens, as returned by `GET /v1/models` on 2026-09-13. Four OpenAI models are priced in two bands: prompts above 272k input tokens bill at the higher rate shown in the last column. Treat the table as indicative rather than current: some routes here reprice hourly, and `GET /v1/models` reports a `pricing_version` hash so a cached copy can be checked against the live catalog.
+Pricing is USD per 1M tokens, taken from LiteLLM's cost map, which records what `GET /v1/models` returned on 2026-09-16 (`pricing_version` `sha256:1099de72…`) to six significant figures. Four OpenAI models are priced in two bands: prompts above 272k input tokens bill at the higher rate shown in the last column. Treat the table as indicative rather than current: some routes here reprice hourly, and `GET /v1/models` reports a `pricing_version` hash so a cached copy can be checked against the live catalog.
 
 | Model ID | Input | Output | Cache read | Above 272k input / output |
 |---|---|---|---|---|
+| `cheaperinference/gpt-5.5-pro` | $21.00 | $126.00 | $2.55 |  |
 | `cheaperinference/gpt-6-astra` | $7.00 | $35.00 | $0.70 | $14.00 / $52.50 |
+| `cheaperinference/gpt-5.5` | $3.50 | $21.00 | $0.35 |  |
+| `cheaperinference/gpt-5.4` | $1.75 | $10.50 | $0.175 |  |
+| `cheaperinference/gpt-5.2-codex` | $1.225 | $9.80 | $0.1225 |  |
 | `cheaperinference/gpt-5.6-sol` | $1.00 | $5.00 | $0.10 | $2.00 / $7.50 |
 | `cheaperinference/gpt-5.6-terra` | $0.80 | $4.80 | $0.08 | $1.60 / $7.20 |
+| `cheaperinference/gpt-5.4-mini` | $0.525 | $3.15 | $0.0525 |  |
+| `cheaperinference/gpt-5-mini` | $0.201421 | $1.61137 | $0.020142 |  |
+| `cheaperinference/gpt-5.4-nano` | $0.14 | $0.875 | $0.014 |  |
+| `cheaperinference/gpt-4.1-nano` | $0.085 | $0.34 | $0.008499 |  |
 | `cheaperinference/gpt-5.6-luna` | $0.08 | $0.48 | $0.008 | $0.16 / $0.72 |
-| `cheaperinference/gpt-5-mini` | $0.201421 | $1.611374 | $0.020142 |  |
+| `cheaperinference/gpt-5-nano` | $0.040284 | $0.322274 | $0.004028 |  |
 | `cheaperinference/gpt-oss-120b` | $0.04 | $0.20 | $0.0085 |  |
+| `cheaperinference/claude-opus-4-8-fast` | $8.40 | $42.00 | $0.84 |  |
+| `cheaperinference/claude-fable-5` | $7.00 | $35.00 | $0.70 |  |
+| `cheaperinference/claude-fable-5.1` | $7.00 | $35.00 | $0.175 |  |
+| `cheaperinference/claude-opus-5-fast` | $7.00 | $35.00 | $0.70 |  |
+| `cheaperinference/claude-opus-4.5` | $3.50 | $17.50 | $0.35 |  |
+| `cheaperinference/claude-opus-4.6` | $3.50 | $17.50 | $0.35 |  |
+| `cheaperinference/claude-opus-4.7` | $3.50 | $17.50 | $0.35 |  |
+| `cheaperinference/claude-opus-4.8` | $3.50 | $17.50 | $0.35 |  |
 | `cheaperinference/claude-opus-5` | $3.50 | $17.50 | $0.35 |  |
+| `cheaperinference/claude-sonnet-4.5` | $2.10 | $10.50 | $0.21 |  |
+| `cheaperinference/claude-sonnet-4.6` | $2.10 | $10.50 | $0.21 |  |
 | `cheaperinference/claude-sonnet-5` | $1.40 | $7.00 | $0.14 |  |
+| `cheaperinference/claude-haiku-4.5` | $0.70 | $3.50 | $0.07 |  |
+| `cheaperinference/gemini-3.1-pro` | $1.70 | $10.20 | $0.17 |  |
+| `cheaperinference/gemini-3.1-pro-preview` | $1.40 | $8.40 | $0.14 |  |
+| `cheaperinference/gemini-3-5-flash` | $1.05 | $6.30 | $0.105 |  |
+| `cheaperinference/gemini-3.6-flash` | $0.6375 | $3.1875 | $0.06375 |  |
 | `cheaperinference/gemini-3.7-flash` | $0.525 | $2.625 | $0.0525 |  |
+| `cheaperinference/gemini-3-flash-preview` | $0.35 | $2.10 | $0.035 |  |
+| `cheaperinference/gemini-2.5-flash` | $0.21 | $1.75 | $0.021 |  |
+| `cheaperinference/google/gemini-3.5-flash-lite` | $0.21 | $1.75 | $0.021 |  |
+| `cheaperinference/gemini-3.1-flash-lite` | $0.201421 | $1.20853 | $0.02125 |  |
+| `cheaperinference/glm-5.1` | $0.77 | $2.42 | $0.119 |  |
+| `cheaperinference/glm-5.3` | $0.77 | $2.42 | $0.119 |  |
+| `cheaperinference/glm-5` | $0.483412 | $1.54692 | $0.085 |  |
+| `cheaperinference/glm-5.2` | $0.44 | $1.4025 | $0.068 |  |
+| `cheaperinference/glm-4.5` | $0.33 | $1.21 | $0.051 |  |
+| `cheaperinference/glm-4.6` | $0.33 | $1.21 | $0.051 |  |
+| `cheaperinference/glm-4.7` | $0.322274 | $1.21 | $0.051 |  |
+| `cheaperinference/glm-4.5-air` | $0.104739 | $0.605 | $0.017 |  |
+| `cheaperinference/glm-5.3-flash` | $0.080568 | $0.268535 | $0.01275 |  |
+| `cheaperinference/deepseek-v4-pro` | $0.462 | $1.386 | $0.038981 |  |
+| `cheaperinference/deepseek-v4-pro-0813` | $0.462 | $1.386 | $0.01541 |  |
+| `cheaperinference/deepseek-v4.1-flash` | $0.105 | $0.42 | $0.0021 |  |
+| `cheaperinference/deepseek-v4-flash` | $0.071388 | $0.142777 | $0.01105 |  |
+| `cheaperinference/deepseek-v4-flash-0731` | $0.0456 | $0.0918 | $0.00646 |  |
+| `cheaperinference/qwen-3-8-max` | $1.75 | $5.25 | $0.2125 |  |
+| `cheaperinference/qwen3.6-27b` | $0.241706 | $1.61137 | $0.024171 |  |
+| `cheaperinference/qwen3-5-35b-a3b` | $0.21875 | $0.875 | $0.026562 |  |
+| `cheaperinference/qwen3-6-35b-a3b` | $0.07 | $0.70 | $0.0085 |  |
+| `cheaperinference/qwen-3-8-27b` | $0.1498 | $1.785 | $0.01819 |  |
 | `cheaperinference/grok-4.5` | $1.40 | $4.20 | $0.17 |  |
 | `cheaperinference/kimi-k3` | $2.10 | $10.50 | $0.239969 |  |
-| `cheaperinference/qwen-3-8-max` | $1.75 | $5.25 | $0.2125 |  |
-| `cheaperinference/glm-5.3` | $0.77 | $2.42 | $0.119 |  |
-| `cheaperinference/glm-5.3-flash` | $0.105 | $0.35 | $0.01275 |  |
-| `cheaperinference/deepseek-v4.1-flash` | $0.120853 | $0.483412 | $0.002417 |  |
-| `cheaperinference/deepseek-v4-flash-0731` | $0.032227 | $0.064454 | $0.006445 |  |
+| `cheaperinference/minimax-m2.7` | $0.21 | $0.84 | $0.0255 |  |
+| `cheaperinference/muse-spark-1.2` | $1.0625 | $3.6125 | $0.10625 |  |
+| `cheaperinference/aion-labs.aion-2-0` | $0.790698 | $1.5814 | $0.085 |  |
 
-Any other model ID from `GET /v1/models` also works with the `cheaperinference/` prefix; only the 16 models listed above carry pricing in LiteLLM's cost map today.
+Every chat model the gateway serves is in the table and in LiteLLM's cost map. The 5 image-generation and 1 video routes it also serves are not: their per-unit media pricing does not fit the cost map's per-token fields.
+
+`cheaperinference/gpt-5.5-pro` answers only on `/v1/responses`. Every `/v1/chat/completions` request to it returns 400 "Pro reasoning mode requires the /v1/responses endpoint", so its cost-map entry declares the Responses route alone.
 
 ## Notes
 
-Responses echo the serving route's own model id rather than the id you sent: a request for `cheaperinference/glm-5.3-flash` comes back with `"model": "z-ai/glm-5.3-flash"`, alongside a `provider` field naming the upstream that served it. Cost tracking follows the model you requested, so spend is calculated correctly; only a direct `litellm.completion_cost(completion_response=...)` call on the raw response needs the model passed explicitly.
+A response echoes the model id you sent and names the upstream that served it in a separate `provider` field: a request for `cheaperinference/glm-5.3-flash` comes back with `"model": "glm-5.3-flash"` and, for example, `"provider": "BaseTen"`. Cost tracking follows the model you requested.
+
+Reasoning controls are per model rather than per gateway. `reasoning.enabled` switches thinking off on some routes, `reasoning.effort` grades it on others, some models return the reasoning text in `reasoning_content` while the OpenAI-shaped routes only count reasoning tokens in `usage`, and a few expose no reasoning at all even though the model reasons elsewhere.
 
 The price of a request is set by whichever route serves it, and the gateway documents that a request is never billed above the model maker's direct list price. Standard OpenAI parameters are forwarded (`temperature`, `top_p`, `max_tokens`, `tools`, `tool_choice`, `response_format`, reasoning controls), but support is model-specific, so verify the exact request shape for a model before moving production traffic. Wallet balance is checked before a request starts and settled after it completes; a request against an empty wallet fails with a balance error rather than a rate-limit error.
