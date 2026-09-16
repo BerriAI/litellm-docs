@@ -234,7 +234,7 @@ Only emitted for requests attached to an organization, with the same conditions 
 
 ### Customer (end_user) - Budget
 
-Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is enabled. On each request the remaining and max budget gauges are refreshed for the request's customer; the reset hours gauge and customers without recent traffic are covered by [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup), which emits all three gauges for every customer that has a budget attached. The series are subject to the `end_user` cardinality caps described in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus).
+Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is enabled. On each request the remaining and max budget gauges are refreshed for the request's customer; the reset hours gauge and customers without recent traffic are covered by [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup), which emits all three gauges for every customer that has a budget attached. When `max_end_user_budget_id` is set, customers without their own budget are emitted against that default budget. The series are subject to the `end_user` cardinality caps described in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus).
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
