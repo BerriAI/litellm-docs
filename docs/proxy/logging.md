@@ -1035,6 +1035,21 @@ callback_settings:
     message_logging: False
 ```
 
+### Redacting Messages for One Callback Only
+
+Set `turn_off_message_logging: true` under `callback_settings.<callback_name>` to redact `messages` and `response` in the payload that one callback receives, while every other callback keeps the full content. This is useful when one destination is for cost and usage tracking (for example `gcs_bucket`) and another needs the prompts (for example `langsmith`).
+
+```yaml
+litellm_settings:
+  callbacks: ["gcs_bucket", "langsmith"]
+
+callback_settings:
+  gcs_bucket:
+    turn_off_message_logging: true
+```
+
+`gcs_bucket` receives `redacted-by-litellm` in place of message and response content on success, failure and streaming requests, and `langsmith` receives the full payload. Spend and usage fields are never redacted. `litellm_settings.turn_off_message_logging: true` still redacts every callback.
+
 ### Traceparent Header
 ##### Context propagation across Services `Traceparent HTTP Header`
 
