@@ -1,63 +1,37 @@
 ---
 slug: litellm-rust-ocr
-title: "LiteLLM OCR uses Rust by default starting with v1.102.0-rc.1"
+title: "OCR uses Rust by default starting with v1.102.0-rc.1"
 date: 2026-09-13T10:00:00
 authors:
   - yujonglee
-description: "Starting with LiteLLM v1.102.0-rc.1, OCR calls use the Rust implementation by default while preserving the existing API."
+description: "Starting with v1.102.0-rc.1, OCR calls use the Rust implementation by default while preserving the existing API."
 keywords: [litellm, rust, ocr, python sdk, ai gateway]
 tags: [litellm, rust, ocr, reliability]
 ---
 
-# LiteLLM OCR uses Rust by default starting with v1.102.0-rc.1
+import {OcrFixedArrivalChart, OcrProviderDelayChart, OcrThroughputChart} from '@site/src/components/OcrBenchmarkCharts';
 
-Starting with LiteLLM `v1.102.0-rc.1`, the Rust implementation is the default execution path for OCR. Existing `ocr()` and `aocr()` calls keep the same request and response contract.
+Starting with LiteLLM `v1.102.0-rc.1`, OCR runs on Rust by default. 
 
-{/* truncate */}
+## No action required
 
-## No API migration required
-
-Continue using the existing OCR API. This example uses the Rust path by default in `v1.102.0-rc.1` and later:
+Continue using the existing OCR API:
 
 ```python
-from litellm import ocr
+import litellm
 
-response = ocr(
+response = litellm.ocr(
     model="mistral/mistral-ocr-latest",
     document={
         "type": "document_url",
         "document_url": "https://arxiv.org/pdf/2201.04234",
     },
 )
-
-for page in response.pages:
-    print(page.markdown)
 ```
 
-The same default applies to asynchronous OCR calls and to OCR requests served through the LiteLLM Proxy. Provider-specific configuration, file uploads, optional OCR parameters, callbacks, logging, and response formatting continue to use the existing LiteLLM interface.
+The same default applies to asynchronous OCR calls. Gateway users get the Rust path automatically on upgrade too.
 
-## Audited proxy results
-
-Rust improves the OCR data path, but the first proxy benchmark was too confident. The revised results below are medians from four fresh-container trials run in both orders. Absolute RPS varied significantly, so the ratios are host-specific ranges, not production constants.
-
-![Audited OCR proxy throughput and retained anonymous memory](./docker-ocr-audit.svg)
-
-| Workload | Python | Rust | Gain |
-|---|---:|---:|---:|
-| 1 MiB, c32 | 149 RPS | 216 RPS | 1.44x |
-| 8 MiB, c8 | 22 RPS | 38 RPS | 1.70x |
-
-The strongest result is large-image memory. After `8 MiB` saturation, retained anonymous memory increased from `651 MiB` to `697 MiB` on Python and from `158 MiB` to `168 MiB` on Rust. At `1 MiB`, retained memory was similar, so Rust does not universally use less memory.
-
-Fixed-arrival testing also found a capacity difference. At `8 MiB` and `30` offered RPS, Rust remained stable at `p95 32 ms`. Python reached the `2 GiB` limit, drained at `17.6 RPS`, and reached `p95 3.7 seconds`.
-
-Default Docker logging materially affects these results. Two workers did not fit comfortably in a `2 GiB` container, and both variants reached the memory ceiling. With `100 ms` provider latency and low concurrency, the throughput difference disappeared. The mock provider and client were also confirmed to have roughly `10x` the proxy capacity.
-
-Python and Rust returned byte-identical responses. The audit completed `29,679` proxy requests with no semantic failures.
-
-These measurements cover the data plane only. Authentication, callbacks, database connections, observability, and multi-replica scaling need separate validation before setting production limits.
-
-## Opt out when needed
+### Opt out when needed
 
 Set `LITELLM_RUST=0` to disable the Rust path for a process:
 
@@ -73,4 +47,36 @@ import litellm
 litellm.rust(False)
 ```
 
-See the [OCR API documentation](../../docs/ocr) for supported providers, SDK usage, proxy configuration, and request formats.
+## What is the performance impact?
+
+**TL;DR:** When proxy CPU is the bottleneck, Rust sustains more OCR requests per second.
+
+### How we tested
+
+We measured proxy overhead, not end-to-end OCR latency. Each path ran in a fresh container with `v1.102.0-rc.1`, one proxy worker, one CPU, `2 GiB` of memory, and a local mock provider. Python and Rust used the same image and limits; only `LITELLM_RUST` changed, and the order alternated across six paired rounds for each upload size.
+
+### Rust raises the CPU-limited proxy ceiling
+
+On one CPU, median throughput moved from `143.6` to `211.7 RPS` at `1 MiB` (`1.48x`) and from `21.6` to `36.2 RPS` at `8 MiB` (`1.69x`). Each gain is the median of the six within-round Rust/Python ratios.
+
+<OcrThroughputChart />
+
+Both paths used 97% to 99% of their one-CPU allowance. This supports a higher OCR proxy throughput ceiling when proxy CPU is the bottleneck. It does not mean that a real OCR request finishes `1.69x` faster; provider latency usually dominates end-to-end latency.
+
+Absolute RPS varied as load on the shared development host changed. The paired rounds preserve the more useful signal: which implementation was faster under nearby conditions.
+
+### The advantage depends on the bottleneck
+
+We ran a few extra checks to see where the main result holds and where it stops. The charts show one run each and the exact numbers moved between reruns, so read them as rough boundaries rather than precise numbers. The direction of each result held.
+
+#### The gain appears only when proxy CPU saturates
+
+<OcrProviderDelayChart />
+
+We added a `100 ms` delay to the mock provider so that waiting on the provider, not the proxy, could become the bottleneck. At concurrency 8 it did: the proxy sat mostly idle and there was no measured Rust gain. At concurrency 64, enough requests were in flight that proxy CPU saturated again and the gain returned.
+
+#### Above Python's ceiling, requests queue
+
+<OcrFixedArrivalChart />
+
+The primary benchmark fixed concurrency and measured each path's ceiling. This check instead offered a fixed thirty `8 MiB` requests per second, which is above Python's measured ceiling at that size and below Rust's. Rust completed every arrival with CPU to spare, so latency stayed in the tens of milliseconds. Python's CPU saturated, requests queued, p95 latency climbed into seconds, and it used roughly twice the memory.
