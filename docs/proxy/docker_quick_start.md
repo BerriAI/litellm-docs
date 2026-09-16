@@ -50,9 +50,9 @@ echo "sk-$(openssl rand -hex 32)"   # LITELLM_MASTER_KEY
 openssl rand -hex 32                 # LITELLM_SALT_KEY
 ```
 
-`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and see the [master key rotation guide](./master_key_rotations) if it ever leaks. It must start with `sk-`.
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. It must start with `sk-`.
 
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. Set it once and never change it afterwards: credentials encrypted with the old value cannot be decrypted with a new one.
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. Choose it before you add your first model, because there is no in-place rotation for it: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
 :::
 
 ## 2. Log in to the Admin UI
