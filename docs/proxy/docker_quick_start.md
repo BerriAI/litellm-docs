@@ -42,8 +42,17 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 </TabItem>
 </Tabs>
 
-:::warning Set a real salt key
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. The quickstart compose file ships a placeholder; before adding models to anything you intend to keep, set it to a long random value, and never change it afterwards. Credentials encrypted with the old value cannot be decrypted with a new one. A password generator works well for this.
+:::warning Set a real master key and salt key
+The quickstart compose file ships placeholders for both `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY`. Replace them before running anything you intend to keep. Generate each one separately:
+
+```bash
+echo "sk-$(openssl rand -hex 32)"   # LITELLM_MASTER_KEY
+openssl rand -hex 32                 # LITELLM_SALT_KEY
+```
+
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and see the [master key rotation guide](./master_key_rotations) if it ever leaks. It must start with `sk-`.
+
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. Set it once and never change it afterwards: credentials encrypted with the old value cannot be decrypted with a new one.
 :::
 
 ## 2. Log in to the Admin UI
