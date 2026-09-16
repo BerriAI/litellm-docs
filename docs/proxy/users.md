@@ -205,6 +205,8 @@ curl --location 'http://localhost:4000/chat/completions' \
 
 Update `max_budget_in_team` for an existing team member with `/team/member_update`. The new budget takes effect on the member's next request
 
+This gives the member their own budget. It no longer follows the team's `team_member_budget` default, and later `/team/update` changes to that default leave this member untouched. To change the budget for every member still on the default, update `team_member_budget` on `/team/update` instead
+
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
