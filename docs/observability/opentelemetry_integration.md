@@ -531,7 +531,7 @@ LiteLLM emits the following histograms when `enable_metrics=True` is set on the 
 
 :::
 
-Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.framework="litellm"`.
+Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.request.model`, `gen_ai.framework="litellm"`. `gen_ai.system` is added when LiteLLM knows the call's provider, so a call without one carries no `gen_ai.system` label.
 
 | Common metric ask | Metric |
 |---|---|
