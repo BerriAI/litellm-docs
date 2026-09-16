@@ -124,7 +124,8 @@ curl http://localhost:4000/claude-code/marketplace.json
       "version": "1.0.0",
       "description": "My awesome plugin",
       "category": "productivity",
-      "keywords": ["automation", "tools"]
+      "keywords": ["automation", "tools"],
+      "installationPreference": "auto_install"
     }
   ]
 }
@@ -146,9 +147,12 @@ curl -X POST http://localhost:4000/claude-code/plugins \
     "version": "1.0.0",
     "description": "My awesome plugin",
     "category": "productivity",
-    "keywords": ["automation", "tools"]
+    "keywords": ["automation", "tools"],
+    "installation_preference": "auto_install"
   }'
 ```
+
+`installation_preference` is an optional string, such as `auto_install`. When set, it is emitted as `installationPreference` in `marketplace.json`, allowing Claude Desktop to auto-install plugins from a same-origin marketplace
 
 #### GET `/claude-code/plugins`
 
