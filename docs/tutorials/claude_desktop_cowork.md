@@ -297,9 +297,11 @@ Anthropic ships an import for exactly this move, off by default. Add `claudeAiIm
 ```json
 {
   "chatTabEnabled": true,
-  "claudeAiImport": {"enabled": true, "exportEnabled": true}
+  "claudeAiImport": {"enabled": true, "exportEnabled": true, "bannerBehavior": "show"}
 }
 ```
+
+`bannerBehavior` is what makes the move self-serve: `show` puts a prompt to import at the top of a new chat or task, so nobody has to know the settings page exists, and `detect` shows it only on machines that hold sessions from an earlier Claude install. Leave it unset and the app shows no prompt.
 
 Each user then opens **Settings > Import & export**, clicks **Import…**, and signs in to claude.ai from the wizard; **Fetch export** pulls their chats and projects and copies them into the gateway app. Users who would rather not sign in from the app download the zip from **Settings > Privacy > Export data** on claude.ai (the emailed link lasts 24 hours) and pick it with **Choose file…**, and the same wizard picks up Cowork and Code sessions left on the machine by an earlier standard install. An imported chat opens from the sidebar and continues against your proxy after **Trust and resume**. The import is a one-time copy that can be rerun without creating duplicates, attachments and project knowledge files never come over (a claude.ai policy that applies to both paths), and members of a claude.ai Team or Enterprise workspace can only export once an owner turns on **Allow members to export their own data** under the workspace's data and privacy settings. `exportEnabled` adds **Export…** to the same settings page, a zip of this computer's chats and sessions for moving to another device through the same wizard. Anthropic's [import guide](https://claude.com/docs/third-party/claude-desktop/import) has screenshots of each step.
 
