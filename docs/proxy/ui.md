@@ -40,7 +40,7 @@ Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhos
 Out of the box, the UI accepts a login built from environment variables: the username is `UI_USERNAME` (default `admin`) and the password is `UI_PASSWORD`. If `UI_PASSWORD` is unset, the master key itself is accepted as the password. Anyone who signs in this way is a proxy admin.
 
 ```shell
-LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" # this is your master key for using the proxy server
+LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)" # master key for the proxy; must start with sk-
 UI_USERNAME=ishaan-litellm   # username to sign in on UI
 UI_PASSWORD=langchain        # password to sign in on UI
 ```
