@@ -318,3 +318,12 @@ curl --location 'http://0.0.0.0:4000/project/new' \
     }
 }'
 ```
+
+Quotas are optional by default, so a project can be created with some models limited and others unbounded. To require one for every model, set `enforce_project_model_quota` in `general_settings` (available from `v1.100.0`):
+
+```yaml
+general_settings:
+  enforce_project_model_quota: true
+```
+
+With this on, `POST /project/new` and `POST /project/update` return a `400` unless every model on the project has a positive `model_rpm_limit` and `model_tpm_limit`. Updates are checked against the project as it will look after the change, so a partial update that leaves models and quotas untouched still passes, while one that adds a model or clears a limit has to leave every model covered. Projects that list `all-proxy-models`, a wildcard such as `azure/*`, or a model access group are rejected while the flag is on, because those expand to several models at request time and the rate limiter looks quotas up by the exact model name; list the concrete model names instead.
