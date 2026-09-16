@@ -1054,9 +1054,9 @@ Requests that carry no virtual key, such as the proxy's own health checks, are n
 
 ### Enforce Budget on Fallbacks
 
-Budget is checked once, when the request is authenticated, against the model the caller asked for. The fallback target is picked afterwards, so a fallback to a paid model runs even when the caller is out of budget. This matters most when the primary model is priced at zero: a zero-cost model is exempt from budget checks entirely, so a request for it is admitted, falls back to the paid model, and bills in full with no cap applied.
+Budget is checked once, when the request is authenticated, against the model the caller asked for. The fallback target is picked afterwards, so on its own that check cannot see the model that actually bills. This matters most when the primary model is priced at zero: a zero-cost model is exempt from budget checks entirely, so without a second check a request for it is admitted, falls back to the paid model, and bills in full with no cap applied.
 
-Set `general_settings.enforce_fallback_budget: true` to re-check the calling key's and user's budget against every fallback target before it is tried. Over-budget targets are skipped. When no affordable target remains, the caller gets the primary model's own error. The primary attempt itself is never blocked, so a zero-cost model keeps working at the cap, and a zero-cost fallback target is always allowed. The check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+The proxy re-checks the calling key's and user's budget against every fallback target before it is tried, so this needs no configuration. Over-budget targets are skipped. When no affordable target remains, the caller gets the primary model's own error. The primary attempt itself is never blocked, so a zero-cost model keeps working at the cap, and a zero-cost fallback target is always allowed. The check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
 ```yaml keep-model-ids
 model_list:
@@ -1080,10 +1080,16 @@ router_settings:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  enforce_fallback_budget: true
 ```
 
-A user whose spend has passed their `max_budget` can still call `free-model` and pay nothing. With the flag on, once `free-model` fails, that user gets the `free-model` error instead of a billed `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A user still under budget keeps falling back to `{{anthropic}}` as before.
+A user whose spend has passed their `max_budget` can still call `free-model` and pay nothing. Once `free-model` fails, that user gets the `free-model` error instead of a billed `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A user still under budget keeps falling back to `{{anthropic}}` as before.
+
+To turn this off and let fallbacks run whatever the caller's budget, set `enforce_fallback_budget: false`:
+
+```yaml
+general_settings:
+  enforce_fallback_budget: false
+```
 
 A team key does not inherit the key owner's personal `max_budget` unless `general_settings.apply_user_budget_to_team_keys` is set, matching how personal budgets are enforced elsewhere. Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the spend lookup itself fails, the fallback is skipped rather than allowed.
 
