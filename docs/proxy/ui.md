@@ -35,9 +35,9 @@ Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhos
 
 <Image img={require('../../img/ui_link.png')} />
 
-### 4. Change default username + password
+### 4. Sign in for the first time
 
-Set the following in your .env on the Proxy
+Out of the box, the UI accepts a login built from environment variables: the username is `UI_USERNAME` (default `admin`) and the password is `UI_PASSWORD`. If `UI_PASSWORD` is unset, the master key itself is accepted as the password. Anyone who signs in this way is a proxy admin.
 
 ```shell
 LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" # this is your master key for using the proxy server
@@ -47,7 +47,31 @@ UI_PASSWORD=langchain        # password to sign in on UI
 
 On accessing the LiteLLM UI, you will be prompted to enter your username, password
 
-### 5. Configure Root Redirect URL
+:::warning Environment credentials are for bootstrapping only
+This login path stores a permanent, shared, cleartext admin credential in your environment, cannot be rotated per person, and leaves no way to tell which admin did what. Once you are signed in, follow the steps below to move to per-user accounts and disable it. Until you do, the dashboard shows a warning banner to every admin.
+:::
+
+### 5. Create your own admin account and disable environment credential login
+
+First, while signed in with the environment credentials, create a `proxy_admin` user for yourself: go to `Internal Users` -> `+ Invite User`, set the role to `proxy_admin`, and open the invitation link it generates to set your password. You can also create the user over the API with `POST /user/new` and a `user_role` of `proxy_admin`; see [invite users](./self_serve.md). Sign out and confirm you can sign in with your email and new password before continuing.
+
+Then turn off the environment credential login path in your `config.yaml` and restart the proxy:
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  disable_env_credential_login: true
+```
+
+After the restart, `UI_USERNAME`/`UI_PASSWORD` and the master key are rejected on the login page with `401 Invalid credentials used to access UI`, the warning banner disappears, and only database users (and [SSO](./admin_ui_sso.md), if configured) can sign in. You can now remove `UI_USERNAME` and `UI_PASSWORD` from your environment.
+
+:::danger Lockout risk
+Create and test at least one `proxy_admin` user with a password before enabling `disable_env_credential_login`, or nobody will be able to sign in to the UI. If you do lock yourself out, the proxy is still fully manageable over the API with the master key (`Authorization: Bearer <master_key>`); remove the setting and restart to restore environment credential login.
+:::
+
+If you use SSO, `disable_password_login_when_sso_enabled` also blocks this login path, since it rejects every username/password login once the SSO provider is fully configured. See [SSO for the Admin UI](./admin_ui_sso.md).
+
+### 6. Configure Root Redirect URL
 
 When `DOCS_URL` is set to something other than `"/"`, you can configure where the root path (`/`) redirects to using `ROOT_REDIRECT_URL`:
 

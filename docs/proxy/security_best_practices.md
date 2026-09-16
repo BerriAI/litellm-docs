@@ -20,6 +20,19 @@ Assign the minimum required [RBAC role](./access_control) and keep the number of
 
 Applications and users should use scoped [Virtual Keys](./virtual_keys), not the LiteLLM master key. Use a separate service account key for each production workload so access can be revoked without affecting other services.
 
+### Disable environment credential login to the Admin UI
+
+By default the Admin UI accepts a login built from environment variables: `UI_USERNAME` (default `admin`) with `UI_PASSWORD`, and when `UI_PASSWORD` is unset, the master key itself. This is a permanent, shared, cleartext admin credential. It cannot be rotated per person, everyone who has ever read the environment can keep signing in as a proxy admin, and audit logs cannot attribute changes to an individual. Treat it as a bootstrap mechanism only. While it is enabled, the dashboard shows a warning banner to admins.
+
+Before disabling it, create a `proxy_admin` user with their own password for each administrator (or connect [SSO](./admin_ui_sso)) and confirm they can sign in. Then set the following in `config.yaml` and restart the proxy:
+
+```yaml
+general_settings:
+  disable_env_credential_login: true
+```
+
+`UI_USERNAME`, `UI_PASSWORD`, and the master key are then rejected on the login page and the banner disappears. Database users and SSO are unaffected. Enabling this before an admin account exists locks everyone out of the UI; the proxy stays manageable over the API with the master key, and removing the setting and restarting restores the environment login. See the [Admin UI quick start](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) for the step-by-step flow.
+
 ## 4. Connect your enterprise identity provider
 
 ### SSO
