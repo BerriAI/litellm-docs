@@ -257,6 +257,73 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Restrict Results to a User
+
+Knowledge Bases with access control (a Kendra GenAI index or a data source with document-level ACLs) only return the chunks a given user may see. Pass that identity as Bedrock's `userContext` and LiteLLM forwards it on the Retrieve request. The value is sent as is, so Bedrock validates it: `userId` must be a string.
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM Python SDK">
+
+```python
+import litellm
+
+response = litellm.vector_stores.search(
+    vector_store_id="YOUR_KNOWLEDGE_BASE_ID",
+    custom_llm_provider="bedrock",
+    query="What does our company policy say about remote work?",
+    extra_body={"userContext": {"userId": "alice@example.com"}},
+)
+```
+
+</TabItem>
+
+<TabItem value="proxy-openai-sdk" label="Proxy (OpenAI SDK)">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:4000", api_key="your-litellm-api-key")
+
+response = client.vector_stores.search(
+    vector_store_id="YOUR_KNOWLEDGE_BASE_ID",
+    query="What does our company policy say about remote work?",
+    extra_body={"userContext": {"userId": "alice@example.com"}},
+)
+```
+
+</TabItem>
+
+<TabItem value="proxy-curl" label="Proxy (curl)">
+
+```bash
+curl http://localhost:4000/v1/vector_stores/YOUR_KNOWLEDGE_BASE_ID/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "query": "What does our company policy say about remote work?",
+    "userContext": {"userId": "alice@example.com"}
+  }'
+```
+
+</TabItem>
+
+<TabItem value="proxy-config" label="Proxy (config.yaml)">
+
+Set `user_context` on the store to apply one identity to every search against it. A `userContext` sent on the request overrides it.
+
+```yaml
+vector_store_registry:
+  - vector_store_name: "bedrock-company-docs"
+    litellm_params:
+      vector_store_id: "YOUR_KNOWLEDGE_BASE_ID"
+      custom_llm_provider: "bedrock"
+      user_context:
+        userId: "service-account@example.com"
+```
+
+</TabItem>
+</Tabs>
+
 ## Accessing Search Results
 
 See how to access vector store search results in your response:
