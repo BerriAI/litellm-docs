@@ -31,7 +31,7 @@ general_settings:
   disable_env_credential_login: true
 ```
 
-`UI_USERNAME`, `UI_PASSWORD`, and the master key are then rejected on the login page and the banner disappears. Database users and SSO are unaffected. Enabling this before an admin account exists locks everyone out of the UI; the proxy stays manageable over the API with the master key, and removing the setting and restarting restores the environment login. See the [Admin UI quick start](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) for the step-by-step flow.
+`UI_USERNAME`, `UI_PASSWORD`, and the master key are then rejected on the login page and the banner disappears. Database users and SSO are unaffected. If you enable it before an admin account exists, remove the setting and restart to bring the environment login back; the API keeps working with the master key throughout. See the [Admin UI quick start](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) for the step-by-step flow.
 
 ## 4. Connect your enterprise identity provider
 

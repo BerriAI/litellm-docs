@@ -65,8 +65,8 @@ general_settings:
 
 After the restart, `UI_USERNAME`/`UI_PASSWORD` and the master key are rejected on the login page with `401 Invalid credentials used to access UI`, the warning banner disappears, and only database users (and [SSO](./admin_ui_sso.md), if configured) can sign in. You can now remove `UI_USERNAME` and `UI_PASSWORD` from your environment.
 
-:::danger Lockout risk
-Create and test at least one `proxy_admin` user with a password before enabling `disable_env_credential_login`, or nobody will be able to sign in to the UI. If you do lock yourself out, the proxy is still fully manageable over the API with the master key (`Authorization: Bearer <master_key>`); remove the setting and restart to restore environment credential login.
+:::note
+Enable `disable_env_credential_login` after you have a `proxy_admin` user with a password, since it is the only way left to sign in to the UI. If you enable it too early, remove the setting and restart to bring the environment login back; the API keeps working with the master key throughout.
 :::
 
 If you use SSO, `disable_password_login_when_sso_enabled` also blocks this login path, since it rejects every username/password login once the SSO provider is fully configured. See [SSO for the Admin UI](./admin_ui_sso.md).

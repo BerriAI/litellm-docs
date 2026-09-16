@@ -261,7 +261,7 @@ router_settings:
 | disable_spend_logs | boolean | If true, turns off writing each transaction to the database |
 | disable_spend_updates | boolean | If true, turns off all spend updates to the DB. Including key/user/team spend updates. |
 | disable_master_key_return | boolean | If true, turns off returning master key on UI. (checked on '/user/info' endpoint) |
-| disable_env_credential_login | boolean | Default `false`. If true, the Admin UI no longer accepts the environment credentials (`UI_USERNAME`/`UI_PASSWORD`, or the master key when `UI_PASSWORD` is unset); only database users and SSO can sign in. Create a `proxy_admin` user with a password before enabling this or nobody can sign in to the UI. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) |
+| disable_env_credential_login | boolean | Default `false`. If true, the Admin UI no longer accepts the environment credentials (`UI_USERNAME`/`UI_PASSWORD`, or the master key when `UI_PASSWORD` is unset); only database users and SSO can sign in. Create a `proxy_admin` user with a password first; if enabled too early, remove the setting and restart to restore the environment login. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) |
 | disable_retry_on_max_parallel_request_limit_error | boolean | If true, turns off retries when max parallel request limit is reached |
 | disable_reset_budget | boolean | If true, turns off reset budget scheduled task |
 | disable_adding_master_key_hash_to_db | boolean | If true, turns off storing master key hash in db |
