@@ -259,7 +259,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ## Restrict Results to a User
 
-Knowledge Bases with access control (a Kendra GenAI index or a data source with document-level ACLs) only return the chunks a given user may see. Pass that identity as Bedrock's `userContext` and LiteLLM forwards it on the Retrieve request. The value is sent as is, so Bedrock validates it: `userId` must be a string.
+Knowledge Bases with access control (a Kendra GenAI index or a data source with document-level ACLs) only return the chunks a given user may see. Pass that identity as Bedrock's `userContext` and LiteLLM forwards it on the Retrieve request. The value is sent as is, so Bedrock validates it: `userId` must be a string. LiteLLM does not check the identity against the proxy key, so only callers you trust to name their users should be able to search a store with ACLs.
 
 <Tabs>
 <TabItem value="sdk" label="LiteLLM Python SDK">
