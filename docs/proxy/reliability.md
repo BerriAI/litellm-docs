@@ -1052,6 +1052,47 @@ A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{ant
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
 
+### Enforce Budget on Fallbacks
+
+Budget is checked once, when the request is authenticated, against the model the caller asked for. The fallback target is picked afterwards, so on its own that check cannot see the model that actually bills. This matters most when the primary model is priced at zero: a zero-cost model is exempt from budget checks entirely, so without a second check a request for it is admitted, falls back to the paid model, and bills in full with no cap applied.
+
+The proxy re-checks the calling key's and user's budget against every fallback target before it is tried, so this needs no configuration. Over-budget targets are skipped. When no affordable target remains, the caller gets the primary model's own error. The primary attempt itself is never blocked, so a zero-cost model keeps working at the cap, and a zero-cost fallback target is always allowed. The check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+
+```yaml keep-model-ids
+model_list:
+  - model_name: free-model
+    litellm_params:
+      model: ollama/llama2
+      api_base: http://localhost:11434
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+    model_info:
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks:
+    - free-model: ["{{anthropic}}"]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+A user whose spend has passed their `max_budget` can still call `free-model` and pay nothing. Once `free-model` fails, that user gets the `free-model` error instead of a billed `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A user still under budget keeps falling back to `{{anthropic}}` as before.
+
+To turn this off and let fallbacks run whatever the caller's budget, set `enforce_fallback_budget: false`:
+
+```yaml
+general_settings:
+  enforce_fallback_budget: false
+```
+
+A team key does not inherit the key owner's personal `max_budget` unless `general_settings.apply_user_budget_to_team_keys` is set, matching how personal budgets are enforced elsewhere. Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the spend lookup itself fails, the fallback is skipped rather than allowed.
+
 ### Disable Fallbacks (Per Request/Key)
 
 
