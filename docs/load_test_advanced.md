@@ -219,6 +219,6 @@ class MyUser(HttpUser):
 
 
     def on_start(self):
-        self.api_key = os.getenv('API_KEY', 'sk-1234')
+        self.api_key = os.getenv('API_KEY', 'sk-<your-litellm-api-key>')
         self.client.headers.update({'Authorization': f'Bearer {self.api_key}'})
 ```

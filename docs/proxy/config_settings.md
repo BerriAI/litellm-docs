@@ -128,6 +128,7 @@ general_settings:
   allow_unmanaged_response_ids: boolean  # let keys address response IDs this proxy never issued, e.g. raw provider IDs
   disable_auto_add_proxy_admin_to_teams: boolean  # if true, a proxy admin calling /team/new is no longer auto-added to the new team as team admin
   enforce_fallback_model_access: boolean  # if true, router_settings fallbacks only run when the calling key, team and project may call the fallback model
+  enforce_fallback_budget: boolean  # default true; set false to let router_settings fallbacks run even when the calling key or user is out of budget
   enable_jwt_auth: boolean  # allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims
   enforce_user_param: boolean  # requires all openai endpoint requests to have a 'user' param
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
@@ -224,6 +225,7 @@ router_settings:
 | request_timeout | integer | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) |
 | force_ipv4 | boolean | If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API. `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` are still honored on both the aiohttp and httpx transports; on the httpx transport only direct connections are pinned to IPv4, the hop to the proxy itself is not |
 | disable_aiohttp_transport | boolean | If true, LLM requests go through plain httpx instead of the default aiohttp transport. Set this (or the `DISABLE_AIOHTTP_TRANSPORT` env var) if you see aiohttp connector errors such as a `CancelledError` surfacing as `No response returned` on `/v1/responses`, `/v1/chat/completions` or `/v1/messages`. **Default is False** |
+| http2 | boolean | If true, LiteLLM negotiates HTTP/2 with LLM providers over TLS (falls back to HTTP/1.1 when the provider does not support it). Routes traffic through httpx instead of the default aiohttp transport. Can also be set with the `LITELLM_HTTP2` env var. Available from v1.103.0. [Further docs](./server_tuning#outbound-http2-to-providers). **Default is False** |
 | content_policy_fallbacks | array of objects | Fallbacks to use when a ContentPolicyViolationError is encountered. [Further docs](./reliability#content-policy-fallbacks) |
 | context_window_fallbacks | array of objects | Fallbacks to use when a ContextWindowExceededError is encountered. [Further docs](./reliability#context-window-fallbacks) |
 | cache | boolean | If true, enables caching. [Further docs](./caching) |
@@ -260,6 +262,7 @@ router_settings:
 | disable_spend_logs | boolean | If true, turns off writing each transaction to the database |
 | disable_spend_updates | boolean | If true, turns off all spend updates to the DB. Including key/user/team spend updates. |
 | disable_master_key_return | boolean | If true, turns off returning master key on UI. (checked on '/user/info' endpoint) |
+| disable_env_credential_login | boolean | Default `false`. If true, the Admin UI no longer accepts the environment credentials (`UI_USERNAME`/`UI_PASSWORD`, or the master key when `UI_PASSWORD` is unset); only database users and SSO can sign in. Create a `proxy_admin` user with a password first; if enabled too early, remove the setting and restart to restore the environment login. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) |
 | disable_retry_on_max_parallel_request_limit_error | boolean | If true, turns off retries when max parallel request limit is reached |
 | disable_reset_budget | boolean | If true, turns off reset budget scheduled task |
 | disable_adding_master_key_hash_to_db | boolean | If true, turns off storing master key hash in db |
@@ -267,6 +270,7 @@ router_settings:
 | allow_unmanaged_response_ids | boolean | If true, lets keys address response IDs this proxy never issued, such as raw provider IDs or IDs handed out before response ID encryption was on. When false (default), those IDs are refused with 403 because the proxy cannot tell who owns them. IDs the proxy did issue stay owner-checked either way. Applies to /v1/responses endpoints |
 | disable_auto_add_proxy_admin_to_teams | boolean | Default `false`. When a user calls `/team/new`, LiteLLM auto-adds that caller to the new team as a team admin. Set this to `true` so proxy admins are no longer auto-added; members you explicitly list in `members_with_roles` are still added, and non-admin callers (e.g. internal users) are still auto-added. Also toggleable from the Admin UI under **Settings > Router Settings > General Settings**. |
 | enforce_fallback_model_access | boolean | Default `false`. When `true`, a fallback configured in `router_settings` (`fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks`, `default_fallbacks`) only runs if the calling key, its team and its project are allowed to call the fallback model; unauthorized targets are skipped and the primary model's error is returned when none remain. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
+| enforce_fallback_budget | boolean | Default `true`. A fallback configured in `router_settings` only runs if the calling key and user are still within budget; over-budget targets are skipped and the primary model's error is returned when none remain. Zero-cost fallback targets are always allowed, and the primary attempt is never blocked. Set to `false` to let fallbacks run regardless of budget. [More information here](reliability#enforce-budget-on-fallbacks) |
 | enable_jwt_auth | boolean | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
 | enforce_user_param | boolean | If true, requires all OpenAI endpoint requests to have a 'user' param. [Doc on call hooks](call_hooks)|
 | reject_clientside_metadata_tags | boolean | If true, rejects requests that contain client-side 'metadata.tags' to prevent users from influencing budgets by sending different tags. Tags can only be inherited from the API key metadata. |
@@ -462,6 +466,7 @@ router_settings:
 | enable_tag_filtering | boolean | If true, uses tag based routing for requests [Tag Based Routing](tag_routing) |
 | enable_weighted_failover | boolean | If true and `routing_strategy` is `simple-shuffle`, a retryable failure on one deployment re-picks (weighted) across other deployments in the same model group before cross-group fallbacks. Default: false. |
 | fallback_access_check | Optional[FallbackAccessCheck] | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_model_access`. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
+| fallback_budget_check | Optional[FallbackBudgetCheck] | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects as over budget are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_budget`. [More information here](reliability#enforce-budget-on-fallbacks) |
 | tag_filtering_match_any | boolean | Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags |
 | tag_routing_prefix | string | Default `""` (no-op). A request tag starting with this exact string is stripped and matched as an explicit, trusted routing directive, exempt from the heuristic that otherwise infers routing intent from deployment tag vocabulary. Unprefixed tags keep matching as today. [Tag Based Routing](tag_routing) |
 | cooldown_time | integer | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
@@ -523,6 +528,11 @@ router_settings:
 | A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
+| AGENT365_API_BASE | Base URL of the Microsoft Agent 365 tool evaluation endpoint for the `agent_365` guardrail. Default is https://agent365.svc.cloud.microsoft
+| AGENT365_CLIENT_ID | Client id of the gateway's Entra app registration for the `agent_365` guardrail On-Behalf-Of exchange
+| AGENT365_CLIENT_SECRET | Client secret of the gateway's Entra app registration for the `agent_365` guardrail
+| AGENT365_RESOURCE_APP_ID | Application id of the Agent 365 resource the `agent_365` guardrail mints delegated tokens for. Defaults to the production resource
+| AGENT365_TENANT_ID | Entra tenant id used by the `agent_365` guardrail for the On-Behalf-Of token exchange
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
@@ -1248,12 +1258,14 @@ router_settings:
 | LOGGING_WORKER_MAX_TIME_PER_COROUTINE | Maximum time in seconds allowed for each coroutine in the logging worker before timing out. Default is 20.0
 | LOGGING_WORKER_CLEAR_PERCENTAGE | Percentage of the queue to extract when clearing. Default is 50% 
 | MAX_BASE64_LENGTH_FOR_LOGGING | Maximum number of base64 characters to keep in logging payloads. Data URIs exceeding this are replaced with a size placeholder. Set to 0 to disable truncation. Default is 64
+| MAX_BASE64_LENGTH_STDOUT_LOG | Maximum length, in characters, of a base64 run kept as is in a log line written to stdout, at every log level including DEBUG. A longer run is replaced with a size placeholder such as `[base64_data truncated: 2.86MB]`, in the message and in any traceback, and the text around it stays. Hex and decimal runs (digests, numeric ids) are left alone. Logging callbacks (OTEL, Datadog, etc.) still receive the full record. Set to 0 to disable. Default is 4096
 | MAX_COMPETITOR_NAMES | Maximum number of competitor names allowed in policy template enrichment. Default is 100
 | MAX_EXCEPTION_MESSAGE_LENGTH | Maximum length for exception messages. Default is 2000
 | MAX_ITERATIONS_TO_CLEAR_QUEUE | Maximum number of iterations to attempt when clearing the logging worker queue during shutdown. Default is 200
 | MAX_TIME_TO_CLEAR_QUEUE | Maximum time in seconds to spend clearing the logging worker queue during shutdown. Default is 5.0
 | LOGGING_WORKER_AGGRESSIVE_CLEAR_COOLDOWN_SECONDS | Cooldown time in seconds before allowing another aggressive clear operation when the queue is full. Default is 0.5 
 | MAX_STRING_LENGTH_PROMPT_IN_DB | Maximum length for strings in spend logs when sanitizing request bodies. Strings longer than this will be truncated. Default is 1000
+| MAX_STRING_LENGTH_STDOUT_LOG | Maximum number of characters an INFO-or-higher log line (message or traceback) may write to stdout. A longer line keeps its head and tail around a `litellm_truncated skipped N chars` marker, which counts toward the cap. DEBUG lines are never cut, so `--detailed_debug` still prints whole payloads, and logging callbacks (OTEL, Datadog, etc.) still receive the full record. Set to 0 to disable. Default is 4096
 | MAX_IN_MEMORY_QUEUE_FLUSH_COUNT | Maximum count for in-memory queue flush operations. Default is 1000
 | MAX_IMAGE_URL_DOWNLOAD_SIZE_MB | Maximum size in MB for downloading images from URLs. Prevents memory issues from downloading very large images. Images exceeding this limit will be rejected before download. Set to 0 to completely disable image URL handling (all image_url requests will be blocked). Default is 50MB (matching [OpenAI's limit](https://platform.openai.com/docs/guides/images-vision?api-mode=chat#image-input-requirements))
 | MAX_LONG_SIDE_FOR_IMAGE_HIGH_RES | Maximum length for the long side of high-resolution images. Default is 2000
@@ -1473,8 +1485,8 @@ router_settings:
 | TOOL_POLICY_CACHE_TTL_SECONDS | TTL in seconds for caching tool policy guardrail results. Default is 60
 | UI_LOGO_PATH | Path to the logo image used in the UI
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
-| UI_PASSWORD | Password for accessing the UI
-| UI_USERNAME | Username for accessing the UI
+| UI_PASSWORD | Password for the built-in Admin UI login. If unset, the master key is accepted as the password. This is a shared cleartext admin credential meant for bootstrapping only; create per-user admin accounts and set `general_settings.disable_env_credential_login: true` to turn this login path off. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login)
+| UI_USERNAME | Username for the built-in Admin UI login. Default `admin`. Ignored when `disable_env_credential_login` is enabled
 | UPSTREAM_LANGFUSE_DEBUG | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | UPSTREAM_LANGFUSE_HOST | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning

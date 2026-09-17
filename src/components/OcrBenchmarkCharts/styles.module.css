@@ -1,0 +1,45 @@
+.chart {
+  background: #111827;
+  border-radius: 12px;
+  color: #f8fafc;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  padding: 1.35rem;
+}
+
+.vega {
+  width: 100%;
+}
+
+.chart > .vega + .vega {
+  border-top: 1px solid #334155;
+  margin-top: 0.75rem;
+  padding-top: 1rem;
+}
+
+.vega :global(.vega-embed),
+.vega :global(.vega-embed > svg) {
+  width: 100%;
+}
+
+.split {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart figcaption {
+  color: #a8b3c4;
+  font-size: 0.78rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 720px) {
+  .chart {
+    padding: 1rem;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+  }
+}

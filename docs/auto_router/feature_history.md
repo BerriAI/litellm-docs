@@ -20,9 +20,9 @@ Merged after the v1.101.0 release candidate was cut. These changes are in `v1.10
 
 Use a build containing the linked PRs; earlier development builds may not include every change. [Harness-aware routing update](/blog/auto-router-harness-aware-classification)
 
-## v1.101.0 (release candidate)
+## v1.101.0
 
-[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.101.0-rc.1), [Release notes](/release_notes/v1.101.0rc1/v1-101-0-rc-1)
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.101.0), [Release notes](/release_notes/v1.101.0/v1-101-0)
 
 - **Heuristic classifiers.** `heuristic_v2` routes locally; `hybrid` calls the LLM near a tier boundary. [#39276](https://github.com/BerriAI/litellm/pull/39276), [#39403](https://github.com/BerriAI/litellm/pull/39403). [Post](/blog/heuristic-v2)
 - **Context and user-turn routing.** Fit oversized prompts to a tier and classify only new user turns when configured. [#38844](https://github.com/BerriAI/litellm/pull/38844), [#38861](https://github.com/BerriAI/litellm/pull/38861), UI [#39042](https://github.com/BerriAI/litellm/pull/39042), [#39054](https://github.com/BerriAI/litellm/pull/39054)

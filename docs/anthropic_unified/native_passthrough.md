@@ -47,7 +47,7 @@ Test it with an Anthropic-only feature in the request:
 
 ```bash
 curl http://0.0.0.0:4000/v1/messages \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
@@ -81,7 +81,7 @@ With the opt-in, a request to the proxy's `/v1/responses` is POSTed to `{api_bas
 
 ```bash
 curl http://0.0.0.0:4000/v1/responses \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{"model": "my-open-model", "input": "Say hi in three words"}'
 ```

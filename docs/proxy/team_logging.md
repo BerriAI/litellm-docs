@@ -90,7 +90,7 @@ We make a request to `POST /team/{team_id}/callback` to add a callback for
 ```shell
 curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "callback_name": "langfuse",
   "callback_type": "success",
@@ -123,7 +123,7 @@ All keys created for team `dbe2f686-a686-4896-864a-4c3924458709` will log to lan
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "team_id": "dbe2f686-a686-4896-864a-4c3924458709"
@@ -202,7 +202,7 @@ Use this to check what success/failure callbacks are active for team=`team_id`
 
 ```shell
 curl -X GET 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
-        -H 'Authorization: Bearer sk-1234'
+        -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Remove a Single Callback from a Team
@@ -251,7 +251,7 @@ Now, when you [generate keys](./virtual_keys.md) for this team-id
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "06ed1e01-3fa7-4b9e-95bc-f2e59b74f3a8"}'
 ```
@@ -315,7 +315,7 @@ Navigate to your configured logging provider and check if you received the logs 
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -353,7 +353,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
   ```bash
   curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
       "metadata": {
@@ -397,7 +397,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
   ```bash
   curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
       "metadata": {
@@ -518,7 +518,7 @@ Set `turn_off_message_logging` to `false` for the key you want to enable prompt 
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {

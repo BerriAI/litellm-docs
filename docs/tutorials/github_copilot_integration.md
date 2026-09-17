@@ -62,7 +62,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
-  master_key: sk-1234567890 # Change this to a secure key
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Step 3: Start LiteLLM Proxy
@@ -113,7 +113,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
@@ -129,7 +129,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
@@ -147,7 +147,7 @@ model_list:
       aws_region_name: us-east-1
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
@@ -170,7 +170,7 @@ router_settings:
   routing_strategy: simple-shuffle
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>

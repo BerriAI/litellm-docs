@@ -260,7 +260,7 @@ By default, LiteLLM generates a UUID for `litellm_call_id`. To provide your own:
 ```bash
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-call-id: my-custom-call-id-789" \
   -d '{
     "model": "{{openai_large}}",

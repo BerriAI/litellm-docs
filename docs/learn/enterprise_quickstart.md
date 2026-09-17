@@ -43,7 +43,7 @@ curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker-compose.ym
 Create `.env`:
 
 ```bash
-LITELLM_MASTER_KEY="sk-1234"
+LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
 LITELLM_SALT_KEY="sk-salt-change-me"
 LITELLM_LICENSE="eyJ..."
 OPENAI_API_KEY="your-api-key"
@@ -108,7 +108,7 @@ kubectl apply -f litellm-config.yaml
 
 ```bash
 kubectl create secret generic litellm-secrets \
-  --from-literal=LITELLM_MASTER_KEY="sk-1234" \
+  --from-literal=LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
   --from-literal=LITELLM_SALT_KEY="sk-salt-change-me" \
   --from-literal=LITELLM_LICENSE="eyJ..." \
   --from-literal=OPENAI_API_KEY="your-api-key" \
@@ -219,7 +219,7 @@ kubectl create secret generic litellm-env-secret \
 Layer your enterprise settings onto the chart. `environmentSecrets` injects the Secret above as env vars, which `proxy_config` then references with `os.environ/<NAME>`.
 
 ```yaml title="values-enterprise.yaml" showLineNumbers
-masterkey: sk-1234
+masterkey: sk-<your-litellm-api-key>
 
 environmentSecrets:
   - litellm-env-secret
@@ -324,7 +324,7 @@ flowchart TD
 ```bash
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM Enterprise Gateway"}]
@@ -513,7 +513,7 @@ flowchart TD
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "max_budget": 0.01,
@@ -569,7 +569,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 
 ```bash
 curl -X GET 'http://localhost:4000/spend/tags' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Verify:** response lists `poc:chat-app` with `total_spend` and `log_count`.
