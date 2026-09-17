@@ -4,7 +4,7 @@ Pass-through endpoints for the [TinyFish Agent API](https://docs.tinyfish.ai/age
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
-| Cost Tracking | ✅ | Billed per run as `num_of_steps x $0.016` (TinyFish's published rate) |
+| Cost Tracking | ✅ | `COMPLETED` runs billed as `num_of_steps x $0.016` (TinyFish's published rate) |
 | Logging | ✅ | Runs logged as model `tinyfish/automation-run` |
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | `run-sse` progress events relayed live |
@@ -93,6 +93,8 @@ Runs are billed `num_of_steps x $0.016` to the calling key and team:
 
 Override the per-step rate with the `TINYFISH_COST_PER_STEP` environment variable if your TinyFish contract prices steps differently
 
+One operational caveat: run-async and SSE billing runs in an in-memory background poller. It survives client disconnects, but a proxy restart while such a run is in flight loses that run's spend log (the run itself completes upstream unaffected)
+
 ## Authenticated runs
 
 Request fields that run with the TinyFish account's saved logins (`use_vault`, `credential_item_ids`, `use_profile`, `profile_id`) are rejected with a 403 by default, because every caller shares the proxy's upstream key. Set `TINYFISH_ALLOW_AUTHENTICATED_RUNS=true` on the proxy to allow them
@@ -102,6 +104,6 @@ Request fields that run with the TinyFish account's saved logins (`use_vault`, `
 | Variable | Description |
 |----------|-------------|
 | `TINYFISH_API_KEY` | TinyFish API key the proxy uses upstream |
-| `TINYFISH_AGENT_API_BASE` | Base URL for the TinyFish Agent API. Default is https://agent.tinyfish.ai |
+| `TINYFISH_AGENT_API_BASE` | Base URL for the TinyFish Agent API. Default is https://agent.tinyfish.ai; a schemeless value is treated as https |
 | `TINYFISH_COST_PER_STEP` | Per-step USD rate used for spend tracking. Default is 0.016 |
 | `TINYFISH_ALLOW_AUTHENTICATED_RUNS` | Set to `true` to allow vault and browser-profile fields in run requests |
