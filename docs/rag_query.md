@@ -13,7 +13,7 @@ RAG Query endpoint: **Search Vector Store → (Rerank) → LLM Completion**
 
 ```bash showLineNumbers title="RAG Query with OpenAI"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -73,7 +73,7 @@ Add a `rerank` configuration to improve result quality:
 
 ```bash showLineNumbers title="RAG Query with Reranking"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -97,7 +97,7 @@ Enable streaming for real-time responses:
 
 ```bash showLineNumbers title="RAG Query with Streaming"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -107,6 +107,31 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
             "custom_llm_provider": "openai"
         },
         "stream": true
+    }'
+```
+
+## Filtering Retrieval
+
+Set `retrieval_config.retrieval_filter` to narrow the search to the chunks whose metadata matches. The filter is passed to the vector store as its `filters` argument, so it takes whatever the provider accepts: Bedrock Knowledge Bases take their native operators (`equals`, `notEquals`, `andAll`, `orAll`, and so on; an `andAll` or `orAll` needs at least two clauses) as well as the OpenAI comparison shape (`{"key": ..., "value": ..., "operator": "eq"}`), and OpenAI vector stores take their own filter object. `retrieval_config.filters` is accepted as an alias; when both keys are set, `retrieval_filter` wins. A filter the vector store rejects fails the request with the store's status code and message
+
+```bash showLineNumbers title="RAG Query with a Bedrock metadata filter"
+curl -X POST "http://localhost:4000/v1/rag/query" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "bedrock/us.anthropic.{{anthropic}}",
+        "messages": [{"role": "user", "content": "How do I reset my password?"}],
+        "retrieval_config": {
+            "vector_store_id": "KNOWLEDGE_BASE_ID",
+            "custom_llm_provider": "bedrock",
+            "top_k": 5,
+            "retrieval_filter": {
+                "andAll": [
+                    {"equals": {"key": "department", "value": "billing"}},
+                    {"equals": {"key": "doc_type", "value": "manual"}}
+                ]
+            }
+        }
     }'
 ```
 
@@ -129,6 +154,8 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
 | `vector_store_id` | string | **required** | ID of the vector store to search |
 | `custom_llm_provider` | string | `"openai"` | Vector store provider |
 | `top_k` | integer | `10` | Number of results to retrieve |
+| `retrieval_filter` | object | - | Metadata filter forwarded to the vector store search (see [Filtering Retrieval](#filtering-retrieval)) |
+| `filters` | object | - | Alias of `retrieval_filter`; `retrieval_filter` wins when both are set |
 
 ### rerank
 
@@ -146,7 +173,7 @@ First, ingest a document using the [/rag/ingest](./rag_ingest.md) endpoint:
 
 ```bash showLineNumbers title="Step 1: Ingest"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -178,7 +205,7 @@ Now query the ingested documents:
 
 ```bash showLineNumbers title="Step 2: Query"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "{{openai_small}}",
@@ -218,7 +245,7 @@ Response:
 
 ```bash showLineNumbers title="RAG Query with Bedrock"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "bedrock/us.anthropic.{{anthropic}}",
@@ -235,7 +262,7 @@ curl -X POST "http://localhost:4000/v1/rag/query" \
 
 ```bash showLineNumbers title="RAG Query with Vertex AI"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "model": "vertex_ai/{{gemini_pro}}",

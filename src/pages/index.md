@@ -725,7 +725,7 @@ model_list:
       api_version: "2023-07-01-preview"
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: postgres://
 ```
 
@@ -771,7 +771,7 @@ print(response)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 

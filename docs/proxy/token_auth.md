@@ -28,7 +28,7 @@ export JWT_PUBLIC_KEY_URL="" # "https://demo.duendesoftware.com/.well-known/open
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
 
 model_list:
@@ -417,7 +417,7 @@ Change the string in JWT 'scopes', that litellm evaluates to see if a user has a
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -431,7 +431,7 @@ Set the field in the jwt token, which corresponds to a litellm user / team / org
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -488,7 +488,7 @@ Sometimes your JWT token contains human-readable names instead of database IDs. 
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     # Name-based fields (resolved via database lookup)
@@ -678,7 +678,7 @@ def my_custom_validate(token: str) -> Literal[True]:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_id_jwt_field: "sub"
@@ -723,7 +723,7 @@ By default:
 **Admin Routes**
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -733,7 +733,7 @@ general_settings:
 **Team Routes**
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     # ...
@@ -813,7 +813,7 @@ Control how long public keys are cached for (in seconds).
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -827,7 +827,7 @@ Set a custom field in which the team_id exists. By default, the 'client_id' fiel
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     team_id_jwt_field: "client_id" # 👈 KEY CHANGE
@@ -868,7 +868,7 @@ Allow users who belong to a specific email domain, automatic access to the proxy
  
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_email_jwt_field: "email" # 👈 checks 'email' field in jwt payload
@@ -1297,7 +1297,7 @@ All endpoints require admin auth (`Authorization: Bearer <master_key>`).
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/new \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jwt_claim_name": "email",
@@ -1310,21 +1310,21 @@ curl -X POST http://localhost:4000/jwt/key/mapping/new \
 
 ```bash
 curl http://localhost:4000/jwt/key/mapping/list?page=1&size=50 \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Get a specific mapping:**
 
 ```bash
 curl "http://localhost:4000/jwt/key/mapping/info?id=<mapping-id>" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Update a mapping:**
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/update \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "id": "<mapping-id>",
@@ -1337,7 +1337,7 @@ curl -X POST http://localhost:4000/jwt/key/mapping/update \
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/delete \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"id": "<mapping-id>"}'
 ```

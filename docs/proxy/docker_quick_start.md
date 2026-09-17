@@ -42,13 +42,22 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 </TabItem>
 </Tabs>
 
-:::warning Set a real salt key
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. The quickstart compose file ships a placeholder; before adding models to anything you intend to keep, set it to a long random value, and never change it afterwards. Credentials encrypted with the old value cannot be decrypted with a new one. A password generator works well for this.
+:::warning Set a real master key and salt key
+The quickstart compose file ships placeholders for both `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY`. Replace them before running anything you intend to keep. Generate each one separately:
+
+```bash
+echo "sk-$(openssl rand -hex 32)"   # LITELLM_MASTER_KEY
+openssl rand -hex 32                 # LITELLM_SALT_KEY
+```
+
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. It must start with `sk-`.
+
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. Choose it before you add your first model, because there is no in-place rotation for it: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
 :::
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-1234` in the quickstart compose file).
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-<your-litellm-master-key>` in the quickstart compose file).
 
 <Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
 
@@ -186,7 +195,7 @@ model_list:
 docker run \
   -v $(pwd)/litellm_config.yaml:/app/config.yaml \
   -e OPENAI_API_KEY=<your-openai-key> \
-  -e LITELLM_MASTER_KEY=sk-1234 \
+  -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \
   -p 4000:4000 \
   docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml

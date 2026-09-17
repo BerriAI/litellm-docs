@@ -26,7 +26,7 @@ Use the OpenAI SDK pointed at your LiteLLM Gateway:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
     base_url="http://localhost:4000"
 )
 
@@ -45,7 +45,7 @@ print(response)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -66,7 +66,7 @@ for event in stream:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

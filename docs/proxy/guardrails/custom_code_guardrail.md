@@ -39,7 +39,7 @@ litellm --config config.yaml
 
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",
@@ -86,9 +86,9 @@ async def apply_guardrail(inputs, request_data, input_type):
 |-------|------|-------------|
 | `texts` | `List[str]` | Extracted text from the request/response |
 | `images` | `List[str]` | Extracted images (for image guardrails) |
-| `tools` | `List[dict]` | Tools sent to the LLM |
+| `tools` | `List[dict]` | Tools sent to the LLM, on request and response scans |
 | `tool_calls` | `List[dict]` | Tool calls returned from the LLM |
-| `structured_messages` | `List[dict]` | Full messages with role info (system/user/assistant) |
+| `structured_messages` | `List[dict]` | Full messages with role info (system/user/assistant). On a response scan, ends with the model reply as an assistant turn |
 | `model` | `str` | The model being used |
 
 ### `request_data` Parameter
@@ -346,7 +346,7 @@ Enable guardrail per request:
 
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",

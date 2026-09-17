@@ -59,7 +59,7 @@ export JWT_AUDIENCE="api://default"
 export DATABASE_URL="postgresql://..."
 export LITELLM_LICENSE="<your-enterprise-license>"
 export ANTHROPIC_API_KEY="sk-ant-..."
-export LITELLM_MASTER_KEY="sk-1234"
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
 ```
 
 Start the proxy:

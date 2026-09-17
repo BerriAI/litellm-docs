@@ -232,6 +232,16 @@ Only emitted for requests attached to an organization, with the same conditions 
 | `litellm_org_max_budget_metric`                     | Max Budget for Organization Labels: `"org_id", "org_alias"`|
 | `litellm_org_budget_remaining_hours_metric`         | Hours before the Organization budget is reset Labels: `"org_id", "org_alias"`|
 
+### Customer (end_user) - Budget
+
+Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is enabled. On each request the remaining and max budget gauges are refreshed for the request's customer from the customer row cached during auth (no extra database query; a cache miss is left to the periodic refresh); the reset hours gauge and customers without recent traffic are covered by [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup), which emits all three gauges for every customer that has a budget attached. When `max_end_user_budget_id` is set, customers without their own budget are emitted against that default budget. The series are subject to the `end_user` cardinality caps described in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus).
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_customer_budget_metric`          | Remaining Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_max_budget_metric`                | Max Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_budget_remaining_hours_metric`    | Hours before the Customer budget is reset Labels: `"end_user"`|
+
 ### Virtual Key - Rate Limit
 
 | Metric Name          | Description                          |
@@ -521,6 +531,15 @@ litellm_settings:
   enable_end_user_cost_tracking_prometheus_only: true
 ```
 
+Every metric that carries the `end_user` label, including the [customer budget gauges](#customer-end_user---budget), is capped per metric by `prometheus_end_user_metrics_max_series_per_metric` (default `10000`, oldest series are dropped first) and series idle for longer than `prometheus_end_user_metrics_ttl_seconds` (default `3600`) are removed. Set either to `null` to disable that limit.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  enable_end_user_cost_tracking_prometheus_only: true
+  prometheus_end_user_metrics_max_series_per_metric: 500
+  prometheus_end_user_metrics_ttl_seconds: 1800
+```
 
 ### Emit Stream Label
 
@@ -596,7 +615,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -609,7 +628,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {

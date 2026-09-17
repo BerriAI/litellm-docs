@@ -232,7 +232,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -305,7 +305,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -410,7 +410,7 @@ print(resp)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # pass litellm proxy key, if you're using virtual keys
+    api_key="sk-<your-litellm-api-key>", # pass litellm proxy key, if you're using virtual keys
     base_url="http://0.0.0.0:4000/v1/" # point to litellm proxy
 )
 
@@ -428,7 +428,7 @@ print(response)
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_pro}}",
     "messages": [
@@ -546,7 +546,7 @@ print(resp)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # pass litellm proxy key, if you're using virtual keys
+    api_key="sk-<your-litellm-api-key>", # pass litellm proxy key, if you're using virtual keys
     base_url="http://0.0.0.0:4000/v1/" # point to litellm proxy
 )
 
@@ -564,7 +564,7 @@ print(response)
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_pro}}",
     "messages": [
@@ -616,7 +616,7 @@ print(response)
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -700,7 +700,7 @@ print(resp)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # pass litellm proxy key, if you're using virtual keys
+    api_key="sk-<your-litellm-api-key>", # pass litellm proxy key, if you're using virtual keys
     base_url="http://0.0.0.0:4000/v1/" # point to litellm proxy
 )
 
@@ -719,7 +719,7 @@ print(response)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # pass litellm proxy key, if you're using virtual keys
+    api_key="sk-<your-litellm-api-key>", # pass litellm proxy key, if you're using virtual keys
     base_url="http://0.0.0.0:4000/v1/" # point to litellm proxy
 )
 
@@ -746,7 +746,7 @@ print(response)
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -765,7 +765,7 @@ curl http://localhost:4000/v1/chat/completions \
 ```bash showLineNumbers
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1105,7 +1105,7 @@ litellm --config /path/to/config.yaml
 
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1299,7 +1299,7 @@ Here's how to use Vertex AI with the LiteLLM Proxy Server
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -1321,7 +1321,7 @@ Here's how to use Vertex AI with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "team1-gemini-2.5-pro",
@@ -2555,7 +2555,7 @@ $ litellm --config /path/to/config.yaml
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="snowflake-arctic-embed-m-long-1731622468876", 
@@ -2614,7 +2614,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -2665,7 +2665,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -2748,7 +2748,7 @@ Requests with GCS Image / Video URI
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -2764,7 +2764,7 @@ Requests with base64 encoded images
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -2788,7 +2788,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -2809,7 +2809,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -2852,7 +2852,7 @@ from vertexai.vision_models import VideoSegmentConfig
 from google.auth.credentials import Credentials
 
 
-LITELLM_PROXY_API_KEY = "sk-1234"
+LITELLM_PROXY_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_PROXY_BASE = "http://0.0.0.0:4000/vertex-ai"
 
 import datetime
@@ -2970,7 +2970,7 @@ Text + Image
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -2985,7 +2985,7 @@ Text + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -3000,7 +3000,7 @@ Image + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -3060,7 +3060,7 @@ ft_job = await client.fine_tuning.jobs.create(
 ```shell
 curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
     "model": "{{gemini_flash}}",
@@ -3100,7 +3100,7 @@ ft_job = client.fine_tuning.jobs.create(
 ```shell
 curl http://localhost:4000/v1/fine_tuning/jobs \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: vertex_ai" \
     -d '{
     "model": "{{gemini_flash}}",
@@ -3312,7 +3312,7 @@ Test with curl:
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "semantic-ranker-default@latest",

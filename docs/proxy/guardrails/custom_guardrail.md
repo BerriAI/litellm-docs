@@ -95,14 +95,14 @@ Every key in `inputs` is optional, so you only get the ones this call actually h
 |-----|--------------|
 | `texts` | The text to check. This is the one most guardrails use. |
 | `images` | Images from the request, as base64 or URLs. |
-| `tools` | Tool definitions sent to the LLM. |
+| `tools` | Tool definitions sent to the LLM. Present on both directions, so a post-call check on a tool call can look up the tool's schema. |
 | `tool_calls` | Tool calls the LLM asked for. |
-| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
+| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. On `input_type="response"` the list ends with the model reply as an `assistant` turn, so you get the conversation that produced the text in `texts`. |
 | `model` | The model this call is routed to. |
 
 **To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place; LiteLLM maps them back onto the original request or response.
 
-`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
+`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored. Rewritten `structured_messages` and `tools` only take effect on request scans; on a response scan, `texts` and `tool_calls` are the only fields written back.
 
 While streaming, you can also set `stream_holdback_chars`, a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
@@ -241,7 +241,7 @@ This request will be blocked if it violates your guardrail policy:
 ```shell
 curl -i -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -276,7 +276,7 @@ This request passes the guardrail:
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -305,7 +305,7 @@ Expect this to mask the word `litellm` before sending the request to the LLM API
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -325,7 +325,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -349,7 +349,7 @@ Expect this to fail since `litellm` is in the message content. [This runs the `a
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -382,7 +382,7 @@ Expected response:
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -406,7 +406,7 @@ Expect this to fail since `coffee` will be in the response content. [This runs t
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -439,7 +439,7 @@ Expected response:
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [

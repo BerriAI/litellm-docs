@@ -156,6 +156,7 @@ const sidebars = {
           "proxy/guardrails/guardrails_ai",
           "proxy/guardrails/lakera_ai",
           "proxy/guardrails/llm_as_a_judge",
+          "proxy/guardrails/microsoft_agent_365",
           "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
           "proxy/guardrails/noma_security",
@@ -492,6 +493,7 @@ const sidebars = {
                 "mcp_guardrail",
                 "mcp_server_submissions",
                 "mcp_toolsets",
+                "proxy/tool_policies",
                 {
                   type: "link",
                   label: "MCP Troubleshooting Guide",
@@ -955,6 +957,7 @@ const sidebars = {
             "pass_through/mistral",
             "pass_through/openai_passthrough",
             "pass_through/tinyfish",
+            "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
             {
               type: "category",

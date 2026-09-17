@@ -93,7 +93,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 # Upload file
@@ -178,7 +178,7 @@ request.jsonl:
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 # Upload file
@@ -244,7 +244,7 @@ The batch's cost row has `call_type: "aretrieve_batch"` and a `request_id` of `<
 
 ```bash showLineNumbers title="get_batch_spend_row.sh"
 curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json showLineNumbers title="batch cost row (trimmed)"
@@ -306,13 +306,13 @@ A batch reaches `completed` at the provider as soon as it finishes running, whet
 ```bash showLineNumbers title="compare_counts.sh"
 # what the provider reports
 curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
-  -H "Authorization: Bearer sk-1234" | jq '.status, .request_counts'
+  -H "Authorization: Bearer $LITELLM_API_KEY" | jq '.status, .request_counts'
 # "completed"
 # {"completed": 2, "failed": 1, "total": 3}
 
 # what the spend log recorded
 curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   | jq '.[0].metadata | {batch_successful_requests, batch_failed_requests}'
 # {"batch_successful_requests": 2, "batch_failed_requests": 1}
 ```
@@ -321,10 +321,10 @@ To see why the failed requests failed, download the batch's error file. It holds
 
 ```bash showLineNumbers title="read_error_file.sh"
 ERROR_FILE_ID=$(curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
-  -H "Authorization: Bearer sk-1234" | jq -r '.error_file_id')
+  -H "Authorization: Bearer $LITELLM_API_KEY" | jq -r '.error_file_id')
 
 curl -s "http://0.0.0.0:4000/v1/files/${ERROR_FILE_ID}/content" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Failed requests cost nothing, so `spend` covers the successful lines only and a batch that half failed costs about half of what you budgeted for. A request the provider accepted but LiteLLM could not price still counts as successful and is billed at `$0`, which keeps the counts reconcilable with the provider's own numbers. A batch whose requests all failed has no output file at all, and its cost row records `$0`, zero successful requests, and the failure count read from the error file. Anthropic and Bedrock extended thinking batches do not report reasoning tokens per line, so `reasoning_tokens` stays absent for them even though the model was thinking. The one case where the two counts do not add up to the provider's total is an output line that is not valid JSON, which gets skipped with a warning and lands in neither count

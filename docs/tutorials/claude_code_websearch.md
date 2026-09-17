@@ -88,7 +88,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers title="Configure Claude Code"
 export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_API_KEY=sk-1234
+export ANTHROPIC_API_KEY=sk-<your-api-key>
 claude
 ```
 

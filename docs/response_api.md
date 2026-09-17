@@ -249,7 +249,7 @@ print(cancel_response)
 **REST API:**
 ```bash
 curl -X POST http://localhost:4000/v1/responses/response_id/cancel \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 This will attempt to cancel the in-progress response with the given ID.
@@ -522,7 +522,7 @@ for event in response:
 from openai import OpenAI
 import base64
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
     model="{{openai_large}}",
@@ -836,7 +836,7 @@ from websocket import create_connection  # uv add websocket-client
 # Connect to LiteLLM proxy WebSocket endpoint
 ws = create_connection(
     "ws://localhost:4000/v1/responses?model={{gemini_flash}}",
-    header=["Authorization: Bearer sk-1234"]
+    header=["Authorization: Bearer sk-<your-litellm-api-key>"]
 )
 
 try:
@@ -900,7 +900,7 @@ const ws = new WebSocket(
     'ws://localhost:4000/v1/responses?model={{gemini_flash}}',
     {
         headers: {
-            'Authorization': 'Bearer sk-1234'
+            'Authorization': 'Bearer sk-<your-litellm-api-key>'
         }
     }
 );
@@ -958,7 +958,7 @@ ws.on('error', (error) => {
 
 # Connect to WebSocket endpoint
 websocat "ws://localhost:4000/v1/responses?model={{gemini_flash}}" \
-  -H="Authorization: Bearer sk-1234"
+  -H="Authorization: Bearer $LITELLM_API_KEY"
 
 # Then send JSON events (paste and press Enter):
 {"type":"response.create","model":"{{gemini_flash}}","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"Hello!"}]}]}
@@ -1132,11 +1132,12 @@ Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7
 |----------|---------------------|
 | `openai` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
 | `azure` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
+| `azure_ai` on `.services.ai.azure.com` and `.openai.azure.com` hosts | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/913ef6ed49250f28680a1a50850183b5d80f6bbb/litellm/llms/azure_ai/responses/transformation.py#L25) |
+| `azure_ai` on other hosts | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `anthropic` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `bedrock` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `gemini` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `vertex_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
-| `azure_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | All other llm api providers | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 
 ## Load Balancing with Session Continuity.
@@ -1542,7 +1543,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="non-Responses API Model Request"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic-model",
     "input": "who is Michael Jordan"
@@ -1624,7 +1625,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="Request via bridge"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "my-local-model",
     "input": "Hello!"
@@ -1802,7 +1803,7 @@ Start a new conversation by making a request without specifying a previous respo
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "who is Michael Jordan"
@@ -1818,7 +1819,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make initial request to start a new conversation
@@ -1860,7 +1861,7 @@ Continue the conversation by referencing the previous response ID to maintain co
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him",
@@ -1877,7 +1878,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make follow-up request in the same conversation session
@@ -1919,7 +1920,7 @@ Start a brand new conversation without referencing previous context to demonstra
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him"
@@ -1935,7 +1936,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make a new request without previous context

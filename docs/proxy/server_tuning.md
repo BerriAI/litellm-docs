@@ -120,11 +120,24 @@ docker run \
     -v $(pwd)/proxy_config.yaml:/app/config.yaml \
     -p 4000:4000 \
     -e DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname> \
-    -e LITELLM_MASTER_KEY="sk-1234" \
+    -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
     your_custom_docker_image \
     --config /app/config.yaml \
     --run_hypercorn
 ```
+
+## Outbound HTTP/2 to providers
+
+Available from v1.103.0.
+
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+
+```yaml
+litellm_settings:
+  http2: true
+```
+
+Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2. Deployments on the `aiohttp_openai/` provider always use aiohttp and stay on HTTP/1.1; LiteLLM logs a warning if the flag is on for such a request.
 
 ## Granian ASGI server [Beta]
 

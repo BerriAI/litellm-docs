@@ -112,7 +112,7 @@ Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which wou
 If you use the database, set a salt key for encrypting and decrypting stored variables. Do not change it after adding a model; it encrypts your LLM API key credentials, and changing it makes them unreadable. Use a [password generator](https://1password.com/password-generator/) to get a random hash.
 
 ```bash
-export LITELLM_SALT_KEY="sk-1234"
+export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
@@ -329,11 +329,14 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 
 | Type of Error | Expected Behavior | Details |
 |---------------|-------------------|----------------|
-| Prisma Errors | Request will be allowed | Covers issues like DB connection resets or rejections from the DB via Prisma, the ORM used by LiteLLM. |
+| Prisma connection errors | Request will be allowed | The database engine cannot be reached (connection refused or reset, `EngineConnectionError`). Requests proceed with a restricted `INTERNAL_USER` fallback identity, never admin. |
+| Prisma query errors (P2xxx, e.g. P2010) | Request will be blocked | The database answered but the query failed, so the key cannot be verified and the request gets a 401. Treated as fail-closed because the database is reachable. |
 | Httpx Errors | Request will be allowed | Occurs when the database is unreachable, allowing the request to proceed despite the DB outage. |
 | Pod Startup Behavior | Pods start regardless | LiteLLM Pods will start even if the database is down or unreachable, ensuring higher uptime guarantees for deployments. |
 | Health/Readiness Check | Always returns 200 OK | The /health/readiness endpoint returns a 200 OK status to ensure that pods remain operational even when the database is unavailable. |
 | LiteLLM Budget Errors or Model Errors | Request will be blocked | Triggered when the DB is reachable but the authentication token is invalid, lacks access, or exceeds budget limits. |
+
+During a database outage, virtual keys already in the in-memory auth cache keep authenticating until `user_api_key_cache_ttl` expires, which defaults to 60 seconds and can be longer with `enable_redis_auth_cache`; see [caching_redis](./caching_redis.md#virtual-key-authentication-cache-redis). The master key and models defined in the config file keep working. Uncached virtual key lookups, key/team/user management endpoints, and spend log writes fail or are deferred until the database is back
 
 [More information about what the Database is used for here](db_info)
 
@@ -353,7 +356,7 @@ Plain Docker:
 docker run \
   -v /path/to/global-bundle.pem:/certs/global-bundle.pem:ro \
   -e DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem" \
-  -e LITELLM_MASTER_KEY="sk-1234" \
+  -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
   -p 4000:4000 \
   ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
 ```
