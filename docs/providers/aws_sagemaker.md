@@ -36,7 +36,7 @@ response = completion(
 ```
 
 ### Usage - Streaming
-Sagemaker currently does not support streaming - LiteLLM fakes streaming by returning chunks of the response string
+The legacy `sagemaker/` completion route calls the `/invocations` endpoint, which does not stream; LiteLLM fakes streaming by chunking the full response string. If your endpoint speaks the HF Messages API, use the `sagemaker_chat/` route instead, which streams natively (see [Sagemaker Messages API](#sagemaker-messages-api) below)
 
 ```python
 import os 
@@ -422,6 +422,8 @@ Use route `sagemaker_chat/*` to route to Sagemaker Messages API
 ```
 model: sagemaker_chat/<your-endpoint-name>
 ```
+
+Unlike the legacy `sagemaker/` route, `sagemaker_chat/` streams natively; it calls the SageMaker `/invocations-response-stream` endpoint and forwards each decoded event as soon as it arrives, so client time-to-first-token and chunk cadence track the endpoint's own streaming. Pass `stream=True` (LiteLLM includes `"stream": true` in the signed request body) to enable it
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
