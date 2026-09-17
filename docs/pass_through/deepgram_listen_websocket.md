@@ -7,7 +7,7 @@ Stream live audio to Deepgram's realtime speech-to-text API (`wss://api.deepgram
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ✅ | Billed at socket close from the `Metadata.duration` frame using the `deepgram/<model>` per-second price |
+| Cost Tracking | ✅ | Billed at socket close from the `Metadata.duration` frame, times the channel count, using the `deepgram/<model>` per-second price |
 | Logging | ✅ | Works across all integrations, one SpendLogs row per WebSocket session |
 | Streaming | ✅ | Interim and final `Results` frames are relayed as Deepgram sends them |
 | Guardrails | ❌ | Audio frames are opaque bytes; no request or response guardrails run on them |
@@ -136,7 +136,7 @@ Deepgram to client: every frame is relayed byte for byte in the order received, 
 
 ## Cost tracking
 
-When the socket closes, the proxy reads the last `Metadata` frame's `duration` (seconds of audio Deepgram processed) and multiplies it by the `input_cost_per_second` of the `deepgram/<model>` entry in [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). If Deepgram never sends `Metadata` (for example the client dropped the connection), the proxy falls back to the furthest `start + duration` seen across `Results` frames. The spend is written to SpendLogs with `call_type: pass_through_endpoint`, attributed to the calling key, team, and user like any other route
+When the socket closes, the proxy reads the last `Metadata` frame's `duration` (seconds of audio Deepgram processed) and multiplies it by the `input_cost_per_second` of the `deepgram/<model>` entry in [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). If Deepgram never sends `Metadata` (for example the client dropped the connection), the proxy falls back to the furthest `start + duration` seen across `Results` frames. Deepgram bills every channel it processes, so a stereo session with `multichannel=true&channels=2` costs twice its wall-clock duration. The proxy multiplies the duration by the channel count from `Metadata.channels`, falling back to the widest `channel_index` seen in `Results` frames and then to the `channels` query parameter, and defaulting to one. The spend is written to SpendLogs with `call_type: pass_through_endpoint`, attributed to the calling key, team, and user like any other route
 
 ```bash
 curl -s "http://localhost:4000/spend/logs?api_key=sk-1234" -H "Authorization: Bearer sk-1234"
