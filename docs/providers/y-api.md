@@ -229,8 +229,8 @@ Unsupported parameter: 'max_tokens' is not supported with this model.
 Use 'max_completion_tokens' instead.
 ```
 
-LiteLLM already sends `max_completion_tokens` for these models, so no extra configuration is
-needed — this only matters if you call the API directly.
+LiteLLM rewrites the parameter for you, so `max_tokens` and `max_completion_tokens` behave
+identically here and you can pass either. This only matters if you call the API directly.
 
 ## Embeddings
 
