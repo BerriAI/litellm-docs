@@ -42,7 +42,7 @@ lite autoroute configure
 
 ## 4. Start the Autorouter
 
-Start the ephemeral local proxy. It runs in the foreground and streams routing decisions live, so you can watch which tier and model gets picked for each request. Ctrl-C stops it and restores your Claude Code settings; if the process died any other way, `lite autoroute stop` does that cleanup.
+Start the ephemeral local proxy. It runs in the foreground and prints the proxy's request log. Ctrl-C stops it and restores your Claude Code settings; if the process died any other way, `lite autoroute stop` does that cleanup.
 
 ```bash
 lite autoroute start
@@ -50,7 +50,7 @@ lite autoroute start
 
 ## 5. Run Claude Code as Normal
 
-In another tab, start Claude Code. The autorouter now automatically intercepts all Claude Code traffic.
+In another tab, start Claude Code. The autorouter now automatically intercepts all Claude Code traffic, and the Claude Code status line shows `Routed to: <model>` after each reply.
 
 ```bash
 claude
