@@ -259,6 +259,7 @@ const sidebars = {
             "claude_code_context_management",
           ]
         },
+        "tutorials/claude_desktop_cowork",
         "tutorials/opencode_integration",
         "tutorials/openclaw_integration",
         "tutorials/cursor_integration",

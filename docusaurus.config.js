@@ -101,10 +101,6 @@ const config = {
             to: '/docs/proxy/global_control_plane',
           },
           {
-            from: '/docs/tutorials/claude_desktop_cowork',
-            to: '/docs/proxy/client_setup/claude_desktop',
-          },
-          {
             from: '/docs/tutorials/openai_codex',
             to: '/docs/proxy/client_setup/codex_cli',
           },
