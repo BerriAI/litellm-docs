@@ -178,7 +178,11 @@ The `issuer` value should equal the origin the user types into their browser (`h
 
 3. **Fix the ingress.** If the ingress is stripping or rewriting `X-Forwarded-*`, no proxy setting will help; restore the headers at the ingress layer
 
-If the `redirect_uri` legitimately lives on a sister domain you control (e.g. an internal web app registering as an OAuth client of the MCP proxy), allowlist its origin via `MCP_TRUSTED_REDIRECT_ORIGINS`. See [Allowing additional first-party redirect_uri origins](./mcp_oauth#allowing-additional-first-party-redirect_uri-origins). For a static (pre-registered) OAuth client, the full list of accepted `redirect_uri` shapes, how to read the value a given MCP client sends, and the distinction between the client's callback and the `<proxy origin>/callback` you register at the IdP are in [Redirect URLs for static clients](./mcp_oauth#static-client-redirect-urls). If a client reports it cannot register (dynamic client registration), capture the client's verbatim error and the metadata JSON above; the supported grant types are listed in the metadata
+For an approved OAuth client on a separate domain, such as an internal web application, add the callback host to `MCP_TRUSTED_REDIRECT_ORIGINS`. See [Allowing additional first-party redirect_uri origins](./mcp_oauth#allowing-additional-first-party-redirect_uri-origins).
+
+For pre-registered OAuth applications, see [Redirect URLs for static OAuth clients](./mcp_oauth#static-client-redirect-urls) for IdP callback configuration, MCP client callback requirements, and validation errors.
+
+For Dynamic Client Registration failures, collect the client's error response and the authorization server metadata shown above. The metadata lists the supported grant types.
 
 ### Network, TLS, and timeouts {#network-tls-timeouts}
 
