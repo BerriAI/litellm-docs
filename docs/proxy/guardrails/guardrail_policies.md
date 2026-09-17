@@ -307,17 +307,23 @@ Response:
 
 ## Policy Execution Order
 
-When several policies match one request, prioritised attachments run first in ascending priority order, while attachments without a priority keep the existing tier order: `scope: "*"` first, then `teams`, `keys`, `tags`, and `models`. Ties fall back to scope specificity, then `config.yaml` order and API or UI creation order, newest first
+When several policies match one request, LiteLLM runs them from the broadest attachment to the narrowest: `scope: "*"` first, then `teams`, then `keys`, then `tags`, then `models`. An attachment that combines several of these is ranked by its narrowest one and after the single-constraint attachments in that tier (`models: [gpt-4o]` before `teams: [finance], models: [gpt-4o]`). Attachments that still tie keep their `config.yaml` order, followed by attachments created through the API or UI, newest first. Policies passed in the request body (`"policies": [...]`) run after every attachment match, in the order given. Across tiers, the order does not depend on how attachments are listed in `config.yaml` or on which proxy worker handles the request.
 
-```yaml
+This is the order pipelines execute in, so a global blocking policy always rejects a request before a model-scoped one gets to run. It is also the order of `x-litellm-applied-policies` and of `matched_policies` in `/policies/resolve` and the Policy Simulator. When the same policy is attached at more than one matching scope, it runs once, ranked by its broadest attachment, and `matched_via` reports that attachment (`scope:*` rather than `model:gpt-4o`).
+
+To override the tier order, set an optional integer `priority` on an attachment. Attachments with a `priority` run before every attachment without one, lowest value first, and fall back to the tier order above when two share the same value. Attachments without a `priority` behave exactly as before, so existing configs do not change. Here `model-policy` runs before `tag-policy` even though `tags` is the broader tier:
+
+```yaml showLineNumbers title="config.yaml"
 policy_attachments:
-  - policy: tag-policy
-    tags: ["production"]
-    priority: 10
   - policy: model-policy
-    models: ["gpt-4o"]
-    priority: 20
+    models: [gpt-4o]
+    priority: 1
+  - policy: tag-policy
+    tags: [production]
+    priority: 2
 ```
+
+The same field is accepted by `POST /policies/attachments` and returned from `GET /policies/attachments`.
 
 ```yaml showLineNumbers title="config.yaml"
 policy_attachments:
