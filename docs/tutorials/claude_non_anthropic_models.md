@@ -263,6 +263,25 @@ and select any LiteLLM-managed model (`{{openai_large}}`, `{{gemini_flash}}`, `a
 
 :::
 
+### 7. Sync the Proxy Model List with `--sync-models`
+
+Use `lite claude --sync-models` to pass the proxy's model list to Claude Code through its `--settings` `modelPicker` option
+
+```bash
+lite claude --sync-models
+```
+
+You can enable the same behavior with `LITELLM_CLAUDE_SYNC_MODELS=1` before running `lite claude`
+
+```bash
+export LITELLM_CLAUDE_SYNC_MODELS=1
+lite claude
+```
+
+When this mode is enabled, the `-claude-compatible` naming workaround is unnecessary because the proxy model ids are added directly to the `/model` picker
+
+Gateway model discovery is not enabled by default in this mode, so the picker does not receive duplicate model rows
+
 :::tip Surface only specific models
 
 If you only want a subset of your LiteLLM models to show up in the `/model` picker, issue a [virtual key](../proxy/virtual_keys) scoped to those models and use that key as `ANTHROPIC_AUTH_TOKEN`. `/v1/models` will only return models the key can access.
@@ -271,7 +290,7 @@ You can also add individual model entries manually via `ANTHROPIC_CUSTOM_MODEL_O
 
 :::
 
-### 7. Show a Clean Name in the Picker with `display_name`
+### 8. Show a Clean Name in the Picker with `display_name`
 
 The `/model` picker only keeps gateway models whose id contains `claude` or `anthropic`, so a non-Anthropic model needs a claude-flavored name like `kimi-k3-claude-compatible` to appear at all; the picker then shows that raw id as the label. To keep the id for routing but show a friendlier label, set `display_name` under the model's `model_info`:
 
@@ -287,7 +306,7 @@ model_list:
 
 The Anthropic-shaped `GET /v1/models` response now returns `"display_name": "Kimi K3"` for that entry, so the picker lists **Kimi K3** (labeled From gateway) while every request keeps using the `kimi-k3-claude-compatible` id. Models without a `display_name` keep showing their id, and the OpenAI-shaped listing is unaffected; nothing gets duplicated in other harnesses.
 
-### 8. Context Window Reported for a Gateway Model
+### 9. Context Window Reported for a Gateway Model
 
 Claude Code applies its own default context window to a model name it does not recognize as one of Anthropic's, and every gateway-served name falls into that category. Declaring `max_input_tokens` under a model's `model_info` changes what `GET /v1/models`, `/model/info`, and the LiteLLM UI report, and it drives the proxy's own [context-window pre-call checks](../proxy/reliability.md#context-window-fallbacks-pre-call-checks--fallbacks), but it does not change the figure the client shows or when the client compacts.
 
