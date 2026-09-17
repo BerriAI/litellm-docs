@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-09-16T06:20:23Z",
+  "generated_at": "2026-09-17T06:15:34Z",
   "litellm_version": "v1.101.0",
   "claude_code_version": "2.1.228",
   "providers": [
@@ -154,7 +154,8 @@
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "fail",
+          "error": "[claude-sonnet-4-6-azure] claude CLI timed out after 120.0s"
         }
       }
     },
