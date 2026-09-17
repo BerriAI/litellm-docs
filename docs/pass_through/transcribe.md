@@ -1,10 +1,10 @@
 # Amazon Transcribe
 
-Pass-through endpoints for the [Amazon Transcribe](https://docs.aws.amazon.com/transcribe/latest/dg/what-is.html) batch and management API (start, poll and delete transcription jobs, manage custom vocabularies, vocabulary filters, language models and Call Analytics), in native AWS format (no translation).
+Pass-through endpoints for the [Amazon Transcribe](https://docs.aws.amazon.com/transcribe/latest/dg/what-is.html) batch and management API (start, poll and delete transcription jobs, manage custom vocabularies, vocabulary filters, language models and Call Analytics categories), in native AWS format (no translation).
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ❌ | Requests are logged with model `transcribe/{Operation}` and spend `0`. Transcribe bills per second of audio, which is not known at request time, so LiteLLM key, team and user budgets do not limit Transcribe usage |
+| Cost Tracking | ✅ | `StartTranscriptionJob` is priced when the job completes, from the audio duration in the transcript, at the `transcribe/StartTranscriptionJob` rate in the LiteLLM model cost map, so key, team and user budgets apply. Management calls are logged as `transcribe/{Operation}` with spend `0`. Job types LiteLLM cannot price yet are rejected, see Cost tracking and budgets |
 | Logging | ✅ | works across all integrations |
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Streaming transcription (`StartStreamTranscription`, the `transcribestreaming` HTTP/2 and WebSocket endpoint) is a separate protocol and is not covered by this pass-through |
@@ -54,7 +54,7 @@ curl -X POST 'http://0.0.0.0:4000/transcribe/GetTranscriptionJob' \
 -d '{"TranscriptionJobName": "my-job"}'
 ```
 
-The operation name in the URL is any operation of the Amazon Transcribe JSON API, e.g. `StartTranscriptionJob`, `GetTranscriptionJob`, `ListTranscriptionJobs`, `DeleteTranscriptionJob`, `StartMedicalTranscriptionJob`, `StartCallAnalyticsJob`, `CreateVocabulary`. The allowlist is read from the AWS service model shipped with botocore, so it tracks the installed SDK version. Anything else returns a 400 listing the supported set. [See all Amazon Transcribe operations](https://docs.aws.amazon.com/transcribe/latest/APIReference/API_Operations_Amazon_Transcribe_Service.html)
+The operation name in the URL is any operation of the Amazon Transcribe JSON API, e.g. `StartTranscriptionJob`, `GetTranscriptionJob`, `ListTranscriptionJobs`, `DeleteTranscriptionJob`, `CreateVocabulary`. The allowlist is read from the AWS service model shipped with botocore, so it tracks the installed SDK version. Anything else returns a 400 listing the supported set. [See all Amazon Transcribe operations](https://docs.aws.amazon.com/transcribe/latest/APIReference/API_Operations_Amazon_Transcribe_Service.html). The billable job types LiteLLM does not price yet (`StartMedicalTranscriptionJob`, `StartMedicalScribeJob`, `StartCallAnalyticsJob`) are rejected with a 400 before anything is sent to AWS, see Cost tracking and budgets
 
 ## Usage with the AWS SDK (boto3)
 
@@ -83,10 +83,16 @@ print(job["TranscriptionJobStatus"])
 
 The SDK signs the request locally with the placeholder credentials. LiteLLM reads the virtual key from the `Credential=` field of that signature, authenticates the call with it, discards the SDK signature, and re-signs the request with the proxy's AWS credentials.
 
+## Cost tracking and budgets
+
+Amazon Transcribe bills per second of audio, and the duration is only known once the job finishes. After a successful `StartTranscriptionJob`, LiteLLM polls `GetTranscriptionJob` in the background until the job reaches `COMPLETED` or `FAILED`, reads the last `end_time` from the transcript, rounds it up to whole seconds and multiplies by `input_cost_per_second` of the `transcribe/StartTranscriptionJob` entry in the model cost map. That spend is written to SpendLogs and to the key, team and user, so `max_budget` blocks further requests once it is exceeded. A `FAILED` job is charged `0`. If the job cannot be polled or the transcript cannot be read, LiteLLM charges the longest media Transcribe accepts (4 hours) so an unreadable job can never be free. Every other operation (`GetTranscriptionJob`, `ListTranscriptionJobs`, vocabulary management, and so on) is logged as `transcribe/{Operation}` with spend `0`.
+
+Because spend lands when the job completes, jobs submitted before the first charge is written are not stopped by the budget, and a job whose polling is interrupted by a proxy restart is not charged. Use key or team `rpm_limit` to bound how many jobs a key can start in that window, and use `allowed_routes` to restrict which keys may reach `/transcribe` at all.
+
+Only the standard batch rate is priced. `StartTranscriptionJob` requests that add a per-second surcharge (`ContentRedaction`, `ToxicityDetection`, or a custom language model through `ModelSettings.LanguageModelName`) and the separately priced job types `StartMedicalTranscriptionJob`, `StartMedicalScribeJob` and `StartCallAnalyticsJob` are rejected with a 400 explaining why, before anything is sent to AWS. If `transcribe/StartTranscriptionJob` is missing from the model cost map, `StartTranscriptionJob` is rejected the same way rather than being forwarded unpriced.
+
 ## Limitations
 
 Only the `transcribe.{region}.amazonaws.com` JSON API is proxied. Streaming transcription uses the separate `transcribestreaming.{region}.amazonaws.com` endpoint over HTTP/2 event streams or WebSockets and cannot be routed through these endpoints; clients that stream should continue to call AWS directly for now.
 
-Transcripts are written by AWS to S3 and returned as a presigned `TranscriptFileUri`; the transcript body itself never passes through LiteLLM.
-
-Spend is not computed for Transcribe calls. Every request is still logged with model `transcribe/{Operation}` and provider `transcribe`, so calls show up in SpendLogs and logging integrations with a spend of `0`. Because spend is `0`, `max_budget` on keys, teams and users never blocks a Transcribe request. Restrict who can start jobs with key or team `allowed_routes` (for example, only grant `/transcribe` to the keys that need it) and use AWS Budgets or IAM policies on the proxy's AWS credentials to cap the AWS side.
+Transcripts are written by AWS to S3 and returned as a presigned `TranscriptFileUri`; the transcript body is never returned through LiteLLM. To price the job, the proxy reads that transcript once with its own AWS credentials, so when you set `OutputBucketName` the proxy credentials also need `s3:GetObject` on that bucket.
