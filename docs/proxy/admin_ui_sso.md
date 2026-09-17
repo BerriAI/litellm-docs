@@ -418,9 +418,11 @@ Some providers only include the groups claim in the access token, not in the use
 general_settings:
   ui_access_mode:
     type: "restricted_sso_group"
-    restricted_sso_group: "<group required for UI access>"
+    restricted_sso_group: ["<group a>", "<group b>"]
     sso_group_jwt_field: "groups"
 ```
+
+A single string is still accepted for `restricted_sso_group`. Users who belong to any listed group are granted UI access
 
 For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](./saml_sso.md).
 
