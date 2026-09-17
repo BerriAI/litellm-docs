@@ -1278,6 +1278,7 @@ const sidebars = {
         },
         "providers/xiaomi_mimo",
         "providers/xinference",
+        "providers/y-api",
         "providers/zai",
       ],
     },
