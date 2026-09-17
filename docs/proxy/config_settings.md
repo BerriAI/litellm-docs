@@ -537,6 +537,8 @@ router_settings:
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
 | AI21_API_BASE | Base URL for AI21. Default is https://api.ai21.com/studio/v1
+| AINETCAFE_API_BASE | Base URL for ainetcafe. Default is https://microquickjs.com/v1
+| AINETCAFE_API_KEY | API key for ainetcafe
 | AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
 | AISPEND_ACCOUNT_ID | Account ID for AI Spend
 | AISPEND_API_KEY | API Key for AI Spend
