@@ -21,6 +21,15 @@ The master key is the proxy admin credential: it authenticates admin API calls a
 export LITELLM_MASTER_KEY="sk-<long-random-value>"
 ```
 
+### Tell the proxy which addresses are your proxies
+
+Failed Admin UI sign-ins are counted per source address and per address and username, and too many in a row block that key for five minutes. The per-address half only works when the proxy knows which address is the client, so set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancers or ingress in front of LiteLLM. If clients connect to LiteLLM directly, set it to an empty list. Leaving it unset logs a warning at startup and turns off the per-address limit, leaving only the per-username one. See [limit failed sign-in attempts](./ui.md#limit-failed-sign-in-attempts) for the limits and the [security best practices](./security_best_practices.md#limit-failed-admin-ui-sign-in-attempts) for the reasoning.
+
+```yaml
+general_settings:
+  trusted_proxy_ranges: ["10.0.0.0/8"]   # or [] when clients connect directly
+```
+
 ### Turn on alerting
 
 Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
