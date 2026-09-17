@@ -18,11 +18,10 @@ Just replace `https://agent.tinyfish.ai` with `LITELLM_PROXY_BASE_URL/tinyfish` 
 | `/v1/automation/run` | POST | Run an automation to completion (blocking) |
 | `/v1/automation/run-async` | POST | Submit a run, poll for the result |
 | `/v1/automation/run-sse` | POST | Run with live SSE progress events |
-| `/v1/runs` | GET | List runs |
 | `/v1/runs/{id}` | GET | Run status and result |
 | `/v1/runs/{id}/cancel` | POST | Cancel a run |
 
-Every other Agent API endpoint (vault, wallet, browser profiles) returns 403. All callers share the proxy's one upstream TinyFish key, so the credential and account management surface stays admin-only
+Every other Agent API endpoint (vault, wallet, browser profiles) returns 403. All callers share the proxy's one upstream TinyFish key, so the credential and account management surface stays admin-only. The `GET /v1/runs` listing is also blocked: run ids are unguessable, so withholding the list keeps callers behind the shared key from discovering each other's runs
 
 ## Quick Start
 
@@ -88,9 +87,9 @@ Runs are billed `num_of_steps x $0.016` to the calling key and team:
 
 - `POST /v1/automation/run` bills when the blocking response returns
 - `POST /v1/automation/run-async` bills exactly once: LiteLLM polls the run in the background and writes one spend log when it reaches a terminal status. Client polls of `GET /v1/runs/{id}` are never billed, no matter how many
-- `POST /v1/automation/run-sse` bills once at the end of the stream
-- `FAILED` and `CANCELLED` runs still bill for the steps TinyFish took
-- `GET /v1/runs*` and cancels never write spend logs
+- `POST /v1/automation/run-sse` bills exactly once when the run reaches a terminal status, the same way: a client that disconnects mid-stream is still billed once the run completes
+- Only `COMPLETED` runs carry cost. `FAILED` and `CANCELLED` runs write a $0 spend log, matching how TinyFish invoices
+- `GET /v1/runs/{id}` and cancels never write spend logs
 
 Override the per-step rate with the `TINYFISH_COST_PER_STEP` environment variable if your TinyFish contract prices steps differently
 
