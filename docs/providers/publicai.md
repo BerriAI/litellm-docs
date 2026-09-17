@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `publicai/` |
 | Link to Provider Doc | [PublicAI ↗](https://platform.publicai.co/) |
 | Base URL | `https://platform.publicai.co/` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/publicai#usage---litellm-python-sdk) |
 
 <br />
 <br />

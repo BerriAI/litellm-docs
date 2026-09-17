@@ -74,11 +74,11 @@ class TenantPolicy:
 
 
 class BudgetPolicy:
-    COST_CAP_PER_TOKEN = 0.000005
+    COST_CAP_PER_TOKEN = 0.000001
     COST_BY_MODEL = {
-        "openai/gpt-4o-mini": 0.00000015,
-        "anthropic/claude-haiku-4-5": 0.000001,
-        "openai/gpt-5.1": 0.00003,
+        "openai/{{openai_small}}": 0.0000002,
+        "anthropic/{{anthropic}}": 0.000002,
+        "openai/{{openai_large}}": 0.000002,
     }
 
     async def run(self, context: RoutingContext) -> RoutingContext:
@@ -91,9 +91,9 @@ class BudgetPolicy:
 
 router = Router(
     model_list=[
-        {"model_name": "smart-router", "litellm_params": {"model": "openai/gpt-4o-mini"}},
-        {"model_name": "smart-router", "litellm_params": {"model": "anthropic/claude-haiku-4-5"}},
-        {"model_name": "smart-router", "litellm_params": {"model": "openai/gpt-5.1"}},
+        {"model_name": "smart-router", "litellm_params": {"model": "openai/{{openai_small}}"}},
+        {"model_name": "smart-router", "litellm_params": {"model": "anthropic/{{anthropic}}"}},
+        {"model_name": "smart-router", "litellm_params": {"model": "openai/{{openai_large}}"}},
         {"model_name": "smart-router", "litellm_params": {"model": "ollama/llama-3-70b"}},
     ],
     plugins=[LanguageDetector(), DomainClassifier(), TenantPolicy(), BudgetPolicy()],
@@ -153,22 +153,22 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE: ["gpt-4o-mini"]
-          MEDIUM: ["gpt-4o-mini"]
-          COMPLEX: ["gpt-4o", "gpt-4o-mini"]
-          REASONING: ["gpt-4o", "gpt-4o-mini"]
-        default_model: gpt-4o-mini
+          SIMPLE: ["{{openai_small}}"]
+          MEDIUM: ["{{openai_small}}"]
+          COMPLEX: ["{{openai_large}}", "{{openai_small}}"]
+          REASONING: ["{{openai_large}}", "{{openai_small}}"]
+        default_model: {{openai_small}}
         plugins:
           - plugins.cost_ceiling_plugin.cost_ceiling_plugin
 
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -191,13 +191,13 @@ class CostCeilingPlugin:
 
 cost_ceiling_plugin = CostCeilingPlugin(
     max_cost_per_token=0.000001,
-    cost_by_model={"gpt-4o-mini": 1.5e-07, "gpt-4o": 2.5e-06},
+    cost_by_model={"{{openai_small}}": 2e-07, "{{openai_large}}": 2e-06},
 )
 ```
 
 The proxy resolves each dotted path at startup, validates the result is a `RoutingPlugin` (fails startup with a clear error otherwise), and wires the instance into every tier-pick site: weighted scoring, `keyword_tier_rules` overrides, and the no-user-message default-tier path. No route bypasses the pipeline.
 
-For a `COMPLEX` request routed to a tier of `["gpt-4o", "gpt-4o-mini"]`, `CostCeilingPlugin` drops `gpt-4o` (above the ceiling); every dispatch lands on `gpt-4o-mini`.
+For a `COMPLEX` request routed to a tier of `["{{openai_large}}", "{{openai_small}}"]`, `CostCeilingPlugin` drops `{{openai_large}}` (above the ceiling); every dispatch lands on `{{openai_small}}`.
 
 Two behaviors to know when using plugins with the complexity router on the proxy:
 
@@ -213,18 +213,18 @@ from litellm import Router
 
 router = Router(
     model_list=[
-        {"model_name": "gpt-4o-mini", "litellm_params": {"model": "openai/gpt-4o-mini"}},
-        {"model_name": "gpt-4o", "litellm_params": {"model": "openai/gpt-4o"}},
+        {"model_name": "{{openai_small}}", "litellm_params": {"model": "openai/{{openai_small}}"}},
+        {"model_name": "{{openai_large}}", "litellm_params": {"model": "openai/{{openai_large}}"}},
         {
             "model_name": "smart-router",
             "litellm_params": {
                 "model": "auto_router/complexity_router",
                 "complexity_router_config": {
                     "tiers": {
-                        "SIMPLE": ["gpt-4o-mini"],
-                        "COMPLEX": ["gpt-4o", "gpt-4o-mini"],
+                        "SIMPLE": ["{{openai_small}}"],
+                        "COMPLEX": ["{{openai_large}}", "{{openai_small}}"],
                     },
-                    "default_model": "gpt-4o-mini",
+                    "default_model": "{{openai_small}}",
                 },
             },
         },
@@ -257,13 +257,13 @@ model_list:
         classifier_plugin: plugins.tier_by_team.tier_by_team
         classifier_plugin_timeout_ms: 3000
         tiers:
-          SIMPLE: ["gpt-4o-mini"]
-          REASONING: ["gpt-5.1", "gpt-4o"]
-        default_model: gpt-4o-mini
+          SIMPLE: ["{{openai_small}}"]
+          REASONING: ["{{openai_large}}", "{{openai_small}}"]
+        default_model: {{openai_small}}
 
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 

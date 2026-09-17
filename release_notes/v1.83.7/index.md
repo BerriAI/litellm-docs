@@ -168,7 +168,7 @@ pip install litellm==1.83.7
     - Add Ramp as a built-in success callback - [PR #23769](https://github.com/BerriAI/litellm/pull/23769)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Preserve proxy key-auth metadata on `/v1/messages` Langfuse traces - [PR #25448](https://github.com/BerriAI/litellm/pull/25448)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Reduce default `LATENCY_BUCKETS` from 35 → 18 boundaries (see breaking-change note above) - [PR #25527](https://github.com/BerriAI/litellm/pull/25527)
 - **General**
     - S3 logging: retry with exponential backoff for transient 503/500 errors - [PR #25530](https://github.com/BerriAI/litellm/pull/25530)

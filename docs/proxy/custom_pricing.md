@@ -74,13 +74,13 @@ You can override [our model cost map](https://github.com/BerriAI/litellm/blob/ma
 
 Just add a `model_info` key to your model in the config, and override the desired keys.
 
-Example: Override Anthropic's model cost map for the `prod/claude-3-5-sonnet-20241022` model.
+Example: Override Anthropic's model cost map for the `prod/{{anthropic}}` model.
 
 ```yaml
 model_list:
-  - model_name: "prod/claude-3-5-sonnet-20241022"
+  - model_name: "prod/{{anthropic}}"
     litellm_params:
-      model: "anthropic/claude-3-5-sonnet-20241022"
+      model: "anthropic/{{anthropic}}"
       api_key: os.environ/ANTHROPIC_PROD_API_KEY
     model_info:
       input_cost_per_token: 0.000006
@@ -144,9 +144,9 @@ model_list:
       output_cost_per_token: 0  # 👈 Explicitly set to 0
   
   # Paid cloud model - budget checks apply
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     # No model_info - uses default pricing from cost map
 ```
@@ -155,9 +155,9 @@ model_list:
 
 With the above configuration:
 
-- **User over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
-- **Team over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
-- **End-user over budget** → Can still use `on-prem-llama` ✅, but blocked from `gpt-4` ❌
+- **User over budget** → Can still use `on-prem-llama` ✅, but blocked from `{{openai_large}}` ❌
+- **Team over budget** → Can still use `on-prem-llama` ✅, but blocked from `{{openai_large}}` ❌
+- **End-user over budget** → Can still use `on-prem-llama` ✅, but blocked from `{{openai_large}}` ❌
 
 This ensures your free/on-premises models remain accessible regardless of budget constraints, while paid models are still properly governed.
 
@@ -179,7 +179,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4-1106-preview
+      base_model: azure/{{openai_large}}
 ```
 
 ### OpenAI Models with Dated Versions

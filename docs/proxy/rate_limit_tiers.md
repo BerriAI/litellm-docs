@@ -4,22 +4,13 @@ Define tiers with rate limits. Assign them to keys.
 
 Use this to control access and budgets across a lot of keys.
 
-:::info 
-
-This is a LiteLLM Enterprise feature.
-
-Get a 30 day free trial + get in touch [here](https://litellm.ai/#trial).
-
-See pricing [here](https://litellm.ai/#pricing).
-
-:::
-
+<EnterpriseFeature />
 
 ## 1. Create a budget 
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier",
@@ -31,7 +22,7 @@ curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier"
@@ -54,9 +45,10 @@ Expected Response:
 ## 3. Check if budget is enforced on key 
 
 ```bash
+# Authorization: 👈 KEY from step 2.
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-...' \ # 👈 KEY from step 2.
+-H 'Authorization: Bearer sk-...' \
 -d '{
     "model": "<REPLACE_WITH_MODEL_NAME_FROM_CONFIG.YAML>",
     "messages": [

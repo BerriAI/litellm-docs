@@ -69,7 +69,7 @@ For example, you can now give your Engineering team access to `list_repositories
 
 This makes it easier for Proxy Admins to govern MCP Tool Access.
 
-[Get Started](../../docs/mcp_control#set-allowed-tools-for-a-key-team-or-organization)
+[Get Started](/docs/mcp_control)
 
 ---
 
@@ -218,13 +218,13 @@ View the complete load testing script: [gist.github.com/AlexsanderHamir/no_cach
     - Add native Responses API support for litellm_proxy provider - [PR #15347](https://github.com/BerriAI/litellm/pull/15347)
     - Temporarily relax ResponsesAPIResponse parsing to support custom backends (e.g., vLLM) - [PR #15362](https://github.com/BerriAI/litellm/pull/15362)
 
-- **[Files API](../../docs/files_api)**
+- **[Files API](/docs/files_endpoints)**
     - Feat(files): add @client decorator to file operations - [PR #15339](https://github.com/BerriAI/litellm/pull/15339)
 
 - **[/generateContent](../../docs/providers/gemini)**
     - Fix gemini cli by actually streaming the response - [PR #15264](https://github.com/BerriAI/litellm/pull/15264)
 
-- **[Azure Passthrough](../../docs/pass_through/azure)**
+- **[Azure Passthrough](/docs/pass_through/azure_passthrough)**
     - Azure - passthrough support with router models - [PR #15240](https://github.com/BerriAI/litellm/pull/15240)
 
 #### Bugs
@@ -275,12 +275,12 @@ View the complete load testing script: [gist.github.com/AlexsanderHamir/no_cach
 
 #### Features
 
-- **[PostHog](../../docs/observability/posthog)**
+- **[PostHog](/docs/observability/posthog_integration)**
     - Feat: posthog per request api key - [PR #15379](https://github.com/BerriAI/litellm/pull/15379)
 
 #### Guardrails
 
-- **[EnkryptAI](../../docs/proxy/guardrails)**
+- **[EnkryptAI](/docs/proxy/guardrails/quick_start)**
     - Add EnkryptAI Guardrails on LiteLLM - [PR #15390](https://github.com/BerriAI/litellm/pull/15390)
 
 ---

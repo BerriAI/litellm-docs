@@ -17,7 +17,7 @@ Call Bedrock's `/converse` endpoint through LiteLLM Proxy.
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID  # reads from environment
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
@@ -43,7 +43,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -65,7 +65,7 @@ For streaming responses, use `/converse-stream`:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse-stream' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -90,7 +90,7 @@ model_list:
   # Deployment 1 - us-west-2
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
@@ -99,7 +99,7 @@ model_list:
   # Deployment 2 - us-east-1
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
@@ -118,7 +118,7 @@ import os
 # Set dummy AWS credentials (required by boto3, but not used by LiteLLM proxy)
 os.environ['AWS_ACCESS_KEY_ID'] = 'dummy'
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'dummy'
-os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-1234"  # your litellm proxy api key
+os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-<your-litellm-api-key>"  # your litellm proxy api key
 
 # Point boto3 to the LiteLLM proxy
 bedrock_runtime = boto3.client(

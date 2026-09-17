@@ -56,7 +56,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_auth.py`, t
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
 
 litellm_settings:
   drop_params: True
@@ -82,7 +82,7 @@ These fields are read straight off the returned object and enforced with no flag
 Who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true`.
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     api_key: Optional[str] = None,                    # The API key (will be hashed automatically)
     token: Optional[str] = None,                      # Hashed token for internal use
     key_alias: Optional[str] = None,                  # Key alias for identification
@@ -92,7 +92,7 @@ UserAPIKeyAuth(
     team_id: Optional[str] = None,                    # Team identifier (also used to load the team record)
     org_id: Optional[str] = None,                     # Organization identifier (also used to load the org record)
     end_user_id: Optional[str] = None,                # End-user identifier (also used to load the end-user record)
-)
+): ...
 ```
 
 ### Rate limits
@@ -100,7 +100,7 @@ UserAPIKeyAuth(
 All scopes below are enforced directly off the returned object, with no flag.
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     # Key
     tpm_limit: Optional[int] = None,
     rpm_limit: Optional[int] = None,
@@ -119,7 +119,7 @@ UserAPIKeyAuth(
     # Per-model (key / team scoped)
     metadata: Dict = {},          # e.g. {"model_tpm_limit": {...}, "model_rpm_limit": {...}}
     team_metadata: Optional[Dict] = None,  # same keys, team scoped
-)
+): ...
 ```
 
 :::note
@@ -133,12 +133,12 @@ Per-model rate limits are read from `metadata` (key) and `team_metadata` (team),
 ### Advanced
 
 ```python
-UserAPIKeyAuth(
+def UserAPIKeyAuth(
     max_parallel_requests: Optional[int] = None,      # Concurrent request limit
     allowed_model_region: Optional[AllowedModelRegion] = None,  # Geographic restrictions
     blocked: Optional[bool] = None,                   # Whether the key is blocked
     config: Dict = {},                                # Configuration settings
-)
+): ...
 ```
 
 ### Object permission (MCP, agents, etc.)
@@ -185,7 +185,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   -d '{
     "team_id": "eng-team",
     "max_budget": 100,
-    "models": ["gpt-4o-mini", "claude-3-haiku"]
+    "models": ["{{openai_small}}", "{{anthropic}}"]
   }'
 ```
 
@@ -198,8 +198,8 @@ For project per-model rate limits, set `model_tpm_limit` / `model_rpm_limit` on 
 
 ```python
 # On the project record (via /project/new or the UI):
-#   model_tpm_limit = {"gpt-4o": 100000, "claude-3-haiku": 50000}
-#   model_rpm_limit = {"gpt-4o": 100,    "claude-3-haiku": 200}
+#   model_tpm_limit = {"{{openai_large}}": 100000, "{{anthropic}}": 50000}
+#   model_rpm_limit = {"{{openai_large}}": 100,    "{{anthropic}}": 200}
 ```
 
 :::note
@@ -218,7 +218,7 @@ These are separate controls:
 | `models` on `UserAPIKeyAuth` | Key-level allowlist | Value you return from custom auth |
 | `project_id` on `UserAPIKeyAuth` | Project-level allowlist | `models` on the **project record in LiteLLM's DB** |
 
-An empty `models` list (`[]`) means no restriction. Names must match the model group in your config (wildcards supported). See [Project Management](./project_management) and [Config Settings](./config_settings#all-settings).
+An empty `models` list (`[]`) means no restriction. Names must match the model group in your config (wildcards supported). See [Project Management](./project_management) and [Config Settings](/docs/proxy/config_settings#litellm_settings---reference).
 
 ## Key-level enforcement
 
@@ -238,8 +238,8 @@ from datetime import datetime, timedelta, timezone
 
 return UserAPIKeyAuth(
     api_key=api_key,
-    models=["gpt-4o-mini"],                                   # key model allowlist (needs both flags)
-    model_max_budget={"gpt-4o": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
+    models=["{{openai_small}}"],                                   # key model allowlist (needs both flags)
+    model_max_budget={"{{openai_large}}": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
     expires=datetime.now(timezone.utc) + timedelta(days=30),  # key expiry
 )
 ```
@@ -250,14 +250,7 @@ This path also enforces end-user budgets and per-model end-user budgets when `en
 
 Supported from v1.72.2+
 
-:::info 
-
-✨ Supporting Custom Auth + LiteLLM Virtual Keys is on LiteLLM Enterprise
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Using Custom Auth with LiteLLM Virtual Keys" />
 
 ### Usage
 
@@ -297,7 +290,7 @@ Key change set `mode: auto`. This will check both litellm api key auth + custom 
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:

@@ -190,12 +190,12 @@ Without a policy, the first health check failure marks a deployment as unhealthy
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY_SECONDARY
 
 general_settings:
@@ -210,7 +210,7 @@ router_settings:
     TimeoutErrorAllowedFails: 3          # cooldown after 4th timeout
 ```
 
-When `allowed_fails_policy` is set, the binary health check filter is bypassed. Only the cooldown system controls routing exclusion, and it only fires after your configured threshold is crossed.
+When `allowed_fails_policy` is set, the binary health check filter is bypassed. Only the cooldown system controls routing exclusion, and it only fires after your configured threshold is crossed. The exception is when `background_health_check_model_groups` is also set (see Step 5): listed groups then keep the binary filter even with a policy configured.
 
 ### Step 4 (optional): Ignore transient errors
 
@@ -226,24 +226,45 @@ general_settings:
 
 With this on, only hard failures (401, 404, 5xx) from health checks contribute to cooldown.
 
+### Step 5 (optional): Scope health checks to specific model groups
+
+By default the background loop probes every model group. To opt in only the groups you want managed, list them in `background_health_check_model_groups`:
+
+```yaml
+general_settings:
+  background_health_checks: true
+  health_check_interval: 30
+  enable_health_check_routing: true
+  background_health_check_model_groups: ["prod-openai"]
+```
+
+With an allowlist set:
+
+- Only deployments in the listed groups are probed, so unlisted groups generate no background probe traffic or cost
+- `GET /health` serves the background results, so it reports only the listed groups
+- Health check routing steers traffic only within the listed groups; unlisted groups keep their configured routing strategy and plain request-time retry behavior
+- Model groups added later are excluded until you add them to the list
+- Listed groups keep the binary health filter even when `allowed_fails_policy` is set
+- A value that is not a list of strings fails at proxy startup instead of being silently ignored
+
 
 ## Full example
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY_SECONDARY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
 
@@ -271,6 +292,7 @@ router_settings:
 | `health_check_interval` | `general_settings` | `300` | Seconds between full health check cycles |
 | `health_check_staleness_threshold` | `general_settings` | `interval x 2` | Seconds before cached health state is ignored |
 | `health_check_ignore_transient_errors` | `general_settings` | `false` | Ignore 429 and 408 from health checks; these never affect routing |
+| `background_health_check_model_groups` | `general_settings` | `null` | Only probe and health-route the listed model groups; unlisted groups keep normal routing |
 | `cooldown_time` | `router_settings` | `5` | Seconds a deployment stays in cooldown after threshold is crossed |
 | `allowed_fails_policy` | `router_settings` | `null` | Per-error-type failure thresholds before cooldown (see below) |
 

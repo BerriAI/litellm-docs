@@ -50,9 +50,9 @@ print(f"Dataset name: {response.name}")
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-4o-mini
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 vector_store_registry:

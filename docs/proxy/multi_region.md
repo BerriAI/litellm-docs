@@ -133,11 +133,11 @@ Health-check each region against `/health/liveliness`, not `/health/readiness`. 
 
 By default every instance serves both LLM traffic and admin traffic (UI and management APIs). In a multi-region deployment you can designate one instance as admin-only and strip admin surfaces from the regional instances. This keeps management access behind one hostname and reduces the attack surface of the instances serving LLM traffic.
 
-:::info
+<EnterpriseFeature>
 
-`DISABLE_ADMIN_ENDPOINTS` and `DISABLE_LLM_API_ENDPOINTS` are Enterprise features. [Enterprise Pricing](https://www.litellm.ai/#pricing)
+`DISABLE_ADMIN_ENDPOINTS` and `DISABLE_LLM_API_ENDPOINTS` are Enterprise features.
 
-:::
+</EnterpriseFeature>
 
 <Tabs>
 <TabItem value="admin" label="Admin instance">

@@ -2,9 +2,9 @@ import Image from '@theme/IdealImage';
 
 # Manage Routing Groups
 
-Routing groups let you apply different routing strategies to different models in the same router, for example latency-based routing for `gpt-4o` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
+Routing groups let you apply different routing strategies to different models in the same router, for example latency-based routing for `{{openai_large}}` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
 
-For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies).
+For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-and-callable-virtual-models).
 
 > Click any screenshot below to open the full Scribe walkthrough.
 
@@ -58,7 +58,7 @@ router_settings:
         ttl: 3600
 ```
 
-See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies) for the full schema, multi-group examples, and runtime update behavior.
+See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-and-callable-virtual-models) for the full schema, multi-group examples, and runtime update behavior.
 
 ## Test a Request
 

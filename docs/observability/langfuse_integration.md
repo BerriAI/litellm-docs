@@ -11,9 +11,11 @@ Example trace in Langfuse using multiple models via LiteLLM:
 <Image img={require('../../img/langfuse-example-trace-multiple-models-min.png')} />
 
 
-:::info
+:::tip Recommended: Use OpenTelemetry v2
 
-For Langfuse v3, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets).
+For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
+
+The SDK callback below (`langfuse`) is the legacy v2 SDK integration and is maintained for backward compatibility.
 
 :::
 
@@ -22,8 +24,16 @@ For Langfuse v3, we recommend using the `langfuse_otel` preset in the [OpenTelem
 
 👉 [**Follow this link to start sending logs to langfuse with LiteLLM Proxy server**](../proxy/logging)
 
+To route different teams or virtual keys to different Langfuse projects, see [Team/Key Based Logging](../proxy/team_logging). Team defaults live in trusted `config.yaml` (where `os.environ/...` references are resolved by the gateway), while per-key callbacks are provisioned via `/key/generate` or `/key/update` with resolved credential values; these are stored settings on the key, not per-request credentials.
+
 
 ## Usage with LiteLLM Python SDK
+
+:::note Legacy SDK Integration
+
+This section covers the legacy Langfuse v2 SDK integration. For Langfuse v3+, prefer the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets) for better performance and compatibility.
+
+:::
 
 ### Pre-Requisites
 Ensure you have run `uv add langfuse` for this integration
@@ -32,7 +42,7 @@ uv add langfuse==2.59.7 litellm
 ```
 
 ### Quick Start
-Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse:
+Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse (legacy v2 SDK):
 
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
@@ -62,7 +72,7 @@ litellm.success_callback = ["langfuse"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -93,7 +103,7 @@ litellm.success_callback = ["langfuse"]
  
 # openai call
 response = completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
@@ -129,19 +139,19 @@ litellm.success_callback = ["langfuse"]
 
 # set custom langfuse trace params and generation params
 response = completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ],
   metadata={
       "generation_name": "ishaan-test-generation",  # set langfuse Generation Name
       "generation_id": "gen-id22",                  # set langfuse Generation ID 
-      "parent_observation_id": "obs-id9"            # set langfuse Parent Observation ID
-      "version":  "test-generation-version"         # set langfuse Generation Version
+      "parent_observation_id": "obs-id9",           # set langfuse Parent Observation ID
+      "version":  "test-generation-version",        # set langfuse Generation Version
       "trace_user_id": "user-id2",                  # set langfuse Trace User ID
       "session_id": "session-1",                    # set langfuse Session ID
       "tags": ["tag1", "tag2"],                     # set langfuse Tags
-      "trace_name": "new-trace-name"                # set langfuse Trace Name
+      "trace_name": "new-trace-name",               # set langfuse Trace Name
       "trace_id": "trace-id22",                     # set langfuse Trace ID
       "trace_metadata": {"key": "value"},           # set langfuse Trace Metadata
       "trace_version": "test-trace-version",        # set langfuse Trace Version (if not set, defaults to Generation Version)
@@ -165,12 +175,12 @@ You can also pass `metadata` as part of the request header with a `langfuse_*` p
 ```shell
 curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'langfuse_trace_id: trace-id2' \
     --header 'langfuse_trace_user_id: user-id2' \
     --header 'langfuse_trace_metadata: {"key":"value"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -206,7 +216,7 @@ Any other key value pairs passed into the metadata are logged on the generation 
 
 ```python
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hi"}],
     metadata={"metadata": {"my_key": "my_value"}},   # arrives as requester_metadata
 )
@@ -231,7 +241,7 @@ litellm.failure_callback = ["langfuse"]
 
 # Request 1 → Langfuse Project A
 response_a = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello from team A"}],
     langfuse_public_key="pk-lf-project-a...",
     langfuse_secret_key="sk-lf-project-a...",
@@ -240,7 +250,7 @@ response_a = completion(
 
 # Request 2 → Langfuse Project B (different project)
 response_b = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello from team B"}],
     langfuse_public_key="pk-lf-project-b...",
     langfuse_secret_key="sk-lf-project-b...",
@@ -258,7 +268,7 @@ litellm.success_callback = ["langfuse"]
 litellm.failure_callback = ["langfuse"]
 
 response = await acompletion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hi"}],
     langfuse_public_key="pk-lf-...",
     langfuse_secret_key="sk-lf-...",
@@ -297,7 +307,7 @@ os.environ['OPENAI_API_KEY']="sk-..."
 litellm.success_callback = ["langfuse"] 
 
 chat = ChatLiteLLM(
-  model="gpt-3.5-turbo"
+  model="{{openai_small}}",
   model_kwargs={
       "metadata": {
         "trace_user_id": "user-id2", # set langfuse Trace User ID

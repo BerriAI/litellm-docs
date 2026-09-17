@@ -115,7 +115,7 @@ You can also create pass through endpoints using the `config.yaml` file. Here's 
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   pass_through_endpoints:
     - path: "/v1/rerank"                                  # Route on LiteLLM Proxy
       target: "https://api.cohere.com/v1/rerank"          # Target endpoint
@@ -351,11 +351,11 @@ anthropic_adapter = AnthropicAdapter()
 model_list:
   - model_name: my-claude-endpoint
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   pass_through_endpoints:
     - path: "/v1/messages"
       target: custom_callbacks.anthropic_adapter
@@ -367,7 +367,7 @@ general_settings:
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
-  -H 'x-api-key: sk-1234' \
+  -H "x-api-key: $LITELLM_API_KEY" \
   -H 'anthropic-version: 2023-06-01' \
   -H 'content-type: application/json' \
   -d '{
@@ -421,6 +421,16 @@ general_settings:
   litellm_jwtauth:
     team_ids_jwt_field: "team_ids"
     team_allowed_routes: ["openai_routes","info_routes","mapped_pass_through_routes"]
+```
+
+For your own pass-through endpoints, `mapped_pass_through_routes` only covers the provider prefixes LiteLLM ships with. If your endpoints share a custom prefix, grant that prefix once with a trailing `*` and every endpoint you register under it later is allowed without another config change.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    team_ids_jwt_field: "team_ids"
+    team_allowed_routes: ["openai_routes","info_routes","/internal-models/*"]
 ```
 
 ### Getting Help

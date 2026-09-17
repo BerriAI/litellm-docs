@@ -99,7 +99,7 @@ View the complete load testing script: [gist.github.com/AlexsanderHamir/no_cache
 
 This release adds support for OAuth 2.0 Client Credentials for MCP servers. This is great for **Internal Dev Tools** use-cases, as it enables your users to call MCP servers, with their own credentials. E.g. Allowing your developers to call the Github MCP, with their own credentials.
 
-[Set it up today on Claude Code](../../docs/tutorials/claude_responses_api#connecting-mcp-servers)
+[Set it up today on Claude Code](/docs/tutorials/claude_responses_api)
 
 ### Scheduled Key Rotations
 
@@ -261,7 +261,7 @@ This is great for Proxy Admins who need to enforce security policies for product
 
 #### Features
 
-- **[OpenTelemetry](../../docs/observability/otel)**
+- **[OpenTelemetry](/docs/observability/opentelemetry_v2)**
     - Use generation_name for span naming in logging method - [PR #14799](https://github.com/BerriAI/litellm/pull/14799)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Handle non-serializable objects in Langfuse logging - [PR #15148](https://github.com/BerriAI/litellm/pull/15148)
@@ -272,7 +272,7 @@ This is great for Proxy Admins who need to enforce security policies for product
 
 #### Guardrails
 
-- **[Javelin](../../docs/proxy/guardrails)**
+- **[Javelin](/docs/proxy/guardrails/quick_start)**
     - Add Javelin standalone guardrails integration for LiteLLM Proxy - [PR #14983](https://github.com/BerriAI/litellm/pull/14983)
     - Add logging for important status fields in guardrails - [PR #15090](https://github.com/BerriAI/litellm/pull/15090)
     - Don't run post_call guardrail if no text returned from Bedrock - [PR #15106](https://github.com/BerriAI/litellm/pull/15106)

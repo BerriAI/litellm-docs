@@ -44,6 +44,7 @@ Nine values. The MCP server's outbound `Authorization` header (or per-request Si
 | `api_key` / `bearer_token` / `basic` / `authorization` / `token` | Static header, sent verbatim per call | [MCP Overview](./mcp) |
 | `oauth2` | PKCE (interactive) or M2M `client_credentials`. Discriminated by `oauth2_flow`. | [MCP OAuth](./mcp_oauth) |
 | `oauth2_token_exchange` | RFC 8693 On-Behalf-Of (OBO) — exchange the caller's bearer token for a scoped MCP token | [MCP OBO Auth](./mcp_obo_auth) |
+| `oauth2_id_jag` | Identity Assertion Authorization Grant: two-leg exchange of the user's identity token (inbound or captured at SSO login) for an MCP access token | [MCP ID-JAG Auth](./mcp_id_jag) |
 | `aws_sigv4` | Per-request SigV4 signature using a dedicated MCP-side credential chain | [MCP AWS SigV4](./mcp_aws_sigv4) |
 
 ### A2A: auth mode inferred from `litellm_params`
@@ -132,7 +133,7 @@ Both surfaces use the `object_permission` model with intersection-style resoluti
 | Pre-call input guardrails (Presidio, Bedrock, Lakera, Aporia, etc.) | `mode: pre_mcp_call` | Standard chat-completion guardrails apply to the underlying LLM calls the agent makes |
 | During-call intervention | `mode: during_mcp_call` | — |
 | Zero-trust JWT signing | [`mcp_jwt_signer` guardrail](./mcp_zero_trust) | — (not applicable to A2A today) |
-| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](./proxy/guardrails) apply via the agent's underlying model calls |
+| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](/docs/proxy/guardrails/quick_start) apply via the agent's underlying model calls |
 
 ---
 

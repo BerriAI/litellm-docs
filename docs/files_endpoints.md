@@ -35,13 +35,13 @@ model_list:
   # litellm OpenAI Account
   - model_name: "gpt-4o-litellm"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_LITELLM_API_KEY
   
   # Free OpenAI Account
   - model_name: "gpt-4o-free"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_FREE_API_KEY
 ```
 
@@ -51,7 +51,7 @@ model_list:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 
@@ -135,7 +135,7 @@ client.files.retrieve(file_id, extra_headers={"custom-llm-provider": "openai"})
 model_list:
   - model_name: "gpt-4o-account1"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_KEY
 ```
 
@@ -252,7 +252,7 @@ print("content=", content)
 
 **Upload a File**
 ```python
-from litellm
+import litellm
 import os 
 
 os.environ["OPENAI_API_KEY"] = "sk-.."
@@ -322,7 +322,7 @@ print("file content=", content.text)
 
 ### [Azure OpenAI](./providers/azure#azure-batches-api)
 
-### [Vertex AI](./providers/vertex#batch-apis)
+### [Vertex AI](/docs/providers/vertex_batch)
 
 ### [Bedrock](./providers/bedrock_batches#4-retrieve-batch-results)
 

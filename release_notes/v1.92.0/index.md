@@ -231,9 +231,9 @@ Claude Sonnet 5 ships with pricing entries for Anthropic (`claude-sonnet-5`), Am
 
 - **[Model Armor](../../docs/proxy/guardrails/model_armor)**
     - Scan file and document attachments with Model Armor - [PR #31655](https://github.com/BerriAI/litellm/pull/31655)
-- **[CrowdStrike AIDR](../../docs/proxy/guardrails)**
+- **[CrowdStrike AIDR](/docs/proxy/guardrails/quick_start)**
     - Capture user and model metadata, reading identity from both metadata bags - [PR #29517](https://github.com/BerriAI/litellm/pull/29517), [PR #29991](https://github.com/BerriAI/litellm/pull/29991)
-- **[Headroom](../../docs/proxy/guardrails)**
+- **[Headroom](/docs/proxy/guardrails/quick_start)**
     - Add CCR (compress-cache-retrieve) via an agentic loop - [PR #31681](https://github.com/BerriAI/litellm/pull/31681)
     - Add an `unreachable_fallback` fail-open option to the headroom guardrail - [PR #32026](https://github.com/BerriAI/litellm/pull/32026)
 - **General**

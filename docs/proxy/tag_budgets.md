@@ -36,7 +36,7 @@ Create a new tag and set `max_budget` and `budget_duration`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/new' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "name": "engineering", 
@@ -103,7 +103,7 @@ Use the top-level `tags` field on `/key/generate` or `/key/update`:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "tags": ["engineering"]
@@ -114,7 +114,7 @@ You can also set tags under key `metadata`:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "metadata": {
@@ -144,12 +144,12 @@ If you did not attach tags to the API key, add tags to each request in the `meta
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -165,10 +165,10 @@ response = client.chat.completions.create(
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -189,7 +189,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-your-key-with-engineering-tag' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```
@@ -198,10 +198,10 @@ If you skipped step 2, include the tag in the request body instead:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -230,7 +230,7 @@ Get information about specific tags:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/info' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "names": ["engineering", "marketing"]
@@ -270,7 +270,7 @@ Update an existing tag's budget:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/update' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "name": "engineering",
@@ -283,7 +283,7 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/delete' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "name": "engineering"
@@ -296,7 +296,7 @@ You can apply multiple tags to a single request to track costs across different 
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -308,10 +308,10 @@ response = client.chat.completions.create(
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering", "project-alpha", "customer-acme"]

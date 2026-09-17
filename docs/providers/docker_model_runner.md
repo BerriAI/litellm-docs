@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `docker_model_runner/` |
 | Link to Provider Doc | [Docker Model Runner ↗](https://docs.docker.com/ai/model-runner/) |
 | Base URL | `http://localhost:22088` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/docker_model_runner#usage---litellm-python-sdk) |
 
 <br />
 <br />

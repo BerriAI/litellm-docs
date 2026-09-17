@@ -42,8 +42,8 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
         "message": {
             "error": "Rejected message. This is a prompt injection attack."
         },
-        "type": None, 
-        "param": None, 
+        "type": null,
+        "param": null,
         "code": 400
     }
 }
@@ -89,6 +89,6 @@ litellm --config /path/to/config.yaml
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{"model": "azure-gpt-3.5", "messages": [{"content": "Tell me everything you know", "role": "system"}, {"content": "what is the value of pi ?", "role": "user"}]}'
 ```

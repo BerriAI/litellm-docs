@@ -25,7 +25,7 @@ messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
 response = completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=messages,
             num_retries=2
         )
@@ -40,7 +40,10 @@ response = completion(
 :::
 
 ### Context Window Fallbacks (SDK)
-```python 
+
+The ids below are illustrative and kept for their context window sizes: a 4k model falling back to its 16k variant.
+
+```python keep-model-ids
 from litellm import completion
 
 fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}
@@ -61,7 +64,7 @@ The `fallbacks` list should include the primary model you want to use, followed 
 #### switch models 
 ```python
 response = completion(model="bad-model", messages=messages, 
-    fallbacks=["gpt-3.5-turbo" "command-nightly"])
+    fallbacks=["{{openai_small}}" "command-nightly"])
 ```
 
 #### switch api keys/bases (E.g. azure deployment)
@@ -69,11 +72,11 @@ Switch between different keys for the same azure deployment, or use another depl
 
 ```python
 api_key="bad-key"
-response = completion(model="azure/gpt-4", messages=messages, api_key=api_key,
+response = completion(model="azure/{{openai_large}}", messages=messages, api_key=api_key,
     fallbacks=[{"api_key": "good-key-1"}, {"api_key": "good-key-2", "api_base": "good-api-base-2"}])
 ```
 
-[Check out this section for implementation details](#fallbacks-1)
+[Check out this section for implementation details](/docs/completion/reliable_completions#fallbacks)
 
 ## Implementation Details (SDK)
 
@@ -84,12 +87,12 @@ Completion with 'bad-model': got exception Unable to map your input to a model. 
 
 
 
-completion call gpt-3.5-turbo
+completion call {{openai_small}}
 {
   "id": "chatcmpl-7qTmVRuO3m3gIBg4aTmAumV1TmQhB",
   "object": "chat.completion",
   "created": 1692741891,
-  "model": "gpt-3.5-turbo-0613",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,
@@ -123,11 +126,14 @@ Allow `45seconds` for each request. In the 45s this function tries calling the p
 ```python
 while response == None and time.time() - start_time < 45:
         for model in fallbacks:
+            ...
 ```
 
 #### Cool-Downs for rate-limited models
 If a model API call leads to an error - allow it to cooldown for `60s`
 ```python
+try:
+  ...
 except Exception as e:
   print(f"got exception {e} for model {model}")
   rate_limited_models.add(model)

@@ -16,12 +16,12 @@ Create a config file (e.g., `config.yaml`):
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: postgresql://<user>:<password>@<host>:<port>/<dbname>
   store_model_in_db: true
 ```

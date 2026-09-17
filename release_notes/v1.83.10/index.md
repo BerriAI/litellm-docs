@@ -79,13 +79,13 @@ pip install litellm==1.83.10
   ```bash
   # Per key
   curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
 
   # Per team
   curl -L -X POST 'http://0.0.0.0:4000/team/new' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
   ```
@@ -305,7 +305,7 @@ pip install litellm==1.83.10
 
 ### Logging
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add 7m and 10m latency histogram buckets - [PR #25071](https://github.com/BerriAI/litellm/pull/25071)
     - Performance improvements for Prometheus exporter - [PR #25934](https://github.com/BerriAI/litellm/pull/25934)
     - Resolve `prometheus_helpers` file/package shadow breaking `/global/spend/logs` - [PR #26026](https://github.com/BerriAI/litellm/pull/26026)

@@ -8,7 +8,7 @@
 | Provider Route on LiteLLM | `poe/` |
 | Link to Provider Doc | [Poe Website ↗](https://poe.com) |
 | Base URL | `https://api.poe.com/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/poe#usage---litellm-python-sdk) |
 
 <br />
 

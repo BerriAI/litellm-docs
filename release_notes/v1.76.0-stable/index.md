@@ -66,7 +66,7 @@ This release is not live yet.
     - Updated URL handling for DataRobot provider URL - [PR #13880](https://github.com/BerriAI/litellm/pull/13880)
 
 #### Features
-- **[Together AI](../../docs/providers/together)**
+- **[Together AI](/docs/providers/togetherai)**
     - Added Qwen3, Deepseek R1 0528 Throughput, GLM 4.5 and GPT-OSS models cost tracking - [PR #13637](https://github.com/BerriAI/litellm/pull/13637), s/o  @[Tasmay-Tibrewal](https://github.com/Tasmay-Tibrewal)
 - **[Fireworks AI](../../docs/providers/fireworks_ai)**
     - add fireworks_ai/accounts/fireworks/models/deepseek-v3-0324 - [PR #13821](https://github.com/BerriAI/litellm/pull/13821)
@@ -91,7 +91,7 @@ This release is not live yet.
     - Support new ‘thinking’ response block - [PR #13671](https://github.com/BerriAI/litellm/pull/13671)
 - **[Databricks](../../docs/providers/databricks)**
     - remove deprecated dbrx models (dbrx-instruct, llama 3.1) - [PR #13843](https://github.com/BerriAI/litellm/pull/13843)
-- **[AI/ML API](../../docs/providers/ai_ml_api)**
+- **[AI/ML API](/docs/providers/aiml)**
     - Image gen api support - [PR #13893](https://github.com/BerriAI/litellm/pull/13893)
 
 
@@ -137,17 +137,17 @@ This release is not live yet.
 - **[Bedrock Guardrails](../../docs/proxy/guardrails/bedrock)**
     - Add bedrock api key support - [PR #13835](https://github.com/BerriAI/litellm/pull/13835)
 #### Features
-- **[Datadog LLM Observability](../../docs/integrations/datadog)**
+- **[Datadog LLM Observability](/docs/observability/datadog)**
     - Add support for Failure Logging [PR #13726](https://github.com/BerriAI/litellm/pull/13726)
     - Add time to first token, litellm overhead, guardrail overhead latency metrics - [PR #13734](https://github.com/BerriAI/litellm/pull/13734)
     - Add support for tracing guardrail input/output - [PR #13767](https://github.com/BerriAI/litellm/pull/13767)
-- **[Langfuse OTEL](../../docs/integrations/langfuse)**
+- **[Langfuse OTEL](/docs/observability/opentelemetry_v2#2-send-traces-to-a-specific-tool-presets)**
     - Allow using Key/Team Based Logging - [PR #13791](https://github.com/BerriAI/litellm/pull/13791)
-- **[AIM](../../docs/integrations/aim)**
+- **[AIM](/docs/proxy/guardrails/aim_security)**
     - Migrate to new firewall API - [PR #13748](https://github.com/BerriAI/litellm/pull/13748)
 - **[OTEL](../../docs/observability/opentelemetry_integration)**
     - Add OTEL tracing for actual LLM API call - [PR #13836](https://github.com/BerriAI/litellm/pull/13836)
-- **[MLFlow](../../docs/observability/mlflow_integration)**
+- **[MLFlow](/docs/observability/mlflow)**
     - Include predicted output in MLflow tracing - [PR #13795](https://github.com/BerriAI/litellm/pull/13795), s/o @TomeHirata  
 
 

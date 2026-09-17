@@ -1,14 +1,6 @@
 # Google Secret Manager
 
-:::info
-
-✨ **This is an Enterprise Feature**
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 Support for [Google Secret Manager](https://cloud.google.com/security/products/secret-manager)
 
@@ -43,5 +35,5 @@ You can now test this by starting your proxy:
 litellm --config /path/to/config.yaml
 ```
 
-[Quick Test Proxy](../proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain-langchain-js)
+[Quick Test Proxy](/docs/proxy/quick_start#using-litellm-proxy---curl-request-openai-package-langchain)
 

@@ -13,9 +13,9 @@ Define your guardrails under the `guardrails` section:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -70,7 +70,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test Request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Successful Call" value="allowed">
@@ -78,9 +78,9 @@ litellm --config config.yaml --detailed_debug
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Hello, how can you help me today?"}
     ],
@@ -101,9 +101,9 @@ Expect this to fail if content violates detector policies:
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My email is test@example.com and my SSN is 123-45-6789"}
     ],

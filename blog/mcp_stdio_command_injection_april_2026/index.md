@@ -17,7 +17,7 @@ The fix landed in [commit `7b7f304`](https://github.com/BerriAI/litellm/commit/7
 ## TLDR;
 
 - **This was not exploitable by unauthenticated users.** The affected endpoints (MCP server creation and the `/mcp-rest/test/*` preview endpoints) all sit behind LiteLLM's auth. An attacker needed a valid LiteLLM API key, and with the patch the `PROXY_ADMIN` role, before they could reach this code path.
-- **The fix has been live since `v1.83.6-nightly`.** The first stable release with the fix is **`v1.83.7-stable`**. Full list of patched versions [below](#versions-with-the-fix).
+- **The fix has been live since `v1.83.6-nightly`.** The first stable release with the fix is **`v1.83.7-stable`**. Full list of patched versions [below](/blog/mcp-stdio-command-injection-april-2026#versions-with-the-fix).
 - **If you find other vulnerabilities, please send them our way.** We run a [bug bounty program](https://github.com/BerriAI/litellm/security) and pay out for P0 (supply chain) and P1 (unauthenticated proxy access) issues. See our [previous security update](https://docs.litellm.ai/blog/security-hardening-april-2026#bug-bounty-program) for the current bounty table.
 
 {/* truncate */}

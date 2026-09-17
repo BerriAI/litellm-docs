@@ -24,7 +24,7 @@ LiteLLM Proxy is **Anthropic-compatible**:
 * /messages 
 
 LiteLLM Proxy is **Vertex AI compatible**:
-- [Supports ALL Vertex Endpoints](../vertex_ai)
+- [Supports ALL Vertex Endpoints](/docs/pass_through/vertex_ai)
 
 This doc covers:
 
@@ -67,7 +67,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -105,7 +105,7 @@ client = openai.AzureOpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -138,14 +138,14 @@ llm = AzureOpenAI(
     engine="azure-gpt-3.5",               # model_name on litellm proxy
     temperature=0.0,
     azure_endpoint="http://0.0.0.0:4000", # litellm proxy endpoint
-    api_key="sk-1234",                    # litellm proxy API Key
+    api_key="sk-<your-litellm-api-key>",                    # litellm proxy API Key
     api_version="2023-07-01-preview",
 )
 
 embed_model = AzureOpenAIEmbedding(
     deployment_name="azure-embedding-model",
     azure_endpoint="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     api_version="2023-07-01-preview",
 )
 
@@ -169,7 +169,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -201,7 +201,7 @@ os.environ["OPENAI_API_KEY"] = "anything"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -234,8 +234,8 @@ import { ChatOpenAI } from "@langchain/openai";
 
 
 const model = new ChatOpenAI({
-  modelName: "gpt-4",
-  openAIApiKey: "sk-1234",
+  modelName: "{{openai_large}}",
+  openAIApiKey: "sk-<your-litellm-api-key>",
   modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
 }, {
   basePath: "http://0.0.0.0:4000",
@@ -254,14 +254,14 @@ console.log(message);
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234", // This is the default and can be omitted
+  apiKey: "sk-<your-api-key>", // This is the default and can be omitted
   baseURL: "http://0.0.0.0:4000"
 });
 
 async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
-    model: 'gpt-3.5-turbo',
+    model: '{{openai_small}}',
   }, {"metadata": {
             "generation_name": "ishaan-generation-openaijs-client",
             "generation_id": "openaijs-client-gen-id22",
@@ -296,7 +296,7 @@ message = client.messages.create(
             "content": "Hello, Claude",
         }
     ],
-    model="claude-3-opus-20240229",
+    model="{{anthropic}}",
 )
 print(message.content)
 ```
@@ -311,7 +311,7 @@ from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
 
 
-client = MistralClient(api_key="sk-1234", endpoint="http://0.0.0.0:4000")
+client = MistralClient(api_key="sk-<your-litellm-api-key>", endpoint="http://0.0.0.0:4000")
 chat_response = client.chat(
     model="mistral-small-latest",
     messages=[
@@ -330,7 +330,7 @@ from openai import OpenAI
 import instructor
 from pydantic import BaseModel
 
-my_proxy_api_key = "" # e.g. sk-1234 - LITELLM KEY
+my_proxy_api_key = "" # e.g. sk-<your-litellm-api-key> - LITELLM KEY
 my_proxy_base_url = "" # e.g. http://0.0.0.0:4000 - LITELLM PROXY BASE URL
 
 # This enables response_model keyword
@@ -372,7 +372,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello!"}],
     extra_body={
         "metadata": {
@@ -394,7 +394,7 @@ from langchain_core.messages import HumanMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model="gpt-4o",
+    model="{{openai_large}}",
     extra_body={
         "metadata": {
             "tags": ["langchain-integration", "content-gen"],
@@ -414,7 +414,7 @@ response = chat.invoke([HumanMessage(content="Generate a blog post")])
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello!"}],
     "metadata": {
         "tags": ["api-test", "development"],
@@ -431,14 +431,14 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   baseURL: "http://0.0.0.0:4000"
 });
 
 async function main() {
   const response = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Hello!' }],
-    model: 'gpt-3.5-turbo',
+    model: '{{openai_small}}',
     metadata: {
       tags: ["javascript-client", "api-test"],
       trace_user_id: "js-user-789"
@@ -473,7 +473,7 @@ async function main() {
     }
   ],
   "created": 1704089632,
-  "model": "gpt-35-turbo",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": null,
   "usage": {
@@ -497,7 +497,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $OPTIONAL_YOUR_PROXY_KEY" \
 -d '{
-  "model": "gpt-4-turbo",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -513,13 +513,13 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```python 
 from openai import OpenAI
 client = OpenAI(
-    api_key="sk-1234", # [OPTIONAL] set if you set one on proxy, else set ""
+    api_key="sk-<your-litellm-api-key>", # [OPTIONAL] set if you set one on proxy, else set ""
     base_url="http://0.0.0.0:4000",
 )
 
 messages = [{"role": "user", "content": "this is a test request, write a short poem"}]
 completion = client.chat.completions.create(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=messages,
   stream=True
 )
@@ -545,7 +545,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $OPTIONAL_YOUR_PROXY_KEY" \
 -d '{
-  "model": "gpt-4-turbo",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -584,7 +584,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```python 
 from openai import OpenAI
 client = OpenAI(
-    api_key="sk-1234", # [OPTIONAL] set if you set one on proxy, else set ""
+    api_key="sk-<your-litellm-api-key>", # [OPTIONAL] set if you set one on proxy, else set ""
     base_url="http://0.0.0.0:4000",
 )
 
@@ -610,7 +610,7 @@ tools = [
 ]
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 completion = client.chat.completions.create(
-  model="gpt-4o", # use 'model_name' from config.yaml
+  model="{{openai_large}}", # use 'model_name' from config.yaml
   messages=messages,
   tools=tools,
   tool_choice="auto"
@@ -707,8 +707,8 @@ print(query_result[:5])
       "embedding": [
         0.0023064255,
         -0.009327292,
-        .... 
-        -0.0028842222,
+        ...,
+        -0.0028842222
       ],
       "index": 0
     }
@@ -753,7 +753,7 @@ print(response)
 ```shell
 curl --location 'http://0.0.0.0:4000/moderations' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{"input": "Sample text goes here", "model": "text-moderation-stable"}'
 ```
 </TabItem>
@@ -815,7 +815,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -830,7 +830,7 @@ print(response)
 
 #### Start the LiteLLM proxy
 ```shell
-litellm --model gpt-3.5-turbo
+litellm --model {{openai_small}}
 
 #INFO: Proxy running on http://0.0.0.0:4000
 ```
@@ -852,7 +852,7 @@ OPENAI_REVERSE_PROXY=http://host.docker.internal:4000/v1/chat/completions
 
 Copy Librechat's `.env.example` to `.env` and overwrite the default OPENAI_API_KEY (by default it requires the user to pass a key).
 ```env
-OPENAI_API_KEY=sk-1234
+OPENAI_API_KEY=sk-<your-api-key>
 ```
 
 #### 4. Run LibreChat: 
@@ -888,7 +888,7 @@ $ aider --openai-api-base http://0.0.0.0:4000 --openai-api-key fake-key
 </TabItem>
 <TabItem value="autogen" label="AutoGen">
 
-```python
+```bash
 uv add pyautogen
 ```
 
@@ -935,7 +935,7 @@ import guidance
 
 # set api_base to your proxy
 # set api_key to anything
-gpt4 = guidance.llms.OpenAI("gpt-4", api_base="http://0.0.0.0:4000", api_key="anything")
+gpt4 = guidance.llms.OpenAI("{{openai_large}}", api_base="http://0.0.0.0:4000", api_key="anything")
 
 experts = guidance('''
 {{#system~}}
@@ -972,11 +972,11 @@ Use this when you want to send 1 request to N Models
 
 #### Expected Request Format
 
-Pass model as a string of comma separated value of models. Example `"model"="llama3,gpt-3.5-turbo"`
+Pass model as a string of comma separated value of models. Example `"model"="llama3,{{openai_small}}"`
 
 This same request will be sent to the following model groups on the [litellm proxy config.yaml](https://docs.litellm.ai/docs/proxy/configs)
 - `model_name="llama3"`
-- `model_name="gpt-3.5-turbo"` 
+- `model_name="{{openai_small}}"` 
 
 <Tabs>
 
@@ -986,10 +986,10 @@ This same request will be sent to the following model groups on the [litellm pro
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo,llama3",
+    model="{{openai_small}},llama3",
     messages=[
         {"role": "user", "content": "this is a test request, write a short poem"}
     ],
@@ -1022,7 +1022,7 @@ Get a list of responses when `model` is passed as a list
             )
         ],
         created=1715462919,
-        model='gpt-3.5-turbo-0125',
+        model='{{openai_small}}',
         object='chat.completion',
         system_fingerprint=None,
         usage=CompletionUsage(
@@ -1069,10 +1069,10 @@ Get a list of responses when `model` is passed as a list
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "llama3,gpt-3.5-turbo",
+    "model": "llama3,{{openai_small}}",
     "max_tokens": 10,
     "user": "litellm2",
     "messages": [
@@ -1128,7 +1128,7 @@ Get a list of responses when `model` is passed as a list
       }
     ],
     "created": 1715459877,
-    "model": "gpt-3.5-turbo-0125",
+    "model": "{{openai_small}}",
     "object": "chat.completion",
     "system_fingerprint": null,
     "usage": {

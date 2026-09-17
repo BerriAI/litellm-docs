@@ -8,16 +8,16 @@ Setup LiteLLM Proxy quickly via CLI.
 
 LiteLLM Server (LLM Gateway) manages:
 
-* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](#other-supported-models) in the OpenAI `ChatCompletions` & `Completions` format
+* **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](/docs/proxy/quick_start#supported-llms) in the OpenAI `ChatCompletions` & `Completions` format
 * **Cost tracking**: Authentication, Spend Tracking & Budgets [Virtual Keys](https://docs.litellm.ai/docs/proxy/virtual_keys)
-* **Load Balancing**: between [Multiple Models](#multiple-models---quick-start) + [Deployments of the same model](#multiple-instances-of-1-model) - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
+* **Load Balancing**: between Multiple Models + Deployments of the same model - LiteLLM proxy can handle 1.5k+ requests/second during load tests.
 
 ```shell
 $ uv tool install 'litellm[proxy]'
 ```
 
-:::warning Requires Python 3.10+
-LiteLLM 1.84.0 and newer require Python 3.10 or higher (`requires-python >=3.10`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on Python 3.9 pip silently resolves down to the last release that still allowed 3.9, which is 1.83.9, with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to 3.10+ (or use uv), then reinstall
+:::warning Minimum Python version
+LiteLLM 1.84.0 and newer require Python {{python_min_version}} or higher (`requires-python >={{python_min_version}}`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on an older interpreter pip silently resolves down to the last release whose `requires-python` still allowed it (1.83.9 for the previous floor), with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to {{python_min_version}}+ (or use uv), then reinstall
 :::
 
 ## Quick Start - LiteLLM Proxy CLI
@@ -36,6 +36,7 @@ Run with `--detailed_debug` if you need detailed debug logs
 
 ```shell
 $ litellm --model huggingface/bigcode/starcoder --detailed_debug
+```
 :::
 
 ### Test
@@ -58,7 +59,7 @@ $ export AWS_SECRET_ACCESS_KEY=
 ```
 
 ```shell
-$ litellm --model bedrock/anthropic.claude-v2
+$ litellm --model bedrock/us.anthropic.{{anthropic}}
 ```
 </TabItem>
 <TabItem value="azure" label="Azure OpenAI">
@@ -79,7 +80,7 @@ $ export OPENAI_API_KEY=my-api-key
 ```
 
 ```shell
-$ litellm --model gpt-3.5-turbo
+$ litellm --model {{openai_small}}
 ```
 </TabItem>
 <TabItem value="ollama" label="Ollama">
@@ -108,7 +109,7 @@ $ export VERTEX_LOCATION="us-west"
 ```
 
 ```shell
-$ litellm --model vertex_ai/gemini-pro
+$ litellm --model vertex_ai/{{gemini_flash}}
 ```
 </TabItem>
 
@@ -148,7 +149,7 @@ $ litellm --model sagemaker/jumpstart-dft-meta-textgeneration-llama-2-7b
 $ export ANTHROPIC_API_KEY=my-api-key
 ```
 ```shell
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -235,12 +236,12 @@ Example config
 
 ```yaml
 model_list: 
-  - model_name: gpt-3.5-turbo # user-facing model alias
+  - model_name: {{openai_small}} # user-facing model alias
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
       model: azure/<your-deployment-name>
       api_base: <your-azure-api-endpoint>
       api_key: <your-azure-api-key>
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -274,7 +275,7 @@ LiteLLM is compatible with several SDKs - including OpenAI SDK, Anthropic SDK, M
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-3.5-turbo",
+      "model": "{{openai_small}}",
       "messages": [
         {
           "role": "user",
@@ -295,7 +296,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -319,7 +320,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1
 )
 
@@ -379,7 +380,7 @@ This is **not recommended**. There is duplicate logic as the proxy also uses the
 from litellm import completion 
 
 response = completion(
-    model="openai/gpt-3.5-turbo", 
+    model="openai/{{openai_small}}", 
     messages = [
         {
             "role": "user",
@@ -415,7 +416,7 @@ message = client.messages.create(
             "content": "Hello, Claude",
         }
     ],
-    model="claude-3-opus-20240229",
+    model="{{anthropic}}",
 )
 print(message.content)
 ```
@@ -440,12 +441,12 @@ print(message.content)
 
 Events that occur during normal operation
 ```shell
-litellm --model gpt-3.5-turbo --debug
+litellm --model {{openai_small}} --debug
 ```
 
 Detailed information
 ```shell
-litellm --model gpt-3.5-turbo --detailed_debug
+litellm --model {{openai_small}} --detailed_debug
 ```
 
 ### Set Debug Level using env variables

@@ -156,7 +156,7 @@ model_list:
       mode: image_edit
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -178,7 +178,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",  # Your proxy URL
-    api_key="sk-1234"                  # Your proxy API key
+    api_key="sk-<your-litellm-api-key>"                  # Your proxy API key
 )
 
 # Edit image with FLUX Kontext Pro
@@ -207,7 +207,7 @@ response = litellm.image_edit(
     image=open("path/to/your/image.png", "rb"),
     prompt="Add a mystical forest background with magical creatures",
     api_base="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 img_base64 = response.data[0].b64_json
@@ -222,7 +222,7 @@ path.write_bytes(img_bytes)
 
 ```bash showLineNumbers title="Azure AI Image Editing via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="azure-flux-kontext-edit"' \
 --form 'prompt="Convert this image to a vintage sepia tone with old-fashioned effects"' \
 --form 'image=@"path/to/your/image.png"'

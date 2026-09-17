@@ -22,7 +22,7 @@ Using a custom api base
 $ export HUGGINGFACE_API_KEY=my-api-key #[OPTIONAL]
 $ litellm --model huggingface/tinyllama --api_base https://k58ory32yinf1ly0.us-east-1.aws.endpoints.huggingface.cloud
 ```
-OpenAI Compatible Endpoint at http://0.0.0.0:8000
+OpenAI Compatible Endpoint at http://0.0.0.0:4000
 
 **Step 2: Create a Virtual Env for LM Harness + Use OpenAI 0.28.1**
 We will now run lm harness with a new virtual env with openai==0.28.1
@@ -39,7 +39,7 @@ uv add openai==0.28.01
 
 **Step 3: Set OpenAI API Base & Key**
 ```shell
-$ export OPENAI_BASE_URL=http://0.0.0.0:8000
+$ export OPENAI_BASE_URL=http://0.0.0.0:4000
 ```
 
 LM Harness requires you to set an OpenAI API key `OPENAI_API_SECRET_KEY` for running benchmarks
@@ -74,7 +74,7 @@ $ litellm --model huggingface/bigcode/starcoder
 
 **Step 2: Set OpenAI API Base & Key**
 ```shell
-$ export OPENAI_BASE_URL=http://0.0.0.0:8000
+$ export OPENAI_BASE_URL=http://0.0.0.0:4000
 ```
 
 Set this to anything since the proxy has the credentials
@@ -96,7 +96,7 @@ cd FastEval
 On FastEval make the following **2 line code change** to set `OPENAI_BASE_URL`
 
 https://github.com/FastEval/FastEval/pull/90/files
-```python
+```python nolint
 try:
     api_base = os.environ["OPENAI_BASE_URL"] #changed: read api base from .env
     if api_base == None:
@@ -130,7 +130,7 @@ $ litellm --model huggingface/bigcode/starcoder
 
 **Step 2: Set OpenAI API Base & Key**
 ```shell
-$ export OPENAI_BASE_URL=http://0.0.0.0:8000
+$ export OPENAI_BASE_URL=http://0.0.0.0:4000
 ```
 
 **Step 3 Run with FLASK** 

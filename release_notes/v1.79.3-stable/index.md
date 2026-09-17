@@ -159,7 +159,7 @@ This update significantly improves `/responses` latency by integrating our inter
     - Add support for Anthropic Memory Tool - [PR #16115](https://github.com/BerriAI/litellm/pull/16115)
     - Propagate cache creation/read token costs for model info to fix Anthropic long context cost calculations - [PR #16376](https://github.com/BerriAI/litellm/pull/16376)
 
-- **[Vertex AI](../../docs/providers/vertex_ai)**
+- **[Vertex AI](/docs/providers/vertex)**
     - Add Vertex MiniMAX m2 model support - [PR #16373](https://github.com/BerriAI/litellm/pull/16373)
     - Correctly map 429 Resource Exhausted to RateLimitError - [PR #16363](https://github.com/BerriAI/litellm/pull/16363)
     - Add `vertex_credentials` support to `litellm.rerank()` for Vertex AI - [PR #16266](https://github.com/BerriAI/litellm/pull/16266)
@@ -211,15 +211,15 @@ This update significantly improves `/responses` latency by integrating our inter
     - Support responses API streaming in langfuse otel - [PR #16153](https://github.com/BerriAI/litellm/pull/16153)
     - Pass extra_body parameters to provider in Responses API requests - [PR #16320](https://github.com/BerriAI/litellm/pull/16320)
 
-- **[Container API](../../docs/container_api)**
+- **[Container API](/docs/containers)**
     - Add E2E Container API Support - [PR #16136](https://github.com/BerriAI/litellm/pull/16136)
     - Update container documentation to be similar to others - [PR #16327](https://github.com/BerriAI/litellm/pull/16327)
 
-- **[Video Generation API](../../docs/video_generation)**
+- **[Video Generation API](/docs/videos)**
     - Add Vertex and Gemini Videos API with Cost Tracking + UI support - [PR #16323](https://github.com/BerriAI/litellm/pull/16323)
     - Add `custom_llm_provider` support for video endpoints (non-generation) - [PR #16121](https://github.com/BerriAI/litellm/pull/16121)
 
-- **[Audio API](../../docs/audio)**
+- **[Audio API](/docs/audio_transcription)**
     - Add gpt-4o-transcribe cost tracking - [PR #16412](https://github.com/BerriAI/litellm/pull/16412)
 
 - **[Vector Stores](../../docs/vector_stores)**
@@ -296,10 +296,10 @@ This update significantly improves `/responses` latency by integrating our inter
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Fix langfuse input tokens logic for cached tokens - [PR #16203](https://github.com/BerriAI/litellm/pull/16203)
 
-- **[Opik](../../docs/proxy/logging#opik)**
+- **[Opik](/docs/observability/opik_integration)**
     - Fix the bug with not incorrect attachment to existing trace & refactor - [PR #15529](https://github.com/BerriAI/litellm/pull/15529)
 
-- **[S3](../../docs/proxy/logging#s3)**
+- **[S3](/docs/proxy/logging#s3-buckets)**
     - S3 logger, add support for ssl_verify when using minio logger - [PR #16211](https://github.com/BerriAI/litellm/pull/16211)
     - Strip base64 in s3 - [PR #16157](https://github.com/BerriAI/litellm/pull/16157)
     - Add allowing Key based prefix to s3 path - [PR #16237](https://github.com/BerriAI/litellm/pull/16237)
@@ -313,32 +313,32 @@ This update significantly improves `/responses` latency by integrating our inter
 
 ### Guardrails
 
-- **[Noma](../../docs/proxy/guardrails)**
+- **[Noma](/docs/proxy/guardrails/quick_start)**
     - Revert Noma Apply Guardrail implementation - [PR #16214](https://github.com/BerriAI/litellm/pull/16214)
     - Litellm noma guardrail support images - [PR #16199](https://github.com/BerriAI/litellm/pull/16199)
 
-- **[PANW Prisma AIRS](../../docs/proxy/guardrails)**
+- **[PANW Prisma AIRS](/docs/proxy/guardrails/quick_start)**
     - PANW prisma airs guardrail deduplication and enhanced session tracking - [PR #16273](https://github.com/BerriAI/litellm/pull/16273)
 
-- **[LiteLLM Custom Guardrail](../../docs/proxy/guardrails)**
+- **[LiteLLM Custom Guardrail](/docs/proxy/guardrails/quick_start)**
     - Add LiteLLM Gateway built in guardrail - [PR #16338](https://github.com/BerriAI/litellm/pull/16338)
     - UI - Allow configuring LiteLLM Custom Guardrail - [PR #16339](https://github.com/BerriAI/litellm/pull/16339)
     - Bug Fix: Content Filter Guard - [PR #16414](https://github.com/BerriAI/litellm/pull/16414)
 
 ### Secret Managers
 
-- **[CyberArk](../../docs/secret_managers)**
+- **[CyberArk](/docs/secret)**
     - Add CyberArk Secrets Manager Integration - [PR #16278](https://github.com/BerriAI/litellm/pull/16278)
     - Cyber Ark - Add Key Rotations support - [PR #16289](https://github.com/BerriAI/litellm/pull/16289)
 
-- **[HashiCorp Vault](../../docs/secret_managers)**
+- **[HashiCorp Vault](/docs/secret)**
     - Add configurable mount name and path prefix for HashiCorp Vault - [PR #16253](https://github.com/BerriAI/litellm/pull/16253)
     - Secret Manager - Hashicorp, add auth via approle - [PR #16374](https://github.com/BerriAI/litellm/pull/16374)
 
-- **[AWS Secrets Manager](../../docs/secret_managers)**
+- **[AWS Secrets Manager](/docs/secret)**
     - Add tags and descriptions support to aws secrets manager - [PR #16224](https://github.com/BerriAI/litellm/pull/16224)
 
-- **[Custom Secret Manager](../../docs/secret_managers)**
+- **[Custom Secret Manager](/docs/secret)**
     - Add Custom Secret Manager - Allow users to define and write a custom secret manager - [PR #16297](https://github.com/BerriAI/litellm/pull/16297)
 
 - **General**

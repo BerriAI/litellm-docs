@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `hyperbolic/` |
 | Link to Provider Doc | [Hyperbolic Documentation ↗](https://docs.hyperbolic.xyz) |
 | Base URL | `https://api.hyperbolic.xyz/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/hyperbolic#usage---litellm-python-sdk) |
 
 <br />
 <br />

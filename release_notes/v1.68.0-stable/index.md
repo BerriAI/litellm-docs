@@ -84,7 +84,7 @@ This is currently behind a feature flag, and we plan to have this be the default
 export LITELLM_RATE_LIMIT_ACCURACY=true
 ```
 
-[Read more here](../../docs/proxy/users#beta-multi-instance-rate-limiting) 
+[Read more here](/docs/proxy/users#multi-instance-rate-limiting)
 
 
 
@@ -92,7 +92,7 @@ export LITELLM_RATE_LIMIT_ACCURACY=true
 - **Gemini ([VertexAI](https://docs.litellm.ai/docs/providers/vertex#usage-with-litellm-proxy-server) + [Google AI Studio](https://docs.litellm.ai/docs/providers/gemini))**
     - Handle more json schema - openapi schema conversion edge cases [PR](https://github.com/BerriAI/litellm/pull/10351)
     - Tool calls - return ‘finish_reason=“tool_calls”’ on gemini tool calling response [PR](https://github.com/BerriAI/litellm/pull/10485)
-- **[VertexAI](../../docs/providers/vertex#metallama-api)**
+- **[VertexAI](/docs/providers/vertex)**
     - Meta/llama-4 model support [PR](https://github.com/BerriAI/litellm/pull/10492)
     - Meta/llama3 - handle tool call result in content [PR](https://github.com/BerriAI/litellm/pull/10492)
     - Meta/* - return ‘finish_reason=“tool_calls”’ on tool calling response [PR](https://github.com/BerriAI/litellm/pull/10492)
@@ -163,15 +163,15 @@ export LITELLM_RATE_LIMIT_ACCURACY=true
 ## Performance / Loadbalancing / Reliability improvements
 - **[Redis](../../docs/proxy/caching)**
     - Ensure all redis queues are periodically flushed, this fixes an issue where redis queue size was growing indefinitely when request tags were used - [PR](https://github.com/BerriAI/litellm/pull/10393)
-- **[Rate Limits](../../docs/proxy/users#set-rate-limit)**
-    - [Multi-instance rate limiting](../../docs/proxy/users#beta-multi-instance-rate-limiting) support across keys/teams/users/customers - [PR](https://github.com/BerriAI/litellm/pull/10458), [PR](https://github.com/BerriAI/litellm/pull/10497), [PR](https://github.com/BerriAI/litellm/pull/10500)
+- **[Rate Limits](/docs/proxy/users#set-rate-limits)**
+    - [Multi-instance rate limiting](/docs/proxy/users#multi-instance-rate-limiting) support across keys/teams/users/customers - [PR](https://github.com/BerriAI/litellm/pull/10458), [PR](https://github.com/BerriAI/litellm/pull/10497), [PR](https://github.com/BerriAI/litellm/pull/10500)
 - **[Azure OpenAI OIDC](../../docs/providers/azure#entra-id---use-azure_ad_token)**
     - allow using litellm defined params for [OIDC Auth](../../docs/providers/azure#entra-id---use-azure_ad_token) - [PR](https://github.com/BerriAI/litellm/pull/10394)
 
 
 ## General Proxy Improvements
 - **Security**
-    - Allow [blocking web crawlers](../../docs/proxy/enterprise#blocking-web-crawlers) - [PR](https://github.com/BerriAI/litellm/pull/10420)
+    - Allow [blocking web crawlers](/docs/proxy/public_routes) - [PR](https://github.com/BerriAI/litellm/pull/10420)
 - **Auth**
     - Support [`x-litellm-api-key` header param by default](../../docs/pass_through/vertex_ai#use-with-virtual-keys), this fixes an issue from the prior release where `x-litellm-api-key` was not being used on vertex ai passthrough requests - [PR](https://github.com/BerriAI/litellm/pull/10392)
     - Allow key at max budget to call non-llm api endpoints - [PR](https://github.com/BerriAI/litellm/pull/10392)

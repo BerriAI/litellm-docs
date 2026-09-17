@@ -63,6 +63,19 @@ lite whoami
 ```
 :::
 
+#### Pre-fill the verification code
+
+By default the browser page that finishes `lite login` asks you to type the verification code the terminal printed. To have `lite login` open that page with the code already filled in, so you only confirm it and click Continue, set on the proxy:
+
+```yaml
+general_settings:
+  allow_cli_sso_verification_uri_complete: true
+```
+
+The flag is off by default because typing the code by hand is what ties the browser page to the terminal that started the login. With the flag on, still check that the pre-filled code matches the one the terminal printed before you confirm it. Older `lite` versions open the page without the code either way, so upgrade the CLI as well
+
+If that browser is already signed in to your SSO provider and you would rather skip the code entirely, run `lite login --pkce` instead: one Approve click and the terminal prints `Login successful!`. See [Browser sign-in with PKCE](#browser-sign-in-with-pkce)
+
 #### Attribution metadata (OIDC claims)
 
 Map allowlisted OIDC claims into the LiteLLM user's `metadata` and return them to the CLI in `/sso/cli/poll` as `attribution_metadata`. Use this for stable attribution fields (for example employment type or cost center) without parsing large group lists in the client.
@@ -138,6 +151,8 @@ Example poll response (after SSO completes):
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you should be able to login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
+
+   The browser page asks for the verification code the terminal printed. To skip typing it, either have the proxy [pre-fill the verification code](#pre-fill-the-verification-code) or, when the browser already holds your SSO session, use [`lite login --pkce`](#browser-sign-in-with-pkce), which needs no code at all
 
    The credential goes into your OS keychain, and `lite login` prints where it landed. On a machine with no keychain it falls back to `~/.litellm/token.json` with owner-only permissions. See [the `lite login` credential](./management_cli.md#the-lite-login-credential) for the details and for how to turn keychain storage off
 

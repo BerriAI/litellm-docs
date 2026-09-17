@@ -65,7 +65,7 @@ response = completion(
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -92,7 +92,7 @@ response = completion(
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "command-r-plus",
@@ -167,7 +167,7 @@ response = completion(
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -189,7 +189,7 @@ response = completion(
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "mistral",
@@ -328,7 +328,7 @@ os.environ["AZURE_AI_API_KEY"] = "your-azure-ai-api-key"
 os.environ["AZURE_AI_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
 
 response = completion(
-    model="azure_ai/claude-opus-4-1",
+    model="azure_ai/{{anthropic_large}}",
     messages=[{"role": "user", "content": "Explain how Azure Anthropic hosts Claude Opus differently from the public Anthropic API."}],
     max_tokens=1200,
     temperature=0.7,
@@ -356,7 +356,7 @@ export AZURE_AI_API_BASE="https://my-resource.services.ai.azure.com/anthropic"
 model_list:
   - model_name: claude-4-azure
     litellm_params:
-      model: azure_ai/claude-opus-4-1
+      model: azure_ai/{{anthropic_large}}
       api_key: os.environ/AZURE_AI_API_KEY
       api_base: os.environ/AZURE_AI_API_BASE
 ```
@@ -457,7 +457,7 @@ Test request
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "cohere-rerank-v3.5",

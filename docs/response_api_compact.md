@@ -18,7 +18,7 @@ Compress conversation history using OpenAI's `/responses/compact` endpoint.
 import litellm
 
 response = litellm.compact_responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input=[{"role": "user", "content": "Hello, how are you?"}],
     instructions="Be helpful",
     previous_response_id="resp_abc123"  # optional
@@ -37,9 +37,9 @@ print(response.output)
 ```bash showLineNumbers title="Compact Request"
 curl http://localhost:4000/v1/responses/compact \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "openai/gpt-4o",
+    "model": "openai/{{openai_large}}",
     "input": [{"role": "user", "content": "Hello"}],
     "instructions": "Be helpful"
   }'
@@ -53,9 +53,9 @@ import httpx
 
 response = httpx.post(
     "http://localhost:4000/v1/responses/compact",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     json={
-        "model": "openai/gpt-4o",
+        "model": "openai/{{openai_large}}",
         "input": [{"role": "user", "content": "Hello"}],
         "instructions": "Be helpful"
     }

@@ -44,7 +44,7 @@ pip install litellm==1.81.14
 
 - **Guardrail Garden**: [Browse built-in and partner guardrails by use case: competitor blocking, topic filtering, GDPR, prompt injection, and more. Pick a template, customize it, attach it to a team or key.](../../docs/proxy/guardrails/policy_templates)
 - **Compliance Playground**: [Test any guardrail policy against your own traffic before it goes live. See precision, recall, and false positive rate, so you know how it'll behave in production.](../../docs/proxy/guardrails/policy_templates)
-- **3 new zero-cost built-in guardrails**: [Competitor name blocker, topic blocker, and insults filter, all gateway-level, &lt;0.1ms latency, no external API, configurable per-team or key](../../docs/proxy/guardrails)
+- **3 new zero-cost built-in guardrails**: [Competitor name blocker, topic blocker, and insults filter, all gateway-level, &lt;0.1ms latency, no external API, configurable per-team or key](/docs/proxy/guardrails/quick_start)
 - **Store Model in DB Settings via UI** - [Configure model storage directly in the Admin UI without editing config files or restarting the proxy, which is ideal for cloud deployments](../../docs/proxy/model_management#database-vs-configyaml-models)
 - **Claude Sonnet 4.6, day 0**: [Full support across Anthropic and Vertex AI: reasoning, computer use, prompt caching, 200K context](../../docs/providers/anthropic)
 - **20+ performance optimizations**: Faster routing, lower logging overhead, reduced cost-calculator latency, and connection pool fixes, for meaningfully less CPU and latency on every request
@@ -216,7 +216,7 @@ graph LR
 - **[hosted_vllm](../../docs/providers/vllm)**
     - Convert thinking blocks to content blocks for multi-turn conversations - [PR #21557](https://github.com/BerriAI/litellm/pull/21557)
 
-- **[OCI / Oracle](../../docs/providers/oci_cohere)**
+- **[OCI / Oracle](/docs/providers/oci)**
     - Fix Grok output pricing - [PR #21329](https://github.com/BerriAI/litellm/pull/21329)
 
 - **[AU Anthropic](../../docs/providers/anthropic)**
@@ -354,7 +354,7 @@ graph LR
 - **[DataDog](../../docs/proxy/logging#datadog)**
     - Add `team` tag to logs, metrics, and cost management - [PR #21449](https://github.com/BerriAI/litellm/pull/21449)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Fix double-counting of `litellm_proxy_total_requests_metric` - [PR #21159](https://github.com/BerriAI/litellm/pull/21159)
     - Guard against None metadata in Prometheus metrics - [PR #21489](https://github.com/BerriAI/litellm/pull/21489)
     - Add ASGI middleware for improved Prometheus metrics collection - [PR #20434](https://github.com/BerriAI/litellm/pull/20434)
@@ -396,13 +396,13 @@ graph LR
     - Insults content filter - [PR #21729](https://github.com/BerriAI/litellm/pull/21729)
     - MCP Security guardrail to block unregistered MCP servers - [PR #21429](https://github.com/BerriAI/litellm/pull/21429)
 
-- **[Generic Guardrails](../../docs/proxy/guardrails)**
+- **[Generic Guardrails](/docs/proxy/guardrails/quick_start)**
     - Add configurable fallback to handle generic guardrail endpoint connection failures - [PR #21245](https://github.com/BerriAI/litellm/pull/21245)
 
-- **[Presidio](../../docs/proxy/guardrails)**
+- **[Presidio](/docs/proxy/guardrails/quick_start)**
     - Fix Presidio controls configuration - [PR #21798](https://github.com/BerriAI/litellm/pull/21798)
 
-- **[LakeraAI](../../docs/proxy/guardrails)**
+- **[LakeraAI](/docs/proxy/guardrails/quick_start)**
     - Avoid `KeyError` on missing `LAKERA_API_KEY` during initialization - [PR #21422](https://github.com/BerriAI/litellm/pull/21422)
 
 ### Auto Routing

@@ -75,8 +75,9 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
+  onBrokenAnchors: 'throw',
+  onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -320,12 +321,19 @@ const config = {
         gtag:
           process.env.NODE_ENV === 'production'
             ? {
-                trackingID: 'G-K7K215ZVNC',
+                // Two GA4 destinations. G-K7K215ZVNC is the docs property and
+                // stays first: plugin-google-gtag uses trackingID[0] for the
+                // gtag.js loader URL and emits one gtag('config', ...) per id.
+                // G-G3LG9H6J6B is the canonical litellm.ai property, also on the
+                // Webflow marketing site, so a visitor moving between
+                // www.litellm.ai and docs.litellm.ai stays in one session.
+                trackingID: ['G-K7K215ZVNC', 'G-G3LG9H6J6B'],
                 anonymizeIP: true,
               }
             : undefined,
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
@@ -395,10 +403,10 @@ const config = {
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            type: 'doc',
-            docId: 'learn/autorouter_cli',
+            type: 'docSidebar',
+            sidebarId: 'autoRouterSidebar',
             position: 'left',
-            label: 'Autorouter CLI',
+            label: 'Auto Router',
           },
           {
             href: 'https://trust.litellm.ai/',

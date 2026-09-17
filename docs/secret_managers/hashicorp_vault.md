@@ -2,15 +2,7 @@ import Image from '@theme/IdealImage';
 
 # Hashicorp Vault
 
-:::info
-
-✨ **This is an Enterprise Feature**
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 | Feature | Support | Description |
 |---------|----------|-------------|
@@ -177,7 +169,7 @@ For example, for `AZURE_API_KEY`, the secret should be stored as:
 
 ```json
 {
-  "key": "sk-1234"
+  "key": "sk-<virtual-key>"
 }
 ```
 

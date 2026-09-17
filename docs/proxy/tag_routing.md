@@ -9,20 +9,20 @@ import TabItem from '@theme/TabItem';
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["free"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["paid"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
@@ -31,7 +31,7 @@ router_settings:
   enable_tag_filtering: True # 👈 Key Change
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### 2. Make Request with `tags=["free"]`
@@ -39,9 +39,9 @@ general_settings:
 ```bash
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-3.5-turbo-0125",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "usage": {"completion_tokens": 12, "prompt_tokens": 9, "total_tokens": 21}
 }
@@ -75,9 +75,9 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```bash
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -100,7 +100,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-4o-2024-05-13",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "usage": {"completion_tokens": 10, "prompt_tokens": 12, "total_tokens": 22}
 }
@@ -111,10 +111,10 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'x-litellm-tags: free,my-custom-tag' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -151,7 +151,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "fake-openai-endpoint",
     "messages": [
@@ -169,9 +169,9 @@ Prefix any tag with `!` to **exclude** deployments that carry that exact tag. Th
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["!provider:anthropic"]}
   }'
@@ -185,19 +185,19 @@ Any deployment tagged `provider:anthropic` is removed from the candidate pool be
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
   - model_name: chat
     litellm_params:
-      model: vertex_ai/gemini-2.0-flash
+      model: vertex_ai/{{gemini_flash}}
       api_key: os.environ/VERTEX_API_KEY
       tags: ["provider:vertex"]
 
@@ -205,7 +205,7 @@ router_settings:
   enable_tag_filtering: true
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Combining positive and negation tags
@@ -215,7 +215,7 @@ Use positive tags to select a tier and negation tags to exclude a provider withi
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -230,7 +230,7 @@ Send multiple `!` tags to exclude more than one deployment group:
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -248,13 +248,13 @@ When the primary model group is banned, the router falls through to the configur
 model_list:
   - model_name: primary
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: fallback
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -264,13 +264,13 @@ router_settings:
     - {"primary": ["fallback"]}
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "primary",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -299,7 +299,7 @@ Prefix any tag with `&` to require it. A deployment must carry every `&`-prefixe
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -315,13 +315,13 @@ Only a deployment carrying both `reasoning_type:high` and `provider:anthropic` i
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["reasoning_type:high", "provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["reasoning_type:high", "provider:openai"]
 
@@ -329,7 +329,7 @@ router_settings:
   enable_tag_filtering: true
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Combining required, negation, and plain tags
@@ -339,7 +339,7 @@ general_settings:
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -370,7 +370,7 @@ This is an explicit opt-in. Without it, behavior is unchanged: an unsatisfiable 
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -378,7 +378,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai", "default"]
     model_info:
@@ -388,7 +388,7 @@ router_settings:
   enable_tag_filtering: true
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Without `allow_fail_open`
@@ -396,7 +396,7 @@ general_settings:
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -412,7 +412,7 @@ Using the config above, the same request instead falls back to the default-tagge
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -454,7 +454,7 @@ With `tag_routing_prefix: "route:"` configured:
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -470,7 +470,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["default", "provider:anthropic"]
     model_info:
@@ -478,7 +478,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -487,7 +487,7 @@ router_settings:
   tag_routing_prefix: "route:" # opt-in: enables the prefix mechanism
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Prefixed tags and the unknown-tag fail-open guard
@@ -497,7 +497,7 @@ A prefixed `&`/`!` tag counts as known to the [unknown-tag fail-open guard](#fai
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -531,7 +531,7 @@ This matters on a proxy that serves many unrelated model groups. Turning on `rou
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "chat-compliance",
     "messages": [{"role": "user", "content": "Hello"}],
@@ -547,7 +547,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat-compliance
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -555,7 +555,7 @@ model_list:
 
   - model_name: chat-compliance
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
     model_info:
@@ -563,7 +563,7 @@ model_list:
 
   - model_name: incident-response
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       enable_tag_filtering: false # opt out for this group only
@@ -572,7 +572,7 @@ router_settings:
   enable_tag_filtering: false # router-wide default; chat-compliance overrides it
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 With this config, `chat-compliance` evaluates tags on every request even though the router-wide default is off, while every other model group, including `incident-response`, ignores tags and falls back to ordinary load-balanced routing. Flip the router-wide default to `true` instead and `chat-compliance` still evaluates tags, unaffected, while `incident-response`'s explicit `enable_tag_filtering: false` keeps it exempt.
@@ -628,7 +628,7 @@ router_settings:
   tag_filtering_match_any: true
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### 2. Verify routing
@@ -636,14 +636,14 @@ general_settings:
 ```bash
 # Claude Code request (User-Agent set automatically by Claude Code)
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "User-Agent: claude-code/1.2.3" \
   -d '{"model": "claude-sonnet", "messages": [{"role": "user", "content": "hi"}]}'
 # -> x-litellm-model-id: claude-code-deployment
 
 # Any other client (no matching User-Agent) -> default deployment
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{"model": "claude-sonnet", "messages": [{"role": "user", "content": "hi"}]}'
 # -> x-litellm-model-id: regular-deployment
 ```
@@ -760,7 +760,7 @@ router_settings:
   enable_tag_filtering: True # 👈 Key Change
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Create teams with tags
@@ -768,13 +768,13 @@ general_settings:
 ```bash
 # Create Team A
 curl -X POST http://0.0.0.0:4000/team/new \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"tags": ["teamA"]}'
 
 # Create Team B
 curl -X POST http://0.0.0.0:4000/team/new \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"tags": ["teamB"]}'
 ```
@@ -784,13 +784,13 @@ curl -X POST http://0.0.0.0:4000/team/new \
 ```bash
 # Generate key for Team A
 curl -X POST http://0.0.0.0:4000/key/generate \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"team_id": "team_a_id_here"}'
 
 # Generate key for Team B
 curl -X POST http://0.0.0.0:4000/key/generate \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"team_id": "team_b_id_here"}'
 ```

@@ -6,7 +6,7 @@ This page documents which A2A agent card fields LiteLLM supports today, how invo
 
 For provider-specific setup, see:
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 
 ## Agent card support
 
@@ -168,7 +168,7 @@ All methods below are accepted on `POST /a2a/{agent_id}` (and `POST /a2a/{agent_
 
 ```bash title="1. Send a message (0.3 wire format — pin protocolVersion: 0.3)"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -189,7 +189,7 @@ Use `result.id` from the response as the task id:
 
 ```bash title="2. Poll task status"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -229,5 +229,5 @@ You can edit supported fields from the agent detail page in the LiteLLM UI. Use 
 
 ## Related documentation
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 - [A2A Protocol Specification (v1.0)](https://a2a-protocol.org/latest/specification/)

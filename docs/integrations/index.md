@@ -29,6 +29,12 @@ items={[
     to: "/docs/observability/datadog",
   },
   {
+    icon: <img src="/img/observability/grafana_icon.svg" alt="" style={{ width: 24, height: 24, display: "block" }} />,
+    title: "Grafana Cloud",
+    description: "LLM traces, GenAI metrics, and dashboards.",
+    to: "/docs/observability/grafana_cloud",
+  },
+  {
     icon: "📡",
     title: "OpenTelemetry",
     description: "Vendor-neutral tracing.",

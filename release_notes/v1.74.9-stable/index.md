@@ -94,7 +94,7 @@ guardrails:
 ```
 
 
-[Read More](../../docs/proxy/guardrails/quick_start#model-level-guardrails)
+[Read More](/docs/proxy/guardrails/quick_start#-model-level-guardrails)
 
 ---
 ## MCP Header Propagation
@@ -144,7 +144,7 @@ v1.74.9-stable allows you to propagate MCP server specific authentication header
 - **[Recraft](../../docs/providers/recraft)**
     - New image generation API - [PR #12832](https://github.com/BerriAI/litellm/pull/12832)
     - New image edits api - [PR #12874](https://github.com/BerriAI/litellm/pull/12874)
-- **[Azure OpenAI](../../docs/providers/azure/azure)**
+- **[Azure OpenAI](/docs/providers/azure)**
     - Support DefaultAzureCredential without hard-coded environment variables - [PR #12841](https://github.com/BerriAI/litellm/pull/12841)
 - **[Hyperbolic](../../docs/providers/hyperbolic)**
     - New LLM API provider - [PR #12826](https://github.com/BerriAI/litellm/pull/12826)
@@ -172,11 +172,11 @@ v1.74.9-stable allows you to propagate MCP server specific authentication header
 
 #### Features
 
-- **[Passthrough endpoints](../../docs/pass_through/)**
+- **[Passthrough endpoints](/docs/pass_through/intro)**
     - Make key/user/team cost tracking OSS - [PR #12847](https://github.com/BerriAI/litellm/pull/12847)
-- **[/v1/models](../../docs/providers/passthrough)**
+- **[/v1/models](/docs/pass_through/intro)**
     - Return fallback models as part of api response - [PR #12811](https://github.com/BerriAI/litellm/pull/12811) s/o @[murad-khafizov](https://github.com/murad-khafizov)
-- **[/vector_stores](../../docs/providers/passthrough)**
+- **[/vector_stores](/docs/pass_through/intro)**
     - Make permission management OSS - [PR #12990](https://github.com/BerriAI/litellm/pull/12990)
 
 #### Bugs
@@ -190,7 +190,7 @@ v1.74.9-stable allows you to propagate MCP server specific authentication header
 ## [MCP Gateway](../../docs/mcp)
 
 #### Features
-- **[Permission Management](../../docs/mcp#grouping-mcps-access-groups)**
+- **[Permission Management](/docs/mcp#control-mcp-access-for-end-users)**
     - Make permission management by key/team OSS - [PR #12988](https://github.com/BerriAI/litellm/pull/12988)
 - **[MCP Alias](../../docs/mcp#mcp-aliases)**
     - Support mcp server aliases (useful for calling long mcp server names on Cursor) - [PR #12994](https://github.com/BerriAI/litellm/pull/12994)
