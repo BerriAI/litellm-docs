@@ -94,6 +94,18 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 The messages are sent to the headroom service at `{api_base}/v1/compress` with the JSON body `{"messages": [...], "model": "<model>"}`. The returned `messages` list replaces the request payload before the LLM call.
 
+## What triggers compression
+
+Headroom only compresses large machine-generated payloads carried in the conversation: JSON API responses, database dumps, and the large file reads or RAG chunks that come back as `tool`-role messages. Short chat prompts pass straight through, which is why a 20-token question saves nothing; compression only engages once a single message is on the order of a thousand tokens or more. `user`/`system` messages (unless `HEADROOM_COMPRESS_USER_MESSAGES=1` is set on the Headroom container) and `cache_control`-marked messages are never compressed, see [Why `requests_compressed` can be 0](#why-requests_compressed-can-be-0).
+
+To confirm compression is firing, run [`headroom_compression_check.sh`](/scripts/headroom_compression_check.sh) against any Headroom endpoint. It calls `/v1/compress` (the same call the guardrail makes) with a tiny prompt and a large `tool` result, and prints `tokens_before`, `tokens_after`, `tokens_saved`, and `transforms_applied`; the tiny prompt reports `router:noop` with zero savings while the large payload compresses.
+
+```shell
+HEADROOM_URL=http://localhost:8787 bash headroom_compression_check.sh
+```
+
+On a live request, the same numbers land in `guardrail_information` on the spend log row and in the **Guardrails & Policy Compliance** panel of the Logs UI. A `router:noop` value there means the payload was too small or fully protected.
+
 ## Enabling compression per key
 
 When `default_on` is not set, compression runs only for requests that opt in. The typical admin pattern is to attach the guardrail to a virtual key so the developer using the key gets compression automatically, without changing their client code.
