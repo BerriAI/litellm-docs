@@ -62,6 +62,8 @@ agents:
 
 `protocolVersion` can be set the same way when registering through the API.
 
+An optional `litellm_params` block carries per-agent settings such as `api_key`, `headers`, `agent_card_path`, and Microsoft Entra credentials; [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a) shows a full entry
+
 Config-defined agents show up in the Agents tab and in `GET /v1/agents` alongside agents created in the UI, and they survive the periodic reload from the database. Verify them with:
 
 ```shell
@@ -82,6 +84,8 @@ The `agents` key is read correctly starting in the next release (after `v1.95.0`
 ### Add Azure AI Foundry Agents
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
+
+Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 

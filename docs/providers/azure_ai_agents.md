@@ -425,3 +425,60 @@ The agent responds with its capabilities. You can now interact with your Azure A
 - [Create Thread and Run API Reference](https://learn.microsoft.com/en-us/rest/api/aifoundry/aiagents/create-thread-and-run/create-thread-and-run)
 - [A2A Agent Gateway](../a2a.md)
 - [A2A Cost Tracking](../a2a_cost_tracking.md)
+
+## Foundry agents over A2A
+
+Agents created in the current Microsoft Foundry portal do not speak the Assistants API, so `azure_ai/agents/<name>` answers `Invalid 'assistant_id'` for them. They expose an A2A endpoint instead, and LiteLLM registers them as plain A2A agents that authenticate with Microsoft Entra ID
+
+The endpoint is `https://<account>.services.ai.azure.com/api/projects/<project>/agents/<agent>/endpoint/protocols/a2a`. Foundry serves its agent card at `agentCard/v1.0` under it rather than at the well-known paths, and accepts only an Entra bearer for the `https://ai.azure.com/.default` scope, so the entry sets `agent_card_path` and the service principal fields:
+
+```yaml title="config.yaml"
+agents:
+  - agent_name: foundry-agent
+    agent_card_params:
+      name: "Foundry Agent"
+      url: "https://<account>.services.ai.azure.com/api/projects/<project>/agents/<agent>/endpoint/protocols/a2a"
+      protocolVersion: "1.0"
+      capabilities:
+        streaming: false
+    litellm_params:
+      agent_card_path: agentCard/v1.0
+      tenant_id: os.environ/AZURE_TENANT_ID
+      client_id: os.environ/AZURE_CLIENT_ID
+      client_secret: os.environ/AZURE_CLIENT_SECRET
+```
+
+`tenant_id`, `client_id` and `client_secret` are the names the `azure_ai` provider uses. A bearer you minted yourself goes in `azure_ad_token`, a user login in `client_id` + `azure_username` + `azure_password`, and `azure_scope` overrides the scope. Only the credentials on the agent are used; the process-wide `AZURE_*` variables are never read for an A2A agent. Without `agent_card_path`, discovery still reaches `agentCard/v1.0` after the two well-known paths fail, at the cost of two extra round trips on every call
+
+Foundry answers `message/send` with a submitted task unless the request asks for a blocking send, and it has no `message/stream`. The `capabilities.streaming: false` line makes LiteLLM run a streaming chat completion as one blocking send and replay the answer as a single chunk
+
+Call the agent over A2A with a blocking send:
+
+```bash
+curl http://localhost:4000/a2a/foundry-agent \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "kind": "message",
+        "role": "user",
+        "messageId": "m1",
+        "parts": [{"kind": "text", "text": "What is 2 + 2?"}]
+      },
+      "configuration": {"blocking": true}
+    }
+  }'
+```
+
+Or through chat completions, where LiteLLM asks for the blocking send itself:
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "a2a/foundry-agent", "messages": [{"role": "user", "content": "What is 2 + 2?"}]}'
+```

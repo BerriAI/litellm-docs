@@ -179,6 +179,8 @@ Example:
 
 This ensures admin-controlled credentials cannot be overridden by client requests.
 
+When LiteLLM mints the backend credential itself (a `databricks_oauth` block or Microsoft Entra fields on the agent), that minted `Authorization` wins over both sources, and a client header of the same name in any casing (`authorization`, `Authorization`) is dropped so the backend receives one `Authorization` line
+
 ---
 
 ## Combining All Three Methods
