@@ -35,15 +35,15 @@ import litellm
 from litellm import completion
 from litellm.caching.caching import Cache
 
-litellm.cache = Cache(type="redis", host=<host>, port=<port>, password=<password>)
+litellm.cache = Cache(type="redis", host="<host>", port="<port>", password="<password>")
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -77,11 +77,11 @@ litellm.cache = RedisClusterCache(
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -132,11 +132,11 @@ from litellm.caching.caching import Cache
 litellm.cache = Cache(type="gcs", gcs_bucket_name="my-cache-bucket", gcs_path_service_account="/path/to/service_account.json")
 
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -170,11 +170,11 @@ litellm.cache = Cache(type="s3", s3_bucket_name="cache-bucket-litellm", s3_regio
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -201,11 +201,11 @@ litellm.cache = Cache(type="azure-blob", azure_account_url="https://example.blob
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -244,7 +244,7 @@ litellm.cache = Cache(
     redis_semantic_cache_embedding_model="text-embedding-ada-002", # this model is passed to litellm.embedding(), any litellm.embedding() model is supported here
 )
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -258,7 +258,7 @@ print(f"response1: {response1}")
 random_number = random.randint(1, 100000)
 
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -301,7 +301,7 @@ litellm.cache = Cache(
 )
 
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -315,7 +315,7 @@ print(f"response1: {response1}")
 random_number = random.randint(1, 100000)
 
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -368,7 +368,7 @@ litellm.cache = Cache(
     valkey_semantic_cache_index_name="litellm_semantic_cache_index", # optional, defaults to litellm_semantic_cache_index
 )
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -382,7 +382,7 @@ print(f"response1: {response1}")
 random_number = random.randint(1, 100000)
 
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -412,12 +412,12 @@ litellm.cache = Cache()
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -448,12 +448,12 @@ litellm.cache = Cache(type="disk")
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -485,7 +485,7 @@ Example usage `no-cache` - When `True`, Will not return a cached response
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -504,7 +504,7 @@ Example usage `no-store` - When `True`, Will not cache the response.
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -522,7 +522,7 @@ Example usage `ttl` - cache the response for 10 seconds
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -540,7 +540,7 @@ Example usage `s-maxage` - Will only accept cached responses for 60 seconds
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -569,7 +569,7 @@ litellm.enable_cache()
 Advanced Params
 
 ```python
-litellm.enable_cache(
+def enable_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -578,7 +578,7 @@ litellm.enable_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ### Disabling Cache
@@ -593,7 +593,7 @@ litellm.disable_cache()
 Update the Cache params
 
 ```python
-litellm.update_cache(
+def update_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -602,7 +602,7 @@ litellm.update_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ## Custom Cache Keys:
@@ -638,10 +638,10 @@ cache = Cache()
 ### 2. Define custom add/get cache functions 
 ```python
 def add_cache(self, result, *args, **kwargs):
-  your logic
+  ...
   
 def get_cache(self, *args, **kwargs):
-  your logic
+  ...
 ```
 
 ### 3. Point cache add/get functions to your add/get functions 
@@ -686,6 +686,9 @@ def __init__(
     valkey_semantic_cache_embedding_model: str = "text-embedding-ada-002",
     valkey_semantic_cache_index_name: Optional[str] = None,
 
+    # semantic cache tenant scope: "key" (key/team/org) or "end_user" (also per end user)
+    semantic_cache_scope: str = "key",
+
     # s3 Bucket, boto3 configuration
     s3_bucket_name: Optional[str] = None,
     s3_region_name: Optional[str] = None,
@@ -711,7 +714,7 @@ def __init__(
 
     qdrant_semantic_cache_vector_size: Optional[int] = None,
     **kwargs
-):
+): ...
 ```
 
 ## Logging 
@@ -721,7 +724,7 @@ Cache hits are logged in success events as `kwarg["cache_hit"]`.
 Here's an example of accessing it: 
 
   ```python
-  import litellm
+import litellm
 from litellm.integrations.custom_logger import CustomLogger
 from litellm import completion, acompletion, Cache
 
@@ -729,7 +732,7 @@ from litellm import completion, acompletion, Cache
 class MyCustomHandler(CustomLogger):
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time): 
         print(f"On Success")
-        print(f"Value of Cache hit: {kwargs['cache_hit']"})
+        print(f"Value of Cache hit: {kwargs['cache_hit']}")
 
 async def test_async_completion_azure_caching():
     # set custom callback

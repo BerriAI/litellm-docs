@@ -15,6 +15,7 @@ columns={3}
 items={[
   { icon: "🪢", title: "Langfuse", description: "LLM observability and analytics.", to: "/docs/observability/langfuse_integration" },
   { icon: "🐶", title: "Datadog", description: "Metrics, traces, and dashboards.", to: "/docs/observability/datadog" },
+  { icon: <img src="/img/observability/grafana_icon.svg" alt="" style={{ width: 24, height: 24, display: "block" }} />, title: "Grafana Cloud", description: "LLM traces, GenAI metrics, and dashboards.", to: "/docs/observability/grafana_cloud" },
   { icon: "📡", title: "OpenTelemetry", description: "Vendor-neutral tracing.", to: "/docs/observability/opentelemetry_integration" },
   { icon: "🔗", title: "LangSmith", description: "LLM debugging and evaluation.", to: "/docs/observability/langsmith_integration" },
   { icon: "📈", title: "Arize AX", description: "Hosted LLM observability and evaluation.", to: "/docs/observability/arize_integration" },

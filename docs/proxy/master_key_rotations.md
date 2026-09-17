@@ -32,10 +32,10 @@ Call `POST /key/regenerate` with the current master key and the new one.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/regenerate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
-  "key": "sk-1234",
+  "key": "sk-<virtual-key>",
   "new_master_key": "sk-PIp1h0RekR"
 }'
 ```
@@ -64,7 +64,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-PIp1h0RekR' \
 -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
         {
             "content": "Hey, how'\''s it going",

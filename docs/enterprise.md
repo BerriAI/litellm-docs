@@ -122,6 +122,8 @@ For teams that need guaranteed response times around the clock, we offer 24/7 Su
 
 Custom SLAs available on request.
 
+For what support covers, see the [Shared Responsibility Model](./shared_responsibility.md).
+
 ---
 
 ## Version support

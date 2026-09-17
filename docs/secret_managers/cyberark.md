@@ -2,15 +2,7 @@
 
 import Image from '@theme/IdealImage';
 
-:::info
-
-✨ **This is an Enterprise Feature**
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Contact us here to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
+<EnterpriseFeature />
 
 | Feature | Support | Description |
 |---------|----------|-------------|

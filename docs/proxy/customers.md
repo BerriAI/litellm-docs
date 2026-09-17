@@ -23,12 +23,18 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 | 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
 | 8 | `safety_identifier` field | Request body | Responses API |
 
+:::info JWT auth takes precedence
+
+If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
+
+:::
+
 **Option 1: Standard headers** (recommended, no request body modification needed)
 
 ```bash showLineNumbers title="Make request with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'x-litellm-end-user-id: ishaan3' \
         --data '{
         "model": "azure-gpt-3.5",
@@ -43,7 +49,7 @@ Both `x-litellm-customer-id` and `x-litellm-end-user-id` are supported and alway
 ```bash showLineNumbers title="Make request with customer ID in body"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
         "model": "azure-gpt-3.5",
         "user": "ishaan3",
@@ -63,7 +69,7 @@ general_settings:
 ```bash showLineNumbers title="Make request with custom header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'x-my-app-user-id: ishaan3' \
         --data '{
         "model": "azure-gpt-3.5",
@@ -76,9 +82,9 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ```bash showLineNumbers title="Make request with litellm_metadata.user"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
-        "model": "claude-3-5-sonnet",
+        "model": "{{anthropic}}",
         "messages": [{"role": "user", "content": "what time is it"}],
         "litellm_metadata": {"user": "ishaan3"}
         }'
@@ -89,7 +95,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ```bash showLineNumbers title="Make request with metadata.user_id"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         --header 'Content-Type: application/json' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --data '{
         "model": "azure-gpt-3.5",
         "messages": [{"role": "user", "content": "what time is it"}],
@@ -109,8 +115,10 @@ If the customer_id already exists, spend will be incremented.
 Call `/customer/info` to get a customer's all up spend
 
 ```bash showLineNumbers title="Get customer spend"
-curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \ # 👈 CUSTOMER ID
-        -H 'Authorization: Bearer sk-1234' \ # 👈 YOUR PROXY KEY
+# end_user_id: 👈 CUSTOMER ID
+# Authorization: 👈 YOUR PROXY KEY
+curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
+        -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Expected Response:
@@ -152,7 +160,7 @@ general_settings:
 ```bash showLineNumbers title="Test webhook"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "mistral",
     "messages": [
@@ -192,6 +200,41 @@ Expected Response
 </Tabs>
 
 
+## Restricting Which IDs Become Customers
+
+Every distinct customer ID LiteLLM sees is upserted into the customer table, which becomes a problem when a client sends a per-session identifier. Claude Code, for example, puts a JSON blob in `metadata.user_id`:
+
+```json title="What Claude Code sends"
+{"device_id": "4ec41ed1...", "account_uuid": "...", "session_id": "..."}
+```
+
+Each session then lands in Usage -> Customer Usage as its own customer, and if you have a [default customer budget](#default-budget-for-all-customers) configured, each session gets its own copy of that budget, so a monthly cap meant for real customers turns into a per-session cap on that traffic.
+
+Set `validate_end_user_id_in_db` to keep those IDs out. Available in v1.87.0 and above.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  validate_end_user_id_in_db: true
+```
+
+An ID is then accepted only when it matches an existing customer's `user_id`, an internal user's `user_id`, or an internal user's email. IDs shaped like a JSON object or array are dropped before any database lookup, since those are never real customer identifiers. Dropping is not an error: the request still succeeds, it just carries no customer, and its spend is attributed to the virtual key, team and internal user as usual. Lookups are cached for 5 minutes when the ID resolved and 1 minute when it did not, so a newly created customer can take up to a minute to be recognized.
+
+### Keeping a default budget for unregistered customers
+
+On its own, `validate_end_user_id_in_db` drops every ID with no matching row, which works against `max_end_user_budget_id` if you rely on that to cap customers you never explicitly created. Set both and the two cooperate: JSON-shaped IDs are still dropped, while a plain-string ID with no row is preserved so the default budget still applies to it.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  validate_end_user_id_in_db: true
+  max_end_user_budget_id: "your_default_budget_id"
+```
+
+### Bucketing internal traffic under one customer
+
+If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md).
+
+Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
+
 ## Setting Customer Object Permissions
 
 Control which resources (MCP servers, vector stores, agents) a customer can access.
@@ -210,7 +253,7 @@ Object permissions allow you to restrict customer access to specific:
 
 ```bash showLineNumbers title="Create customer with object permissions"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "user_1",
@@ -243,7 +286,7 @@ You can update object permissions for existing customers:
 
 ```bash showLineNumbers title="Update customer object permissions"
 curl -L -X POST 'http://localhost:4000/customer/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "user_1",
@@ -260,7 +303,7 @@ When you query customer info, object permissions are included in the response:
 
 ```bash showLineNumbers title="Get customer info with object permissions"
 curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=user_1' \
-    -H 'Authorization: Bearer sk-1234'
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Response:**
@@ -293,7 +336,7 @@ Create different permission tiers for your customers:
 ```bash showLineNumbers title="Free tier customer"
 # Free tier - limited access
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "free_user",
@@ -308,7 +351,7 @@ curl -L -X POST 'http://localhost:4000/customer/new' \
 ```bash showLineNumbers title="Premium tier customer"
 # Premium tier - full access
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "premium_user",
@@ -326,7 +369,7 @@ Restrict customers to resources relevant to their department:
 
 ```bash showLineNumbers title="Sales team customer"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "sales_user",
@@ -343,7 +386,7 @@ Grant access to specific tools within an MCP server:
 
 ```bash showLineNumbers title="Limited tool access"
 curl -L -X POST 'http://localhost:4000/customer/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "user_id": "restricted_user",
@@ -369,7 +412,7 @@ Apply budget limits to all customers without explicit budgets. This is useful fo
 ```bash showLineNumbers title="Create default budget"
 curl -X POST 'http://localhost:4000/budget/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "max_budget": 10,
     "rpm_limit": 2,
@@ -389,9 +432,9 @@ litellm_settings:
 ```bash showLineNumbers title="Make request with customer ID"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "user": "my-customer-id"
 }'
@@ -401,6 +444,8 @@ The customer will be subject to the default budget limits (RPM, TPM, and $ budge
 
 The float setting `max_end_user_budget` is no longer enforced; if you have it in your config, replace it with `max_end_user_budget_id` as shown above.
 
+The default applies to every ID that reaches customer tracking, including per-session IDs sent by agent clients. See [Restricting Which IDs Become Customers](#restricting-which-ids-become-customers) if you want those kept out of the customer table while real customers keep the default budget.
+
 ### Quick Start 
 
 Create / Update a customer with budget
@@ -408,7 +453,7 @@ Create / Update a customer with budget
 **Create New Customer w/ budget**
 ```bash showLineNumbers title="Create customer with budget"
 curl -X POST 'http://0.0.0.0:4000/customer/new'         
-    -H 'Authorization: Bearer sk-1234'         
+    -H "Authorization: Bearer $LITELLM_API_KEY"         
     -H 'Content-Type: application/json'         
     -d '{
         "user_id" : "my-customer-id",
@@ -427,7 +472,7 @@ Customer budgets are global per deployment. Spend is tracked against the custome
 ```bash showLineNumbers title="Test customer budget"
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "mistral",
     "messages": [
@@ -463,7 +508,7 @@ Use the `/budget/new` endpoint for creating a new budget. [API Reference](https:
 ```bash showLineNumbers title="Create budget via API"
 curl -X POST 'http://localhost:4000/budget/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "budget_id": "my-free-tier", 
     "max_budget": 4 
@@ -473,6 +518,20 @@ curl -X POST 'http://localhost:4000/budget/new' \
 </TabItem>
 </Tabs>
 
+:::info
+
+`tpm_limit` and `rpm_limit` are optional on a budget. Leaving them unset stores `null` and LiteLLM enforces no per-customer TPM or RPM limit for customers on that budget; only your provider's own rate limits apply. Set them only when you want LiteLLM to cap the customer
+
+```bash
+curl -X POST 'http://localhost:4000/budget/info' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"budgets": ["my-free-tier"]}'
+```
+
+`tpm_limit` and `rpm_limit` come back as `null` when no LiteLLM limit is set
+
+:::
 
 #### 2. Assign Budget to Customer 
 
@@ -483,7 +542,7 @@ Just use the `budget_id` used when creating the budget. In our example, this is 
 ```bash showLineNumbers title="Assign budget to customer"
 curl -X POST 'http://localhost:4000/customer/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
     "budget_id": "my-free-tier" # 👈 KEY CHANGE
@@ -498,7 +557,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 ```bash showLineNumbers title="Test with curl"
 curl -X POST 'http://localhost:4000/customer/new' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
     "budget_id": "my-free-tier" # 👈 KEY CHANGE
@@ -516,7 +575,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}

@@ -29,7 +29,7 @@ These strings are reserved as enum values in `litellm.proxy._types.SpecialModelN
 
 ## Resolution: with team_id vs without
 
-Two rules cover every case. A standalone key (no `team_id`) is authorized purely against its own `models` list. A team-attached key must pass both its own list and a second check against `team.models`; the intersection is what the caller can actually reach, so a key holding `["gpt-4"]` under a team holding `["azure-gpt-3.5"]` cannot call anything.
+Two rules cover every case. A standalone key (no `team_id`) is authorized purely against its own `models` list. A team-attached key must pass both its own list and a second check against `team.models`; the intersection is what the caller can actually reach, so a key holding `["{{openai_large}}"]` under a team holding `["azure-gpt-3.5"]` cannot call anything.
 
 Both steps reject with the same message shape: `{object_type} not allowed to access model. This {object_type} can only access models=[...]. Tried to access <model>`, where `object_type` is `key`, `team`, `user`, or `org`, so the prefix tells you which step rejected. A separate team-config validation path raises `Invalid model for team <team_id>: <model>. Valid models for team are: [...]` (see [Restrict models by team_id](./model_access.md#restrict-models-by-team_id)).
 

@@ -1,7 +1,7 @@
 ---
-title: "v1.98.0rc1 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
-slug: "v1-98-0-rc-1"
-date: 2026-08-15T18:00:01
+title: "v1.98.0 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
+slug: "v1-98-0"
+date: 2026-08-22T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,14 +30,14 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.98.0-rc.1
+docker.litellm.ai/berriai/litellm:1.98.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.98.0rc1
+pip install litellm==1.98.0
 ```
 
 </TabItem>
@@ -60,7 +60,7 @@ pip install litellm==1.98.0rc1
 - **Routing groups are callable models** - `model=<group_name>` now routes across the union of member deployments using the group's own strategy, group names appear in `/v1/models` so Claude Code and Codex discovery surface them, and they are grantable on keys and teams. The Create Group modal has promised this since day one
 - **Every response can state its own cost breakdown** - six `x-litellm-response-cost-*` headers ship next to the total, where input, cache read, cache creation, output, and tool usage sum exactly to the total and reasoning is a subset of output, so a platform team attributes spend per component with no local pricing table
 - **TPM reservations follow declared output size** - expected output tokens are now declarable per key, per team, and per model instead of one static floor for every tenant, so concurrent requests stop overrunning a team's TPM limit and teams whose models emit far less stop being throttled. No config means byte-identical behavior and no migration
-- **The Admin UI's move off antd and Tremor took its largest step yet** - 74 UI pull requests in this window carry the navbar, playground, guardrails, usage, cost tracking, models and endpoints, team and user surfaces, the log details drawer, the AI Hub, and much of the shared component library onto shadcn (base-vega) primitives. The migration is not finished; both libraries remain dependencies and still back parts of the dashboard
+- **The Admin UI's move off antd and Tremor took its largest step yet** - 75 UI pull requests in this window carry the navbar, playground, guardrails, usage, cost tracking, models and endpoints, team and user surfaces, the log details drawer, the AI Hub, and much of the shared component library onto shadcn (base-vega) primitives. The migration is not finished; both libraries remain dependencies and still back parts of the dashboard
 
 ## New Providers and Endpoints
 
@@ -263,7 +263,7 @@ Beyond the new entries, this release is a large cost-map maintenance pass: 270 e
     - Scope the Virtual Keys and Logs team lists to the caller - [PR #36472](https://github.com/BerriAI/litellm/pull/36472)
     - Show and edit key-level router settings on a virtual key - [PR #36674](https://github.com/BerriAI/litellm/pull/36674)
     - Stop a deselected MCP server keeping its grant on a virtual key, and match the MCP servers count badge to its sibling permission badges - [PR #36840](https://github.com/BerriAI/litellm/pull/36840), [PR #36984](https://github.com/BerriAI/litellm/pull/36984)
-    - Restore playground model filtering by endpoint, and distinguish hosted from local vLLM in the provider dropdown - [PR #36130](https://github.com/BerriAI/litellm/pull/36130), [PR #36974](https://github.com/BerriAI/litellm/pull/36974)
+    - Restore playground model filtering by endpoint, keep `mode: completion` models in the chat dropdown, and distinguish hosted from local vLLM in the provider dropdown - [PR #36130](https://github.com/BerriAI/litellm/pull/36130), [PR #37954](https://github.com/BerriAI/litellm/pull/37954), [PR #36974](https://github.com/BerriAI/litellm/pull/36974)
     - Add NVIDIA Riva to the model provider list - [PR #36769](https://github.com/BerriAI/litellm/pull/36769)
     - Align the spend and budget columns, and rename the models table Status column to Source - [PR #35176](https://github.com/BerriAI/litellm/pull/35176), [PR #37021](https://github.com/BerriAI/litellm/pull/37021)
     - Show zeroed auto-router usage stats when a window has no sessions, and open the classifier prompt editor above the edit auto-router form - [PR #36868](https://github.com/BerriAI/litellm/pull/36868), [PR #36438](https://github.com/BerriAI/litellm/pull/36438)
@@ -380,9 +380,9 @@ Beyond the new entries, this release is a large cost-map maintenance pass: 270 e
 
 ### PR roll-up by ownership area
 
-PRs by ownership area (total: 276)
+PRs by ownership area (total: 277)
 
-- UI: 74
+- UI: 75
 - Models & Providers: 39
 - Spend / Budgets / Rate Limits: 37
 - Other (CI / chore / tests / build / version bumps): 36
@@ -427,4 +427,4 @@ This window added 18 test-only pull requests, 10 of them touching the live e2e s
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.97.0-rc.1...v1.98.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.97.0...v1.98.0

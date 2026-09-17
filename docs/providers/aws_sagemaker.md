@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
 }
 )
 

@@ -15,7 +15,7 @@ Share a model's TPM/RPM capacity across keys and teams. The limiter watches how 
 model_list: 
   - model_name: my-fake-model
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: my-fake-key
       mock_response: hello-world
       tpm: 60
@@ -24,7 +24,7 @@ litellm_settings:
   callbacks: ["dynamic_rate_limiter_v3"]
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your .env
 ```
 
@@ -61,8 +61,8 @@ def create_key(api_key: str, base_url: str):
 
     return _response["key"]
 
-key_1 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
-key_2 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+key_1 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
+key_2 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # call proxy with key 1 - works
 openai_client_1 = OpenAI(api_key=key_1, base_url="http://0.0.0.0:4000")
@@ -113,10 +113,7 @@ Reserve TPM/RPM capacity for different environments or use cases. This ensures c
 - Real-time applications vs batch processing
 - Critical services vs experimental features
 
-:::tip
-
-Reserving TPM/RPM on keys based on priority is a premium feature. Please [get an enterprise license](/docs/enterprise) for it.
-:::
+<EnterpriseFeature feature="Reserving TPM/RPM on keys based on priority" />
 
 ### How Priority Reservation Works
 
@@ -133,9 +130,9 @@ Priority reservation allocates a percentage of your model's total TPM/RPM to spe
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo             
+  - model_name: {{openai_small}}             
     litellm_params:
-      model: "gpt-3.5-turbo"       
+      model: "{{openai_small}}"       
       api_key: os.environ/OPENAI_API_KEY 
       rpm: 10   # Total model capacity
 
@@ -157,7 +154,7 @@ litellm_settings:
     saturation_check_cache_ttl: 60 # How long (seconds) saturation values are cached locally
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your.env
 ```
 
@@ -193,7 +190,7 @@ All keys within a team will inherit the team's priority. This is useful when you
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_alias": "production-team",
@@ -204,7 +201,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 Create a key for this team:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_id": "team-id-from-previous-response"
@@ -218,7 +215,7 @@ Set priority directly on the key. This is useful when you need fine-grained cont
 **Production Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "prod"}
@@ -228,7 +225,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Development Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "dev"}
@@ -238,7 +235,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Key Without Priority (uses default_priority weight):**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -265,7 +262,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-prod-key' \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello from prod"}]
   }'
 ```
@@ -276,7 +273,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer sk-dev-key' \
   -d '{
-    "model": "gpt-3.5-turbo", 
+    "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hello from dev"}]
   }'
 ```
@@ -320,7 +317,7 @@ Priority pool exhausted in strict mode:
 ```json
 {
   "error": {
-    "message": "Priority-based rate limit exceeded. Model: gpt-3.5-turbo, Priority: dev, Rate limit type: tokens, Model TPM: 1000, Model RPM: not configured, Remaining: 0, Model saturation: 52.8%",
+    "message": "Priority-based rate limit exceeded. Model: {{openai_small}}, Priority: dev, Rate limit type: tokens, Model TPM: 1000, Model RPM: not configured, Remaining: 0, Model saturation: 52.8%",
     "type": "throttling_error",
     "code": "429"
   }
@@ -332,7 +329,7 @@ Model-wide capacity exhausted (any priority):
 ```json
 {
   "error": {
-    "message": "Model capacity reached for gpt-3.5-turbo. Priority: prod, Rate limit type: tokens, Model TPM: 1000, Model RPM: not configured, Remaining: 0",
+    "message": "Model capacity reached for {{openai_small}}. Priority: prod, Rate limit type: tokens, Model TPM: 1000, Model RPM: not configured, Remaining: 0",
     "type": "throttling_error",
     "code": "429"
   }

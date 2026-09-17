@@ -26,7 +26,7 @@ Click the **+ Add New Prompt** button to create a new prompt.
 
 ### Step 1: Select Your Model
 
-Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-3-5-sonnet`, `gpt-4o`, etc.).
+Choose the LLM model you want to use from the dropdown menu at the top. You can select from any of your configured models (e.g., `aws/anthropic/bedrock-claude-sonnet-5`, `{{openai_large}}`, etc.).
 
 ### Step 2: Set the Developer Message 
 
@@ -92,9 +92,9 @@ Call a prompt using just the prompt ID and model:
 ```bash showLineNumbers title="Basic Prompt Call"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id"
   }' | jq
 ```
@@ -106,12 +106,12 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     extra_body={
         "prompt_id": "your-prompt-id"
     }
@@ -127,13 +127,13 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         prompt_id: "your-prompt-id"
     });
     
@@ -156,9 +156,9 @@ Add custom messages to your prompt:
 ```bash showLineNumbers title="Prompt with Custom Messages"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
     "messages": [
       {
@@ -176,12 +176,12 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "hi"}
     ],
@@ -200,13 +200,13 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         messages: [
             { role: "user", content: "hi" }
         ],
@@ -232,9 +232,9 @@ Pass variables to your prompt template using `prompt_variables`:
 ```bash showLineNumbers title="Prompt with Variables"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
     "prompt_variables": {
       "dish": "cookies"
@@ -249,12 +249,12 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     extra_body={
         "prompt_id": "your-prompt-id",
         "prompt_variables": {
@@ -273,13 +273,13 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         prompt_id: "your-prompt-id",
         prompt_variables: {
             "dish": "cookies"
@@ -376,9 +376,9 @@ By default, API calls use the latest version of a prompt. To use a specific vers
 ```bash showLineNumbers title="Use Specific Prompt Version"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "jack-sparrow",
     "prompt_version": 2,
     "messages": [
@@ -397,12 +397,12 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "Who are u"}
     ],
@@ -422,13 +422,13 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "{{openai_large}}",
         messages: [
             { role: "user", content: "Who are u" }
         ],

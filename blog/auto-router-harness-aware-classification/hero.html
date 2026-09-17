@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="scale" content="2">
+  <title>Harness-aware routing</title>
+  <link rel="stylesheet" href="../../assets/brand.css">
+  <style>
+    #canvas { width: 1200px; height: 675px; position: relative; }
+    .heading { position: absolute; top: 52px; left: 60px; right: 60px; }
+    .brandmark { position: absolute; top: 49px; right: 60px; font-size: 27px; }
+    h1 { margin: 42px 0 0; font-size: 62px; line-height: 1.06; font-weight: 500; letter-spacing: -0.035em; }
+    .subtitle { margin-top: 16px; font-size: 23px; color: var(--ink-muted); }
+    .request-label { position: absolute; left: 60px; top: 256px; }
+    .request { position: absolute; left: 60px; top: 290px; width: 410px; height: 298px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 14px; padding: 24px; }
+    .client { font-size: 20px; font-weight: 500; }
+    .task { margin-top: 23px; padding: 16px 18px; font-size: 23px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 8px; }
+    .context { display: grid; gap: 14px; margin-top: 22px; font-family: var(--mono); font-size: 17px; color: var(--ink-muted); }
+    .context span::before { content: '+'; display: inline-block; width: 24px; }
+    .routes { position: absolute; inset: 0; width: 1200px; height: 675px; }
+    .classifier, .model { position: absolute; left: 710px; width: 430px; padding: 25px 28px; border-radius: 14px; }
+    .classifier { top: 307px; height: 145px; background: var(--accent-wash); border: 1px solid var(--accent-line); }
+    .model { top: 514px; height: 114px; background: var(--surface); border: 1px solid var(--line-2); }
+    .classifier .kicker { color: var(--accent); }
+    .node-title { margin-top: 12px; font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
+    .node-note { margin-top: 9px; font-size: 16px; color: var(--ink-muted); }
+    .choice { position: absolute; left: 950px; top: 473px; font-family: var(--mono); font-size: 13px; color: var(--ink-muted); }
+    .footer { position: absolute; left: 60px; bottom: 28px; font-size: 16px; color: var(--ink-muted); }
+  </style>
+</head>
+<body>
+  <div id="canvas">
+    <div class="heading">
+      <div class="kicker">LITELLM AUTO-ROUTER</div>
+      <h1>Harness-aware routing</h1>
+      <div class="subtitle">Task context for classification. Full context for execution</div>
+    </div>
+    <span class="brandmark"><span class="train">&#128645;</span><span>LiteLLM</span></span>
+    <div class="kicker request-label">AGENT REQUEST</div>
+    <div class="request">
+      <div class="client">Claude Code / Codex</div>
+      <div class="task">Task + conversation</div>
+      <div class="context"><span>System context</span><span>Tool definitions</span><span>Harness reminders</span></div>
+    </div>
+    <svg class="routes" viewBox="0 0 1200 675" fill="none" aria-hidden="true">
+      <path d="M445 389H710" stroke="var(--accent)" stroke-width="2"/>
+      <path d="m699 383 11 6-11 6" stroke="var(--accent)" stroke-width="2"/>
+      <path d="M470 558H590V571H710" stroke="var(--ink-muted)" stroke-width="1.5"/>
+      <path d="m699 565 11 6-11 6" stroke="var(--ink-muted)" stroke-width="1.5"/>
+      <path d="M925 452V514m-6-11 6 11 6-11" stroke="var(--ink-muted)" stroke-width="1.5"/>
+    </svg>
+    <div class="classifier">
+      <div class="kicker">CLASSIFIER INPUT</div>
+      <div class="node-title">Task + relevant history</div>
+      <div class="node-note">Encrypted task blocks preserved</div>
+    </div>
+    <div class="choice">Model choice</div>
+    <div class="model">
+      <div class="kicker">SELECTED MODEL INPUT</div>
+      <div class="node-title">Original request</div>
+    </div>
+    <div class="footer">Recognizes Claude Code and Codex request formats</div>
+  </div>
+</body>
+</html>

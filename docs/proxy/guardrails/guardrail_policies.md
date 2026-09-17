@@ -19,9 +19,9 @@ Use policies to group guardrails and control which ones run for specific teams, 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
 
 # 1. Define your guardrails
 guardrails:
@@ -79,9 +79,7 @@ x-litellm-applied-guardrails: pii_masking,prompt_injection
 
 ## Add guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have a global baseline, but want to add extra guardrails for a specific team.
 
@@ -139,9 +137,7 @@ Now the `finance` team gets `pii_masking` + `strict_compliance_check` + `audit_l
 
 ## Remove guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have guardrails running globally, but want to disable some for a specific team (e.g., internal testing).
 
@@ -206,12 +202,12 @@ Run guardrails only for specific models:
 
 ```yaml showLineNumbers title="config.yaml"
 policies:
-  gpt4-safety:
+  gpt-safety:
     guardrails:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-4.*"  # regex - matches gpt-4, gpt-4-turbo, gpt-4o
+      model: "gpt-5.6.*"  # regex - matches {{openai_small}}, {{openai_large}}
 
   bedrock-compliance:
     guardrails:
@@ -219,8 +215,8 @@ policies:
         - audit_logger
     condition:
       model:  # exact match list
-        - bedrock/claude-3
-        - bedrock/claude-2
+        - bedrock/anthropic.{{anthropic}}
+        - bedrock/anthropic.{{anthropic_large}}
 ```
 
 ## Attachments
@@ -287,7 +283,7 @@ curl -X POST "http://localhost:4000/policies/resolve" \
     -H "Content-Type: application/json" \
     -d '{
         "tags": ["healthcare"],
-        "model": "gpt-4"
+        "model": "{{openai_large}}"
     }'
 ```
 
@@ -308,6 +304,24 @@ Response:
 
 </TabItem>
 </Tabs>
+
+## Policy Execution Order
+
+When several policies match one request, LiteLLM runs them from the broadest attachment to the narrowest: `scope: "*"` first, then `teams`, then `keys`, then `tags`, then `models`. An attachment that combines several of these is ranked by its narrowest one and after the single-constraint attachments in that tier (`models: [gpt-4o]` before `teams: [finance], models: [gpt-4o]`). Attachments that still tie keep their `config.yaml` order, followed by attachments created through the API or UI, newest first. Policies passed in the request body (`"policies": [...]`) run after every attachment match, in the order given. Across tiers, the order does not depend on how attachments are listed in `config.yaml` or on which proxy worker handles the request.
+
+This is the order pipelines execute in, so a global blocking policy always rejects a request before a model-scoped one gets to run. It is also the order of `x-litellm-applied-policies` and of `matched_policies` in `/policies/resolve` and the Policy Simulator. When the same policy is attached at more than one matching scope, it runs once, ranked by its broadest attachment, and `matched_via` reports that attachment (`scope:*` rather than `model:gpt-4o`).
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: model-policy
+    models: [gpt-4o]
+  - policy: team-policy
+    teams: [finance]
+  - policy: global-policy
+    scope: "*"
+```
+
+A `gpt-4o` request from a `finance` key runs `global-policy`, then `team-policy`, then `model-policy`, and returns `x-litellm-applied-policies: global-policy,team-policy,model-policy`.
 
 ## Policy Flow Builder
 

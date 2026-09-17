@@ -41,7 +41,7 @@ litellm.callbacks = ["arize"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -55,9 +55,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -84,9 +84,9 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -132,7 +132,7 @@ litellm_settings:
 
 ### Per-team and per-key credentials {#pass-arize-spacekey-per-request}
 
-Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Configure this from the Admin UI or the API as described in [per-key / per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant).
+Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
 ## Full OpenTelemetry reference
 

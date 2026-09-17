@@ -46,9 +46,9 @@ Grant the permissions listed above in the Azure portal under **App registrations
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -108,9 +108,9 @@ Pass the Entra object ID of the end-user in `metadata`:
 ```shell
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, what is the capital of France?"}],
     "metadata": {"user_id": "<entra-user-object-id>"}
   }'
@@ -163,9 +163,9 @@ When `default_on: false`, you can opt individual requests in or out:
 ```shell
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["purview-prompt-dlp"],
     "metadata": {"user_id": "<entra-user-object-id>"}

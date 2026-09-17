@@ -23,7 +23,7 @@ Let's make sure our keys are working. Run this script in any environment of your
 
 🚨 Don't forget to replace the placeholder key values with your keys!
 
-```python 
+```bash
 uv add litellm
 ```
 
@@ -39,7 +39,7 @@ os.environ["AI21_API_KEY"] = "ai21 key" ## REPLACE THIS
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages)
+response = completion(model="{{openai_small}}", messages=messages)
 
 # cohere call
 response = completion("command-nightly", messages)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
 ### Let's test it
 Start the server:
-```python 
+```bash
 python main.py
 ```
 
@@ -130,7 +130,7 @@ Run this curl command to test it:
 curl -X POST localhost:4000/chat/completions \
 -H 'Content-Type: application/json' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [{
     "content": "Hello, how are you?",
     "role": "user"
@@ -179,7 +179,7 @@ This is what you should see:
 <Image img={require('../../img/litellm_streamlit_playground.png')} alt="streamlit_playground" />
 
 
-# Congratulations 🚀 
+## Congratulations 🚀 
 
 You've created your first LLM Playground - with the ability to call 50+ LLM APIs. 
 

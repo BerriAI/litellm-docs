@@ -27,14 +27,14 @@ messages = [
 
 compressed = litellm.compress(
     messages=messages,
-    model="gpt-4o",
+    model="{{openai_large}}",
     call_type=CallTypes.completion,
     compression_trigger=1000,
     compression_target=500,
 )
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=compressed["messages"],
     tools=compressed["tools"],
 )
@@ -138,19 +138,19 @@ Benchmarked on [SWE-bench Lite](https://huggingface.co/datasets/princeton-nlp/SW
 
 ```bash
 # 5-problem quick check
-python tests/eval_swe_bench.py --model claude-opus-4-20250514 --problems 5
+python tests/eval_swe_bench.py --model {{anthropic_large}} --problems 5
 
 # Custom trigger/target
-python tests/eval_swe_bench.py --model gpt-4o --problems 20 \
+python tests/eval_swe_bench.py --model {{openai_large}} --problems 20 \
     --compression-trigger 15000 --compression-target 10000
 
 # With embedding scoring
-python tests/eval_swe_bench.py --model gpt-4o --problems 10 \
+python tests/eval_swe_bench.py --model {{openai_large}} --problems 10 \
     --embedding-model text-embedding-3-small
 ```
 
 ### Running the HumanEval-style eval
 
 ```bash
-python scripts/eval_compression.py --model gpt-4o --problems 5
+python scripts/eval_compression.py --model {{openai_large}} --problems 5
 ```

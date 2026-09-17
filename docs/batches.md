@@ -7,9 +7,12 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock, vLLM | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
+
+Guardrails configured on your proxy are applied to the records inside a batch input file when it is
+uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
 
 ## Quick Start 
 
@@ -37,7 +40,7 @@ $ litellm
 
 ```shell
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@mydata.jsonl"
 ```
@@ -46,7 +49,7 @@ curl http://localhost:4000/v1/files \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-        -H "Authorization: Bearer sk-1234" \
+        -H "Authorization: Bearer $LITELLM_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{
             "input_file_id": "file-abc123",
@@ -59,7 +62,7 @@ curl http://localhost:4000/v1/batches \
 
 ```bash
 curl http://localhost:4000/v1/batches/batch_abc123 \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -68,7 +71,7 @@ curl http://localhost:4000/v1/batches/batch_abc123 \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -116,37 +119,37 @@ print("response from litellm.create_batch=", create_batch_response)
 **Retrieve the Specific Batch and File Content**
 
 ```python
-    # Maximum wait time before we give up
-    MAX_WAIT_TIME = 300  
+# Maximum wait time before we give up
+MAX_WAIT_TIME = 300  
 
-    # Time to wait between each status check
-    POLL_INTERVAL = 5
+# Time to wait between each status check
+POLL_INTERVAL = 5
+
+#Time waited till now 
+waited = 0
+
+# Wait for the batch to finish processing before trying to retrieve output
+# This loop checks the batch status every few seconds (polling)
+
+while True:
+    retrieved_batch = await litellm.aretrieve_batch(
+        batch_id=create_batch_response.id,
+        custom_llm_provider="openai"
+    )
     
-    #Time waited till now 
-    waited = 0
-
-    # Wait for the batch to finish processing before trying to retrieve output
-    # This loop checks the batch status every few seconds (polling)
-
-    while True:
-        retrieved_batch = await litellm.aretrieve_batch(
-            batch_id=create_batch_response.id,
-            custom_llm_provider="openai"
-        )
-        
-        status = retrieved_batch.status
-        print(f"⏳ Batch status: {status}")
-        
-        if status == "completed" and retrieved_batch.output_file_id:
-            print("✅ Batch complete. Output file ID:", retrieved_batch.output_file_id)
-            break
-        elif status in ["failed", "cancelled", "expired"]:
-            raise RuntimeError(f"❌ Batch failed with status: {status}")
-        
-        await asyncio.sleep(POLL_INTERVAL)
-        waited += POLL_INTERVAL
-        if waited > MAX_WAIT_TIME:
-            raise TimeoutError("❌ Timed out waiting for batch to complete.")
+    status = retrieved_batch.status
+    print(f"⏳ Batch status: {status}")
+    
+    if status == "completed" and retrieved_batch.output_file_id:
+        print("✅ Batch complete. Output file ID:", retrieved_batch.output_file_id)
+        break
+    elif status in ["failed", "cancelled", "expired"]:
+        raise RuntimeError(f"❌ Batch failed with status: {status}")
+    
+    await asyncio.sleep(POLL_INTERVAL)
+    waited += POLL_INTERVAL
+    if waited > MAX_WAIT_TIME:
+        raise TimeoutError("❌ Timed out waiting for batch to complete.")
 
 print("retrieved batch=", retrieved_batch)
 # just assert that we retrieved a non None batch
@@ -191,19 +194,19 @@ Route batch operations to different provider accounts using model-specific crede
 model_list:
   - model_name: gpt-4o-account-1
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-account-1-key
       api_base: https://api.openai.com/v1
   
   - model_name: gpt-4o-account-2
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-account-2-key
       api_base: https://api.openai.com/v1
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"
@@ -218,7 +221,7 @@ When you upload a file with a model parameter, LiteLLM encodes the model informa
 ```bash
 # Step 1: Upload file with model
 curl http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-1" \
   -F purpose="batch" \
   -F file="@batch.jsonl"
@@ -231,7 +234,7 @@ curl http://localhost:4000/v1/files \
 
 # Step 2: Create batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
@@ -248,7 +251,7 @@ curl http://localhost:4000/v1/batches \
 
 # Step 3: Retrieve batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxncHQtNG8tYWNjb3VudC0x \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Benefits:**
@@ -263,7 +266,7 @@ Specify the model for each request without encoding it in the ID.
 ```bash
 # Create batch with model header
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-2" \
   -H "Content-Type: application/json" \
   -d '{
@@ -274,7 +277,7 @@ curl http://localhost:4000/v1/batches \
 
 # Or use query parameter
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -284,7 +287,7 @@ curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
 
 # List batches for specific model
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Use Case:**
@@ -300,7 +303,7 @@ Traditional approach using environment variables when no model is specified.
 export OPENAI_API_KEY="sk-env-key"
 
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -435,7 +438,6 @@ LiteLLM supports the following provider-native batch APIs:
 | OpenAI | [Quick start](#quick-start) |
 | Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
-| vLLM | [vLLM batches](./providers/vllm_batches) |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
@@ -451,7 +453,7 @@ Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch i
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   max_batch_file_size_mb: 10
 ```
 
@@ -523,7 +525,7 @@ Per-minute windows fit batches poorly: a batch runs for hours, but its whole inp
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
 ```
@@ -566,7 +568,7 @@ general_settings:
 
   # Or apply only to batches routed to selected providers
   skip_batch_input_file_rate_limiting_for_providers:
-    - hosted_vllm
+    - bedrock
 ```
 
 The provider-specific option uses the provider configured on the selected route. It does not use a `custom_llm_provider` value supplied by the client.
