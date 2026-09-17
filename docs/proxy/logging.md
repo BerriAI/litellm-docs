@@ -1332,6 +1332,8 @@ litellm_settings:
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
     s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
     s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
+    s3_max_concurrent_uploads: 16 # [OPTIONAL] max simultaneous PUTs per flush; lower this if S3 returns 503 SlowDown
+    s3_batch_file_upload: false # [OPTIONAL] write each flush as one .jsonl file (one log per line) instead of one object per request; per-request cold storage lookup is unavailable in this mode
 ```
 
 **Step 3**: Start the proxy, make a test request
