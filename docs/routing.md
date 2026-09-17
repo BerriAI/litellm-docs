@@ -1282,13 +1282,13 @@ See [`enable_weighted_failover`](./proxy/config_settings#router_settings---refer
 
 ### Max Parallel Requests (ASYNC)
 
-Used in semaphore for async requests on router. Limit the max concurrent calls made to a deployment. Useful in high-traffic scenarios. 
+Limit the max concurrent calls made to a deployment. Useful in high-traffic scenarios. 
 
-If tpm/rpm is set, and no max parallel request limit given, we use the RPM or calculated RPM as the max parallel request limit. The precedence is `max_parallel_requests`, then `rpm`, then `int(tpm / 1000 * 6)` (six concurrent requests per 1000 TPM, minimum 1), then the router's `default_max_parallel_requests`. This means a deployment with only `rpm: 2` set gets a per-process concurrency cap of 2, whatever its provider is. The cap is an in-process `asyncio.Semaphore`, so it is per proxy worker and is not shared across workers or pods
+If tpm/rpm is set, and no max parallel request limit given, we use the RPM or calculated RPM as the max parallel request limit. The precedence is `max_parallel_requests`, then `rpm`, then `int(tpm / 1000 * 6)` (six concurrent requests per 1000 TPM, minimum 1), then the router's `default_max_parallel_requests`. This means a deployment with only `rpm: 2` set gets a per-process concurrency cap of 2, whatever its provider is. The cap is counted in process, so it is per proxy worker and is not shared across workers or pods
 
-By default the semaphore queues instead of rejecting: a request that arrives while every slot is busy waits until a slot frees up, however long that takes, with no 429 and no header. Queue time is spent before the provider call starts, so it does not show up in `x-litellm-response-duration-ms` or `x-litellm-overhead-duration-ms`. The router logs a debug line when a request queues and another when it leaves the queue, with the wait in ms
+A request that arrives while every slot of the deployment is in use fails right away with a 429 whose body names the deployment and its `max_parallel_requests`. There is no wait queue and nothing to configure for one: requests never sit in the proxy waiting for a slot, they either run or get the 429. The 429 is raised before any provider call, so it does not count towards the deployment's cooldown. The router's own retries and fallbacks treat it like any other 429, so a model group with a second deployment fails over to it, and a single deployment is retried `num_retries` times before the caller sees the error. Set `num_retries: 0` if callers should see the rejection immediately
 
-Set `max_parallel_requests_queue_size` to bound the queue. Once every slot is busy and that many requests are already waiting, the next request fails right away with a 429 whose body names the deployment, its `max_parallel_requests`, and the configured queue size. Requests already waiting keep their place and still complete. The 429 is raised before any provider call, so it does not count towards the deployment's cooldown. The router's own retries and fallbacks treat it like any other 429, so set `num_retries: 0` if callers should see the rejection immediately. `0` means no queueing at all: reject as soon as every slot is in use. Leave it unset to keep unbounded queueing. Both settings only accept a whole number of zero or more, so a deployment with a negative or fractional value fails validation at startup and is skipped with an error log, and the Admin UI returns a 400 instead of saving one. The per-deployment value wins over the router-level `default_max_parallel_requests_queue_size`, which applies to every deployment that does not set its own. The router-level default can also be changed at runtime from the Admin UI under Router Settings as `Max Parallel Requests Queue Size`
+Earlier versions queued instead of rejecting: a request over the cap waited, for as long as it took, until a slot freed up, so a deployment with `rpm` or `tpm` set could silently serialize traffic with 200s and long latencies instead of 429s. If you relied on that, raise `max_parallel_requests` (or the `rpm`/`tpm` it is derived from), or handle the 429 in the caller
 
 ```python
 from litellm import Router 
@@ -1298,24 +1298,19 @@ model_list = [{
 	"litellm_params": {
 		"model": "azure/{{openai_large}}",
 		# ...
-		"max_parallel_requests": 10, # 👈 SET PER DEPLOYMENT
-		"max_parallel_requests_queue_size": 20 # OPTIONAL: 429 once 20 requests are already waiting for a slot
+		"max_parallel_requests": 10 # 👈 SET PER DEPLOYMENT
 	}
 }]
 
 ### OR ### 
 
-router = Router(
-	model_list=model_list,
-	default_max_parallel_requests=20, # 👈 SET DEFAULT MAX PARALLEL REQUESTS 
-	default_max_parallel_requests_queue_size=40, # OPTIONAL: default queue bound for deployments without their own
-)
+router = Router(model_list=model_list, default_max_parallel_requests=20) # 👈 SET DEFAULT MAX PARALLEL REQUESTS 
 
 
 # deployment max parallel requests > default max parallel requests
 ```
 
-On the proxy, set the same keys per deployment under `litellm_params` and the default under `router_settings`:
+On the proxy, set `max_parallel_requests` per deployment under `litellm_params` and the default under `router_settings`:
 
 ```yaml
 model_list:
@@ -1324,17 +1319,16 @@ model_list:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       rpm: 2 # derives max_parallel_requests=2
-      max_parallel_requests_queue_size: 1 # both slots busy and 1 waiting -> the next request gets a 429
 
 router_settings:
   num_retries: 0 # optional, surfaces the 429 to the caller instead of retrying it
-  default_max_parallel_requests_queue_size: 10 # applies to deployments that do not set their own
+  default_max_parallel_requests: 20 # applies to deployments with no max_parallel_requests, rpm or tpm of their own
 ```
 
-With the config above, four requests sent at the same time to `{{openai_large}}` get three 200s (two running, one queued) and one 429:
+With the config above, four requests sent at the same time to `{{openai_large}}` get two 200s and two immediate 429s:
 
 ```json
-{"error":{"message":"litellm.RateLimitError: Deployment max_parallel_requests queue is full. Deployment model_group={{openai_large}}, id=... has all max_parallel_requests=2 slots in use and 1 requests already waiting, which is its max_parallel_requests_queue_size=1. Raise max_parallel_requests or max_parallel_requests_queue_size for this deployment, or unset max_parallel_requests_queue_size to queue without a bound","type":"throttling_error","param":null,"code":"429"}}
+{"error":{"message":"litellm.RateLimitError: Deployment has all max_parallel_requests slots in use. Deployment model_group={{openai_large}}, id=... already has max_parallel_requests=2 requests in flight. Raise max_parallel_requests (or the rpm/tpm it is derived from) for this deployment. Received Model Group={{openai_large}}\nAvailable Model Group Fallbacks=None","type":"throttling_error","param":null,"code":"429"}}
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/a978f2d8813c04dad34802cb95e0a0e35a3324bc/litellm/utils.py#L5605)

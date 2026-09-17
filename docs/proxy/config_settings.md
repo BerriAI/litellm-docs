@@ -475,7 +475,6 @@ router_settings:
 | allowed_fails | integer | The number of failures allowed before cooling down a model. [More information here](reliability) |
 | allowed_fails_policy | object | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | The default maximum number of parallel requests for a deployment. |
-| default_max_parallel_requests_queue_size | Optional[int] | Default cap on how many requests may wait for a deployment's `max_parallel_requests` slot before further requests get a 429. Unset queues without a bound. A deployment's own `max_parallel_requests_queue_size` wins. [More information here](../routing#max-parallel-requests-async) |
 | default_priority | (Optional[int]) | The default priority for a request. Only for '.scheduler_acompletion()'. Default is None. | 
 | polling_interval | (Optional[float]) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | The maximum number of fallbacks to try before exiting the call. Defaults to 5. |
