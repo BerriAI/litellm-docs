@@ -117,6 +117,126 @@ response = completion(
 
 </Tabs>
 
+## Entra ID / OAuth authentication
+
+Every `azure_ai` route accepts Microsoft Entra ID (formerly Azure AD) credentials instead of an API key, so you don't have to mint and rotate a key per Foundry project. When no API key is configured, LiteLLM acquires an access token and sends it as `Authorization: Bearer <token>`; when a key is configured, the key wins and no token is requested.
+
+This works for chat and completions, embeddings, rerank, OCR (including Azure Document Intelligence), image generation and image edits (FLUX and MAI), and agents.
+
+### Credential types
+
+Pass any one of the following in `litellm_params` (proxy) or as kwargs to the SDK call. Each one also has an environment variable fallback, so a proxy-wide setup can rely on the environment alone.
+
+| Credential | Params | Environment variables |
+|---|---|---|
+| Service principal | `tenant_id`, `client_id`, `client_secret` | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` |
+| Pre-fetched access token | `azure_ad_token` | `AZURE_AD_TOKEN` |
+| OIDC federated token | `azure_ad_token` set to `oidc/<token>`, plus `tenant_id` and `client_id` | `AZURE_AD_TOKEN`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` |
+| Username and password | `azure_username`, `azure_password`, `client_id` | `AZURE_USERNAME`, `AZURE_PASSWORD`, `AZURE_CLIENT_ID` |
+| Managed identity or `DefaultAzureCredential` | none; set `litellm.enable_azure_ad_token_refresh = True` (`litellm_settings.enable_azure_ad_token_refresh: true` on the proxy) | `AZURE_CREDENTIAL` to pin a credential type |
+| Custom provider | `azure_ad_token_provider`, a callable returning a token (SDK only) | n/a |
+
+The token is requested for `https://cognitiveservices.azure.com/.default` by default. Override it with `azure_scope` (or `AZURE_SCOPE`) when your resource expects a different audience, for example `https://ai.azure.com/.default` for Foundry agents.
+
+Token providers are cached per tenant, client and scope, and the underlying credential caches the access token until it nears expiry, so a busy deployment does one token acquisition per token lifetime rather than one per request.
+
+<Tabs>
+<TabItem value="proxy" label="PROXY">
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: command-r-plus
+    litellm_params:
+      model: azure_ai/command-r-plus
+      api_base: os.environ/AZURE_AI_API_BASE
+      tenant_id: os.environ/AZURE_TENANT_ID
+      client_id: os.environ/AZURE_CLIENT_ID
+      client_secret: os.environ/AZURE_CLIENT_SECRET
+
+  - model_name: cohere-embed
+    litellm_params:
+      model: azure_ai/cohere-embed-v3-english
+      api_base: os.environ/AZURE_AI_API_BASE
+      tenant_id: os.environ/AZURE_TENANT_ID
+      client_id: os.environ/AZURE_CLIENT_ID
+      client_secret: os.environ/AZURE_CLIENT_SECRET
+
+  - model_name: doc-intelligence
+    litellm_params:
+      model: azure_ai/doc-intelligence/prebuilt-layout
+      api_base: os.environ/AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+      tenant_id: os.environ/AZURE_TENANT_ID
+      client_id: os.environ/AZURE_CLIENT_ID
+      client_secret: os.environ/AZURE_CLIENT_SECRET
+```
+
+To use a managed identity on the host instead of a service principal, drop the credential params and enable token refresh:
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: command-r-plus
+    litellm_params:
+      model: azure_ai/command-r-plus
+      api_base: os.environ/AZURE_AI_API_BASE
+
+litellm_settings:
+  enable_azure_ad_token_refresh: true
+```
+
+</TabItem>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers title="Service principal"
+import os
+from litellm import completion, embedding
+
+os.environ["AZURE_AI_API_BASE"] = "https://your-resource.services.ai.azure.com"
+
+response = completion(
+    model="azure_ai/command-r-plus",
+    messages=[{"role": "user", "content": "Hello, how are you?"}],
+    tenant_id=os.environ["AZURE_TENANT_ID"],
+    client_id=os.environ["AZURE_CLIENT_ID"],
+    client_secret=os.environ["AZURE_CLIENT_SECRET"],
+)
+
+embeddings = embedding(
+    model="azure_ai/cohere-embed-v3-english",
+    input=["good morning from litellm"],
+    tenant_id=os.environ["AZURE_TENANT_ID"],
+    client_id=os.environ["AZURE_CLIENT_ID"],
+    client_secret=os.environ["AZURE_CLIENT_SECRET"],
+)
+```
+
+```python showLineNumbers title="Managed identity / DefaultAzureCredential"
+import litellm
+
+litellm.enable_azure_ad_token_refresh = True
+
+response = litellm.completion(
+    model="azure_ai/command-r-plus",
+    messages=[{"role": "user", "content": "Hello, how are you?"}],
+)
+```
+
+```python showLineNumbers title="Your own token provider"
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+token_provider = get_bearer_token_provider(
+    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+)
+
+response = litellm.completion(
+    model="azure_ai/command-r-plus",
+    messages=[{"role": "user", "content": "Hello, how are you?"}],
+    azure_ad_token_provider=token_provider,
+)
+```
+
+</TabItem>
+</Tabs>
+
 ## Passing additional params - max_tokens, temperature 
 See all litellm.completion supported params [here](../completion/input.md#translated-openai-params)
 
