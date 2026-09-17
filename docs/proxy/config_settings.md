@@ -1119,7 +1119,7 @@ router_settings:
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
 | LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request the Langfuse callback sends; defaults to `5`. A request that times out or fails to connect is retried three times before the batch is dropped
 | LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
-| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`
+| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`. Values outside that range or not numeric log a warning and export every trace
 | LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
 | LANGSMITH_API_KEY | API key for Langsmith platform
 | LANGSMITH_BASE_URL | Base URL for Langsmith service
@@ -1475,11 +1475,11 @@ router_settings:
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for accessing the UI
 | UI_USERNAME | Username for accessing the UI
-| UPSTREAM_LANGFUSE_DEBUG | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
-| UPSTREAM_LANGFUSE_HOST | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
-| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
-| UPSTREAM_LANGFUSE_RELEASE | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
-| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated. No longer read; upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4
+| UPSTREAM_LANGFUSE_DEBUG | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_HOST | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_RELEASE | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
 | USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
