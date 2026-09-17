@@ -15,7 +15,7 @@ items={[
   { title: "Agent skill", description: "One line to your coding agent.", to: "#agent-skill" },
   { title: "config.yaml", description: "One router entry in model_list.", to: "#configyaml" },
   { title: "Model-management API", description: "POST /model/new, for CI/CD.", to: "#model-management-api" },
-  { title: "Autorouter CLI", description: "Try it locally without touching the proxy.", to: "#autorouter-cli" },
+  { title: "lite autoroute", description: "Try it locally without touching the proxy.", to: "#lite-autoroute" },
 ]}
 />
 
@@ -105,11 +105,11 @@ curl -X POST "http://localhost:4000/model/new" \
 
 The response includes `model_id`. Use it with `PATCH /model/{model_id}/update` for partial changes, and call the router by its `model_name`. Validate a complexity configuration before saving with `POST /auto_router/validate_complexity_router_config`. See [Model Management](/docs/proxy/model_management) for deployment CRUD and [Configuration Reference](/docs/proxy/auto_routing) for the full router payload.
 
-## Autorouter CLI
+## lite autoroute
 
 - Stands up a throwaway local proxy that forwards every request to your real proxy.
 - Routes Claude Code traffic through it for the session. Nothing bypasses the real proxy and its config is untouched.
-- Guide: [Autorouter CLI](/docs/learn/autorouter_cli).
+- Guide: [lite autoroute](/docs/learn/autorouter_cli).
 
 ## Claude Code and Claude Desktop
 
