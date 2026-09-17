@@ -31,7 +31,7 @@ from litellm import CustomLLM, completion, get_llm_provider
 class MyCustomLLM(CustomLLM):
     def completion(self, *args, **kwargs) -> litellm.ModelResponse:
         return litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
             mock_response="Hi!",
         )  # type: ignore
@@ -62,14 +62,14 @@ from litellm import CustomLLM, completion, get_llm_provider
 class MyCustomLLM(CustomLLM):
     def completion(self, *args, **kwargs) -> litellm.ModelResponse:
         return litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
             mock_response="Hi!",
         )  # type: ignore
 
     async def acompletion(self, *args, **kwargs) -> litellm.ModelResponse:
         return litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
             mock_response="Hi!",
         )  # type: ignore
@@ -110,7 +110,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "messages": [{"role": "user", "content": "Say \"this is a test\" in JSON!"}],
@@ -135,7 +135,7 @@ Expected Response
         }
     ],
     "created": 1721955063,
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "object": "chat.completion",
     "system_fingerprint": null,
     "usage": {
@@ -248,7 +248,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",
@@ -326,7 +326,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'model=my-custom-image-edit-model' \
 -F 'image=@/path/to/image.png' \
 -F 'prompt=Make the sky blue'
@@ -356,7 +356,7 @@ from litellm import CustomLLM, completion, get_llm_provider
 class MyCustomLLM(CustomLLM):
     async def acompletion(self, *args, **kwargs) -> litellm.ModelResponse:
         return litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
             mock_response="Hi!",
         )  # type: ignore
@@ -398,7 +398,7 @@ litellm --config /path/to/config.yaml
 curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 -H 'anthropic-version: 2023-06-01' \
 -H 'content-type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
    "model": "my-custom-model",
      "max_tokens": 1024,
@@ -420,7 +420,7 @@ Expected Response
     "id": "chatcmpl-Bm4qEp4h4vCe7Zi4Gud1MAxTWgibO",
     "type": "message",
     "role": "assistant",
-    "model": "gpt-3.5-turbo-0125",
+    "model": "{{openai_small}}",
     "stop_sequence": null,
     "usage": {
         "input_tokens": 18,
@@ -455,7 +455,7 @@ class MyCustomLLM(CustomLLM):
     def completion(self, *args, **kwargs) -> litellm.ModelResponse:
         assert kwargs["optional_params"] == {"my_custom_param": "my-custom-param"} # 👈 CHECK HERE
         return litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
             mock_response="Hi!",
         )  # type: ignore
@@ -525,7 +525,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",

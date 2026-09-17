@@ -51,18 +51,18 @@ Create a `config.yaml` file with your model configurations:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
-  master_key: sk-1234567890 # Change this to a secure key
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Step 3: Start LiteLLM Proxy
@@ -107,29 +107,29 @@ Route requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route requests to GPT-4o:
+Route requests to `{{openai_large}}`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
@@ -141,13 +141,13 @@ Route requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>
@@ -157,20 +157,20 @@ All deployments with the same model_name will be load balanced. In this example 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-4o  # Same model name for load balancing
+  - model_name: {{openai_large}}  # Same model name for load balancing
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
   routing_strategy: simple-shuffle
 
 general_settings:
-  master_key: sk-1234567890
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 </TabItem>

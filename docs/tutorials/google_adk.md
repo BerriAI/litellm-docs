@@ -58,9 +58,9 @@ os.environ["OPENAI_API_KEY"] = "your-openai-api-key"  # For OpenAI models
 os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"  # For Claude models
 
 # Define model constants for cleaner code
-MODEL_GEMINI_PRO = "gemini-1.5-pro"
-MODEL_GPT_4O = "openai/gpt-4o"
-MODEL_CLAUDE_SONNET = "anthropic/claude-3-sonnet-20240229"
+MODEL_GEMINI_PRO = "{{gemini_pro}}"
+MODEL_GPT = "openai/{{openai_large}}"
+MODEL_CLAUDE_SONNET = "anthropic/{{anthropic}}"
 ```
 
 ## 2. Define a Simple Tool
@@ -133,9 +133,9 @@ async def call_agent_async(query: str, runner, user_id, session_id):
 # Create an agent powered by OpenAI's GPT model
 weather_agent_gpt = Agent(
     name="weather_agent_gpt",
-    model=LiteLlm(model=MODEL_GPT_4O),  # Use OpenAI's GPT model
+    model=LiteLlm(model=MODEL_GPT),  # Use OpenAI's GPT model
     description="Provides weather information using OpenAI's GPT.",
-    instruction="You are a helpful weather assistant powered by GPT-4o. "
+    instruction="You are a helpful weather assistant powered by {{openai_large}}. "
                 "Use the 'get_weather' tool for city weather requests. "
                 "Present information clearly.",
     tools=[get_weather],
@@ -287,7 +287,7 @@ litellm.use_litellm_proxy = True
 # Create a proxy-enabled agent (using environment variables)
 weather_agent_proxy_env = Agent(
     name="weather_agent_proxy_env",
-    model=LiteLlm(model="gpt-4o"), # this will call the `gpt-4o` model on LiteLLM proxy
+    model=LiteLlm(model="{{openai_large}}"), # this will call the `{{openai_large}}` model on LiteLLM proxy
     description="Provides weather information using a model from LiteLLM proxy.",
     instruction="You are a helpful weather assistant. "
                 "Use the 'get_weather' tool for city weather requests. "

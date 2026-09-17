@@ -12,6 +12,7 @@ Supported Providers:
 - Google AI Studio (Gemini)
 - Vertex AI
 - Bedrock
+- Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 
 ## Proxy Usage
 
@@ -35,11 +36,19 @@ model_list:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: azure-gpt-4o-realtime-audio
     litellm_params:
       model: azure/gpt-4o-realtime-preview
       api_key: os.environ/AZURE_SWEDEN_API_KEY
       api_base: os.environ/AZURE_SWEDEN_API_BASE
+
+  - model_name: azure-gpt-realtime
+    litellm_params:
+      model: azure/gpt-realtime
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+    model_info:
+      mode: realtime
 
   - model_name: openai-gpt-4o-realtime-audio
     litellm_params:
@@ -70,7 +79,7 @@ model_list:
 ```bash
 litellm --config /path/to/config.yaml 
 
-# RUNNING on http://0.0.0.0:8000
+# RUNNING on http://0.0.0.0:4000
 ```
 
 ### Test 
@@ -85,7 +94,7 @@ const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
 // const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
 const ws = new WebSocket(url, {
     headers: {
-        "api-key": `sk-1234`,
+        "api-key": `sk-<your-litellm-api-key>`,
         "OpenAI-Beta": "realtime=v1",
     },
 });
@@ -108,6 +117,43 @@ ws.on("message", function incoming(message) {
 ws.on("error", function handleError(error) {
     console.error("Error: ", error);
 });
+```
+
+## Azure: GA vs beta realtime protocol
+
+Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?model=<deployment>`) speaks the GA event schema (`session.type`, `output_modalities`, nested `audio`), and the older beta endpoint (`/openai/realtime?api-version=2024-10-01-preview&deployment=<deployment>`) speaks the beta schema (`modalities`, `voice`, flat audio formats). Sending a GA-shaped `session.update` to the beta endpoint fails with `Unknown parameter: 'session.type'`
+
+LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
+
+```python
+from openai import AsyncOpenAI
+
+client = AsyncOpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234")
+
+async with client.realtime.connect(model="azure-gpt-realtime") as connection:
+    await connection.session.update(
+        session={"type": "realtime", "output_modalities": ["audio"], "instructions": "Please assist the user."}
+    )
+    async for event in connection:
+        print(event.type)
+        if event.type == "session.updated":
+            break
+```
+
+To pin one protocol regardless of what the client sends, set `realtime_protocol` on the deployment or `LITELLM_AZURE_REALTIME_PROTOCOL` in the proxy's environment. The deployment setting wins over the environment variable, and both win over the client header. The realtime health check (`/health` on a `mode: realtime` deployment, and the Admin UI's Test Connect) has no client header to read, so it probes the GA endpoint unless one of those pins the protocol
+
+```yaml
+model_list:
+  - model_name: azure-gpt-realtime
+    litellm_params:
+      model: azure/gpt-realtime
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      realtime_protocol: beta # or GA
+```
+
+```bash
+export LITELLM_AZURE_REALTIME_PROTOCOL=beta # or GA
 ```
 
 ## Guardrails
@@ -134,7 +180,7 @@ const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&gu
 
 const ws = new WebSocket(url, {
     headers: {
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
     },
 });
 
@@ -166,7 +212,7 @@ async def main():
     url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         print("Connected — guardrail active")
         async for msg in ws:

@@ -1,0 +1,7 @@
+configuration,tasks_solved,tasks,solve_rate_percent,total_cost_usd,cost_per_solved_task_usd
+Fuse,25,25,100,18.65,0.75
+Complexity classifier,24,25,96,22.70,0.95
+Capability classifier,23,25,92,11.15,0.48
+NeMo Switchyard,21,25,84,17.03,0.81
+Opus 5 only,23,25,92,20.27,0.88
+Sonnet 5 only,22,25,88,13.19,0.60

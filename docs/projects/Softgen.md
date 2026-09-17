@@ -4,4 +4,4 @@
 LiteLLM helps `Softgen` users to choose and use different LLMs.
 
 - [Softgen](https://softgen.ai)
-- [Academy](hhttps://academy.softgen.ai)
+- [Academy](https://academy.softgen.ai)

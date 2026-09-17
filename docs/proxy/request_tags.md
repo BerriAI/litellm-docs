@@ -17,7 +17,7 @@ Set tags on model deployments in `config.yaml`:
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-prod
       api_key: os.environ/AZURE_PROD_API_KEY
@@ -40,10 +40,10 @@ Requests just specify the model - tags are automatically applied from config:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -54,11 +54,11 @@ Pass tags dynamically via the `x-litellm-tags` header as a comma-separated strin
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -H 'x-litellm-tags: team-api,production,us-east-1' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -74,10 +74,10 @@ Pass tags directly in the request body. Both formats are supported:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "tags": ["team-api", "production", "us-east-1"]
   }'
@@ -89,10 +89,10 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {
       "tags": ["team-api", "production", "us-east-1"]
@@ -118,7 +118,7 @@ You can also set default tags at the API key or team level:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "metadata": {
@@ -132,7 +132,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "metadata": {
@@ -171,7 +171,7 @@ The tag from the model config appears in `LiteLLM_SpendLogs`:
   "request_id": "chatcmpl-abc123",
   "request_tags": ["AWS_IAM_PROD"],
   "spend": 0.002,
-  "model": "gpt-4"
+  "model": "{{openai_large}}"
 }
 ```
 

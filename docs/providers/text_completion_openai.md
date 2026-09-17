@@ -43,9 +43,9 @@ export OPENAI_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo                          # The `openai/` prefix will call openai.chat.completions.create
+      model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
@@ -56,7 +56,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-4`, `gpt-3.5-turbo` , `gpt-4-turbo-preview` will all go through this route 
+This means requests to `{{openai_large}}`, `{{openai_small}}` will all go through this route 
 
 ```yaml
 model_list:

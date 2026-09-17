@@ -78,7 +78,7 @@ from a2a.client import A2AClient
 
 client = A2AClient(
     base_url="http://localhost:4000",  # Your LiteLLM proxy
-    api_key="sk-1234"                   # LiteLLM API key
+    api_key="sk-<your-litellm-api-key>"                   # LiteLLM API key
 )
 
 response = client.send_message(

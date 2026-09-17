@@ -1,7 +1,7 @@
 
 # StandardLoggingPayload Specification
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every successful and failed response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Custom logging callbacks should read request identity from `kwargs["standard_logging_object"]["metadata"]`, rather than raw `litellm_params` metadata. Optional identity fields are `null` when unavailable. Intermediate streaming events and callbacks where payload construction fails can omit `standard_logging_object`.
 
 ## StandardLoggingPayload
 
@@ -50,7 +50,7 @@ The `cost_breakdown` field provides detailed cost breakdown for completion reque
 - **`output_cost`**: Cost of output/completion tokens (including reasoning tokens if applicable)
 - **`tool_usage_cost`**: Cost of built-in tools usage (e.g., web search, code interpreter)
 - **`total_cost`**: Total cost of input + output + tool usage
-- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `gemini-2.5-flash`, `o3`)
+- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `{{gemini_flash}}`, `o3`)
 - **`cache_read_cost`**: Cost of cache-read tokens, reported as a subset of `input_cost` (populated when cached tokens are present in the response)
 - **`cache_creation_cost`**: Cost of cache-creation tokens, reported as a subset of `input_cost` (populated when prompt caching is used, e.g. Anthropic models)
 
@@ -80,6 +80,7 @@ class CostBreakdown(TypedDict, total=False):
 | `user_api_key_org_id` | `Optional[str]` | Organization ID associated with the key |
 | `user_api_key_team_id` | `Optional[str]` | Team ID associated with the key |
 | `user_api_key_user_id` | `Optional[str]` | User ID associated with the key |
+| `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
 | `user_api_key_team_alias` | `Optional[str]` | Team alias associated with the key |
 
 ## StandardLoggingMetadata

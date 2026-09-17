@@ -14,6 +14,15 @@
  * Defaults to scanning `docs/`. Table cells, fenced code blocks, and
  * `- **Term** — description` list labels are exempt: there the dash is
  * typography, not a spliced sentence.
+ *
+ * One escape hatch, for text we are not free to edit (approved customer
+ * quotes, co-published copy, verbatim quotations). Put this MDX comment on
+ * the line before, with a reason:
+ *
+ *   {\/* style-lint-allow-next-line em-dash: reason *\/}
+ *
+ * It exempts exactly the next line. There is no file-level or global opt-out:
+ * if you are writing the sentence yourself, rewrite it instead.
  */
 
 const fs = require("fs");
@@ -51,6 +60,10 @@ const LIST_LABEL = new RegExp(
   `^([-*+]|\\d+\\.)\\s+(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\([^)]+\\)|\`[^\`]+\`)\\s*${EM_DASH}`
 );
 
+// The escape hatch, deliberately scoped to a single following line and
+// required to carry a reason.
+const ALLOW_NEXT_LINE = /^\{\/\*\s*style-lint-allow-next-line\s+em-dash\s*:\s*\S.*\*\/\}$/;
+
 function isExemptDashLine(line) {
   const trimmed = line.trim();
   if (trimmed.startsWith("|")) return true;
@@ -77,7 +90,8 @@ function checkFile(file) {
     }
     if (inFence) return;
 
-    if (line.includes(EM_DASH) && !isExemptDashLine(line)) {
+    const allowedByPragma = ALLOW_NEXT_LINE.test((lines[idx - 1] || "").trim());
+    if (line.includes(EM_DASH) && !isExemptDashLine(line) && !allowedByPragma) {
       errors.push({ file, lineNo, line, message: "em dash in prose: use a comma, colon, semicolon, or two sentences" });
     }
 

@@ -28,11 +28,13 @@ Endpoint activity is **automatically tracked** whenever you make API calls throu
 When you make a request to any endpoint, activity is automatically recorded:
 
 ```bash showLineNumbers title="Endpoint activity is automatically tracked"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \ # 👈 ENDPOINT AUTOMATICALLY TRACKED
+# /chat/completions: 👈 ENDPOINT AUTOMATICALLY TRACKED
+# Authorization: 👈 YOUR PROXY KEY
+curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \ # 👈 YOUR PROXY KEY
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -110,7 +112,7 @@ Gateway counts are served by their own endpoint. Because the underlying table is
 
 ```shell title="Gateway request counts" showLineNumbers
 curl -L -X GET 'http://localhost:4000/gateway/daily/activity?start_date=2026-07-28&end_date=2026-08-04' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json title="Gateway request counts response" showLineNumbers
