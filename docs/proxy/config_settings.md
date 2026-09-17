@@ -435,7 +435,9 @@ Top-level key. Set it on a [Global Control Plane](./global_control_plane.md) to 
 :::info
 
 Most values can also be set via `litellm_settings`. If you see overlapping values, settings on
-`router_settings` will override those on `litellm_settings`. :::
+`router_settings` will override those on `litellm_settings`.
+
+:::
 
 ```yaml
 router_settings:
