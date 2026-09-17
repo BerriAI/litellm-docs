@@ -956,6 +956,7 @@ const sidebars = {
             "pass_through/langfuse",
             "pass_through/mistral",
             "pass_through/openai_passthrough",
+            "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
             {
               type: "category",
