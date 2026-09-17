@@ -4,7 +4,7 @@ Pass-through endpoints for the [Amazon Transcribe](https://docs.aws.amazon.com/t
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ❌ | Requests are logged with model `transcribe/{Operation}` and spend `0`; Transcribe bills per second of audio, which is not known at request time |
+| Cost Tracking | ❌ | Requests are logged with model `transcribe/{Operation}` and spend `0`. Transcribe bills per second of audio, which is not known at request time, so LiteLLM key, team and user budgets do not limit Transcribe usage |
 | Logging | ✅ | works across all integrations |
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Streaming transcription (`StartStreamTranscription`, the `transcribestreaming` HTTP/2 and WebSocket endpoint) is a separate protocol and is not covered by this pass-through |
@@ -89,4 +89,4 @@ Only the `transcribe.{region}.amazonaws.com` JSON API is proxied. Streaming tran
 
 Transcripts are written by AWS to S3 and returned as a presigned `TranscriptFileUri`; the transcript body itself never passes through LiteLLM.
 
-Spend is not computed for Transcribe calls. Every request is still logged with model `transcribe/{Operation}` and provider `transcribe`, so calls show up in SpendLogs and logging integrations with a spend of `0`.
+Spend is not computed for Transcribe calls. Every request is still logged with model `transcribe/{Operation}` and provider `transcribe`, so calls show up in SpendLogs and logging integrations with a spend of `0`. Because spend is `0`, `max_budget` on keys, teams and users never blocks a Transcribe request. Restrict who can start jobs with key or team `allowed_routes` (for example, only grant `/transcribe` to the keys that need it) and use AWS Budgets or IAM policies on the proxy's AWS credentials to cap the AWS side.
