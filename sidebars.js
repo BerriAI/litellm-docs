@@ -948,6 +948,7 @@ const sidebars = {
             "pass_through/assembly_ai",
             "pass_through/bedrock",
             "pass_through/azure_passthrough",
+            "pass_through/azure_speech",
             "pass_through/cohere",
             "pass_through/comprehend_medical",
             "pass_through/cursor",
