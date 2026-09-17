@@ -1218,6 +1218,7 @@ const sidebars = {
           type: "category",
           label: "Perplexity AI",
           items: [
+            "providers/parallel_ai",
             "providers/perplexity",
             "providers/perplexity_embedding",
           ]
