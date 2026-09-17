@@ -146,6 +146,12 @@ trust_level = "trusted"
 "{{openai_large}}" = 1
 ```
 
+:::tip Keep each user's own ChatGPT login
+
+The configuration above sends one LiteLLM key as the only credential, so OpenAI sees the proxy's configured API key for every user. To have Codex users sign in with their own ChatGPT accounts and keep that identity on the upstream request, follow [OpenAI Codex with Your Own ChatGPT Login](./openai_codex_byok.md)
+
+:::
+
 ## 5. Run Codex
 
 With everything configured, you can now run Codex:
@@ -194,5 +200,6 @@ codex --model gemini/{{gemini_flash}}
 ## Additional Resources
 
 - [LiteLLM Quickstart](../proxy/docker_quick_start.md)
+- [OpenAI Codex with Your Own ChatGPT Login](./openai_codex_byok.md)
 - [OpenAI Codex GitHub Repository](https://github.com/openai/codex)
 - [LiteLLM Virtual Keys and Authentication](../proxy/virtual_keys.md)
