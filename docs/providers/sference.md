@@ -26,14 +26,15 @@ We actively maintain the list of models, pricing, token window, etc. [here](http
 
 | Model ID | Input context length | Input Modalities | Output Modalities |
 | --- | --- | --- | --- |
-| `Qwen/Qwen3.6-35B-A3B` | 262K | Text | Text |
-| `Qwen/Qwen3-VL-30B-A3B-Instruct` | 262K | Text, Image | Text |
-| `bottlecapai/ThinkingCap-Qwen3.6-27B` | 262K | Text | Text |
-| `deepseek-ai/DeepSeek-V4-Flash` | 1M | Text | Text |
 | `moonshotai/Kimi-K3` | 1M | Text | Text |
+| `zai-org/GLM-5.3` | 1M | Text | Text |
 | `zai-org/GLM-5.2` | 1M | Text | Text |
+| `zai-org/GLM-5.3-Flash` | 1M | Text, Image | Text |
+| `deepseek-ai/DeepSeek-V4.1-Flash` | 1M | Text, Image | Text |
+| `deepseek-ai/DeepSeek-V4-Flash` | 1M | Text | Text |
+| `deepseek-ai/DeepSeek-V4-Flash-0731` | 1M | Text | Text |
 
-All models support function calling and prompt caching. All models except `Qwen/Qwen3-VL-30B-A3B-Instruct` support reasoning via `reasoning_effort`.
+All models support function calling, prompt caching, and reasoning. Reasoning controls vary by model family: DeepSeek and Kimi models accept `enable_thinking` plus named `reasoning_effort` levels, while the GLM-5.3 family (GLM-5.3, GLM-5.3-Flash, and the GLM-5.2 alias) always reasons and rejects thinking-off requests with a 400. See the [sference docs](https://sference.com/docs/models) for the per-model control surface.
 
 Custom (BYOM) models deployed on sference also work: tool calling is assumed for any `sference/` model that is not in the catalog above.
 
@@ -78,7 +79,7 @@ for chunk in response:
 
 ### Reasoning Effort
 
-All sference models except `Qwen/Qwen3-VL-30B-A3B-Instruct` accept `reasoning_effort`.
+DeepSeek and Kimi models accept named `reasoning_effort` levels (`low`, `high`, `xhigh`); DeepSeek-V4.1-Flash additionally accepts an integer budget in [1, 100]. The GLM-5.3 family always reasons — it takes no effort control and rejects thinking-off requests with a 400.
 
 ```python showLineNumbers title="sference Reasoning Effort"
 import os
@@ -90,7 +91,7 @@ os.environ["SFERENCE_API_KEY"] = ""  # your sference API key
 messages = [{"content": "What is 15% of 2840?", "role": "user"}]
 
 response = completion(
-    model="sference/Qwen/Qwen3.6-35B-A3B",
+    model="sference/deepseek-ai/DeepSeek-V4.1-Flash",
     messages=messages,
     reasoning_effort="high"
 )
