@@ -4,7 +4,7 @@ Pass-through endpoints for [Azure AI Speech](https://learn.microsoft.com/azure/a
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ❌ | Requests are logged with model `azure_speech/short-audio` or `azure_speech/batch-transcription` and spend `0`. Azure Speech bills per hour of audio, and LiteLLM has no price entry for it, so LiteLLM key, team and user budgets do not limit Azure Speech usage |
+| Cost Tracking | ✅ | Short audio recognition is priced per second of recognized audio from the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json`. Batch transcription calls are logged with spend `0` because the REST responses do not report audio duration |
 | Logging | ✅ | works across all integrations |
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Realtime recognition uses the Speech SDK WebSocket protocol, which is not covered by this pass-through |
@@ -73,4 +73,4 @@ Only the REST APIs are proxied. Realtime and continuous recognition use the Spee
 
 Only subscription key authentication is supported. Microsoft Entra ID tokens (`Authorization: Bearer <token>` against Azure) are not issued or forwarded by this route, so the proxy's credential has to be a subscription key of the Speech resource
 
-Spend is not computed for Azure Speech calls. Every request is still logged with model `azure_speech/short-audio` or `azure_speech/batch-transcription` and provider `azure_speech`, so calls show up in SpendLogs and logging integrations with a spend of `0`. Because spend is `0`, `max_budget` on keys, teams and users never blocks an Azure Speech request. Restrict who can call the service with key or team `allowed_routes` (for example, only grant `/azure_speech` to the keys that need it) and use Azure cost alerts or resource quotas on the Speech resource to cap the Azure side
+Short audio recognition responses carry `Offset` and `Duration` in 100 nanosecond ticks. LiteLLM converts their sum to seconds and prices it with the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json` (the same entry used for Azure Speech through `/v1/audio/transcriptions`), so successful recognitions count against key, team and user budgets. A response without a recognized duration (for example `RecognitionStatus: NoMatch`) is logged with spend `0`. Batch transcription requests are logged with model `azure_speech/batch-transcription` and spend `0`: the batch REST API bills per hour of audio on the Azure side, but its responses do not report a duration LiteLLM could price. To cap batch usage, restrict who can call the route with key or team `allowed_routes` (for example, only grant `/azure_speech` to the keys that need it) and use Azure cost alerts or quotas on the Speech resource
