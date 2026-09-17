@@ -4,7 +4,7 @@ Pass-through endpoints for [Azure AI Speech](https://learn.microsoft.com/azure/a
 
 | Feature | Supported | Notes |
 |-------|-------|-------|
-| Cost Tracking | ✅ | Short audio recognition is priced per second of recognized audio from the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json`. Batch transcription calls are logged with spend `0` because the REST responses do not report audio duration |
+| Cost Tracking | ✅ | Short audio recognition and fast transcription are priced per second of audio from the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json`. Batch transcription jobs cannot be priced from their responses and are shared across every key on the proxy, so the batch API is limited to proxy admin keys and logged with spend `0` |
 | Logging | ✅ | works across all integrations |
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Realtime recognition uses the Speech SDK WebSocket protocol, which is not covered by this pass-through |
@@ -45,7 +45,20 @@ curl -X POST 'http://0.0.0.0:4000/azure_speech/speech/recognition/conversation/c
 {"RecognitionStatus":"Success","Offset":9700000,"Duration":89500000,"DisplayText":"Britain Tranquility Base. Here the eagle has landed."}
 ```
 
-4. Or create a batch transcription job and poll it
+4. Or transcribe a file with the fast transcription API, which returns the transcript in one request and reports the audio duration LiteLLM prices
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/azure_speech/speechtotext/transcriptions:transcribe?api-version=2024-11-15' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-F 'audio=@audio.wav' \
+-F 'definition={"locales":["en-US"]};type=application/json'
+```
+
+```json
+{"durationMilliseconds":5061,"combinedPhrases":[{"text":"Listen, Tranquility Base here. The Eagle has landed."}],"phrases":[...]}
+```
+
+5. Or, with a proxy admin key, create a batch transcription job and poll it (the whole batch API is admin only, see Limitations)
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/azure_speech/speechtotext/v3.2/transcriptions' \
@@ -73,4 +86,6 @@ Only the REST APIs are proxied. Realtime and continuous recognition use the Spee
 
 Only subscription key authentication is supported. Microsoft Entra ID tokens (`Authorization: Bearer <token>` against Azure) are not issued or forwarded by this route, so the proxy's credential has to be a subscription key of the Speech resource
 
-Short audio recognition responses carry `Offset` and `Duration` in 100 nanosecond ticks. LiteLLM converts their sum to seconds and prices it with the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json` (the same entry used for Azure Speech through `/v1/audio/transcriptions`), so successful recognitions count against key, team and user budgets. A response without a recognized duration (for example `RecognitionStatus: NoMatch`) is logged with spend `0`. Batch transcription requests are logged with model `azure_speech/batch-transcription` and spend `0`: the batch REST API bills per hour of audio on the Azure side, but its responses do not report a duration LiteLLM could price. To cap batch usage, restrict who can call the route with key or team `allowed_routes` (for example, only grant `/azure_speech` to the keys that need it) and use Azure cost alerts or quotas on the Speech resource
+Short audio recognition responses carry `Offset` and `Duration` in 100 nanosecond ticks, and fast transcription responses carry `durationMilliseconds`. LiteLLM converts both to seconds and prices them with the `azure/speech/azure-stt` entry in `model_prices_and_context_window.json` (the same entry used for Azure Speech through `/v1/audio/transcriptions`), so successful transcriptions count against key, team and user budgets. Fast transcription requests are logged with model `azure_speech/fast-transcription`. A response without a duration (for example `RecognitionStatus: NoMatch`) is logged with spend `0`
+
+The rest of the batch API (`/speechtotext/v3.2/...`) is limited to proxy admin keys; any other key gets a 403 for every method there. Two reasons: it bills per hour of audio on the Azure side but its responses do not report a duration LiteLLM could price, so a `POST` or `PUT` (creating a transcription job, a custom model, an endpoint) would spend against the proxy's Azure resource without touching any LiteLLM budget, and every job, file and model under that API belongs to the proxy's single Azure subscription, so a `GET`, `PATCH` or `DELETE` from one key could read or remove work another key created. Admin calls there are logged with model `azure_speech/batch-transcription` and spend `0`. Ordinary keys that need one-shot transcription should use the fast transcription endpoint above, which is priced per request
