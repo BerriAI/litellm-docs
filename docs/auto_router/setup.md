@@ -91,7 +91,7 @@ jev_classifier_config:
   circuit_breaker_cooldown_seconds: 30
 ```
 
-`model` defaults to `jev-latest`. When `api_key` is omitted or null, LiteLLM reads `TYPESAFE_API_KEY`. When `api_base` is omitted or null, LiteLLM reads `TYPESAFE_API_BASE` and then uses `https://api.typesafe.ai`. `instructions` replaces the built-in question instructions when provided
+`model` defaults to `jev-latest`. When `api_key` is omitted or null, LiteLLM reads `TYPESAFE_API_KEY`. When `api_base` is omitted or null, LiteLLM reads `TYPESAFE_API_BASE` and then uses `https://api.typesafe.ai`. Setting `api_base` without `api_key` is rejected, so `TYPESAFE_API_KEY` is only ever sent to `TYPESAFE_API_BASE` or the default host. Team members editing an auto router through the management API cannot set `api_key` or `api_base` at all. `instructions` replaces the built-in question instructions when provided
 
 Spend-log routing decisions carry `cause: jev_classifier`, `classifier_model: typesafe/<model>`, `classifier_probabilities` for each tier label, `classifier_confidence`, and `classifier_cost` calculated from the `typesafe/<model>` registry rows
 
