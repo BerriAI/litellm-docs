@@ -84,18 +84,18 @@ By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've chan
 
 ## Limit failed sign-in attempts
 
-Every username and password sign-in to the Admin UI (`/login`, `/v2/login`, `/v3/login`) is counted per source address when it fails. More than 10 wrong passwords from one address within 60 seconds, across every username, blocks that address for 5 minutes. Accounts are never locked: the same username keeps working from any other address. Each address also gets a per-username allowance of half its address limit, rounded down but never below 1, so 5 by default. More than that for one username from one address blocks only that address and username pair, and its further failures stop counting against the address, so a script stuck on one account does not block everyone else behind the same office address.
+Failed username and password sign-ins to the Admin UI are counted per source address. More than 10 wrong passwords from one address within 60 seconds, across all usernames, blocks that address for 5 minutes. Accounts are never locked: the same username can still sign in from any other address. Half the address limit (5 by default) is the allowance for a single username from that address. Going over it blocks only that address and username pair, and its further failures no longer count toward the address, so one script stuck on one account does not lock out everyone else behind a shared office address.
 
-A block is a hard block. While it is active every sign-in attempt for that key is refused with `429 Too many failed sign-in attempts` and a `Retry-After` header, before the database is queried or the password is checked. The correct password is refused too, as are `UI_USERNAME`/`UI_PASSWORD` and the master key used as a password. The block lasts its full duration and is not extended by refused attempts. A successful sign-in clears the pair counter but leaves the address counter alone. A blocked administrator who cannot wait can still reach the API with the master key as a bearer token, since API requests never go through the sign-in throttle.
+While a block is active, every sign-in attempt for that address or pair is refused with `429 Too many failed sign-in attempts` and a `Retry-After` header, before the password is checked. That includes the correct password, `UI_USERNAME`/`UI_PASSWORD`, and the master key typed into the form. Refused attempts do not extend the block. If you are blocked and cannot wait, the master key still works as a bearer token on the API, which the sign-in limit does not cover.
 
-The counters are stored in Redis when the proxy has one, so every worker and pod sees the same numbers. Without Redis each worker keeps its own counters and the effective limit is the configured number times the worker count; the proxy logs a warning at startup when that is the case. If Redis stops answering, the proxy falls back to the local counters, logs a warning, and never refuses a sign-in because Redis is down.
+Counters live in Redis when the proxy has one, so a block applies across all workers and pods. Without Redis each worker counts on its own, so the effective limit is the configured number times the worker count; the proxy warns about this at startup. If Redis becomes unreachable, the proxy falls back to per-worker counters and keeps accepting sign-ins.
 
-The per-address limit needs to know which address is the client. Set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the reverse proxies or ingress in front of LiteLLM; the client is then read from `X-Forwarded-For` as the first hop outside those ranges. When clients connect to LiteLLM directly, set it to an empty list so the peer address is used and `X-Forwarded-For` is ignored. Leave it unset and the proxy cannot tell a client from a shared ingress, so it logs a warning at startup and only the per-username half of the limit is enforced. IPv4-mapped IPv6 peers are treated as their IPv4 address, and other IPv6 addresses are grouped by /64 so one host cannot spread its guesses across its own subnet.
+To count per address, the proxy has to know which address is the client. Set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancer or ingress in front of LiteLLM; the client is then the first `X-Forwarded-For` hop outside those ranges. If clients connect to LiteLLM directly, set it to `[]` so the peer address is used and `X-Forwarded-For` is ignored. If it is unset, the proxy cannot tell a client from a shared ingress, so it warns at startup and enforces only the per-username limit. IPv6 addresses are grouped by /64.
 
 ```yaml
 general_settings:
   trusted_proxy_ranges: ["10.0.0.0/8"]        # or [] when clients connect directly
-  max_failed_login_attempts_per_source: 10    # default; per username from one address is half, so 5
+  max_failed_login_attempts_per_source: 10    # default; the per-username allowance is half of this
   failed_login_window_seconds: 60             # default
   failed_login_block_seconds: 300             # default
   max_failed_login_attempts_per_source_overrides:
@@ -104,7 +104,7 @@ general_settings:
     "198.51.100.4": 0                         # 0 exempts this address from both limits
 ```
 
-The per-username allowance is not configured on its own; it follows the address limit, including any override, so one override is enough to raise both limits for an address, and an override of `0` exempts that address from both. Set `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` in the environment to turn the limit off everywhere. It is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind these defaults.
+An override raises both limits for that address, since the per-username allowance follows the address limit, and `0` exempts the address entirely. `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` turns the limit off everywhere; it is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind the defaults.
 
 ## Invite-other users
 

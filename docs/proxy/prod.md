@@ -21,9 +21,9 @@ The master key is the proxy admin credential: it authenticates admin API calls a
 export LITELLM_MASTER_KEY="sk-<long-random-value>"
 ```
 
-### Tell the proxy which addresses are your proxies
+### Set trusted proxy ranges
 
-Failed Admin UI sign-ins are counted per source address, and too many in a row block that address for five minutes; accounts are never locked. A per-username allowance of half the address limit keeps one stuck script from blocking a whole shared address. The per-address half only works when the proxy knows which address is the client, so set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancers or ingress in front of LiteLLM. If clients connect to LiteLLM directly, set it to an empty list. Leaving it unset logs a warning at startup and turns off the per-address limit, leaving only the per-username one. See [limit failed sign-in attempts](./ui.md#limit-failed-sign-in-attempts) for the limits and the [security best practices](./security_best_practices.md#limit-failed-admin-ui-sign-in-attempts) for the reasoning.
+Failed Admin UI sign-ins are limited per source address (see [security best practices](./security_best_practices.md#limit-failed-admin-ui-sign-in-attempts)). That limit only runs when the proxy knows which address is the client, so set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancer or ingress in front of LiteLLM, or to `[]` if clients connect directly. Left unset, the proxy warns at startup and only the weaker per-username limit applies.
 
 ```yaml
 general_settings:
