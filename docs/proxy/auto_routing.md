@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # [Beta] Auto Routing
 
-One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier.
+One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, JEV through TypeSafe System One Choice, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier
 
 :::info Availability
 
@@ -21,7 +21,7 @@ Auto routing is in **beta**, so config keys and defaults can still change betwee
 
 | Feature      | Semantic Auto Router (deprecated) | Auto Routing (this page)                                                   |
 | ------------ | --------------------------------- | -------------------------------------------------------------------------- |
-| Classifier   | Embedding match on utterances     | Heuristic, LLM classifier, lexical/semantic keyword rules, or your own plugin |
+| Classifier   | Embedding match on utterances     | Heuristics, LLM classifier, JEV, lexical/semantic keyword rules, or your own plugin |
 | Tier value   | One model                         | One model, random pool, or adaptive (Thompson-sampled) pool                |
 | Latency      | ~100-500ms (embedding call)       | Sub-millisecond (heuristic/keyword) or one small classifier call (LLM)     |
 | Session pin  | No                                | Opt-in `session_affinity` (off by default), keyed by `session_id` metadata |
@@ -100,9 +100,10 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
         timeout_ms: 2000
         # system_prompt: <your rubric>         # replaces the built-in rubric entirely; omit for the default
       classifier_fallback: heuristic           # default; or default_model
-      # Prior conversation the classifier sees (LLM classifier only)
+      # Prior conversation the classifier sees (LLM or JEV)
       classifier_context_window_size: 3          # default 3; 0 disables
-      classifier_context_per_turn_chars: 200     # default 200
+      classifier_context_budget_chars: 8000     # default 8000
+      # classifier_context_per_turn_chars: 200  # optional per-turn cap; unset by default
       classifier_context_include_assistant_turns: false   # default false
 
       # Or hand the tier decision to your own code (config file only)
@@ -175,7 +176,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
 ## Classification
 
-Four ways to pick a tier. Pick one; the router falls back to the heuristic scorer if no keyword rule matches, and, unless `classifier_fallback` says otherwise, if the LLM classifier or a custom classifier plugin fails.
+Choose a classifier, with optional keyword rules before classification. Unless configured otherwise, an LLM, JEV or custom classifier failure falls back to the heuristic scorer
 
 **Heuristic scorer (default).** Zero API calls, sub-millisecond. Scores each request across seven dimensions and maps the score to a tier.
 
@@ -200,7 +201,68 @@ classifier_llm_config:
   timeout_ms: 2000
 ```
 
-**Keyword rules.** Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior.
+### JEV classifier
+
+Set `classifier_type: jev` with `jev_classifier_config` to use [TypeSafe System One](/docs/pass_through/typesafe). It sends one `questions.tier` Choice question to `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
+
+```yaml
+classifier_type: jev
+jev_classifier_config:
+  model: jev-latest
+  timeout_ms: 3000
+  circuit_breaker_enabled: true
+  circuit_breaker_cooldown_seconds: 30
+classifier_fallback: heuristic
+classifier_context_window_size: 3
+classifier_context_budget_chars: 8000
+classifier_context_include_assistant_turns: false
+```
+
+| `jev_classifier_config` field | Default | Behavior |
+| --- | --- | --- |
+| `model` | `jev-latest` | TypeSafe model identifier, without a `typesafe/` prefix. Pin a version for a repeatable evaluation |
+| `api_key` | `null` | Reads `TYPESAFE_API_KEY` from the server when omitted |
+| `api_base` | `null` | Reads `TYPESAFE_API_BASE`, then falls back to `https://api.typesafe.ai`. An explicit value requires an explicit `api_key` |
+| `timeout_ms` | `3000` | Deadline for a classification, at least 1 ms |
+| `instructions` | `null` | Replaces the built-in question instructions. Omit to keep the default. Blank strings are rejected |
+| `circuit_breaker_enabled` | `true` | Enables the process-local timeout breaker for this router instance |
+| `circuit_breaker_cooldown_seconds` | `30` | Positive cooldown before one recovery probe is admitted |
+
+#### Context sent to JEV
+
+JEV shares the classifier context builder with the LLM classifier. `classifier_context_window_size` defaults to three prior user turns. `classifier_context_budget_chars` defaults to 8,000 characters of prior-turn text, taking the newest turns first. `classifier_context_per_turn_chars` is an optional positive cap with no default cap. `classifier_context_include_assistant_turns: true` includes assistant text and makes the window count both roles
+
+These bounds cover prior-turn text. The current ask and extracted system text are outside that budget, as is the numbering around quoted turns. Recognized Claude Code requests omit their harness system text. A window size of `0` disables prior-turn context, and a character budget below `120` suppresses that block. Increasing context changes what is sent to TypeSafe and can change classification cost and tier choices
+
+#### Fallback and recovery
+
+Timeouts, HTTP failures, malformed responses, missing or unknown choices, and an open circuit use the existing classifier fallback. For built-in tiers, `classifier_fallback: heuristic` is the default. `classifier_fallback: default_model` sends the request to `litellm_params.complexity_router_default_model`. A configured `fallback_tier` takes precedence for custom tiers
+
+The breaker opens on a recognized classification timeout. During its cooldown, requests use fallback without making another JEV call. After cooldown, one request probes recovery while others continue to fall back. A successful probe closes the breaker, and a failed probe reopens it. Ordinary non-timeout failures while closed use fallback without opening the breaker. This state belongs to one router instance in one process and is not shared across workers
+
+The classifier deadline bounds waiting for classification. It does not guarantee that a canceled provider request was never received or billed, and a fallback completion can still fail at its own provider
+
+#### Customization, licensing and authorization
+
+Built-in JEV classification is available without an Enterprise license under the same policy as the built-in LLM classifier. Replacing `instructions` or defining `tier_definitions` uses the existing Enterprise custom-classifier capability. With `tier_definitions`, each description becomes the corresponding Choice criterion. JEV also supports the normal `enable_non_reasoning_tier` configuration
+
+Dependency authorization identifies JEV as `typesafe/<configured model>` with role `evaluation`, alongside the router's tier, default and embedding dependencies. Restricted keys and team members need access to the dependencies they can invoke. Team-member management writes cannot supply `api_key` or `api_base`, even when the user can edit a router. Choosing JEV does not grant additional model or management permissions
+
+#### Test Routing and accounting
+
+`POST /auto_router/test_routing` classifies without sending a completion to the selected tier. A JEV call can still incur provider spend, as can a semantic embedding call. The request's `default_model` field selects the default for this preview. **Test Connection** also probes JEV and the configured model dependencies, so it can incur both classifier and completion charges
+
+Test Routing checks access to the models it can call and enforces virtual-key budget limits before classification. Team and member policy also applies through management-route authorization. The preview does not bypass these checks because it skips the downstream completion
+
+Successful JEV decisions record `cause: jev_classifier`, `classifier_model: typesafe/<model>`, `classifier_probabilities`, `classifier_confidence`, and `classifier_cost` when priceable. The model is the version returned by TypeSafe, or the configured model when the response omits it. Probabilities describe TypeSafe's choice, not independently measured correctness
+
+JEV usage is logged as a separate classifier call with the originating request's identity metadata. Returned input/output tokens are priced using the model registry. Missing usage or pricing makes cost unknown. An HTTP response with usable usage can be logged even if its choice later fails validation, but a fallback decision does not guarantee a `classifier_cost` value. When reconciling spend, inspect the separate classifier row as well as the parent completion
+
+For successful classifications, reported Auto Router savings deduct `classifier_cost`. Do not add that metadata again when summing spend rows that already include the classifier call. See [evaluation and savings accounting](/docs/auto_router/evaluate#evaluate-jev-on-your-own-prompts) and the [benchmark's cost scope](/blog/jev-auto-router-benchmark)
+
+### Keyword rules
+
+Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior
 
 Enable `semantic_keyword_matching` to match paraphrases via embeddings. Semantic scoring uses MAX aggregation so a strong match on one keyword in a tier is not diluted by that tier's other utterances. Query embeddings carry the caller's request metadata, so their spend attributes to the originating key. On embedding failure the router falls back to the scorer.
 
@@ -286,11 +348,11 @@ Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/Berr
 
 :::
 
-The LLM classifier does not see the request in isolation. By default it also receives the last 3 prior turns of the conversation, truncated to 200 characters each, so a referring follow-up like "now do the same for the streaming path" is rated against what it refers to rather than on its own length. Without that context a hard follow-up mid-session classifies as whatever landed last, which in an agentic harness is often a `<system-reminder>` blob that barely varies across the session and pins every turn to one tier.
+The LLM and JEV classifiers receive up to three prior user turns by default, within an 8,000-character prior-turn budget. A follow-up like "now do the same for the streaming path" can then be rated against what it refers to. `classifier_context_per_turn_chars` optionally caps each turn before the total budget applies, and is unset by default
 
 By default, only turns carrying text a human wrote count toward the window. Tool output never qualifies (`tool_result` blocks on the Messages surface, the `tool` role on chat completions), complete reminder blocks are stripped before a turn is considered (`<system-reminder>` ... `</system-reminder>` by default, another pair with `reminder_markers`), and a turn left empty after stripping is skipped rather than spending a slot. Set `classifier_context_include_assistant_turns` to include assistant turns too; see [Assistant turns in the context window](#assistant-turns-in-the-context-window) below. A turn whose text equals the ask being classified is excluded so the ask is never quoted twice. Prior turns are sent oldest first and numbered `[1]`, `[2]`, `[3]`, and a turn cut at the character limit gets a trailing `...` so the classifier can tell it was clipped. When prior conversation exists, a single depth line (`Conversation so far: ~N tokens across the request`) is included as well. That trajectory count is a rough four-characters-per-token estimate over the text of every message on the request, not a tokenizer count and not limited to the turns in the window, so it reads as a depth signal rather than as a billable number
 
-The call is split so the system role carries only the operator's rubric, byte-identical across sessions and therefore prompt-cacheable, while everything caller-supplied (their system prompt, the prior turns, the ask) is quoted as labeled sections of the user turn. A three-turn conversation on the defaults produces:
+On the LLM path, the system role carries the operator's rubric, while caller-supplied context is quoted in the user turn. JEV sends this classification context as `state` with the instructions on the Choice question. A three-turn conversation on the LLM path produces:
 
 ```
 system: <rubric, operator-authored, identical on every request>
@@ -308,7 +370,7 @@ user:   Caller system prompt, quoted as task context:
         now do the same for the streaming path
 ```
 
-Set `classifier_context_window_size: 0` to turn it off; the classifier then receives the caller's latest system prompt and the current ask alone, no prior turns and no depth line, and the rubric closes on "classify only the current message" to match. Raise `classifier_context_per_turn_chars` if turns are being clipped before the part that carries the difficulty. Both settings apply only when `classifier_type: llm`; the heuristic scorer and keyword rules always read the current human ask alone
+Set `classifier_context_window_size: 0` to disable prior-turn context and the depth line. The current ask and extracted system text remain outside the prior-turn budget, except that recognized Claude Code harness system text is omitted. Raise `classifier_context_budget_chars` or an explicit per-turn cap if relevant context is clipped. These context controls also apply to JEV. Keyword matching still reads the human ask, and the heuristic scorer does not use this prior-turn window
 
 Note that `session_affinity` skips reclassification after a session's first turn, so on a router that turns it on the context window only comes into play on turn one, or on requests where no `session_id` is resolvable from metadata. It is off by default, so by default every turn is classified and the window applies throughout.
 
@@ -717,11 +779,11 @@ response = await router.acompletion(
 
 Models + Endpoints > Add Model > Auto Router tab. Enter a router name, then click **Configure automatically** to have LiteLLM check the models your proxy already serves, select the best available models for all four complexity tiers, and fill in the form for you. Review the generated tiers before saving. You can also use the **Template** dropdown to pick one of the bundled templates to prefill all four tiers, or **Custom Configuration** to fill them in yourself. A template whose models this proxy does not serve is greyed out with the missing names, so anything selectable is applicable. Everything else lives under **Detailed Configuration**, collapsed by default with a one-line summary of the tiers it currently holds; expand it to set the tier model groups, tier display names, Semantic Keyword Matching, LLM Classifier, escalation keywords, or Adaptive.
 
-**Test Routing** sends one prompt through the classifier for the config in the form, without creating the router, and shows the model it would pick with the same routing-decision card the logs drawer uses. Nothing is sent to the model it routes to, so a heuristic config spends nothing, while an LLM classifier or semantic matching bills its classifier or embedding call to your key. **Test Connection** instead runs a minimal `/v1/chat/completions` or `/v1/embeddings` per distinct tier model group, so a green row means the tier is genuinely reachable and a red row shows the real provider error.
+**Test Routing** sends the input through the form's classifier without creating a router or calling the selected completion model. LLM and JEV classifier calls and semantic embedding calls can incur spend. **Test Connection** probes the configured model dependencies and, for JEV, separately checks that classification succeeded. See [JEV Test Routing and accounting](#test-routing-and-accounting)
 
 Tier and classifier dropdowns exclude embedding-mode models; the semantic embedding dropdown lists only embedding-mode models. All four tiers are required on submit; missing tiers are flagged inline.
 
-Selecting **LLM Classifier** reveals, alongside the classifier model and timeout, a **Classifier Prompt** editor (`classifier_llm_config.system_prompt`, prefilled with the built-in rubric for the router's context window size and tier names, and sent only once you edit it), an **If the classifier fails** choice between scoring with the heuristic and routing to the default model (`classifier_fallback`, the second option available only once the router has a default model), and the classifier context settings: **Context Window Size** (`classifier_context_window_size`), **Context Per-Turn Character Limit** (`classifier_context_per_turn_chars`), and an **Include Assistant Turns** toggle (`classifier_context_include_assistant_turns`). They are written only when the classifier type is LLM, and a value left at the default is omitted from the saved config so the backend default applies.
+Selecting **LLM Classifier** exposes its model, timeout and prompt editor. **JEV Classifier** exposes JEV model, timeout, circuit breaker and instructions. Both expose classifier fallback, **Context Window Size**, **Context Character Budget**, and **Include Assistant Turns**. See [JEV dashboard setup](/docs/auto_router/setup#create-or-edit-in-the-dashboard) for the create and edit flow
 
 **Advanced > Session Affinity** holds the session pin, off to match the config default. Both the create tab and the edit modal write the value explicitly, so a router built in the UI records what it does rather than inheriting whatever the default happens to be.
 
