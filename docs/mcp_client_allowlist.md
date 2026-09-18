@@ -129,6 +129,14 @@ curl -sS -w 'HTTP %{http_code}\n' http://localhost:4000/mcp \
 ```
 
 ```text
+event: message
+data: {"jsonrpc":"2.0","id":0,"result":{"protocolVersion":"2025-06-18",...,"serverInfo":{"name":"litellm-mcp-server","version":"1.0.0"}}}
+HTTP 200
+```
+
+Drop the header from that request and the gateway names what it was looking for.
+
+```text
 {"detail":{"error":"Forbidden","details":"The request has no 'x-mcp-client' header naming the client application. This gateway only admits client applications listed in mcp_allowed_clients."}}
 HTTP 403
 ```
