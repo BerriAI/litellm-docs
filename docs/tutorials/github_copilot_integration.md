@@ -32,7 +32,7 @@ When you use VS Code chat with LiteLLM you get the following benefits:
 Before you begin, ensure you have:
 - A running LiteLLM Proxy instance
 - A valid LiteLLM Proxy API key
-- VS Code 1.109 or newer with the GitHub Copilot Chat extension (the chat view and model picker come from it)
+- VS Code 1.115 or newer with the GitHub Copilot Chat extension (the chat view and model picker come from it)
 
 ## Option 1: LiteLLM extension for VS Code
 
