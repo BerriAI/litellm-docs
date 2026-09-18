@@ -932,6 +932,36 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 - `summarize=false`: Analytics dashboards, ETL processes, detailed audit trails
 - `summarize=true`: Daily spending reports, high-level cost tracking (legacy behavior)
 
+## Paginated Spend Logs - `/spend/logs/v2`
+
+Use `/spend/logs/v2` for programmatic access to individual spend logs with page-based pagination. The legacy `/spend/logs` endpoint above truncates results to the 10,000 most recent matching rows (the response then carries an `x-litellm-spend-logs-truncated: true` header), so `/spend/logs/v2` is the recommended endpoint for exports and integrations.
+
+```bash title="Get a page of spend logs" showLineNumbers
+curl -X GET "http://localhost:4000/spend/logs/v2?start_date=2024-01-01%2000:00:00&end_date=2024-01-02%2023:59:59&page=1&page_size=100" \
+-H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+`start_date` and `end_date` take `YYYY-MM-DD HH:MM:SS` timestamps. `page` starts at 1 and `page_size` accepts up to 1000 rows per page. The endpoint also accepts filters such as `api_key`, `user_id`, `team_id`, `model`, `status_filter`, `min_spend` and `max_spend`; the full list is on your proxy's Swagger page (`/docs`) under `/spend/logs/v2`.
+
+```json title="Response format"
+{
+  "data": ["..."],
+  "total": 10000,
+  "page": 1,
+  "page_size": 100,
+  "total_pages": 100,
+  "total_is_capped": true
+}
+```
+
+### The `total` count is capped at 10,000
+
+Counting every matching row in a large time window caused expensive full scans on the spend logs table, so since v1.93.0 the count query behind this endpoint is bounded at 10,000 rows. When more rows match, `total` reports exactly `10000`, `total_pages` is derived from that capped value, and `total_is_capped` is `true`. Only the advertised count is capped. The data itself is never truncated, so pages past the advertised `total_pages` keep returning rows until the results are exhausted.
+
+There are two ways to read every matching row. When `total_is_capped` is `true`, ignore `total_pages` and keep requesting pages until you receive an empty `data` array. Alternatively, chunk your query into smaller time windows so each window matches fewer than 10,000 rows; every window then reports an exact `total`. Prefer the windowing approach for large exports, since it also avoids deep offset pagination, which gets slower the further in you page.
+
+With `group_by_session=true`, pagination is bounded to the same 10,000-row window and a page starting past it returns no rows, so chunk the time window instead of paging past the cap.
+
 ## ✨ Custom Spend Log metadata
 
 Log specific key,value pairs as part of the metadata for a spend log
