@@ -345,6 +345,7 @@ These are set by the preset from the request and response, not from a client-sup
 
 - Auth is HTTP Basic, `Authorization: Basic <base64(public_key:secret_key)>`; the preset builds this from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` so you never set the header directly.
 - If your client already sends a W3C `traceparent` and Langfuse is picking up the wrong parent, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true` in the proxy environment to drop inbound context.
+- By default your Langfuse project receives the whole request tree. Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 - This is a Langfuse-flavored path; for a general-purpose OTel backend, use the [generic OTLP setup](#1-send-traces-to-any-otlp-collector) instead.
 
 ![LiteLLM trace in Langfuse](/img/observability/otel_v2_langfuse.png)
@@ -768,6 +769,38 @@ litellm_settings:
 
 Your own `LANGFUSE_HOST` needs no allowlist entry. The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
 
+### Send only the model calls to Langfuse
+
+By default a Langfuse project, yours or a tenant's, receives the whole request tree: the HTTP request root, the auth step, database and cache lookups, every guardrail run, MCP tool calls, the model call and the spend write. If you only want the generations in Langfuse, set the scope to `llm_only`. The proxy keeps the model-call spans and stops forwarding every other span of that request to that Langfuse project. A model-call span is the one the proxy emits for each provider call it made on the caller's behalf, whatever the route: chat and text completions, Responses API calls, embeddings, image, audio and OCR generation, moderation, vector store calls and agent messages all count. They are the spans carrying `gen_ai.operation.name`, minus MCP tool calls. Nothing is reparented and no attribute is copied between spans; the generation keeps its original trace id and parent span id, along with the caller's `langfuse.trace.name`, `user.id`, `session.id` and `langfuse.trace.tags`, so Langfuse still groups generations of one request under one trace. Since the request root is no longer sent, the Langfuse trace takes its name from `langfuse_trace_name` or `metadata.trace_name` when the caller sets one and is otherwise unnamed
+
+A team or key sets it in its `langfuse_otel` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "langfuse_span_scope": "llm_only"
+    }
+  }'
+```
+
+The Admin UI shows the same field as a `langfuse span scope` pick between `full` and `llm_only` next to the Langfuse OTEL credentials of a team or key
+
+Your own Langfuse exporter has a separate switch in the proxy environment:
+
+```shell
+LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # default: full
+```
+
+The two are independent. A tenant's `llm_only` narrows only that tenant's project, and the operator setting narrows only the exporter built from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, whichever mode `otel_tenant_destination_mode` is in. Neither touches a plain `otel` collector or any other preset, so a Datadog or Grafana view of the same request stays complete. The accepted values are `full` and `llm_only`, and a key or team callback with any other value is rejected when it is saved. The setting applies to the `langfuse_otel` preset only: saving a `langfuse_span_scope` on a legacy `langfuse` callback or on another backend's callback is rejected as well, since nothing there would read it
+
+Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
+
 ### Good to know
 
 The key wins outright over the team. If a key has any `metadata.logging` entry, the team's callbacks are not consulted at all rather than merged with the key's, so a key that overrides one backend has to restate the others it still wants.
@@ -793,6 +826,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 |---|---|---|
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
 | `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
+| `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. |
 | `OTEL_HEADERS` (alias `OTEL_EXPORTER_OTLP_HEADERS`) | none | Comma-separated `key=value` auth headers for your backend. |
