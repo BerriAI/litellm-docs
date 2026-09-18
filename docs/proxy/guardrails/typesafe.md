@@ -260,6 +260,8 @@ curl "$LITELLM_PROXY_URL/v1/chat/completions" \
   --data-binary @payload.json
 ```
 
+When compaction runs, the response carries an `x-litellm-applied-guardrails: typesafe-compaction` header. The guardrail also applies to `/v1/messages` (Anthropic format) and `/v1/responses`; on `/v1/messages`, which has no top-level `guardrails` field, pass it as `litellm_metadata.guardrails` instead.
+
 The response should identify `eu-west-1` as the production region and `30 days` as the log retention period. The runbook is preserved in this example, while the weather and stock results are eligible for removal.
 
 ## Verify the result
