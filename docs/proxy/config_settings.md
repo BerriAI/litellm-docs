@@ -370,9 +370,10 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | use_google_kms | boolean | `false` | If true, load keys from google kms |
 | spend_report_frequency | str | `7d` | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md) |
 | ui_access_mode | Literal["admin_only"] | `all` | If set, restricts access to the UI to admin users only. [Docs](./ui.md#disable-admin-ui) |
-| max_failed_login_attempts | integer | `50` | Number of failed Admin UI sign-in attempts allowed for one username, from any source address, within `failed_login_window_seconds`, before further attempts for that username are refused with 429. Failed attempts receive an escalating delay before this ceiling. Configurable from config.yaml only. Defaults to 50 |
-| max_failed_login_attempts_per_source | integer | `250` | Number of failed Admin UI sign-in attempts allowed from one source address, across every username, within `failed_login_window_seconds`, before further attempts from that address are refused with 429. Configurable from config.yaml only. Defaults to 250 |
-| failed_login_window_seconds | integer | `900` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted. The window starts at the first failure and is not extended by later attempts. Configurable from config.yaml only. Defaults to 900 |
+| max_failed_login_attempts_per_source | integer | `10` | Failed Admin UI sign-in attempts allowed from one source address, across all usernames, within `failed_login_window_seconds`; exceeding it blocks the address for `failed_login_block_seconds`. Half this value (rounded down, at least 1) is the allowance for a single username from that address, which blocks only that address and username pair. The per-address limit only applies when `trusted_proxy_ranges` is set (`[]` when clients connect directly); left unset, only the per-username half applies. IPv6 addresses are grouped by /64. [Docs](./ui#limit-failed-sign-in-attempts) |
+| max_failed_login_attempts_per_source_overrides | dict | `null` | Per-address overrides of `max_failed_login_attempts_per_source`, keyed by IP address or CIDR range, e.g. `{"203.0.113.7": 50, "10.0.0.0/8": 100}`. The most specific match wins, the per-username allowance follows as half the override, and `0` exempts the address from both limits |
+| failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
+| failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise.md#how-do-i-set-up-and-verify-an-enterprise-license) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
@@ -410,6 +411,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | mcp_internal_ip_ranges | list | `null` (RFC1918 + loopback) | CIDR ranges considered internal for non-public MCP server access control |
 | mcp_required_fields | list | `null` | List of required field names for MCP server submissions |
 | mcp_trusted_proxy_ranges | list | `null` | CIDR ranges of proxies trusted to forward `X-Forwarded-*` headers. Required (in addition to `use_x_forwarded_for: true`) for the MCP OAuth `authorize` endpoint to derive its public origin from those headers, and for session/SSO/SAML cookies to be marked `Secure` from `X-Forwarded-Proto` behind a TLS-terminating reverse proxy. Without this, headers are ignored and the proxy falls back to the request's literal scheme/base URL. For ingressed deployments, prefer [`PROXY_BASE_URL`](#environment-variables---reference). Despite the `mcp_` prefix, this is the general request trust boundary LiteLLM uses for `X-Forwarded-*` headers, not an MCP-only setting. See [Security best practices — Secure cookies behind a reverse proxy](./security_best_practices#8-configure-secure-cookies-behind-a-tls-terminating-reverse-proxy) and [MCP OAuth — Reverse proxy and ingress configuration](../mcp_oauth#reverse-proxy-and-ingress-configuration). |
+| trusted_proxy_ranges | list | `null` | CIDR ranges of the reverse proxies trusted to supply identity headers for header-based auth (`enable_oauth2_proxy_auth`, `custom_ui_sso_sign_in_handler`) and whose `X-Forwarded-For` gives the source address for the Admin UI sign-in limit. Set to `[]` when clients connect directly so the peer address is used. Left unset, `X-Forwarded-For` is ignored and only the per-username sign-in limit applies. [Docs](./ui#limit-failed-sign-in-attempts) |
 | require_end_user_mcp_access_defined | boolean | `false` | If true, requires end users to have explicit MCP access permissions defined |
 | require_key_mcp_access_defined | boolean | `false` | If true, a key with an empty MCP server list no longer inherits its team's servers; the team becomes a ceiling and the key must grant MCP servers explicitly (directly or via an access group). See [MCP Permission Management](../mcp_control#require-keys-to-define-their-own-mcp-access) |
 | role_permissions | list | `null` | List of role-based permission configurations |
@@ -541,7 +543,7 @@ router_settings:
 
 | Name | Description |
 |------|-------------|
-| LITELLM_DISABLE_LOGIN_RATE_LIMIT | Set to `true` to turn off the Admin UI failed sign-in attempt accounting entirely |
+| LITELLM_DISABLE_LOGIN_RATE_LIMIT | Set to `true` to turn off the Admin UI failed sign-in limit. Read once at startup. [Docs](./ui#limit-failed-sign-in-attempts) |
 | A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
