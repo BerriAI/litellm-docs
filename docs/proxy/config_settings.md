@@ -737,6 +737,8 @@ router_settings:
 | DYNAMOAI_POLICY_IDS | Comma-separated list of DynamoAI policy IDs to apply
 | DD_BASE_URL | Base URL for Datadog integration
 | DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
+| EDENAI_API_BASE | Base URL for Eden AI. Default is https://api.edenai.run/v3; set https://api.eu.edenai.run/v3 for the EU endpoint
+| EDENAI_API_KEY | API key for Eden AI
 | ELEVENLABS_API_BASE | Base URL for ElevenLabs. Default is https://api.elevenlabs.io
 | EMPOWER_API_BASE | Base URL for Empower. Default is https://app.empower.dev/api/v1
 | EXA_API_BASE | Base URL for the Exa AI search provider
