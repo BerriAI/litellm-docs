@@ -448,7 +448,7 @@ agents:
       client_secret: os.environ/AZURE_CLIENT_SECRET
 ```
 
-`tenant_id`, `client_id` and `client_secret` are the names the `azure_ai` provider uses. A bearer you minted yourself goes in `azure_ad_token`, a user login in `client_id` + `azure_username` + `azure_password`, and `azure_scope` overrides the scope. Only the credentials on the agent are used; the process-wide `AZURE_*` variables are never read for an A2A agent. Without `agent_card_path`, discovery still reaches `agentCard/v1.0` after the two well-known paths fail, at the cost of two extra round trips on every call
+`tenant_id`, `client_id` and `client_secret` are the names the `azure_ai` provider uses. A bearer you minted yourself goes in `azure_ad_token` (an `oidc/` federated token there needs `tenant_id` + `client_id` next to it), a user login in `client_id` + `azure_username` + `azure_password`, and `azure_scope` overrides the scope. Only the credentials on the agent are used; the process-wide `AZURE_*` variables are never read for an A2A agent. Without `agent_card_path`, discovery still reaches `agentCard/v1.0` after the two well-known paths fail, at the cost of two extra round trips on every call
 
 Foundry answers `message/send` with a submitted task unless the request asks for a blocking send, and it has no `message/stream`. The `capabilities.streaming: false` line makes LiteLLM run a streaming chat completion as one blocking send and replay the answer as a single chunk
 
