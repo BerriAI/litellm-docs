@@ -1087,9 +1087,11 @@ router_settings:
 | HCP_VAULT_APPROLE_SECRET_ID | Secret ID for AppRole authentication in [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
 | HCP_VAULT_CLIENT_CERT | Path to client certificate for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
 | HCP_VAULT_CLIENT_KEY | Path to client key for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_LOGIN_NAMESPACE | Namespace sent as the `X-Vault-Namespace` header on AppRole and TLS cert login for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md). Falls back to HCP_VAULT_NAMESPACE
 | HCP_VAULT_MOUNT_NAME | Mount name for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
 | HCP_VAULT_NAMESPACE | Namespace for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
 | HCP_VAULT_PATH_PREFIX | Path prefix for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
+| HCP_VAULT_SECRET_NAMESPACE | Namespace used in the URL path for secret reads and writes in [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md). Falls back to HCP_VAULT_NAMESPACE
 | HCP_VAULT_TOKEN | Token for [Hashicorp Vault Secret Manager](../secret_managers/hashicorp_vault.md)
 | HCP_VAULT_CERT_ROLE | Role for [Hashicorp Vault Secret Manager Auth](../secret_managers/hashicorp_vault.md)
 | HELICONE_API_KEY | API key for Helicone service
