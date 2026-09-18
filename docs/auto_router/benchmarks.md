@@ -6,7 +6,25 @@ description: Every published measurement of the Auto Router, from Terminal-Bench
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
-Every post ran against a live LiteLLM proxy with real provider APIs and publishes the config it used. Numbers below are quoted from the posts.
+These posts publish measurements with real provider APIs and their configurations. The JEV classifier comparison times the classifier directly and includes a separate live proxy check. Numbers below are quoted from the posts
+
+## JEV: 81.58% lower p50 classifier latency than Haiku
+
+On 2026-09-18, TypeSafe `jev-1.13.0` and `anthropic/claude-haiku-4-5-20251001` classified the same 80 authored synthetic cases, with three paired repeats and concurrency one
+
+| Metric | JEV | Haiku |
+| --- | ---: | ---: |
+| Authored-label accuracy | 95.00% (228/240) | 73.75% (177/240) |
+| p50 classifier latency | 126.81 ms | 688.40 ms |
+| p95 classifier latency | 231.16 ms | 896.94 ms |
+| Registry-priced classifier cost, 240 calls | $0.007706664 | $0.198534 |
+| Provider errors / timeouts / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Classifier cost was 96.12% lower, and p95 latency was 74.23% lower. Tier agreement between classifiers was 78.75%, a separate measure from matching the authored labels. The eight boundary cases had an accuracy-difference interval that included zero
+
+These results measure the classifier on this corpus, with a shared custom rubric and explicit context settings. They do not establish downstream answer quality, invoice savings, or performance under concurrent load. The separate gateway check used the same downstream model for every tier, so it cannot establish savings from switching completion models
+
+[Read the methodology, per-tier results, uncertainty and limitations](/blog/jev-auto-router-benchmark), or [download the frozen evidence and reproduction scripts](/benchmarks/jev-live-evidence-20260918.tar.gz)
 
 ## Terminal-Bench 2.0: Opus-level quality at 27% lower cost
 
