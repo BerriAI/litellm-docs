@@ -277,6 +277,12 @@ Config mistakes surface at startup instead of on the first classified request. A
         COMPLEX: {{openai_large}}
 ```
 
+:::info
+
+The bundled classifier ships with [PR #41797](https://github.com/BerriAI/litellm/pull/41797). On earlier versions the dotted path does not resolve and the proxy refuses to start, naming the config key.
+
+:::
+
 Set `NADIR_API_KEY` to attribute decisions to an account and lift the anonymous rate limit; without it the endpoint still answers, rate limited per IP. Set `NADIR_API_BASE` to point at a self-hosted Nadir instead of the hosted API.
 
 The routing decision is the only thing that leaves: the tier's model pool, the provider call, your provider keys, fallbacks and spend tracking are unchanged. The messages are sent to whichever host `NADIR_API_BASE` names, which is a third party unless that host is yours, the same disclosure `classifier_type: llm` carries with a hosted classifier model.
