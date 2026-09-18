@@ -96,15 +96,15 @@ Flat cost does not count against team or key budgets. Reserved capacity is alrea
 
 ## Spillover requests
 
-Azure can route requests a saturated PTU deployment cannot serve to a pay-as-you-go deployment you name as its spillover target. Azure bills those requests per token, so LiteLLM prices them per token as well: when a response from a PTU deployment carries `x-ms-is-spilled-over: true`, the request is charged at the standard rates for the served model from the pricing map (or `base_model` when set) instead of the zero PTU rates. Requests the PTU itself serves keep logging at zero, and the hourly flat cost is unchanged either way
+When a PTU deployment is full, Azure can send the overflow to a pay-as-you-go deployment you configure as its spillover target, and bills those requests per token. LiteLLM does the same: a response with `x-ms-is-spilled-over: true` is priced at the served model's standard rates, while requests the PTU serves stay at zero. The hourly flat cost is unchanged either way
 
-A spilled request shows up in `/spend/logs` and on the Logs page with the Azure deployment it spilled from in its metadata:
+Spilled requests are tagged in the spend log metadata, so you can tell them apart on the Logs page:
 
 ```json
 "azure_spillover": {"from_deployment": "<your-deployment-name>"}
 ```
 
-The key is `null` for every request Azure did not spill. Spillover pricing needs `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` set like the rest of this feature, and the served model has to have a pricing map entry, otherwise a spilled request still logs at zero
+This needs `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` set and a pricing map entry for the served model (set `base_model` if the deployment name does not match one). Without either, spilled requests still log at zero
 
 ## Read the cost back
 
