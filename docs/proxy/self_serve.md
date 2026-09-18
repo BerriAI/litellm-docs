@@ -313,6 +313,10 @@ curl -X POST '<PROXY_BASE_URL>/team/new' \
 </TabItem>
 </Tabs>
 
+:::info
+Setting `team_member_budget` on an existing team links it to every member that has no budget yet, and the spend those members already accrued counts against it right away. See [Existing spend counts against a budget added later](./users.md#existing-spend-counts-against-a-budget-added-later) for how to unblock a member who is already over the new budget.
+:::
+
 ### Team Member Rate Limits
 
 Set a default tpm/rpm limit for an individual team member. 
