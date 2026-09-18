@@ -968,6 +968,7 @@ const sidebars = {
               ]
             },
             "pass_through/vllm",
+            "pass_through/xai",
             "proxy/pass_through",
             "proxy/pass_through_cost_tracking",
             "proxy/pass_through_guardrails"
