@@ -84,7 +84,7 @@ By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've chan
 
 ## Limit failed sign-in attempts
 
-Every username and password sign-in to the Admin UI (`/login`, `/v2/login`, `/v3/login`) is counted per source address when it fails. More than 10 wrong passwords from one address within 60 seconds, across every username, blocks that address for 5 minutes. Accounts are never locked: the same username keeps working from any other address. Each address also gets a per-username allowance of half its address limit, rounded up, so 5 by default. More than that for one username from one address blocks only that address and username pair, and its further failures stop counting against the address, so a script stuck on one account does not block everyone else behind the same office address.
+Every username and password sign-in to the Admin UI (`/login`, `/v2/login`, `/v3/login`) is counted per source address when it fails. More than 10 wrong passwords from one address within 60 seconds, across every username, blocks that address for 5 minutes. Accounts are never locked: the same username keeps working from any other address. Each address also gets a per-username allowance of half its address limit, rounded down but never below 1, so 5 by default. More than that for one username from one address blocks only that address and username pair, and its further failures stop counting against the address, so a script stuck on one account does not block everyone else behind the same office address.
 
 A block is a hard block. While it is active every sign-in attempt for that key is refused with `429 Too many failed sign-in attempts` and a `Retry-After` header, before the database is queried or the password is checked. The correct password is refused too, as are `UI_USERNAME`/`UI_PASSWORD` and the master key used as a password. The block lasts its full duration and is not extended by refused attempts. A successful sign-in clears the pair counter but leaves the address counter alone. A blocked administrator who cannot wait can still reach the API with the master key as a bearer token, since API requests never go through the sign-in throttle.
 
@@ -101,10 +101,10 @@ general_settings:
   max_failed_login_attempts_per_source_overrides:
     "203.0.113.7": 50                         # a NAT gateway many admins share; 25 per username there
     "192.0.2.0/24": 100                       # the most specific match wins
-    "198.51.100.4": 1000000                   # effectively opts this address out of both limits
+    "198.51.100.4": 0                         # 0 exempts this address from both limits
 ```
 
-The per-username allowance is not configured on its own; it follows the address limit, including any override, so one override is enough to raise or effectively remove both limits for an address. Set `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` in the environment to turn the limit off everywhere. It is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind these defaults.
+The per-username allowance is not configured on its own; it follows the address limit, including any override, so one override is enough to raise both limits for an address, and an override of `0` exempts that address from both. Set `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` in the environment to turn the limit off everywhere. It is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind these defaults.
 
 ## Invite-other users
 
