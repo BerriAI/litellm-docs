@@ -93,6 +93,169 @@ sequenceDiagram
 
 See the official [MCP Authorization Flow](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization#authorization-flow-steps) for additional reference.
 
+### Redirect URLs for static OAuth clients {#static-client-redirect-urls}
+
+Use a static OAuth client when the upstream identity provider (IdP) requires an application to be registered in advance. Configure the application's `client_id` and `client_secret` in the LiteLLM MCP server entry. This supports providers that do not offer Dynamic Client Registration (RFC 7591).
+
+The authorization flow uses two callback URLs:
+
+| Callback | Purpose | Configuration |
+|----------|---------|---------------|
+| LiteLLM callback | Receives the authorization response from the upstream IdP. | Register `<proxy origin>/callback` in the IdP application's **Redirect URI** or **Callback URL** field. |
+| MCP client callback | Returns the authorization response from LiteLLM to the MCP client. | The client supplies this URL as `redirect_uri` to `/{mcp_server_name}/authorize`. Configure additional trusted callbacks in LiteLLM when required by the validation rules below. |
+
+For example, a proxy at `https://llm.example.com` uses `https://llm.example.com/callback` as its IdP callback. A desktop client's local callback, such as `http://localhost:33418/callback`, is supplied to LiteLLM and does not need to be registered with the upstream IdP.
+
+#### Configure the upstream OAuth application
+
+Set `PROXY_BASE_URL` to the proxy's public origin and register the corresponding `/callback` URL with the IdP:
+
+```bash
+export PROXY_BASE_URL=https://llm.example.com
+# IdP callback URL: https://llm.example.com/callback
+```
+
+LiteLLM resolves its public origin from `PROXY_BASE_URL`, trusted `X-Forwarded-*` headers, or the incoming request URL, in that order. See [Reverse proxy and ingress configuration](#reverse-proxy-and-ingress-configuration) for header trust requirements.
+
+Add the application's credentials and OAuth endpoints to the MCP server configuration:
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  jira_mcp:
+    url: https://mcp.example.com/mcp
+    auth_type: oauth2
+    oauth2_flow: authorization_code
+    client_id: os.environ/JIRA_OAUTH_CLIENT_ID
+    client_secret: os.environ/JIRA_OAUTH_CLIENT_SECRET
+    authorization_url: https://idp.example.com/oauth2/authorize
+    token_url: https://idp.example.com/oauth2/token
+    scopes:
+      - read:jira-work
+```
+
+Replace the example server URL, OAuth endpoints, and scopes with the values for your provider. `authorization_url` and `token_url` are optional when the upstream MCP server publishes OAuth metadata that LiteLLM can discover. Explicitly configured endpoints take precedence over conflicting discovered endpoints.
+
+For static clients, LiteLLM handles `POST /{mcp_server_name}/register` locally. It returns the MCP server name as `client_id`, `dummy` as `client_secret`, and the client's submitted `redirect_uris`. LiteLLM uses the configured upstream credentials for authorization and token exchange.
+
+#### Identify the MCP client's callback URL
+
+Obtain the callback URL from the client's `redirect_uris` field in `POST /{mcp_server_name}/register` or its `redirect_uri` parameter in `GET /{mcp_server_name}/authorize`. Callback paths and ports can vary by client version and deployment.
+
+For an origin mismatch, the `HTTP 400` response includes the submitted URL in `detail.redirect_uri`. The proxy also logs the rejected value as `MCP OAuth: rejecting redirect_uri '<value>'` at warning level.
+
+The following examples summarize common callback configurations:
+
+| Client or callback type | Callback example | LiteLLM configuration |
+|-------------------------|------------------|-----------------------|
+| Cursor | `cursor://anysphere.cursor-mcp/oauth/callback` | Included in the built-in trusted callbacks. |
+| Desktop or command-line client using a loopback listener | `http://localhost:33418/callback` | Loopback callbacks are accepted on any port. |
+| VS Code for the Web | `https://vscode.dev/redirect` or `https://insiders.vscode.dev/redirect` | Add `vscode.dev,insiders.vscode.dev` to `MCP_TRUSTED_REDIRECT_ORIGINS`. |
+| Web application on a separate origin | `https://app.example.com/oauth/callback` | Add `app.example.com` to `MCP_TRUSTED_REDIRECT_ORIGINS`. |
+| Native client using a custom URI scheme | `myclient://auth/callback` | Add the callback URI to `MCP_TRUSTED_NATIVE_REDIRECT_URIS`. |
+| LiteLLM Admin UI | `<proxy origin>/ui/mcp/oauth/callback` | Accepted when the proxy's resolved public origin matches the UI origin. |
+
+For clients that require additional trusted callbacks, set the applicable environment variable in the proxy deployment:
+
+```bash
+# Trusted HTTPS client hosts, with optional ports or wildcard subdomains.
+export MCP_TRUSTED_REDIRECT_ORIGINS='app.example.com,*.tools.example.com'
+
+# Trusted native client callback URIs.
+export MCP_TRUSTED_NATIVE_REDIRECT_URIS='myclient://auth/callback'
+```
+
+`MCP_TRUSTED_REDIRECT_ORIGINS` accepts a comma-separated list of hosts or `host:port` entries. `MCP_TRUSTED_NATIVE_REDIRECT_URIS` accepts a comma-separated list of native callback URIs. Include the callback path; `myclient://auth/callback` and `myclient://auth/callback/` are distinct entries.
+
+#### Redirect URI validation
+
+For per-server static OAuth, `/{mcp_server_name}/authorize` validates the callback against these rules:
+
+| Callback type | Requirements |
+|---------------|--------------|
+| Trusted native callback | Matches the built-in Cursor callback or an entry in `MCP_TRUSTED_NATIVE_REDIRECT_URIS`. |
+| Loopback | Uses HTTP or HTTPS with `localhost`, an address in `127.0.0.0/8`, or `::1`. Any port and path are accepted. |
+| Same origin | Uses the same scheme, host, and port as the proxy's resolved public origin. Default ports are normalized. |
+| Additional trusted origin | Uses HTTPS and a host or `host:port` listed in `MCP_TRUSTED_REDIRECT_ORIGINS`. A wildcard such as `*.tools.example.com` matches subdomains, including `a.tools.example.com`, but excludes `tools.example.com` itself. |
+
+Callback URLs must include a host and must not contain a fragment (`#...`), embedded credentials (`user:pass@host`), or a backslash in the host. Custom URI schemes require a trusted native callback entry. Native callback URIs must not contain a query string. HTTP and HTTPS callbacks may include a query string, which LiteLLM preserves when redirecting to the client.
+
+#### Troubleshoot callback errors
+
+When LiteLLM rejects a per-server callback, it returns `HTTP 400` with `detail.error` set to `invalid_request`. `detail.error_description` identifies the validation failure. Some responses also include `detail.hint` with configuration guidance; origin mismatch responses include `detail.redirect_uri`.
+
+| Error or symptom | Resolution |
+|------------------|------------|
+| The upstream IdP reports a redirect URI mismatch. | Verify that the IdP application's registered callback is `<proxy origin>/callback` and that LiteLLM resolves the expected public origin. |
+| LiteLLM rejects a callback on the proxy's public origin. | Set `PROXY_BASE_URL` or configure trusted forwarded headers. See [Reverse proxy and ingress configuration](#reverse-proxy-and-ingress-configuration). |
+| LiteLLM rejects an HTTPS callback on a separate origin. | Add the approved client host, including its port when applicable, to `MCP_TRUSTED_REDIRECT_ORIGINS`. |
+| LiteLLM rejects a custom URI scheme. | Add the client's callback URI to `MCP_TRUSTED_NATIVE_REDIRECT_URIS`. |
+| LiteLLM reports that the callback contains a URL fragment. | Configure the client to use a callback URL without a fragment. |
+
+For example, an origin mismatch response includes these fields:
+
+```json title="Origin mismatch response (selected fields)"
+{
+  "detail": {
+    "error": "invalid_request",
+    "error_description": "redirect_uri origin (https://app.example.com) does not match the proxy origin. host/port: redirect_uri 'app.example.com' does not match the proxy origin",
+    "redirect_uri": "https://app.example.com/oauth/callback"
+  }
+}
+```
+
+#### Gateway Dynamic Client Registration
+
+The aggregate `/mcp` endpoint uses gateway-level registration through `POST /register`, `GET /authorize`, and `POST /token`. Each registration accepts one to four `redirect_uris`, with a maximum of 256 characters per URI.
+
+For this flow, the `redirect_uri` supplied to `/authorize` must exactly match a registered value. An unregistered value returns `HTTP 400` with the following top-level JSON fields:
+
+```json
+{
+  "error": "invalid_request",
+  "error_description": "redirect_uri is not registered for this client"
+}
+```
+
+Per-server static registration returns placeholder credentials and does not store a client-specific callback allowlist. Its authorization endpoint applies the per-server validation rules described above.
+
+#### Verify the configuration
+
+Use the following requests to verify discovery, static registration, and the authorization redirect. The examples use a proxy listening on `http://localhost:4000` with `PROXY_BASE_URL=https://llm.example.com` and the `jira_mcp` configuration above.
+
+Retrieve the authorization server metadata:
+
+```bash
+curl -sS http://localhost:4000/.well-known/oauth-authorization-server/jira_mcp | jq .issuer
+# "https://llm.example.com/jira_mcp"
+```
+
+The issuer's origin is `https://llm.example.com`, so the IdP callback URL is `https://llm.example.com/callback`.
+
+Verify the static registration response:
+
+```bash
+curl -sS -X POST http://localhost:4000/jira_mcp/register \
+  -H 'Content-Type: application/json' \
+  -d '{"client_name":"my-mcp-client","redirect_uris":["http://localhost:33418/callback"]}'
+# {"client_id":"jira_mcp","client_secret":"dummy","redirect_uris":["http://localhost:33418/callback"]}
+```
+
+Request authorization with the loopback callback:
+
+```bash
+curl -sS -o /dev/null -D - --get http://localhost:4000/jira_mcp/authorize \
+  --data-urlencode 'response_type=code' \
+  --data-urlencode 'client_id=jira_mcp' \
+  --data-urlencode 'redirect_uri=http://localhost:33418/callback' \
+  --data-urlencode 'state=example-state' \
+  --data-urlencode 'code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM' \
+  --data-urlencode 'code_challenge_method=S256'
+```
+
+The expected response is `HTTP 307 Temporary Redirect`. Its `Location` header points to the upstream authorization endpoint and includes the configured upstream `client_id` and the URL-encoded `redirect_uri=https://llm.example.com/callback`.
+
+To verify an additional trusted origin, repeat the authorization request with `redirect_uri=https://app.example.com/oauth/callback`. Without a matching `MCP_TRUSTED_REDIRECT_ORIGINS` entry, the expected response is `HTTP 400`. Set `MCP_TRUSTED_REDIRECT_ORIGINS=app.example.com`, restart the proxy, and repeat the request; the expected response is `HTTP 307`.
+
 ### Reverse proxy and ingress configuration {#reverse-proxy-and-ingress-configuration}
 
 If LiteLLM runs behind a TLS-terminating ingress (Kubernetes, ALB, nginx, Cloudflare, etc.), the proxy needs to know its public origin so the OAuth `authorize` endpoint can compare the browser-supplied `redirect_uri` (e.g. `https://llm.example.com/ui/mcp/oauth/callback`) against its own scheme + host + port. If the proxy resolves to its internal address (`http://<pod-ip>:4000`) the same-origin check fails and the **Connect** button on the MCP server page returns `400 Bad Request` with `{"detail":"invalid_request"}`.

@@ -489,6 +489,7 @@ const sidebars = {
                 "mcp_semantic_filter",
                 "mcp_tool_search",
                 "mcp_control",
+                "mcp_grant_access",
                 "mcp_cost",
                 "mcp_guardrail",
                 "mcp_server_submissions",
@@ -918,6 +919,7 @@ const sidebars = {
             "mcp_semantic_filter",
             "mcp_tool_search",
             "mcp_control",
+            "mcp_grant_access",
             "mcp_cost",
             "mcp_guardrail",
             "mcp_server_submissions",
@@ -948,14 +950,18 @@ const sidebars = {
             "pass_through/assembly_ai",
             "pass_through/bedrock",
             "pass_through/azure_passthrough",
+            "pass_through/azure_speech",
             "pass_through/cohere",
             "pass_through/comprehend_medical",
             "pass_through/cursor",
+            "pass_through/deepgram_listen_websocket",
             "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
             "pass_through/mistral",
             "pass_through/openai_passthrough",
+            "pass_through/transcribe",
+            "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
             {
               type: "category",
@@ -1437,7 +1443,7 @@ const learnSidebar = {
         "learn/enterprise_quickstart",
       ],
     },
-    { type: "doc", id: "learn/autorouter_cli", label: "Autorouter CLI" },
+    { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
 
     // ── Guides ────────────────────────────────────────────────────────
     {
@@ -1750,7 +1756,7 @@ const autoRouterSidebar = {
       items: [
         { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
         { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
-        { type: "link", label: "Autorouter CLI", href: "/docs/learn/autorouter_cli" },
+        { type: "link", label: "lite autoroute", href: "/docs/learn/autorouter_cli" },
         { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
       ],
     },
