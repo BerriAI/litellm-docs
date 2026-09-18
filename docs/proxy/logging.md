@@ -345,7 +345,7 @@ We will use the `--config` to set `litellm.success_callback = ["langfuse"]` this
 **Step 1** Install langfuse
 
 ```shell
-uv add "langfuse>=4.7"
+uv add "langfuse>=4.7,<5"
 ```
 
 **Step 2**: Create a `config.yaml` file and set `litellm_settings`: `success_callback`
@@ -491,7 +491,7 @@ print(response)
 </Tabs>
 
 :::info
-Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). A custom `trace_id` that isn't already in that format (like `trace-id22` above) is deterministically hashed to one; the same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the 32-hex hash, not the original string.
+Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). LiteLLM first lowercases a custom `trace_id` and strips hyphens, so a UUID is used as is once normalized. Anything that still isn't 32 hex chars (like `trace-id22` above) is deterministically hashed to one; the same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the normalized or hashed form, not the original string.
 :::
 
 ### Custom Tags
