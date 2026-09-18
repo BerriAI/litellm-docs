@@ -212,9 +212,24 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
 ```
 
+Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
+
 #### Reset a team member's spend
 
-Reset the spend tracked against a member's in-team budget without changing the budget itself. Callable by a proxy admin or the team's admin, but a team admin cannot reset their own spend
+Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
+
+<Tabs>
+<TabItem value="ui" label="UI">
+
+1. Go to **Teams** and open the team
+2. Open the **Members** tab
+3. In the **Actions** column of the member's row, click the **Reset spend** icon (the refresh icon between the edit and delete icons)
+4. The **Reset Team Member Spend** dialog shows the member and their current cycle spend. Click **Reset** to set it to $0
+
+The icon is shown only to users who can edit the team, and only on rows where **Current Cycle Spend (USD)** is above $0. A team admin does not see it on their own row, but a proxy admin does
+
+</TabItem>
+<TabItem value="api" label="API">
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
@@ -223,13 +238,28 @@ curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/memb
 -d '{"reset_to": 0}'
 ```
 
-`reset_to` must be a number no greater than the member's current spend or their budget. The reset takes effect on the member's next request
+`reset_to` must be a number of at least 0 that is no greater than the member's current spend or their budget
 
 Response:
 
 ```shell
 {"team_id":"e8d1460f-846c-45d7-9b43-55f3cc52ac32","user_id":"ishaan","spend":0.0,"previous_spend":3.495e-05,"max_budget":10.0}
 ```
+
+The endpoint returns a 403 (`Cannot reset your own spend. Ask a proxy admin.`) when a team admin targets their own user, and a 404 when the user has no membership row in that team
+
+</TabItem>
+</Tabs>
+
+The reset takes effect on the member's next request, on every proxy instance. It applies to one member at a time and there is no bulk version, so repeat it for each member you want to reset
+
+#### Existing spend counts against a budget added later
+
+Spend is tracked for every team member, including members with no budget. On the team's **Members** tab, **Current Cycle Spend (USD)** is the value checked against the member's budget and it goes back to $0 when the member's `budget_duration` window rolls over, while **Total Spend (USD)** is cumulative and never resets. A member with no budget has no budget window, so their current cycle spend is never reset automatically and keeps growing. Older versions only tracked spend for members that had a budget, and a member added on one of those versions starts being tracked on their next request after the upgrade
+
+If you give that member a budget later, the spend they already accrued counts against it right away. This applies both to setting `team_member_budget` on the team with `/team/update`, which links the team's member budget to every member that has no budget yet, and to setting `max_budget_in_team` for one member with `/team/member_update`. For example, a member spends $500 with no budget, an admin then sets a $100 member budget, and the member's next request is rejected with a budget exceeded error
+
+There are two ways out. If the new budget has a `budget_duration`, the member's current cycle spend goes back to $0 at the next reset and they are unblocked without any action. If it has no `budget_duration`, the member stays blocked until someone [resets their spend](#reset-a-team-members-spend) in the UI or through the API
 
 
 ### Internal User
