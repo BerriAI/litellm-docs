@@ -75,6 +75,30 @@ model_list:
 - `classifier_type: llm` with a small model raises accuracy on agent traffic for a fraction of a cent per request. See [benchmarks](/docs/auto_router/benchmarks).
 - Everything else (keyword rules, tier pools, session affinity, scorer tuning): [configuration reference](/docs/proxy/auto_routing).
 
+## Jev classifier (TypeSafe AI)
+
+`classifier_type: jev` sends the newest ask, plus the caller's system prompt when present, to TypeSafe's System One endpoint as one `choice` question. The question criteria are the router's tier labels, and the returned choice selects the tier
+
+```yaml
+classifier_type: jev
+jev_classifier_config:
+  model: jev-latest
+  api_key: null
+  api_base: null
+  timeout_ms: 3000
+  instructions: null
+  circuit_breaker_enabled: true
+  circuit_breaker_cooldown_seconds: 30
+```
+
+`model` defaults to `jev-latest`. When `api_key` is omitted or null, LiteLLM reads `TYPESAFE_API_KEY`. When `api_base` is omitted or null, LiteLLM reads `TYPESAFE_API_BASE` and then uses `https://api.typesafe.ai`. Setting `api_base` without `api_key` is rejected, so `TYPESAFE_API_KEY` is only ever sent to `TYPESAFE_API_BASE` or the default host. Team members editing an auto router through the management API cannot set `api_key` or `api_base` at all. `instructions` replaces the built-in question instructions when provided
+
+Spend-log routing decisions carry `cause: jev_classifier`, `classifier_model: typesafe/<model>` where `<model>` is the version TypeSafe reports for the call (`typesafe/jev-1.13.0` for `jev-latest` today), `classifier_probabilities` for each tier label, `classifier_confidence`, and `classifier_cost` calculated from that model's registry row
+
+Failures, timeouts, an open circuit, and unknown labels use the same fallback behavior as the LLM classifier. A custom tier set routes to `fallback_tier`, while the built-in tier set uses `classifier_fallback`
+
+Jev works with `tier_definitions`, where each definition's description becomes that tier's criterion, and with `enable_non_reasoning_tier`. For the pass-through endpoint, see [TypeSafe AI pass-through](/docs/pass_through/typesafe)
+
 ## Model-management API
 
 For CI/CD or scripts, create the same deployment with `POST /model/new`. Enable `store_model_in_db` first; Auto Routers are model deployments, so there is no separate `/auto_router/new` endpoint. This example uses the [Anthropic Family preset](/docs/auto_router/recommended_configurations#anthropic-family); create the referenced model deployments first.
