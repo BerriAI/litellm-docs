@@ -94,6 +94,18 @@ A reservation that starts before the job first sees it is filled in as well: the
 
 Flat cost does not count against team or key budgets. Reserved capacity is already paid for, so a team cannot exhaust a budget by using the capacity it reserved.
 
+## Spillover requests
+
+Azure can route requests a saturated PTU deployment cannot serve to a pay-as-you-go deployment you name as its spillover target. Azure bills those requests per token, so LiteLLM prices them per token as well: when a response from a PTU deployment carries `x-ms-is-spilled-over: true`, the request is charged at the standard rates for the served model from the pricing map (or `base_model` when set) instead of the zero PTU rates. Requests the PTU itself serves keep logging at zero, and the hourly flat cost is unchanged either way
+
+A spilled request shows up in `/spend/logs` and on the Logs page with the Azure deployment it spilled from in its metadata:
+
+```json
+"azure_spillover": {"from_deployment": "<your-deployment-name>"}
+```
+
+The key is `null` for every request Azure did not spill. Spillover pricing needs `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` set like the rest of this feature, and the served model has to have a pricing map entry, otherwise a spilled request still logs at zero
+
 ## Read the cost back
 
 `/team/daily/activity` reports `flat_cost` per day and `total_flat_cost` for the range, alongside the usual per-token `spend`:
