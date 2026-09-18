@@ -176,7 +176,7 @@ An invalid `session.update` (wrong encoding, channel count, sample rate, session
 
 `input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. There is no size limit per event; LiteLLM splits the audio into gRPC requests of at most 25 KB and forwards them as they arrive, without pacing, so a file can be sent faster than real time. `input_audio_buffer.clear` discards the turn in progress, audio already sent and text not yet completed included, without any event. Every other client event, including `response.create`, is dropped
 
-Google limits how long one streaming request may run, so once a stream has been open for 240 seconds LiteLLM finishes it and opens a fresh one when the next audio arrives. A turn still open at that point is completed with the text so far and later text arrives under a new `item_id`; billed seconds carry across streams
+Google limits how long one streaming request may run, so LiteLLM moves to a fresh stream once one has been open for 240 seconds. It waits for the next pause in speech (Google's voice activity end) before switching, and switches at 280 seconds at the latest. A push-to-talk turn carries across the switch: the text so far is kept and the `completed` after your `commit` holds the whole turn under one `item_id`. With server VAD, Google finalizes the audio sent so far when the old stream closes, so an utterance still in progress at a forced switch (continuous speech from 240 to 280 seconds) completes in two parts under two `item_id`s. Billed seconds carry across streams
 
 ### 6. Read transcripts
 
@@ -187,7 +187,7 @@ Google limits how long one streaming request may run, so once a stream has been 
 | `input_audio_buffer.speech_started` | `item_id` | Server VAD only: Google detects speech, or the first transcript text of a turn arrives |
 | `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | Words added since the previous delta of the turn, interim results included |
 | `input_audio_buffer.speech_stopped` | `item_id` | Server VAD only: Google detects the end of the utterance, or the turn completes |
-| `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`; `usage: {"type": "duration", "seconds": 18.0}` when Google billed audio since the previous `completed` | Server VAD: each final result. Push to talk: after `commit` or `end`. Both: when a stream rotates while a turn is open |
+| `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`; `usage: {"type": "duration", "seconds": 18.0}` when Google billed audio since the previous `completed` | Server VAD: each final result, a forced stream switch during continuous speech included. Push to talk: after `commit` or `end` |
 | `error` | `error.type: server_error`; `error.message` is `upstream websocket closed with code 1011: Google Speech-to-Text streaming failed: ...` | Google's stream failed; the proxy closes with code `1011` right after |
 
 Deltas are computed word by word, ignoring case and punctuation, so when Google revises an earlier word the delta restarts from that word. Take the final text from `completed.transcript`, which is Google's final result with its punctuation, rather than joining deltas. Turns are correlated by `item_id`. The session stays open after the last `completed` until you close it; the proxy closes it on its own only after a Google failure
