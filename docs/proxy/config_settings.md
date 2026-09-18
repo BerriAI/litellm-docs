@@ -1119,7 +1119,9 @@ router_settings:
 | LAGO_API_KEY | API key for accessing Lago services
 | LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
 | LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
+| LANGFUSE_FLUSH_AT | Number of spans the Langfuse callback batches per OTLP export request; defaults to `512`. Values that are not a whole number between `1` and `100000` log a warning and use the default
 | LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
+| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
 | LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false

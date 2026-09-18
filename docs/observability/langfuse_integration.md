@@ -15,7 +15,7 @@ Example trace in Langfuse using multiple models via LiteLLM:
 
 For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
 
-The SDK callback below (`langfuse`) uses the Langfuse Python SDK v4 (`langfuse>=4.7,<5`) and ingests via Langfuse's OTel-native endpoint, so traces appear in near real time.
+The SDK callback below (`langfuse`) requires the Langfuse Python SDK v4 (`langfuse>=4.7,<5`). It exports traces through LiteLLM's own OpenTelemetry pipeline to Langfuse's OTLP endpoint, so traces appear in near real time, and uses the SDK's REST client only for prompt management and credential checks. Batch size and prompt cache TTL are tuned with `LANGFUSE_FLUSH_AT` and `LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS` (see [config settings](../proxy/config_settings)).
 
 :::
 
