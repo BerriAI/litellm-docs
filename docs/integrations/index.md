@@ -285,6 +285,12 @@ items={[
     to: "./letta",
   },
   {
+    icon: "🗂️",
+    title: "Hindsight",
+    description: "Long-term memory across sessions for any provider.",
+    to: "./hindsight",
+  },
+  {
     icon: "🎙️",
     title: "LiveKit",
     description: "Real-time voice and video AI agents.",
