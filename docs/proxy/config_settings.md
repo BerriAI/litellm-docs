@@ -1509,6 +1509,7 @@ router_settings:
 | UPSTREAM_LANGFUSE_PUBLIC_KEY | Public key for upstream Langfuse authentication
 | UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
 | UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
+| USAGE_TOP_API_KEYS_LIMIT | Max number of API keys (ranked by spend) listed in the Admin Usage aggregated activity response. Totals and the model, provider, MCP and endpoint rollups always cover every key. **Default is 100**
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
 | USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
