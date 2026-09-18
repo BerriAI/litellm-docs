@@ -651,6 +651,7 @@ const sidebars = {
             "proxy/caching_redis",
             "proxy/elasticache_iam",
             "proxy/gcp_memorystore_iam",
+            "proxy/azure_redis_ad",
             "proxy/caching_semantic",
             "proxy/caching_object_storage",
             "proxy/caching_controls",
