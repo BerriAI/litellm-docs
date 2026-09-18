@@ -84,27 +84,27 @@ By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've chan
 
 ## Limit failed sign-in attempts
 
-Every username and password sign-in to the Admin UI (`/login`, `/v2/login`, `/v3/login`) is counted against two limits when it fails. The first is per source address and username: more than 5 wrong passwords for one username from one address within 60 seconds blocks that pair for 5 minutes. The second is per source address across every username: more than 10 wrong passwords from one address within 60 seconds blocks the address for 5 minutes. Once an address and username pair is blocked, its further failures stop counting against the address, so a script stuck on one account does not block everyone else behind the same address.
+Every username and password sign-in to the Admin UI (`/login`, `/v2/login`, `/v3/login`) is counted per source address when it fails. More than 10 wrong passwords from one address within 60 seconds, across every username, blocks that address for 5 minutes. Accounts are never locked: the same username keeps working from any other address. Each address also gets a per-username allowance of half its address limit, rounded up, so 5 by default. More than that for one username from one address blocks only that address and username pair, and its further failures stop counting against the address, so a script stuck on one account does not block everyone else behind the same office address.
 
 A block is a hard block. While it is active every sign-in attempt for that key is refused with `429 Too many failed sign-in attempts` and a `Retry-After` header, before the database is queried or the password is checked. The correct password is refused too, as are `UI_USERNAME`/`UI_PASSWORD` and the master key used as a password. The block lasts its full duration and is not extended by refused attempts. A successful sign-in clears the pair counter but leaves the address counter alone. A blocked administrator who cannot wait can still reach the API with the master key as a bearer token, since API requests never go through the sign-in throttle.
 
 The counters are stored in Redis when the proxy has one, so every worker and pod sees the same numbers. Without Redis each worker keeps its own counters and the effective limit is the configured number times the worker count; the proxy logs a warning at startup when that is the case. If Redis stops answering, the proxy falls back to the local counters, logs a warning, and never refuses a sign-in because Redis is down.
 
-The per-address limit needs to know which address is the client. Set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the reverse proxies or ingress in front of LiteLLM; the client is then read from `X-Forwarded-For` as the first hop outside those ranges. When clients connect to LiteLLM directly, set it to an empty list so the peer address is used and `X-Forwarded-For` is ignored. Leave it unset and the proxy cannot tell a client from a shared ingress, so it logs a warning at startup and only the per-username limit is enforced. IPv4-mapped IPv6 peers are treated as their IPv4 address, and other IPv6 addresses are grouped by /64 so one host cannot spread its guesses across its own subnet.
+The per-address limit needs to know which address is the client. Set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the reverse proxies or ingress in front of LiteLLM; the client is then read from `X-Forwarded-For` as the first hop outside those ranges. When clients connect to LiteLLM directly, set it to an empty list so the peer address is used and `X-Forwarded-For` is ignored. Leave it unset and the proxy cannot tell a client from a shared ingress, so it logs a warning at startup and only the per-username half of the limit is enforced. IPv4-mapped IPv6 peers are treated as their IPv4 address, and other IPv6 addresses are grouped by /64 so one host cannot spread its guesses across its own subnet.
 
 ```yaml
 general_settings:
   trusted_proxy_ranges: ["10.0.0.0/8"]        # or [] when clients connect directly
-  max_failed_login_attempts_per_source: 10    # default
-  max_failed_login_attempts_per_user: 5       # default
+  max_failed_login_attempts_per_source: 10    # default; per username from one address is half, so 5
   failed_login_window_seconds: 60             # default
   failed_login_block_seconds: 300             # default
   max_failed_login_attempts_per_source_overrides:
-    "203.0.113.7": 50                         # a NAT gateway many admins share
+    "203.0.113.7": 50                         # a NAT gateway many admins share; 25 per username there
     "192.0.2.0/24": 100                       # the most specific match wins
+    "198.51.100.4": 1000000                   # effectively opts this address out of both limits
 ```
 
-Set `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` in the environment to turn the limit off. It is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind these defaults.
+The per-username allowance is not configured on its own; it follows the address limit, including any override, so one override is enough to raise or effectively remove both limits for an address. Set `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` in the environment to turn the limit off everywhere. It is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind these defaults.
 
 ## Invite-other users
 
