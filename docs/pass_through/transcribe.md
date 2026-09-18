@@ -23,10 +23,16 @@ export AWS_SECRET_ACCESS_KEY=""
 export AWS_REGION_NAME="us-west-2"
 ```
 
-2. Start the proxy
+2. List the S3 buckets that virtual keys may transcribe from and write transcripts to, then start the proxy. Without this list only proxy admin keys can start jobs, see Access control
+
+```yaml showLineNumbers
+general_settings:
+  transcribe_media_buckets:
+    - my-bucket
+```
 
 ```bash showLineNumbers
-litellm
+litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
 ```
@@ -92,6 +98,14 @@ Because spend lands when the job completes, jobs submitted before the first char
 Only the standard batch rate is priced. `StartTranscriptionJob` requests that add a per-second surcharge (`ContentRedaction`, `ToxicityDetection`, or a custom language model through `ModelSettings.LanguageModelName` or `LanguageIdSettings.<language>.LanguageModelName`) and the separately priced job types `StartMedicalTranscriptionJob`, `StartMedicalScribeJob` and `StartCallAnalyticsJob` are rejected with a 400 explaining why, before anything is sent to AWS. If `transcribe/StartTranscriptionJob` is missing from the model cost map, `StartTranscriptionJob` is rejected the same way rather than being forwarded unpriced.
 
 LiteLLM reads the media length with libsndfile, so the media must be `flac`, `mp3`, `ogg` or `wav`. The format is taken from `MediaFormat` when set, otherwise from the file extension of `Media.MediaFileUri`. A request whose media is in another format (`mp4`, `m4a`, `webm`, `amr`) or whose format cannot be determined is rejected with a 400 before anything is sent to AWS; convert the file or set `MediaFormat` to submit it.
+
+## Access control
+
+Every request through `/transcribe` runs under the proxy's AWS credentials, so LiteLLM limits what a virtual key can reach with them.
+
+A key that is not a proxy admin may only start jobs whose `Media.MediaFileUri` and `OutputBucketName` name a bucket listed in `general_settings.transcribe_media_buckets`, and may not set `DataAccessRoleArn` or `JobExecutionSettings`; anything else is rejected with a 403 before the request is signed. When the list is unset, empty or malformed, only proxy admin keys can start jobs. The list can be set in `config.yaml` as above, or from the Admin UI under Settings, Router Settings, General Settings (`transcribe_media_buckets`, comma-separated bucket names); a value saved there is picked up by the running proxy on its next config reload, and a value in `config.yaml` takes precedence over it.
+
+Each `StartTranscriptionJob` is tagged with the calling key's owner (its team when it has one, otherwise its user, otherwise the key itself). `GetTranscriptionJob` and `DeleteTranscriptionJob` answer only for jobs carrying the caller's owner tag and return a 404 for any other job name, and a caller-supplied `litellm-owner` tag is rejected. Account-wide operations such as `ListTranscriptionJobs` and vocabulary management are limited to proxy admin keys. Proxy admins bypass both checks and see every job in the AWS account.
 
 ## Limitations
 
