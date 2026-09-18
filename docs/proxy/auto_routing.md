@@ -262,6 +262,33 @@ Anything else is treated as availability rather than policy and falls back exact
 
 Config mistakes surface at startup instead of on the first classified request. A `classifier_plugin` whose `classify` is missing or not `async` is rejected with the config key named, `classifier_type: custom` without a plugin raises, and a plugin set under any other `classifier_type` raises too, since it would never run.
 
+**Bundled: the Nadir classifier.** LiteLLM ships one classifier plugin, so a trained complexity classifier needs no code of your own. `litellm.router_strategy.complexity_router.nadir_classifier.nadir_classifier` asks [Nadir](https://getnadir.com)'s `/v1/bucket` endpoint, which runs a trained classifier rather than an LLM call, whether a request is `simple`, `medium` or `complex`, and maps those to the SIMPLE, MEDIUM and COMPLEX tiers.
+
+```yaml title="config.yaml"
+- model_name: smart-router
+  litellm_params:
+    model: auto_router/complexity_router
+    complexity_router_config:
+      classifier_type: custom
+      classifier_plugin: litellm.router_strategy.complexity_router.nadir_classifier.nadir_classifier
+      classifier_fallback: heuristic
+      tiers:
+        SIMPLE:  {{openai_small}}
+        COMPLEX: {{openai_large}}
+```
+
+Set `NADIR_API_KEY` to attribute decisions to an account and lift the anonymous rate limit; without it the endpoint still answers, rate limited per IP. Set `NADIR_API_BASE` to point at a self-hosted Nadir instead of the hosted API.
+
+The routing decision is the only thing that leaves: the tier's model pool, the provider call, your provider keys, fallbacks and spend tracking are unchanged. The messages are sent to whichever host `NADIR_API_BASE` names, which is a third party unless that host is yours, the same disclosure `classifier_type: llm` carries with a hosted classifier model.
+
+Two more things to know. It classifies over the network, so it costs a round trip per request where `heuristic` and `heuristic_v2` cost under a millisecond, and anything past `classifier_plugin_timeout_ms` routes on `classifier_fallback` instead of waiting. And it grades three buckets, so REASONING is never returned; `keyword_tier_rules` and the reasoning override still place requests there. A router that renamed its tiers with `tier_labels`, or defined its own with `tier_definitions`, builds the classifier with those names instead of using the module instance:
+
+```python title="classifiers.py"
+from litellm.router_strategy.complexity_router.nadir_classifier import NadirComplexityClassifier
+
+nadir = NadirComplexityClassifier(tier_map={"simple": "Cheap", "medium": "Standard", "complex": "Premium"})
+```
+
 Everything else on the router still applies. `keyword_tier_rules` short-circuit ahead of the plugin, escalation keywords still escalate the tier it returns, `adaptive: true` still Thompson-samples inside that tier's pool, and `session_affinity: true` still pins a session to its first-turn model. The `classifier_context_*` settings are LLM-classifier only; a plugin gets the messages directly and decides for itself how much of them to read.
 
 ### What gets classified
