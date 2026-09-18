@@ -881,6 +881,124 @@ Beta features may require special access or permissions in your AWS account. Som
 
 :::
 
+### Eager Input Streaming for Tool Calls
+
+By default Claude buffers a tool call's whole input JSON before streaming it, so a large tool call (a big file write, say) can leave the stream silent long enough to trip a client read timeout. Set `eager_input_streaming: true` on a tool and its input streams as it is generated. LiteLLM turns the flag into the `fine-grained-tool-streaming-2025-05-14` beta on every Bedrock route (Converse and Invoke, `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`), so it works on every Claude model on Bedrock, including older ones that reject the per-tool field. The beta is request-wide: once one tool sets it, every tool's input streams eagerly, and the streamed deltas can be partial JSON until the block ends.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python keep-model-ids
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    messages=[{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "write_file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                "required": ["path", "content"],
+            },
+        },
+        "eager_input_streaming": True,
+    }],
+    stream=True,
+)
+for chunk in response:
+    print(chunk.choices[0].delta.tool_calls)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+**Set on YAML Config**
+
+```yaml keep-model-ids
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0  # bedrock/converse/ and bedrock/invoke/ work too
+```
+
+**OpenAI format, `/v1/chat/completions`**
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "parameters": {
+          "type": "object",
+          "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+          "required": ["path", "content"]
+        }
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**Anthropic format, `/v1/messages`**
+
+```bash
+curl http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LITELLM_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "bedrock-claude",
+    "max_tokens": 4096,
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "name": "write_file",
+      "input_schema": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**OpenAI Responses format, `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "input": "Write a 2000 word README to docs/README.md",
+    "tools": [{
+      "type": "function",
+      "name": "write_file",
+      "parameters": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 
 ## Usage - Structured Output / JSON mode 
 
