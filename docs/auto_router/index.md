@@ -24,7 +24,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **One-click setup.** Configure automatically checks the models your proxy already serves and fills all four tiers for you; no template to pick.
 - **One model name in your clients.** The gateway classifies each request and picks the model.
 - **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
-- **Three classifiers.** Sub-millisecond heuristic scorer, a small LLM, or keyword rules.
+- **Classifier choices.** Heuristics, an LLM, JEV through TypeSafe System One Choice, keyword rules, or a custom plugin
 - **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
 - **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
 
@@ -32,6 +32,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 | Result | Measured on | Read more |
 | --- | --- | --- |
+| JEV: 81.58% lower p50 classifier latency and 96.12% lower registry-priced classifier cost than Haiku | 80 authored synthetic cases, three paired repeats, 95.00% vs 73.75% authored-label accuracy | [JEV comparison](/blog/jev-auto-router-benchmark) |
 | Claude Opus-5 solve rate at 27% lower cost | 21-task subset of Terminal-Bench 2.0, 16/21 solved by both | [Terminal-Bench](/blog/auto-router-terminal-bench-benchmark) |
 | Heuristic v2: 27% more tasks solved at 45% lower cost per task than v1 | Same 21-task subset, no LLM classifier call | [Heuristic v2](/blog/heuristic-v2) |
 | 74.5% cheaper at 87.3% of frontier quality | RouterArena, 8,399 graded queries | [Cost and quality](/blog/auto-router-cost-quality-benchmark) |
@@ -80,6 +81,8 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 ```
 
 ## Explore
+
+To use TypeSafe System One for classification, choose `classifier_type: jev` and configure `jev_classifier_config`. Start with [JEV setup](/docs/auto_router/setup#jev-classifier-typesafe-ai) and review its [context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier)
 
 <NavigationCards
 columns={3}
