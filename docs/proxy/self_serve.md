@@ -287,9 +287,11 @@ litellm_settings:
 
 ### Team Member Budgets
 
-Set a max budget for a team member. 
+Set a default max budget that applies to each member of a team. 
 
 You can do this when creating a new team, or by updating an existing team. 
+
+`team_member_budget` is a single team-wide default. Every member added without their own `max_budget_in_team` is linked to it, so changing it through `/team/update` (or the team's Default Budget field in the UI) applies to those members on their next request, not just to members added afterwards. A member given `max_budget_in_team` on `/team/member_add`, or later edited through [`/team/member_update`](./users.md#update-a-team-members-budget), gets their own budget and stops following the team default
 
 <Tabs>
 <TabItem value="ui" label="UI">
