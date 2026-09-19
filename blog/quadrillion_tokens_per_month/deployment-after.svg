@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="779" viewBox="0 0 800 779" role="img" aria-labelledby="title desc">
+<title id="title">LiteLLM high-throughput deployment</title>
+<desc id="desc">A Kubernetes Service sends requests to four workers in the gateway container. The gateway uses Rust token counting and a shared PgBouncer pool for Postgres. Separate metrics and spend collector containers run in the same pod. Prometheus receives metrics, and the workers and collector use Redis shared state. The collector processes spend after responses and shares the PgBouncer pool. An autoscaler adds whole three-container gateway pods based on requests, tokens, CPU and memory.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8da0b2"/></marker>
+  <marker id="greenArrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#82b545"/></marker>
+</defs>
+<rect width="800" height="779" fill="#ffffff"/>
+<g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif">
+<text x="24" y="42" font-size="28" font-weight="650" fill="#12283e">High-throughput deployment</text><text x="24" y="73" font-size="16" font-weight="400" fill="#536a7e">Four request workers, with separate metrics and spend containers</text>
+<rect x="186" y="118" width="410" height="474" rx="20" fill="#f7f9fc" stroke="#8da0b2" stroke-width="1.7" stroke-dasharray="7 6"/>
+<text x="208" y="150" font-size="20" font-weight="650" fill="#12283e">Gateway pod · 3 containers</text>
+<rect x="208" y="174" width="366" height="224" rx="15" fill="#fff" stroke="#82b545" stroke-width="1.7"/>
+<text x="230" y="203" font-size="19" font-weight="650" fill="#12283e">Gateway container</text>
+<rect x="224" y="221" width="75" height="54" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/><text x="261.5" y="254" font-size="15" font-weight="650" fill="#12283e" text-anchor="middle">Worker 1</text>
+<rect x="307" y="221" width="75" height="54" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/><text x="344.5" y="254" font-size="15" font-weight="650" fill="#12283e" text-anchor="middle">Worker 2</text>
+<rect x="390" y="221" width="75" height="54" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/><text x="427.5" y="254" font-size="15" font-weight="650" fill="#12283e" text-anchor="middle">Worker 3</text>
+<rect x="473" y="221" width="75" height="54" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/><text x="510.5" y="254" font-size="15" font-weight="650" fill="#12283e" text-anchor="middle">Worker 4</text>
+<text x="391" y="301" font-size="16" font-weight="400" fill="#536a7e" text-anchor="middle">Auth and budget checks</text>
+<rect x="224" y="329" width="143" height="49" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/>
+<text x="295.5" y="350" font-size="16" font-weight="650" fill="#12283e" text-anchor="middle">Rust token</text>
+<text x="295.5" y="368" font-size="16" font-weight="400" fill="#12283e" text-anchor="middle">counting</text>
+<rect x="414" y="329" width="144" height="49" rx="10" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/>
+<text x="486" y="350" font-size="16" font-weight="650" fill="#12283e" text-anchor="middle">PgBouncer</text>
+<text x="486" y="368" font-size="15" font-weight="400" fill="#12283e" text-anchor="middle">Shared pool</text>
+<rect x="208" y="454" width="161" height="111" rx="15" fill="#edf5ff" stroke="#5e97d5" stroke-width="1.7"/>
+<text x="288.5" y="485" font-size="19" font-weight="650" fill="#12283e" text-anchor="middle">Metrics</text>
+<text x="288.5" y="510" font-size="17" font-weight="400" fill="#12283e" text-anchor="middle">container</text>
+<text x="288.5" y="543" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">Serves metrics</text>
+<rect x="397" y="454" width="177" height="111" rx="15" fill="#fff5e6" stroke="#dc9b3c" stroke-width="1.7"/>
+<text x="485.5" y="485" font-size="18" font-weight="650" fill="#12283e" text-anchor="middle">Spend collector</text>
+<text x="485.5" y="510" font-size="17" font-weight="400" fill="#12283e" text-anchor="middle">container</text>
+<text x="485.5" y="543" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">After the response</text>
+<rect x="24" y="204" width="130" height="88" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="89" y="242" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Kubernetes</text><text x="89" y="265" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">Service</text>
+<rect x="638" y="204" width="138" height="88" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="242" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Model</text><text x="707" y="265" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">providers</text>
+<rect x="638" y="314" width="138" height="80" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="359" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Postgres</text>
+<rect x="638" y="476" width="138" height="70" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="505" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Redis</text><text x="707" y="528" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">Shared state</text>
+<rect x="24" y="476" width="150" height="70" rx="15" fill="#edf5ff" stroke="#5e97d5" stroke-width="1.7"/><text x="99" y="516" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Prometheus</text>
+<path d="M154 248 H222" fill="none" stroke="#8da0b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M548 248 H636" fill="none" stroke="#8da0b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M510 275 V327" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M558 354 H636" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M289 398 V452" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M429 398 V452" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M542 454 V380" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M208 511 H176" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M574 376 H615 V511 H636" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M574 511 H614" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
+<circle cx="615" cy="511" r="3.5" fill="#8da0b2"/>
+<rect x="186" y="639" width="410" height="76" rx="15" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/>
+<text x="391" y="669" font-size="18" font-weight="650" fill="#12283e" text-anchor="middle">Autoscaler adds whole gateway pods</text>
+<text x="391" y="696" font-size="16" font-weight="400" fill="#12283e" text-anchor="middle">Requests · tokens · CPU · memory</text>
+<path d="M391 639 V595" fill="none" stroke="#82b545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#greenArrow)"/>
+<text x="24" y="752" font-size="15" font-weight="400" fill="#536a7e">Solid arrows: model requests. Dotted arrows: supporting work.</text>
+</g>
+</svg>
