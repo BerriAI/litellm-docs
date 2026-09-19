@@ -760,6 +760,8 @@ router_settings:
 | EMPOWER_API_BASE | Base URL for Empower. Default is https://app.empower.dev/api/v1
 | EXA_API_BASE | Base URL for the Exa AI search provider
 | FAL_AI_API_BASE | Base URL for fal.ai image generation
+| FAL_AI_QUEUE_API_BASE | Base URL for fal.ai video generation over the fal queue API. Default is https://queue.fal.run
+| FAL_KEY | Alias for `FAL_AI_API_KEY`, matching the name the fal.ai SDK reads. Read for video generation when `FAL_AI_API_KEY` is unset
 | FEATHERLESS_AI_API_BASE | Base URL for Featherless AI, read before `FEATHERLESS_API_BASE`
 | FEATHERLESS_API_BASE | Alias for `FEATHERLESS_AI_API_BASE`
 | FEATHERLESS_API_KEY | Alias for `FEATHERLESS_AI_API_KEY`
