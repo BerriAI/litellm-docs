@@ -1132,6 +1132,74 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
+### Read scopes from a different claim
+
+By default LiteLLM reads scopes from the top-level `scope` claim. If your identity provider puts them somewhere else (for example Keycloak realm roles under `realm_access.roles`), set `scope_jwt_field` to that claim path. Dot notation reaches nested claims, the same way as the other `*_jwt_field` settings.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    scope_jwt_field: "realm_access.roles"
+    scope_mappings:
+      - scope: litellm.api.consumer
+        models: ["anthropic-claude"]
+    enforce_scope_based_access: true
+```
+
+```json
+{
+  "sub": "my-unique-user",
+  "realm_access": {
+    "roles": ["offline_access", "litellm.api.consumer"]
+  }
+}
+```
+
+The value at the configured path can be a list of strings or a space-separated string. `scope_jwt_field` is the single source of scopes for the token: it feeds the model checks in `scope_mappings`, the [MCP grants](#control-mcp-access-with-scopes) below, and the `admin_jwt_scope` check. Once you set it, a literal `scope` claim is no longer read. If the path is missing, the token carries no scopes; if the value is neither a string nor a list, the scope checks treat the token as malformed and grant nothing. Neither case ever widens access.
+
+## [BETA] Control MCP Access with Scopes {#control-mcp-access-with-scopes}
+
+A `scope_mappings` entry can grant MCP servers and tools as well as models, so a JWT can reach MCP servers without a virtual key, team, or user row provisioned in the LiteLLM database. The caller only needs a token whose scopes match a mapping.
+
+```yaml
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    scope_mappings:
+      - scope: litellm.mcp.deepwiki
+        mcp_servers: ["deepwiki"]                       # every tool on the server
+      - scope: litellm.mcp.deepwiki_readonly
+        mcp_tool_permissions:
+          deepwiki: ["read_wiki_structure"]              # grants the server and only this tool
+      - scope: litellm.mcp.ops
+        mcp_access_groups: ["ops-tools"]                 # every server in the access group
+    enforce_scope_based_access: true
+```
+
+`mcp_servers`, `mcp_access_groups` and `mcp_tool_permissions` take the same values as the matching fields on a key or team, see [Grant MCP Server Access](../mcp_grant_access). A mapping that names a server in `mcp_tool_permissions` grants that server too; you do not need to repeat it in `mcp_servers`. One mapping can carry both `models` and MCP fields.
+
+Matching happens once, when the token is admitted, and the matched grants travel with the request. Scopes are compared exactly (case-sensitive, no wildcards). A token whose scopes match no mapping gets no MCP servers from this path; a missing or unreadable scope claim behaves the same way. The `x-mcp-servers` header and URL namespacing still narrow which servers a request targets, they never widen what the scopes granted.
+
+Argument-level and resource-level authorization are not part of scope mappings. Use [tool parameter filtering](../mcp_control#allowdisallow-mcp-tool-parameters) or a guardrail for that.
+
+### How scope grants combine with keys and teams
+
+Scope grants sit at the key level of the [permission hierarchy](../mcp_control#permission-hierarchy). Within that level they are additive: the servers granted by the matched scopes are unioned with the servers the key itself holds (its `mcp_servers`, access groups and toolsets), and on each server every independent grant contributes its tools. A grant that names a server without restricting its tools keeps every tool on that server, no matter what a narrower grant on the same server says, in either direction. A key that holds all of `deepwiki` plus a scope that allows one tool on it still reaches every tool, and a key allowing one tool plus a scope that grants the whole server does too. Two grants that each restrict tools on the same server union their lists.
+
+Everything above the key level stays a ceiling. When the team the token maps to has an `mcp_servers` list, the additive key-plus-scope result is intersected with it, and the team's `mcp_tool_permissions` intersect per server exactly as they do for a key without scopes. Organization, internal user, end user and agent grants narrow the result further and are never widened by a scope. `mcp_servers: ["no-mcp-servers"]` on the key still opts it out of every server, scope grants included.
+
+| Key grant on `deepwiki` | Scope grant on `deepwiki` | Team grant on `deepwiki` | Effective tools |
+|---|---|---|---|
+| none (no key row) | whole server | none | every tool |
+| none (no key row) | `["read_wiki_structure"]` | none | `read_wiki_structure` |
+| whole server | `["read_wiki_structure"]` | none | every tool |
+| `["read_wiki_contents"]` | whole server | none | every tool |
+| `["read_wiki_contents"]` | `["read_wiki_structure"]` | none | both tools |
+| whole server | `["read_wiki_structure"]` | `["read_wiki_structure"]` | `read_wiki_structure` (team ceiling) |
+| `["read_wiki_contents"]` | whole server | `["read_wiki_structure"]` | `read_wiki_structure` (team ceiling) |
+| `no-mcp-servers` | whole server | any | none |
+
 ## [BETA] Sync User Roles and Teams with IDP
 
 Automatically sync user roles and team memberships from your Identity Provider (IDP) to LiteLLM's database. This ensures that user permissions and team memberships in LiteLLM stay in sync with your IDP.
