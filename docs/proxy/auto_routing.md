@@ -500,22 +500,25 @@ savings = cost(baseline model, this request)
 - **Only one side is hypothetical.** What the request actually cost is read back from what the cost calculator recorded, on the service tier and data residency it was billed on, rather than re-derived; the baseline never ran, so it is priced through the same engine on that same basis. That figure is input plus output cost, leaving built-in tool cost, discounts and margins outside the comparison
 - **The result is signed.** Switching models leaves the new one cold, and when the resulting cache-creation charge outweighs the cheaper rates the number goes negative and the dashboard says so
 - **The classifier's own charge counts against the saving** (v1.100 and later). An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
-- **The model comparison reads `0.0`** when either side cannot be resolved or priced, or when both resolve to the same provider and model. That is model identity rather than deployment identity, so routing between two deployments of one model reports zero even where their negotiated rates differ. A recorded `classifier_cost` still comes off that zero, so a request routed to the baseline itself reports the classifier charge as a small negative saving
+- **Zero savings retains both costs.** For supported native Anthropic requests, complete observed usage establishes equal model costs while the recorded session has used the exact baseline deployment at the same prices, including overlapping requests. Both costs remain nonzero when the request was billable. A recorded classifier charge still counts against savings. After routing diverges, returning to the same model requires cache-history evidence; model identity alone does not establish zero savings. Missing pricing or evidence produces an unavailable estimate
 
-### The baseline is priced with a warm cache
+### Cache-prefix history and expiry {#the-baseline-is-priced-with-a-warm-cache}
 
-The baseline is one model serving every turn, so whether it had this prompt cached is simply whether the conversation was already underway. The router records that as `conversation_continuing` on the decision; an assistant turn anywhere in the history is the evidence, and no messages at all counts as continuing, which is the direction that cannot inflate
+For supported native Anthropic `/v1/messages` requests, a baseline cache read requires a matching prefix that was available when the request started and remained within its five-minute or one-hour TTL. A prefix known to have expired is charged as a write. Requests served by cheaper models advance the hypothetical baseline history too. An assistant message alone does not establish a cache hit
 
-```python
-warm   = conversation_continuing and cache_creation > 0 and cache_read <= cache_creation
-reads  = cache_read + cache_creation if warm else cache_read
-writes = 0 if warm else cache_creation
-```
+Use a stable session ID, a configured proxy database and enabled spend logging. Accounting runs after inference and replays recorded observations in request-start order. Late observations can temporarily withdraw affected estimates while request, session and daily totals are corrected. Actual billed spend remains recorded throughout
 
-- **Continuing turn that paid to write cache**, the `warm` case: those tokens become baseline cache *reads* and its creation charge drops to zero, since a single-model baseline wrote that prefix on an earlier turn. The write this request really paid stays on the router's side of the subtraction, which is exactly the cost of having switched
-- **Continuing turn that mostly read**, where reads exceed writes: buckets stay put and both arms carry the write. The selected model was evidently already serving this conversation, so those tokens are the turn's own growth and the baseline would have paid to write them too
-- **A conversation's first turn**: buckets stay put for the same reason, nothing was warm for any model
-- **A baseline missing a cache rate of its own**: those tokens become ordinary input at its plain rate rather than a free bucket. The relevant OpenAI, Azure and Gemini entries have no separate cache-write rate, and treating an absent rate as zero would carry the whole prompt for nothing, turning a profitable route into a reported loss
+Baseline token counting requires the same endpoint and API key as the served request. An Anthropic-compatible gateway must support native counting for every required prefix, including system or tools without messages. Missing or timed-out counts produce unknown estimates; a local tokenizer or invented message cannot establish a cache hit
+
+The comparison holds recorded prompts, output usage and request timing fixed. It does not predict alternate model responses, provider evictions or unrecorded traffic. Legacy sessions do not become new baseline-identical sessions merely because their recorded history is unavailable. Inactive session history is pruned according to session retention, and reusing a retired session ID does not establish another initial estimate
+
+Some Claude Code beta headers and `context_management` shapes remain unsupported for modeled cache accounting. Initial baseline-identical requests can still use complete observed usage. Support after switching models depends on the actual request shape and available prefix counts
+
+### Estimate coverage
+
+The dashboard compares baseline and routed costs over the same estimated turns, including turns with numeric zero savings. It shows how many turns have estimates alongside total actual spend. Unknown and pending turns contribute to neither comparison cost, while their actual spend remains in the total. Existing session-status clients receive no baseline total when coverage is partial
+
+For example, a baseline-identical request costing $0.10 has $0.10 baseline cost, $0.10 routed model cost and $0 model savings. If the next turn has unavailable cache history, its billed spend is still recorded but it is excluded from both sides of the savings comparison
 
 ### Where it shows up
 
@@ -526,7 +529,7 @@ writes = 0 if warm else cache_creation
 
 :::note
 
-`LiteLLM_SpendLogs` has no cache-token or savings columns, so the split is not queryable there; the daily rollup above is. The usage carrying that split does ride in the row's `metadata` under `usage_object`, which is what the daily savings writer reads back to rebuild `Usage`. Its `cache_hit` and `cache_key` columns are unrelated, describing LiteLLM's own response cache rather than provider-side prompt caching. Routing itself persists as `routing_decision` in metadata: `routed_model`, `cause` and `conversation_continuing` always, `tier` when a tier was determined, `classifier_cost` when the LLM classifier ran, and the derived baseline alongside the deployment it resolved to. The net figure itself is stamped on that same metadata as `autorouter_savings`, and readers honor the stamped value over recomputing it
+`LiteLLM_SpendLogs` has no cache-token or savings columns, so the split is not queryable there; the daily rollup above is. The usage carrying that split does ride in the row's `metadata` under `usage_object`, which is what the daily savings writer reads back to rebuild `Usage`. Its `cache_hit` and `cache_key` columns are unrelated, describing LiteLLM's own response cache rather than provider-side prompt caching. Routing itself persists as `routing_decision` in metadata: `routed_model`, `cause` and `conversation_continuing` always, `tier` when a tier was determined, `classifier_cost` when the LLM classifier ran, and the derived baseline alongside the deployment it resolved to. The net figure is stamped on that metadata as `autorouter_savings`. The versioned `autorouter_savings_estimate` records comparison identity, provenance, status, reason and both comparison costs. Readers use the recorded estimate and its coverage
 
 :::
 
