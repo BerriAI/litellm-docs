@@ -138,7 +138,7 @@ vector_store_registry:
       embedding_model: "text-embedding-3-small"
 ```
 
-`aws_region_name` is required for search. `embedding_model` should match the model the index was built with. Instead of the `bucket:index` id you can also set `vector_bucket_name` in `litellm_params` and use the plain index name as `vector_store_id`.
+`aws_region_name` is required for search. `embedding_model` should match the model the index was built with. Instead of the `bucket:index` id you can also set `vector_bucket_name` in `litellm_params` and use the plain index name as `vector_store_id`. Once registered, a `/rag/ingest` request that names the store id lands in that index too, taking the provider, region, credentials, and embedding model from the registration instead of the request.
 
 ## Configuration reference
 
@@ -154,7 +154,7 @@ Search-side `litellm_params` (registry entry, or persisted automatically from in
 | `aws_access_key_id`, `aws_secret_access_key`, `aws_session_token`, `aws_role_name`, `aws_session_name`, `aws_profile_name`, `aws_web_identity_token` | no | Explicit AWS credentials, see [Credentials](#credentials) |
 | `litellm_credential_name` | no | Reference a named credential from `credential_list` |
 
-Ingest-side options (the `vector_store` block of `ingest_options`) are documented in the [RAG Ingest reference](../rag_ingest.md#vector_store-aws-s3-vectors): `vector_bucket_name` (required), `index_name`, `dimension`, `distance_metric` (`cosine`, default, or `euclidean`), `non_filterable_metadata_keys` (default `["source_text"]`), plus the same AWS credential parameters.
+Ingest-side options (the `vector_store` block of `ingest_options`) are documented in the [RAG Ingest reference](../rag_ingest.md#vector_store-aws-s3-vectors): `vector_store_id` (an existing index as `bucket:index`, or a bare index name when `vector_bucket_name` is set), `vector_bucket_name` (required unless `vector_store_id` carries the bucket), `index_name`, `dimension`, `distance_metric` (`cosine`, default, or `euclidean`), `non_filterable_metadata_keys` (default `["source_text"]`), plus the same AWS credential parameters.
 
 ## Region, endpoint, and encryption
 
@@ -187,7 +187,7 @@ The raw file bytes are not stored in S3 or in the LiteLLM database; only chunk t
 
 ## Is there a "default vector store" setting?
 
-No. LiteLLM has no proxy-wide default vector store provider today. `/rag/ingest` defaults to `custom_llm_provider: "openai"` when the `vector_store` block omits the provider, so every ingest request that should land in S3 Vectors must pass `custom_llm_provider: "s3_vectors"` explicitly. After ingest, no provider choice is needed anywhere else: search, `/rag/query`, and `file_search` all address the store by its id, and the persisted registration carries the provider and AWS settings.
+No. LiteLLM has no proxy-wide default vector store provider today. `/rag/ingest` defaults to `custom_llm_provider: "openai"` when the `vector_store` block omits the provider, so every ingest request that should land in S3 Vectors must pass `custom_llm_provider: "s3_vectors"` explicitly, unless its `vector_store_id` names a store in the registry or the database: then the provider, region, credentials, and embedding model come from that registration and the request needs only the id. After ingest, no provider choice is needed anywhere else: search, `/rag/query`, and `file_search` all address the store by its id, and the persisted registration carries the provider and AWS settings.
 
 ## Can S3 be the default storage for /v1/files?
 
