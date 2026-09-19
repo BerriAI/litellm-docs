@@ -1262,6 +1262,7 @@ const sidebars = {
         "providers/tensormesh",
         "providers/togetherai",
         "providers/topaz",
+        "providers/topxai",
         "providers/triton-inference-server",
         "providers/v0",
         "providers/valkey_vector_stores",
