@@ -85,9 +85,14 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 columns={3}
 items={[
   {
-    title: "Setup",
-    description: "Dashboard presets, agent skill, config.yaml, the local CLI, and Claude Code.",
+    title: "Admin Setup",
+    description: "Create an Auto Router with dashboard presets, an agent skill, config.yaml, or the CLI.",
     to: "/docs/auto_router/setup",
+  },
+  {
+    title: "User Setup",
+    description: "Connect Claude Code or Codex with lite configure and see live session savings in Claude Code.",
+    to: "/docs/auto_router/user_setup",
   },
   {
     title: "Recommended Configurations",
