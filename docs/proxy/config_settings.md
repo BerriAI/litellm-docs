@@ -108,7 +108,8 @@ litellm_settings:
 
   # Virtual key auth cache — shares API key / virtual-key auth across workers via Redis.
   # Reduces DB round trips when caches are cold on new workers or pods.
-  # Requires litellm_settings.cache: true AND cache_params.type: redis above.
+  # Requires a coordination Redis: either general_settings.coordination_redis,
+  # or litellm_settings.cache: true AND cache_params.type: redis above.
   enable_redis_auth_cache: false
 
 callback_settings:
@@ -139,6 +140,10 @@ general_settings:
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
   key_management_system: google_kms  # either google_kms or azure_kms
   master_key: string
+  coordination_redis:  # Redis for cross-pod coordination (rate limits, budgets, spend counters, config sync, pod lock), independent of response caching
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
   user_mcp_management_mode: restricted  # or "view_all"
@@ -232,7 +237,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | context_window_fallbacks | array of objects | `[]` | Fallbacks to use when a ContextWindowExceededError is encountered. [Further docs](./reliability#context-window-fallbacks) |
 | cache | boolean | `false` | If true, enables caching. [Further docs](./caching) |
 | cache_params | object | `{}` (`type` defaults to `redis`) | Parameters for the cache. [Further docs](./caching_settings#supported-cache_params-on-proxy-configyaml) |
-| enable_redis_auth_cache | boolean | `false` | When `true`, stores virtual-key auth payloads in Redis (same client as response caching) so every worker/pod shares cached auth lookups—fewer repeated database reads on cache misses. **Requires `cache: true` and `cache_params.type: redis`** (Redis or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching_redis#virtual-key-authentication-cache-redis) |
+| enable_redis_auth_cache | boolean | `false` | When `true`, stores virtual-key auth payloads in the proxy's coordination Redis so every worker/pod shares cached auth lookups, which cuts repeated database reads on cache misses. **Requires a coordination Redis**: either `general_settings.coordination_redis`, or `cache: true` with `cache_params.type: redis` (Redis or Redis Cluster), which coordination then borrows. Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching_redis#virtual-key-authentication-cache-redis) |
 | disable_end_user_cost_tracking | boolean | `false` | If true, turns off end user cost tracking on prometheus metrics + litellm spend logs table on proxy. |
 | enable_end_user_cost_tracking_prometheus_only | boolean | `false` | If true, includes the `end_user` label on Prometheus metrics. Disabled by default to keep Prometheus cardinality bounded. [Further docs](./prometheus#tracking-end_user-on-prometheus) |
 | cost_discount_config | object | `{}` | Provider-specific percentage discounts applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_discounts) |
@@ -298,6 +303,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allowed_routes | array of strings | `null` (all routes) | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | `null` | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy [Set up Virtual Keys](virtual_keys) |
+| coordination_redis | object | `null` | Redis used for cross-pod coordination: rate limits, budgets and spend counters, config sync, the pod lock for scheduled jobs, shared health checks, CLI SSO sessions, and router state when `router_settings` names no Redis. Configured independently of response caching, so you can run coordination without caching any responses, or point the two at different servers. Accepts `host`, `port`, `username`, `password`, `url`, `ssl`, `namespace`, `startup_nodes` (cluster), `sentinel_nodes` / `sentinel_password` / `service_name` (sentinel), and the `aws_iam_*` ElastiCache IAM fields; values may be `os.environ/VAR` references. Must name at least one of `host`, `url`, `startup_nodes` or `sentinel_nodes` or the proxy fails to start. Without this block, coordination borrows the response cache's Redis, then falls back to bare `REDIS_*` env vars. [Coordination Redis](./caching_redis#coordination-redis) |
 | database_url | string | `null` (falls back to `DATABASE_URL`) | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
 | database_connection_pool_limit | integer | `10` | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
 | database_connection_timeout | integer | `60` (seconds) | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](./configs.md#configure-db-pool-limits--connection-timeouts) |

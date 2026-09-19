@@ -72,6 +72,117 @@ Then run the proxy:
 $ litellm --config /path/to/config.yaml
 ```
 
+## Coordination Redis
+
+LiteLLM uses Redis for two independent jobs, and most deployments only need the first:
+
+| Job | What it covers | Configured by |
+| --- | --- | --- |
+| **Coordination** | Rate limits and budgets, spend counters, config sync across pods, the pod lock that elects a single runner for scheduled jobs, shared health checks, CLI SSO sessions, router state | `general_settings.coordination_redis` |
+| **Response caching** | Storing LLM responses so an identical request skips the provider | `litellm_settings.cache` and `cache_params` |
+
+Any deployment running more than one worker or replica needs coordination, or each worker enforces its own private copy of every limit. See [What Needs Redis](./redis_requirements.md) for the full list of what degrades without it. Response caching is a separate, optional feature: turning on coordination does not cache any responses
+
+### Coordination only (no response caching)
+
+Set `general_settings.coordination_redis` and leave out the `litellm_settings.cache` block entirely:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+
+litellm_settings:
+  enable_redis_auth_cache: true # optional, recommended: share virtual-key auth lookups across pods
+```
+
+That covers rate limits, budgets, spend counters, cross-pod config sync, the pod lock, shared health checks, and CLI SSO sessions. It also covers router state (deployment cooldowns, `usage-based-routing-v2`, `latency-based-routing`): when `router_settings` names no Redis of its own, the proxy attaches the coordination Redis to the router. You do not need to repeat the connection under `router_settings` unless you deliberately want router state on a **different** Redis, in which case `router_settings.redis_*` wins for router state only
+
+`enable_redis_auth_cache: true` is worth adding on any multi-pod deployment: without it each pod warms its own virtual-key auth cache against the database
+
+### A separate Redis for coordination and response caching
+
+The point of a dedicated `coordination_redis` block is pointing the two jobs at different servers, so cache traffic cannot evict coordination state or vice versa:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/COORDINATION_REDIS_HOST
+    port: 6379
+    password: os.environ/COORDINATION_REDIS_PASSWORD
+
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis
+    host: os.environ/CACHE_REDIS_HOST
+    port: 6379
+    password: os.environ/CACHE_REDIS_PASSWORD
+```
+
+Without a `coordination_redis` block, coordination borrows the response cache's Redis, so both jobs share one server
+
+### Supported fields
+
+Every field is optional on its own, but the block must name at least one connection target (`host`, `url`, `startup_nodes`, or `sentinel_nodes`) or the proxy fails to start
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `host` | string | Redis hostname |
+| `port` | integer | Redis port |
+| `username` | string | Redis username, if the server requires one |
+| `password` | string | Redis password |
+| `url` | string | Full connection URL, for example `redis://:pass@host:6379/1`. Use instead of the discrete host/port/username/password fields |
+| `ssl` | boolean | Connect over TLS |
+| `namespace` | string | Prefix for every key this client writes, so a [restricted ACL user](#restricted-acl-users-redis-7--valkey) can be scoped to `~<namespace>:*` |
+| `startup_nodes` | list | Cluster-mode startup nodes, for example `[{"host": "127.0.0.1", "port": 7001}]`. When set, a Redis Cluster client is used |
+| `sentinel_nodes` | list | Sentinel `[host, port]` pairs, for example `[["localhost", 26379]]`. When set, a Sentinel-managed client is used |
+| `sentinel_password` | string | Password for the Sentinel nodes |
+| `service_name` | string | Master service name for Sentinel |
+| `aws_iam_auth` | boolean | Authenticate with [AWS ElastiCache IAM](./elasticache_iam.md) instead of a password |
+| `aws_iam_user_name` | string | ElastiCache IAM user name |
+| `aws_iam_cache_name` | string | ElastiCache cache name |
+| `aws_iam_region` | string | AWS region for ElastiCache IAM authentication |
+| `aws_iam_serverless` | boolean | The ElastiCache cache is serverless rather than a self-designed cluster |
+
+Any other key is passed through to the Redis client, so `redis.Redis` kwargs not listed here still work
+
+`os.environ/VAR` references are resolved at startup, but only for the block's own top-level values. A reference nested inside `startup_nodes` or `sentinel_nodes` is passed through literally, so put those values in the config directly
+
+### How the coordination Redis is resolved
+
+The proxy takes the first of these that produces a working client:
+
+1. A block saved from the Admin UI, which lives in the database
+2. `general_settings.coordination_redis` in config.yaml
+3. The response cache's Redis, when `litellm_settings.cache_params.type` is `redis`
+4. Bare `REDIS_HOST` / `REDIS_PORT` / `REDIS_URL` environment variables with no config block at all
+
+Options 1 through 3 are deliberate, so a bad connection target fails loudly at startup. Option 4 is inferred from environment variables that may be set for an unrelated reason, so it is best-effort: the proxy pings the server once and silently falls back to per-pod in-memory state if the ping fails or the value is malformed. It also cannot carry a namespace. Prefer an explicit block in production, where a Redis that quietly went missing should be a startup failure rather than a silent loss of cross-pod enforcement
+
+:::warning
+
+Set the block in **either** config.yaml or the Admin UI, not both. When both exist, the database block takes over rate limiting and config sync while spend counters and CLI SSO sessions stay on the config.yaml server, which splits coordination state across two Redis servers
+
+:::
+
+### Manage it from the Admin UI
+
+Proxy admins can save the block from the Admin UI under **Caching > Coordination Redis**, or over the API:
+
+```shell
+curl -X POST 'http://localhost:4000/coordination_redis/settings' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"settings": {"host": "my-redis.internal", "port": 6379, "password": "os.environ/REDIS_PASSWORD"}}'
+```
+
+Test a connection before saving it with `POST /coordination_redis/settings/test`, and read the current settings (credentials redacted) with `GET /coordination_redis/settings`
+
+This path writes to the database, so it needs `STORE_MODEL_IN_DB=True` and a connected database. `os.environ/VAR` references are stored as written and resolved at startup. **Saved settings apply on the next proxy restart**, not immediately. Changes are recorded in the audit log, since repointing coordination Redis moves where cross-pod rate limit and spend state lives
+
 ## Namespace
 
 If you want to create some folder for your keys, you can set a namespace, like this:
@@ -286,12 +397,11 @@ The `REDIS_SOCKET_TIMEOUT` environment variable (default `0.1`) does not change 
 
 When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
-Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
+Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the proxy's coordination Redis**. Workers and replicas then share cached auth entries across the cluster
 
 **Requirements**
 
-- `litellm_settings.cache` must be **`true`** (Redis for the proxy is initialized during cache setup). See [All settings](./config_settings).
-- `cache_params.type` must be **`redis`** (or Redis Cluster, per your cache config); the auth cache attaches to that Redis client. See [supported `cache_params`](./caching_settings.md#supported-cache_params-on-proxy-configyaml).
+- The proxy needs a [coordination Redis](#coordination-redis). Either set `general_settings.coordination_redis`, or set `litellm_settings.cache: true` with `cache_params.type: redis` (or Redis Cluster) and let coordination borrow that client. See [supported `cache_params`](./caching_settings.md#supported-cache_params-on-proxy-configyaml) and [All settings](./config_settings)
 - Optionally set **`general_settings.user_api_key_cache_ttl`** (seconds): TTL applies to both the in-memory and Redis tiers when Redis auth caching is enabled, so stale keys expire consistently.
 
 Example:

@@ -579,6 +579,20 @@ custom_tokenizer:
 
 ## General Settings `general_settings` (DB Connection, etc)
 
+### Configure Coordination Redis
+
+Any deployment running more than one worker or replica needs a shared Redis, or each worker enforces its own private copy of every rate limit and budget:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+```
+
+This covers rate limits, budgets and spend counters, config sync across pods, the pod lock for scheduled jobs, shared health checks, and router state. It does not turn on response caching, which is a separate opt-in under [`litellm_settings.cache`](./caching.md). See [Coordination Redis](./caching_redis.md#coordination-redis) for the full field reference, cluster and sentinel setups, and how to run coordination and response caching on different servers
+
 ### Configure DB Pool Limits + Connection Timeouts 
 
 ```yaml

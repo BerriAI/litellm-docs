@@ -22,21 +22,19 @@ Multi-pod deployments without Redis are in beta, and the list below is not exhau
 For provisioning Redis and wiring the proxy to it end to end, see [Set Up Redis](/docs/proxy/caching_redis). The short version:
 
 ```yaml
-router_settings:
-  redis_host: os.environ/REDIS_HOST
-  redis_port: os.environ/REDIS_PORT
-  redis_password: os.environ/REDIS_PASSWORD
-
-litellm_settings:
-  cache: True
-  cache_params:
-    type: redis
+general_settings:
+  coordination_redis:
     host: os.environ/REDIS_HOST
     port: os.environ/REDIS_PORT
     password: os.environ/REDIS_PASSWORD
+
+litellm_settings:
+  enable_redis_auth_cache: true # optional, recommended: share virtual-key auth lookups across pods
 ```
 
-Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its own: the proxy reads them only when the config points at Redis, as above. The `router_settings` block covers router state (cooldowns, usage and latency based routing), and the cache block covers response caching and everything coordinated proxy-wide (rate limits, budgets, cache invalidation, the pod lock). Configure both. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache with `general_settings.coordination_redis`, see [Redis and Valkey](./caching_redis.md).
+That one block fixes everything in the table below except response caching, which is a separate opt-in feature. It also covers router state (cooldowns, usage and latency based routing), since the router picks up the coordination Redis when `router_settings` names no Redis of its own. To cache responses as well, add a [`litellm_settings.cache` block](./caching.md); to keep the two jobs on different servers, or for cluster, sentinel and ACL details, see [Coordination Redis](./caching_redis.md#coordination-redis)
+
+Setting `REDIS_HOST` and `REDIS_PORT` in the environment with no config block at all is a best-effort fallback rather than a supported configuration: the proxy pings that server once at startup and falls back silently to per-pod in-memory state if it cannot reach it, and those keys cannot carry a namespace. In production prefer the explicit block above, where an unreachable Redis fails startup instead of quietly dropping cross-pod enforcement
 
 ## What breaks without Redis
 
