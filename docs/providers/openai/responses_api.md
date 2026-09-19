@@ -284,6 +284,7 @@ import litellm
 
 response = litellm.responses(
     model="openai/{{openai_large}}",
+    input="Write a short birthday message",
     prompt={
         "id": "pmpt_abc123",
         "version": "2",
@@ -306,6 +307,7 @@ client = OpenAI(base_url="http://localhost:4000", api_key="your-api-key")
 
 response = client.responses.create(
     model="openai/{{openai_large}}",
+    input="Write a short birthday message",
     prompt={
         "id": "pmpt_abc123",
         "version": "2",
