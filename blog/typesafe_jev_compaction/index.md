@@ -139,8 +139,6 @@ Compare the same request with compaction on and off. For the off version, remove
 
 On LiteLLM Enterprise, attach `jev-compaction` to a team. If your users authenticate with OIDC, use the LiteLLM team that their tokens map to. See the [OIDC setup guide](/docs/proxy/token_auth#tracking-end-users--internal-users--team--org) for that mapping.
 
-A proxy admin can update the team with this request. Replace `my-team-id` with its team ID and set `LITELLM_MASTER_KEY` to your proxy's master key:
-
 ```bash
 curl "$LITELLM_PROXY_URL/team/update" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
@@ -150,8 +148,6 @@ curl "$LITELLM_PROXY_URL/team/update" \
     "guardrails": ["jev-compaction"]
   }'
 ```
-
-If the team already has guardrails, include them in this list too. Requests that resolve to this team now use compaction automatically, so the app can leave out the `guardrails` field. Users keep sending their OIDC tokens as usual.
 
 Start with the default score threshold of `0.2`. A higher threshold can remove more results, so check that answers stay correct before raising it. If Jev is unavailable, LiteLLM's default `fail_open` setting sends the original request to the model without compaction.
 
