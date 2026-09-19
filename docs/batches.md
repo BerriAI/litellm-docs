@@ -7,7 +7,7 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
@@ -439,6 +439,7 @@ LiteLLM supports the following provider-native batch APIs:
 | Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
 | Mistral AI | [Mistral files and batches](./providers/mistral#files-and-batches-api) |
+| vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
