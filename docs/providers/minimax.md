@@ -636,4 +636,4 @@ Pass these via `extra_body`:
 | sample_rate | int | Sample rate: 16000, 24000, 32000 | 32000 |
 | bitrate | int | Bitrate for MP3: 64000, 128000, 192000, 256000 | 128000 |
 | channel | int | Audio channels: 1 (mono) or 2 (stereo) | 1 |
-| output_format | string | Output format: "hex" or "url" (url returns a URL valid for 24 hours) | hex |
+| output_format | string | Output format. Only "hex" is supported; passing "url" raises an error since URL output is not yet supported | hex |
