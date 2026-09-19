@@ -888,6 +888,7 @@ const sidebars = {
             "mcp_servers/atlassian",
             "mcp_servers/linear",
             "mcp_servers/microsoft_365",
+            "mcp_servers/algenta",
             "mcp_openapi",
             "mcp_toolsets",
             "mcp_server_submissions",
