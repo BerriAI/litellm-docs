@@ -14,6 +14,8 @@ Auto-Router can move a conversation between tiers as the request changes from si
 
 LiteLLM now keeps the readable history and removes encrypted reasoning that the newly selected tier cannot verify. The request can continue to the selected model instead of failing with `invalid_encrypted_content`
 
+This fix is included in the LiteLLM `v1.102.x` release line and landed in [PR #40280](https://github.com/BerriAI/litellm/pull/40280)
+
 {/* truncate */}
 
 ## Why encrypted reasoning blocks fail after a tier change
