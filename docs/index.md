@@ -207,6 +207,17 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 
 **Need to understand a specific feature?** Check [Guides](/docs/guides) for streaming, function calling, prompt caching, and other how-tos.
 
+<div style={{ maxWidth: '100%', overflow: 'hidden', paddingBottom: '56.25%', position: 'relative', height: 0, margin: '2rem 0' }}>
+  <iframe
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    src="https://www.youtube.com/embed/KKM2MjznzYk"
+    title="What is LiteLLM and Why it is the Leading Open Source LLM Gateway?"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ---
 
 ## Choose Your Path
