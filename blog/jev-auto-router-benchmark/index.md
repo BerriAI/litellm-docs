@@ -11,7 +11,9 @@ hide_table_of_contents: true
 
 *Last Updated: September 18, 2026*
 
-An Auto Router pays for classification before the selected model can answer. In our benchmark, TypeSafe JEV classified requests **5.43x as fast as Haiku**, comparing median classifier latency: **126.81 ms versus 688.40 ms**. Registry-priced classifier cost was **96.12% lower**, rounded to 96% in the title. Across 80 frozen, authored synthetic cases, JEV matched 95.00% of the tier labels versus 73.75% for Haiku. These measurements cover classification on this corpus, so answer quality and total application savings still need a separate evaluation
+An Auto Router pays for classification before the selected model can answer. In our benchmark, TypeSafe JEV classified requests **5.43x as fast as Haiku**, comparing median classifier latency: **126.81 ms versus 688.40 ms**. Registry-priced classifier cost was **96.12% lower**, rounded to 96% in the title
+
+JEV matched our benchmark's expected tiers on 95.00% of calls, versus 73.75% for Haiku. That result depends on the prompts, tier definitions, instructions and context used here. The expected tiers were authored with the synthetic prompts, without independent review. This comparison does not establish general classification accuracy or the quality of the final answers
 
 {/* truncate */}
 
@@ -29,7 +31,7 @@ The benchmark ran on **September 18, 2026 UTC**, with `jev-latest` first resolve
 
 | Metric | JEV | Haiku |
 | --- | ---: | ---: |
-| Authored-label accuracy | 228/240, 95.00% | 177/240, 73.75% |
+| Match with authored expected tiers | 228/240, 95.00% | 177/240, 73.75% |
 | Mean classifier latency | 138.38 ms | 720.71 ms |
 | p50 classifier latency | 126.81 ms | 688.40 ms |
 | p95 classifier latency | 231.16 ms | 896.94 ms |
@@ -57,15 +59,17 @@ This is a ratio of aggregate statistics, not an average of per-request ratios. T
 | p50 speed ratio | 5.43x | 5.20x to 5.71x |
 | p95 speed ratio | 3.88x | 2.94x to 4.78x |
 | Registry-priced classifier cost savings | 96.118% | 95.973% to 96.266% |
-| Paired authored-label accuracy difference | 21.25 percentage points | 12.92 to 30.42 points |
+| Paired difference in expected-tier match rate | 21.25 percentage points | 12.92 to 30.42 points |
 
-### Accuracy and agreement answer different questions
+### What matching the expected tiers tells us
 
-Accuracy here means exact match with a frozen, authored label. JEV's 95% interval was **90.00% to 98.75%**, and Haiku's was **64.16% to 82.92%**. Labels and prompts came from the same author, without independent annotation or blind adjudication
+The match rate counts exact matches with a frozen, authored tier label. JEV's 95% interval was **90.00% to 98.75%**, and Haiku's was **64.16% to 82.92%**. Labels and prompts came from the same author, without independent annotation or blind adjudication
+
+Tier selection depends on both the user's request and the classifier's instructions. A different request mix, rubric, tier boundary or conversation history can change the result for either classifier. We tested one fixed configuration, without independently tuning either prompt or measuring sensitivity to alternate instructions. Matching these labels also does not prove that the selected completion model can answer a request well
 
 The classifiers agreed with each other on **189/240 calls, or 78.75%**, with an interval of **69.58% to 87.08%**. Agreement ignores whether either classifier matched the authored label
 
-| Authored tier, 20 cases and 60 calls each | JEV accuracy [95% interval] | Haiku accuracy [95% interval] | Agreement |
+| Authored tier, 20 cases and 60 calls each | JEV match rate [95% interval] | Haiku match rate [95% interval] | Agreement between classifiers |
 | --- | --- | --- | ---: |
 | SIMPLE | 60/60, 100% [100%, 100%] | 60/60, 100% [100%, 100%] | 100% |
 | MEDIUM | 51/60, 85% [70%, 100%] | 23/60, 38.33% [18.33%, 60%] | 53.33% |
@@ -74,9 +78,9 @@ The classifiers agreed with each other on **189/240 calls, or 78.75%**, with an 
 
 An empirical interval of 100% to 100% means every case in that sampled subset matched. It does not establish perfect accuracy on unseen prompts. There are **80 independent case clusters**, with correlated repeats
 
-JEV consistently assigned four cases to a lower tier than the authored label: M07, M13 and M15 went from MEDIUM to SIMPLE, and C10 went from COMPLEX to MEDIUM. Haiku's errors also assigned lower tiers: 37 MEDIUM observations became SIMPLE, 12 COMPLEX became MEDIUM, and 14 REASONING became COMPLEX. The largest difference is on the subjective MEDIUM boundary
+JEV consistently assigned four cases to a lower tier than the authored label: M07, M13 and M15 went from MEDIUM to SIMPLE, and C10 went from COMPLEX to MEDIUM. Haiku's mismatches also assigned lower tiers: 37 MEDIUM observations became SIMPLE, 12 COMPLEX became MEDIUM, and 14 REASONING became COMPLEX. The largest difference is on the subjective MEDIUM boundary
 
-| Subset | Cases / calls per classifier | JEV accuracy | Haiku accuracy | Agreement |
+| Subset | Cases / calls per classifier | JEV match rate | Haiku match rate | Agreement between classifiers |
 | --- | --- | ---: | ---: | ---: |
 | Short | 40 / 120 | 97.50% | 73.33% | 75.83% |
 | Long | 16 / 48 | 87.50% | 62.50% | 75.00% |
@@ -84,7 +88,7 @@ JEV consistently assigned four cases to a lower tier than the authored label: M0
 | Tool context | 8 / 24 | 100% | 83.33% | 83.33% |
 | Ambiguous boundary | 8 / 24 | 87.50% | 75.00% | 87.50% |
 
-The boundary subset's accuracy difference was 12.50 points with a **0 to 37.50 point interval**, which includes zero. JEV's long-case accuracy was lower than its short-case accuracy. Both findings matter when choosing prompts for your own evaluation
+The boundary subset's match-rate difference was 12.50 points with a **0 to 37.50 point interval**, which includes zero. JEV matched fewer expected tiers on long cases than on short cases. Both findings matter when choosing prompts for your own evaluation
 
 ### Per-tier latency
 
@@ -147,6 +151,8 @@ This deployment example uses built-in tier criteria, a three-second deadline and
 In the dashboard, create or edit an Auto Router under **Models + Endpoints**, then select **JEV Classifier** under **Classification Method**. The form exposes model, timeout, circuit breaker, context and fallback settings. Custom **JEV Instructions** replace the built-in instructions and follow the Enterprise custom-classifier policy. [The setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai) covers the full create, test and edit flow
 
 JEV receives the current ask and classifier context in a System One `state`, with one `questions.tier` Choice question. Built-in tiers use shipped criteria. With `tier_definitions`, the custom descriptions become the Choice criteria. The classifier context budget bounds prior-turn text, while the current ask and extracted system text sit outside it
+
+Like the LLM classifier, JEV sends up to three prior user turns by default, within an 8,000-character budget. That history goes to the configured TypeSafe endpoint. Set `classifier_context_window_size: 0` to omit it, including when upgrading an existing JEV router
 
 ## Failure handling in a production-grade AI Gateway
 
@@ -220,7 +226,7 @@ The first harness configuration combined incompatible custom-prompt fields and s
 ## Key Takeaways
 
 - JEV classified requests 5.43x as fast as Haiku by median latency, and 3.88x as fast at p95, on these 80 authored cases
-- Authored-label accuracy was 95.00% versus 73.75%, with 78.75% agreement between classifiers. Downstream answer quality was not measured
+- Expected-tier match rates were 95.00% versus 73.75% for this prompt set and configuration, with 78.75% agreement between classifiers. Downstream answer quality was not measured
 - Registry-priced classifier cost was 96.118% lower. Total application cost and provider invoices need separate measurement
 - JEV uses the existing Auto Router's context, tier pools and fallback, with a process-local timeout breaker and separate classifier spend logging
 - Evaluate your own prompts and completion quality before changing a production routing policy
@@ -229,7 +235,7 @@ The first harness configuration combined incompatible custom-prompt fields and s
 
 ### Does this establish LLM-quality classification?
 
-It establishes higher agreement with our authored labels than this Haiku configuration on this corpus. The labels were not independently reviewed, and repeated calls do not create new independent cases. Use [shadow evaluation](/docs/auto_router/evaluate) to measure downstream answers on your traffic
+It establishes higher agreement with our authored labels than this Haiku configuration on this corpus. Both classifiers depend on the requests, rubric and context they receive. The labels were not independently reviewed, and repeated calls do not create new independent cases. For a broader quality claim, evaluate representative held-out traffic with independently reviewed labels, compare instruction variants, and use [shadow evaluation](/docs/auto_router/evaluate) to score the final answers
 
 ### What does 5.43x as fast mean?
 
@@ -245,7 +251,7 @@ Built-in JEV classification is available without an Enterprise license under the
 
 ## Conclusion
 
-JEV classified requests 5.43x as fast as Haiku by median latency in this comparison, with lower registry-priced cost and higher accuracy against the authored labels. For Enterprise AI Gateway deployments and OSS deployments alike, the next step is to test real prompts, score the resulting answers and include fallback traffic in spend accounting. Start with the [JEV setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai) and [evaluate on your traffic](/docs/auto_router/evaluate)
+JEV classified requests 5.43x as fast as Haiku by median latency in this comparison, with lower registry-priced cost and more matches with the authored expected tiers. For Enterprise AI Gateway deployments and OSS deployments alike, the next step is to test real prompts, score the resulting answers and include fallback traffic in spend accounting. Start with the [JEV setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai) and [evaluate on your traffic](/docs/auto_router/evaluate)
 
 ## Recommended Reading
 

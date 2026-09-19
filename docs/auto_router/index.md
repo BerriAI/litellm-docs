@@ -32,7 +32,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 | Result | Measured on | Read more |
 | --- | --- | --- |
-| JEV: 5.43x as fast as Haiku by median classification latency and 96.12% lower registry-priced classifier cost | 80 authored synthetic cases, three paired repeats, 95.00% vs 73.75% authored-label accuracy | [JEV comparison](/blog/jev-auto-router-benchmark) |
+| JEV: 5.43x as fast as Haiku by median classification latency and 96.12% lower registry-priced classifier cost | 80 authored synthetic cases, three paired repeats, 95.00% vs 73.75% match with authored expected tiers under one fixed rubric | [JEV comparison](/blog/jev-auto-router-benchmark) |
 | Claude Opus-5 solve rate at 27% lower cost | 21-task subset of Terminal-Bench 2.0, 16/21 solved by both | [Terminal-Bench](/blog/auto-router-terminal-bench-benchmark) |
 | Heuristic v2: 27% more tasks solved at 45% lower cost per task than v1 | Same 21-task subset, no LLM classifier call | [Heuristic v2](/blog/heuristic-v2) |
 | 74.5% cheaper at 87.3% of frontier quality | RouterArena, 8,399 graded queries | [Cost and quality](/blog/auto-router-cost-quality-benchmark) |

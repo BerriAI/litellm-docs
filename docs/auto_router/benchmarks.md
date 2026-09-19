@@ -14,15 +14,15 @@ On 2026-09-18, TypeSafe `jev-1.13.0` and `anthropic/claude-haiku-4-5-20251001` c
 
 | Metric | JEV | Haiku |
 | --- | ---: | ---: |
-| Authored-label accuracy | 95.00% (228/240) | 73.75% (177/240) |
+| Match with authored expected tiers | 95.00% (228/240) | 73.75% (177/240) |
 | p50 classifier latency | 126.81 ms | 688.40 ms |
 | p95 classifier latency | 231.16 ms | 896.94 ms |
 | Registry-priced classifier cost, 240 calls | $0.007706664 | $0.198534 |
 | Provider errors / timeouts / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
 
-JEV classified requests 5.43x as fast as Haiku by median latency and 3.88x as fast at p95, with 96.12% lower registry-priced classifier cost. Tier agreement between classifiers was 78.75%, a separate measure from matching the authored labels. The eight boundary cases had an accuracy-difference interval that included zero
+JEV classified requests 5.43x as fast as Haiku by median latency and 3.88x as fast at p95, with 96.12% lower registry-priced classifier cost. Tier agreement between classifiers was 78.75%, a separate measure from matching the authored labels. The eight boundary cases had a match-rate difference interval that included zero
 
-These results measure the classifier on this corpus, with a shared custom rubric and explicit context settings. They do not establish downstream answer quality, invoice savings, or performance under concurrent load. The separate gateway check used the same downstream model for every tier, so it cannot establish savings from switching completion models
+These results measure the classifier on this corpus, with a shared custom rubric and explicit context settings. Requests, tier definitions, instructions and context can change either classifier's match rate. The expected labels were not independently reviewed, and alternative classifier prompts were not evaluated. These results do not establish general classification accuracy, downstream answer quality, invoice savings, or performance under concurrent load. The separate gateway check used the same downstream model for every tier, so it cannot establish savings from switching completion models
 
 [Read the methodology, per-tier results, uncertainty and limitations](/blog/jev-auto-router-benchmark), or [download the frozen evidence and reproduction scripts](/benchmarks/jev-live-evidence-20260918.tar.gz)
 

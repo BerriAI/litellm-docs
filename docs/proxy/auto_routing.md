@@ -232,6 +232,8 @@ classifier_context_include_assistant_turns: false
 
 JEV shares the classifier context builder with the LLM classifier. `classifier_context_window_size` defaults to three prior user turns. `classifier_context_budget_chars` defaults to 8,000 characters of prior-turn text, taking the newest turns first. `classifier_context_per_turn_chars` is an optional positive cap with no default cap. `classifier_context_include_assistant_turns: true` includes assistant text and makes the window count both roles
 
+Prior turns are sent to the configured TypeSafe endpoint by default, even if another provider serves the completion. Assistant turns are excluded unless enabled. Existing JEV routers gain this history behavior when upgrading to the [context integration](https://github.com/BerriAI/litellm/pull/41886). Set `classifier_context_window_size: 0` before upgrading to keep prior conversation out of JEV requests
+
 These bounds cover prior-turn text. The current ask and extracted system text are outside that budget, as is the numbering around quoted turns. Recognized Claude Code requests omit their harness system text. A window size of `0` disables prior-turn context, and a character budget below `120` suppresses that block. Increasing context changes what is sent to TypeSafe and can change classification cost and tier choices
 
 #### Fallback and recovery
