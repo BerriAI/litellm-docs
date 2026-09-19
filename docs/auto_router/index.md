@@ -1,5 +1,5 @@
 ---
-title: Auto Router
+title: Auto Router [Add-on]
 sidebar_label: Overview
 description: Route every request to the cheapest model that can answer it well. Benchmarks, setup, recommended configurations, prompt caching, and how to evaluate the router on your own traffic.
 ---

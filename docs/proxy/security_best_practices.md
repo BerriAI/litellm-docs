@@ -33,6 +33,22 @@ general_settings:
 
 `UI_USERNAME`, `UI_PASSWORD`, and the master key are then rejected on the login page and the banner disappears. Database users and SSO are unaffected. If you enable it before an admin account exists, remove the setting and restart to bring the environment login back; the API keeps working with the master key throughout. See the [Admin UI quick start](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login) for the step-by-step flow.
 
+### Limit failed Admin UI sign-in attempts
+
+Failed password sign-ins to the Admin UI are rate limited out of the box: more than 10 wrong passwords from one source address within 60 seconds blocks that address for 5 minutes, and more than 5 for a single username from that address blocks just that pair. Blocks are keyed on the address, never on the account, so nobody can lock an administrator out by guessing at their username from elsewhere, and the per-username limit keeps one misconfigured script behind an office NAT from blocking every colleague on the same address. The block is absolute: the correct password, `UI_USERNAME`/`UI_PASSWORD`, and the master key are all refused with `429` until it expires, because any exception for the right credentials would let an attacker keep guessing through it. A blocked administrator can still use the master key as an API bearer token, which the limit does not cover.
+
+The per-address limit only runs when LiteLLM knows which address is the client, so a production deployment must set `general_settings.trusted_proxy_ranges`: to the CIDR ranges of your reverse proxy or ingress, so the client is read from `X-Forwarded-For` and forged headers from outside cannot pick another address, or to `[]` when clients connect directly. Left unset, the proxy warns at startup and enforces only the per-username limit, which leaves username spraying from one address unlimited. For a known shared egress address, use `max_failed_login_attempts_per_source_overrides` rather than raising the global limit.
+
+```yaml
+general_settings:
+  trusted_proxy_ranges: ["10.0.0.0/8"]  # your ingress; [] when clients connect directly
+  max_failed_login_attempts_per_source_overrides:
+    "203.0.113.7": 50                   # shared office egress
+    "198.51.100.4": 0                   # a scanner you run yourself, exempt
+```
+
+Blocks are shared across workers and pods through Redis; without Redis each worker counts separately and the proxy warns at startup. Usernames are stored hashed. Settings and defaults are in the [Admin UI guide](./ui#limit-failed-sign-in-attempts).
+
 ## 4. Connect your enterprise identity provider
 
 ### SSO
