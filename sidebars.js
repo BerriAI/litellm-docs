@@ -77,6 +77,7 @@ const sidebars = {
             "observability/datadog",
             "observability/gcs_bucket_integration",
             "observability/newrelic",
+            "observability/parseable",
             "observability/posthog_integration",
             "observability/sentry",
             "observability/signoz",
