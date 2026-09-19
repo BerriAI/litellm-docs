@@ -1,17 +1,17 @@
 ---
 slug: jev-auto-router-benchmark
-title: "JEV Classifier: 81.58% lower p50 latency than Haiku on 80 authored cases"
+title: "JEV Classifier: 5.43x as Fast as Haiku, 96% Lower Cost"
 date: 2026-09-18T22:30:00
 authors:
   - moe
-description: "JEV cut p50 classifier latency by 81.58% versus Haiku on 80 authored cases. Review the AI Gateway setup, cost scope and reproducible results."
+description: "JEV classified requests 5.43x as fast as Haiku by median latency in our AI Gateway benchmark. Explore the setup, cost savings and methodology."
 tags: [routing, complexity-router, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
 
 *Last Updated: September 18, 2026*
 
-An Auto Router pays for classification before the selected model can answer. In our frozen 80-case synthetic comparison, TypeSafe JEV had **126.81 ms p50 classifier latency versus Haiku's 688.40 ms**, an **81.58% reduction**. JEV matched 95.00% of the authored tier labels versus 73.75% for Haiku, with **96.12% lower registry-priced classifier cost**. These measurements cover classification on this corpus, so answer quality and total application savings still need a separate evaluation
+An Auto Router pays for classification before the selected model can answer. In our benchmark, TypeSafe JEV classified requests **5.43x as fast as Haiku**, comparing median classifier latency: **126.81 ms versus 688.40 ms**. Registry-priced classifier cost was **96.12% lower**, rounded to 96% in the title. Across 80 frozen, authored synthetic cases, JEV matched 95.00% of the tier labels versus 73.75% for Haiku. These measurements cover classification on this corpus, so answer quality and total application savings still need a separate evaluation
 
 {/* truncate */}
 
@@ -40,23 +40,22 @@ The benchmark ran on **September 18, 2026 UTC**, with `jev-latest` first resolve
 
 All measured attempts succeeded, so all-attempt and successful-call latency statistics are identical. Calls with an incorrect tier remain in both latency and cost totals
 
-### p50 latency reduction and speedup use different denominators
+### How we calculate 5.43x as fast
 
 The title compares the **median of all 240 JEV calls with the median of all 240 Haiku calls**. Using unrounded measurements:
 
 ```text
-p50 latency reduction = 100 * (1 - JEV_p50 / Haiku_p50) = 81.58%
-p50 speedup          = 100 * (Haiku_p50 / JEV_p50 - 1) = 442.84%
-p50 latency ratio    = Haiku_p50 / JEV_p50             = 5.43x
+p50 speed ratio = Haiku_p50 / JEV_p50
+                = 688.395634 ms / 126.814470 ms
+                = 5.43x
 ```
 
-These are ratios of aggregate statistics, not averages of per-request ratios. The p95 comparison is 231.16 ms versus 896.94 ms: **74.23% lower latency**, or **288.01% speedup** under the same ratio definition. Mean latency was 80.80% lower
+This is a ratio of aggregate statistics, not an average of per-request ratios. The same calculation gives **3.88x as fast at p95** (231.16 ms versus 896.94 ms) and **5.21x as fast by mean latency** (138.38 ms versus 720.71 ms). These ratios measure classification time, not end-to-end completion speed or throughput under load
 
 | Comparison | Estimate | 95% clustered-bootstrap interval |
 | --- | ---: | --- |
-| p50 latency reduction | 81.58% | 80.77% to 82.47% |
-| p50 speedup | 442.84% | 419.98% to 470.51% |
-| p95 latency reduction | 74.23% | 66.04% to 79.09% |
+| p50 speed ratio | 5.43x | 5.20x to 5.71x |
+| p95 speed ratio | 3.88x | 2.94x to 4.78x |
 | Registry-priced classifier cost savings | 96.118% | 95.973% to 96.266% |
 | Paired authored-label accuracy difference | 21.25 percentage points | 12.92 to 30.42 points |
 
@@ -220,7 +219,7 @@ The first harness configuration combined incompatible custom-prompt fields and s
 
 ## Key Takeaways
 
-- JEV had 81.58% lower p50 and 74.23% lower p95 classifier latency than Haiku on these 80 authored cases
+- JEV classified requests 5.43x as fast as Haiku by median latency, and 3.88x as fast at p95, on these 80 authored cases
 - Authored-label accuracy was 95.00% versus 73.75%, with 78.75% agreement between classifiers. Downstream answer quality was not measured
 - Registry-priced classifier cost was 96.118% lower. Total application cost and provider invoices need separate measurement
 - JEV uses the existing Auto Router's context, tier pools and fallback, with a process-local timeout breaker and separate classifier spend logging
@@ -232,9 +231,9 @@ The first harness configuration combined incompatible custom-prompt fields and s
 
 It establishes higher agreement with our authored labels than this Haiku configuration on this corpus. The labels were not independently reviewed, and repeated calls do not create new independent cases. Use [shadow evaluation](/docs/auto_router/evaluate) to measure downstream answers on your traffic
 
-### Is JEV 442.84% faster or 81.58% lower latency?
+### What does 5.43x as fast mean?
 
-Both describe the ratio of the measured p50 latencies, using different denominators. We use 81.58% lower latency in the title to make the reduction clear. Neither number measures end-to-end completion speed or throughput under load
+Haiku's median classification time divided by JEV's was 5.43: 688.40 ms versus 126.81 ms. The title describes that measured classification speed ratio. It does not measure end-to-end completion speed or throughput under load
 
 ### What happens if TypeSafe is unavailable?
 
@@ -246,7 +245,7 @@ Built-in JEV classification is available without an Enterprise license under the
 
 ## Conclusion
 
-JEV reduced classification latency and registry-priced cost in this measured comparison, with higher accuracy against the authored labels. For Enterprise AI Gateway deployments and OSS deployments alike, the next step is to test real prompts, score the resulting answers and include fallback traffic in spend accounting. Start with the [JEV setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai) and [evaluate on your traffic](/docs/auto_router/evaluate)
+JEV classified requests 5.43x as fast as Haiku by median latency in this comparison, with lower registry-priced cost and higher accuracy against the authored labels. For Enterprise AI Gateway deployments and OSS deployments alike, the next step is to test real prompts, score the resulting answers and include fallback traffic in spend accounting. Start with the [JEV setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai) and [evaluate on your traffic](/docs/auto_router/evaluate)
 
 ## Recommended Reading
 
