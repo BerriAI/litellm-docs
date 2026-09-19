@@ -42,6 +42,7 @@ guardrails:
       api_base: https://your-headroom-service
 #     api_key: os.environ/HEADROOM_API_KEY  [OPTIONAL]
 #     default_on: true [OPTIONAL]
+#     min_tokens: 1000 [OPTIONAL, skip compression below this many tokens; 0 always compresses]
 ```
 
 Only `pre_call` is meaningful; the guardrail is a no-op on responses.
@@ -241,6 +242,7 @@ Headroom protects two message types by default, set on the Headroom container it
 | `api_key`    | str    | Bearer token for the headroom service. Falls back to `HEADROOM_API_KEY`. Optional.                    |
 | `model`      | str    | Model name forwarded to `/v1/compress`. Defaults to the request's `model` field.                      |
 | `default_on` | bool   | Run the guardrail on every request without needing to opt in per call. Defaults to `false`.           |
+| `min_tokens` | int    | Skip the `/v1/compress` round trip when the compressible messages total fewer than this many tokens. Defaults to `1000`. Set `0` to always call the compression service. |
 
 ## Environment variables
 
