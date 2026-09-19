@@ -8,7 +8,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 These posts publish measurements with real provider APIs and their configurations. The JEV classifier comparison times the classifier directly and includes a separate live proxy check. Numbers below are quoted from the posts
 
-## JEV: 81.58% lower p50 classifier latency than Haiku
+## JEV Classifier: 5.43x as Fast as Haiku, 96% Lower Cost
 
 On 2026-09-18, TypeSafe `jev-1.13.0` and `anthropic/claude-haiku-4-5-20251001` classified the same 80 authored synthetic cases, with three paired repeats and concurrency one
 
@@ -20,7 +20,7 @@ On 2026-09-18, TypeSafe `jev-1.13.0` and `anthropic/claude-haiku-4-5-20251001` c
 | Registry-priced classifier cost, 240 calls | $0.007706664 | $0.198534 |
 | Provider errors / timeouts / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
 
-Classifier cost was 96.12% lower, and p95 latency was 74.23% lower. Tier agreement between classifiers was 78.75%, a separate measure from matching the authored labels. The eight boundary cases had an accuracy-difference interval that included zero
+JEV classified requests 5.43x as fast as Haiku by median latency and 3.88x as fast at p95, with 96.12% lower registry-priced classifier cost. Tier agreement between classifiers was 78.75%, a separate measure from matching the authored labels. The eight boundary cases had an accuracy-difference interval that included zero
 
 These results measure the classifier on this corpus, with a shared custom rubric and explicit context settings. They do not establish downstream answer quality, invoice savings, or performance under concurrent load. The separate gateway check used the same downstream model for every tier, so it cannot establish savings from switching completion models
 
