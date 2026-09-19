@@ -81,7 +81,8 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `pre_call` Run **before** LLM call, on **input**
 - `post_call` Run **after** LLM call, on **input & output**
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
-- A list of the above values to run multiple modes, e.g. `mode: [pre_call, post_call]`
+- `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
+- A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
 ### Skip system messages in guardrail evaluation
 
