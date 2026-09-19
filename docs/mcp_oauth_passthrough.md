@@ -2,11 +2,19 @@
 
 Some MCP servers run their own OAuth issuer and expect the client (Claude Code, Cursor, ChatGPT, etc.) to authenticate directly against it. For those servers LiteLLM can let the client's own upstream token flow through instead of minting, storing, or refreshing anything itself.
 
+:::danger Breaking Changes
+
+**Legacy delegated OAuth MCP routes require LiteLLM authentication in builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923).** This is an upcoming release change: `auth_type: oauth2` with `delegate_auth_to_upstream: true` no longer admits callers based only on an upstream OAuth token. Such requests now return `401`. Authenticate to LiteLLM separately and migrate to `auth_type: oauth_delegate`; the upstream token still uses `Authorization: Bearer <upstream-token>` unchanged. Existing requests with distinct LiteLLM and upstream credentials remain supported. See the [migration steps](#delegate-auth-to-upstream-pkce-passthrough).
+
+The passthrough spend behavior below also applies to builds containing this PR. Older builds may omit successful anonymous tool calls from spend logs. No released version is assigned to this notice yet.
+
+:::
+
 Two `auth_type` values cover this. They differ in one thing: whether LiteLLM still authenticates the caller at its own edge.
 
 | Mode | LiteLLM admission | Credential forwarded upstream | Spend / rate limits / audit | Use when |
 |------|-------------------|-------------------------------|-----------------------------|----------|
-| `true_passthrough` | None; anonymous at the LiteLLM layer | The client's `Authorization`, verbatim | Not recorded | LiteLLM should add zero auth and the upstream is the sole gate |
+| `true_passthrough` | None; anonymous at the LiteLLM layer | The client's `Authorization`, verbatim | Successful tool spend is recorded without identity attribution; no identity-based budget debits or rate limits | LiteLLM should add zero auth and the upstream is the sole gate |
 | `oauth_delegate` | Required (LiteLLM key / SSO / JWT) | A distinct upstream bearer the caller sends alongside admission | Recorded, keyed on the admission identity | You want LiteLLM to keep gating and observing the route while the upstream owns tool authorization |
 
 Both modes return the upstream's protected-resource metadata verbatim during discovery, so the client always authorizes against the real upstream issuer.
@@ -82,7 +90,8 @@ The transparent path fires only when every target resolves to `true_passthrough`
 ### Security Trade-offs
 
 - The MCP route becomes an unauthenticated ingress at the LiteLLM layer.
-- Spend tracking, per-key rate limits, and any guardrail depending on `user_api_key_auth.user_id` do not run.
+- Successful tool calls are recorded in spend logs, but without key, user, or team attribution. See [MCP Cost Tracking](./mcp_cost.md#identity-and-budget-attribution).
+- These unattributed records do not debit key, user, or team budgets. Per-key rate limits and guardrails requiring a user identity cannot enforce caller-specific policy.
 - LiteLLM cannot tell who the caller is, so per-user auditing must come from the upstream server's logs.
 - `available_on_public_internet: false` adds no authentication here; it mainly controls IP-based discovery ([see guide](./mcp_public_internet.md)).
 - Only enable it on servers whose upstream OAuth issuer you trust to enforce access control.
@@ -152,6 +161,8 @@ sequenceDiagram
 :::warning Keep the two credentials in separate headers
 
 If a caller sends a single credential in `Authorization` with no `x-litellm-api-key`, LiteLLM treats it as the admission credential (virtual key, IdP JWT, or SSO session token) and never forwards it upstream. That is the leak defense keeping a LiteLLM or IdP token from reaching a third-party MCP server.
+
+In builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923), repeating the LiteLLM admission credential in both headers also strips it from upstream requests. Use a distinct upstream token.
 
 :::
 
@@ -247,7 +258,7 @@ The transparent option for OAuth-only clients:
 - It runs PKCE against `GET /{server_name}/authorize` and `POST /{server_name}/token`.
 - Where the upstream supports DCR, LiteLLM relays the client's registration to it.
 - Where the server has no stored `client_id`, LiteLLM mints an ephemeral client for the flow and persists nothing.
-- No LiteLLM sign-in is involved, and no caller identity or spend is recorded.
+- No LiteLLM sign-in or caller identity is involved. In builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923), successful tool spend is recorded without identity attribution, as for other `true_passthrough` requests.
 
 ### oauth_delegate with the bridge
 
@@ -366,19 +377,21 @@ OpenCode reads them from `opencode.json`:
 | `url` | Yes | The upstream MCP server URL. |
 | `dcr_bridge` | Yes | `true` so the gateway hosts sign-in for OAuth-only clients. Off relays the upstream's own OAuth metadata instead. |
 
-## Delegate Auth to Upstream (PKCE Passthrough) {#delegate-auth-to-upstream-pkce-passthrough}
+## Migrate legacy delegated OAuth {#delegate-auth-to-upstream-pkce-passthrough}
 
 :::warning Deprecated
 
-`delegate_auth_to_upstream` is the original flag-based form of transparent passthrough and is planned for deprecation. It is the direct predecessor of `auth_type: true_passthrough` and behaves the same way (same how-it-works, same fail-closed behavior, same security trade-offs), so new servers should use `true_passthrough`. The section below is kept for existing configs.
+In builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923), `auth_type: oauth2` with `delegate_auth_to_upstream: true` is deprecated and requires LiteLLM admission. Loading a legacy interactive configuration from YAML or the database logs a migration warning. Use `auth_type: oauth_delegate` for authenticated delegation.
 
 :::
 
-For OAuth2 MCP servers where the client already authenticates directly against the upstream server's own OAuth issuer, you can opt the route into **upstream-delegated auth**: LiteLLM stops checking its own API key / SSO and lets the client's PKCE flow run end-to-end with the upstream MCP server.
+Previously, a request targeting only legacy delegated servers could skip LiteLLM authentication. Upstream OAuth protected the upstream server, but did not establish a LiteLLM identity or protect the gateway's session and request-processing capacity. The anonymous admission path has been removed; the upstream OAuth protocol has not changed.
 
-### Setup
+### Update the server configuration
 
-```yaml title="config.yaml" showLineNumbers
+Replace the legacy configuration:
+
+```yaml title="Before" showLineNumbers
 mcp_servers:
   notion_mcp:
     url: "https://mcp.notion.com/mcp"
@@ -387,65 +400,38 @@ mcp_servers:
     delegate_auth_to_upstream: true
 ```
 
-Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
+with:
 
-:::warning Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation
-
-Using **`available_on_public_internet: false`** together with **`delegate_auth_to_upstream: true`** on an **`auth_type: oauth2`** interactive server (not `oauth2_flow: client_credentials`) still allows **anonymous** callers to reach the upstream OAuth2 **`/authorize`** flow and complete PKCE for matching MCP routes **without a LiteLLM API key session**. The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)); it does **not** disable this delegate bypass.
-
-**What to do:** Enforce access at the upstream IdP and network edge. The LiteLLM UI surfaces a warning when both settings are enabled; the proxy logs a warning when the server is loaded from config or the database.
-
-:::
-
-### How It Works
-
-1. Client sends an MCP request to LiteLLM with no `x-litellm-api-key` (and optionally no `Authorization` header).
-2. LiteLLM detects that every target server in the request is `auth_type: oauth2` AND has `delegate_auth_to_upstream: true`, and skips its own API-key/SSO check.
-3. LiteLLM also skips its pre-emptive 401, so the upstream MCP server's own `401` + `WWW-Authenticate` flows back to the client.
-4. The client completes PKCE directly with the upstream OAuth issuer.
-5. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM forwards it untouched.
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant LiteLLM as LiteLLM Proxy
-    participant MCP as Upstream MCP Server
-    participant Auth as Upstream OAuth Server
-
-    Client->>LiteLLM: MCP request (no LiteLLM key)
-    LiteLLM->>MCP: Forward request (no Authorization)
-    MCP-->>LiteLLM: 401 + WWW-Authenticate
-    LiteLLM-->>Client: 401 + WWW-Authenticate (passthrough)
-
-    Note over Client,Auth: Client runs PKCE directly with upstream
-    Client->>Auth: Authorize + token exchange (PKCE)
-    Auth-->>Client: access_token
-
-    Client->>LiteLLM: MCP request + Bearer access_token
-    LiteLLM->>MCP: Forward request + Bearer access_token
-    MCP-->>LiteLLM: MCP response
-    LiteLLM-->>Client: MCP response
+```yaml title="After" showLineNumbers
+mcp_servers:
+  notion_mcp:
+    url: "https://mcp.notion.com/mcp"
+    auth_type: oauth_delegate
 ```
 
-### Fail-Closed Behavior
+Keep the server alias, URL, tool permissions, and cost configuration. The delegated mode does not require `oauth2_flow`, `delegate_auth_to_upstream`, or gateway-managed OAuth client credentials. This migration is for interactive delegation, not `oauth2_flow: client_credentials` servers.
 
-The bypass fires only when **every** target opts in. It fails closed and runs normal LiteLLM auth when:
+### Keep the upstream token and add LiteLLM admission
 
-- The server's `auth_type` is anything other than `oauth2`.
-- `delegate_auth_to_upstream` is not explicitly `true`.
-- The request targets multiple servers (`x-mcp-servers: a,b`) and any one is not delegated.
-- The target server cannot be resolved from the URL path or `x-mcp-servers` header.
+For a client using a LiteLLM key, send the key separately from the upstream bearer:
 
-### Security Trade-offs
+```bash
+curl -i http://localhost:4000/notion_mcp/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
+  -H "Authorization: Bearer $UPSTREAM_OAUTH_TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"mcp-client","version":"1.0"}}}'
+```
 
-- The MCP route becomes an **unauthenticated** ingress at the LiteLLM layer. Spend tracking, per-key rate limits, and guardrails depending on `user_api_key_auth.user_id` do not run.
-- LiteLLM cannot tell who the caller is by design, so per-user auditing must come from the upstream MCP server's own logs.
-- Only enable this on servers whose upstream OAuth issuer you trust to enforce access control.
+The upstream still validates its own token. LiteLLM validates admission separately and does not forward that admission credential upstream, even if the same value was repeated in both headers. Existing clients already sending distinct credentials do not need to change the upstream token or its header.
 
-### Config Reference
+LiteLLM admission is not limited to virtual keys: existing JWT, SSO, custom-auth, and gateway-session paths still apply when configured. The command above shows the two-header key flow; it does not require every authentication method to use that header. For OAuth-only clients that cannot send two headers, use the existing [`oauth_delegate` DCR bridge](#oauth_delegate-with-the-bridge), which signs the caller in to LiteLLM before upstream authorization.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `auth_type` | Yes | Must be `oauth2`. The flag is ignored otherwise. |
-| `oauth2_flow` | Yes | Set to `authorization_code`; delegation passes the client's interactive PKCE flow through to the upstream server. |
-| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into PKCE passthrough. |
+Keeping the legacy server configuration does not keep anonymous access: a request with only the upstream token now gets `401`, including when all its targets are legacy delegated servers. Valid dual-credential requests remain supported while you migrate.
+
+### Discovery and explicit anonymous access
+
+OAuth discovery and the upstream authorization flow remain available without a LiteLLM credential, subject to the existing server visibility rules. A credential-free discovery request to a matching legacy MCP route can return `401` with the RFC 9728 `WWW-Authenticate` resource-metadata challenge. That challenge is not admission to an MCP session or permission to list or call tools. Completing upstream OAuth alone does not authenticate the caller to LiteLLM.
+
+If anonymous gateway access is intentional, configure [`true_passthrough`](#true_passthrough) explicitly and account for its security trade-offs. It is not required to preserve the upstream OAuth header contract. Its successful tool calls are logged without identity attribution, which does not restore caller-specific budget or rate-limit enforcement. Setting `available_on_public_internet: false` remains a separate IP-based restriction, not an authentication method.

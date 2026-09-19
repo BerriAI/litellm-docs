@@ -16,7 +16,9 @@ Control which MCP servers are visible to external callers (e.g., ChatGPT, Claude
 
 :::warning Interaction with `delegate_auth_to_upstream`
 
-If an MCP server is **`available_on_public_internet: false`** (internal for IP-based discovery) **and** has **`delegate_auth_to_upstream: true`** with **`auth_type: oauth2`** (interactive PKCE, not M2M), anonymous callers can still use the upstream OAuth **`/authorize`** path without a LiteLLM session. See [MCP OAuth Passthrough: Delegate Auth to Upstream](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough) for details and mitigations.
+In builds containing [PR #40923](https://github.com/BerriAI/litellm/pull/40923), legacy `auth_type: oauth2` servers with `delegate_auth_to_upstream: true` require LiteLLM authentication for MCP access. OAuth discovery and the upstream `/authorize` flow remain available without a LiteLLM credential, subject to the existing visibility rules; completing upstream OAuth does not grant anonymous access to MCP sessions or tools. Older builds allowed the legacy admission bypass. See the [upcoming breaking-change notice and migration guide](./mcp_oauth_passthrough.md#delegate-auth-to-upstream-pkce-passthrough).
+
+`available_on_public_internet` controls IP-based access separately from authentication. It does not replace LiteLLM admission, and setting it to `false` does not turn explicit `true_passthrough` into an authenticated mode.
 
 :::
 
