@@ -149,7 +149,7 @@ Batch `endpoint` can be `/v1/chat/completions`, `/v1/completions`, `/v1/embeddin
 
 ## How a batch runs
 
-The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines the server rejects land in the error file with the server's status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the line in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished
+The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines the server rejects land in the error file with the server's status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the line in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished. The 24 hour `completion_window` is enforced the same way: a line still unfinished when it closes is cut off and lands in the error file as `batch_expired`, and the batch ends `expired`, keeping the output of the lines that finished in time
 
 Results come back in OpenAI's batch output shape: `output_file_id` holds one line per successful request and `error_file_id` one line per failed request. Both are served only to the key that created the batch
 
