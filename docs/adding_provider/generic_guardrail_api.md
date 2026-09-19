@@ -224,6 +224,10 @@ The `structured_messages` parameter provides the full input in OpenAI chat compl
 - **Supported endpoints:** `/v1/chat/completions`, `/v1/messages`, `/v1/responses`
 - **Both input and output:** On `input_type="request"`, the request messages. On `input_type="response"`, the same request messages followed by the model reply as a final `assistant` turn (its text as `content`, its tool calls as `tool_calls`), so a post-call guardrail sees the conversation that produced the response. `texts` and `tool_calls` still hold only the response, and returned `structured_messages` are only written back on request scans
 
+:::info Changed in v1.103.0
+Before v1.103.0, `input_type="response"` scans carried only `texts` and `tool_calls`; `structured_messages` and `tools` were `null`. They now hold the request conversation and tool definitions, scoped by the same flags as request scans (`skip_system_message_in_guardrail`, `skip_tool_message_in_guardrail`, `scan_only_tool_results`), so a guardrail endpoint attached to `post_call` receives the system prompt and user turns it previously only saw on `pre_call`. An endpoint that must judge only the reply should read `texts` and `tool_calls`
+:::
+
 **Use cases:**
 - Apply different policies for system vs user messages
 - Enforce role-based content restrictions
