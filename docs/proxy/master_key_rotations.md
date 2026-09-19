@@ -28,14 +28,14 @@ When no salt key is set, the master key doubles as the at-rest encryption key, s
 Before you rotate, consider setting a permanent `LITELLM_SALT_KEY` so future master-key rotations become the no-migration flow above. Set the salt key to your current master key value first (so existing data still decrypts), then rotate the master key freely afterwards.
 :::
 
-Call `POST /key/regenerate` with the current master key and the new one.
+Call `POST /key/regenerate` with the current master key as `key` and the new one as `new_master_key`. The proxy only rotates the master key when `key` is the current master key; with any other value it treats the call as a regular virtual key regeneration.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/regenerate' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
-  "key": "sk-<virtual-key>",
+  "key": "sk-<current-master-key>",
   "new_master_key": "sk-PIp1h0RekR"
 }'
 ```
@@ -75,3 +75,66 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ```
 
 If the UI loads and your stored models and credentials resolve, the rotation is complete.
+
+## Proxy refuses to start on sk-1234 {#proxy-refuses-to-start}
+
+The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or is the literal `sk-1234`. With no master key the proxy runs without authentication and accepts every request. `sk-1234` is the example key from LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
+
+What to do next depends on whether the old key encrypted anything in your database. It did only if the key was `sk-1234`, `LITELLM_SALT_KEY` is not set, and the proxy has a database. The startup error carries a rotation warning that links to this section in exactly that case. If your error has no such warning, follow the first case.
+
+### A salt key is set, or there is no database
+
+Nothing is encrypted with the master key, so there is nothing to rotate. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Generate a new key, [set it](#where-to-set-the-new-key), and restart.
+
+```bash
+echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)" | tee -a .env
+```
+
+### No salt key, and a database with stored credentials
+
+Your model API keys, credentials, MCP server credentials, and DB-stored environment variables are encrypted with `sk-1234` itself. If you swap the key and restart, the proxy can no longer decrypt them. They have to be re-encrypted under the new key first, and that needs a running proxy. Back up your database before you start, for the reasons given at the top of this page.
+
+1. Leave the old key where it is and start the proxy once with the local development override, so that it boots on `sk-1234`. With Docker or Kubernetes, add the variable to the container's environment instead.
+
+   ```bash
+   export LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY=true
+   litellm --config config.yaml
+   ```
+
+   While the override is on, the proxy still accepts `sk-1234`, so keep it off any network you do not trust and finish these steps in one sitting.
+
+2. In another shell, generate the new key and keep it in a variable.
+
+   ```bash
+   export NEW_MASTER_KEY="sk-$(openssl rand -hex 32)"
+   echo "$NEW_MASTER_KEY"
+   ```
+
+3. Call `POST /key/regenerate` with the old master key as both the bearer token and `key`, and the new key as `new_master_key`. This is the same request as in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key), and it re-encrypts the same stored values.
+
+   ```bash
+   curl -L -X POST 'http://localhost:4000/key/regenerate' \
+   -H 'Authorization: Bearer sk-1234' \
+   -H 'Content-Type: application/json' \
+   -d "{
+     \"key\": \"sk-1234\",
+     \"new_master_key\": \"$NEW_MASTER_KEY\"
+   }"
+   ```
+
+4. Stop the proxy, [set `LITELLM_MASTER_KEY` to the new key](#where-to-set-the-new-key), and remove the override (`LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY`, or `general_settings.dangerously_allow_unsafe_proxy` if you used the config setting). Restart every proxy instance, then verify as described in [After rotating](#after-rotating).
+
+Once you are on the new key, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart. Wait until this rotation is done before you do, because setting `LITELLM_SALT_KEY` to `sk-1234` would leave your stored credentials encrypted under a publicly known value.
+
+### Where to set the new key
+
+The new key has to reach the proxy as the `LITELLM_MASTER_KEY` environment variable. A `.env` file in the working directory is only read when you run the proxy from a checkout of the repo or load the file through Docker Compose `env_file`. With a pip install, plain `docker run`, or Kubernetes, pass the variable to the process or container directly. If the `.env` file already has a `LITELLM_MASTER_KEY` line, delete the old one so that only the new value remains.
+
+If the old key is written as a literal under `general_settings.master_key` in your `config.yaml`, change it to read from the environment, because a literal in the config takes precedence over the environment variable.
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+Changing the master key signs everyone out of the Admin UI, because UI session tokens are signed with it. Log in again with the new key.
