@@ -71,21 +71,28 @@ general_settings:
 
 ### Step 2: Add the allowlist in the Admin UI
 
-Open the MCP Servers page and switch to the **Network Settings** tab. The **Allowed Client Applications** section sits below the private IP ranges and starts out empty, which means every client is admitted.
+Open the MCP Servers page and switch to the **Network Settings** tab. The **Allowed Clients** section sits below the private IP ranges and starts out empty, which means every client is admitted.
 
 <Image
   img={require('../img/mcp_client_allowlist_ui_empty.png')}
   style={{width: '100%', display: 'block', margin: '0'}}
 />
 
-Click **Add client** under **Allowed Clients** and fill the row: **Alias** `Antigravity CLI`, **Value** `antigravity-cli`. Add one row per client application, for example a second row with **Alias** `Claude Code` and **Value** `claude-code`. If some of your callers use virtual keys instead of JWTs, also fill **Client Identity Header** with the header they will send, for example `x-mcp-client`. Click **Save**. The change is stored in the database and picked up by every proxy worker on its next settings poll, without a restart.
+Click **Add client**. A dialog opens with two fields: **Alias** `Antigravity CLI`, **Value** `antigravity-cli`. Click **Add** to close it; the client appears as a card with the alias in bold and the value in smaller gray text underneath. Add one card per client application, for example a second one with **Alias** `Claude Code` and **Value** `claude-code`. If some of your callers use virtual keys instead of JWTs, also fill **Client Identity Header** with the header they will send, for example `x-mcp-client`. Click **Save**. The change is stored in the database and picked up by every proxy worker on its next settings poll, without a restart.
 
 <Image
   img={require('../img/mcp_client_allowlist_ui_saved.png')}
   style={{width: '100%', display: 'block', margin: '0'}}
 />
 
-To go back to admitting every client, remove every row and click **Save** again; the setting is deleted rather than saved as an empty list. If an empty list is ever stored (for example through the API), or the stored value is not a list of alias and value pairs (for example a plain list of strings written by an older version), the page warns that every client is being denied. Add the rows you want and Save to replace it, or Save with the list empty to remove it.
+Click a card to change its alias or value, or to remove that client with **Remove client**. **Done** applies the edit to the card and **Cancel** leaves it as it was; nothing reaches the gateway until you click **Save** on the page.
+
+<Image
+  img={require('../img/mcp_client_allowlist_ui_edit_dialog.png')}
+  style={{width: '420px', display: 'block', margin: '0'}}
+/>
+
+To go back to admitting every client, remove every card and click **Save** again; the setting is deleted rather than saved as an empty list. If an empty list is ever stored (for example through the API), or the stored value is not a list of alias and value pairs (for example a plain list of strings written by an older version), the page warns that every client is being denied. Add the clients you want and Save to replace it, or Save with the list empty to remove it.
 
 <Image
   img={require('../img/mcp_client_allowlist_ui_deny_all.png')}
@@ -148,7 +155,7 @@ Rejected requests show up in the proxy log as `Rejected MCP request from a disal
 <Tabs>
 <TabItem value="ui" label="UI">
 
-MCP Servers page, **Network Settings** tab, **Allowed Client Applications** section. Each **Allowed Clients** row (alias and value) is one entry of `mcp_allowed_clients` and **Client Identity Header** maps to `mcp_client_id_header`. A row needs both fields; Save rejects a row with only one of them filled. A key that is set in config.yaml cannot be edited here; remove it from the file first.
+MCP Servers page, **Network Settings** tab, **Allowed Clients** section. Each card (alias and value) is one entry of `mcp_allowed_clients` and **Client Identity Header** maps to `mcp_client_id_header`. Cards are added and edited in a dialog that needs both fields before it lets you add or apply the client. A key that is set in config.yaml cannot be edited here; remove it from the file first.
 
 </TabItem>
 <TabItem value="config" label="config.yaml">
