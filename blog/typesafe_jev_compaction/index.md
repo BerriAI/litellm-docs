@@ -4,104 +4,65 @@ title: "Reduce agent context with TypeSafe Jev and LiteLLM"
 date: 2026-09-18T10:00:00
 authors:
   - yassin
-description: "Use TypeSafe Jev through LiteLLM for typed decisions and relevance-based compaction of tool results in long agent conversations."
+description: "Use TypeSafe Jev to remove old tool results from bot conversations and enable compaction for a team in LiteLLM."
 tags: [product, agents, guardrails]
 hide_table_of_contents: false
 ---
 
-Agent conversations accumulate tool results. An operations assistant may retrieve a weather report, inspect a service, and read a deployment runbook. When the user asks a follow-up about the runbook, earlier results still travel with the conversation and consume input tokens.
+A bot looks up the weather, then checks a shop's opening hours. The user asks, "What time does the shop close?" The bot still sends the old weather report to the model, even though it no longer helps answer the question.
 
-LiteLLM's TypeSafe integration uses Jev to decide which tool results the current task still needs. The compaction guardrail replaces results judged irrelevant with a short removal notice before the request reaches the LLM. Retained results stay intact, giving platform teams a way to reduce repeated context while keeping compaction centrally configured in the gateway.
+TypeSafe Jev helps LiteLLM spot tool results that are no longer needed. LiteLLM replaces those results with a short notice before calling the model. This is called compaction, and it can reduce the input tokens used by long conversations.
 
 {/* truncate */}
 
-## Typed decisions for agent workflows
+## What Jev does
 
-[TypeSafe's Jev](https://docs.typesafe.ai/api) answers typed questions: a choice between options, a score, or a yes/no probability. Applications can use these decisions to route a support request, evaluate a condition, or decide whether an earlier tool result remains useful.
+[TypeSafe's Jev](https://docs.typesafe.ai/api) answers questions with a choice, a score, or a yes/no probability. For example, it can choose whether a customer question belongs with billing or support.
 
-LiteLLM exposes Jev through two integrations:
+You can call Jev directly through LiteLLM's `/typesafe/v1/systemone` endpoint. The [TypeSafe pass-through guide](/docs/pass_through/typesafe) shows the request format, logging, and cost tracking.
 
-| Integration | What it does | Where to use it |
-| --- | --- | --- |
-| TypeSafe pass-through | Returns Jev's typed answers to your application. | Call `/typesafe/v1/systemone` with a LiteLLM key. |
-| TypeSafe compaction guardrail | Evaluates earlier tool exchanges and replaces results that fall below a relevance threshold. | Enable `guardrail: typesafe` on LLM requests. |
+For compaction, LiteLLM asks Jev a simple question about each older tool result: **does the bot still need this to answer the user's latest question?**
 
-For direct Jev calls, set `TYPESAFE_API_KEY` on the proxy and send a request using a LiteLLM virtual key:
-
-```bash
-curl "$LITELLM_PROXY_URL/typesafe/v1/systemone" \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "jev-latest",
-    "state": "The customer needs a copy of the invoice from last month.",
-    "questions": {
-      "department": {
-        "type": "choice",
-        "instructions": "Which team should handle this request?",
-        "criteria": {
-          "billing": "Invoices, payments, and refunds",
-          "technical": "Bugs, outages, and integrations",
-          "sales": "Pricing and new accounts"
-        }
-      }
-    }
-  }'
-```
-
-Set `LITELLM_PROXY_URL` to your gateway URL and `LITELLM_API_KEY` to a valid LiteLLM key. The proxy supplies the upstream TypeSafe credential and returns TypeSafe's response format, including `answers.department`. These pass-through calls support logging and cost tracking from TypeSafe's reported token usage. See the [TypeSafe pass-through guide](/docs/pass_through/typesafe) for the response format and configuration.
-
-## Compact tool results before the next model call
-
-The compaction guardrail applies Jev's decisions during LiteLLM's `pre_call` step. It sends the latest user text, system text, and eligible tool exchanges to TypeSafe, with one yes/no probability question per exchange: is this still needed to complete the task?
+## How compaction works
 
 ```mermaid
 sequenceDiagram
-    participant A as Agent
+    participant A as Bot
     participant G as LiteLLM
     participant J as TypeSafe Jev
-    participant M as Application LLM
-    A->>G: Request with conversation and tool results
-    G->>J: Evaluate eligible tool exchanges
-    J-->>G: Relevance probabilities
-    G->>G: Replace results below the threshold
-    G->>M: Request with compacted tool results
-    M-->>G: Model response
-    G-->>A: Model response
+    participant M as Model
+    A->>G: Chat history, including tool results
+    G->>J: Which old tool results are still needed?
+    J-->>G: Scores for those results
+    G->>G: Replace results with low scores
+    G->>M: Chat history with less old tool output
+    M-->>G: Answer
+    G-->>A: Answer
 ```
 
-An exchange consists of an assistant's tool calls and their corresponding results. If Jev scores an exchange below the configured threshold, LiteLLM replaces its tool-result content with:
+LiteLLM checks each completed tool exchange: a tool call and its results. By default, results with a Jev score below `0.2` are replaced with:
 
 ```text
 [Tool result removed by TypeSafe compaction: judged no longer relevant to the current task]
 ```
 
-The assistant's tool calls, tool-call IDs, and message order remain intact. Retained tool results are preserved verbatim. System and user messages remain unchanged, and the shared compression policy protects the last assistant message and any exchange containing it, along with the prompt-cache prefix through an Anthropic cache breakpoint.
+Results that are kept stay unchanged. LiteLLM also keeps the tool calls and their IDs, so the conversation still has the structure the model expects. System and user messages are unchanged. The last assistant message and any tool exchange it belongs to are protected.
 
-The guardrail supports Chat Completions, Anthropic Messages, and Responses API requests. Jev evaluates relevance; your configured application model still generates the answer.
+The guardrail works with Chat Completions, Anthropic Messages, and the Responses API. Jev checks the old tool results; your chosen model writes the answer.
 
 ## Enable compaction in LiteLLM
 
-Use a LiteLLM build that includes the `typesafe` guardrail. Set the provider credentials on the proxy:
+Use a LiteLLM proxy with a model already configured and a build that includes the `typesafe` guardrail. Keep your existing authentication setup, including OIDC if you use it.
+
+Set your TypeSafe API key on the proxy:
 
 ```bash
 export TYPESAFE_API_KEY="your-typesafe-api-key"
-export OPENAI_API_KEY="your-openai-api-key"
-export LITELLM_MASTER_KEY="sk-your-litellm-master-key"
 ```
 
-Save this configuration as `config.yaml`. For an existing deployment, add the guardrail entry alongside your existing models and authentication settings.
+Add this guardrail to your existing `config.yaml`, then restart the proxy:
 
 ```yaml title="config.yaml"
-model_list:
-  - model_name: operations-model
-    litellm_params:
-      model: openai/gpt-4.1-mini
-      api_key: os.environ/OPENAI_API_KEY
-
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-
 guardrails:
   - guardrail_name: jev-compaction
     litellm_params:
@@ -112,30 +73,30 @@ guardrails:
         relevance_threshold: 0.2
 ```
 
-Start the proxy with `litellm --config config.yaml`. The guardrail uses `jev-latest` by default and calls TypeSafe's hosted API from the proxy. Compaction is opt-in with this configuration.
+`pre_call` means compaction runs before LiteLLM calls your model. The proxy sends TypeSafe the system text, latest user question, and older tool exchanges selected for evaluation. This setup leaves compaction off until you enable it for a request or team.
 
-## Try a conversation with stale tool results
+## Try it: weather, then shop hours
 
-The example below contains an earlier weather lookup and a deployment runbook. The latest question asks only about the runbook. The weather result exceeds the default 200-character minimum, so it is eligible for evaluation. The runbook belongs to the last assistant exchange and is protected.
+This example has two tool results: a weather report and the shop's opening hours. The user only wants to know when the shop closes. Jev can mark the weather report for removal. The shop hours belong to the last assistant exchange, so LiteLLM keeps them.
 
-Set `LITELLM_PROXY_URL` to your proxy URL, such as `http://localhost:4000`, and `LITELLM_API_KEY` to your virtual key. For a local test, you can use the master key configured above.
+Set `LITELLM_PROXY_URL` to your gateway URL and `ACCESS_TOKEN` to a bearer token accepted by your proxy. For OIDC, use your valid OIDC access token. Replace `my-model` below with a model available to your team.
 
 <details>
 <summary>Complete example request</summary>
 
 ```bash
 curl -i "$LITELLM_PROXY_URL/v1/chat/completions" \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "operations-model",
+    "model": "my-model",
     "guardrails": ["jev-compaction"],
     "tool_choice": "none",
     "tools": [{
       "type": "function",
       "function": {
         "name": "lookup",
-        "description": "Retrieve a report or runbook.",
+        "description": "Look up the weather or shop hours.",
         "parameters": {
           "type": "object",
           "properties": {"query": {"type": "string"}},
@@ -144,53 +105,54 @@ curl -i "$LITELLM_PROXY_URL/v1/chat/completions" \
       }
     }],
     "messages": [
-      {"role": "system", "content": "Answer the latest question using the relevant tool result. Be concise."},
-      {"role": "user", "content": "Check the Lisbon weather, then read the deployment runbook."},
-      {"role": "assistant", "tool_calls": [{"id": "call_weather", "type": "function", "function": {"name": "lookup", "arguments": "{\"query\":\"Lisbon weather\"}"}}]},
-      {"role": "tool", "tool_call_id": "call_weather", "content": "Lisbon weather report: temperature 23 C, humidity 61 percent, northwest wind at 14 km/h. Skies are mostly clear with scattered coastal clouds. The afternoon high is 26 C with less than 5 percent chance of rain. Sunset is at 19:42 local time, visibility is 12 km, and pressure is steady at 1017 hPa. Bring a light jacket for the evening waterfront breeze."},
-      {"role": "assistant", "tool_calls": [{"id": "call_runbook", "type": "function", "function": {"name": "lookup", "arguments": "{\"query\":\"deployment runbook\"}"}}]},
-      {"role": "tool", "tool_call_id": "call_runbook", "content": "Deployment runbook, revision 12. Production runs in AWS region eu-west-1. Operational request logs are retained for 30 days, then deleted by the lifecycle policy. Deployments use a blue-green rollout with readiness checks before traffic switches. On-call engineers monitor error rates after deployment and roll back if the error budget alert fires."},
-      {"role": "user", "content": "According only to the runbook, which AWS region hosts production and how long are operational request logs retained?"}
+      {"role": "system", "content": "Answer the latest question using the tool results. Keep it short."},
+      {"role": "user", "content": "Check the weather in London, then look up the shop hours."},
+      {"role": "assistant", "tool_calls": [{"id": "call_weather", "type": "function", "function": {"name": "lookup", "arguments": "{\"query\":\"London weather\"}"}}]},
+      {"role": "tool", "tool_call_id": "call_weather", "content": "Today in London it is cool and cloudy. It may rain in the afternoon, so bring an umbrella. The wind is light and the temperature is 16 C. Tomorrow is expected to be warmer with clear skies. This weather report covers the next two days."},
+      {"role": "assistant", "tool_calls": [{"id": "call_shop", "type": "function", "function": {"name": "lookup", "arguments": "{\"query\":\"shop hours\"}"}}]},
+      {"role": "tool", "tool_call_id": "call_shop", "content": "Shop hours: Monday to Friday, open at 9 AM and close at 6 PM. On Saturday, open at 10 AM and close at 4 PM. The shop is closed on Sunday. These hours apply to the main shop on High Street. Customers can collect online orders during the same opening hours."},
+      {"role": "user", "content": "Forget the weather. What time does the shop close on Monday?"}
     ]
   }'
 ```
 
 </details>
 
-If Jev scores the weather exchange below `0.2`, LiteLLM replaces that result with the removal notice. The runbook reaches the LLM intact, so the answer should identify `eu-west-1` and `30 days`. Removal depends on Jev's evaluation; enabling the guardrail does not guarantee a smaller request.
+Both tool results are longer than the default 200-character minimum. If Jev scores the weather result below `0.2`, LiteLLM replaces it with the removal notice. The shop hours stay in the request, and the model should answer **6 PM**.
 
-## Measure compaction in Logs
+Jev may decide a result is still useful and keep it. Turning on compaction does not guarantee that every request gets smaller.
 
-Check the `x-litellm-applied-guardrails` response header for `jev-compaction`. On a proxy with database-backed logging, open the request in **Logs → Guardrails & Policy Compliance**. When results are removed, the guardrail records:
+## Check the result
+
+Look for `jev-compaction` in the `x-litellm-applied-guardrails` response header. On a proxy with database logging, open the request in **Logs → Guardrails & Policy Compliance**. When results are removed, the guardrail records:
 
 | Field | What it shows |
 | --- | --- |
-| `exchanges_evaluated` | How many tool exchanges Jev evaluated. |
-| `exchanges_dropped` | How many exchanges had their tool results replaced. |
-| `chars_removed` | The approximate reduction in tool-result characters. |
-| `model` | The configured Jev evaluation model. |
+| `exchanges_evaluated` | How many tool exchanges Jev checked. |
+| `exchanges_dropped` | How many had their results replaced. |
+| `chars_removed` | About how many characters were removed. |
+| `model` | The configured Jev model. |
 
-The applied-guardrail header confirms invocation; the counters show whether content was removed. Compare the same request with compaction enabled and disabled, using a key without an attached guardrail and leaving `default_on` disabled for the baseline. Check downstream prompt-token usage, latency, and answer quality together. Character counts are not token savings, and an end-to-end cost comparison also needs to account for Jev's evaluation cost.
+Compare the same request with compaction on and off. For the off version, remove `guardrails` from the request and use a team without compaction enabled. Also leave `default_on` disabled. Compare input tokens, response time, and whether the answer is still correct. Include Jev's own cost when checking total savings.
 
-## Roll out to an application's virtual key
+## Turn it on for a team
 
-Once the results fit your workload, attach `jev-compaction` to the application's virtual key. With a database-backed proxy, an administrator can create a key with compaction enabled:
+On LiteLLM Enterprise, attach `jev-compaction` to a team. If your users authenticate with OIDC, use the LiteLLM team that their tokens map to. See the [OIDC setup guide](/docs/proxy/token_auth#tracking-end-users--internal-users--team--org) for that mapping.
+
+A proxy admin can update the team with this request. Replace `my-team-id` with its team ID and set `LITELLM_MASTER_KEY` to your proxy's master key:
 
 ```bash
-curl "$LITELLM_PROXY_URL/key/generate" \
+curl "$LITELLM_PROXY_URL/team/update" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "key_alias": "operations-agent",
-    "models": ["operations-model"],
+    "team_id": "my-team-id",
     "guardrails": ["jev-compaction"]
   }'
 ```
 
-Configure the application to use the returned key. LiteLLM then applies compaction without requiring a `guardrails` field on every call. To enable it by default across the proxy, set `default_on: true` under the guardrail's `litellm_params`.
+If the team already has guardrails, include them in this list too. Requests that resolve to this team now use compaction automatically, so the app can leave out the `guardrails` field. Users keep sending their OIDC tokens as usual.
 
-Start with the default relevance threshold of `0.2`; raising it permits more removals. `min_chars_to_evaluate` defaults to `200`, and `max_result_chars_in_state` defaults to `4000` characters per exchange sent to Jev. The latter bounds evaluator input while leaving retained results in the LLM request unchanged.
+Start with the default score threshold of `0.2`. A higher threshold can remove more results, so check that answers stay correct before raising it. If Jev is unavailable, LiteLLM's default `fail_open` setting sends the original request to the model without compaction.
 
-On an evaluator failure, the default `fail_open` behavior forwards the request without compaction. The evaluator call can still add latency before a failure is handled. Set `unreachable_fallback: fail_closed` if your deployment should reject the request instead.
-
-Explore the [TypeSafe compaction guide](/docs/proxy/guardrails/typesafe) for endpoint-specific opt-in and configuration options, or the [pass-through guide](/docs/pass_through/typesafe) to build your own typed decisions with Jev.
+See the [TypeSafe compaction guide](/docs/proxy/guardrails/typesafe) for more settings, or the [pass-through guide](/docs/pass_through/typesafe) to call Jev directly.
