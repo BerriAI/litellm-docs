@@ -48,7 +48,7 @@ A key on TopxAI's Auto route sends each request to the lowest-priced line that s
 
 ### Text Generation
 
-```python showLineNumbers title="TopxAI Text Generation"
+```python keep-model-ids showLineNumbers title="TopxAI Text Generation"
 from litellm import completion
 import os
 
@@ -60,7 +60,7 @@ response = completion(
 print(response)
 ```
 
-```python showLineNumbers title="TopxAI Text Generation - Streaming"
+```python keep-model-ids showLineNumbers title="TopxAI Text Generation - Streaming"
 from litellm import completion
 import os
 
@@ -80,7 +80,7 @@ for chunk in stream:
 
 The GPT models and `grok-4.6` are also served on `/v1/responses`:
 
-```python showLineNumbers title="TopxAI Responses API"
+```python keep-model-ids showLineNumbers title="TopxAI Responses API"
 import litellm
 import os
 
@@ -96,7 +96,7 @@ print(response)
 
 Add the following to your LiteLLM Proxy configuration file:
 
-```yaml showLineNumbers title="config.yaml"
+```yaml keep-model-ids showLineNumbers title="config.yaml"
 model_list:
   - model_name: topxai/claude-sonnet-5
     litellm_params:
@@ -123,7 +123,7 @@ litellm --config config.yaml
 <Tabs>
 <TabItem value="openai-sdk" label="OpenAI SDK">
 
-```python showLineNumbers title="TopxAI via Proxy - Non-streaming"
+```python keep-model-ids showLineNumbers title="TopxAI via Proxy - Non-streaming"
 from openai import OpenAI
 
 client = OpenAI(
@@ -142,7 +142,7 @@ print(response.choices[0].message.content)
 
 <TabItem value="curl" label="cURL">
 
-```bash showLineNumbers title="TopxAI via Proxy - cURL"
+```bash keep-model-ids showLineNumbers title="TopxAI via Proxy - cURL"
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
