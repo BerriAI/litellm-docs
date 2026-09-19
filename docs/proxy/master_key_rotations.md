@@ -80,21 +80,35 @@ If the UI loads and your stored models and credentials resolve, the rotation is 
 
 The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or is the literal `sk-1234`. With no master key the proxy runs without authentication and accepts every request. `sk-1234` is the example key from LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
 
-What to do next depends on whether the old key encrypted anything in your database. It did only if the key was `sk-1234`, `LITELLM_SALT_KEY` is not set, and the proxy has a database. The startup error carries a rotation warning that links to this section in exactly that case. If your error has no such warning, follow the first case.
+What to do next depends on whether the old key encrypted anything in your database. It did only if the key was `sk-1234`, `LITELLM_SALT_KEY` is not set, and the proxy has a database. In that case the startup error links to this section and prints a command that only generates a key, with a note to save it once this guide says to. In every other case its steps generate a key and save it to `.env`, and you follow the first case.
 
 ### A salt key is set, or there is no database
 
-Nothing is encrypted with the master key, so there is nothing to rotate. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Generate a new key, [set it](#where-to-set-the-new-key), and restart.
+Nothing is encrypted with the master key, so there is nothing to rotate, and the steps the error prints are all you need. If the key came from `general_settings.master_key`, make sure your config reads the key from the environment. Then generate a key and save it to `.env`, and start the proxy again. [Where to set the new key](#where-to-set-the-new-key) covers setups that do not read a `.env` file.
 
 ```bash
 echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)" | tee -a .env
 ```
 
+This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Do not call `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, that leaves your stored credentials unreadable under both keys.
+
 ### No salt key, and a database with stored credentials
 
-Your model API keys, credentials, MCP server credentials, and DB-stored environment variables are encrypted with `sk-1234` itself. If you swap the key and restart, the proxy can no longer decrypt them. They have to be re-encrypted under the new key first, and that needs a running proxy. Back up your database before you start, for the reasons given at the top of this page.
+Your model API keys, credentials, MCP server credentials, and DB-stored environment variables are encrypted with `sk-1234` itself. If you swap the key and restart, the proxy can no longer decrypt them. They have to be re-encrypted under the new key first, and that needs a proxy running on the old key.
 
-1. Leave the old key where it is and start the proxy once with the local development override, so that it boots on `sk-1234`. With Docker or Kubernetes, add the variable to the container's environment instead.
+:::warning Do not save the new key yet
+Keep the new key out of `.env`, the `LITELLM_MASTER_KEY` environment variable, and `config.yaml` until the regenerate call in step 4 has succeeded. If it is in place any earlier, the next boot starts on the new key before anything is re-encrypted, so the proxy cannot decrypt your stored credentials and the regenerate call does not rotate anything.
+:::
+
+1. Back up your database. The regenerate call deletes and recreates model rows and skips any credential row that fails, so a backup is the only clean way back from a partial failure.
+
+2. Generate the new key with the command from the error. Copy the output somewhere safe, such as your secret manager, and nowhere the proxy reads from.
+
+   ```bash
+   echo "sk-$(openssl rand -hex 32)"
+   ```
+
+3. Leave the old key where it is and start the proxy once with the local development override, so that it boots on `sk-1234`. With Docker or Kubernetes, add the variable to the container's environment instead.
 
    ```bash
    export LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY=true
@@ -103,26 +117,21 @@ Your model API keys, credentials, MCP server credentials, and DB-stored environm
 
    While the override is on, the proxy still accepts `sk-1234`, so keep it off any network you do not trust and finish these steps in one sitting.
 
-2. In another shell, generate the new key and keep it in a variable.
-
-   ```bash
-   export NEW_MASTER_KEY="sk-$(openssl rand -hex 32)"
-   echo "$NEW_MASTER_KEY"
-   ```
-
-3. Call `POST /key/regenerate` with the old master key as both the bearer token and `key`, and the new key as `new_master_key`. This is the same request as in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key), and it re-encrypts the same stored values.
+4. In another shell, call `POST /key/regenerate` with the old master key as both the bearer token and `key`, and the key from step 2 as `new_master_key`. This is the same request as in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key), and it re-encrypts the same stored values.
 
    ```bash
    curl -L -X POST 'http://localhost:4000/key/regenerate' \
    -H 'Authorization: Bearer sk-1234' \
    -H 'Content-Type: application/json' \
-   -d "{
-     \"key\": \"sk-1234\",
-     \"new_master_key\": \"$NEW_MASTER_KEY\"
-   }"
+   -d '{
+     "key": "sk-1234",
+     "new_master_key": "sk-<the-key-from-step-2>"
+   }'
    ```
 
-4. Stop the proxy, [set `LITELLM_MASTER_KEY` to the new key](#where-to-set-the-new-key), and remove the override (`LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY`, or `general_settings.dangerously_allow_unsafe_proxy` if you used the config setting). Restart every proxy instance, then verify as described in [After rotating](#after-rotating).
+   The response echoes the new master key in plaintext in the `key`, `token`, and `key_name` fields, so do not paste it into tickets, chat, or logs.
+
+5. Stop the proxy as soon as the call returns. The running process still holds the old key and can no longer decrypt the rows it just re-encrypted, so it should not keep serving traffic. Now [set `LITELLM_MASTER_KEY` to the new key](#where-to-set-the-new-key) and remove the override (`LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY`, or `general_settings.dangerously_allow_unsafe_proxy` if you used the config setting). Start every proxy instance again, then verify as described in [After rotating](#after-rotating).
 
 Once you are on the new key, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart. Wait until this rotation is done before you do, because setting `LITELLM_SALT_KEY` to `sk-1234` would leave your stored credentials encrypted under a publicly known value.
 
@@ -130,7 +139,7 @@ Once you are on the new key, consider moving to a dedicated salt key, as the tip
 
 The new key has to reach the proxy as the `LITELLM_MASTER_KEY` environment variable. A `.env` file in the working directory is only read when you run the proxy from a checkout of the repo or load the file through Docker Compose `env_file`. With a pip install, plain `docker run`, or Kubernetes, pass the variable to the process or container directly. If the `.env` file already has a `LITELLM_MASTER_KEY` line, delete the old one so that only the new value remains.
 
-If the old key is written as a literal under `general_settings.master_key` in your `config.yaml`, change it to read from the environment, because a literal in the config takes precedence over the environment variable.
+If the old key is written as a literal under `general_settings.master_key`, make sure your `config.yaml` reads the key from the environment, because a literal in the config takes precedence over the environment variable.
 
 ```yaml
 general_settings:
