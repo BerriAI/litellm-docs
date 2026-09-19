@@ -1443,6 +1443,8 @@ router_settings:
 | REQUEST_TIMEOUT | Timeout in seconds for requests. Default is 6000
 | RESET_BUDGET_JOB_BATCH_SIZE | Maximum rows the budget reset job reads and commits per transaction. Default is 500
 | RESET_BUDGET_JOB_MAX_CHUNKS_PER_RUN | Maximum batches each budget reset phase processes per run; leftovers wait for the next run. Default is 100
+| RESET_BUDGET_SPEND_COUNTER_RESET_MAX_ATTEMPTS | Number of attempts the budget reset job makes to reset a Redis spend counter before falling back to deleting it. Default is 3
+| RESET_BUDGET_SPEND_COUNTER_RESET_RETRY_DELAY_SECONDS | Delay in seconds between those retry attempts. Default is 0.25
 | RESPONSES_SESSION_LOOKUP_MAX_ATTEMPTS | How many times `/v1/responses` looks up the session behind a `previous_response_id` before giving up, so a follow-up sent right after the previous turn does not beat that turn's spend log to the database. Default is 3
 | RESPONSES_SESSION_LOOKUP_RETRY_INTERVAL | Seconds to wait between those session lookup attempts. Default is 0.2
 | ROOT_REDIRECT_URL | URL to redirect root path (/) to when DOCS_URL is set to something other than "/" (DOCS_URL is "/" by default)
