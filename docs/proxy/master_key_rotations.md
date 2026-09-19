@@ -80,17 +80,25 @@ If the UI loads and your stored models and credentials resolve, the rotation is 
 
 The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or is the literal `sk-1234`. With no master key the proxy runs without authentication and accepts every request. `sk-1234` is the example key from LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
 
-What to do next depends on whether the old key encrypted anything in your database. It did only if the key was `sk-1234`, `LITELLM_SALT_KEY` is not set, and the proxy has a database. In that case the startup error links to this section and prints a command that only generates a key, with a note to save it once this guide says to. In every other case its steps generate a key and save it to `.env`, and you follow the first case.
+What to do next depends on whether the old key encrypted anything in your database. It did only if the key was `sk-1234`, `LITELLM_SALT_KEY` is not set, and the proxy has a database. In that case the startup error links to this section and tells you to rotate the key by following this guide, saving the new key only once the guide says to. In every other case the error prints its own steps for setting a new key, and you follow the first case.
 
 ### A salt key is set, or there is no database
 
-Nothing is encrypted with the master key, so there is nothing to rotate, and the steps the error prints are all you need. If the key came from `general_settings.master_key`, make sure your config reads the key from the environment. Then generate a key and save it to `.env`, and start the proxy again. [Where to set the new key](#where-to-set-the-new-key) covers setups that do not read a `.env` file.
+Nothing is encrypted with the master key, so there is nothing to rotate, and the steps the error prints are all you need. If the key came from `general_settings.master_key`, make sure your config reads the key from the environment. The step that sets the new key depends on whether `LITELLM_MASTER_KEY` is already set in the proxy's environment.
+
+When the variable is not set at all, the error prints a command that generates a key and saves it to `.env`. [Where to set the new key](#where-to-set-the-new-key) covers setups that do not read a `.env` file.
 
 ```bash
 echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)" | tee -a .env
 ```
 
-This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Do not call `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, that leaves your stored credentials unreadable under both keys.
+When the variable is already set to an unsafe value (`sk-1234` or empty), the error prints a command that only generates a key. Put the new key in place of the current `LITELLM_MASTER_KEY` value wherever that is set: a shell export, your container or deployment environment, or its line in `.env`. Do not just add it to `.env`. The proxy loads `.env` without overriding variables that already exist, so a value already exported in the environment wins and an appended line would never take effect.
+
+```bash
+echo "sk-$(openssl rand -hex 32)"
+```
+
+Then start the proxy again. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Do not call `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, that leaves your stored credentials unreadable under both keys.
 
 ### No salt key, and a database with stored credentials
 
@@ -137,7 +145,9 @@ Once you are on the new key, consider moving to a dedicated salt key, as the tip
 
 ### Where to set the new key
 
-The new key has to reach the proxy as the `LITELLM_MASTER_KEY` environment variable. A `.env` file in the working directory is only read when you run the proxy from a checkout of the repo or load the file through Docker Compose `env_file`. With a pip install, plain `docker run`, or Kubernetes, pass the variable to the process or container directly. If the `.env` file already has a `LITELLM_MASTER_KEY` line, delete the old one so that only the new value remains.
+The new key has to reach the proxy as the `LITELLM_MASTER_KEY` environment variable. A `.env` file in the working directory is only read when you run the proxy from a checkout of the repo or load the file through Docker Compose `env_file`. With a pip install, plain `docker run`, or Kubernetes, pass the variable to the process or container directly.
+
+If `LITELLM_MASTER_KEY` is already set somewhere, such as a shell export, the container or deployment environment, or a line in `.env`, replace the value there instead of appending a new line to `.env`. The proxy loads `.env` without overriding variables that are already in the environment, so an exported value wins over the file.
 
 If the old key is written as a literal under `general_settings.master_key`, make sure your `config.yaml` reads the key from the environment, because a literal in the config takes precedence over the environment variable.
 
