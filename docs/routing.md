@@ -1592,6 +1592,8 @@ stops a deployment `num_retries: N` from being applied twice and turning one req
 - Use `RetryPolicy` if you want to set a `num_retries` based on the Exception received
 - Use `AllowedFailsPolicy` to set a custom number of `allowed_fails`/minute before cooling down a deployment
 
+`RetryPolicy` takes one field per error type (`AuthenticationErrorRetries`, `TimeoutErrorRetries`, `RateLimitErrorRetries`, `ContentPolicyViolationErrorRetries`, `BadRequestErrorRetries`, `NotFoundErrorRetries`, `InternalServerErrorRetries`, `ServiceUnavailableErrorRetries`) plus `DefaultRetries` for every error none of those cover. The most specific field wins: `NotFoundErrorRetries` governs any 404 answer, whatever exception class the provider's error body mapped to, `BadRequestErrorRetries` then covers a 4xx the provider reported as an invalid request, and `DefaultRetries` applies last. A field left unset defers to the next one, so a policy that only sets `DefaultRetries` retries 404s too; set `NotFoundErrorRetries: 0` to leave them alone.
+
 [**See All Exception Types**](https://github.com/BerriAI/litellm/blob/ccda616f2f881375d4e8586c76fe4662909a7d22/litellm/types/router.py#L436)
 
 
@@ -1604,6 +1606,8 @@ Example:
 retry_policy = RetryPolicy(
     ContentPolicyViolationErrorRetries=3, 		  # run 3 retries for ContentPolicyViolationErrors
     AuthenticationErrorRetries=0,         		  # run 0 retries for AuthenticationErrorRetries
+    NotFoundErrorRetries=0,               		  # never retry a 404 (a deleted response id, an unknown deployment name)
+    DefaultRetries=2,                     		  # run 2 retries for every error with no field of its own
 )
 
 allowed_fails_policy = AllowedFailsPolicy(
@@ -1623,6 +1627,9 @@ retry_policy = RetryPolicy(
 	BadRequestErrorRetries=1,
 	TimeoutErrorRetries=2,
 	RateLimitErrorRetries=3,
+	NotFoundErrorRetries=0,
+	ServiceUnavailableErrorRetries=2,
+	DefaultRetries=1,
 )
 
 allowed_fails_policy = AllowedFailsPolicy(
@@ -1668,7 +1675,9 @@ response = await router.acompletion(
 router_settings: 
   retry_policy: {
     "BadRequestErrorRetries": 3,
-    "ContentPolicyViolationErrorRetries": 4
+    "ContentPolicyViolationErrorRetries": 4,
+    "NotFoundErrorRetries": 0, # never retry a 404
+    "DefaultRetries": 2 # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment
