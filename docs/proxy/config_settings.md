@@ -1149,9 +1149,10 @@ router_settings:
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
 | LANGFUSE_MOCK_LATENCY_MS | Mock latency in milliseconds for Langfuse API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGFUSE_PUBLIC_KEY | Public key for Langfuse authentication
-| LANGFUSE_RELEASE | Release version of Langfuse integration
+| LANGFUSE_MAX_RETRIES | How many times the Langfuse callback retries an OTLP export request that times out, fails to connect or gets a retryable status before the batch is dropped; defaults to `3`, with waits of 1, 2 and 4 seconds between attempts. Values that are not a whole number log a warning and use the default
+| LANGFUSE_RELEASE | Release recorded on every Langfuse trace. When unset, the callback falls back to the first of `RENDER_GIT_COMMIT`, `CI_COMMIT_SHA`, `CIRCLE_SHA1`, `SOURCE_VERSION`, `TRAVIS_COMMIT`, `GIT_COMMIT`, `GITHUB_SHA`, `BITBUCKET_COMMIT`, `BUILD_SOURCEVERSION` and `DRONE_COMMIT_SHA` that is set, the same list the Langfuse SDK reads
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
-| LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request and each REST request (prompts, credential check, project lookup) the Langfuse callback sends; defaults to `5` and accepts decimals such as `2.5`. An export request that times out or fails to connect is retried three times before the batch is dropped
+| LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request and each REST request (prompts, credential check, project lookup) the Langfuse callback sends; defaults to `20` and accepts decimals such as `2.5`. An export request that times out or fails to connect is retried `LANGFUSE_MAX_RETRIES` times before the batch is dropped
 | LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
 | LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`. Values outside that range or not numeric log a warning and export every trace
 | LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
