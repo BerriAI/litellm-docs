@@ -25,6 +25,7 @@ items={[
   { icon: "🏋️", title: "Weights & Biases", description: "ML experiment tracking.", to: "/docs/observability/wandb_integration" },
   { icon: "📉", title: "PostHog", description: "Product analytics.", to: "/docs/observability/posthog_integration" },
   { icon: "🔭", title: "Splunk Observability Cloud", description: "OTLP traces to Splunk.", to: "/docs/observability/splunk_observability_cloud" },
+  { icon: "🔴", title: "New Relic", description: "Application Performance Monitoring and AI Monitoring.", to: "/docs/observability/newrelic" },
 ]}
 />
 
