@@ -337,6 +337,23 @@ policy_attachments:
 
 A `gpt-4o` request from a `finance` key runs `global-policy`, then `team-policy`, then `model-policy`, and returns `x-litellm-applied-policies: global-policy,team-policy,model-policy`.
 
+## Default (Fallback) Attachments
+
+Attachment matches are additive: every attachment whose scope matches the request contributes its policy. To run one policy only for requests that opted in and a different policy for everyone else, mark the fallback attachment with `default: true`. A default attachment is skipped whenever any non-default attachment matches the request. When no non-default attachment matches, every default attachment whose own scope matches applies, in the usual execution order.
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: strict-guardrail
+    tags: [strict-opt-in]
+  - policy: standard-guardrail
+    scope: "*"
+    default: true
+```
+
+A request carrying the `strict-opt-in` tag runs only `strict-guardrail`. A request without it runs only `standard-guardrail`, and its `matched_via` in `/policies/resolve` and the Policy Simulator is prefixed with `default:` (for example `default:scope:*`). A default attachment still honors `teams`, `keys`, `models` and `tags`, so `teams: [finance], default: true` applies only to finance requests that matched nothing else. Attachments without `default` behave exactly as before.
+
+The same field is accepted by `POST /policies/attachments`, returned from `GET /policies/attachments/list`, and exposed as a Default switch in the Admin UI create-attachment form plus a Default column in the Attachments tab.
+
 ## Policy Flow Builder
 
 For conditional execution (e.g., run a second guardrail only if the first fails), use the [Policy Flow Builder](./policy_flow_builder) to define pipelines with per-step **pass**, **fail**, and optional **error** actions (`on_pass`, `on_fail`, `on_error`).
@@ -378,6 +395,7 @@ policy_attachments:
     models: [...]
     tags: [...]
     priority: ...
+    default: ...
 ```
 
 | Field | Type | Description |
@@ -389,6 +407,7 @@ policy_attachments:
 | `models` | `list[string]` | Model names. Supports `*` wildcard. |
 | `tags` | `list[string]` | Tag patterns (from key/team `metadata.tags`). Supports `*` wildcard. |
 | `priority` | `integer` | Optional. Lower values run first. Attachments with a priority run before those without one; ties fall back to the tier order. |
+| `default` | `boolean` | Optional, defaults to `false`. Apply this attachment only when no non-default attachment matches the request. |
 
 ### Response Headers
 
