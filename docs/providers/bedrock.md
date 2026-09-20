@@ -1677,13 +1677,13 @@ AWS serves some Bedrock models on an OpenAI-compatible endpoint, `https://bedroc
 
 | Model | LiteLLM model name | Default route |
 |-------|--------------------|---------------|
-| GPT-OSS 20B | `bedrock/openai.gpt-oss-20b-1:0` | Native Chat Completions |
-| GPT-OSS 120B | `bedrock/openai.gpt-oss-120b-1:0` | Native Chat Completions |
+| GPT-OSS 20B | `bedrock/openai.gpt-oss-20b-1:0`, `bedrock/us-gov.openai.gpt-oss-20b-1:0` | Native Chat Completions |
+| GPT-OSS 120B | `bedrock/openai.gpt-oss-120b-1:0`, `bedrock/us-gov.openai.gpt-oss-120b-1:0` | Native Chat Completions |
 | GPT-5.6 Sol, Terra, Luna | `bedrock/us.openai.gpt-5.6-sol`, `bedrock/global.openai.gpt-5.6-sol`, and the `terra` / `luna` variants | Native Chat Completions |
 | Grok 4.6 | `bedrock/us.xai.grok-4.6`, `bedrock/global.xai.grok-4.6`, `bedrock/us-gov.xai.grok-4.6` | Native Chat Completions |
 | Everything else (Claude, Nova, Llama, Mistral, ...) | `bedrock/<model-id>` | Converse or Invoke, as before |
 
-A model opts in through `"supports_bedrock_runtime_chat_completions": true` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), so a model AWS lists without Chat Completions support keeps using Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
+A model opts in through `"supports_bedrock_runtime_chat_completions": true` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), so a model AWS lists without Chat Completions support keeps using Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. A region path in the model name (`bedrock/us-gov-west-1/openai.gpt-oss-20b-1:0`) works the same too: the region picks the endpoint and the id after it is what AWS receives, and an explicit `aws_region_name` still wins over the path. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
 
 The trade-off is that the OpenAI-compatible endpoint has no equivalent for a few Converse features, so LiteLLM falls back to Converse per request when you use one of them:
 
