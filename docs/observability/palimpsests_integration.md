@@ -136,4 +136,4 @@ rests on that, not on this integration.
 ## Support
 
 - GitHub: [Assault-Consulting/Palimpsests](https://github.com/Assault-Consulting/Palimpsests)
-- Plain-words introduction: [Start here](
+- Plain-words introduction: [Start here](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/START-HERE.md)
