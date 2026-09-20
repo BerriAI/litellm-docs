@@ -1,7 +1,7 @@
 ---
-title: "1.102.0rc1 - Auto Router Controls, Native OCR & Gateway Reliability"
-slug: "v1-102-0-rc-1"
-date: 2026-09-13T04:56:38
+title: "v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+slug: "v1-102-0"
+date: 2026-09-19T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -30,24 +30,23 @@ import TabItem from '@theme/TabItem';
 docker run \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.102.0-rc.1
+docker.litellm.ai/berriai/litellm:1.102.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.102.0rc1
+pip install litellm==1.102.0
 ```
 
 </TabItem>
 </Tabs>
 
-The published GitHub tag is `v1.102.0-rc.1`. These notes compare it with `v1.101.0-rc.2`. Changes already shipped in RC2 are omitted
 
 :::danger Breaking Changes
 
-These callouts cover changes to behavior available in `v1.100.1`, the latest stable release
+These callouts cover changes to behavior available in `v1.101.0`, the previous stable release
 
 **Organization endpoints now require an enterprise license.** Unlicensed calls to organization APIs return 403 after authentication. Enable the license before using organization APIs. See [PR #40613](https://github.com/BerriAI/litellm/pull/40613)
 
@@ -92,6 +91,17 @@ These callouts cover changes to behavior available in `v1.100.1`, the latest sta
 - **Gateway reliability**: optional shared PgBouncer connections and a spend collector, fewer database and Redis calls, stable Redis outage handling, and request/token-based autoscaling controls
 - **MCP, logging, and guardrails**: schema-discovery proxy mode, improved OAuth compatibility and permission enforcement, configurable OTel trace URLs and HTTP/JSON export, PointFive logging, Conduct Guard, and broader post-call pipeline coverage
 - **99 new model catalog entries**: additions across Bedrock, Azure AI, OpenAI, Fireworks, OpenRouter, Together AI, and other providers, alongside pricing and capability corrections
+
+## Included after the v1.102.0-rc.1 cut
+
+The stable tag includes these release-line additions, including changes after rc.2:
+
+- **Provider request bodies** drop LiteLLM-internal params, keep `extra_headers` out of the chat body on the httpx handler path, filter bridged kwargs the way the native Responses path does, and stop sending the addressed response id to bridged providers - [PR #41018](https://github.com/BerriAI/litellm/pull/41018), [PR #41141](https://github.com/BerriAI/litellm/pull/41141), [PR #41144](https://github.com/BerriAI/litellm/pull/41144), [PR #41689](https://github.com/BerriAI/litellm/pull/41689).
+- **Image edits** stop forwarding the raw `image[]` and `mask[]` form keys upstream - [PR #39512](https://github.com/BerriAI/litellm/pull/39512).
+- **Spend and budgets** track spend for streams a deployment hook converted to non-streaming, run the post-call deployment hook on those converted chat streams, and apply `team_member_budget` updates to members still on the team default - [PR #41171](https://github.com/BerriAI/litellm/pull/41171), [PR #41495](https://github.com/BerriAI/litellm/pull/41495), [PR #41347](https://github.com/BerriAI/litellm/pull/41347).
+- **Routing and retries** replay rate-limit fallbacks from a pristine request snapshot and bind per-request `routing_strategy` override selectors to that request's callbacks - [PR #40596](https://github.com/BerriAI/litellm/pull/40596), [PR #41178](https://github.com/BerriAI/litellm/pull/41178).
+- **Auth and management** let a wildcard `allowed_features` license grant the `auto_router` feature, keep org admins' own team memberships in other organizations visible on team list, and keep access-group raw SQL writes on the writer while `writer_unavailable` is stale - [PR #41684](https://github.com/BerriAI/litellm/pull/41684), [PR #41086](https://github.com/BerriAI/litellm/pull/41086), [PR #41283](https://github.com/BerriAI/litellm/pull/41283).
+- **CLI** imports on Python 3.10 again after dropping `enum.StrEnum` - [PR #41046](https://github.com/BerriAI/litellm/pull/41046).
 
 ## New Providers and Endpoints
 
@@ -651,7 +661,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### PR roll-up by ownership area
 
-Customer-visible PRs: **317**
+Customer-visible PRs for the original rc.1 notes: **317**. The release-line additions listed above are separate from this existing roll-up.
 
 - Performance: 92
 - Models & Providers: 40
@@ -683,4 +693,4 @@ Customer-visible PRs: **317**
 
 ## Full Changelog
 
-[Compare release contents on GitHub](https://github.com/BerriAI/litellm/compare/v1.101.0-rc.2..v1.102.0-rc.1)
+https://github.com/BerriAI/litellm/compare/v1.101.0...v1.102.0
