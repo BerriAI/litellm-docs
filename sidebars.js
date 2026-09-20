@@ -146,6 +146,7 @@ const sidebars = {
           "proxy/guardrails/aporia_api",
           "proxy/guardrails/azure_content_guardrail",
           "proxy/guardrails/bedrock",
+          "proxy/guardrails/cato_networks",
           "proxy/guardrails/compresr",
           "proxy/guardrails/typesafe",
           "proxy/guardrails/crowdstrike_aidr",
