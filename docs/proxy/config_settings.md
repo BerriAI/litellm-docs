@@ -189,7 +189,10 @@ router_settings:
     "TimeoutErrorRetries": 3,
     "RateLimitErrorRetries": 3,
     "ContentPolicyViolationErrorRetries": 4,
-    "InternalServerErrorRetries": 4
+    "InternalServerErrorRetries": 4,
+    "ServiceUnavailableErrorRetries": 4,
+    "NotFoundErrorRetries": 0,             # never retry a 404
+    "DefaultRetries": 2                    # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "BadRequestErrorAllowedFails": 1000, # Allow 1000 BadRequestErrors before cooling down a deployment
@@ -460,7 +463,10 @@ router_settings:
     "TimeoutErrorRetries": 3,
     "RateLimitErrorRetries": 3,
     "ContentPolicyViolationErrorRetries": 4,
-    "InternalServerErrorRetries": 4
+    "InternalServerErrorRetries": 4,
+    "ServiceUnavailableErrorRetries": 4,
+    "NotFoundErrorRetries": 0,             # never retry a 404
+    "DefaultRetries": 2                    # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "BadRequestErrorAllowedFails": 1000, # Allow 1000 BadRequestErrors before cooling down a deployment
