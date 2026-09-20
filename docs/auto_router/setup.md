@@ -1,10 +1,12 @@
 ---
-title: Setup
-sidebar_label: Setup
-description: Every way to set up an Auto Router, from adding one in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
+title: Admin Setup
+sidebar_label: Admin Setup
+description: Create and configure an Auto Router through the dashboard, an agent skill, config.yaml, the model-management API, or lite autoroute.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
+
+Create an Auto Router for your team using one of the methods below. To connect your coding agent to an existing router, follow [User Setup](/docs/auto_router/user_setup).
 
 Five ways in. All of them create the same `auto_router/complexity_router` deployment.
 
