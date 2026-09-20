@@ -1526,6 +1526,7 @@ router_settings:
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
 | USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
 | USE_LITELLM_PROXY | Flag to route every `litellm` SDK completion call through a LiteLLM proxy by default, which lets model names stay in their original provider format such as `gemini/gemini-3.5-flash`. Environment equivalent of `litellm.use_litellm_proxy = True`. **Default is False**
+| USE_V2_MIGRATION_RESOLVER | Flag selecting which resolver applies database migrations at startup. The v2 resolver skips the diff-and-force recovery that caused schema thrashing when two LiteLLM versions ran migrations against the same database during a rolling deploy. Set to `false` to fall back to the legacy v1 resolver. **Default is True**
 | USE_PRISMA_MIGRATE | Removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555); `prisma migrate deploy` is now the default. Setting this has no effect and it is safe to remove.
 | VANTAGE_API_KEY | API key for Vantage cost-import integration
 | VANTAGE_BASE_URL | Base URL for Vantage API. Default is `https://api.vantage.sh`
