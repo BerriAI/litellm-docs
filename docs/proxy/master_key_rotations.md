@@ -148,7 +148,13 @@ You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_K
 
 If a stored value is edited while the migration runs, that value is left as it was and the log says "Re-encrypted N stored value(s), but M are still encrypted with the previous key because they changed during the migration. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy to migrate them." Do what it says and restart once more.
 
-A database error during the migration does not stop the boot. The proxy keeps starting and logs at WARNING "Could not migrate stored values from the LITELLM_MIGRATE_FROM_MASTER_KEY key (`<ErrorType: message>`). Values still encrypted with the previous key cannot be read until the migration succeeds. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy once the database is reachable." Until that restart, requests that need a stored credential still encrypted with the previous key fail, so fix the database connection and restart with the variable still set.
+A database error during the migration stops the boot, so a worker never serves traffic with stored values it cannot read. The proxy logs this at WARNING and then exits with a non-zero status:
+
+```text
+Could not migrate stored values from the LITELLM_MIGRATE_FROM_MASTER_KEY key (<ErrorType: message>). Values still encrypted with the previous key cannot be read until the migration succeeds. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy once the database is reachable.
+```
+
+Fix the database problem and start the proxy again with the same two variables. The next boot picks up where the failed one stopped: if it had migrated 2 of 6 values, the next boot logs "Re-encrypting 4 stored value(s)" followed by the "Done" line. The one exception follows the rule the proxy already applies to its database connection at boot. When `general_settings.allow_requests_on_db_unavailable` is true and the error is a connection outage, the boot continues, and the values still encrypted with the previous key stay unreadable until a later boot completes the migration.
 
 Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy expects stored values to be encrypted with the salt key, so it skips the migration and logs that there is nothing to migrate, and the values still encrypted with the old key stay unreadable. Once the migration is done, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart.
 
