@@ -139,7 +139,7 @@ general_settings:
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
   key_management_system: google_kms  # either google_kms or azure_kms
   master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or sk-1234
-  dangerously_allow_unsafe_proxy: boolean  # local development only; lets the proxy start with no master key or with sk-1234
+  dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or with sk-1234
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
   user_mcp_management_mode: restricted  # or "view_all"
@@ -299,7 +299,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allowed_routes | array of strings | `null` (all routes) | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | `null` | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Set up Virtual Keys](virtual_keys), [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
-| dangerously_allow_unsafe_proxy | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or is `sk-1234`, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY` env var. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
+| dangerously_permit_weak_or_unset_master_key | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or is `sk-1234`, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY` env var. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
 | database_url | string | `null` (falls back to `DATABASE_URL`) | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
 | database_connection_pool_limit | integer | `10` | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
 | database_connection_timeout | integer | `60` (seconds) | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](./configs.md#configure-db-pool-limits--connection-timeouts) |
@@ -1188,7 +1188,7 @@ router_settings:
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
 | LITELLM_CORS_ALLOW_CREDENTIALS | Set to `true` to explicitly allow credentials in CORS responses. When not set, credentials are disabled automatically if `LITELLM_CORS_ORIGINS` is `*` (wildcard) to prevent the browser security misconfiguration of reflecting any origin with credentials
 | LITELLM_CORS_ORIGINS | Comma-separated list of allowed CORS origins (e.g. `https://app.example.com,https://admin.example.com`). Defaults to `*` (all origins) when not set
-| LITELLM_DANGEROUSLY_ALLOW_UNSAFE_PROXY | For local development only: set to `true` to let the proxy start when the master key is not set, is empty, or is `sk-1234`. Same as `general_settings.dangerously_allow_unsafe_proxy`. **Default is false**. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY | For local development only: set to `true` to let the proxy start when the master key is not set, is empty, or is `sk-1234`. Same as `general_settings.dangerously_permit_weak_or_unset_master_key`. **Default is false**. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_DD_AGENT_HOST | Hostname or IP of DataDog agent for LiteLLM-specific logging. When set, logs are sent to agent instead of direct API
 | LITELLM_DEPLOYMENT_ENVIRONMENT | Environment name for the deployment (e.g., "production", "staging"). Used as a fallback when OTEL_ENVIRONMENT_NAME is not set. Sets the `environment` tag in telemetry data
 | LITELLM_DETAILED_TIMING | When true, adds detailed per-phase timing headers to responses (`x-litellm-timing-{pre-processing,llm-api,post-processing,message-copy}-ms`). Default is false. See [latency overhead docs](../troubleshoot/latency_overhead.md)
