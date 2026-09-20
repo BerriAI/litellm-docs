@@ -209,6 +209,8 @@ The region comes from `aws_region_name`, else a region prefix in the model name 
 
 Auth is the same chain as the rest of the provider: a bearer token from `api_key`, `BEDROCK_MANTLE_API_KEY`, or `AWS_BEARER_TOKEN_BEDROCK` when one is set, otherwise SigV4 from `aws_access_key_id` / `aws_secret_access_key` / `aws_session_token`, `aws_profile_name`, or the role params. LiteLLM sends `anthropic-version: 2023-06-01` on every request, and an `anthropic-version` header supplied by the caller wins
 
+Beta features travel in the `anthropic-beta` header: the values the caller sends plus the ones a request needs (a `context_management` edit adds `context-management-2025-06-27`), limited to what Mantle accepts. A value Mantle does not know is left out instead of failing the request with a 400, and nothing is sent in the body `anthropic_beta` field, which Mantle ignores whenever the header is present
+
 ## OpenAI Models (GPT-5.4 / GPT-5.5)
 
 ### /responses
