@@ -1246,6 +1246,7 @@ router_settings:
 | PYROSCOPE_GRAFANA_USER | Optional. Grafana Cloud Pyroscope user/tenant ID for basic auth. Required when PYROSCOPE_GRAFANA_API_TOKEN is set.
 | PYROSCOPE_GRAFANA_API_TOKEN | Optional. Grafana Cloud API/access policy token for Pyroscope basic auth. Required when PYROSCOPE_GRAFANA_USER is set.
 | LITELLM_MASTER_KEY | Master key for proxy authentication. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_MIGRATE_FROM_MASTER_KEY | The previous master key. When set together with a new, safe `LITELLM_MASTER_KEY` and no `LITELLM_SALT_KEY`, the proxy re-encrypts every stored value that decrypts under the previous key at boot, before serving traffic, and logs when the variable can be deleted. Leaving it set afterwards is a no-op. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
