@@ -1683,7 +1683,7 @@ AWS serves some Bedrock models on an OpenAI-compatible endpoint, `https://bedroc
 | Grok 4.6 | `bedrock/us.xai.grok-4.6`, `bedrock/global.xai.grok-4.6`, `bedrock/us-gov.xai.grok-4.6` | Native Chat Completions |
 | Everything else (Claude, Nova, Llama, Mistral, ...) | `bedrock/<model-id>` | Converse or Invoke, as before |
 
-A model opts in through `"use_bedrock_runtime_chat_completions": true` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), so a model AWS lists without Chat Completions support keeps using Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
+A model opts in through `"supports_bedrock_runtime_chat_completions": true` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), so a model AWS lists without Chat Completions support keeps using Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
 
 The trade-off is that the OpenAI-compatible endpoint has no equivalent for a few Converse features, so LiteLLM falls back to Converse per request when you use one of them:
 
@@ -1693,7 +1693,7 @@ The trade-off is that the OpenAI-compatible endpoint has no equivalent for a few
 | `requestMetadata`, `performanceConfig`, `serviceTier`, or `outputConfig` in the request body | Converse | These Converse body fields are rejected as malformed input on the OpenAI-compatible endpoint |
 | `bedrock_request_metadata_fields` set in `litellm_settings` | Converse, for every request | LiteLLM only writes the operator's request metadata onto the Converse body |
 | Application inference profile ARN as the model | Converse | LiteLLM cannot tell from the ARN which model it fronts |
-| GPT-5.6 with function `tools` and `reasoning_effort` other than `"none"` (or unset) | Converse | AWS only accepts function tools on Chat Completions for GPT-5.6 when `reasoning_effort` is `"none"` |
+| Function `tools` with `reasoning_effort` other than `"none"` (or unset), on a model without `"supports_bedrock_runtime_chat_completions_tools_with_reasoning": true` in the cost map (the GPT-5.6 family today) | Converse | AWS only accepts function tools on Chat Completions for GPT-5.6 when `reasoning_effort` is `"none"`; GPT-OSS and Grok carry the flag and take tools with any effort |
 | `bedrock/converse/<model>` | Converse | You asked for it explicitly |
 
 What you will notice on the native route: the response carries AWS's own `id` and `service_tier` fields, tool call ids look like `call_0` instead of `tooluse_...`, `max_tokens` is sent as `max_completion_tokens`, `n` greater than 1 is unsupported (as on Converse), and GPT-OSS reasoning comes back in `reasoning_content` (LiteLLM splits it out of the inline `<reasoning>...</reasoning>` prefix AWS returns) without the Converse-only `thinking_blocks` field.
