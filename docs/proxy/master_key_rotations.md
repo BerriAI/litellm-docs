@@ -107,12 +107,12 @@ Then start the proxy again. This is the same swap and restart as [rotating with 
 When no salt key is set, the master key also encrypts the credentials stored in your database, so replacing it alone would make them unreadable. The error says so, with the number of values it found:
 
 ```text
-Your database holds 6 value(s) encrypted with this master key, which encrypts stored
-credentials while LITELLM_SALT_KEY is not set. Replacing the key alone makes them unreadable, so also tell
-the proxy which key to migrate from:
+Your database holds 6 value(s) encrypted with this master key,
+which encrypts stored credentials while LITELLM_SALT_KEY is not set. Replacing the key alone makes them
+unreadable, so also tell the proxy which key to migrate from:
 ```
 
-If the database cannot be reached during the refusal, the error says "Your database could not be checked for values encrypted with this master key" and prints the same steps. Following them is safe either way, because the migration does nothing when there is nothing to migrate.
+If the database cannot be reached during the refusal, the first line is "Your database could not be checked for values encrypted with this master key," instead, and the same steps follow. Following them is safe either way, because the migration does nothing when there is nothing to migrate.
 
 You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_KEY`, and the next boot re-encrypts the stored values under the new master key. You do not need a running proxy, the local development override, or a call to `POST /key/regenerate`. Back up your database first, as with any rotation on this page. If the old key came from `general_settings.master_key`, the error's first step is to make your config read the key from the environment, as shown in [Where to set the new key](#where-to-set-the-new-key).
 
@@ -148,11 +148,13 @@ You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_K
 
 If a stored value is edited while the migration runs, that value is left as it was and the log says "Re-encrypted N stored value(s), but M are still encrypted with the previous key because they changed during the migration. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy to migrate them." Do what it says and restart once more.
 
+A database error during the migration does not stop the boot. The proxy keeps starting and logs at WARNING "Could not migrate stored values from the LITELLM_MIGRATE_FROM_MASTER_KEY key (<ErrorType: message>). Values still encrypted with the previous key cannot be read until the migration succeeds. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy once the database is reachable." Until that restart, requests that need a stored credential still encrypted with the previous key fail, so fix the database connection and restart with the variable still set.
+
 Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy expects stored values to be encrypted with the salt key, so it skips the migration and logs that there is nothing to migrate, and the values still encrypted with the old key stay unreadable. Once the migration is done, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart.
 
 ### What the boot-time migration covers {#boot-time-migration}
 
-The migration works for any previous master key, not only the unsafe ones, so it is also an offline alternative to `POST /key/regenerate` with `new_master_key`: set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
+The migration works for any previous master key, not only the unsafe ones, so it is also an offline alternative to `POST /key/regenerate` with `new_master_key`: set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. It reads and writes through the primary database even when a read replica is configured. Tables or columns that do not exist on an older schema are skipped, so it works both before and after a schema upgrade. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
 
 It re-encrypts more than the regenerate call does: models stored in the database (`litellm_params`), credentials, `LiteLLM_Config` values (environment variables, CloudZero and Vantage settings and so on), SSO settings, cache settings, config overrides, MCP server credentials, static headers and environment variables, MCP OAuth client credentials, per-user MCP credentials and environment variables, SSO identity assertions, and the encrypted callback variables in team, key, and user metadata, including the deleted-team and deleted-key tables.
 
