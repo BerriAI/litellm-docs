@@ -3,8 +3,7 @@ slug: typesafe_jev
 title: "Day 0 Support: TypeSafe Jev"
 date: 2026-09-20T10:00:00
 authors:
-  - misbah
-  - mateo
+  - kerry
 description: "Day 0 support for TypeSafe AI's Jev on LiteLLM v1.103.0-rc: call it through the proxy, use it as the Auto Router classifier, or let it compact agent tool history."
 tags: [typesafe, jev, auto router, day 0 support]
 hide_table_of_contents: false
