@@ -843,6 +843,8 @@ router_settings:
 | SCX_API_KEY | API key for SCX.ai
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
 | SERPER_API_BASE | Base URL for the Serper search provider
+| SERPLY_API_BASE | Base URL for the Serply search provider. Default is https://api.serply.io/v1
+| SERPLY_API_KEY | API key for the Serply search provider
 | SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
 | SONIOX_API_KEY | API key for Soniox
 | SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
