@@ -339,7 +339,7 @@ A `gpt-4o` request from a `finance` key runs `global-policy`, then `team-policy`
 
 ## Default (Fallback) Attachments
 
-Attachment matches are additive: every attachment whose scope matches the request contributes its policy. To run one policy only for requests that opted in and a different policy for everyone else, mark the fallback attachment with `default: true`. A default attachment is skipped whenever any non-default attachment matches the request. When no non-default attachment matches, every default attachment whose own scope matches applies, in the usual execution order.
+Attachment matches are additive: every attachment whose scope matches the request contributes its policy. To run one policy only for requests that opted in and a different policy for everyone else, mark the fallback attachment with `default: true`. A default attachment is skipped whenever any non-default attachment matches the request and its policy applies (the policy exists and its `condition`, if any, matches the request model). When no non-default attachment matches, every default attachment whose own scope matches applies, in the usual execution order.
 
 ```yaml showLineNumbers title="config.yaml"
 policy_attachments:
