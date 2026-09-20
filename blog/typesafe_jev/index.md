@@ -1,18 +1,18 @@
 ---
 slug: typesafe_jev
-title: "Day 0 Support: TypeSafe Jev"
+title: "TypeSafe Jev on LiteLLM"
 date: 2026-09-20T10:00:00
 authors:
   - kerry
-description: "Day 0 support for TypeSafe AI's Jev on LiteLLM v1.103.0-rc: call it through the proxy, use it as the Auto Router classifier, or let it compact agent tool history."
-tags: [typesafe, jev, auto router, day 0 support]
+description: "TypeSafe AI's Jev lands in LiteLLM v1.103.0-rc: call it through the proxy, use it as the Auto Router classifier, or let it compact agent tool history."
+tags: [typesafe, jev, auto router, product]
 hide_table_of_contents: false
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports [TypeSafe AI's Jev](https://docs.typesafe.ai/api) on day 0, launching today in `v1.103.0-rc`. Jev is a decision model: it returns a choice, a score, or a yes/no probability instead of text. LiteLLM wires it in three places: a pass-through endpoint, an Auto Router classifier, and a compaction guardrail.
+[TypeSafe AI's Jev](https://docs.typesafe.ai/api) launches on LiteLLM today in `v1.103.0-rc`. Jev is a decision model: it returns a choice, a score, or a yes/no probability instead of text. LiteLLM wires it in three places: a pass-through endpoint, an Auto Router classifier, and a compaction guardrail.
 
 {/* truncate */}
 
