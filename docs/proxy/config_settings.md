@@ -1370,6 +1370,7 @@ router_settings:
 | OTEL_HEADERS | Headers for OpenTelemetry requests
 | OTEL_MODEL_ID | Model ID for OpenTelemetry tracing
 | OTEL_EXPORTER_OTLP_HEADERS | Headers for OpenTelemetry requests
+| OTEL_EXPORTER_OTLP_CERTIFICATE | CA bundle path for the OTLP HTTP exporters. When set (or the per-signal `OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE` / `OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` / `OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE`), it takes precedence over `SSL_CERT_FILE` and `SSL_VERIFY` for telemetry exports
 | OTEL_SERVICE_NAME | Service name identifier for OpenTelemetry
 | OTEL_TRACER_NAME | Tracer name for OpenTelemetry tracing
 | OTEL_LOGS_EXPORTER | Exporter type for OpenTelemetry logs (e.g., console)
