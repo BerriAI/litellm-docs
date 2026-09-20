@@ -1,7 +1,7 @@
 ---
 slug: jev-auto-router-benchmark
 title: "JEV Classifier: 5.43x as Fast as Haiku, 96% Lower Cost"
-date: 2026-09-18T22:30:00
+date: 2026-09-20T10:15:00
 authors:
   - moe
 description: "JEV classified requests 5.43x as fast as Haiku by median latency in our AI Gateway benchmark. Explore the setup, cost savings and methodology."
