@@ -257,7 +257,6 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | add_function_to_prompt | boolean | `false` | If true, when the provider does not support function/tool calling, appends the function definitions to the prompt instead of raising. |
 | ssl_verify | boolean or string | `true` | Controls TLS certificate verification for outgoing LLM requests. Set to `false` to disable verification, or to a string path to a CA bundle. |
 | return_response_headers | boolean | `false` | If true, surfaces the provider's rate-limit response headers (e.g. `x-ratelimit-remaining-requests`) on the response. |
-| telemetry | boolean | `true` | If true, LiteLLM sends anonymous library-usage telemetry. No prompts, keys, or request content are included. Set to `false` to opt out. |
 | max_budget | float | `0` (no cap) | Global spend cap in USD across all providers for this instance. `0` disables the cap. |
 | max_internal_user_budget | float | `null` | Default max budget (USD) applied to every internal user. `null` means no per-user cap. [Further docs](./self_serve#set-default-max-budget-for-internal-users) |
 | default_max_internal_user_budget | float | `null` | Fallback max budget (USD) for internal users when `max_internal_user_budget` is unset. `null` means no cap. |
