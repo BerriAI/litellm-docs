@@ -23,7 +23,7 @@ LLM Tech serves open-weight language models from EU hardware:
 - **EU Hosting**: All compute in the European Union, GDPR-ready with a signable DPA
 - **Measured Performance**: Live latency and throughput published at [llmtech.eu/status](https://llmtech.eu/status)
 
-Currently served model: `unsloth/Qwen3.8-27B-NVFP4` (262,144-token context). Model list and pricing: [llmtech.eu/models/qwen3.8-27b](https://llmtech.eu/models/qwen3.8-27b/).
+Currently served model: `nvidia/Qwen3.8-27B-NVFP4` (262,144-token context). Model list and pricing: [llmtech.eu/models/qwen3.8-27b](https://llmtech.eu/models/qwen3.8-27b/).
 
 ## Required Variables
 
@@ -47,7 +47,7 @@ os.environ["LLMTECH_API_KEY"] = ""  # your LLM Tech API key
 messages = [{"content": "What is the capital of France?", "role": "user"}]
 
 response = completion(
-    model="llmtech/unsloth/Qwen3.8-27B-NVFP4",
+    model="llmtech/nvidia/Qwen3.8-27B-NVFP4",
     messages=messages
 )
 
@@ -66,7 +66,7 @@ os.environ["LLMTECH_API_KEY"] = ""  # your LLM Tech API key
 messages = [{"content": "Write a short poem about AI", "role": "user"}]
 
 response = completion(
-    model="llmtech/unsloth/Qwen3.8-27B-NVFP4",
+    model="llmtech/nvidia/Qwen3.8-27B-NVFP4",
     messages=messages,
     stream=True
 )
@@ -83,7 +83,7 @@ Add the following to your LiteLLM Proxy configuration file:
 model_list:
   - model_name: qwen3.8-27b
     litellm_params:
-      model: llmtech/unsloth/Qwen3.8-27B-NVFP4
+      model: llmtech/nvidia/Qwen3.8-27B-NVFP4
       api_key: os.environ/LLMTECH_API_KEY
 ```
 
@@ -117,7 +117,7 @@ The served model supports adaptive reasoning. Control it via `chat_template_kwar
 
 ```python showLineNumbers title="Disable or tune reasoning"
 response = completion(
-    model="llmtech/unsloth/Qwen3.8-27B-NVFP4",
+    model="llmtech/nvidia/Qwen3.8-27B-NVFP4",
     messages=[{"role": "user", "content": "2+2?"}],
     chat_template_kwargs={"enable_thinking": False},
 )
