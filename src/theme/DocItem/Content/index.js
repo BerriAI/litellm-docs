@@ -66,10 +66,8 @@ export default function DocItemContent({children}) {
       {showRustMigrationBanner && (
         <Link className={styles.rustMigrationBanner} to="/rust-migration">
           <span className={styles.rustMigrationContent}>
-            <span className={styles.rustMigrationEmoji} aria-hidden="true">🦀</span>
-            <strong>LiteLLM is moving to Rust</strong>
+            <strong>LiteLLM is moving to Rust <span aria-hidden="true">🦀</span></strong>
             <small>Follow the migration, benchmarks, and rollout status.</small>
-            <span className={styles.rustMigrationButton}>View migration →</span>
           </span>
         </Link>
       )}
