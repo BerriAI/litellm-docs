@@ -120,7 +120,7 @@ When you pass `prompt_id="1234"`, the custom prompt manager will add a system me
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -144,7 +144,7 @@ from langchain.schema import HumanMessage
 
 chat = ChatOpenAI(
     model="{{openai_large}}",
-    openai_api_key="sk-1234",
+    openai_api_key="sk-<your-api-key>",
     openai_api_base="http://0.0.0.0:4000",
     extra_body={
         "prompt_id": "1234"
@@ -163,7 +163,7 @@ print(response.content)
 ```shell
 curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],

@@ -125,7 +125,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="cURL Request"
 curl http://0.0.0.0:4000/v1/search/perplexity-search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "latest AI developments 2024",
@@ -139,7 +139,7 @@ curl http://0.0.0.0:4000/v1/search/perplexity-search \
 
 ```bash showLineNumbers title="cURL Request with search_tool_name in body"
 curl http://0.0.0.0:4000/v1/search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "search_tool_name": "perplexity-search",
@@ -182,7 +182,7 @@ Test with load balancing:
 
 ```bash
 curl http://0.0.0.0:4000/v1/search/my-search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "AI developments",

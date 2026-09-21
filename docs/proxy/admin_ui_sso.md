@@ -260,7 +260,7 @@ Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token co
 - `proxy_admin` - Admin over the platform
 - `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
 - `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_view_only` - Can login, view their own keys, view their own spend
+- `internal_user_viewer` - Can login, view their own keys, view their own spend
 
 Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
 
@@ -378,7 +378,7 @@ For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the to
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
 ```

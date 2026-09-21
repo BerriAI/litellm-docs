@@ -5,7 +5,7 @@
 | Cost Tracking | ✅ |
 | Logging | ✅ (Basic Logging not supported) |
 | Load Balancing | ✅ |
-| Supported Providers | `mistral`, `azure_ai`, `vertex_ai` |
+| Supported Providers | `mistral`, `azure_ai`, `vertex_ai`, `cohere` |
 
 :::tip
 
@@ -171,7 +171,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "mistral-ocr",
@@ -188,7 +188,7 @@ Upload a file directly using multipart form data. No need to base64-encode the f
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@/path/to/document.pdf"
 ```
@@ -197,7 +197,7 @@ You can also pass optional parameters as additional form fields:
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@screenshot.png" \
   -F 'pages=[0,1,2]' \
@@ -282,7 +282,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 **For file uploads (Proxy, multipart form):**
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@document.pdf"
 ```
@@ -340,11 +340,16 @@ The response follows Mistral's OCR format with the following structure:
 | `object` | string | Always `"ocr"` for OCR responses |
 
 
+## **Batch OCR**
+
+Mistral OCR also runs through the [Batches API](./batches): upload a JSONL file whose lines target `/v1/ocr`, create a batch with `"endpoint": "/v1/ocr"`, and download the output file once it completes. Pages processed in a batch are billed at the model's `ocr_cost_per_page_batches` rate. See [Mistral files and batches](./providers/mistral#files-and-batches-api) for the full flow and the cost keys.
+
 ## **Supported Providers**
 
 | Provider    | Link to Usage      |
 |-------------|--------------------|
-| Mistral AI  |   [Usage](#quick-start)                 |
-| Azure AI    |   [Usage](../docs/providers/azure_ocr)                 |
+| Mistral AI  |   [Usage](#quick-start), [Batch OCR](./providers/mistral#files-and-batches-api)                 |
+| Azure AI (Mistral, Cohere Parse) |   [Usage](../docs/providers/azure_ocr)                 |
 | Vertex AI   |   [Usage](../docs/providers/vertex_ocr)                 |
+| Cohere Parse |   [Usage](../docs/providers/cohere#parse-ocr)                 |
 

@@ -36,7 +36,7 @@ Apply a budget across all calls on the proxy
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   # other litellm settings
@@ -54,7 +54,7 @@ litellm /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Autherization: Bearer sk-1234' \
+    --header "Autherization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",
@@ -143,7 +143,7 @@ Create a user with `user_id=ishaan`
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan"
@@ -156,7 +156,7 @@ Set `max_budget_in_team` when adding a User to a team. We use the same `user_id`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "max_budget_in_team": 0.000000000001, "member": {"role": "user", "user_id": "ishaan"}}'
 ```
@@ -167,7 +167,7 @@ Set `user_id=ishaan` from step 1
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan",
@@ -205,31 +205,63 @@ curl --location 'http://localhost:4000/chat/completions' \
 
 Update `max_budget_in_team` for an existing team member with `/team/member_update`. The new budget takes effect on the member's next request
 
+This gives the member their own budget. It no longer follows the team's `team_member_budget` default, and later `/team/update` changes to that default leave this member untouched. To change the budget for every member still on the default, update `team_member_budget` on `/team/update` instead
+
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
 ```
 
+Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
+
 #### Reset a team member's spend
 
-Reset the spend tracked against a member's in-team budget without changing the budget itself. Callable by a proxy admin or the team's admin, but a team admin cannot reset their own spend
+Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
+
+<Tabs>
+<TabItem value="ui" label="UI">
+
+1. Go to **Teams** and open the team
+2. Open the **Members** tab
+3. In the **Actions** column of the member's row, click the **Reset spend** icon (the refresh icon between the edit and delete icons)
+4. The **Reset Team Member Spend** dialog shows the member and their current cycle spend. Click **Reset** to set it to $0
+
+The icon is shown only to users who can edit the team, and only on rows where **Current Cycle Spend (USD)** is above $0. A team admin does not see it on their own row, but a proxy admin does
+
+</TabItem>
+<TabItem value="api" label="API">
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"reset_to": 0}'
 ```
 
-`reset_to` must be a number no greater than the member's current spend or their budget. The reset takes effect on the member's next request
+`reset_to` must be a number of at least 0 that is no greater than the member's current spend or their budget
 
 Response:
 
 ```shell
 {"team_id":"e8d1460f-846c-45d7-9b43-55f3cc52ac32","user_id":"ishaan","spend":0.0,"previous_spend":3.495e-05,"max_budget":10.0}
 ```
+
+The endpoint returns a 403 (`Cannot reset your own spend. Ask a proxy admin.`) when a team admin targets their own user, and a 404 when the user has no membership row in that team
+
+</TabItem>
+</Tabs>
+
+The reset takes effect on the member's next request, on every proxy instance. It applies to one member at a time and there is no bulk version, so repeat it for each member you want to reset
+
+#### Existing spend counts against a budget added later
+
+Spend is tracked for every team member, including members with no budget. On the team's **Members** tab, **Current Cycle Spend (USD)** is the value checked against the member's budget and it goes back to $0 when the member's `budget_duration` window rolls over, while **Total Spend (USD)** is cumulative and never resets. A member with no budget has no budget window, so their current cycle spend is never reset automatically and keeps growing. Older versions only tracked spend for members that had a budget, and a member added on one of those versions starts being tracked on their next request after the upgrade
+
+If you give that member a budget later, the spend they already accrued counts against it right away. This applies both to setting `team_member_budget` on the team with `/team/update`, which links the team's member budget to every member that has no budget yet, and to setting `max_budget_in_team` for one member with `/team/member_update`. For example, a member spends $500 with no budget, an admin then sets a $100 member budget, and the member's next request is rejected with a budget exceeded error
+
+There are two ways out. If the new budget has a `budget_duration`, the member's current cycle spend goes back to $0 at the next reset and they are unblocked without any action. If it has no `budget_duration`, the member stays blocked until someone [resets their spend](#reset-a-team-members-spend) in the UI or through the API
 
 
 ### Internal User
@@ -615,7 +647,7 @@ Set `tpm_limit` and `rpm_limit` on the agent to cap total throughput across all 
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -637,7 +669,7 @@ Set `session_tpm_limit` and `session_rpm_limit` to cap throughput per individual
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -659,7 +691,7 @@ Set `max_iterations` and `max_budget_per_session` in agent `litellm_params` to c
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -690,7 +722,7 @@ You can also update rate limits on existing agents using `PATCH /v1/agents/{agen
 
 ```bash
 curl -X PATCH 'http://localhost:4000/v1/agents/<agent_id>' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "tpm_limit": 200000,
@@ -711,7 +743,7 @@ Use this to budget `user` passed to `/chat/completions`, **without needing to cr
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
         "budget_id": "default-customer-budget",
@@ -723,7 +755,7 @@ curl --location 'http://0.0.0.0:4000/budget/new' \
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   max_end_user_budget_id: "default-customer-budget" # applied to any 'user' without their own budget
@@ -917,7 +949,7 @@ Set `token_rate_limit_type` in your `config.yaml`:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   token_rate_limit_type: "output"  # Options: "input", "output", "total" (default)
 ```
 
@@ -939,7 +971,7 @@ Declare what your models actually emit with `default_estimated_output_tokens` (o
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -956,7 +988,7 @@ The same two fields work on `/team/new` and `/team/update`, and both are editabl
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -998,7 +1030,7 @@ Use `/team/new` or `/team/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1026,7 +1058,7 @@ Use `/team/new` or `/team/update` with `model_rpm_limit` and `model_tpm_limit` a
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1039,7 +1071,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1054,7 +1086,7 @@ You can also pass per-model limits via the `metadata` field:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1079,7 +1111,7 @@ Use `/user/new` or `/user/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1103,7 +1135,7 @@ Use `/key/generate`, if you want them for just that key.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1129,7 +1161,7 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
 ```
@@ -1181,7 +1213,7 @@ Set rate limits on agents registered with the [Agent Gateway](../a2a.md).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "tpm_limit": 100000, "rpm_limit": 100}'
 ```
@@ -1190,7 +1222,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/agents' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "session_tpm_limit": 50000, "session_rpm_limit": 50}'
 ```
@@ -1212,9 +1244,11 @@ Use this to set rate limits for `user` passed to `/chat/completions`, without ne
 
 Set a `tpm_limit` on the budget (You can also pass `rpm_limit` if needed)
 
+Both are optional; a budget with neither set applies no LiteLLM TPM or RPM limit to its customers, and only provider rate limits apply
+
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "budget_id" : "free-tier",
@@ -1229,7 +1263,7 @@ We use `budget_id="free-tier"` from Step 1 when creating this new customers
 
 ```shell
 curl --location 'http://0.0.0.0:4000/customer/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id" : "palantir",
@@ -1244,7 +1278,7 @@ Pass the `user_id` from Step 2 as `user="palantir"`
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -1288,7 +1322,7 @@ litellm_settings:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

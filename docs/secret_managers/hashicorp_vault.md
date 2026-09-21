@@ -22,7 +22,9 @@ LiteLLM supports three methods of authentication:
 
 ```bash
 HCP_VAULT_ADDR="https://test-cluster-public-vault-0f98180c.e98296b2.z1.hashicorp.cloud:8200"
-HCP_VAULT_NAMESPACE="admin"
+HCP_VAULT_NAMESPACE="admin" # OPTIONAL. Vault Enterprise namespace for both login and secret operations
+HCP_VAULT_LOGIN_NAMESPACE="admin" # OPTIONAL. Namespace for AppRole / TLS cert login only. Defaults to HCP_VAULT_NAMESPACE
+HCP_VAULT_SECRET_NAMESPACE="admin/teams/team-a" # OPTIONAL. Namespace for secret reads and writes only. Defaults to HCP_VAULT_NAMESPACE
 
 # Authentication via AppRole (recommended)
 HCP_VAULT_APPROLE_ROLE_ID="your-role-id"
@@ -139,6 +141,22 @@ Direct token authentication uses a static Vault token.
 export HCP_VAULT_TOKEN="hvs.CAESIG52gL6ljBSdmq*****"
 ```
 
+## Namespaces
+
+On Vault Enterprise, LiteLLM sends the namespace in two places: as the `X-Vault-Namespace` header on the AppRole or TLS cert login request, and as a path segment in the URL of every secret read, write, rotate and delete. `HCP_VAULT_NAMESPACE` sets both. When the role that LiteLLM logs in with lives in a different namespace than the secrets it manages, set the two independently with `HCP_VAULT_LOGIN_NAMESPACE` and `HCP_VAULT_SECRET_NAMESPACE`. Each one falls back to `HCP_VAULT_NAMESPACE` when unset, so existing deployments keep working unchanged. The same three settings are available in the Admin UI under Settings > Admin Settings > Hashicorp Vault as Namespace, Login Namespace and Secret Namespace
+
+For example, an AppRole that is defined in the top-level `admin` namespace and has access to every team namespace below it, with team virtual keys and provider secrets stored under `admin/teams/team-a`:
+
+```bash
+HCP_VAULT_ADDR="https://vault.example.com:8200"
+HCP_VAULT_LOGIN_NAMESPACE="admin"
+HCP_VAULT_SECRET_NAMESPACE="admin/teams/team-a"
+HCP_VAULT_APPROLE_ROLE_ID="your-role-id"
+HCP_VAULT_APPROLE_SECRET_ID="your-secret-id"
+```
+
+With this configuration the login request is `POST https://vault.example.com:8200/v1/auth/approle/login` with the header `X-Vault-Namespace: admin`, and a read of `OPENAI_API_KEY` goes to `GET https://vault.example.com:8200/v1/admin/teams/team-a/secret/data/OPENAI_API_KEY` with only the `X-Vault-Token` header. Vault addresses the root namespace by omitting the header, so to log in at root while reading team secrets, leave `HCP_VAULT_LOGIN_NAMESPACE` and `HCP_VAULT_NAMESPACE` unset and set only `HCP_VAULT_SECRET_NAMESPACE`. Secret requests never carry a namespace header, so the URL is the single source of truth for which namespace a secret lives in. A per-team `namespace` override (see [Team-specific overrides](#team-specific-overrides)) replaces `HCP_VAULT_SECRET_NAMESPACE` for that team's keys and never affects login
+
 ## How it works
 
 **Reading Secrets**
@@ -169,7 +187,7 @@ For example, for `AZURE_API_KEY`, the secret should be stored as:
 
 ```json
 {
-  "key": "sk-1234"
+  "key": "sk-<virtual-key>"
 }
 ```
 
@@ -207,7 +225,7 @@ Use the following structure for the JSON payload:
 }
 ```
 
-- `namespace` – overrides the `X-Vault-Namespace` header.
+- `namespace` – overrides the secret namespace (`HCP_VAULT_SECRET_NAMESPACE`, or `HCP_VAULT_NAMESPACE` when that is unset) in the secret URL. Login always uses the login namespace.
 - `mount` – which KV engine mount to use (defaults to `secret`).
 - `path_prefix` – additional path segments between the mount and the secret name.
 - `data` – the field name inside the KV payload (defaults to `key`).

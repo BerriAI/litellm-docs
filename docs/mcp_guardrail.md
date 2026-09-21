@@ -40,7 +40,7 @@ Test your MCP guardrails with a request that includes sensitive information:
 ```bash title="Test MCP Guardrail" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [

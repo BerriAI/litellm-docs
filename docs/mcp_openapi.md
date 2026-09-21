@@ -129,10 +129,11 @@ curl -X POST http://localhost:4000/v1/mcp/server \
 ```
 
 ```bash title="Update overrides on an existing server" showLineNumbers
-curl -X PUT http://localhost:4000/v1/mcp/server/{server_id} \
+curl -X PUT http://localhost:4000/v1/mcp/server \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
+    "server_id": "<server-id>",
     "tool_name_to_display_name": {
       "getPetById": "Get Pet"
     },
@@ -178,7 +179,7 @@ config = {
         "petstore": {
             "url": "http://localhost:4000/petstore_mcp/mcp",
             "headers": {
-                "x-litellm-api-key": "Bearer sk-1234"
+                "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
             }
         }
     }
@@ -211,7 +212,7 @@ if __name__ == "__main__":
     "Petstore": {
       "url": "http://localhost:4000/petstore_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }

@@ -52,6 +52,7 @@ general_settings:
     tags: # OPTIONAL, if set will set this as the tags for all virtual keys
       Environment: "Prod"
       Owner: "AI Platform team"
+    kms_key_id: "arn:aws:kms:us-east-1:123456789012:key/11111111-2222-3333-4444-555555555555" # OPTIONAL, customer-managed KMS key used to encrypt stored virtual keys
 ```
 </TabItem>
 <TabItem value="read_and_write" label="Read + Write Keys with AWS Secret Manager">
@@ -75,6 +76,21 @@ general_settings:
 ```bash
 litellm --config /path/to/config.yaml
 ```
+
+## Encrypt Virtual Keys with a Customer-Managed KMS Key
+
+By default, secrets LiteLLM creates in AWS Secrets Manager are encrypted with the AWS-managed `aws/secretsmanager` key. Set `kms_key_id` to a KMS key ID, alias or ARN to encrypt them with your own customer-managed key (CMK) instead. The value is sent as `KmsKeyId` on every `CreateSecret` call, so it only applies to secrets created after the setting is in place. Existing secrets keep their current key.
+
+```yaml
+general_settings:
+  key_management_system: "aws_secret_manager"
+  key_management_settings:
+    store_virtual_keys: true
+    aws_region_name: "us-east-1"
+    kms_key_id: "arn:aws:kms:us-east-1:123456789012:key/11111111-2222-3333-4444-555555555555"
+```
+
+The IAM identity the proxy uses needs `kms:GenerateDataKey` and `kms:Decrypt` on that key in addition to its Secrets Manager permissions. You can confirm the key took effect with `aws secretsmanager describe-secret --secret-id litellm/<key_alias>`; the response's `KmsKeyId` should match the configured key.
 
 ## Using K/V pairs in 1 AWS Secret
 
@@ -153,6 +169,7 @@ general_settings:
 | `aws_profile_name` | AWS profile from `~/.aws/credentials` |
 | `aws_web_identity_token` | OIDC token path for IRSA |
 | `aws_sts_endpoint` | Custom STS endpoint for VPC |
+| `kms_key_id` | Customer-managed KMS key (ID, alias or ARN) used to encrypt secrets LiteLLM creates |
 
 
 

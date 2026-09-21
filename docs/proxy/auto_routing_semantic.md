@@ -185,7 +185,7 @@ Once added developers need to select the model=`auto_router1` in the `model` fie
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234", # replace with your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>", # replace with your LiteLLM API key
     base_url="http://localhost:4000"
 )
 

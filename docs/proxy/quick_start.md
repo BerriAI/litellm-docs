@@ -461,7 +461,9 @@ Detailed information
 export LITELLM_LOG=DEBUG
 ```
 
-No Logs
+Errors only
 ```shell
-export LITELLM_LOG=None
+export LITELLM_LOG=ERROR
 ```
+
+`LITELLM_LOG` must be a valid Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Setting it to `None` makes `import litellm` fail.

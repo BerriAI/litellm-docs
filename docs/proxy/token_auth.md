@@ -28,7 +28,7 @@ export JWT_PUBLIC_KEY_URL="" # "https://demo.duendesoftware.com/.well-known/open
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
 
 model_list:
@@ -417,7 +417,7 @@ Change the string in JWT 'scopes', that litellm evaluates to see if a user has a
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -431,7 +431,7 @@ Set the field in the jwt token, which corresponds to a litellm user / team / org
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -488,7 +488,7 @@ Sometimes your JWT token contains human-readable names instead of database IDs. 
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     # Name-based fields (resolved via database lookup)
@@ -678,7 +678,7 @@ def my_custom_validate(token: str) -> Literal[True]:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_id_jwt_field: "sub"
@@ -723,7 +723,7 @@ By default:
 **Admin Routes**
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -733,7 +733,7 @@ general_settings:
 **Team Routes**
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     # ...
@@ -813,7 +813,7 @@ Control how long public keys are cached for (in seconds).
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     admin_jwt_scope: "litellm-proxy-admin"
@@ -827,7 +827,7 @@ Set a custom field in which the team_id exists. By default, the 'client_id' fiel
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     team_id_jwt_field: "client_id" # 👈 KEY CHANGE
@@ -868,7 +868,7 @@ Allow users who belong to a specific email domain, automatic access to the proxy
  
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     user_email_jwt_field: "email" # 👈 checks 'email' field in jwt payload
@@ -1297,7 +1297,7 @@ All endpoints require admin auth (`Authorization: Bearer <master_key>`).
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/new \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jwt_claim_name": "email",
@@ -1310,21 +1310,21 @@ curl -X POST http://localhost:4000/jwt/key/mapping/new \
 
 ```bash
 curl http://localhost:4000/jwt/key/mapping/list?page=1&size=50 \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Get a specific mapping:**
 
 ```bash
 curl "http://localhost:4000/jwt/key/mapping/info?id=<mapping-id>" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Update a mapping:**
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/update \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "id": "<mapping-id>",
@@ -1337,7 +1337,7 @@ curl -X POST http://localhost:4000/jwt/key/mapping/update \
 
 ```bash
 curl -X POST http://localhost:4000/jwt/key/mapping/delete \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"id": "<mapping-id>"}'
 ```
@@ -1359,6 +1359,40 @@ curl -X POST http://localhost:4000/jwt/key/mapping/delete \
 | 400 | The provided key does not match an existing virtual key |
 | 404 | Mapping not found (for update/delete/info) |
 | 403 | Non-admin user attempted a mapping operation |
+
+## Bind JWTs to Registered Agents
+
+Provision agent identities in your identity provider (for example, one Microsoft Entra ID app registration per agent) and let LiteLLM enforce the agent's policies on every JWT that agent presents. When `agent_id_jwt_field` is set, LiteLLM reads that claim from the verified token, matches it against a registered agent (first by `agent_id`, then by `agent_name`), and sets `agent_id` on the authenticated identity. Everything that already applies to a virtual key bound to an agent then applies to the JWT caller too: `require_trace_id_on_calls_by_agent`, per-agent MCP server and tool restrictions, and `agent_id` spend attribution.
+
+### Setup
+
+Register the agent under the name your identity provider will send. For an Entra app token that is the client id, which Entra puts in the `azp` claim (v2 tokens) or `appid` (v1 tokens).
+
+```yaml
+agents:
+  - agent_name: 2f5c9b1e-6a4d-4c8e-9f0b-7d1a3e5c9b21   # Entra client id of the agent's app registration
+    agent_card_params:
+      name: research-agent
+      url: http://localhost:9999/a2a
+      version: "1.0.0"
+    litellm_params:
+      require_trace_id_on_calls_by_agent: true
+
+general_settings:
+  enable_jwt_auth: True
+  litellm_jwtauth:
+    agent_id_jwt_field: "azp"   # supports dot notation for nested claims
+    team_id_jwt_field: "team"
+    user_id_jwt_field: "sub"
+```
+
+### Behavior
+
+A token whose claim matches a registered agent is bound to that agent and inherits its restrictions, so with the config above a call without `x-litellm-trace-id` is rejected with `400`. A token whose claim matches no registered agent is rejected with `403` rather than falling back to an unbound identity, the same way an unknown `team_id_jwt_field` value is rejected; this applies to admin-scoped tokens as well. A token that does not carry the claim at all is authenticated exactly as before. When `agent_id_jwt_field` is unset nothing changes.
+
+Every token that carries the configured claim is treated as an agent. Entra puts `azp` on delegated (user) tokens too, so if humans and agents obtain tokens for the same audience, `azp` will bind or reject the human callers as well. In that setup point `agent_id_jwt_field` at a claim that only agent tokens carry, such as an optional claim or a custom claim added through a claims mapping policy on the agents' app registrations, and leave `azp` for a proxy whose JWT callers are all agents.
+
+If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#beta-jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
 
 ## All JWT Params
 

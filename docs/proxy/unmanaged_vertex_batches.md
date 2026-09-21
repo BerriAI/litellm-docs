@@ -31,7 +31,7 @@ Enable cost tracking in your proxy config:
 
 ```yaml
 general_settings:
-  track_unmanaged_vertex_batch_cost: true  # Default: false
+  track_unmanaged_batch_cost: true  # Default: false
 ```
 
 Configure a `vertex_ai` deployment for the model you want to batch. The poller uses this deployment's credentials to poll Vertex and compute cost:
@@ -79,7 +79,7 @@ Pass the GCS URI as `input_file_id`:
 
 ```bash
 curl -X POST http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "gs://my-bucket/batches/publishers/google/models/{{gemini_flash}}/batch.jsonl",
@@ -97,7 +97,7 @@ Pass `custom_llm_provider=vertex_ai` so the proxy routes to Vertex instead of Op
 
 ```bash
 curl -X GET "http://localhost:4000/v1/batches/8823717160934178816?custom_llm_provider=vertex_ai" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### 4. Retrieve results
@@ -116,13 +116,15 @@ Each line is a Vertex AI response object:
 
 ## Cost tracking
 
-With `track_unmanaged_vertex_batch_cost: true`, the CheckBatchCost poller handles cost tracking automatically. It extracts the model from the GCS path, uses the configured `vertex_ai` deployment to poll Vertex for results, computes token cost, and marks the batch as processed. Cost appears in the proxy logs UI at `http://localhost:4000/ui/?page=logs`.
+With `track_unmanaged_batch_cost: true`, the CheckBatchCost poller handles cost tracking automatically. It extracts the model from the GCS path, uses the configured `vertex_ai` deployment to poll Vertex for results, computes token cost, and marks the batch as processed. Cost appears in the proxy logs UI at `http://localhost:4000/ui/?page=logs`.
 
 The polling interval is controlled by `proxy_batch_polling_interval` in `general_settings` (base seconds; the poller adds 0-30s jitter). Set it to `10` for faster feedback during testing.
 
+The spend log row the poller writes has the same shape as the one managed batches get, so see [Observability](/docs/proxy/managed_batches#observability) for what each field means and how to read a partially failed batch
+
 ## Troubleshooting
 
-**Batch not costed.** Check that `track_unmanaged_vertex_batch_cost: true` is set, that your GCS path contains `publishers/google/models/<model>/`, and that you have a `vertex_ai` deployment configured. Look for log lines like:
+**Batch not costed.** Check that `track_unmanaged_batch_cost: true` is set, that your GCS path contains `publishers/google/models/<model>/`, and that you have a `vertex_ai` deployment configured. Look for log lines like:
 
 ```
 Skipping unmanaged vertex batch 8823717160934178816: no vertex_ai deployment configured for model {{gemini_flash}}

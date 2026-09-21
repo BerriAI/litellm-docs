@@ -186,7 +186,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "ragflow-chat-gpt4",
     "messages": [
@@ -202,7 +202,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 

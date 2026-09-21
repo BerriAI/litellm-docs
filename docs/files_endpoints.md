@@ -51,7 +51,7 @@ model_list:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 
@@ -267,7 +267,7 @@ print("Response from creating file=", file_obj)
 
 **List Files**
 ```python
-files = await litellm.alist_files(
+files = await litellm.afile_list(
     custom_llm_provider="openai",
     limit=10
 )
@@ -276,7 +276,7 @@ print("files=", files)
 
 **Retrieve File Information**
 ```python
-file = await litellm.aretrieve_file(
+file = await litellm.afile_retrieve(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )
@@ -285,7 +285,7 @@ print("file=", file)
 
 **Delete File**
 ```python
-response = await litellm.adelete_file(
+response = await litellm.afile_delete(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )

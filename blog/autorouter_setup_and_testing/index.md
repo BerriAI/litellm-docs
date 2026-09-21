@@ -35,12 +35,13 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 :::
 
-## 1-Click Presets for Anthropic and OpenAI Families
+## Add an Auto Router (Models + Endpoints → Auto Router)
 
-![Add Auto Router form with the Configure automatically button and generated tier summary](./auto-setup.png)
+![The Add Auto Router dialog in Models + Endpoints, with Configure automatically and template options](./auto-setup.png)
 
-- Add Auto Router now opens on a name field, a **Configure automatically** button, and a **Template** dropdown
-- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four tiers, and fills in the form for you. Review the generated tiers before saving
+- In the LiteLLM Dashboard, go to **Models + Endpoints** and open the **Auto Router** tab. Add a new Auto Router model, or enable and configure an existing one.
+- Enter an Auto Router name, then select **Configure automatically** or choose a template. Review the generated tiers, test routing, and save.
+- **Configure automatically** checks the models your proxy already serves, selects the best available models for all four tiers, and fills in the form for you
 - Picking a family builds the whole config for you with the **latest models** in that family, so every tier is on current models without writing any YAML
 - The detail collapses behind a one-line tier summary; presets that reference a model your proxy doesn't serve grey out and tell you which one is missing
 - More families are coming; today Anthropic and OpenAI are covered, and Custom is there for everything else
@@ -92,7 +93,7 @@ complexity_router_config:
 
 :::info
 
-Start with the one-line agent command, or open Add Model → Auto Router in the dashboard and pick a family preset. Questions and results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) to work on this with us directly.
+Start with the one-line agent command, or go to **Models + Endpoints → Auto Router** in the dashboard to add or enable an Auto Router model. Questions and results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) to work on this with us directly.
 
 :::
 

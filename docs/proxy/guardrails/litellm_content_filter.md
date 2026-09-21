@@ -182,7 +182,7 @@ litellm --config config.yaml
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -212,7 +212,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -251,7 +251,7 @@ Contact me at [EMAIL_REDACTED]
 |-------------|-------------|---------|
 | `us_ssn` | US Social Security Numbers | `123-45-6789` |
 | `email` | Email addresses | `user@example.com` |
-| `phone` | Phone numbers | `+1-555-123-4567` |
+| `us_phone` | US phone numbers | `+1-555-123-4567` |
 | `visa` | Visa credit cards | `4532-1234-5678-9010` |
 | `mastercard` | Mastercard credit cards | `5425-2334-3010-9903` |
 | `amex` | American Express cards | `3782-822463-10005` |
@@ -376,7 +376,7 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -446,7 +446,7 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

@@ -26,7 +26,7 @@ Use the OpenAI SDK pointed at your LiteLLM Gateway:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
     base_url="http://localhost:4000"
 )
 
@@ -45,7 +45,7 @@ print(response)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -66,7 +66,7 @@ for event in stream:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -155,7 +155,7 @@ files = litellm.list_container_files(
 
 # 4. Download each file
 for file in files.data:
-    content = litellm.retrieve_container_file_content(
+    content = litellm.containers.retrieve_container_file_content(
         container_id=container_id,
         file_id=file.id,
         custom_llm_provider="openai"

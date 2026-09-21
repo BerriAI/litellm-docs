@@ -89,7 +89,7 @@ Required environment variables:
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `LITELLM_BASE_URL` | `http://localhost:4000` | LiteLLM proxy URL |
-| `LITELLM_API_KEY` | `sk-1234` | Your LiteLLM API key (not your provider's key) |
+| `LITELLM_API_KEY` | `sk-<your-litellm-api-key>` | Your LiteLLM API key (not your provider's key) |
 
 ## 2. Setting Up Environment
 
@@ -116,7 +116,7 @@ from agents import (
 
 # Point to LiteLLM proxy
 BASE_URL = os.getenv("LITELLM_BASE_URL") or "http://localhost:4000"
-API_KEY = os.getenv("LITELLM_API_KEY") or "sk-1234"
+API_KEY = os.getenv("LITELLM_API_KEY") or "sk-<your-litellm-api-key>"
 
 # Define model constants for cleaner code
 MODEL_BEDROCK_SONNET = "bedrock-claude-sonnet-5"
@@ -288,7 +288,7 @@ from agents import (
 
 # Point to LiteLLM proxy
 BASE_URL = os.getenv("LITELLM_BASE_URL") or "http://localhost:4000"
-API_KEY = os.getenv("LITELLM_API_KEY") or "sk-1234"
+API_KEY = os.getenv("LITELLM_API_KEY") or "sk-<your-litellm-api-key>"
 MODEL_NAME = os.getenv("MODEL_NAME") or "bedrock-claude-sonnet-5"
 
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)

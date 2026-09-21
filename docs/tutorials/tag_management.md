@@ -30,7 +30,7 @@ Now we will test the tag based routing rules.
 
 ### 2.1 Invalid model
 
-This request will fail since we send `tags=private-data` but the model `{{openai_large}}` is not in the allowed models for the `private-data` tag.
+This request will fail since we send `tags=["private-data"]` but the model `{{openai_large}}` is not in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_invalid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -44,7 +44,7 @@ Here is an example sending the same request using the OpenAI Python SDK.
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000/v1/"
 )
 
@@ -54,7 +54,7 @@ response = client.chat.completions.create(
         {"role": "user", "content": "Hello, how are you?"}
     ],
     extra_body={
-        "tags": "private-data"
+        "tags": ["private-data"]
     }
 )
 ```
@@ -65,7 +65,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -74,7 +74,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
       "content": "Hello, how are you?"
     }
   ],
-  "tags": "private-data"
+  "tags": ["private-data"]
 }'
 ```
 
@@ -85,7 +85,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ### 2.2 Valid model
 
-This request will succeed since we send `tags=private-data` and the model `us.anthropic.{{anthropic}}` is in the allowed models for the `private-data` tag.
+This request will succeed since we send `tags=["private-data"]` and the model `us.anthropic.{{anthropic}}` is in the allowed models for the `private-data` tag.
 
 <Image img={require('../../img/tag_valid.png')}  style={{ width: '800px', height: 'auto' }} />
 
@@ -98,7 +98,7 @@ Here is an example sending the same request using the OpenAI Python SDK.
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000/v1/"
 )
 
@@ -108,7 +108,7 @@ response = client.chat.completions.create(
         {"role": "user", "content": "Hello, how are you?"}
     ],
     extra_body={
-        "tags": "private-data"
+        "tags": ["private-data"]
     }
 )
 ```
@@ -119,7 +119,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "us.anthropic.{{anthropic}}",
   "messages": [
@@ -128,7 +128,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
       "content": "Hello, how are you?"
     }
   ],
-  "tags": "private-data"
+  "tags": ["private-data"]
 }'
 ```
 
