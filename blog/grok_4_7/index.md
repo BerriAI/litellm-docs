@@ -27,8 +27,6 @@ SpaceXAI, the company formerly called xAI, built 4.7 and reports the model is be
 
 Per 1M tokens: $2.00 input, $0.50 cached, $6.00 output, identical to Grok 4.6. Every rate doubles past 200K input tokens, to $4.00, $1.00 and $12.00, so a long-context request costs twice what the headline suggests.
 
-OpenRouter lists the same model at $1.60 input and $4.80 output, 20% under SpaceXAI direct, and LiteLLM prices both routes. Grok 4.6 carried no such gap.
-
 ## Usage
 
 <Tabs>
@@ -56,7 +54,6 @@ model_list:
       model: xai/grok-4.7
       api_key: os.environ/XAI_API_KEY
 
-  # 20% cheaper on the same model
   - model_name: grok-4.7-openrouter
     litellm_params:
       model: openrouter/x-ai/grok-4.7
