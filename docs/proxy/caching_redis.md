@@ -111,6 +111,8 @@ If you see `No permissions to access a key` in the proxy logs and spend tracking
 
 ## Redis Cluster
 
+Point the proxy at a Redis Cluster either with `redis_startup_nodes` under `cache_params` in `config.yaml`, or with the `REDIS_CLUSTER_NODES` environment variable, a JSON list of `{"host": ..., "port": ...}` objects. Only one of the two is needed.
+
 <Tabs>
 
 <TabItem value="redis-cluster-config" label="Set on config.yaml">
@@ -167,6 +169,8 @@ print("REDIS_CLUSTER_NODES", os.environ["REDIS_CLUSTER_NODES"])
 </Tabs>
 
 ## Redis Sentinel
+
+Point the proxy at a Redis Sentinel deployment either with `service_name` and `sentinel_nodes` under `cache_params` in `config.yaml`, or with the `REDIS_SENTINEL_NODES`, `REDIS_SERVICE_NAME` and `REDIS_SENTINEL_PASSWORD` environment variables.
 
 <Tabs>
 
