@@ -1,3 +1,49 @@
+.rustMigrationBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 28px;
+  padding: 16px 18px;
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 45%, transparent);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 8% 20%, color-mix(in srgb, var(--ifm-color-primary) 22%, transparent), transparent 42%),
+    var(--ifm-background-surface-color);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.rustMigrationBanner:hover {
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ifm-color-primary) 14%, transparent);
+  transform: translateY(-1px);
+}
+
+.rustMigrationBanner span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rustMigrationBanner strong {
+  font-size: 1rem;
+}
+
+.rustMigrationBanner small {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.82rem;
+}
+
+.rustMigrationArrow {
+  color: var(--ifm-color-primary);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .titleRow {
   display: flex;
   align-items: flex-start;
@@ -72,6 +118,10 @@
 }
 
 @media (max-width: 600px) {
+  .rustMigrationBanner {
+    padding: 14px 16px;
+  }
+
   .titleRow {
     flex-direction: column;
     gap: 10px;

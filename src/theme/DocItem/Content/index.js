@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import clsx from 'clsx';
+import Link from '@docusaurus/Link';
 import {ThemeClassNames} from '@docusaurus/theme-common';
-import {useDoc} from '@docusaurus/plugin-content-docs/client';
+import {useActivePlugin, useDoc} from '@docusaurus/plugin-content-docs/client';
 import Heading from '@theme/Heading';
 import MDXContent from '@theme/MDXContent';
 import styles from './styles.module.css';
@@ -56,10 +57,21 @@ function useSyntheticTitle() {
 export default function DocItemContent({children}) {
   const syntheticTitle = useSyntheticTitle();
   const {frontMatter} = useDoc();
+  const activePlugin = useActivePlugin();
   const rawMarkdownB64 = frontMatter.rawMarkdownB64;
+  const showRustMigrationBanner = activePlugin?.pluginId === 'release-notes';
 
   return (
     <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>
+      {showRustMigrationBanner && (
+        <Link className={styles.rustMigrationBanner} to="/rust-migration">
+          <span>
+            <strong>LiteLLM is moving to Rust</strong>
+            <small>Follow the migration, benchmarks, and rollout status.</small>
+          </span>
+          <span className={styles.rustMigrationArrow} aria-hidden="true">→</span>
+        </Link>
+      )}
       {syntheticTitle ? (
         <header className={styles.titleRow}>
           <Heading as="h1" className={styles.title}>{syntheticTitle}</Heading>
