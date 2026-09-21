@@ -87,14 +87,17 @@ Expected response on failure - the request is rejected with HTTP 500 and the rej
 ```json
 {
   "error": {
-    "message": {
+    "message": "Violated guardrail policy",
+    "type": "internal_server_error",
+    "param": null,
+    "code": "500",
+    "provider_specific_fields": {
       "error": "Violated guardrail policy",
       "javelin_guardrail_response": { ... },
-      "reject_prompt": "Unable to complete request, prompt injection/jailbreak detected"
-    },
-    "type": "None",
-    "param": "None",
-    "code": "500"
+      "reject_prompt": "Unable to complete request, prompt injection/jailbreak detected",
+      "guardrail_name": "javelin-prompt-injection",
+      "guardrail_mode": "pre_call"
+    }
   }
 }
 ```
@@ -123,14 +126,17 @@ Expected response on failure
 ```json
 {
   "error": {
-    "message": {
+    "message": "Violated guardrail policy",
+    "type": "internal_server_error",
+    "param": null,
+    "code": "500",
+    "provider_specific_fields": {
       "error": "Violated guardrail policy",
       "javelin_guardrail_response": { ... },
-      "reject_prompt": "Unable to complete request, trust & safety violation detected"
-    },
-    "type": "None",
-    "param": "None",
-    "code": "500"
+      "reject_prompt": "Unable to complete request, trust & safety violation detected",
+      "guardrail_name": "javelin-trust-safety",
+      "guardrail_mode": "pre_call"
+    }
   }
 }
 ```
@@ -159,14 +165,17 @@ Expected response on failure
 ```json
 {
   "error": {
-    "message": {
+    "message": "Violated guardrail policy",
+    "type": "internal_server_error",
+    "param": null,
+    "code": "500",
+    "provider_specific_fields": {
       "error": "Violated guardrail policy",
       "javelin_guardrail_response": { ... },
-      "reject_prompt": "Unable to complete request, language violation detected"
-    },
-    "type": "None",
-    "param": "None",
-    "code": "500"
+      "reject_prompt": "Unable to complete request, language violation detected",
+      "guardrail_name": "javelin-language-detection",
+      "guardrail_mode": "pre_call"
+    }
   }
 }
 ```
@@ -334,13 +343,13 @@ export JAVELIN_API_BASE="https://api-dev.javelin.live"  # Optional, defaults to 
 When a guardrail detects a violation:
 
 1. The request is rejected with an HTTP 500 error and is **not** forwarded to the LLM
-2. The error detail contains `"error": "Violated guardrail policy"`, the full `javelin_guardrail_response`, and the `reject_prompt`
+2. `error.message` is `"Violated guardrail policy"`; `error.provider_specific_fields` carries the full `javelin_guardrail_response` and the `reject_prompt`
 3. The original violation is logged for monitoring
 
 **How it works:**
 - Javelin guardrails check the last message for violations
-- If a violation is detected (`request_reject: true`), LiteLLM raises an `HTTPException` with status code 500 and returns the reject prompt in the error detail
-- If Javelin does not return a `reject_prompt`, LiteLLM falls back to `"Request blocked by Javelin guardrails due to <guardrail_name> violation."`
+- If a violation is detected (`request_reject: true`), LiteLLM raises an `HTTPException` with status code 500 and returns the reject prompt under `error.provider_specific_fields`
+- If Javelin does not return a `reject_prompt`, LiteLLM falls back to `"Request blocked by Javelin guardrails due to <guardrail_name> violation."`, where `<guardrail_name>` is the top-level `guardrail_name` from your LiteLLM config (for example `javelin-prompt-injection`), not the Javelin guard name
 
 **Reject Prompts:**
 Can be configured from javelin portal.
