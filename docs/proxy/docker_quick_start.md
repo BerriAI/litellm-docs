@@ -19,15 +19,11 @@ By the end you will have LiteLLM running at `http://localhost:4000` with a model
 <TabItem value="local" label="Run locally" default>
 
 ```bash
-curl -sSL https://docs.litellm.ai/docker-compose.yml | docker compose -f - up -d
+curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+docker compose -f docker-compose.quickstart.yml up -d
 ```
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://docs.litellm.ai/docker-compose.yml) it pipes in defines just those two services; to customize anything (pin a release tag instead of `latest`, change credentials), download it and start it the usual way:
-
-```bash
-curl -sSLO https://docs.litellm.ai/docker-compose.yml
-docker compose up -d
-```
+This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it and edit it afterwards — to pin a specific release tag, or change the placeholder credentials.
 
 </TabItem>
 <TabItem value="cloud" label="1-click deploy">
