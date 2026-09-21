@@ -11,7 +11,7 @@ hide_table_of_contents: true
 
 *Last Updated: September 21, 2026*
 
-On September 18, Anthropic started moving Claude Code auto mode's safety classifier from the client to the Claude API. Starting with Claude Code v2.1.278, released September 19, sessions on Enterprise plans and Claude API accounts ask the server to run those checks as part of their own model requests, and Anthropic does not charge for the checks when the server performs them. The rollout is gradual, beginning with the Claude Code CLI and VS Code extension, followed by the desktop app and Claude Code on the web over the following week. On September 25, auto mode becomes the default permission mode in Claude Code.
+Anthropic is moving Claude Code auto mode's safety classifier from the client to the Claude API. Starting with Claude Code v2.1.278, released September 19, sessions on Enterprise plans and Claude API accounts ask the server to run those checks as part of their own model requests, and Anthropic does not charge for the checks when the server performs them. Anthropic told us the rollout started on September 18 and is gradual, beginning with the Claude Code CLI and VS Code extension and followed by the desktop app and Claude Code on the web over the following week, and that on September 25 auto mode becomes the default permission mode in Claude Code. Today the built-in default is auto on Pro, Max and Team plans and Manual on Enterprise plans and Claude API keys, the accounts that typically sit behind a gateway, per Anthropic's [permission modes reference](https://code.claude.com/docs/en/permission-modes).
 
 Server-side auto mode depends on a contract between Claude Code and the API that some gateways did not preserve, LiteLLM included. The fix is merged on `main` and ships in the next release. This post explains what Claude Code needs from an AI Gateway, what LiteLLM was doing wrong, what changed, which release carries it, and how to confirm your deployment is ready.
 
@@ -29,7 +29,7 @@ If any of that is dropped or rewritten, the server's checks never reach the sess
 We're changing auto mode to no longer charge for classifier requests in Claude Code. However, this session isn't eligible because your requests go through <your gateway>, which isn't compatible with this update. Nothing breaks: auto mode keeps working, and its classifier requests are billed as before. To fix it and access the new version of auto mode, ask your gateway to implement: https://code.claude.com/docs/en/auto-mode-classifier-billing
 ```
 
-Nothing breaks when this happens. Users keep the auto mode they have today and keep paying for the classifier calls. Anthropic has said that new Claude Code releases keep the client-side classifier until at least October 23, 2026, and that releases after that date rely on the server-side checks, so gateways have a window to catch up. Anthropic's [notice reference](https://code.claude.com/docs/en/auto-mode-classifier-billing) covers who sees the notice and what it means.
+Nothing breaks when this happens. Users keep the auto mode they have today and keep paying for the classifier calls. Anthropic has told us that new Claude Code releases keep the client-side classifier until at least October 23, 2026, that releases after that date only support server-side auto mode, and that from then on auto mode is not available behind a gateway that does not support the server-side classifier, so gateways have a window to catch up. Anthropic's [notice reference](https://code.claude.com/docs/en/auto-mode-classifier-billing) covers who sees the notice and what it means.
 
 ## What LiteLLM was doing wrong
 
@@ -47,7 +47,7 @@ When `/v1/messages` is used to reach a non-Anthropic model through the adapter p
 
 This fix covers LiteLLM's route to the Anthropic API. Claude Code also asks for server-side checks on Amazon Bedrock, Google Cloud's Agent Platform and Microsoft Foundry, subject to each platform's own rollout, and LiteLLM's routes to those platforms still filter the beta header, so sessions reaching Claude on them through LiteLLM are not covered by this change yet. We are tracking that as follow-up work.
 
-The merge is not in any tagged build up to `v1.103.0-rc.1`. It first ships in the release candidate cut on Saturday, September 26 (`v1.104.0-rc.1` by the current numbering), with the stable release the following week, planned for Saturday, October 3. Auto mode becomes the default on September 25, one day before that release candidate, so Claude Code sessions routed through the native `/v1/messages` endpoint on any current LiteLLM release see the notice and keep using the client-side classifier until you upgrade. If you would rather your users not see the notice in the meantime, Anthropic documents setting `CLAUDE_CODE_AUTO_MODE_SERVER=0` in the environment Claude Code starts from, which tells it not to ask the gateway for server-side checks.
+The merge is not in any tagged build up to `v1.103.0-rc.1`. It first ships in the release candidate cut on Saturday, September 26 (`v1.104.0-rc.1` by the current numbering), with the stable release the following week, planned for Saturday, October 3. Anthropic's September 25 default change lands one day before that release candidate, so Claude Code sessions routed through the native `/v1/messages` endpoint on any current LiteLLM release see the notice and keep using the client-side classifier until you upgrade. If you would rather your users not see the notice in the meantime, Anthropic documents setting `CLAUDE_CODE_AUTO_MODE_SERVER=0` in the environment Claude Code starts from, which tells it not to ask the gateway for server-side checks.
 
 ## How to verify your deployment
 
@@ -109,7 +109,7 @@ No. Beta header filtering still applies when the resolved provider is anything o
 
 ### Will my Claude Code users be broken before I upgrade?
 
-No. Claude Code detects that the server's checks are not reaching the session and keeps using its own classifier. Users see the notice, keep the current experience, and keep being billed for classifier calls until you upgrade. Anthropic has said new Claude Code releases keep the client-side classifier until at least October 23, 2026, so upgrade before then.
+No. Claude Code detects that the server's checks are not reaching the session and keeps using its own classifier. Users see the notice, keep the current experience, and keep being billed for classifier calls until you upgrade. Anthropic has told us new Claude Code releases keep the client-side classifier until at least October 23, 2026, and that releases after that date need the server-side classifier for auto mode, so upgrade before then.
 
 ### Is this available in LiteLLM OSS?
 
