@@ -65,11 +65,12 @@ export default function DocItemContent({children}) {
     <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>
       {showRustMigrationBanner && (
         <Link className={styles.rustMigrationBanner} to="/rust-migration">
-          <span>
+          <span className={styles.rustMigrationContent}>
+            <span className={styles.rustMigrationEmoji} aria-hidden="true">🦀</span>
             <strong>LiteLLM is moving to Rust</strong>
             <small>Follow the migration, benchmarks, and rollout status.</small>
+            <span className={styles.rustMigrationButton}>View migration →</span>
           </span>
-          <span className={styles.rustMigrationArrow} aria-hidden="true">→</span>
         </Link>
       )}
       {syntheticTitle ? (
