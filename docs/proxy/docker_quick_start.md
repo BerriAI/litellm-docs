@@ -24,7 +24,7 @@ printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex
 docker compose -f docker-compose.quickstart.yml up -d
 ```
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it and edit it afterwards — to pin a specific release tag, for instance.
+This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
@@ -51,7 +51,7 @@ Running locally, the command above generated both into `.env` and the compose fi
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value — the one in the `.env` file you just generated.
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value, the one in the `.env` file you just generated.
 
 <Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
 
