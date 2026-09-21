@@ -13,7 +13,7 @@ hide_table_of_contents: true
 
 Anthropic is moving Claude Code auto mode's safety classifier from the client to the Claude API. Starting with Claude Code v2.1.278, released September 19, sessions on Enterprise plans and Claude API accounts ask the server to run those checks as part of their own model requests, and Anthropic does not charge for the checks when the server performs them. Anthropic told us the rollout started on September 18 and is gradual, beginning with the Claude Code CLI and VS Code extension and followed by the desktop app and Claude Code on the web over the following week, and that on September 25 auto mode becomes the default permission mode in Claude Code. Today the built-in default is auto on Pro, Max and Team plans and Manual on Enterprise plans and Claude API keys, the accounts that typically sit behind a gateway, per Anthropic's [permission modes reference](https://code.claude.com/docs/en/permission-modes).
 
-Server-side auto mode depends on a contract between Claude Code and the API that some gateways did not preserve, LiteLLM included. The fix is merged on `main` and ships in the dev release on Tuesday, September 22. This post explains what Claude Code needs from an AI Gateway, what LiteLLM was doing wrong, what changed, which release carries it, and how to confirm your deployment is ready.
+Server-side auto mode depends on a contract between Claude Code and the API that some gateways did not preserve, LiteLLM included. The fix is merged on `main` and ships in the dev release cut on Tuesday, September 22, then in the release candidate cut on Saturday, September 26 and the stable release planned for Saturday, October 3. This post explains what Claude Code needs from an AI Gateway, what LiteLLM was doing wrong, what changed, which release carries it, and how to confirm your deployment is ready.
 
 {/* truncate */}
 
@@ -47,7 +47,7 @@ When `/v1/messages` is used to reach a non-Anthropic model through the adapter p
 
 This fix covers LiteLLM's route to the Anthropic API. Claude Code also asks for server-side checks on Amazon Bedrock, Google Cloud's Agent Platform and Microsoft Foundry, subject to each platform's own rollout, and LiteLLM's routes to those platforms still filter the beta header, so sessions reaching Claude on them through LiteLLM are not covered by this change yet. We are tracking that as follow-up work.
 
-The merge is not in any tagged build up to `v1.103.0-rc.1`. It ships in the dev release on Tuesday, September 22, ahead of Anthropic's September 25 default change, with the next stable release following on the usual schedule. Claude Code sessions routed through the native `/v1/messages` endpoint on any earlier LiteLLM release see the notice and keep using the client-side classifier until you upgrade. If you would rather your users not see the notice in the meantime, Anthropic documents setting `CLAUDE_CODE_AUTO_MODE_SERVER=0` in the environment Claude Code starts from, which tells it not to ask the gateway for server-side checks.
+The merge is not in any tagged build up to `v1.103.0-rc.1`. It ships in the dev release cut from `main` on Tuesday, September 22, ahead of Anthropic's September 25 default change. Dev releases are pre-release builds published to PyPI, Docker Hub and GitHub releases as `-dev.N` tags, so this one is `v1.104.0-dev.1` by the current numbering (`litellm==1.104.0.dev1` on PyPI). The release candidate cut on Saturday, September 26 carries it next, with the stable release the following week, planned for Saturday, October 3. Claude Code sessions routed through the native `/v1/messages` endpoint on any earlier LiteLLM release see the notice and keep using the client-side classifier until you upgrade. If you would rather your users not see the notice in the meantime, Anthropic documents setting `CLAUDE_CODE_AUTO_MODE_SERVER=0` in the environment Claude Code starts from, which tells it not to ask the gateway for server-side checks.
 
 ## How to verify your deployment
 
@@ -119,7 +119,7 @@ Yes. The fix is in LiteLLM OSS (Apache 2.0) and requires no configuration. [Lite
 
 ## Conclusion
 
-An AI Gateway in front of Claude Code has to forward provider contracts it did not exist for when they were designed. The `safeguards` field is one of those, and LiteLLM's native `/v1/messages` route now passes it through unchanged on the way to the Anthropic API. Upgrade to the September 22 dev release or the next stable release, run the check above, and your users get server-side auto mode at no cost.
+An AI Gateway in front of Claude Code has to forward provider contracts it did not exist for when they were designed. The `safeguards` field is one of those, and LiteLLM's native `/v1/messages` route now passes it through unchanged on the way to the Anthropic API. Upgrade to the September 22 dev release, the September 26 release candidate or the October 3 stable release, run the check above, and your users get server-side auto mode at no cost.
 
 ## Recommended Reading
 
