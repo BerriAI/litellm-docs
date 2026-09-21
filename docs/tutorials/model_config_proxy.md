@@ -9,9 +9,9 @@ import Image from '@theme/IdealImage';
 Let's spin up a local OpenAI-compatible server, to call a deployed `codellama/CodeLlama-34b-Instruct-hf` model using Huggingface's [Text-Generation-Inference (TGI)](https://github.com/huggingface/text-generation-inference) format.
 
 ```shell
-$ litellm --model huggingface/codellama/CodeLlama-34b-Instruct-hf --api_base https://my-endpoint.com
+$ litellm --model huggingface/codellama/CodeLlama-34b-Instruct-hf --api_base https://my-endpoint.com --detailed_debug
 
-# OpenAI compatible server running on http://0.0.0.0/8000
+# OpenAI compatible server running on http://0.0.0.0:4000
 ```
 
 In a new shell, run: 
@@ -20,11 +20,7 @@ $ litellm --test
 ``` 
 This will send a test request to our endpoint. 
 
-Now, let's see what got sent to huggingface. Run: 
-```shell
-$ litellm --logs
-```
-This will return the most recent log (by default logs are stored in a local file called 'api_logs.json').
+Now, let's see what got sent to huggingface. With `--detailed_debug` enabled, the server logs the raw request sent to the provider in the shell it's running in.
 
 As we can see, this is the formatting sent to huggingface: 
 
@@ -39,14 +35,14 @@ So instead of using the LiteLLM default, let's use our own prompt template to us
 
 ## Step 2: Create Custom Prompt Template
 
-Our litellm server accepts prompt templates as part of a config file. You can save api keys, fallback models, prompt templates etc. in this config. [See a complete config file](../proxy_server.md)
+Our litellm server accepts prompt templates as part of a config file. You can save api keys, fallback models, prompt templates etc. in this config. [See a complete config file](../proxy/configs.md)
 
 For now, let's just create a simple config file with our prompt template, and tell our server about it. 
 
-Create a file called `litellm_config.toml`:
+Create a file called `litellm_config.yaml`:
 
 ```shell
-$ touch litellm_config.toml
+$ touch litellm_config.yaml
 ```
 We want to add:
 * BOS (`<s>`) tokens at the start of every System and Human message
@@ -54,20 +50,17 @@ We want to add:
 
 Let's open our file in our terminal: 
 ```shell
-$ vi litellm_config.toml
+$ vi litellm_config.yaml
 ```
 
 paste our prompt template:
-```shell
-[model."huggingface/codellama/CodeLlama-34b-Instruct-hf".prompt_template] 
-MODEL_SYSTEM_MESSAGE_START_TOKEN = "<s>[INST]  <<SYS>>\n]" 
-MODEL_SYSTEM_MESSAGE_END_TOKEN = "\n<</SYS>>\n [/INST]\n"
-
-MODEL_USER_MESSAGE_START_TOKEN = "<s>[INST] " 
-MODEL_USER_MESSAGE_END_TOKEN = " [/INST]\n"
-
-MODEL_ASSISTANT_MESSAGE_START_TOKEN = ""
-MODEL_ASSISTANT_MESSAGE_END_TOKEN = "</s>"
+```yaml
+model_list:
+  - model_name: codellama
+    litellm_params:
+      model: huggingface/codellama/CodeLlama-34b-Instruct-hf
+      api_base: https://my-endpoint.com
+      roles: {"system":{"pre_message":"<s>[INST]  <<SYS>>\n]", "post_message":"\n<</SYS>>\n [/INST]\n"}, "user":{"pre_message":"<s>[INST] ", "post_message":" [/INST]\n"}, "assistant":{"pre_message":"", "post_message":"</s>"}}
 ```
 
 save our file (in vim): 
@@ -77,15 +70,9 @@ save our file (in vim):
 
 ## Step 3: Run new template
 
-Let's save our custom template to our litellm server by running:
+Re-start our server, this time pointing it at our config file:
 ```shell
-$ litellm --config -f ./litellm_config.toml 
-```
-LiteLLM will save a copy of this file in it's package, so it can persist these settings across restarts.
-
-Re-start our server: 
-```shell
-$ litellm --model huggingface/codellama/CodeLlama-34b-Instruct-hf --api_base https://my-endpoint.com
+$ litellm --config ./litellm_config.yaml --detailed_debug
 ```
 
 In a new shell, run: 
