@@ -137,6 +137,80 @@ curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Claude Models on /v1/messages
+
+Every `bedrock_mantle/anthropic.claude-*` model, Claude Mythos included, is served on `/v1/messages` from Bedrock Mantle's native Anthropic Messages endpoint, `https://bedrock-mantle.{region}.api.aws/anthropic/v1/messages`, rather than bridged through chat completions, which Mantle rejects for Claude models. This is the surface Claude Code and the Anthropic SDKs talk to, and LiteLLM forwards the request in Anthropic's own wire format, so streaming, tools, and thinking pass straight through. Other Mantle models, the GPT models below for example, keep using the Responses API bridge on `/v1/messages`
+
+Use the bare Mantle model id, such as `bedrock_mantle/anthropic.{{anthropic}}` or `bedrock_mantle/anthropic.claude-haiku-4-5`. A `us.` inference-profile prefix returns a 404 from Mantle
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import asyncio
+import litellm
+import os
+
+os.environ['AWS_ACCESS_KEY_ID'] = "your-aws-access-key"
+os.environ['AWS_SECRET_ACCESS_KEY'] = "your-aws-secret-key"
+os.environ['AWS_REGION_NAME'] = "us-east-2"
+
+async def main():
+    response = await litellm.anthropic_messages(
+        model="bedrock_mantle/anthropic.{{anthropic}}",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Explain quantum entanglement simply."}],
+    )
+    print(response)
+
+asyncio.run(main())
+```
+
+</TabItem>
+<TabItem value="ai-gateway" label="AI Gateway">
+
+**1. Add to config.yaml**
+
+```yaml
+model_list:
+  - model_name: claude-sonnet-mantle
+    litellm_params:
+      model: bedrock_mantle/anthropic.{{anthropic}}
+      aws_region_name: us-east-2
+      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+```
+
+**2. Start LiteLLM AI Gateway**
+
+```shell
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/messages` via curl**
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-mantle",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Explain quantum entanglement simply."}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+The region comes from `aws_region_name`, else a region prefix in the model name (`bedrock_mantle/us-east-2/anthropic.{{anthropic}}`), else the host of `api_base` or `BEDROCK_MANTLE_API_BASE` when it points at Mantle, else `BEDROCK_MANTLE_REGION`, `AWS_REGION_NAME`, or `AWS_REGION`, and finally `us-east-1`. A custom `api_base` (a VPC endpoint or a proxy in front of Mantle) is kept as the host and `/anthropic/v1/messages` is appended to it, whether it was configured with or without an `/openai/v1` or `/v1` suffix
+
+Auth is the same chain as the rest of the provider: a bearer token from `api_key`, `BEDROCK_MANTLE_API_KEY`, or `AWS_BEARER_TOKEN_BEDROCK` when one is set, otherwise SigV4 from `aws_access_key_id` / `aws_secret_access_key` / `aws_session_token`, `aws_profile_name`, or the role params. LiteLLM sends `anthropic-version: 2023-06-01` on every request, and an `anthropic-version` header supplied by the caller wins
+
+Beta features travel in the `anthropic-beta` header: the values the caller sends plus the ones a request needs (a `context_management` edit adds `context-management-2025-06-27`), limited to what Mantle accepts. A value Mantle does not know is left out instead of failing the request with a 400, and nothing is sent in the body `anthropic_beta` field, which Mantle ignores whenever the header is present
+
 ## OpenAI Models (GPT-5.4 / GPT-5.5)
 
 ### /responses
@@ -319,7 +393,7 @@ The API base URL is `https://bedrock-mantle.{region}.api.aws/v1`. Region is reso
 4. `AWS_REGION_NAME` env var, then `AWS_REGION`
 5. Default: `us-east-1`
 
-An explicit `api_base` (or `BEDROCK_MANTLE_API_BASE`) replaces the derived URL entirely. The model-name prefix is stripped before the request is sent, so `bedrock_mantle/us-gov-west-1/xai.grok-4.3` calls `xai.grok-4.3` in `us-gov-west-1`; it is recognized for the regions LiteLLM knows for Bedrock, and `aws_region_name` works for every region
+An explicit `api_base` (or `BEDROCK_MANTLE_API_BASE`) replaces the derived URL entirely. The model-name prefix is stripped before the request is sent, so `bedrock_mantle/us-gov-west-1/xai.grok-4.3` calls `xai.grok-4.3` in `us-gov-west-1`; it is recognized for the regions LiteLLM knows for Bedrock, and `aws_region_name` works for every region. Claude models on `/v1/messages` use the `/anthropic/v1/messages` path instead of `/v1` and keep a custom `api_base` as the host, see [Claude Models on /v1/messages](#claude-models-on-v1messages)
 
 **Supported regions:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `eu-south-1`, `eu-north-1`, `ap-northeast-1`, `ap-south-1`, `ap-southeast-3`, `sa-east-1`, and `us-gov-west-1` (AWS GovCloud)
 
