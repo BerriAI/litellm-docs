@@ -1142,8 +1142,8 @@ router_settings:
 | LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
 | LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
 | LANGFUSE_FLUSH_AT | Number of spans the Langfuse callback batches per OTLP export request; defaults to `512`. Values that are not a whole number between `1` and `100000` log a warning and use the default
-| LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
-| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt
+| LANGFUSE_FLUSH_INTERVAL | Seconds the Langfuse callback waits between OTLP export batches; defaults to `1`. Values that are not a whole number above `0` log a warning and use the default
+| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt. Must be a whole number of seconds: the Langfuse SDK reads it as an integer when it is imported, so any other value (for example `abc` or `2.5`) fails the callback with an error naming this variable; a negative value logs a warning and uses the default
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
 | LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
