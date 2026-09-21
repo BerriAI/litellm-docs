@@ -286,6 +286,31 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```
 
 
+### Model deprecation warnings
+
+LiteLLM knows the `deprecation_date` of many provider models from its model cost map, and you can set or override it per deployment with `model_info.deprecation_date` (see [Model deprecation](./model_management.md#model-deprecation)). The `model_deprecation_warnings` alert type, on by default, checks once a day and posts a Slack summary of every configured model that is already deprecated or within 30 days of its date. `GET /v1/model/deprecations` returns the same list on demand.
+
+#### Model deprecation warnings by email
+
+When `email` is one of the `alerting` channels and `model_deprecation_warnings` is enabled, the proxy also emails the admins of every team that can use a deprecating model. A team gets one digest email each time a model it can reach crosses a threshold; by default 30 days before, 7 days before, and on the model's `deprecation_date`.
+
+```yaml
+general_settings:
+  alerting: ["slack", "email"]
+  alert_types: ["model_deprecation_warnings"]
+  alerting_args:
+    model_deprecation_email_thresholds: [30, 7, 0]
+    model_deprecation_email_ttl: 7776000
+```
+
+`model_deprecation_email_thresholds` lists the days before `deprecation_date` at which a milestone email goes out. The list is deduplicated and sorted, negative values are rejected, and an empty list turns the emails off while leaving the Slack alert as it is. `model_deprecation_email_ttl` is how long, in seconds, a sent milestone is remembered so the same team is not emailed twice for it. The default is 90 days.
+
+Which teams are emailed: any team whose allowed models include the model, whether by exact name, a wildcard such as `openai/*`, an access group, or unrestricted access, plus the team that owns a team scoped deployment of it. The check reuses the same access logic the proxy applies to requests. Recipients are the team's admins, that is the members whose role is `admin`, using the email on their user record and falling back to the email given inline when they were added. Set them when you create the team (`members_with_roles` on `POST /team/new`, or the team's creator when a logged in user creates it in the UI); promoting an existing member to admin through `POST /team/member_add` is an enterprise feature. Teams that are blocked or have no admin with an email are skipped.
+
+Each email lists the affected models with their provider, deprecation date, days left, and status, and links to the model management docs. Delivery uses the email provider you have configured for the proxy, the `smtp_email`, `resend_email`, or `sendgrid_email` callback, and falls back to the `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SMTP_SENDER_EMAIL` environment variables. `EMAIL_LOGO_URL` and `EMAIL_SUPPORT_CONTACT` customize the header and the support line.
+
+The check runs once a day per proxy fleet. With Redis configured, one pod claims a daily lock and the sent markers are shared, so replicas never double send. Without Redis every pod keeps its own markers in memory, so a restart can send the current milestone once more. Each recipient gets their own copy, so admins never see each other's addresses. Failures are handled per team: if SMTP delivery to one team fails, the others are still emailed and the failed team is retried on the next day's pass. Resend and SendGrid do not report delivery failures back, so digests sent through them count as sent.
+
 ### MS Teams Webhooks
 
 MS Teams provides a slack compatible webhook url that you can use for alerting
@@ -536,6 +561,7 @@ LLM-related Alerts
 | `new_model_added` | Notifications when a new model is added to litellm proxy through /model/new| ✅ |
 | `outage_alerts` | Alerts when a specific LLM deployment is facing an outage | ✅ |
 | `region_outage_alerts` | Alerts when a specific LLM region is facing an outage. Example us-east-1 | ✅ |
+| `model_deprecation_warnings` | Daily summary of deprecated and soon to be deprecated models; with the `email` channel, also emails the admins of affected teams | ✅ |
 
 Budget and Spend Alerts
 
@@ -581,3 +607,5 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | `major_outage_alert_threshold` | 10 | Number of errors that trigger a major outage alert (400 errors not counted) |
 | `max_outage_alert_list_size` | 1000 | Maximum number of errors to store in cache per model/region |
 | `log_to_console` | false | If true, prints alerting payload to console as a `.warning` log. |
+| `model_deprecation_email_thresholds` | [30, 7, 0] | Days before a model's `deprecation_date` at which its team admins are emailed; empty list disables the emails |
+| `model_deprecation_email_ttl` | 7776000 (90 days) | How long a sent deprecation email milestone is remembered, so a team is not emailed twice for it |
