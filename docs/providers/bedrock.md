@@ -1981,6 +1981,82 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 </TabItem>
 </Tabs>
 
+### Moonshot Kimi K3
+
+Kimi K3 is only served through Bedrock cross-region inference profiles, so use the `global.` or `us.` id rather than the bare `moonshotai.kimi-k3` model id (Bedrock rejects it with "on-demand throughput isn't supported"). Both ids are in the LiteLLM cost map with prompt caching and reasoning support.
+
+| Property | Details |
+|----------|---------|
+| Provider Route | `bedrock/global.moonshotai.kimi-k3`, `bedrock/us.moonshotai.kimi-k3` |
+| Provider Documentation | [Kimi K3 model card ↗](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-moonshot-ai-kimi-k3.html) |
+| Supported Parameters | `temperature`, `max_tokens`, `top_p`, `stream`, `tools`, `tool_choice`, `response_format` |
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python title="Kimi K3 SDK Usage" showLineNumbers
+from litellm import completion
+import os
+
+os.environ["AWS_ACCESS_KEY_ID"] = "your-aws-access-key"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "your-aws-secret-key"
+os.environ["AWS_REGION_NAME"] = "us-east-1"
+
+response = completion(
+    model="bedrock/global.moonshotai.kimi-k3",  # or bedrock/us.moonshotai.kimi-k3
+    messages=[{"role": "user", "content": "What is 2+2? Think step by step."}],
+    max_tokens=200,
+)
+print(response.choices[0].message.content)
+
+if response.choices[0].message.reasoning_content:
+    print("Reasoning:", response.choices[0].message.reasoning_content)
+```
+
+</TabItem>
+
+<TabItem value="proxy" label="Proxy">
+
+**1. Add to config**
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: kimi-k3
+    litellm_params:
+      model: bedrock/global.moonshotai.kimi-k3
+      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+      aws_region_name: os.environ/AWS_REGION_NAME
+```
+
+**2. Start proxy**
+
+```bash title="Start LiteLLM Proxy" showLineNumbers
+litellm --config /path/to/config.yaml
+
+# RUNNING at http://0.0.0.0:4000
+```
+
+**3. Test it!**
+
+```bash title="Test Kimi K3 via Proxy" showLineNumbers
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "kimi-k3",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is 2+2? Think step by step."
+      }
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 ## TwelveLabs Pegasus - Video Understanding
 
 TwelveLabs Pegasus 1.2 is a video understanding model that can analyze and describe video content. LiteLLM supports this model through Bedrock's `/invoke` endpoint.
@@ -2169,6 +2245,9 @@ Here's an example of using a bedrock model with LiteLLM. For a complete list, re
 | TwelveLabs Pegasus 1.2 (US) | `completion(model='bedrock/us.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | TwelveLabs Pegasus 1.2 (EU) | `completion(model='bedrock/eu.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Moonshot Kimi K2 Thinking | `completion(model='bedrock/moonshot.kimi-k2-thinking', messages=messages)` or `completion(model='bedrock/invoke/moonshot.kimi-k2-thinking', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| Moonshot Kimi K2.5 | `completion(model='bedrock/moonshotai.kimi-k2.5', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| Moonshot Kimi K3 (Global CRIS) | `completion(model='bedrock/global.moonshotai.kimi-k3', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| Moonshot Kimi K3 (US CRIS) | `completion(model='bedrock/us.moonshotai.kimi-k3', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 
 
 ## Bedrock Embedding
