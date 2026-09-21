@@ -350,8 +350,8 @@ litellm_settings:
   cache_params:
     type: redis
     supported_call_types:
-      ["acompletion", "atext_completion", "aembedding", "atranscription"]
-      # /chat/completions, /completions, /embeddings, /audio/transcriptions
+      ["acompletion", "atext_completion", "aembedding", "atranscription", "aresponses"]
+      # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 ```
 
 ## Set cache for proxy, but not on the actual llm api call
