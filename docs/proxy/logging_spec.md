@@ -14,6 +14,7 @@ Terminal success and failure callback events include `kwargs["standard_logging_o
 | `response_cost` | `float` | Cost of the response in USD ($) |
 | `cost_breakdown` | `Optional[CostBreakdown]` | Detailed cost breakdown object |
 | `response_cost_failure_debug_info` | `StandardLoggingModelCostFailureDebugInformation` | Debug information if cost tracking fails |
+| `zero_cost_diagnostic` | `Optional[StandardLoggingZeroCostDiagnostic]` | Why a billable request priced to $0. `None` when the cost is non-zero, the model is free or unmapped, or the request carried no usage. [Further docs](./cost_tracking#requests-that-price-to-0) |
 | `status` | `StandardLoggingPayloadStatus` | Status of the payload |
 | `status_fields` | `StandardLoggingPayloadStatusFields` | Typed status fields for easy filtering and analytics |
 | `total_tokens` | `int` | Total number of tokens |
@@ -154,6 +155,14 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `base_model` | `Optional[str]` | Optional base model |
 | `call_type` | `str` | Call type |
 | `custom_pricing` | `Optional[bool]` | Whether custom pricing was used |
+
+## StandardLoggingZeroCostDiagnostic
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `reason` | `Literal["missing_pricing_key", "pricing_not_applied", "cost_calculation_error"]` | Why the request priced to $0, the same value as the `reason` label on `litellm_zero_cost_requests_total` |
+| `pricing_model` | `str` | The pricing entry the request was judged against, a deployment id or a model cost map key |
+| `missing_pricing_keys` | `Tuple[str, ...]` | The rate keys the usage needed that the entry does not declare, empty unless `reason` is `missing_pricing_key` |
 
 ## StandardLoggingPayloadErrorInformation
 
