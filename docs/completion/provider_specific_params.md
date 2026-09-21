@@ -194,7 +194,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.TogetherAIConfig(max_tokens_to_sample=200)
+litellm.TogetherAIConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="together_ai/togethercomputer/llama-2-70b-chat",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
