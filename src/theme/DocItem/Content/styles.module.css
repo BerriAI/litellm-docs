@@ -1,5 +1,8 @@
 .rustMigrationBanner {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin: 0 0 20px;
   padding: 12px 14px;
   color: var(--ifm-font-color-base);
@@ -21,6 +24,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .rustMigrationBanner strong {
@@ -31,6 +35,13 @@
 .rustMigrationBanner small {
   color: var(--ifm-color-emphasis-700);
   font-size: 0.8rem;
+}
+
+.rustMigrationChevron {
+  flex-shrink: 0;
+  color: var(--ifm-color-primary);
+  font-size: 1.55rem;
+  line-height: 1;
 }
 
 [data-theme='dark'] .rustMigrationBanner {

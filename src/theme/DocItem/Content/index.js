@@ -67,8 +67,9 @@ export default function DocItemContent({children}) {
         <Link className={styles.rustMigrationBanner} to="/rust-migration">
           <span className={styles.rustMigrationContent}>
             <strong>LiteLLM is moving to Rust <span aria-hidden="true">🦀</span></strong>
-            <small>Follow the migration, benchmarks, and rollout status.</small>
+            <small>Read the latest updates.</small>
           </span>
+          <span className={styles.rustMigrationChevron} aria-hidden="true">›</span>
         </Link>
       )}
       {syntheticTitle ? (
