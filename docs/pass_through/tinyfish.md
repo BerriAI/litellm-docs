@@ -99,6 +99,12 @@ One operational caveat: run-async and SSE billing runs in an in-memory backgroun
 
 Request fields that run with the TinyFish account's saved logins (`use_vault`, `credential_item_ids`, `use_profile`, `profile_id`) are rejected with a 403 by default, because every caller shares the proxy's upstream key. Set `TINYFISH_ALLOW_AUTHENTICATED_RUNS=true` on the proxy to allow them
 
+LiteLLM's generic pass-through envelope fields (`custom_body`, `stream`, `query_params`) are rejected with a 400 on this route: send the native TinyFish request body, and streaming is determined by the endpoint you call
+
+## Timeouts
+
+Blocking runs get a 1500 second upstream timeout by default, covering TinyFish's 1200 second maximum run duration. Setting `general_settings.pass_through_request_timeout` overrides it
+
 ## Environment variables
 
 | Variable | Description |
