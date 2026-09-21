@@ -24,7 +24,7 @@ litellm_settings:
   callbacks: ["dynamic_rate_limiter_v3"]
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your .env
 ```
 
@@ -61,8 +61,8 @@ def create_key(api_key: str, base_url: str):
 
     return _response["key"]
 
-key_1 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
-key_2 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+key_1 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
+key_2 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # call proxy with key 1 - works
 openai_client_1 = OpenAI(api_key=key_1, base_url="http://0.0.0.0:4000")
@@ -154,7 +154,7 @@ litellm_settings:
     saturation_check_cache_ttl: 60 # How long (seconds) saturation values are cached locally
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your.env
 ```
 
@@ -190,7 +190,7 @@ All keys within a team will inherit the team's priority. This is useful when you
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_alias": "production-team",
@@ -201,7 +201,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 Create a key for this team:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_id": "team-id-from-previous-response"
@@ -215,7 +215,7 @@ Set priority directly on the key. This is useful when you need fine-grained cont
 **Production Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "prod"}
@@ -225,7 +225,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Development Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "dev"}
@@ -235,7 +235,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Key Without Priority (uses default_priority weight):**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```

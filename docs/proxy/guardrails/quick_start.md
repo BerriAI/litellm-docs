@@ -81,7 +81,8 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `pre_call` Run **before** LLM call, on **input**
 - `post_call` Run **after** LLM call, on **input & output**
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
-- A list of the above values to run multiple modes, e.g. `mode: [pre_call, post_call]`
+- `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
+- A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
 ### Skip system messages in guardrail evaluation
 
@@ -480,7 +481,7 @@ Use this to control what guardrails run per API Key. In this tutorial we only wa
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
             "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
@@ -491,7 +492,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",
@@ -636,7 +637,7 @@ guardrails:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "4198d93c-d375-4c83-8d5a-71e7c5473e50",

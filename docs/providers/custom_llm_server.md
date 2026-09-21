@@ -110,7 +110,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "messages": [{"role": "user", "content": "Say \"this is a test\" in JSON!"}],
@@ -206,7 +206,7 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
         return ImageResponse(
             created=int(time.time()),
             data=[ImageObject(url="https://example.com/image.png")],
@@ -248,7 +248,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",
@@ -326,7 +326,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'model=my-custom-image-edit-model' \
 -F 'image=@/path/to/image.png' \
 -F 'prompt=Make the sky blue'
@@ -398,7 +398,7 @@ litellm --config /path/to/config.yaml
 curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 -H 'anthropic-version: 2023-06-01' \
 -H 'content-type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
    "model": "my-custom-model",
      "max_tokens": 1024,
@@ -481,7 +481,7 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
         assert optional_params == {"my_custom_param": "my-custom-param"} # 👈 CHECK HERE
         return ImageResponse(
             created=int(time.time()),
@@ -525,7 +525,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-custom-model",
     "prompt": "A cute baby sea otter",
@@ -576,6 +576,8 @@ class CustomLLM(BaseLLM):
         self,
         model: str,
         prompt: str,
+        api_key: Optional[str],
+        api_base: Optional[str],
         model_response: ImageResponse,
         optional_params: dict,
         logging_obj: Any,
@@ -589,6 +591,8 @@ class CustomLLM(BaseLLM):
         model: str,
         prompt: str,
         model_response: ImageResponse,
+        api_key: Optional[str],
+        api_base: Optional[str],
         optional_params: dict,
         logging_obj: Any,
         timeout: Optional[Union[float, httpx.Timeout]] = None,

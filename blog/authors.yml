@@ -4,6 +4,12 @@ litellm:
   url: https://github.com/BerriAI/litellm
   image_url: https://github.com/BerriAI.png
 
+yujonglee:
+  name: Yujong Lee
+  title: Senior SWE, LiteLLM
+  url: mailto:yujong@berri.ai
+  image_url: https://avatars.githubusercontent.com/u/61503739?v=4
+
 sameer:
   name: Sameer Kankute
   title: SWE @ LiteLLM (LLM Translation)
@@ -61,7 +67,7 @@ misbah:
 
 tin:
   name: Tin Lo
-  title: AI Engineer, LiteLLM
+  title: Founding AI Product Engineer, LiteLLM
   image_url: /img/authors/tin.png
 
 mubashir:
@@ -85,3 +91,9 @@ moe:
   title: Product Engineer
   url: https://www.linkedin.com/in/moe-khalil-73a2371a1/
   image_url: https://github.com/moe-berri.png
+
+kerry:
+  name: Kerry Lu
+  title: Software Engineer, LiteLLM
+  url: https://github.com/kerry-berri
+  image_url: https://github.com/kerry-berri.png

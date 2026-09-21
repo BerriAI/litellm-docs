@@ -211,7 +211,7 @@ You can specify the custom LLM provider in multiple ways (priority order):
 ```bash
 # Default provider (openai)
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container",
@@ -225,7 +225,7 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via header
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: openai" \
     -H "Content-Type: application/json" \
     -d '{
@@ -236,7 +236,7 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via query parameter
 curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container"
@@ -246,7 +246,7 @@ curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
 ```bash
 # With model_list credentials: name the deployment
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container",
@@ -258,27 +258,27 @@ curl -X POST "http://localhost:4000/v1/containers" \
 
 ```bash
 curl "http://localhost:4000/v1/containers?limit=20&order=desc" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```bash
 # With model_list credentials: name the deployment
 curl "http://localhost:4000/v1/containers?model=gpt-5.6&limit=20&order=desc" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Retrieve a Container**
 
 ```bash
 curl "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Delete a Container**
 
 ```bash
 curl -X DELETE "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## **Using OpenAI Client with LiteLLM Proxy**
@@ -293,7 +293,7 @@ First, configure your OpenAI client to point to your LiteLLM proxy:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://localhost:4000"  # LiteLLM proxy URL
 )
 ```
@@ -380,7 +380,7 @@ from openai import OpenAI
 
 # Initialize client
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

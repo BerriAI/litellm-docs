@@ -53,7 +53,7 @@ model_list:
       mode: image_generation
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start the proxy
@@ -69,7 +69,7 @@ litellm --config config.yaml
 ```bash showLineNumbers
 curl --location 'http://0.0.0.0:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "sd3",
     "prompt": "A beautiful sunset over a calm ocean"
@@ -401,7 +401,7 @@ model_list:
       mode: image_edit
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start the proxy
@@ -416,7 +416,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers
 curl -X POST "http://0.0.0.0:4000/v1/images/edits" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=stability-inpaint" \
   -F "image=@original_image.png" \
   -F "mask=@mask_image.png" \

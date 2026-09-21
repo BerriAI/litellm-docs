@@ -36,7 +36,7 @@ Store your Azure endpoint credentials in the credentials table. You can do this 
 ```bash showLineNumbers
 # Create credential for Hotel team's Azure endpoint
 curl -X POST 'http://0.0.0.0:4000/credentials' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "credential_name": "hotel-azure-eastus",
@@ -50,7 +50,7 @@ curl -X POST 'http://0.0.0.0:4000/credentials' \
 ```bash showLineNumbers
 # Create credential for Flight team's Azure endpoint
 curl -X POST 'http://0.0.0.0:4000/credentials' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "credential_name": "flight-azure-centralus",
@@ -68,7 +68,7 @@ Add a `model_config` key to the team's metadata referencing the credential by na
 ```bash showLineNumbers
 # Hotel team — default Azure endpoint for all models
 curl -X PATCH 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "hotel-team-id",
@@ -87,7 +87,7 @@ curl -X PATCH 'http://0.0.0.0:4000/team/update' \
 ```bash showLineNumbers
 # Flight team — default Azure endpoint for all models
 curl -X PATCH 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "flight-team-id",
@@ -127,7 +127,7 @@ You can set different credentials for specific models while keeping a default fo
 
 ```bash showLineNumbers
 curl -X PATCH 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "hotel-team-id",
@@ -159,7 +159,7 @@ Projects inherit their team's `model_config` but can override at the project lev
 ```bash showLineNumbers
 # Project overrides the team default for all models
 curl -X PATCH 'http://0.0.0.0:4000/project/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "project_id": "hotel-rec-app-id",

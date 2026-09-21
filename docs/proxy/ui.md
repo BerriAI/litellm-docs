@@ -35,19 +35,43 @@ Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhos
 
 <Image img={require('../../img/ui_link.png')} />
 
-### 4. Change default username + password
+### 4. Sign in for the first time
 
-Set the following in your .env on the Proxy
+Out of the box, the UI accepts a login built from environment variables: the username is `UI_USERNAME` (default `admin`) and the password is `UI_PASSWORD`. If `UI_PASSWORD` is unset, the master key itself is accepted as the password. Anyone who signs in this way is a proxy admin.
 
 ```shell
-LITELLM_MASTER_KEY="sk-1234" # this is your master key for using the proxy server
+LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)" # master key for the proxy; must start with sk-
 UI_USERNAME=ishaan-litellm   # username to sign in on UI
 UI_PASSWORD=langchain        # password to sign in on UI
 ```
 
 On accessing the LiteLLM UI, you will be prompted to enter your username, password
 
-### 5. Configure Root Redirect URL
+:::warning Environment credentials are for bootstrapping only
+This login path stores a permanent, shared, cleartext admin credential in your environment, cannot be rotated per person, and leaves no way to tell which admin did what. Once you are signed in, follow the steps below to move to per-user accounts and disable it. Until you do, the dashboard shows a warning banner to every admin.
+:::
+
+### 5. Create your own admin account and disable environment credential login
+
+First, while signed in with the environment credentials, create a `proxy_admin` user for yourself: go to `Internal Users` -> `+ Invite User`, set the role to `proxy_admin`, and open the invitation link it generates to set your password. You can also create the user over the API with `POST /user/new` and a `user_role` of `proxy_admin`; see [invite users](./self_serve.md). Sign out and confirm you can sign in with your email and new password before continuing.
+
+Then turn off the environment credential login path in your `config.yaml` and restart the proxy:
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  disable_env_credential_login: true
+```
+
+After the restart, `UI_USERNAME`/`UI_PASSWORD` and the master key are rejected on the login page with `401 Invalid credentials used to access UI`, the warning banner disappears, and only database users (and [SSO](./admin_ui_sso.md), if configured) can sign in. You can now remove `UI_USERNAME` and `UI_PASSWORD` from your environment.
+
+:::note
+Enabling `disable_env_credential_login` before creating a `proxy_admin` user with a password will make you unable to log in. If you find yourself in this situation, use the master key to disable `disable_env_credential_login` and restart the proxy to restore access.
+:::
+
+If you use SSO, `disable_password_login_when_sso_enabled` also blocks this login path, since it rejects every username/password login once the SSO provider is fully configured. See [SSO for the Admin UI](./admin_ui_sso.md).
+
+### 6. Configure Root Redirect URL
 
 When `DOCS_URL` is set to something other than `"/"`, you can configure where the root path (`/`) redirects to using `ROOT_REDIRECT_URL`:
 
@@ -57,6 +81,30 @@ ROOT_REDIRECT_URL="/ui"       # Redirect root path (/) to /ui
 ```
 
 By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've changed `DOCS_URL` to a different path.
+
+## Limit failed sign-in attempts
+
+Failed username and password sign-ins to the Admin UI are counted per source address. More than 10 wrong passwords from one address within 60 seconds, across all usernames, blocks that address for 5 minutes. Accounts are never locked: the same username can still sign in from any other address. Half the address limit (5 by default) is the allowance for a single username from that address. Going over it blocks only that address and username pair, and its further failures no longer count toward the address, so one script stuck on one account does not lock out everyone else behind a shared office address.
+
+While a block is active, every sign-in attempt for that address or pair is refused with `429 Too many failed sign-in attempts` and a `Retry-After` header, before the password is checked. That includes the correct password, `UI_USERNAME`/`UI_PASSWORD`, and the master key typed into the form. Refused attempts do not extend the block. If you are blocked and cannot wait, the master key still works as a bearer token on the API, which the sign-in limit does not cover.
+
+Counters live in Redis when the proxy has one, so a block applies across all workers and pods. Without Redis each worker counts on its own, so the effective limit is the configured number times the worker count; the proxy warns about this at startup. If Redis becomes unreachable, the proxy falls back to per-worker counters and keeps accepting sign-ins.
+
+To count per address, the proxy has to know which address is the client. Set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancer or ingress in front of LiteLLM; the client is then the first `X-Forwarded-For` hop outside those ranges. If clients connect to LiteLLM directly, set it to `[]` so the peer address is used and `X-Forwarded-For` is ignored. If it is unset, the proxy cannot tell a client from a shared ingress, so it warns at startup and enforces only the per-username limit. IPv6 addresses are grouped by /64.
+
+```yaml
+general_settings:
+  trusted_proxy_ranges: ["10.0.0.0/8"]        # or [] when clients connect directly
+  max_failed_login_attempts_per_source: 10    # default; the per-username allowance is half of this
+  failed_login_window_seconds: 60             # default
+  failed_login_block_seconds: 300             # default
+  max_failed_login_attempts_per_source_overrides:
+    "203.0.113.7": 50                         # a NAT gateway many admins share; 25 per username there
+    "192.0.2.0/24": 100                       # the most specific match wins
+    "198.51.100.4": 0                         # 0 exempts this address from both limits
+```
+
+An override raises both limits for that address, since the per-username allowance follows the address limit, and `0` exempts the address entirely. `LITELLM_DISABLE_LOGIN_RATE_LIMIT=true` turns the limit off everywhere; it is read once at startup. See [Security best practices](./security_best_practices#limit-failed-admin-ui-sign-in-attempts) for the reasoning behind the defaults.
 
 ## Invite-other users
 

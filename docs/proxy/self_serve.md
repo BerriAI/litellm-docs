@@ -176,7 +176,7 @@ This walks through setting up sso auto-add for **Okta, Google SSO**
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # 👈 CAN BE ANY FIELD
 ```
@@ -287,9 +287,11 @@ litellm_settings:
 
 ### Team Member Budgets
 
-Set a max budget for a team member. 
+Set a default max budget that applies to each member of a team. 
 
 You can do this when creating a new team, or by updating an existing team. 
+
+`team_member_budget` is a single team-wide default. Every member added without their own `max_budget_in_team` is linked to it, so changing it through `/team/update` (or the team's Default Budget field in the UI) applies to those members on their next request, not just to members added afterwards. A member given `max_budget_in_team` on `/team/member_add`, or later edited through [`/team/member_update`](./users.md#update-a-team-members-budget), gets their own budget and stops following the team default
 
 <Tabs>
 <TabItem value="ui" label="UI">
@@ -312,6 +314,10 @@ curl -X POST '<PROXY_BASE_URL>/team/new' \
 
 </TabItem>
 </Tabs>
+
+:::info
+Setting `team_member_budget` on an existing team links it to every member that has no budget yet, and the spend those members already accrued counts against it right away. See [Existing spend counts against a budget added later](./users.md#existing-spend-counts-against-a-budget-added-later) for how to unblock a member who is already over the new budget.
+:::
 
 ### Team Member Rate Limits
 

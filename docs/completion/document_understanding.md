@@ -20,7 +20,8 @@ Works for:
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import supports_pdf_input, completion
+from litellm import completion
+from litellm.utils import supports_pdf_input
 
 # set aws credentials
 os.environ["AWS_ACCESS_KEY_ID"] = ""
@@ -80,7 +81,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -105,7 +106,8 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import supports_pdf_input, completion
+from litellm import completion
+from litellm.utils import supports_pdf_input
 
 # set aws credentials
 os.environ["AWS_ACCESS_KEY_ID"] = ""
@@ -170,7 +172,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -198,7 +200,8 @@ To specify the format of the document, you can use the `format` parameter.
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import supports_pdf_input, completion
+from litellm import completion
+from litellm.utils import supports_pdf_input
 
 # set aws credentials
 os.environ["AWS_ACCESS_KEY_ID"] = ""
@@ -259,7 +262,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -289,7 +292,7 @@ Here is a sample payload for using the Mistral model for document understanding:
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import completion
+from litellm import completion
 
 # pdf file_id received from files endpoint
 file_id = "fa778e5e-46ec-4562-8418-36623fe25a71"
@@ -320,7 +323,7 @@ assert response is not None
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "mistral/mistral-large-latest",
     "messages": [
@@ -385,7 +388,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 

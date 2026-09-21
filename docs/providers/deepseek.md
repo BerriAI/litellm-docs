@@ -53,6 +53,8 @@ We support ALL Deepseek models, just set `deepseek/` as a prefix when sending co
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | deepseek-chat | `completion(model="deepseek/deepseek-chat", messages)` | 
 | deepseek-coder | `completion(model="deepseek/deepseek-coder", messages)` | 
+| deepseek-flash | `completion(model="deepseek/deepseek-flash", messages)` | 
+| deepseek-v4-pro | `completion(model="deepseek/deepseek-v4-pro", messages)` | 
 
 
 ## Reasoning Models
@@ -151,7 +153,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "deepseek-reasoner",
     "messages": [
@@ -171,3 +173,16 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 </TabItem>
 
 </Tabs>
+
+## Off-Peak Pricing
+
+DeepSeek bills half its listed rate outside its peak hours. Peak hours are 01:00-04:00 and 06:00-10:00 UTC, Monday through Friday, excluding Chinese public holidays. Every other hour is off-peak, including weekends and Chinese public holidays in full. The rates below are USD per 1M tokens, from the [DeepSeek pricing page](https://api-docs.deepseek.com/quick_start/pricing), for `deepseek-flash` (DeepSeek-V4.1-Flash) and `deepseek-v4-pro` (DeepSeek-V4-Pro-0813)
+
+| Model | Rate | Input | Output | Cache hit |
+|-------|------|-------|--------|-----------|
+| deepseek-flash | Peak | $0.30 | $1.20 | $0.006 |
+| deepseek-flash | Off-peak | $0.15 | $0.60 | $0.003 |
+| deepseek-v4-pro | Peak | $1.32 | $3.96 | $0.044 |
+| deepseek-v4-pro | Off-peak | $0.66 | $1.98 | $0.022 |
+
+LiteLLM's cost tracking applies the off-peak rate automatically. The built-in cost map entries for these models carry the schedule above, and each request is priced from the UTC time and weekday it completes at, so tracked spend matches the DeepSeek invoice with no extra configuration. Chinese public holidays are not modeled, so on those days peak hours bill at the peak rate, a small overestimate. The legacy `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` names are served by DeepSeek-V4.1-Flash and billed at the Flash rate, off-peak included. To change the schedule or rates, or to set one on another deployment, see [Off-Peak Pricing](../proxy/off_peak_pricing)

@@ -172,6 +172,26 @@ With `streaming_buffer_until_moderated: false` alone, the guardrail scans the ac
 
 These settings apply to both `/v1/chat/completions` and native `/v1/messages` streams.
 
+## Contextual Grounding
+
+Bedrock only scores contextual grounding when it is told what the reference text and the question are. By default LiteLLM sends just the model response, so a grounding policy never blocks anything.
+
+Set `contextual_grounding_from_messages: true` and post-call checks send the system prompt as the grounding source and the latest user message as the query. Answers that contradict the system prompt get blocked.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+guardrails:
+  - guardrail_name: "bedrock-grounding"
+    litellm_params:
+      guardrail: bedrock
+      mode: "post_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      contextual_grounding_from_messages: true
+```
+
+The flag defaults to `false`. Each scan with it on bills one Bedrock contextual grounding unit, and Bedrock rejects queries over roughly 1,000 characters, so only enable it on guardrails that have a grounding policy.
+
 ## Resource-less Checks: InvokeGuardrailChecks
 
 With the [InvokeGuardrailChecks API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeGuardrailChecks.html) you don't need to create a guardrail in AWS. Instead, define the checks inline in your config; Bedrock returns a score per check, and LiteLLM blocks the request when a score reaches your threshold.

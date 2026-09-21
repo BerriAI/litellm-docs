@@ -35,6 +35,14 @@ items={[
 ]}
 />
 
+## Evaluate JEV on your own prompts
+
+Start with [Test Routing](/docs/auto_router/setup#jev-classifier-typesafe-ai) to inspect tier choices, then use a shadow evaluation to compare actual answers. A classifier matching your tier labels does not establish that the selected model answers well. Freeze your rubric and labels before comparing JEV with another classifier, and report disagreement separately from correctness
+
+The [JEV benchmark](/blog/jev-auto-router-benchmark) measured classifier latency and registry-priced classifier cost on authored synthetic cases. To evaluate a deployment, include classifier spend, downstream completions, embeddings where enabled, and shadow/judge requests. Record fallback rates and p95 latency as well as successful-call averages
+
+JEV logs a separate `typesafe/<model>` classifier call attributed through the parent request's metadata. Its `classifier_cost` is also carried on a successful JEV routing decision and deducted in reported router savings. That metadata describes the classifier charge already logged separately: do not count it again when summing spend rows. Missing usage or a missing registry entry leaves classifier cost unknown, and cancellation does not prove the provider billed zero
+
 ## Savings after you switch
 
 ![Auto-Router Usage tab in Cost Optimization](../../blog/autorouter_spend_visibility/auto-router-usage-tab.png)
@@ -42,7 +50,7 @@ items={[
 - **Per request:** what the router picked, why, and what the same request would have cost on the most expensive model in the hardest configured tier. The difference, net of any classifier call, is stamped on the request.
 - **Rolled up:** into the daily spend tables, so it shows per key, team, tag, and organization.
 - **Usage tab:** total estimated savings, sessions and turns, prompt-cache hit rate by turn type. A 30-day window over 400k sessions reads in 38 ms.
-- **Classifier cost:** returned per request in the `x-litellm-classifier-cost` header when an LLM classifier ran.
+- **Classifier cost:** returned per request in the `x-litellm-classifier-cost` header when a classifier cost was recorded, including a successful JEV classification
 - **Honest baseline:** priced with a warm cache on continuing turns; a fresh cache write after a switch counts against the saving, so a single request can read negative. Formula and every surface: [Reported savings](/docs/proxy/auto_routing#reported-savings).
 
 <NavigationCards
@@ -63,5 +71,5 @@ items={[
 
 ## Reading a single decision
 
-- Each routed request in the logs opens with a routing-decision card: tier, cause (heuristic score, keyword match, LLM classifier, or session pin), and the model that served it.
+- Each routed request in the logs opens with a routing-decision card: tier, cause (including `jev_classifier`), and the model that served it
 - Test Routing in the Add Model form shows the same card, so a surprising production decision can be replayed against the form with the same prompt.

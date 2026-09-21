@@ -127,7 +127,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.AnthropicConfig(max_tokens_to_sample=200)
+litellm.AnthropicConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -194,7 +194,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.TogetherAIConfig(max_tokens_to_sample=200)
+litellm.TogetherAIConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="together_ai/togethercomputer/llama-2-70b-chat",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -319,7 +319,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.PalmConfig(maxOutputTokens=10)
+litellm.PalmConfig(max_output_tokens=10)
 response_2 = litellm.completion(
             model="palm/chat-bison",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -382,7 +382,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.CohereConfig(max_tokens=200)
+litellm.CohereChatConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="command-nightly",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -422,7 +422,7 @@ model_list:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "llama-3-8b-instruct",
   "messages": [

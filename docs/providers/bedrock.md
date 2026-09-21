@@ -881,6 +881,124 @@ Beta features may require special access or permissions in your AWS account. Som
 
 :::
 
+### Eager Input Streaming for Tool Calls
+
+By default Claude buffers a tool call's whole input JSON before streaming it, so a large tool call (a big file write, say) can leave the stream silent long enough to trip a client read timeout. Set `eager_input_streaming: true` on a tool and its input streams as it is generated. LiteLLM turns the flag into the `fine-grained-tool-streaming-2025-05-14` beta on every Bedrock route (Converse and Invoke, `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`), so it works on every Claude model on Bedrock, including older ones that reject the per-tool field. The beta is request-wide: once one tool sets it, every tool's input streams eagerly, and the streamed deltas can be partial JSON until the block ends.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python keep-model-ids
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    messages=[{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "write_file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                "required": ["path", "content"],
+            },
+        },
+        "eager_input_streaming": True,
+    }],
+    stream=True,
+)
+for chunk in response:
+    print(chunk.choices[0].delta.tool_calls)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+**Set on YAML Config**
+
+```yaml keep-model-ids
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0  # bedrock/converse/ and bedrock/invoke/ work too
+```
+
+**OpenAI format, `/v1/chat/completions`**
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "parameters": {
+          "type": "object",
+          "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+          "required": ["path", "content"]
+        }
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**Anthropic format, `/v1/messages`**
+
+```bash
+curl http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LITELLM_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "bedrock-claude",
+    "max_tokens": 4096,
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "name": "write_file",
+      "input_schema": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**OpenAI Responses format, `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "input": "Write a 2000 word README to docs/README.md",
+    "tools": [{
+      "type": "function",
+      "name": "write_file",
+      "parameters": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 
 ## Usage - Structured Output / JSON mode 
 
@@ -1583,7 +1701,7 @@ Test it!
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-claude",
     "messages": [{"role": "assistant", "content": "Hey, how's it going?"}]
@@ -1676,7 +1794,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1762,7 +1880,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1847,7 +1965,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test GPT OSS via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "gpt-oss-20b",
@@ -1937,7 +2055,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test Pegasus via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "pegasus-video",
@@ -2169,7 +2287,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "anthropic-claude-sonnet-4-5",
   "messages": [
@@ -2259,7 +2377,7 @@ litellm --config /path/to/config.yaml --detailed_debug
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -2317,6 +2435,50 @@ response = completion(
 | `aws_secret_access_key` | `aws_secret_access_key` | AWS secret key associated with the access key | [Credentials](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) |
 | `aws_role_name` | `RoleArn` | The Amazon Resource Name (ARN) of the role to assume | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
 | `aws_session_name` | `RoleSessionName` | An identifier for the assumed role session | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+| `aws_session_tags` | `Tags` | Optional. A list of `{"Key": <str>, "Value": <str>}` pairs sent as session tags on the AssumeRole call, for example `[{"Key": "team", "Value": "genai"}]` | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+
+#### Session tags
+
+`aws_session_tags` attaches [STS session tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html) to the AssumeRole call. Each tag lands on the assumed session as `aws:PrincipalTag/<Key>`, so the role's trust policy and downstream resource policies can key on it. The AssumeRole event in CloudTrail lists the tags under `requestParameters.tags`, so role sessions can be attributed by tag
+
+Tags are set per deployment, so every request routed to that model entry carries the same tags. Tag order does not matter, and deployments with the same tags on the same role share one cached STS session. This applies to Bedrock chat and invoke, embeddings, batches and SageMaker deployments, anywhere LiteLLM performs the AssumeRole itself. The target role's trust policy must allow `sts:TagSession` next to `sts:AssumeRole`; see [Trust policy for session tags](#trust-policy-for-session-tags)
+
+Like `aws_role_name`, `aws_session_name` and `aws_external_id`, this is an operator-side setting. The proxy rejects `aws_session_tags` in client request bodies with HTTP 401 unless the admin opts in with `general_settings.allow_client_side_credentials: true` or lists it under `configurable_clientside_auth_params` on the deployment. See [Clientside LLM Credentials](../proxy/clientside_auth.md). On the proxy's model management endpoints (`/model/new`, `/model/update` and `PATCH /model/{model_id}/update`), only a proxy admin can set or change `aws_session_tags`. A team admin editing a team model gets HTTP 403 unless the tags stay the same
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.{{anthropic_large}}",
+    messages=[{"role": "user", "content": "Hello!"}],
+    aws_region_name="us-east-1",
+    aws_role_name="arn:aws:iam::123456789012:role/litellm-bedrock",
+    aws_session_name="litellm-proxy",
+    aws_session_tags=[{"Key": "team", "Value": "genai"}],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic_large}}
+      aws_region_name: us-east-1
+      aws_role_name: arn:aws:iam::123456789012:role/litellm-bedrock
+      aws_session_name: litellm-proxy
+      aws_session_tags:
+        - Key: team
+          Value: genai
+```
+
+</TabItem>
+</Tabs>
 
 ### IAM Roles Anywhere (On-Premise / External Workloads)
 
@@ -2399,6 +2561,24 @@ Replace `<TARGET_ROLE_ARN>` with the ARN of the role you want to assume (e.g., `
 ```
 
 **Note:** The target role itself must also trust the calling IAM identity (via its trust policy) for AssumeRole to succeed. See [AWS AssumeRole docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-api.html) for more details.
+
+#### Trust policy for session tags
+
+When a deployment sets `aws_session_tags`, the target role's trust policy must also allow `sts:TagSession`. Without it, AssumeRole fails with `AccessDenied ... is not authorized to perform: sts:TagSession`. Replace `<LITELLM_IDENTITY_ARN>` with the IAM identity running LiteLLM. The `Condition` is optional and makes the role admit only sessions that carry the expected tag:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "<LITELLM_IDENTITY_ARN>"},
+      "Action": ["sts:AssumeRole", "sts:TagSession"],
+      "Condition": {"StringEquals": {"aws:RequestTag/team": "genai"}}
+    }
+  ]
+}
+```
 
 ---
 
@@ -2522,7 +2702,7 @@ from litellm import completion
 response = completion(
     model="bedrock/converse_like/some-model",
     messages=[{"role": "user", "content": "What's AWS?"}],
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     api_base="https://some-api-url/models",
     extra_headers={"test": "hello world"},
 )
@@ -2554,7 +2734,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "anthropic-claude",
     "messages": [

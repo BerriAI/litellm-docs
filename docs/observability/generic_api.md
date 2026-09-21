@@ -19,7 +19,7 @@ callback_settings:
     callback_type: generic_api
     endpoint: https://your-endpoint.com/logs
     headers:
-      Authorization: Bearer sk-1234
+      Authorization: Bearer $LITELLM_API_KEY
 ```
 
 ## Configuration

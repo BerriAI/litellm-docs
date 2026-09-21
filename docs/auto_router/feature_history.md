@@ -6,18 +6,25 @@ description: Which Auto Router features shipped in which LiteLLM release, so you
 
 Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
-## Coming in Next Release
+## v1.102.0
 
-Merged after the v1.101.0 release candidate was cut. These changes are in `v1.102.0-dev` builds.
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.102.0), [Release notes](/release_notes/v1.102.0/v1-102-0)
 
+- **Harness-aware classification.** Omit Claude Code system text and strip Codex reminder envelopes from classification while preserving delegated tasks and the original routed request. [#40655](https://github.com/BerriAI/litellm/pull/40655), [#40599](https://github.com/BerriAI/litellm/pull/40599)
+- **Encrypted delegated tasks.** Preserve encrypted task blocks in native OpenAI or Azure OpenAI Responses classifier calls. Unsupported deployments and decryption errors follow `classifier_fallback`. [#40608](https://github.com/BerriAI/litellm/pull/40608)
+- **Classifier input logs.** Inspect the provider-bound classifier input, masked originating request, and classifier response separately in the Classify row. [#40604](https://github.com/BerriAI/litellm/pull/40604)
 - **Heuristic v1 tuning.** One tuned router stays editable without the `auto_router` license feature. [#39952](https://github.com/BerriAI/litellm/pull/39952)
 - **Faster semantic cold start.** Build the first route layer once, off the event loop. [#39954](https://github.com/BerriAI/litellm/pull/39954)
 - **Adaptive router fixes.** Read model pricing from `model_info` and preserve bandit priors across restarts. [#39957](https://github.com/BerriAI/litellm/pull/39957), [#39955](https://github.com/BerriAI/litellm/pull/39955)
 - **Cross-provider tool history.** `/v1/messages` can replay `tool_use` blocks across OpenAI and Anthropic tiers. [#39967](https://github.com/BerriAI/litellm/pull/39967)
 
-## v1.101.0 (release candidate)
+Also in this release: declarative custom heuristic dimensions and dashboard weight editing [#40156](https://github.com/BerriAI/litellm/pull/40156), [#40205](https://github.com/BerriAI/litellm/pull/40205); an optional `NON_REASONING` tier [#40273](https://github.com/BerriAI/litellm/pull/40273); tier-model output limits [#40209](https://github.com/BerriAI/litellm/pull/40209); healthy-default fallback when a tier cannot serve the request [#40757](https://github.com/BerriAI/litellm/pull/40757); routed model and session savings in Claude Code and Codex [#40330](https://github.com/BerriAI/litellm/pull/40330); and tier, cause, score, and reasoning effort in response headers [#40792](https://github.com/BerriAI/litellm/pull/40792).
 
-[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.101.0-rc.1), [Release notes](/release_notes/v1.101.0rc1/v1-101-0-rc-1)
+[Harness-aware routing update](/blog/auto-router-harness-aware-classification)
+
+## v1.101.0
+
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.101.0), [Release notes](/release_notes/v1.101.0/v1-101-0)
 
 - **Heuristic classifiers.** `heuristic_v2` routes locally; `hybrid` calls the LLM near a tier boundary. [#39276](https://github.com/BerriAI/litellm/pull/39276), [#39403](https://github.com/BerriAI/litellm/pull/39403). [Post](/blog/heuristic-v2)
 - **Context and user-turn routing.** Fit oversized prompts to a tier and classify only new user turns when configured. [#38844](https://github.com/BerriAI/litellm/pull/38844), [#38861](https://github.com/BerriAI/litellm/pull/38861), UI [#39042](https://github.com/BerriAI/litellm/pull/39042), [#39054](https://github.com/BerriAI/litellm/pull/39054)

@@ -249,7 +249,7 @@ print(cancel_response)
 **REST API:**
 ```bash
 curl -X POST http://localhost:4000/v1/responses/response_id/cancel \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 This will attempt to cancel the in-progress response with the given ID.
@@ -522,7 +522,7 @@ for event in response:
 from openai import OpenAI
 import base64
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
     model="{{openai_large}}",
@@ -836,7 +836,7 @@ from websocket import create_connection  # uv add websocket-client
 # Connect to LiteLLM proxy WebSocket endpoint
 ws = create_connection(
     "ws://localhost:4000/v1/responses?model={{gemini_flash}}",
-    header=["Authorization: Bearer sk-1234"]
+    header=["Authorization: Bearer sk-<your-litellm-api-key>"]
 )
 
 try:
@@ -900,7 +900,7 @@ const ws = new WebSocket(
     'ws://localhost:4000/v1/responses?model={{gemini_flash}}',
     {
         headers: {
-            'Authorization': 'Bearer sk-1234'
+            'Authorization': 'Bearer sk-<your-litellm-api-key>'
         }
     }
 );
@@ -958,7 +958,7 @@ ws.on('error', (error) => {
 
 # Connect to WebSocket endpoint
 websocat "ws://localhost:4000/v1/responses?model={{gemini_flash}}" \
-  -H="Authorization: Bearer sk-1234"
+  -H="Authorization: Bearer $LITELLM_API_KEY"
 
 # Then send JSON events (paste and press Enter):
 {"type":"response.create","model":"{{gemini_flash}}","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"Hello!"}]}]}
@@ -1098,17 +1098,46 @@ general_settings:
 
 IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
 
+## Background Mode
+
+LiteLLM passes OpenAI's `background: true` parameter through to the provider. The provider returns immediately with a response in `queued` or `in_progress` status, and you fetch the result later with `GET /v1/responses/{response_id}`:
+
+```bash showLineNumbers title="Create a background response"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6",
+    "input": "Write a detailed comparison of the Responses API and the Chat Completions API",
+    "background": true
+  }'
+```
+
+```bash showLineNumbers title="Poll for the result"
+curl http://localhost:4000/v1/responses/{response_id} \
+  -H "Authorization: Bearer sk-1234"
+```
+
+### Cost tracking for background responses
+
+The create call returns before the model has produced any tokens, so there is no usage to record at request time. To close that gap, the proxy stores every queued background response and prices it with a background polling job, the same machinery the [managed batches cost poller](./proxy/managed_batches#observability) uses for completed batches. It requires a Postgres database and ships with the enterprise package
+
+Every `proxy_batch_polling_interval` seconds (a `general_settings` key, also settable via the `PROXY_BATCH_POLLING_INTERVAL` env var; default `3600`, plus up to 30s of jitter) the job reads pending background responses from the database, oldest first and up to `MAX_OBJECTS_PER_POLL_CYCLE` (default `50`) per cycle, and retrieves each one from the provider with the deployment credentials in your config. Once a response reaches a terminal status (`completed`, `failed`, `cancelled`, or `incomplete`), that retrieval writes a spend log with the final usage, attributed to the user who created the response, and the row stops being polled. Your own `GET /v1/responses/{response_id}` reads are never billed; only the poller's retrieval prices the response
+
+Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7`) days are marked stale and dropped from polling. Set the polling interval to something small like `30` while testing, and set `PROXY_BATCH_POLLING_ENABLED=false` to disable this job and the batch cost poller entirely
+
 ## Supported Responses API Parameters
 
 | Provider | Supported Parameters |
 |----------|---------------------|
 | `openai` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
 | `azure` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
+| `azure_ai` on `.services.ai.azure.com` and `.openai.azure.com` hosts | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/913ef6ed49250f28680a1a50850183b5d80f6bbb/litellm/llms/azure_ai/responses/transformation.py#L25) |
+| `azure_ai` on other hosts | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `anthropic` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `bedrock` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `gemini` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `vertex_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
-| `azure_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | All other llm api providers | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 
 ## Load Balancing with Session Continuity.
@@ -1514,7 +1543,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="non-Responses API Model Request"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic-model",
     "input": "who is Michael Jordan"
@@ -1596,7 +1625,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="Request via bridge"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "my-local-model",
     "input": "Hello!"
@@ -1749,7 +1778,7 @@ LiteLLM Proxy supports session management for all supported models. This allows 
 
 1. Enable storing request / response content in the database
 
-Set `store_prompts_in_cold_storage: true` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
+Set `store_prompts_in_spend_logs: true` under `general_settings` and `cold_storage_custom_logger: s3_v2` under `litellm_settings` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
 
 ```yaml showLineNumbers title="config.yaml with Session Continuity"
 litellm_settings:
@@ -1760,7 +1789,6 @@ litellm_settings:
     s3_region_name: us-west-2      
 
 general_settings:
-  store_prompts_in_cold_storage: true
   store_prompts_in_spend_logs: true
 ```
 
@@ -1774,7 +1802,7 @@ Start a new conversation by making a request without specifying a previous respo
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "who is Michael Jordan"
@@ -1790,7 +1818,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make initial request to start a new conversation
@@ -1832,7 +1860,7 @@ Continue the conversation by referencing the previous response ID to maintain co
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him",
@@ -1849,7 +1877,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make follow-up request in the same conversation session
@@ -1891,7 +1919,7 @@ Start a brand new conversation without referencing previous context to demonstra
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him"
@@ -1907,7 +1935,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make a new request without previous context
