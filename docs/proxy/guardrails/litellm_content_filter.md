@@ -251,7 +251,7 @@ Contact me at [EMAIL_REDACTED]
 |-------------|-------------|---------|
 | `us_ssn` | US Social Security Numbers | `123-45-6789` |
 | `email` | Email addresses | `user@example.com` |
-| `phone` | Phone numbers | `+1-555-123-4567` |
+| `us_phone` | US phone numbers | `+1-555-123-4567` |
 | `visa` | Visa credit cards | `4532-1234-5678-9010` |
 | `mastercard` | Mastercard credit cards | `5425-2334-3010-9903` |
 | `amex` | American Express cards | `3782-822463-10005` |
