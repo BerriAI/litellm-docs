@@ -340,11 +340,15 @@ The response follows Mistral's OCR format with the following structure:
 | `object` | string | Always `"ocr"` for OCR responses |
 
 
+## **Batch OCR**
+
+Mistral OCR also runs through the [Batches API](./batches): upload a JSONL file whose lines target `/v1/ocr`, create a batch with `"endpoint": "/v1/ocr"`, and download the output file once it completes. Pages processed in a batch are billed at the model's `ocr_cost_per_page_batches` rate. See [Mistral files and batches](./providers/mistral#files-and-batches-api) for the full flow and the cost keys.
+
 ## **Supported Providers**
 
 | Provider    | Link to Usage      |
 |-------------|--------------------|
-| Mistral AI  |   [Usage](#quick-start)                 |
+| Mistral AI  |   [Usage](#quick-start), [Batch OCR](./providers/mistral#files-and-batches-api)                 |
 | Azure AI (Mistral, Cohere Parse) |   [Usage](../docs/providers/azure_ocr)                 |
 | Vertex AI   |   [Usage](../docs/providers/vertex_ocr)                 |
 | Cohere Parse |   [Usage](../docs/providers/cohere#parse-ocr)                 |

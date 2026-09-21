@@ -67,6 +67,12 @@ cache_params:
   ssl_cert_reqs: null # Set to null for self-signed certificates
   ssl_check_hostname: false # Set to false for self-signed certificates
 
+  # Azure Entra ID (Azure AD) Authentication for Redis (see azure_redis_ad)
+  azure_redis_ad_token: "true" # Authenticate to Azure Redis with Entra ID instead of a password
+  azure_client_id: your_client_id # [OPTIONAL] User-assigned managed identity or service principal client ID
+  azure_tenant_id: your_tenant_id # [OPTIONAL] Tenant ID, needed together with a client secret
+  azure_client_secret: your_client_secret # [OPTIONAL] Service principal secret; all three fall back to AZURE_* env vars
+
   # S3 cache parameters
   s3_bucket_name: your_s3_bucket_name # Name of the S3 bucket
   s3_region_name: us-west-2 # AWS region of the S3 bucket

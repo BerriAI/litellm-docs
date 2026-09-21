@@ -243,6 +243,10 @@ Response:
 | `vector_store` | object | Yes | Vector store configuration |
 | `name` | string | No | Pipeline name for logging |
 
+:::info Registered stores
+When `vector_store.vector_store_id` names a store in the [vector store registry](./vector_stores/managed_vector_stores.md) or one saved by an earlier ingest, the provider, credentials, and destination settings come from that registration. The request keeps only its per-upload options (`data_source_id`, `wait_for_ingestion`, `ingestion_timeout`, `custom_metadata`, `file_description`, `max_embedding_requests_per_min`); any other `vector_store` key it sends is ignored. A `custom_llm_provider` with no ingestion implementation is rejected with a 400 naming the supported ones.
+:::
+
 ### vector_store (OpenAI)
 
 | Parameter | Type | Default | Description |
@@ -297,7 +301,8 @@ When `vector_store_id` is omitted, LiteLLM automatically creates:
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `custom_llm_provider` | string | - | `"s3_vectors"` |
-| `vector_bucket_name` | string | **required** | S3 vector bucket name |
+| `vector_store_id` | string | auto-create | Existing index as `bucket:index`, or a bare index name inside `vector_bucket_name` |
+| `vector_bucket_name` | string | **required** unless `vector_store_id` is `bucket:index` | S3 vector bucket name |
 | `index_name` | string | auto-create | Vector index name |
 | `dimension` | integer | auto-detect | Vector dimension (auto-detected from embedding model) |
 | `distance_metric` | string | `cosine` | Distance metric: `cosine` or `euclidean` |

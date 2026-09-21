@@ -528,15 +528,6 @@ A read replica takes the same key under `database.reader`, and it requires the w
      litellm --version
      ```
 
-### --telemetry
-   - **Default:** `True`
-   - **Type:** `bool`
-   - Help track usage of this feature. Turn off for privacy.
-   - **Usage:** 
-     ```shell
-     litellm --telemetry False
-     ```
-
 ### --use_queue
    - **Default:** `False`
    - **Type:** `bool` (Flag)

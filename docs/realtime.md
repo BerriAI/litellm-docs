@@ -11,6 +11,7 @@ Supported Providers:
 - xAI ([see full docs](/docs/providers/xai_realtime))
 - Google AI Studio (Gemini)
 - Vertex AI
+- Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 

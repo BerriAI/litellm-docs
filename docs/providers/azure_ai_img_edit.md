@@ -33,6 +33,10 @@ Get your API key and endpoint from [Azure AI Studio](https://ai.azure.com/).
 | Model Name | Description | Cost per Image |
 |------------|-------------|----------------|
 | `azure_ai/FLUX.1-Kontext-pro` | FLUX 1 Kontext Pro model with enhanced context understanding for editing | $0.04 |
+| `azure_ai/flux.2-pro` | FLUX 2 Pro, up to 8 reference images per edit | $0.04 |
+| `azure_ai/FLUX.2-flex` | FLUX 2 Flex, up to 10 reference images per edit, adjustable `guidance` and `steps` | $0.05 per megapixel ($0.052 at 1024x1024) |
+
+FLUX 2 edits go to the same model-specific Black Forest Labs route as FLUX 2 generation (`/providers/blackforestlabs/v1/flux-2-pro` or `/providers/blackforestlabs/v1/flux-2-flex`), with the reference images sent as base64 in the JSON body instead of multipart form data. Pass a list of files as `image` to edit against several references at once. The model name is matched case-insensitively, so `azure_ai/flux.2-flex` works too
 
 ## Image Editing
 
@@ -138,6 +142,36 @@ path.write_bytes(img_bytes)
 ```
 
 </TabItem>
+
+<TabItem value="flux2-multi-edit" label="FLUX 2 Multi-Reference">
+
+```python showLineNumbers title="FLUX 2 Flex Edit with Several Reference Images"
+import os
+import base64
+from pathlib import Path
+
+import litellm
+
+os.environ["AZURE_AI_API_KEY"] = "your-api-key-here"
+os.environ["AZURE_AI_API_BASE"] = "your-azure-ai-endpoint"  # e.g., https://your-resource.services.ai.azure.com
+
+# FLUX 2 Flex accepts up to 10 reference images, FLUX 2 Pro up to 8
+response = litellm.image_edit(
+    model="azure_ai/FLUX.2-flex",
+    image=[open("subject.png", "rb"), open("style.png", "rb")],
+    prompt="Render the subject from the first image in the style of the second",
+    api_base=os.environ["AZURE_AI_API_BASE"],
+    api_key=os.environ["AZURE_AI_API_KEY"],
+    api_version="preview",
+    size="1024x1024",
+    guidance=4.5,
+    steps=32,
+)
+img_bytes = base64.b64decode(response.data[0].get("b64_json"))
+Path("flux2_edited_image.png").write_bytes(img_bytes)
+```
+
+</TabItem>
 </Tabs>
 
 ### Usage - LiteLLM Proxy Server
@@ -152,6 +186,15 @@ model_list:
       api_key: os.environ/AZURE_AI_API_KEY
       api_base: os.environ/AZURE_AI_API_BASE
       api_version: os.environ/AZURE_AI_API_VERSION
+    model_info:
+      mode: image_edit
+
+  - model_name: azure-flux-2-flex-edit
+    litellm_params:
+      model: azure_ai/FLUX.2-flex
+      api_key: os.environ/AZURE_AI_API_KEY
+      api_base: os.environ/AZURE_AI_API_BASE
+      api_version: preview
     model_info:
       mode: image_edit
 
@@ -244,6 +287,8 @@ Azure AI Image Editing supports the following OpenAI-compatible parameters:
 | `api_base` | string | Your Azure AI endpoint URL | Required | `"https://your-endpoint.eastus2.inference.ai.azure.com/"` |
 | `api_key` | string | Your Azure AI API key | Required | Environment variable or direct value |
 | `api_version` | string | API version for Azure AI | Required | `"2025-04-01-preview"` |
+
+FLUX 2 Pro and FLUX 2 Flex edits take the same parameters as [FLUX 2 generation](./azure_ai_img#flux-2-parameters): `size` (or `width` and `height`), `output_format`, `seed`, `safety_tolerance`, `aspect_ratio`, and for Flex `guidance` and `steps`. The OpenAI-only fields `user`, `quality`, `background`, `moderation`, and `output_compression` are accepted and dropped, so an OpenAI SDK client that sets them keeps working
 
 ## Getting Started
 

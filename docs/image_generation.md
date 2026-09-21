@@ -192,8 +192,8 @@ os.environ['AZURE_API_VERSION'] = ""
 
 ### Usage
 ```python showLineNumbers
-from litellm import embedding
-response = embedding(
+from litellm import image_generation
+response = image_generation(
     model="azure/<your deployment name>",
     prompt="cute baby otter",
     api_key=api_key,

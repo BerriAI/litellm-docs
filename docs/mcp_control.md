@@ -19,6 +19,7 @@ This ensures that only authorized entities can discover and use MCP tools, provi
 
 :::info Related Documentation
 - [MCP Overview](./mcp.md) - Learn about MCP in LiteLLM
+- [Grant MCP Server Access to Keys and Teams](./mcp_grant_access.md) - Step-by-step Admin UI and API procedure for key and team grants
 - [MCP Cost Tracking](./mcp_cost.md) - Track costs for MCP tool calls
 - [MCP Guardrails](./mcp_guardrail.md) - Apply security guardrails to MCP calls
 - [Using MCP](./mcp_usage.md) - How to use MCP with LiteLLM
