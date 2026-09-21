@@ -839,6 +839,8 @@ router_settings:
 | RUNWAYML_API_BASE | Base URL for RunwayML
 | RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
 | SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
+| SCHEDULED_JOB_SHUTDOWN_CANCEL_TIMEOUT_SECONDS | Seconds proxy shutdown waits for cancelled scheduled jobs to record their outcome before giving up on them. Default 5
+| SCHEDULED_JOB_SHUTDOWN_FINISH_TIMEOUT_SECONDS | Seconds proxy shutdown waits for in-flight scheduled jobs (spend log cleanup, spend writes) to finish before cancelling them. Default 5
 | SCX_API_BASE | Base URL for SCX.ai. Default is https://api.scx.ai/v1
 | SCX_API_KEY | API key for SCX.ai
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
