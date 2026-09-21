@@ -75,7 +75,7 @@ Setting only the dark logo leaves light mode on the default LiteLLM logo, so set
 ### Set a Custom Logo
 
 ```bash
-curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
+curl -X PATCH 'http://localhost:4000/update/ui_theme_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -91,7 +91,7 @@ curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
 You can also customize the browser tab favicon:
 
 ```bash
-curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
+curl -X PATCH 'http://localhost:4000/update/ui_theme_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -103,7 +103,7 @@ curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
 ### Get Current Theme Settings
 
 ```bash
-curl -X GET 'http://localhost:4000/settings/get/ui_theme_settings'
+curl -X GET 'http://localhost:4000/get/ui_theme_settings'
 ```
 
 ### Reset to Default Logo
@@ -111,7 +111,7 @@ curl -X GET 'http://localhost:4000/settings/get/ui_theme_settings'
 Send an empty `logo_url` to restore the default LiteLLM logo:
 
 ```bash
-curl -X PATCH 'http://localhost:4000/settings/update/ui_theme_settings' \
+curl -X PATCH 'http://localhost:4000/update/ui_theme_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{

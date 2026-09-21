@@ -402,7 +402,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'autoRouterSidebar',
             position: 'left',
-            label: 'Auto Router',
+            label: 'Auto Router [Add-on]',
           },
           {
             href: 'https://trust.litellm.ai/',

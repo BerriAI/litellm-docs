@@ -186,4 +186,5 @@ Two extensions are common once the basic flow works. To attribute spend to teams
 - [JWT-based Auth](../proxy/token_auth): all `litellm_jwtauth` options
 - [JWT to Virtual Key Mapping](../proxy/jwt_key_mapping): per-user keys, budgets, and model access
 - [Provisioning identities and issuing keys](../proxy/identity_provisioning): how JWT auth, SCIM, and key auto-registration fit together
+- [Claude Code Gateway (SSO sign-in)](./claude_code_gateway): developers sign in with `/login` through the proxy's SSO, with no helper script
 - [Claude Code Quickstart](./claude_responses_api): basic Claude Code with LiteLLM setup

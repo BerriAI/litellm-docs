@@ -163,7 +163,7 @@ Built-in tools that carry only a `type` and no `function` block, such as `{"type
 ```
 
 **Availability:**
-- **Both input and output:** Pre-call guardrails get the tool definitions from the request. Post-call guardrails get the same definitions, so a guardrail deciding on a `tool_calls` entry can see the schema of the tool being called. On a response scan, returned `tools` are not written back.
+- **Input only:** Tools are only passed for `input_type="request"` (pre-call guardrails). Output/response guardrails do not currently receive tool definitions.
 - **Supported endpoints:** The `tools` parameter is supported on: `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`. Other endpoints do not have tool support.
 
 **Use cases:**
@@ -222,13 +222,12 @@ The `structured_messages` parameter provides the full input in OpenAI chat compl
 
 **Availability:**
 - **Supported endpoints:** `/v1/chat/completions`, `/v1/messages`, `/v1/responses`
-- **Both input and output:** On `input_type="request"`, the request messages. On `input_type="response"`, the same request messages followed by the model reply as a final `assistant` turn (its text as `content`, its tool calls as `tool_calls`), so a post-call guardrail sees the conversation that produced the response. `texts` and `tool_calls` still hold only the response, and returned `structured_messages` are only written back on request scans
+- **Input only:** Only passed for `input_type="request"` (pre-call guardrails)
 
 **Use cases:**
 - Apply different policies for system vs user messages
 - Enforce role-based content restrictions
 - Log structured conversation context
-- Judge a response or tool call against the request that led to it (prompt injection through tool results, off-topic replies)
 
 #### Returning rewritten messages
 
@@ -472,3 +471,4 @@ async def apply_guardrail(request: GuardrailRequest):
 ## Questions?
 
 This is a **beta API**. We're actively improving it based on feedback. Open an issue or PR if you need additional capabilities.
+

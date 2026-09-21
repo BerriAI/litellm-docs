@@ -18,7 +18,7 @@ model_list:
 2. Start LiteLLM Proxy 
 
 ```bash
-litellm-proxy start
+litellm --config config.yaml
 ```
 
 3. Run test script 

@@ -13,6 +13,7 @@ Use this to give users an accurate list of models available behind provider endp
 - XAI
 - VLLM
 - Vertex AI
+- Eden AI
 
 ### Usage
 
