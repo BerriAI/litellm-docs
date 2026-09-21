@@ -42,6 +42,8 @@ model_list:
       aws_batch_role_arn: arn:aws:iam::888602223428:role/service-role/AmazonBedrockExecutionRoleForAgents_BB9HNW6V4CV
       # Optional: Custom KMS encryption key for the S3 input upload and the batch output
       # s3_encryption_key_id: arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012
+      # Optional: AWS account id that owns the S3 buckets, when they live in another account
+      # s3_bucket_owner: "123456789012"
     model_info: 
       mode: batch # 👈 SPECIFY MODE AS BATCH, to tell user this is a batch model
 ```
@@ -62,6 +64,7 @@ model_list:
 | Parameter | Description |
 |-----------|-------------|
 | `s3_encryption_key_id` | Custom KMS encryption key ID for the batch input file LiteLLM uploads to S3 and for the batch output data. Requires `kms:GenerateDataKey` on that key for the credentials LiteLLM signs the upload with. If not specified, Bedrock uses AWS managed encryption keys. |
+| `s3_bucket_owner` | AWS account id that owns the batch input and output S3 buckets. Sent as `s3BucketOwner` on both the input and output data config of the Bedrock job. Set it when the buckets live in a different account than the one running the batch job, otherwise Bedrock validates bucket ownership against the job's account and the job fails. Also settable via the `AWS_S3_BUCKET_OWNER` env var. |
 
 ### 2. Create Virtual Key
 
@@ -326,6 +329,26 @@ model_list:
 2. **As an environment variable**:
 ```bash
 export AWS_S3_ENCRYPTION_KEY_ID=arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012
+```
+
+### How do I use S3 buckets owned by a different AWS account?
+
+Bedrock checks that the input and output buckets belong to the account named in `s3BucketOwner`, and when that field is missing it defaults to the account running the batch job. If your buckets live in another account the job fails validation with an S3 permission error even though the bucket policy grants access. Set `s3_bucket_owner` to the id of the account that owns the buckets and LiteLLM sends it on both the input and output data config
+
+Through the proxy, an `s3_bucket_owner` passed in the `/v1/batches` request body takes precedence over the deployment's `litellm_params` value, which in turn takes precedence over the `AWS_S3_BUCKET_OWNER` env var. This is the same order the router applies to every other deployment parameter such as `s3_bucket_name` or `s3_encryption_key_id`. When none is set the field is omitted and Bedrock keeps its default
+
+```yaml
+model_list:
+  - model_name: "bedrock-batch-claude"
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+      s3_bucket_name: shared-batch-bucket
+      s3_bucket_owner: "123456789012"
+      # ... other params
+```
+
+```bash
+export AWS_S3_BUCKET_OWNER=123456789012
 ```
 
 
