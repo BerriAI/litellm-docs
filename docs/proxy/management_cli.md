@@ -266,11 +266,12 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Chat Completions
 
-- Ask for chat completions from the proxy server.
+- Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
 - Example:
 
   ```bash
-  lite chat completions {{openai_large}} -m "user:Hello, how are you?"
+  lite chat {{openai_large}}
+  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
   ```
 
   [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
@@ -340,11 +341,11 @@ lite logout             # clear the keychain entry and the token file, and revok
      --key-alias=my-key
    ```
 
-5. **Chat completion:**
+5. **Interactive chat:**
 
    ```bash
-   lite chat completions {{openai_large}} \
-     -m "user:Write a story"
+   lite chat {{openai_large}} \
+     --system "You are a helpful coding assistant"
    ```
 
 6. **Custom HTTP request:**
