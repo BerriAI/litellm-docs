@@ -174,9 +174,9 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Run a moderation check in parallel to the actual LLM API call. 
 
-Subclass `CustomGuardrail` (not `CustomLogger`) and define an `async_moderation_hook` function
+Subclass `CustomGuardrail` and define an `async_moderation_hook` function
 
-- The proxy only calls `async_moderation_hook` on `CustomGuardrail` instances registered under `guardrails:` with `mode: during_call`. A plain `CustomLogger` callback's `async_moderation_hook` is never invoked. 
+- Register the guardrail under `guardrails:` with `mode: during_call`. The hook must accept `data`, `user_api_key_dict` and `call_type`; the older two-argument signature fails with a `TypeError` on every request. 
 - This function runs in parallel to the actual LLM API call. 
 - If your `async_moderation_hook` raises an Exception, we will return that to the user. 
 
