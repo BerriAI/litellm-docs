@@ -174,13 +174,13 @@ curl -X POST "http://0.0.0.0:4000/v1/responses" \
 
 ## Pricing
 
-Prices are per 1M tokens (USD), shown as short context (≤272K tokens) / long context (>272K tokens).
+Prices are per 1M tokens (USD), shown as short context (≤272K tokens) / long context (>272K tokens). These are OpenAI's current promotional prices, which OpenAI says hold at least through November 21, 2026, and they are what the LiteLLM cost map tracks.
 
 | Model | Input | Cached input | Cache write | Output |
 |-------|-------|--------------|-------------|--------|
-| `gpt-5.6-sol` | $5.00 / $10.00 | $0.50 / $1.00 | $6.25 / $12.50 | $30.00 / $45.00 |
-| `gpt-5.6-terra` | $2.50 / $5.00 | $0.25 / $0.50 | $3.125 / $6.25 | $15.00 / $22.50 |
-| `gpt-5.6-luna` | $1.00 / $2.00 | $0.10 / $0.20 | $1.25 / $2.50 | $6.00 / $9.00 |
+| `gpt-5.6-sol` | $4.00 / $8.00 | $0.40 / $0.80 | $5.00 / $10.00 | $20.00 / $30.00 |
+| `gpt-5.6-terra` | $2.00 / $4.00 | $0.20 / $0.40 | $2.50 / $5.00 | $12.00 / $18.00 |
+| `gpt-5.6-luna` | $0.20 / $0.40 | $0.02 / $0.04 | $0.25 / $0.50 | $1.20 / $1.80 |
 
 Global Azure OpenAI deployments (`azure/gpt-5.6-*`) match these OpenAI list prices. Regional deployments (`azure/us/gpt-5.6-*` and `azure/eu/gpt-5.6-*`) carry the standard 10% uplift on the base rate; LiteLLM tracks the difference automatically once you route through the regional model name.
 
