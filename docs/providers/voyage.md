@@ -84,7 +84,7 @@ Voyage's `voyage-context-4` and `voyage-context-3` models produce contextualized
 
 ### Input shapes
 
-A flat list of strings, or a single string, embeds each string as its own document. LiteLLM forwards it with `enable_auto_chunking: true`, `chunk_size: 32000`, and `input_type: "document"`, so a string of up to 32,000 tokens comes back as one embedding and a longer one is split into 32,000-token chunks on Voyage's side. Sending `input_type: "query"` skips those defaults and embeds each string as a search query. Any `input_type`, `chunk_size`, or `enable_auto_chunking` you pass yourself replaces the default
+A flat list of strings, or a single string, embeds each string as its own document. LiteLLM forwards it with `enable_auto_chunking: true`, `chunk_size: 32000`, and `input_type: "document"`, so a string of up to 32,000 tokens comes back as one embedding and a longer one is split into chunks of up to 32,000 tokens on Voyage's side. Sending `input_type: "query"` skips those defaults and embeds each string as a search query. Any `input_type`, `chunk_size`, or `enable_auto_chunking` you pass yourself replaces the default
 
 ```python
 from litellm import embedding
