@@ -1728,7 +1728,8 @@ You can also pass these as either `image_url` or `base64`
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import supports_pdf_input, completion
+from litellm import completion
+from litellm.utils import supports_pdf_input
 
 # set aws credentials
 os.environ["AWS_ACCESS_KEY_ID"] = ""
@@ -1817,7 +1818,8 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm.utils import supports_pdf_input, completion
+from litellm import completion
+from litellm.utils import supports_pdf_input
 
 # set aws credentials
 os.environ["AWS_ACCESS_KEY_ID"] = ""
