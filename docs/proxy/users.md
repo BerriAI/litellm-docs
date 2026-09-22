@@ -67,6 +67,31 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
+**How to check the proxy budget**
+
+Since `v1.95.0`, the proxy-level `max_budget` and `budget_duration` are stored on an internal user row named `litellm-proxy-budget` in the `LiteLLM_UserTable`. Authentication reads that row's `spend` on every request to decide whether the global budget is exhausted, and a background job zeroes the spend when `budget_reset_at` passes. `budget_reset_at` follows the calendar rules described in [Budget Reset and Timezones](./budget_reset_and_tz.md), so `30d` resets on the 1st of the next month rather than 30 days from when the budget was set.
+
+Query the row directly with the master key to see the live counter:
+
+```bash
+curl -s 'http://localhost:4000/user/info?user_id=litellm-proxy-budget' \
+    -H 'Authorization: Bearer sk-1234'
+```
+
+```json
+{
+  "user_id": "litellm-proxy-budget",
+  "user_info": {
+    "max_budget": 1000000.0,
+    "spend": 0.0,
+    "budget_duration": "30d",
+    "budget_reset_at": "2026-10-01T00:00:00Z"
+  }
+}
+```
+
+Note that `/global/spend` reports the sum of the trailing 30 days of spend logs across the proxy. It is a reporting number, not the counter the budget check uses, so it can differ from the `spend` on the `litellm-proxy-budget` row
+
 ### Team
 
 You can:
