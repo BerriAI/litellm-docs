@@ -42,7 +42,7 @@ guardrails:
       api_base: https://your-headroom-service
 #     api_key: os.environ/HEADROOM_API_KEY  [OPTIONAL]
 #     default_on: true [OPTIONAL]
-#     min_tokens: 1000 [OPTIONAL, skip compression below this many tokens; default 0 always compresses]
+#     min_tokens: 1000 [OPTIONAL, skip compression below this many tokens; falls back to HEADROOM_MIN_TOKENS, unset always compresses]
 ```
 
 Only `pre_call` is meaningful; the guardrail is a no-op on responses.
@@ -242,7 +242,7 @@ Headroom protects two message types by default, set on the Headroom container it
 | `api_key`    | str    | Bearer token for the headroom service. Falls back to `HEADROOM_API_KEY`. Optional.                    |
 | `model`      | str    | Model name forwarded to `/v1/compress`. Defaults to the request's `model` field.                      |
 | `default_on` | bool   | Run the guardrail on every request without needing to opt in per call. Defaults to `false`.           |
-| `min_tokens` | int    | Skip the `/v1/compress` round trip when the compressible messages total fewer than this many tokens. Defaults to `0`, which always calls the compression service; `1000` is a reasonable starting point for chat histories |
+| `min_tokens` | int    | Skip the `/v1/compress` round trip when the compressible messages total fewer than this many tokens. Falls back to the `HEADROOM_MIN_TOKENS` env var. When neither is set every request is compressed; `1000` is a reasonable starting point for chat histories |
 
 ## Environment variables
 
@@ -250,3 +250,4 @@ Headroom protects two message types by default, set on the Headroom container it
 | -------------------- | -------------------------------------------------------------------- |
 | `HEADROOM_API_BASE`  | Fallback for `api_base` when not set in the guardrail config.        |
 | `HEADROOM_API_KEY`   | Fallback for `api_key` when not set in the guardrail config.         |
+| `HEADROOM_MIN_TOKENS` | Fallback for `min_tokens` when not set in the guardrail config. Unset means every request is compressed. |
