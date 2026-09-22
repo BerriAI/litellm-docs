@@ -7,7 +7,7 @@ Add tags to model deployments to track spend by environment, AWS account, or any
 
 Tags appear in the `request_tags` field of LiteLLM spend logs.
 
-:::info Requirements
+:::info[Requirements]
 Virtual Keys & a database should be set up. See [Virtual Keys Setup](./virtual_keys.md).
 :::
 

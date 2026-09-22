@@ -10,11 +10,11 @@ LiteLLM automatically tracks spend for all known models. See our [model cost map
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
-:::tip Keep Pricing Data Updated
+:::tip[Keep Pricing Data Updated]
 [Sync model pricing data from GitHub](./sync_models_github.md) to ensure accurate cost tracking.
 :::
 
-:::info Cost does not match your provider bill?
+:::info[Cost does not match your provider bill?]
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
@@ -406,7 +406,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 
 ## Custom Tags
 
-:::tip See Full Request Tags Documentation
+:::tip[See Full Request Tags Documentation]
 For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
 :::
 

@@ -335,7 +335,7 @@ assert response1.id == response2.id
 
 Use this when your vector store is a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, for example [AWS ElastiCache for Valkey](https://aws.amazon.com/elasticache/). RediSearch and RedisVL are not required; LiteLLM drives valkey-search directly over the Redis protocol.
 
-:::info Requirements
+:::info[Requirements]
 
 The `valkey-search` module must be loaded on the server (run `MODULE LIST` and look for `search`, or `FT._LIST`). On AWS ElastiCache, vector search is available on **node-based Valkey 8.2+ clusters**; a cluster-mode-disabled node group is supported and is the recommended target, and a primary with read replicas is fine since only horizontal sharding is unsupported. ElastiCache **Serverless does not support vector search**, so a serverless endpoint will not work here. Multi-shard (cluster-mode-enabled) endpoints are not supported by this backend, since the async client cannot route the `FT.*` search commands across shards; scale vertically instead.
 

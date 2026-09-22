@@ -104,7 +104,7 @@ The per-key, per-model, per-provider and per-tag panels on the Usage page still 
 
 A spend log row exists only for a request that got far enough to be logged, and it carries the key, team and model that served it. A gateway count exists for anything the proxy answered, including requests rejected before a key was resolved or a model was chosen, which is why the gateway table carries no key or user dimension at all. Drift runs in both directions: the gateway counts only classified inference, MCP and A2A traffic and collapses internal fan-out into one row, while the spend rollups also cover logged management and passthrough calls and record each upstream attempt separately. Use the tile for traffic volume and the breakdowns for attributing spend
 
-### `/gateway/daily/activity` {#gateway-daily-activity}
+### `/gateway/daily/activity` {/* #gateway-daily-activity */}
 
 Gateway counts are served by their own endpoint. Because the underlying table is deployment-wide with no per-key or per-user dimension, it is restricted to the `proxy_admin` and `proxy_admin_viewer` roles; any other caller gets a 403. In the Admin UI a non-admin simply sees the spend-derived counts in the tiles and no gateway chart. The same fallback applies to an admin whose deployment has not recorded any gateway counts yet
 

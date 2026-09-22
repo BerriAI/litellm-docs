@@ -14,7 +14,7 @@ Large prompts create a different gateway workload than short chat requests. Toke
 
 This benchmark compares the [high-throughput deployment profile](./proxy/high_throughput.md) with `v1.101.0`. The profile combines Rust token counting, shared database connections, isolated metrics and spend processing, and traffic-based autoscaling.
 
-:::info Nightly benchmark
+:::info[Nightly benchmark]
 The high-throughput profile is still in development and is available in nightly builds. These results used the earliest available version of the complete profile.
 :::
 
@@ -114,11 +114,11 @@ In these tests the baseline latency characteristics are measured against a fake-
 | Custom | LiteLLM Overhead Duration (ms) | 12 | 29 | 43 | 14.74 | 1035.7 |
 |  | Aggregated | 100 | 430 | 930 | 138.6 | 2071.4 |
 
-<!-- <Image img={require('../img/1_instance_proxy.png')} /> -->
+{/* <Image img={require('../img/1_instance_proxy.png')} /> */}
 
-<!-- ## **Horizontal Scaling - 10K RPS**
+{/* ## **Horizontal Scaling - 10K RPS**
 
-<Image img={require('../img/instances_vs_rps.png')} /> -->
+<Image img={require('../img/instances_vs_rps.png')} /> */}
 
 
 ### 4 Instances

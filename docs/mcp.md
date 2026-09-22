@@ -22,7 +22,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
 | Supported MCP Transports | • Streamable HTTP<br/>• SSE<br/>• Standard Input/Output (stdio) |
 | LiteLLM Permission Management | • By Key<br/>• By Team<br/>• By Organization |
 
-:::caution MCP protocol update
+:::caution[MCP protocol update]
 Starting in LiteLLM v1.80.18, the LiteLLM MCP protocol version is `2025-11-25`.<br/> 
 LiteLLM namespaces multiple MCP servers by prefixing each tool name with its MCP server name, so newly created servers now must use names that comply with SEP-986; noncompliant names cannot be added anymore. Existing servers that still violate SEP-986 only emit warnings today, but future MCP-side rollouts may block those names entirely, so we recommend updating any legacy server names proactively before MCP enforcement makes them unusable.
 :::
@@ -788,7 +788,7 @@ asyncio.run(main())
 
 When calling your LiteLLM Proxy's `/v1/responses` endpoint to use MCP tools, **always use `server_url: "litellm_proxy"`** in the tools array. This tells the proxy to use its configured MCP servers.
 
-:::important Do not use the full proxy URL
+:::important[Do not use the full proxy URL]
 Using `server_url: "https://your-proxy.com/mcp"` is incorrect when the request is already going to the proxy. The proxy needs the literal value `litellm_proxy` to route to its configured MCP servers.
 :::
 
@@ -1244,7 +1244,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 
 ## Use MCP tools with `/chat/completions`
 
-:::tip Works with all providers
+:::tip[Works with all providers]
 This flow is **provider-agnostic**: the same MCP tool definition works for _every_ LLM backend behind LiteLLM (OpenAI, Azure OpenAI, Anthropic, Amazon Bedrock, Vertex, self-hosted deployments, etc.).
 :::
 

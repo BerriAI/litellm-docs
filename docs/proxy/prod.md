@@ -72,7 +72,7 @@ general_settings:
   database_connection_pool_limit: 10
 ```
 
-:::warning Multiple instances
+:::warning[Multiple instances]
 
 Each instance multiplies your total connections: 3 instances × 4 workers × 10 connections = 120 total connections against your database.
 

@@ -245,7 +245,7 @@ model_list:
 | `qualifier` | string | Optional runtime qualifier/version to invoke a specific version of the agent runtime |
 | `runtimeSessionId` | string | Optional custom session ID (must be 33+ characters). If not provided, LiteLLM generates one automatically |
 
-## LiteLLM A2A Gateway {#litellm-a2a-gateway}
+## LiteLLM A2A Gateway {/* #litellm-a2a-gateway */}
 
 Register a Bedrock AgentCore runtime as a first-class A2A agent on the LiteLLM [Agent Gateway](../a2a). This gives you per-agent RBAC, access groups, trace-ID enforcement, and the `x-a2a-{agent_name_or_id}-{header}` per-user passthrough convention, the same surface as any other A2A provider.
 
@@ -350,7 +350,7 @@ curl -X POST http://localhost:4000/a2a/my-agentcore-runtime/message/send \
 
 AWS requires the runtime session id to be 33-256 characters. LiteLLM prefixes `contextId` with a 16-character hash of the calling key before checking this, so `contextId` itself needs to be at least 16 characters; a UUID (36 characters) comfortably clears it. A `contextId` (or a configured `runtimeSessionId`) outside that range is rejected with HTTP 400 and a JSON-RPC `-32602` error before any request reaches AWS, rather than silently falling back to a shared session.
 
-### Authentication {#a2a-gateway-authentication}
+### Authentication {/* #a2a-gateway-authentication */}
 
 The AgentCore A2A path supports **two distinct outbound auth modes**, picked automatically based on what's in `litellm_params`:
 

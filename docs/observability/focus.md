@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Focus Export (Experimental)
 
-:::caution Experimental feature
+:::caution[Experimental feature]
 Focus Format export is under active development and currently considered experimental.
 Interfaces, schema mappings, and configuration options may change as we iterate based on user feedback.
 Please treat this integration as a preview and report any issues or suggestions to help us stabilize and improve the workflow.

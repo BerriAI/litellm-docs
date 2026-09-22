@@ -124,7 +124,7 @@ litellm_settings:
 
 Call management endpoints on behalf of a user, and have the audit log attribute the change to them instead of to the calling key's `user_id`. (Useful when connecting proxy to your development platform).
 
-:::warning Opt in required since v1.84.0
+:::warning[Opt in required since v1.84.0]
 
 Before v1.84.0 the `LiteLLM-Changed-By` header was honored unconditionally, which let any caller rewrite audit attribution. Since v1.84.0 the proxy ignores the header unless the calling key, or its team, has `allow_litellm_changed_by_header: true` in its metadata; without the opt in, `changed_by` falls back to the calling key's `user_id`. The master key cannot opt in because it has no stored metadata, so send the header with an admin virtual key
 

@@ -171,7 +171,7 @@ transcript = client.audio.transcriptions.create(
 
 ### Testing Fallbacks
 
-:::warning Deprecated for Proxy requests
+:::warning[Deprecated for Proxy requests]
 Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
 :::
 

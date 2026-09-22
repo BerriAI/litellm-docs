@@ -180,7 +180,7 @@ guardrails:
 
 ### Content Masking
 
-:::warning Important: Masking is Controlled by PANW Security Profile
+:::warning[Important: Masking is Controlled by PANW Security Profile]
 The actual masking behavior (what content gets masked and how) is controlled by your PANW Prisma AIRS security profile in Strata Cloud Manager. The LiteLLM flags (`mask_request_content`, `mask_response_content`) only control whether to apply the masked content and allow the request to continue, or block entirely.
 :::
 

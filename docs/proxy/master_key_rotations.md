@@ -24,7 +24,7 @@ Do not rotate `LITELLM_SALT_KEY` itself. It must not change after you have added
 
 When no salt key is set, the master key doubles as the at-rest encryption key, so rotating it requires re-encrypting stored data.
 
-:::tip Prefer a dedicated salt key
+:::tip[Prefer a dedicated salt key]
 Before you rotate, consider setting a permanent `LITELLM_SALT_KEY` so future master-key rotations become the no-migration flow above. Set the salt key to your current master key value first (so existing data still decrypts), then rotate the master key freely afterwards.
 :::
 
@@ -78,7 +78,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 If the UI loads and your stored models and credentials resolve, the rotation is complete.
 
-## Proxy refuses to start on sk-1234 {#proxy-refuses-to-start}
+## Proxy refuses to start on sk-1234 {/* #proxy-refuses-to-start */}
 
 The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or is the literal `sk-1234`. With no master key the proxy runs without authentication and accepts every request. `sk-1234` is the example key from LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
 
@@ -158,7 +158,7 @@ Fix the database problem and start the proxy again with the same two variables. 
 
 Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy expects stored values to be encrypted with the salt key, so it skips the migration and logs that there is nothing to migrate, and the values still encrypted with the old key stay unreadable. Once the migration is done, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart.
 
-### What the boot-time migration covers {#boot-time-migration}
+### What the boot-time migration covers {/* #boot-time-migration */}
 
 The migration works for any previous master key, not only the unsafe ones, so it is also an offline alternative to `POST /key/regenerate` with `new_master_key`: set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. It reads and writes through the primary database even when a read replica is configured. Tables or columns that do not exist on an older schema are skipped, so it works both before and after a schema upgrade. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
 

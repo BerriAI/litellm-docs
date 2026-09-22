@@ -93,7 +93,7 @@ sequenceDiagram
 
 See the official [MCP Authorization Flow](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization#authorization-flow-steps) for additional reference.
 
-### Redirect URLs for static OAuth clients {#static-client-redirect-urls}
+### Redirect URLs for static OAuth clients {/* #static-client-redirect-urls */}
 
 Use a static OAuth client when the upstream identity provider (IdP) requires an application to be registered in advance. Configure the application's `client_id` and `client_secret` in the LiteLLM MCP server entry. This supports providers that do not offer Dynamic Client Registration (RFC 7591).
 
@@ -256,7 +256,7 @@ The expected response is `HTTP 307 Temporary Redirect`. Its `Location` header po
 
 To verify an additional trusted origin, repeat the authorization request with `redirect_uri=https://app.example.com/oauth/callback`. Without a matching `MCP_TRUSTED_REDIRECT_ORIGINS` entry, the expected response is `HTTP 400`. Set `MCP_TRUSTED_REDIRECT_ORIGINS=app.example.com`, restart the proxy, and repeat the request; the expected response is `HTTP 307`.
 
-### Reverse proxy and ingress configuration {#reverse-proxy-and-ingress-configuration}
+### Reverse proxy and ingress configuration {/* #reverse-proxy-and-ingress-configuration */}
 
 If LiteLLM runs behind a TLS-terminating ingress (Kubernetes, ALB, nginx, Cloudflare, etc.), the proxy needs to know its public origin so the OAuth `authorize` endpoint can compare the browser-supplied `redirect_uri` (e.g. `https://llm.example.com/ui/mcp/oauth/callback`) against its own scheme + host + port. If the proxy resolves to its internal address (`http://<pod-ip>:4000`) the same-origin check fails and the **Connect** button on the MCP server page returns `400 Bad Request` with `{"detail":"invalid_request"}`.
 
@@ -293,7 +293,7 @@ general_settings:
 
 and verify your ingress sends `X-Forwarded-Proto`, `X-Forwarded-Host`, and (if non-default) `X-Forwarded-Port`. See [MCP OAuth troubleshooting](./mcp_troubleshoot#mcp-oauth-invalid-request) for the diagnostic curl.
 
-#### Allowing additional first-party redirect_uri origins {#allowing-additional-first-party-redirect_uri-origins}
+#### Allowing additional first-party redirect_uri origins {/* #allowing-additional-first-party-redirect_uri-origins */}
 
 If a first-party OAuth client lives on a sister domain (for example, an internal web app on `app.example.com` registering against the MCP proxy on `llm.example.com`), set `MCP_TRUSTED_REDIRECT_ORIGINS` to allowlist its origin in addition to the proxy's own:
 

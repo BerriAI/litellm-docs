@@ -44,7 +44,7 @@ pip install litellm==1.102.0
 </Tabs>
 
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 These callouts cover changes to behavior available in `v1.101.0`, the previous stable release
 

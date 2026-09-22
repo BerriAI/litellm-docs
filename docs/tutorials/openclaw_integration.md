@@ -41,7 +41,7 @@ general_settings:
   master_key: sk-your-secret-key  # pick any value — this is YOUR proxy password
 ```
 
-:::tip Multi-provider example
+:::tip[Multi-provider example]
 You can add as many models as you want from different providers:
 
 ```yaml title="litellm_config.yaml"
@@ -83,7 +83,7 @@ litellm --config litellm_config.yaml --port 4000
 curl -fsSL https://openclaw.ai/install.sh | bash
 ```
 
-:::note Windows
+:::note[Windows]
 On Windows, use PowerShell: `iwr -useb https://openclaw.ai/install.ps1 | iex`
 
 WSL2 is recommended over native Windows.

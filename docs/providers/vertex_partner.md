@@ -869,7 +869,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
-## VertexAI xAI (Grok) {#vertexai-xai-grok}
+## VertexAI xAI (Grok) {/* #vertexai-xai-grok */}
 
 xAI Grok models available in **Vertex AI Model Garden** use the same OpenAI-compatible chat-completions path as other Model Garden publisher models. Use the `vertex_ai/xai/` prefix (not `xai/`, which is the direct xAI API with `XAI_API_KEY`). See also [xAI provider](./xai.md).
 
