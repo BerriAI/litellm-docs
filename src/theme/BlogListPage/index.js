@@ -173,7 +173,7 @@ function AuthorList({authors}) {
   );
 }
 
-function PostRow({post}) {
+export function PostRow({post}) {
   const {title, permalink, date, description, authors} = post;
   return (
     <article className={styles.post}>
