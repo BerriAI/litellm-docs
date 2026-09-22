@@ -34,9 +34,9 @@ Make a `/chat/completions` call with the `user` field containing your customer I
 ```bash showLineNumbers title="Track spend with customer ID in body"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "user": "customer-123",
     "messages": [
       {
@@ -61,10 +61,10 @@ LiteLLM automatically recognizes these standard headers (no configuration requir
 ```bash showLineNumbers title="Track spend with customer ID in header"
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'x-litellm-customer-id: customer-123' \
   --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -80,7 +80,7 @@ Claude Code supports custom headers via the `ANTHROPIC_CUSTOM_HEADERS` environme
 
 ```bash title="Configure Claude Code with customer tracking"
 export ANTHROPIC_BASE_URL="http://0.0.0.0:4000/v1/messages"
-export ANTHROPIC_API_KEY="sk-1234"
+export ANTHROPIC_API_KEY="sk-<your-api-key>"
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-id: my-customer-id"
 ```
 

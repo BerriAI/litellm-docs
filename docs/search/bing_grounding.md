@@ -28,7 +28,7 @@ import os
 from litellm import search
 
 os.environ["BING_GROUNDING_PROJECT_ENDPOINT"] = "https://<account>.services.ai.azure.com/api/projects/<project>"
-os.environ["BING_GROUNDING_MODEL"] = "gpt-4.1"
+os.environ["BING_GROUNDING_MODEL"] = "{{openai_large}}"
 os.environ["BING_GROUNDING_TOKEN"] = "<entra bearer token>"
 
 response = search(
@@ -98,7 +98,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Test Request"
 curl http://0.0.0.0:4000/v1/search/bing-grounding-search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "latest AI developments",
@@ -112,9 +112,9 @@ Grounding with Bing Search is a natural backend for [web search interception](..
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-5-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:

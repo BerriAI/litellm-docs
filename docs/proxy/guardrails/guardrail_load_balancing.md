@@ -48,9 +48,9 @@ Define multiple guardrail entries with the **same `guardrail_name`** but differe
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -83,9 +83,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -108,9 +108,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -147,9 +147,9 @@ Requests using the guardrail will be automatically load balanced:
 ```bash showLineNumbers title="Test request"
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, how are you?"}],
     "guardrails": ["content-filter"]
   }'
@@ -214,9 +214,9 @@ flowchart TB
 
 ```yaml showLineNumbers title="config.yaml - Multi-account Bedrock"
 model_list:
-  - model_name: claude-3
+  - model_name: {{anthropic}}
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
 
 guardrails:
   # AWS Account 1 - US East
@@ -260,9 +260,9 @@ guardrails:
 for i in {1..10}; do
   curl -s -X POST http://localhost:4000/v1/chat/completions \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -d '{
-      "model": "claude-3",
+      "model": "{{anthropic}}",
       "messages": [{"role": "user", "content": "Hello"}],
       "guardrails": ["bedrock-content-filter"]
     }' &

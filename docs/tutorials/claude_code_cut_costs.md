@@ -24,7 +24,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **Budget fallbacks** decide what happens once a per-model budget is exhausted. Instead of erroring at the developer's terminal, attach `model_max_budget` per model and a `budget_fallbacks` chain naming the cheaper models to reroute to. The request silently falls to the first fallback still under its own budget:
 
-```bash
+```bash keep-model-ids
 curl -X POST http://localhost:4000/key/generate \
   -H "Authorization: Bearer $ADMIN_KEY" \
   -H "Content-Type: application/json" \
@@ -51,9 +51,9 @@ Claude's prompt cache reads a cache hit for roughly 10% of the price of a fresh 
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       cache_control_injection_points:
         - location: message
@@ -67,9 +67,9 @@ for automatically injecting this in all requests, do this
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-4.5-20250929
+  - model_name: {{anthropic}}
     litellm_params:
-      model: vertex_ai/claude-sonnet-4-5@20250929
+      model: vertex_ai/{{anthropic}}
       # ...
 
 router_settings:
@@ -135,21 +135,21 @@ Complexity router is the fastest to set up. Point Claude Code at `smart-router` 
 ```yaml title="config.yaml"
 model_list:
   # Target models
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-4o-mini
+      model: {{openai_small}}
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 
   - model_name: claude-sonnet
     litellm_params:
-      model: claude-sonnet-4-20250514
+      model: {{anthropic}}
 
-  - model_name: o1-preview
+  - model_name: claude-opus
     litellm_params:
-      model: o1-preview
+      model: {{anthropic_large}}
 
   # Complexity router
   - model_name: smart-router
@@ -157,14 +157,14 @@ model_list:
       model: auto_router/complexity_router
       complexity_router_config:
         tiers:
-          SIMPLE: gpt-4o-mini
-          MEDIUM: gpt-4o
+          SIMPLE: {{openai_small}}
+          MEDIUM: {{openai_large}}
           COMPLEX: claude-sonnet
-          REASONING: o1-preview
-      complexity_router_default_model: gpt-4o
+          REASONING: claude-opus
+      complexity_router_default_model: {{openai_large}}
 ```
 
-Name the router `claude-auto` (or another Anthropic-shaped name) and add that name to your organization's `availableModels` allowlist before rolling it out, otherwise Claude Code and Claude Desktop refuse to select it. [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers both requirements.
+Name the router `claude-auto` (or another name containing `claude`/`anthropic`, so gateway discovery finds it) and add that name to your organization's `availableModels` allowlist before rolling it out, otherwise Claude for Teams and Enterprise refuse to select it. [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers both requirements.
 
 Learn more: [Complexity Router](../proxy/auto_routing#classification), [Semantic Auto Routing](../proxy/auto_routing), and [Adaptive Router](../adaptive_router).
 

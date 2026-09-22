@@ -24,7 +24,7 @@ Available in v1.89.3+.
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   plugins:
     - name: my-plugin              # unique identifier, no spaces
       display_name: My Plugin      # label shown in the UI dropdown

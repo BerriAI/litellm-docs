@@ -48,9 +48,9 @@ Add the CloudZero callback to your LiteLLM configuration YAML file:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -120,7 +120,7 @@ Call the dry run endpoint to test your CloudZero configuration without sending d
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/dry-run" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "limit": 10
   }' | jq
@@ -150,7 +150,7 @@ Call the export endpoint to send data immediately to CloudZero. We suggest setti
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/export" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "limit": 10
   }' | jq
@@ -179,16 +179,16 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 ```json
 {
   "time/usage_start": "2024-01-15T14:00:00Z",
-  "cost/cost": 0.002,
+  "cost/cost": 0.0008,
   "usage/amount": 150,
   "usage/units": "tokens",
-  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-4o",
+  "resource/id": "czrn:litellm:openai:cross-region:team-123:llm-usage:gpt-5.6-terra",
   "resource/service": "litellm",
   "resource/account": "team-123",
   "resource/region": "cross-region",
   "resource/usage_family": "llm-usage",
   "resource/tag:provider": "openai",
-  "resource/tag:model": "gpt-4o",
+  "resource/tag:model": "{{openai_large}}",
   "resource/tag:prompt_tokens": "100",
   "resource/tag:completion_tokens": "50"
 }
@@ -199,7 +199,7 @@ LiteLLM exports data in CloudZero Billing Format (CBF) with the following struct
 LiteLLM automatically creates resource tags for cost attribution:
 
 - **Provider Tags**: `openai`, `anthropic`, `azure`, etc.
-- **Model Tags**: Specific model names like `gpt-4o`, `claude-3-sonnet`
+- **Model Tags**: Specific model names like `{{openai_large}}`, `{{anthropic}}`
 - **Team/User Tags**: Team IDs and user IDs for cost allocation
 - **Token Breakdown**: Separate tracking of prompt and completion tokens
 - **Usage Metrics**: Total tokens consumed per request
@@ -221,7 +221,7 @@ Export data for a specific time range:
 ```bash
 curl -X POST "http://localhost:4000/cloudzero/export" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "start_time_utc": "2024-01-15T00:00:00Z",
     "end_time_utc": "2024-01-15T23:59:59Z",

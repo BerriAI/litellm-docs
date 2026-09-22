@@ -14,9 +14,9 @@ If you're using the LiteLLM CLI with `litellm --config proxy_config.yaml` then y
 Add this to your proxy config.yaml 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 litellm_settings:
   callbacks:
     - prometheus
@@ -32,7 +32,7 @@ Test Request
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
         {
         "role": "user",
@@ -57,6 +57,88 @@ export PROMETHEUS_MULTIPROC_DIR="/prometheus_multiproc"
 ```
 
 This directory is used by the Prometheus client library to store metric files that can be shared across multiple worker processes. Make sure the directory exists and is writable by your LiteLLM process.
+
+## Isolate Prometheus scraping from inference traffic
+
+By default, LiteLLM renders `/metrics` on the proxy port using the same Uvicorn workers that serve inference requests. In multi-worker deployments, each scrape aggregates Prometheus data across workers. Large or high-cardinality metric sets can therefore consume CPU on a request-serving worker and increase tail latency.
+
+LiteLLM v1.101.0 and later can serve the same metric set from a dedicated process. Configure `--prometheus_metrics_port` or `PROMETHEUS_METRICS_PORT`, then update Prometheus to scrape that port. The original `/metrics` route on the proxy port remains available for backward compatibility, so you can migrate scrape targets without interrupting inference traffic.
+
+The `prometheus` callback must be enabled. When the dedicated port is configured, LiteLLM creates `PROMETHEUS_MULTIPROC_DIR` if needed, binds the metrics process to the proxy `--host`, and stops the process with the proxy.
+
+```shell
+litellm --config config.yaml --num_workers 4 --prometheus_metrics_port 4001
+```
+
+```yaml title="prometheus.yml"
+scrape_configs:
+  - job_name: litellm
+    static_configs:
+      - targets: ["litellm:4001"]
+```
+
+:::warning Secure the metrics listener
+The dedicated listener does not use LiteLLM virtual-key authentication. `require_auth_for_metrics_endpoint` applies only to `/metrics` on the proxy port. Permit access only from trusted Prometheus or collector networks, and do not publish the dedicated port through a public ingress or load balancer.
+:::
+
+### Deployment configuration
+
+<Tabs>
+<TabItem value="helm" label="Helm: litellm-helm">
+
+```yaml title="values.yaml"
+metricsServer:
+  enabled: true
+  port: 4001
+
+serviceMonitor:
+  enabled: true
+```
+
+The chart creates a dedicated `<release>-litellm-metrics` `ClusterIP` Service and directs the ServiceMonitor to it. The primary Service is unchanged, including when `service.type` is `LoadBalancer`. `metricsServer.port` must differ from `service.port`.
+
+</TabItem>
+<TabItem value="helm-componentized" label="Helm: componentized">
+
+```yaml title="values.yaml"
+gateway:
+  metricsServer:
+    enabled: true
+    port: 4001
+```
+
+The chart runs the metrics server as a sidecar that shares Prometheus multiprocess data with the gateway. It exposes the listener through a dedicated `<release>-litellm-gateway-metrics` `ClusterIP` Service; configure Prometheus to discover that private Service. The gateway Service remains unchanged.
+
+</TabItem>
+<TabItem value="aws" label="Terraform: AWS">
+
+```hcl title="main.tf"
+module "litellm" {
+  source  = "BerriAI/litellm/aws"
+  version = "~> 1.101"
+
+  gateway_metrics_port         = 4001
+  gateway_metrics_scrape_cidrs = ["10.0.0.0/16"]
+}
+```
+
+The module adds a nonessential metrics sidecar to the gateway task and permits inbound traffic on that port only from `gateway_metrics_scrape_cidrs`. The Application Load Balancer does not route to the metrics port. The feature is disabled when `gateway_metrics_port` is `null`, which is the default, and port `4000` is reserved for gateway traffic.
+
+</TabItem>
+</Tabs>
+
+### Validate the rollout
+
+Check the dedicated process before changing the Prometheus target:
+
+```shell
+curl -fsS http://litellm:4001/health
+# {"status":"healthy","multiproc_dir":"..."}
+
+curl -fsS http://litellm:4001/metrics/ | head
+```
+
+The dedicated endpoint supports the same metrics, label configuration, filtering, and compression as the proxy-port endpoint. Proxy readiness remains available at `/health/readiness` on port `4000`.
 
 ## Virtual Keys, Teams, Internal Users
 
@@ -150,6 +232,16 @@ Only emitted for requests attached to an organization, with the same conditions 
 | `litellm_org_max_budget_metric`                     | Max Budget for Organization Labels: `"org_id", "org_alias"`|
 | `litellm_org_budget_remaining_hours_metric`         | Hours before the Organization budget is reset Labels: `"org_id", "org_alias"`|
 
+### Customer (end_user) - Budget
+
+Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is enabled. On each request the remaining and max budget gauges are refreshed for the request's customer from the customer row cached during auth (no extra database query; a cache miss is left to the periodic refresh); the reset hours gauge and customers without recent traffic are covered by [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup), which emits all three gauges for every customer that has a budget attached. When `max_end_user_budget_id` is set, customers without their own budget are emitted against that default budget. The series are subject to the `end_user` cardinality caps described in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus).
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_customer_budget_metric`          | Remaining Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_max_budget_metric`                | Max Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_budget_remaining_hours_metric`    | Hours before the Customer budget is reset Labels: `"end_user"`|
+
 ### Virtual Key - Rate Limit
 
 | Metric Name          | Description                          |
@@ -183,6 +275,9 @@ Use these to measure per-pod queue depth and diagnose latency that occurs **befo
 | Metric Name | Type | Description |
 |---|---|---|
 | `litellm_in_flight_requests` | Gauge | Number of HTTP requests currently in-flight on this uvicorn worker. Tracks the pod's queue depth in real time. With multiple workers, values are summed across all live workers (`livesum`). |
+| `litellm_admission_admitted_requests` | Gauge | Requests currently holding a per-worker admission slot. Only populated when [per-worker admission control](./server_tuning#per-worker-admission-control) is enabled. Summed across live workers (`livesum`). |
+| `litellm_admission_queued_requests` | Gauge | Requests waiting for a per-worker admission slot. Summed across live workers (`livesum`). |
+| `litellm_admission_rejected_requests_total` | Counter | Requests rejected with `503` by admission control, labelled by `reason`: `queue_full` (queue already at its cap on arrival) or `queue_timeout` (waited `admission_queue_timeout_seconds` without getting a slot). |
 
 ### When to use this
 
@@ -322,6 +417,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_requests_metric`             | **deprecated** use `litellm_proxy_total_requests_metric`. Total number of LLM calls to litellm, tracked per API key, team, user. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider"` |
+| `litellm_zero_cost_requests_total`    | Requests that carried usage but were logged at `$0` on a model whose pricing entry has a non-zero rate. Free models and requests without usage are not counted. Labels: `"requested_model", "model", "model_id", "api_provider", "reason"` where `reason` is `missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`. Each counted request also logs one warning naming the missing pricing key, see [Requests that price to $0](cost_tracking#requests-that-price-to-0) |
 
 ## Request Latency Metrics
 
@@ -436,6 +532,15 @@ litellm_settings:
   enable_end_user_cost_tracking_prometheus_only: true
 ```
 
+Every metric that carries the `end_user` label, including the [customer budget gauges](#customer-end_user---budget), is capped per metric by `prometheus_end_user_metrics_max_series_per_metric` (default `10000`, oldest series are dropped first) and series idle for longer than `prometheus_end_user_metrics_ttl_seconds` (default `3600`) are removed. Set either to `null` to disable that limit.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  enable_end_user_cost_tracking_prometheus_only: true
+  prometheus_end_user_metrics_max_series_per_metric: 500
+  prometheus_end_user_metrics_ttl_seconds: 1800
+```
 
 ### Emit Stream Label
 
@@ -469,9 +574,9 @@ Track custom metrics on prometheus on all events mentioned above.
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -488,7 +593,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <LITELLM_API_KEY>' \
 -d '{
-    "model": "openai/gpt-4o",
+    "model": "openai/{{openai_large}}",
     "messages": [
       {
         "role": "user",
@@ -511,7 +616,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -524,7 +629,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -549,9 +654,9 @@ Track specific tags as prometheus labels for better filtering and monitoring.
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -572,7 +677,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer <LITELLM_API_KEY>' \
 -d '{
-    "model": "openai/gpt-4o",
+    "model": "openai/{{openai_large}}",
     "messages": [
       {
         "role": "user",
@@ -630,9 +735,9 @@ Configure which metrics to emit by specifying them in `prometheus_metrics_config
 
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 
 litellm_settings:
   callbacks: ["prometheus"]
@@ -753,9 +858,9 @@ To monitor the health of litellm adjacent services (redis / postgres), do:
 
 ```yaml
 model_list:
- - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
 litellm_settings:
   service_callback: ["prometheus_system"]
 ```
@@ -806,11 +911,11 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 ## 🔥 LiteLLM Maintained Grafana Dashboards 
 
-Link to Grafana Dashboards maintained by LiteLLM
+LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 
-https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard
+The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics/readme.md) lists which setting each row needs
 
-Here is a screenshot of the metrics you can monitor with the LiteLLM Grafana Dashboard
+The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
 
 
 <Image img={require('../../img/grafana_1.png')} />

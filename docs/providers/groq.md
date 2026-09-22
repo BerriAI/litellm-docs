@@ -324,11 +324,11 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
 )
 
 response = client.chat.completions.create(
-    model = "gpt-4-vision-preview",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",

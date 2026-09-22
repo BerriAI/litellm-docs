@@ -124,10 +124,10 @@ DATABASE_URL="<your_database_url>" prisma db push
 
 ```
 PermissionError: [Errno 13] Permission denied:
-'/usr/local/lib/python3.11/site-packages/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x'
+'/usr/local/lib/python{{python_version}}/site-packages/prisma/binaries/prisma-query-engine-debian-openssl-3.0.x'
 ```
 
-**Cause:** before Prisma can talk to your database it has to decide which query engine binary to run, and it does that by walking the engine paths the Prisma CLI recorded when the client was generated. A generated client carries five of them, one per supported platform, so the walk always runs. It tests each candidate with `Path.exists()`, which reports a missing file as `False` but re-raises `PermissionError` when a directory on the way to the candidate denies the running uid; it only swallows `ENOENT`, `ENOTDIR`, `EBADF` and `ELOOP`. An image that generates the client as one uid and runs as another, or that installs the client somewhere the runtime uid cannot traverse, therefore dies at startup rather than moving on to the next candidate. Python 3.14 returns `False` here and is unaffected; every other interpreter LiteLLM supports, 3.10 through 3.13, raises.
+**Cause:** before Prisma can talk to your database it has to decide which query engine binary to run, and it does that by walking the engine paths the Prisma CLI recorded when the client was generated. A generated client carries five of them, one per supported platform, so the walk always runs. It tests each candidate with `Path.exists()`, which reports a missing file as `False` but re-raises `PermissionError` when a directory on the way to the candidate denies the running uid; it only swallows `ENOENT`, `ENOTDIR`, `EBADF` and `ELOOP`. An image that generates the client as one uid and runs as another, or that installs the client somewhere the runtime uid cannot traverse, therefore dies at startup rather than moving on to the next candidate. Python 3.14 returns `False` here and is unaffected; every older interpreter LiteLLM supports raises. {/* keep-python-version */}
 
 **How to fix:** point Prisma at an engine the runtime uid can read, setting both variables together. `PRISMA_QUERY_ENGINE_BINARY` on its own does not clear this, because the walk that raises runs before Prisma reads that variable. `PRISMA_BINARY_PLATFORM` is the one that short-circuits the walk, before any candidate is tested, so neither variable substitutes for the other:
 
@@ -141,3 +141,59 @@ export PRISMA_QUERY_ENGINE_BINARY=/opt/prisma/binaries/prisma-query-engine-debia
 The official images already avoid the condition by baking the Prisma CLI and engines at a fixed, world-readable `/opt/prisma`, so any uid can resolve them. `v1.95.0` is the first stable release carrying that for both image variants. The standard image has had it since `v1.94.0`, but the whole `1.94.x` line lacks it for `litellm-non_root`, so a non-root deployment on `v1.94.1` or earlier still needs the two variables above. Custom images and plain `pip install` deployments are outside both fixes and always need them.
 
 Images are published to `ghcr.io/berriai` and mirrored at `docker.litellm.ai/berriai`; `ghcr.io/berriai/litellm-non_root:v1.95.0` is the non-root variant.
+
+---
+
+### 5. Upgrade to v1.99.0 or later stalls on `20260818000000_add_spend_log_timestamps` (PostgreSQL 10)
+
+**Symptom:** the proxy sits in `prisma migrate deploy` at startup and serves no traffic. Depending on the version it is either killed by the Prisma command timeout and restarts into the same migration, or it eventually comes up after a long pause during which `pg_stat_activity` shows `ALTER TABLE "LiteLLM_SpendLogs"` holding an `ACCESS EXCLUSIVE` lock. Deployments on PostgreSQL 11 or later apply the same migration in milliseconds.
+
+**Cause:** the migration adds `created_at` and `updated_at` to `LiteLLM_SpendLogs` as `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`. PostgreSQL 11 stores that default as column metadata and touches no rows, so the statement takes the same few milliseconds on an empty table and on one holding years of logs. PostgreSQL 10 has no such fast path: it rewrites the whole heap into a new file, rebuilds every index on the table, and holds an `ACCESS EXCLUSIVE` lock for the duration. On a 1,000,000 row, 1 GB `LiteLLM_SpendLogs` the statement took about 10 seconds on PostgreSQL 10 and under 2 ms on PostgreSQL 16; the time scales with table size, and the rewrite needs free disk for a second copy of the table and its indexes until the transaction commits. Because LiteLLM runs migrations at boot, a killed Prisma client rolls the rewrite back and the next restart starts it over from zero.
+
+**How to fix:** apply the column addition yourself in a maintenance window, before you upgrade. The migration uses `ADD COLUMN IF NOT EXISTS`, so once the columns exist it becomes a no-op at startup and the upgrade proceeds normally. Check how much disk the rewrite needs first:
+
+```sql
+SELECT pg_size_pretty(pg_total_relation_size('"LiteLLM_SpendLogs"'));
+```
+
+The direct route is to run the migration's own statement with the proxy stopped. It performs the same rewrite, but with no client timeout and at a time you chose:
+
+```sql
+ALTER TABLE "LiteLLM_SpendLogs"
+ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN IF NOT EXISTS "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+```
+
+If the table is too large to lock for that long, avoid the rewrite entirely. Adding the columns without a default and setting the default afterwards are both metadata-only changes on every PostgreSQL version, and the proxy can keep running on the old version while you do this:
+
+```sql
+ALTER TABLE "LiteLLM_SpendLogs"
+ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "updated_at" TIMESTAMP(3);
+
+ALTER TABLE "LiteLLM_SpendLogs"
+ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP,
+ALTER COLUMN "updated_at" SET DEFAULT CURRENT_TIMESTAMP;
+```
+
+New rows now get the default. Backfill the existing rows in batches, repeating the statement until it reports `UPDATE 0`, so no single transaction holds a long lock or bloats the table:
+
+```sql
+UPDATE "LiteLLM_SpendLogs"
+SET "created_at" = CURRENT_TIMESTAMP, "updated_at" = CURRENT_TIMESTAMP
+WHERE "request_id" IN (
+    SELECT "request_id" FROM "LiteLLM_SpendLogs" WHERE "created_at" IS NULL LIMIT 10000
+);
+```
+
+`CURRENT_TIMESTAMP` matches what the migration itself would have written. Use `COALESCE("endTime", "startTime", CURRENT_TIMESTAMP)` instead if you want the backfilled values to reflect when each request actually ran. Once the backfill finishes, add the constraint; this scans the table once but does not rewrite it:
+
+```sql
+ALTER TABLE "LiteLLM_SpendLogs"
+ALTER COLUMN "created_at" SET NOT NULL,
+ALTER COLUMN "updated_at" SET NOT NULL;
+```
+
+Then upgrade. Do not insert a row into `_prisma_migrations` by hand and do not run `prisma migrate resolve --applied`; let `prisma migrate deploy` record the migration itself when it finds the columns already in place.
+
+If you would rather let the proxy perform the rewrite at boot, raise the timeout so the Prisma client is not killed mid-statement. From v1.101.0 `prisma migrate deploy` has its own limit, `LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT` (default 600 seconds). On v1.99.x and v1.100.x it runs under `LITELLM_PRISMA_COMMAND_TIMEOUT` (default 60 seconds), which also covers every other Prisma command. A longer timeout only stops the retry loop: the proxy is still unavailable and the table still locked until the rewrite completes, so plan the restart as a maintenance window either way.

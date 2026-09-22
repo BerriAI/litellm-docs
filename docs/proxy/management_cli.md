@@ -178,7 +178,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite models list
-  lite models add gpt-4 \
+  lite models add {{openai_large}} \
     --param api_key=sk-123 \
     --param max_tokens=2048
   lite models update <model-id> -p temperature=0.7
@@ -211,7 +211,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   ```bash
   lite keys list
   lite keys generate \
-    --models=gpt-4 \
+    --models={{openai_large}} \
     --spend=100 \
     --duration=24h \
     --key-alias=my-key
@@ -266,11 +266,12 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Chat Completions
 
-- Ask for chat completions from the proxy server.
+- Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
 - Example:
 
   ```bash
-  lite chat completions gpt-4 -m "user:Hello, how are you?"
+  lite chat {{openai_large}}
+  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
   ```
 
   [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
@@ -283,7 +284,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   ```bash
   lite http request \
     POST /chat/completions \
-    --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+    --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
   [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
@@ -317,7 +318,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 2. **Add a new model:**
 
    ```bash
-   lite models add gpt-4 \
+   lite models add {{openai_large}} \
      --param api_key=sk-123 \
      --param max_tokens=2048
    ```
@@ -334,17 +335,17 @@ lite logout             # clear the keychain entry and the token file, and revok
 
    ```bash
    lite keys generate \
-     --models=gpt-4 \
+     --models={{openai_large}} \
      --spend=100 \
      --duration=24h \
      --key-alias=my-key
    ```
 
-5. **Chat completion:**
+5. **Interactive chat:**
 
    ```bash
-   lite chat completions gpt-4 \
-     -m "user:Write a story"
+   lite chat {{openai_large}} \
+     --system "You are a helpful coding assistant"
    ```
 
 6. **Custom HTTP request:**
@@ -352,7 +353,7 @@ lite logout             # clear the keychain entry and the token file, and revok
    ```bash
    lite http request \
      POST /chat/completions \
-     --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+     --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
    ```
 
 ## Error Handling

@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 ## Required Variables
 
 ```python
-os.environ["LITELLM_PROXY_API_KEY"] = "" # "sk-1234" your litellm proxy api key 
+os.environ["LITELLM_PROXY_API_KEY"] = "" # "sk-<your-litellm-api-key>" your litellm proxy api key 
 os.environ["LITELLM_PROXY_API_BASE"] = "" # "http://localhost:4000" your litellm proxy api base
 ```
 
@@ -38,7 +38,7 @@ litellm.api_base = "your-openai-proxy-url"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # litellm proxy call
-response = completion(model="litellm_proxy/your-model-name", messages)
+response = completion(model="litellm_proxy/your-model-name", messages=messages)
 ```
 
 ## Usage - passing `api_base`, `api_key` per request
@@ -199,7 +199,7 @@ When enabled, requests will use `LITELLM_PROXY_API_BASE` with `LITELLM_PROXY_API
 litellm.use_litellm_proxy = True
 
 response = litellm.completion(
-    model="vertex_ai/gemini-2.0-flash-001",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 ```
@@ -211,7 +211,7 @@ response = litellm.completion(
 os.environ["USE_LITELLM_PROXY"] = "True"
 
 response = litellm.completion(
-    model="vertex_ai/gemini-2.0-flash-001",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}]
 )
 ```
@@ -221,7 +221,7 @@ response = litellm.completion(
 ```python
 # Enable proxy for specific requests only
 response = litellm.completion(
-    model="vertex_ai/gemini-2.0-flash-001",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
     use_litellm_proxy=True
 )
@@ -242,7 +242,7 @@ litellm.proxy_auth = ProxyAuthHandler(
 litellm.api_base = "https://my-proxy.example.com"
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
@@ -261,10 +261,10 @@ Send tags by including them in the `extra_body` parameter of your completion req
 import litellm
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     extra_body={"tags": ["user:ishaan", "department:engineering", "priority:high"]}
 )
 ```
@@ -275,10 +275,10 @@ response = litellm.completion(
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000", 
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     extra_body={"tags": ["user:ishaan", "department:engineering"]}
 )
 ```

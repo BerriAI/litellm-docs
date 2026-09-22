@@ -9,7 +9,7 @@ LiteLLM supports Priority PayGo.
 Send a priority header, get priority queueing, and pay priority token rates.
 
 :::info Which models support Priority PayGo?
-As of this writing: `gemini/gemini-2.5-pro`, `vertex_ai/gemini-3-pro-preview`, `vertex_ai/gemini-3.1-pro-preview`, `vertex_ai/gemini-3-flash-preview`, and their variants.  
+As of this writing: `gemini/gemini-2.5-pro`, `vertex_ai/gemini-3-pro-preview`, `vertex_ai/gemini-3.1-pro-preview`, `vertex_ai/gemini-3-flash-preview`, and their variants.
 Check `supports_service_tier: true` in LiteLLM's [model pricing JSON](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 :::
 
@@ -26,7 +26,7 @@ Use this header:
 import litellm
 
 response = litellm.completion(
-    model="vertex_ai/gemini-3-pro-preview",
+    model="vertex_ai/{{gemini_pro}}",
     messages=[{"role": "user", "content": "Summarize the Gettysburg Address."}],
     vertex_project="YOUR_PROJECT_ID",
     vertex_location="us-central1",
@@ -43,7 +43,7 @@ print(response.choices[0].message.content)
 model_list:
   - model_name: gemini-priority
     litellm_params:
-      model: vertex_ai/gemini-3-pro-preview
+      model: vertex_ai/{{gemini_pro}}
       vertex_project: "YOUR_PROJECT_ID"
       vertex_location: "us-central1"
       vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
@@ -64,7 +64,7 @@ curl http://localhost:4000/v1/chat/completions \
 Use `x-pass-` so LiteLLM forwards provider-specific headers.
 
 ```bash
-MODEL_ID="gemini-3-pro-preview-0325"
+MODEL_ID="{{gemini_pro}}"
 PROJECT_ID="YOUR_PROJECT_ID"
 
 curl -X POST \
@@ -109,7 +109,7 @@ This is a different header from priority routing:
 import litellm
 
 response = litellm.completion(
-    model="vertex_ai/gemini-2.0-flash",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello!"}],
     vertex_project="YOUR_PROJECT_ID",
     vertex_location="us-central1",
@@ -120,7 +120,7 @@ response = litellm.completion(
 ### Pass-through example
 
 ```bash
-MODEL_ID="gemini-2.0-flash-001"
+MODEL_ID="{{gemini_flash}}"
 PROJECT_ID="YOUR_PROJECT_ID"
 
 curl -X POST \

@@ -56,7 +56,7 @@ litellm.callbacks = [
 ]
 
 response = await litellm.aresponses(
-    model="openai/gpt-5",
+    model="openai/{{openai_large}}",
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     input="Product of first 6 primes. Just the number.",
 )
@@ -93,7 +93,7 @@ litellm.callbacks = [
 ]
 
 response = await litellm.acompletion(
-    model="openai/gpt-4o-mini",
+    model="openai/{{openai_small}}",
     messages=[{"role": "user", "content": "Product of first 6 primes. Just the number."}],
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     max_agentic_loops=4,
@@ -119,9 +119,9 @@ export OPENAI_API_KEY="sk-..."
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 sandbox_tools:
@@ -149,10 +149,10 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "tools": [{"type": "code_interpreter", "container": {"type": "auto"}}],
     "input": "Product of first 6 primes. Just the number."
   }'
@@ -164,10 +164,10 @@ curl -s "http://localhost:4000/v1/responses" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     input="Product of first 6 primes. Just the number.",
 )
@@ -179,10 +179,10 @@ print(response.output_text)
 
 ```bash
 curl -s "http://localhost:4000/v1/chat/completions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Product of first 6 primes. Just the number."}
     ],
@@ -196,10 +196,10 @@ curl -s "http://localhost:4000/v1/chat/completions" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Product of first 6 primes. Just the number."}],
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
 )
@@ -232,10 +232,10 @@ By default each request spins up a fresh sandbox that gets deleted when the agen
 ```bash
 # First request: define x
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "tools": [{"type": "code_interpreter", "container": {"type": "auto"}}],
     "input": "Set x = 42 and confirm.",
     "metadata": {"session_id": "chat-abc-123"}
@@ -243,10 +243,10 @@ curl -s "http://localhost:4000/v1/responses" \
 
 # Second request: same session_id, x is still there
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "tools": [{"type": "code_interpreter", "container": {"type": "auto"}}],
     "input": "Print x + 1.",
     "metadata": {"session_id": "chat-abc-123"}
@@ -259,10 +259,10 @@ curl -s "http://localhost:4000/v1/responses" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     input="Set x = 42 and confirm.",
     extra_body={"metadata": {"session_id": "chat-abc-123"}},
@@ -270,7 +270,7 @@ client.responses.create(
 
 # Same session_id reuses the same e2b container, so x is still defined
 followup = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     tools=[{"type": "code_interpreter", "container": {"type": "auto"}}],
     input="Print x + 1.",
     extra_body={"metadata": {"session_id": "chat-abc-123"}},

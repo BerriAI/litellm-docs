@@ -19,7 +19,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-4-vision-preview", 
+    model = "{{openai_large}}", 
     messages=[
         {
             "role": "user",
@@ -48,9 +48,9 @@ response = completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4-vision-preview # OpenAI gpt-4-vision-preview
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-4-vision-preview
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -76,11 +76,11 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
 )
 
 response = client.chat.completions.create(
-    model = "gpt-4-vision-preview",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",
@@ -117,9 +117,9 @@ response = client.chat.completions.create(
 
 Use `litellm.supports_vision(model="")` -> returns `True` if model supports `vision` and `False` if not
 
-```python
-assert litellm.supports_vision(model="openai/gpt-4-vision-preview") == True
-assert litellm.supports_vision(model="vertex_ai/gemini-1.0-pro-vision") == True
+```python keep-model-ids
+assert litellm.supports_vision(model="openai/gpt-5.6-terra") == True
+assert litellm.supports_vision(model="vertex_ai/gemini-3.1-pro-preview") == True
 assert litellm.supports_vision(model="openai/gpt-3.5-turbo") == False
 assert litellm.supports_vision(model="xai/grok-2-vision-latest") == True
 assert litellm.supports_vision(model="xai/grok-2-latest") == False
@@ -133,9 +133,9 @@ assert litellm.supports_vision(model="xai/grok-2-latest") == False
 
 ```yaml
 model_list:
-  - model_name: gpt-4-vision-preview # OpenAI gpt-4-vision-preview
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-4-vision-preview
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -158,7 +158,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -167,13 +167,13 @@ Expected Response
 {
   "data": [
     {
-      "model_group": "gpt-4-vision-preview",
+      "model_group": "{{openai_large}}",
       "providers": ["openai"],
-      "max_input_tokens": 128000,
-      "max_output_tokens": 4096,
+      "max_input_tokens": 922000,
+      "max_output_tokens": 128000,
       "mode": "chat",
       "supports_vision": true, # 👈 supports_vision is true
-      "supports_function_calling": false
+      "supports_function_calling": true
     },
     {
       "model_group": "llava-hf",
@@ -196,7 +196,7 @@ Expected Response
 
 If you have images without a mime-type, or if litellm is incorrectly inferring the mime type of your image (e.g. calling `gs://` url's with vertex ai), you can set this explicitly via the `format` param. 
 
-```python
+```json
 "image_url": {
   "url": "gs://my-gs-image",
   "format": "image/jpeg"
@@ -218,7 +218,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "claude-3-7-sonnet-latest", 
+    model = "{{anthropic}}", 
     messages=[
         {
             "role": "user",
@@ -248,9 +248,9 @@ response = completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4-vision-preview # OpenAI gpt-4-vision-preview
+  - model_name: {{openai_large}} # OpenAI {{openai_large}}
     litellm_params:
-      model: openai/gpt-4-vision-preview
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -276,11 +276,11 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
 )
 
 response = client.chat.completions.create(
-    model = "gpt-4-vision-preview",  # use model="llava-hf" to test your custom OpenAI endpoint
+    model = "{{openai_large}}",  # use model="llava-hf" to test your custom OpenAI endpoint
     messages=[
         {
             "role": "user",

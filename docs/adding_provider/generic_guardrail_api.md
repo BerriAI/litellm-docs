@@ -110,12 +110,13 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 
 ### Response Format
 
-```json
+```json nolint
 {
   "action": "BLOCKED" | "NONE" | "GUARDRAIL_INTERVENED",
   "blocked_reason": "why content was blocked",  // required if action=BLOCKED
   "texts": ["modified text"],  // optional array of modified text strings
-  "images": ["modified_base64_image"]  // optional array of modified images
+  "images": ["modified_base64_image"],  // optional array of modified images
+  "structured_messages": [{"role": "user", "content": "modified message"}]  // optional array of rewritten chat messages
 }
 ```
 
@@ -123,6 +124,8 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 - `BLOCKED` - LiteLLM raises error and blocks request
 - `NONE` - Request proceeds unchanged  
 - `GUARDRAIL_INTERVENED` - Request proceeds with modified texts/images (provide `texts` and/or `images` fields)
+
+**Rewriting per message:** `texts` must line up one to one with the `texts` array LiteLLM sent. When your endpoint rewrites the request per chat message instead, return the rewritten rows as `structured_messages` (see [Returning rewritten messages](#returning-rewritten-messages)). On `/v1/responses` a `texts` array that counts one entry per message does not match what LiteLLM extracted, so the request is rejected with a 500 naming the guardrail rather than sent unrewritten
 
 ## Parameters
 
@@ -226,6 +229,21 @@ The `structured_messages` parameter provides the full input in OpenAI chat compl
 - Enforce role-based content restrictions
 - Log structured conversation context
 
+#### Returning rewritten messages
+
+To rewrite the request per message, return `structured_messages` in the response with one row per row you received, in the same order, keeping each row's `role` and shape and changing only the content you want rewritten. LiteLLM writes the rows back onto the original request on every supported endpoint, including `/v1/responses` turns that carry `instructions` or tool items, where a per-message `texts` array cannot be placed. A row you return exactly as you received it counts as unchanged, so you can echo the rows you did not touch; when every row comes back unchanged, LiteLLM applies `texts` instead. A returned array whose length differs from the one you received replaces the conversation as a whole
+
+**Example:**
+```json
+{
+  "action": "GUARDRAIL_INTERVENED",
+  "structured_messages": [
+    {"role": "system", "content": "You are a helpful assistant"},
+    {"role": "user", "content": "My SSN is <US_SSN>"}
+  ]
+}
+```
+
 ## LiteLLM Configuration
 
 Add to `config.yaml`:
@@ -325,7 +343,7 @@ Users apply your guardrail by name:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=["my-guardrail"]
 )
@@ -335,7 +353,7 @@ Or with dynamic parameters:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=[{
         "my-guardrail": {
@@ -377,6 +395,7 @@ class GuardrailResponse(BaseModel):
     blocked_reason: Optional[str] = None
     texts: Optional[List[str]] = None
     images: Optional[List[str]] = None
+    structured_messages: Optional[List[Dict[str, Any]]] = None  # rewritten OpenAI messages, one per row received
 
 @app.post("/beta/litellm_basic_guardrail_api")
 async def apply_guardrail(request: GuardrailRequest):

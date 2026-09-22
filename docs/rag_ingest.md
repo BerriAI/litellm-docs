@@ -17,7 +17,7 @@ After ingesting documents, use [/rag/query](./rag_query.md) to search and genera
 
 ```bash showLineNumbers title="Ingest to OpenAI vector store"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -37,7 +37,7 @@ curl -X POST "http://localhost:4000/v1/rag/ingest" \
 
 ```bash showLineNumbers title="Ingest to Bedrock Knowledge Base"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -57,7 +57,7 @@ curl -X POST "http://localhost:4000/v1/rag/ingest" \
 
 ```bash showLineNumbers title="Ingest to Vertex AI RAG Corpus"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -81,7 +81,7 @@ Full setup, IAM permissions, and search configuration: [AWS S3 Vectors](./provid
 
 ```bash showLineNumbers title="Ingest to S3 Vectors"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -119,10 +119,10 @@ After ingestion, use the [/rag/query](./rag_query.md) endpoint to search and gen
 
 ```bash showLineNumbers title="RAG Query"
 curl -X POST "http://localhost:4000/v1/rag/query" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "gpt-4o-mini",
+        "model": "{{openai_small}}",
         "messages": [{"role": "user", "content": "What is the main topic?"}],
         "retrieval_config": {
             "vector_store_id": "vs_xyz789",
@@ -143,7 +143,7 @@ Alternatively, search the vector store directly with `/vector_stores/{vector_sto
 
 ```bash showLineNumbers title="Search the vector store"
 curl -X POST "http://localhost:4000/v1/vector_stores/vs_xyz789/search" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "query": "What is the main topic?",
@@ -159,7 +159,7 @@ curl -X POST "http://localhost:4000/v1/vector_stores/vs_xyz789/search" \
 
 ```bash showLineNumbers title="Step 1: Ingest"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {
@@ -190,7 +190,7 @@ Response:
 
 ```bash showLineNumbers title="Step 2: Query"
 curl -X POST "http://localhost:4000/v1/vector_stores/vs_692658d337c4819183f2ad8488d12fc9/search" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "query": "What is LiteLLM?",
@@ -242,6 +242,10 @@ Response:
 |-----------|------|----------|-------------|
 | `vector_store` | object | Yes | Vector store configuration |
 | `name` | string | No | Pipeline name for logging |
+
+:::info Registered stores
+When `vector_store.vector_store_id` names a store in the [vector store registry](./vector_stores/managed_vector_stores.md) or one saved by an earlier ingest, the provider, credentials, and destination settings come from that registration. The request keeps only its per-upload options (`data_source_id`, `wait_for_ingestion`, `ingestion_timeout`, `custom_metadata`, `file_description`, `max_embedding_requests_per_min`); any other `vector_store` key it sends is ignored. A `custom_llm_provider` with no ingestion implementation is rejected with a 400 naming the supported ones.
+:::
 
 ### vector_store (OpenAI)
 
@@ -297,7 +301,8 @@ When `vector_store_id` is omitted, LiteLLM automatically creates:
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `custom_llm_provider` | string | - | `"s3_vectors"` |
-| `vector_bucket_name` | string | **required** | S3 vector bucket name |
+| `vector_store_id` | string | auto-create | Existing index as `bucket:index`, or a bare index name inside `vector_bucket_name` |
+| `vector_bucket_name` | string | **required** unless `vector_store_id` is `bucket:index` | S3 vector bucket name |
 | `index_name` | string | auto-create | Vector index name |
 | `dimension` | integer | auto-detect | Vector dimension (auto-detected from embedding model) |
 | `distance_metric` | string | `cosine` | Distance metric: `cosine` or `euclidean` |
@@ -364,7 +369,7 @@ When `index_name` is omitted, LiteLLM automatically creates:
 
 ```bash showLineNumbers title="Ingest from URL"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "file_url": "https://example.com/document.pdf",
@@ -387,7 +392,7 @@ Vertex AI RAG Engine supports custom chunking via the `chunking_strategy` parame
 
 ```bash showLineNumbers title="Vertex AI with custom chunking"
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{
         \"file\": {

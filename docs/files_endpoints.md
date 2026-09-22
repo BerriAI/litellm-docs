@@ -35,13 +35,13 @@ model_list:
   # litellm OpenAI Account
   - model_name: "gpt-4o-litellm"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_LITELLM_API_KEY
   
   # Free OpenAI Account
   - model_name: "gpt-4o-free"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_FREE_API_KEY
 ```
 
@@ -51,7 +51,7 @@ model_list:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 
@@ -135,7 +135,7 @@ client.files.retrieve(file_id, extra_headers={"custom-llm-provider": "openai"})
 model_list:
   - model_name: "gpt-4o-account1"
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_KEY
 ```
 
@@ -252,7 +252,7 @@ print("content=", content)
 
 **Upload a File**
 ```python
-from litellm
+import litellm
 import os 
 
 os.environ["OPENAI_API_KEY"] = "sk-.."
@@ -267,7 +267,7 @@ print("Response from creating file=", file_obj)
 
 **List Files**
 ```python
-files = await litellm.alist_files(
+files = await litellm.afile_list(
     custom_llm_provider="openai",
     limit=10
 )
@@ -276,7 +276,7 @@ print("files=", files)
 
 **Retrieve File Information**
 ```python
-file = await litellm.aretrieve_file(
+file = await litellm.afile_retrieve(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )
@@ -285,7 +285,7 @@ print("file=", file)
 
 **Delete File**
 ```python
-response = await litellm.adelete_file(
+response = await litellm.afile_delete(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )

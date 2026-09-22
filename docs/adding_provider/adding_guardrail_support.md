@@ -285,7 +285,7 @@ def _has_text_content(self, response: Any) -> bool:
 
 Create `__init__.py` to register the handler with call types:
 
-```python
+```python nolint
 """My Endpoint handler for Unified Guardrails."""
 
 from litellm.llms.{provider}/{endpoint}/guardrail_translation.handler import (
@@ -346,7 +346,7 @@ curl -X POST 'http://localhost:4000/{my_endpoint}' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer your-api-key' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "guardrails": ["test"]
 }'

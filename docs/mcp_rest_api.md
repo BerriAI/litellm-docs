@@ -12,9 +12,9 @@ Use this when you already know which tool to run. For LLM-driven tool use, see [
 **Auth:** LiteLLM API key on every request:
 
 ```bash
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 # or
--H "x-litellm-api-key: sk-1234"
+-H "x-litellm-api-key: sk-<your-litellm-api-key>"
 ```
 
 ---
@@ -54,7 +54,7 @@ The proxy calls the **upstream** MCP server with the unprefixed tool name (e.g. 
 
 ```bash
 curl -s http://localhost:4000/v1/mcp/server \
-  -H "Authorization: Bearer sk-1234" | jq .
+  -H "Authorization: Bearer $LITELLM_API_KEY" | jq .
 ```
 
 Use `server_id` or `server_name` from the response in later calls. Both work as `server_id` in `/mcp-rest/*`.
@@ -67,7 +67,7 @@ Use `server_id` or `server_name` from the response in later calls. Both work as 
 
 ```bash
 curl -s http://localhost:4000/mcp-rest/tools/list \
-  -H "Authorization: Bearer sk-1234" | jq .
+  -H "Authorization: Bearer $LITELLM_API_KEY" | jq .
 ```
 
 Tool `name` values are often **unprefixed** (e.g. `getPlaces`) with `mcp_info.server_name` indicating the server. For `tools/call`, either:
@@ -81,7 +81,7 @@ Tool `name` values are often **unprefixed** (e.g. `getPlaces`) with `mcp_info.se
 
 ```bash
 curl -s "http://localhost:4000/mcp-rest/tools/list?server_id=places_api" \
-  -H "Authorization: Bearer sk-1234" | jq .
+  -H "Authorization: Bearer $LITELLM_API_KEY" | jq .
 ```
 
 Returns **unprefixed** upstream names (e.g. `getPlaces`, `ping`).
@@ -104,7 +104,7 @@ Optional JSON-RPC fields (`jsonrpc`, `method`, `id`) are ignored by the REST han
 
 ```bash
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "17a4490465f74d3696caf12b30220166",
@@ -117,7 +117,7 @@ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
 
 ```bash
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "places_api",
@@ -130,7 +130,7 @@ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
 
 ```bash
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "x-litellm-api-key: sk-1234" \
+  -H "x-litellm-api-key: sk-<your-litellm-api-key>" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "order_status_mcp",
@@ -148,7 +148,7 @@ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
 ```bash
 # 400 missing_parameter
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "name": "places_api-getPlaces", "arguments": {} }'
 ```
@@ -158,7 +158,7 @@ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
 ```bash
 # 500 — arguments must be a JSON object, not null
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "places_api",
@@ -176,7 +176,7 @@ Default separator is `-`, not `_`.
 ```bash
 # Tool not found or wrong routing
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "places_api",
@@ -192,7 +192,7 @@ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
 ```bash
 # 403 tool_server_mismatch
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "order_status_mcp",
@@ -217,7 +217,7 @@ Response:
 ```bash
 # 404 server_not_found (unknown name/uuid)
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "serverid1",
@@ -244,11 +244,11 @@ Strings like `"serverid1"` / `"serverid2"` are not valid unless you created serv
 ```bash
 # All servers
 curl -s http://localhost:4000/mcp-rest/tools/list \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 
 # One server
 curl -s "http://localhost:4000/mcp-rest/tools/list?server_id=MY_SERVER" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -256,7 +256,7 @@ curl -s "http://localhost:4000/mcp-rest/tools/list?server_id=MY_SERVER" \
 
 ```bash
 curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "server_id": "MY_SERVER",

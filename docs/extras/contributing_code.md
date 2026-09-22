@@ -55,10 +55,10 @@ Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a
 
 Examples:
 
-```
+```text keep-python-version
 feat(router): add weighted round-robin strategy
 fix(bedrock): decouple STS region from aws_region_name
-chore(deps): bump black to 26.3.1
+chore(deps): bump ruff to 0.15.0
 refactor!: drop Python 3.8 support
 ```
 
@@ -71,7 +71,7 @@ Format: `<type>/<short-description>` where `<type>` is one of `feature`, `bugfix
 ```
 feature/weighted-round-robin
 bugfix/streaming-empty-chunks
-chore/bump-black
+chore/bump-ruff
 hotfix/auth-bypass
 release/v1.45.0
 ```
@@ -154,7 +154,7 @@ Run the following command from the root of the `litellm` directory:
 make lint
 ```
 
-LiteLLM uses `mypy` for type checking. CI/CD also runs `black` for formatting.
+LiteLLM uses `basedpyright` for type checking. CI also runs `ruff format --check` for formatting; run `make format` to fix formatting locally.
 
 ### 5. Submit a PR
 
@@ -244,7 +244,7 @@ Make sure `config.yaml` is present in the root directory. This is your LiteLLM p
 docker run \
     -v $(pwd)/proxy_config.yaml:/app/config.yaml \
     -e DATABASE_URL="postgresql://xxxxxxxx" \
-    -e LITELLM_MASTER_KEY="sk-1234" \
+    -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
     -p 4000:4000 \
     litellm_test_image \
     --config /app/config.yaml --detailed_debug

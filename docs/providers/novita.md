@@ -163,13 +163,13 @@ messages = [
     }
 ]
 
-completion(
+response = completion(
     model="novita/deepseek/deepseek-r1-turbo", 
     messages=messages, 
     response_format={"type": "json_object"} # 👈 KEY CHANGE
 )
 
-print(json.loads(completion.choices[0].message.content))
+print(json.loads(response.choices[0].message.content))
 ```
 
 </TabItem>
@@ -195,7 +195,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "deepseek-r1-turbo",
   "messages": [

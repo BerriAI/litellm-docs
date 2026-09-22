@@ -59,7 +59,7 @@ The component headers sum to the total: input + cache read + cache creation + ou
 ## LiteLLM Specific Headers
 | Header | Type | Description | Available on Pass-Through Endpoints |
 |--------|------|-------------|-------------|
-| `x-litellm-call-id` | string | Id for this request | ✅ |
+| `x-litellm-call-id` | string | Id for this request. With `general_settings.include_call_id_in_error_body: true` it is also inside JSON error bodies as `litellm_call_id` ([details](./error_reference.md#reporting-a-problem)) | ✅ |
 | `x-litellm-model-id` | string | Deployment id (`model_info.id`) | |
 | `x-litellm-model-api-base` | string | API base URL | ✅ |
 | `x-litellm-version` | string | LiteLLM version | |
@@ -71,7 +71,7 @@ The component headers sum to the total: input + cache read + cache creation + ou
 model_list:
   - model_name: my-chat-model          # clients call this
     litellm_params:
-      model: gpt-4o-mini               # LiteLLM calls this upstream
+      model: {{openai_small}}               # LiteLLM calls this upstream
     model_info:
       id: "7c9f2a1b3d8e4f0a2c6b5d9e1f3a7b8c"   # optional; auto-generated if omitted
 ```
@@ -84,7 +84,20 @@ model_list:
 
 ### Auto-routed requests
 
-For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can read the picked tier from the `router_model_name` body field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
+For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can set `return_raw_model_name` on the router to get the picked tier in the body `model` field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
+
+Complexity auto routers also return the recorded routing decision as response headers:
+
+| Header | Type | Description |
+|--------|------|-------------|
+| `x-litellm-complexity-router-tier` | string | Selected complexity tier |
+| `x-litellm-complexity-router-cause` | string | Routing mechanism that selected the tier, such as `heuristic_scorer`, `heuristic_v2`, `llm_classifier`, or a keyword rule |
+| `x-litellm-complexity-router-score` | float | Recorded heuristic score |
+| `x-litellm-complexity-router-reasoning-effort` | string | `reasoning_effort` configured on the selected tier |
+
+Each header appears only when its value is present in the recorded routing decision for the successful attempt. The score is absent on routes that do not record one, including keyword and LLM-classifier decisions. The reasoning-effort header reports the selected tier's configured override; it does not report the model's default effort or the classifier model's reasoning effort. Invalid or non-ASCII text values are omitted. Raw heuristic signals, matched keywords, and the complete tier parameter map are not exposed
+
+These headers are available on streaming and non-streaming requests to `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`. They are absent after a fallback to a plain model group. HTTP headers cannot change after a stream commits
 
 ### More examples (illustrative)
 

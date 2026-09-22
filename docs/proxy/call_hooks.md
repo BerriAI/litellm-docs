@@ -137,9 +137,9 @@ The last line matters: `callbacks` takes the dotted path of an **instance**, so 
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -157,7 +157,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -174,53 +174,29 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Run a moderation check in parallel to the actual LLM API call. 
 
-In your Custom Handler add a new `async_moderation_hook` function
+Subclass `CustomGuardrail` and define an `async_moderation_hook` function
 
-- This is currently only supported for `/chat/completion` calls. 
+- Register the guardrail under `guardrails:` with `mode: during_call`. The hook must accept `data`, `user_api_key_dict` and `call_type`; the older two-argument signature fails with a `TypeError` on every request. 
 - This function runs in parallel to the actual LLM API call. 
 - If your `async_moderation_hook` raises an Exception, we will return that to the user. 
 
-
-:::info
-
-We might need to update the function schema in the future, to support multiple endpoints (e.g. accept a call_type). Please keep that in mind, while trying this feature
-
-:::
-
-See a complete example with our [Llama Guard content moderation hook](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_hooks/llm_guard.py)
+See a complete example with our [Llama Guard content moderation hook](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_hooks/llm_guard.py) and the [custom guardrail docs](./guardrails/custom_guardrail.md)
 
 ```python
-from litellm.integrations.custom_logger import CustomLogger
-import litellm
+from litellm.integrations.custom_guardrail import CustomGuardrail
+from litellm.proxy._types import UserAPIKeyAuth
+from litellm.types.utils import CallTypesLiteral
 from fastapi import HTTPException
 
-# This file includes the custom callbacks for LiteLLM Proxy
-# Once defined, these can be passed in proxy_config.yaml
-class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observability/custom_callback#callback-class
-    # Class variables or attributes
-    def __init__(self):
-        pass
+class MyCustomGuardrail(CustomGuardrail):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    #### ASYNC #### 
-    
-    async def async_log_pre_api_call(self, model, messages, kwargs):
-        pass
-
-    async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
-        pass
-
-    async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
-        pass
-
-    #### CALL HOOKS - proxy only #### 
-
-    async def async_pre_call_hook(self, user_api_key_dict: UserAPIKeyAuth, cache: DualCache, data: dict, call_type: Literal["completion", "embeddings"]):
-        data["model"] = "my-new-model"
-        return data 
-    
     async def async_moderation_hook( ### 👈 KEY CHANGE ###
         self,
         data: dict,
+        user_api_key_dict: UserAPIKeyAuth,
+        call_type: CallTypesLiteral,
     ):
         messages = data["messages"]
         print(messages)
@@ -228,8 +204,6 @@ class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observabilit
             raise HTTPException(
                     status_code=400, detail={"error": "Violated content safety policy"}
                 )
-
-proxy_handler_instance = MyCustomHandler()
 ```
 
 
@@ -237,12 +211,16 @@ proxy_handler_instance = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
-litellm_settings:
-  callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
+guardrails:
+  - guardrail_name: "my-moderation-guardrail"
+    litellm_params:
+      guardrail: custom_guardrail.MyCustomGuardrail # {file_name}.{class_name}
+      mode: "during_call"
+      default_on: true
 ```
 
 3. Start the server + test the request
@@ -253,7 +231,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -324,9 +302,9 @@ proxy_handler_instance = MyCustomHandler()
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
 
 litellm_settings:
   callbacks: custom_callbacks.proxy_handler_instance # sets litellm.callbacks = [proxy_handler_instance]
@@ -341,7 +319,7 @@ $ litellm /path/to/config.yaml
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --data ' {
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",

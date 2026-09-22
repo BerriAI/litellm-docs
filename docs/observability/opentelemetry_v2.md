@@ -23,7 +23,7 @@ POST /v1/chat/completions                  ← HTTP request (server span)
 │   ├── postgres get_key_object            ← DB lookups during auth
 │   └── postgres get_team_membership
 ├── execute_guardrail presidio-pii         ← each guardrail that runs
-├── chat gpt-4o                            ← the LLM call (model, tokens, cost)
+├── chat {{openai_large}}                     ← the LLM call (model, tokens, cost)
 └── batch_write_to_db                      ← spend/usage written to DB
 ```
 
@@ -278,9 +278,9 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.model_name`, `llm.provider` | model, provider |
 | `llm.token_count.prompt`, `completion`, `total` | usage split |
 | `llm.invocation_parameters` | JSON blob of request params |
-| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on) |
-| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on) |
-| `input.value`, `output.value` | JSON arrays of the same (content capture on) |
+| `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on), [capped](#chat-messages-are-capped) |
+| `llm.output_messages.{idx}.message.role`, `content` | response (content capture on), [capped](#chat-messages-are-capped) |
+| `input.value`, `output.value` | JSON arrays of every message's role and text (content capture on) |
 | `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
@@ -345,6 +345,7 @@ These are set by the preset from the request and response, not from a client-sup
 
 - Auth is HTTP Basic, `Authorization: Basic <base64(public_key:secret_key)>`; the preset builds this from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` so you never set the header directly.
 - If your client already sends a W3C `traceparent` and Langfuse is picking up the wrong parent, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true` in the proxy environment to drop inbound context.
+- By default your Langfuse project receives the whole request tree. Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 - This is a Langfuse-flavored path; for a general-purpose OTel backend, use the [generic OTLP setup](#1-send-traces-to-any-otlp-collector) instead.
 
 ![LiteLLM trace in Langfuse](/img/observability/otel_v2_langfuse.png)
@@ -512,6 +513,12 @@ The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quart
 
 `litellm.request.tools.declared` always carries the true total, so you can tell when the per-tool detail was truncated. Requests declaring fewer tools than the allowance keep full detail.
 
+#### Chat messages are capped
+
+The `openinference` mapper's `llm.input_messages.{idx}.*` and `llm.output_messages.{idx}.*` keys are the other unbounded family: two attributes per message, prompt and response alike. Past a few dozen turns they alone would exceed the 128-attribute default and evict the `gen_ai.*` model, usage, cost, and finish-reason attributes written before them. They are therefore fitted to the budget the span has left: its tracer provider's attribute count limit (`OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT`, or the `SpanLimits` of an injected or per-request routed provider) minus every other attribute on the span, `error.*` included. A conversation that fits is indexed in full. One that does not loses whole messages, role and content together, least valuable first: middle prompt turns, then extra response choices, then message 0 and the newest turn, and last the first choice. Surviving messages keep their original indices, so message 0 and the newest turns stay addressable even when `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` clips the `input.value` blob before the end of the conversation. With `genai` plus `openinference` and `LITELLM_OTEL_LEGACY_COMPAT=false`, a 60-turn conversation with one reply at the default limit indexes `llm.input_messages.0`, `.18` through `.59`, and `llm.output_messages.0`; the default `legacy` mapper adds keys of its own, so fewer middle turns survive with it on.
+
+The cap only touches the per-index convenience keys. `input.value` and `output.value` still list every message's role and text, and the canonical `gen_ai.input.messages` and `gen_ai.output.messages` blobs carry the full message objects (tool calls and non-text parts included), so the whole conversation stays on the span and Arize keeps rendering it. Those blobs are single strings, so `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` (unlimited by default) can truncate them on a long conversation; the surviving per-index keys then still show the opener and the newest turns. Phoenix compacts the per-index keys into a dense list when it renders a span, so a gap in indices shows up there as a shorter message list, in the same order.
+
 Response, usage, cost, identity:
 
 | Attribute | When set |
@@ -524,6 +531,7 @@ Response, usage, cost, identity:
 | `litellm.call_id` | always |
 | `litellm.provider.model` | always (the model string actually sent to the provider) |
 | `litellm.request.streaming` | when true |
+| `litellm.request.route` | on the proxy (the same route the root span reports as `http.route`: the FastAPI route template, e.g. `/v1/responses/{response_id}`, or the literal path on a passthrough prefix such as `/openai/...`; when no server span exists, for example the route is in `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` or the FastAPI instrumentation is not installed, it falls back to the route the proxy recorded at auth) |
 | `litellm.cost.total` | on success |
 | `litellm.cost.input`, `output`, `cache_read`, `cache_creation`, `tool_usage` | when the source reported the breakdown |
 | `litellm.cost.original`, `discount_amount`, `discount_percent`, `margin_fixed_amount`, `margin_percent`, `margin_total_amount` | when reported |
@@ -673,139 +681,138 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=""
 OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 ```
 
-## Per-key / per-team destinations (multi-tenant)
+## Per-key / per-team credentials (multi-tenant)
 
-One proxy can serve many tenants and send each tenant's traces only to that tenant's own backend, so a team never sees another team's traces. The proxy admin owns the routing; a team or key just points at a destination by name and never handles another tenant's secrets.
+One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, or New Relic account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
 
-To keep one Phoenix collector and only split *projects* by team or key, use [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key) instead of a destination. Destinations are for a different Langfuse, Arize, Weave, or OTLP backend per tenant.
+This is the same key/team callback mechanism described in [Team/Key based logging](../proxy/team_logging); v2 applies it to the OTel presets. There is no separate admin-owned "destination" object, and `/credentials` holds LLM provider credentials, not logging ones.
 
-```
-Proxy admin                          Team admin
-  creates a destination  ───────►      sees which ones reach their team
-  (backend + secrets + scope)          (read-only, on the team's info page)
-        │
-        └──────────► at request time
-              the proxy matches the caller against every
-              destination's scope and sends the trace there
-```
+### Which presets support per-request credentials
 
-### The idea in one minute
+| Preset | Callback | Fields on the key or team | What varies per tenant |
+|---|---|---|---|
+| Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key`, `langfuse_host` | The Langfuse project traces land in, and the server they are sent to |
+| Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
+| Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
+| New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
 
-There are two pieces.
+Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
 
-A **destination** is a named place to send traces, created by the proxy admin. It reuses the same backends and credentials as the [presets](#2-send-traces-to-a-specific-tool-presets) above: it holds which backend it is (`langfuse_otel`, `arize`, `weave_otel`, or a `generic` OTLP endpoint, meaning any backend that speaks the OpenTelemetry Protocol), the connection details and secrets for that backend, and an **access scope** that says which teams or organizations are allowed to use it. An **organization** here is a group of teams; a team belongs to one org.
+### Set it on a team
 
-The access scope is the whole of the routing decision. A team does not opt in and cannot turn a destination on or off; if the scope names the team, or the team's organization, or the destination is global, that team's traces go there. Teams see which destinations reach them as a read-only `resolved_logging_exporters` list on `/team/info` and `/organization/info`; the names are all they see, never the endpoints, the secrets, or the scope map itself.
-
-At request time the proxy takes the team the calling key belongs to and that team's organization, keeps every destination whose scope includes one of them, builds each one from its stored values, and sends the request's trace to all of them. If nothing matches, the trace goes only to your normal global exporter from the sections above.
-
-### Who can change what
-
-Destinations are proxy-admin-owned end to end. Only a **proxy admin** can create one, edit its backend, host or secrets, or change its access scope; the `/credentials` endpoints answer 401 to anything else, so a team-scoped key cannot even list them. A **team admin** never handles another tenant's secrets because they never touch destinations at all.
-
-| Action | Proxy admin | Org admin | Team admin |
-|---|:-:|:-:|:-:|
-| Create or delete a destination | Yes | No | No |
-| Edit a destination's backend, host, or secrets | Yes | No | No |
-| Set the access scope: global, orgs, or teams | Yes | No | No |
-| See which destinations reach their own team or org | Yes | Yes, names only | Yes, names only |
-
-### Set it up in the UI
-
-This is the common path, and one thing has to be true before a team's traces flow: the destination's access scope must include that team, either directly, through its organization, or by being global. A proxy admin does all of it on one screen, **Logging & Alerts**, then **Logging Callbacks**.
-
-Proxy admin, create the destination:
-
-1. Open the proxy UI and go to **Logging & Alerts**, then **Logging Callbacks**.
-2. Click **Add Callback** and pick the backend's **scoped destination** entry from the Callback dropdown, for example `Langfuse OTEL (scoped destination)`. The plain `Langfuse OTEL` entry above it is the proxy-wide callback from the sections above, not a destination. Give it a **Name**, fill in the **host** and the **secrets** for that backend, and set the access scope: turn on **Global** for every team, or pick specific **Teams** or **Organizations**. The secret values are the same ones you would set as that preset's env vars, copied from the backend's own dashboard (for example, your Langfuse project's API keys); see the [Preset reference](#preset-reference) for which fields each backend needs.
-3. Save. From now on the secrets and the Global/Org scope are admin-only; team admins can only attach the destination to teams already in its scope.
-
-![Adding a logging destination: the Callback dropdown set to Langfuse OTEL (scoped destination), with the name, host and secret fields above the Global, Teams and Organizations scope controls](/img/observability/otel_v2_destination_admin.png)
-
-The destinations you create appear in the Logging Callbacks list alongside your proxy-wide callbacks, each tagged with its access scope. `Mode` stays empty for a destination, since a destination has no success/failure mode of its own:
-
-![Active logging callbacks: one Global destination, one scoped to a team, one scoped to an organization, and one showing the Not active badge](/img/observability/otel_v2_destinations_list.png)
-
-A **Not active** badge means the destination cannot be built from the values it holds, usually because a required field is missing, so it receives no traces even where its scope would grant it. Fix the values and the badge clears.
-
-To change who a destination reaches after creating it, open the row's actions menu and choose **Edit scope**. This edits only the access scope; the host and secrets stay where they are.
-
-![The Edit scope dialog for a destination, with the Global toggle off and the Teams multi-select holding one team](/img/observability/otel_v2_destination_scope.png)
-
-That is the whole setup. Traces from every team in the scope start flowing on the next request, with no step on the team's side.
-
-To check a team is covered, open **Teams**, pick the team, and read its `resolved_logging_exporters`; it names every destination that will receive that team's traces. Other tenants' destinations never appear there.
-
-### Set it up over the API
-
-The UI calls these endpoints; you can use them directly. `$ADMIN_KEY` is a proxy-admin virtual key (mint one on the **Virtual Keys** page in the UI, or with `/key/generate`), `<team-id>` comes from the Teams page, and `pk-...` / `sk-...` are the backend's own keys from its dashboard. Creating the destination is the only write; there is no second call to turn it on.
-
-Proxy admin creates a destination, here a Langfuse destination granted to one team:
+Register the callback on the team; every key on that team then exports with these credentials:
 
 ```shell
-curl -X POST http://localhost:4000/credentials \
-  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
-    "credential_name": "tenant-a-langfuse",
-    "credential_values": {
-      "langfuse_public_key": "pk-...",
-      "langfuse_secret_key": "sk-...",
-      "langfuse_host": "https://cloud.langfuse.com"
-    },
-    "credential_info": {
-      "credential_type": "logging",
-      "description": "langfuse_otel",
-      "host": "https://cloud.langfuse.com",
-      "access": { "teams": ["<team-id>"] }
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-..."
     }
   }'
 ```
 
-`credential_type` must be `logging`, and `description` names the backend. `access` accepts exactly `global`, `teams` and `orgs`; anything else is rejected with a 400, and per-key access is deliberately unsupported.
+`GET /team/<team-id>/callback` reads back what a team has registered, `DELETE /team/<team-id>/callback/<callback_name>` removes one integration, and `POST /team/<team-id>/disable_logging` removes all of them.
 
-To widen or narrow the scope later, patch the same credential. `credential_info` is replaced wholesale rather than merged, so send the fields you want to keep:
+### Set it on a key
+
+A key can carry its own credentials in `metadata.logging`, including a key with no team:
 
 ```shell
-curl -X PATCH http://localhost:4000/credentials/tenant-a-langfuse \
-  -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
-    "credential_name": "tenant-a-langfuse",
-    "credential_info": {
-      "credential_type": "logging",
-      "description": "langfuse_otel",
-      "access": { "teams": ["<team-id>", "<other-team-id>"] }
-    },
-    "credential_values": {}
+    "metadata": {
+      "logging": [{
+        "callback_name": "arize",
+        "callback_type": "success",
+        "callback_vars": {"arize_space_id": "...", "arize_api_key": "..."}
+      }]
+    }
   }'
 ```
 
-Confirm it landed by reading the team back; `resolved_logging_exporters` names every destination that will receive that team's traces:
+Existing keys take the same field on `/key/update`. You can also fill both of these in from the Admin UI, on the team's or the key's logging settings.
 
-```shell
-curl "http://localhost:4000/team/info?team_id=<team-id>" \
-  -H "Authorization: Bearer $ADMIN_KEY"
+### What the tenant receives
+
+A key or team that names its own backend gets the **whole trace** under one root: the HTTP request, the auth step, the model call with its tokens and cost, and the spend write. Before, it received a single loose span with no request around it.
+
+Your own exporter for that same backend stops receiving those requests. If a team points `langfuse_otel` at its own project, your Langfuse project holds nothing for that team; exporters on other backends, a plain `otel` collector for instance, still receive everything.
+
+The tenant's copy is stripped of your side of the request: the proxy's database endpoint, exception text and stack traces, an unreachable guardrail's error, and the query string on any URL.
+
+If the tenant's backend is unreachable, its spans are not re-routed to your exporters. The point of the override is that you stop holding that team's traffic.
+
+### Keep your own copy as well
+
+Switch the mode to `additive` and your exporter keeps every request too, so an org-wide view stays complete:
+
+```yaml
+litellm_settings:
+  otel_tenant_destination_mode: additive   # default: "override"
 ```
 
-### Backends and the fields each one needs
+`LITELLM_OTEL_TENANT_DESTINATION_MODE=additive` does the same. When a team happens to name a project you already export to, the request is written once, not twice.
 
-The admin fills these into the destination's secret fields; the values come from the backend's own dashboard, the same as the preset env vars in the [Preset reference](#preset-reference). Anything OTLP-compatible that is not one of the first three uses `generic`.
+### Send a tenant to its own Langfuse host
 
-| Backend (`description`) | Secret fields |
-|---|---|
-| `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key`, `langfuse_host` (optional; defaults to Langfuse US cloud) |
-| `arize` | `arize_space_id` (or `arize_space_key`), `arize_api_key`, `arize_project_name`; `arize_endpoint` optional |
-| `weave_otel` | `wandb_api_key`, `weave_project_id` (optional); `weave_endpoint` optional |
-| `generic` | `otel_endpoint` (required), `otel_headers` (optional, `key=value,key2=value2`) |
+`langfuse_host` on a key or team moves that tenant's traces to their own Langfuse server. Pass it with the key pair it belongs to, because a host on its own is ignored. Allowlist the host too, or the proxy logs a warning and leaves the request on your exporters:
+
+```yaml
+litellm_settings:
+  provider_url_destination_allowed_hosts: ["langfuse.acme.com"]
+```
+
+Your own `LANGFUSE_HOST` needs no allowlist entry. The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
+
+### Send only the model calls to Langfuse
+
+By default a Langfuse project, yours or a tenant's, receives the whole request tree: the HTTP request root, the auth step, database and cache lookups, every guardrail run, MCP tool calls, the model call and the spend write. If you only want the generations in Langfuse, set the scope to `llm_only`. The proxy keeps the model-call spans and stops forwarding every other span of that request to that Langfuse project. A model-call span is the one the proxy emits for each provider call it made on the caller's behalf, whatever the route: chat and text completions, Responses API calls, embeddings, image, audio and OCR generation, moderation, vector store calls and agent messages all count. They are the spans carrying `gen_ai.operation.name`, minus MCP tool calls. The generation keeps its trace id, so Langfuse still groups the generations of one request under one trace, and it keeps the caller's `langfuse.trace.name`, `user.id`, `session.id` and `langfuse.trace.tags`. Since the request root is no longer sent, that Langfuse project receives the generation as the root of the trace, and when the caller set no `langfuse_trace_name` or `metadata.trace_name` the trace takes the generation's own name, `chat claude-3-5-haiku` for instance, instead of showing up unnamed. Only that project's copy of the span is changed; a `full` project or a plain collector receiving the same request still sees the generation under the request span. When a tenant's `full` project is the same Langfuse account as your own `llm_only` exporter, that account gets the whole tree once and the generation stays in its place under the request span
+
+A team or key sets it in its `langfuse_otel` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "langfuse_span_scope": "llm_only"
+    }
+  }'
+```
+
+The Admin UI shows the same field as a `langfuse span scope` pick between `full` and `llm_only` next to the Langfuse OTEL credentials of a team or key
+
+Your own Langfuse exporter has a separate switch in the proxy environment:
+
+```shell
+LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # default: full
+```
+
+The two are independent. A tenant's `llm_only` narrows only that tenant's project, and the operator setting narrows only the exporter built from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, whichever mode `otel_tenant_destination_mode` is in. Neither touches a plain `otel` collector or any other preset, so a Datadog or Grafana view of the same request stays complete. The accepted values are `full` and `llm_only`, and a key or team callback with any other value is rejected when it is saved. The setting applies to the `langfuse_otel` preset only: saving a `langfuse_span_scope` on a legacy `langfuse` callback or on another backend's callback is rejected as well, since nothing there would read it
+
+Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
 
 ### Good to know
 
-Resolution is **default-deny**. An `access` that grants nobody, whether it is absent, `{}`, or names only teams that do not exist, sends nothing rather than leaking a trace to the wrong tenant. The same holds for a destination whose values do not build; it is reported as **Not active** in the UI, is left out of `resolved_logging_exporters`, and receives nothing.
+The key wins outright over the team. If a key has any `metadata.logging` entry, the team's callbacks are not consulted at all rather than merged with the key's, so a key that overrides one backend has to restate the others it still wants.
 
-Set `access.global` to `true` to reach every team on the proxy without naming them. It is the one scope that does not need an org or team id, and it is still admin-only, so no team can grant itself global reach.
+Credentials scope to the exporter their own preset contributed. A request carrying one tenant's Arize key never rewrites the headers of a co-configured Langfuse or self-hosted collector exporter, so a tenant's key cannot leak to a backend it was not meant for. Exporters on backends the tenant did not name do still receive the request's spans, with their own proxy-wide credentials.
 
-Destinations are additive with the global exporter, not a replacement for it. A request whose team matches two destinations sends its trace to both of them and to your configured exporter; two destinations that resolve to the same endpoint and headers collapse to one send.
+The proxy caches one tracer provider per distinct credential set, up to 256 at a time, and flushes the least recently used one when it evicts. Tenant churn costs an exporter rebuild, not a lost span.
 
-This routing applies to **traces only**. The GenAI client metrics (see [Metrics](#metrics)) still go to your single globally-configured exporter, not to per-tenant destinations.
+`os.environ/...` references are rejected in key and team `callback_vars`; pass the resolved value. Field names must be known callback params, and an unknown name fails the whole entry.
+
+This routing applies to traces only. The GenAI client metrics (see [Metrics](#metrics)) always go to the proxy-wide exporter.
+
 
 ## Distributed tracing
 
@@ -818,6 +825,8 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | Variable | Default | Purpose |
 |---|---|---|
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
+| `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
+| `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. |
 | `OTEL_HEADERS` (alias `OTEL_EXPORTER_OTLP_HEADERS`) | none | Comma-separated `key=value` auth headers for your backend. |

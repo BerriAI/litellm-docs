@@ -1,7 +1,7 @@
 
 # StandardLoggingPayload Specification
 
-Found under `kwargs["standard_logging_object"]`. This is a standard payload, logged for every successful and failed response.
+Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Custom logging callbacks should read request identity from `kwargs["standard_logging_object"]["metadata"]`, rather than raw `litellm_params` metadata. Optional identity fields are `null` when unavailable. Intermediate streaming events and callbacks where payload construction fails can omit `standard_logging_object`.
 
 ## StandardLoggingPayload
 
@@ -14,6 +14,7 @@ Found under `kwargs["standard_logging_object"]`. This is a standard payload, log
 | `response_cost` | `float` | Cost of the response in USD ($) |
 | `cost_breakdown` | `Optional[CostBreakdown]` | Detailed cost breakdown object |
 | `response_cost_failure_debug_info` | `StandardLoggingModelCostFailureDebugInformation` | Debug information if cost tracking fails |
+| `zero_cost_diagnostic` | `Optional[StandardLoggingZeroCostDiagnostic]` | Why a billable request priced to $0. `None` when the cost is non-zero, the model is free or unmapped, or the request carried no usage. [Further docs](./cost_tracking#requests-that-price-to-0) |
 | `status` | `StandardLoggingPayloadStatus` | Status of the payload |
 | `status_fields` | `StandardLoggingPayloadStatusFields` | Typed status fields for easy filtering and analytics |
 | `total_tokens` | `int` | Total number of tokens |
@@ -50,7 +51,7 @@ The `cost_breakdown` field provides detailed cost breakdown for completion reque
 - **`output_cost`**: Cost of output/completion tokens (including reasoning tokens if applicable)
 - **`tool_usage_cost`**: Cost of built-in tools usage (e.g., web search, code interpreter)
 - **`total_cost`**: Total cost of input + output + tool usage
-- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `gemini-2.5-flash`, `o3`)
+- **`reasoning_cost`**: Cost of reasoning tokens, reported as a subset of `output_cost` (populated when the model returns reasoning tokens, e.g. `{{gemini_flash}}`, `o3`)
 - **`cache_read_cost`**: Cost of cache-read tokens, reported as a subset of `input_cost` (populated when cached tokens are present in the response)
 - **`cache_creation_cost`**: Cost of cache-creation tokens, reported as a subset of `input_cost` (populated when prompt caching is used, e.g. Anthropic models)
 
@@ -80,6 +81,7 @@ class CostBreakdown(TypedDict, total=False):
 | `user_api_key_org_id` | `Optional[str]` | Organization ID associated with the key |
 | `user_api_key_team_id` | `Optional[str]` | Team ID associated with the key |
 | `user_api_key_user_id` | `Optional[str]` | User ID associated with the key |
+| `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
 | `user_api_key_team_alias` | `Optional[str]` | Team alias associated with the key |
 
 ## StandardLoggingMetadata
@@ -153,6 +155,14 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `base_model` | `Optional[str]` | Optional base model |
 | `call_type` | `str` | Call type |
 | `custom_pricing` | `Optional[bool]` | Whether custom pricing was used |
+
+## StandardLoggingZeroCostDiagnostic
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `reason` | `Literal["missing_pricing_key", "pricing_not_applied", "cost_calculation_error"]` | Why the request priced to $0, the same value as the `reason` label on `litellm_zero_cost_requests_total` |
+| `pricing_model` | `str` | The pricing entry the request was judged against, a deployment id or a model cost map key |
+| `missing_pricing_keys` | `Tuple[str, ...]` | The rate keys the usage needed that the entry does not declare, empty unless `reason` is `missing_pricing_key` |
 
 ## StandardLoggingPayloadErrorInformation
 

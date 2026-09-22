@@ -26,9 +26,9 @@ Demo Video Using Responses API with LiteLLM Proxy: [Demo video here](https://www
 ```bash title="cURL Example" showLineNumbers
 curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -61,13 +61,13 @@ When using LiteLLM Proxy, you can use the same MCP tools across all your LLM pro
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234", # paste your litellm proxy api key here
+    api_key="sk-<your-litellm-api-key>", # paste your litellm proxy api key here
     base_url="http://localhost:4000" # paste your litellm proxy base url here
 )
 print("Making API request to Responses API with MCP tools")
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",
@@ -106,9 +106,9 @@ To get the list of allowed tools when using LiteLLM MCP Gateway, you can naigate
 ```bash title="cURL Example with allowed_tools" showLineNumbers
 curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-5",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -137,12 +137,12 @@ curl --location 'http://localhost:4000/v1/responses' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.responses.create(
-    model="gpt-5",
+    model="{{openai_large}}",
     input=[
         {
             "role": "user",
@@ -185,7 +185,7 @@ Use tools directly from Cursor IDE with LiteLLM MCP:
     "LiteLLM": {
       "url": "http://localhost:4000/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }
@@ -203,6 +203,8 @@ When server_url="litellm_proxy", LiteLLM bridges non-MCP providers to your MCP t
 - Output: Complete response combining LLM reasoning with tool execution results
 
 This enables MCP tool usage with any LiteLLM-supported provider, regardless of native MCP support.
+
+If tool calls are missing from the response or fail, see [Responses and Chat Completions failures](./mcp_troubleshoot.md#responsescompletions-with-embedded-mcp-calls) in the troubleshooting runbook.
 
 #### Auto-execution for require_approval: "never"
 

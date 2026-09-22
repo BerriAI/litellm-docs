@@ -21,6 +21,15 @@ The master key is the proxy admin credential: it authenticates admin API calls a
 export LITELLM_MASTER_KEY="sk-<long-random-value>"
 ```
 
+### Set trusted proxy ranges
+
+Failed Admin UI sign-ins are limited per source address (see [security best practices](./security_best_practices.md#limit-failed-admin-ui-sign-in-attempts)). That limit only runs when the proxy knows which address is the client, so set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancer or ingress in front of LiteLLM, or to `[]` if clients connect directly. Left unset, the proxy warns at startup and only the weaker per-username limit applies.
+
+```yaml
+general_settings:
+  trusted_proxy_ranges: ["10.0.0.0/8"]   # or [] when clients connect directly
+```
+
 ### Turn on alerting
 
 Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
@@ -112,7 +121,7 @@ Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which wou
 If you use the database, set a salt key for encrypting and decrypting stored variables. Do not change it after adding a model; it encrypts your LLM API key credentials, and changing it makes them unreadable. Use a [password generator](https://1password.com/password-generator/) to get a random hash.
 
 ```bash
-export LITELLM_SALT_KEY="sk-1234"
+export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
@@ -329,13 +338,61 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 
 | Type of Error | Expected Behavior | Details |
 |---------------|-------------------|----------------|
-| Prisma Errors | Request will be allowed | Covers issues like DB connection resets or rejections from the DB via Prisma, the ORM used by LiteLLM. |
+| Prisma connection errors | Request will be allowed | The database engine cannot be reached (connection refused or reset, `EngineConnectionError`). Requests proceed with a restricted `INTERNAL_USER` fallback identity, never admin. |
+| Prisma query errors (P2xxx, e.g. P2010) | Request will be blocked | The database answered but the query failed, so the key cannot be verified and the request gets a 401. Treated as fail-closed because the database is reachable. |
 | Httpx Errors | Request will be allowed | Occurs when the database is unreachable, allowing the request to proceed despite the DB outage. |
 | Pod Startup Behavior | Pods start regardless | LiteLLM Pods will start even if the database is down or unreachable, ensuring higher uptime guarantees for deployments. |
 | Health/Readiness Check | Always returns 200 OK | The /health/readiness endpoint returns a 200 OK status to ensure that pods remain operational even when the database is unavailable. |
 | LiteLLM Budget Errors or Model Errors | Request will be blocked | Triggered when the DB is reachable but the authentication token is invalid, lacks access, or exceeds budget limits. |
 
+During a database outage, virtual keys already in the in-memory auth cache keep authenticating until `user_api_key_cache_ttl` expires, which defaults to 60 seconds and can be longer with `enable_redis_auth_cache`; see [caching_redis](./caching_redis.md#virtual-key-authentication-cache-redis). The master key and models defined in the config file keep working. Uncached virtual key lookups, key/team/user management endpoints, and spend log writes fail or are deferred until the database is back
+
 [More information about what the Database is used for here](db_info)
+
+### Verify the database server certificate (custom CA, e.g. AWS RDS)
+
+Managed Postgres (AWS RDS, Cloud SQL, Azure Flexible Server, an internal PKI) serves a certificate issued by the provider's own CA, which is not in the stock image's trust store. You do not need a custom image to verify it: mount the CA bundle into the container and point the DB URL at it with the same libpq params the provider docs give you.
+
+```bash
+export DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem"
+```
+
+LiteLLM rewrites `sslmode=verify-full` (or `verify-ca`) and `sslrootcert` into the params its Postgres driver understands (`sslmode=require`, `sslcert=<bundle>`, `sslaccept=strict`) on `DATABASE_URL`, `DIRECT_URL` and `DATABASE_URL_READ_REPLICA`, so the server certificate chain and hostname are checked on every connection, including migrations. A server whose certificate does not chain to the mounted bundle fails at boot with `P1011: Error opening a TLS connection ... certificate verify failed`. The driver has no chain-only mode, so `verify-ca` also checks the hostname. Setting the driver params directly (`sslmode=require&sslcert=/certs/global-bundle.pem&sslaccept=strict`) works too, and any driver param you pin yourself wins over the translation. The same keys can be set from config instead of the URL through `database_extra_connection_params` (see [Cap Idle DB Connections + Pass Extra Prisma URL Params](./configs.md#cap-idle-db-connections--pass-extra-prisma-url-params)).
+
+Plain Docker:
+
+```bash
+docker run \
+  -v /path/to/global-bundle.pem:/certs/global-bundle.pem:ro \
+  -e DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem" \
+  -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
+  -p 4000:4000 \
+  ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
+```
+
+Helm: put the bundle in a ConfigMap or Secret and mount it with `volumes` / `volumeMounts`. Both the Deployment and the migrations Job get these mounts, so migrations verify the certificate too.
+
+```bash
+kubectl create configmap rds-ca --from-file=global-bundle.pem
+```
+
+```yaml title="values.yaml"
+db:
+  useExisting: true
+  endpoint: mydb.abc123.us-east-1.rds.amazonaws.com
+  database: litellm
+  url: postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST)/$(DATABASE_NAME)?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem
+volumes:
+  - name: rds-ca
+    configMap:
+      name: rds-ca
+volumeMounts:
+  - name: rds-ca
+    mountPath: /certs
+    readOnly: true
+```
+
+Download the RDS bundle from [AWS](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem); other providers publish theirs the same way. This is separate from `SSL_CERT_FILE`, which only affects LiteLLM's outbound HTTPS calls to LLM providers and callbacks; the DB driver does not read it. If you need both, mount one bundle and point both settings at it.
 
 ### Stagger scheduled background jobs
 

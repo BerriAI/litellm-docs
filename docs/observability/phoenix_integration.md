@@ -41,7 +41,7 @@ litellm.callbacks = ["arize_phoenix"]
 
 # openai call
 response = litellm.completion(
-  model="gpt-4o",
+  model="{{openai_large}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -55,9 +55,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -84,9 +84,9 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -148,7 +148,7 @@ Every key on the team sends its LLM spans to the named project.
 
 ```bash
 curl -X POST 'http://localhost:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_alias": "payments", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -157,7 +157,7 @@ Update an existing team the same way:
 
 ```bash
 curl -X POST 'http://localhost:4000/team/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -166,7 +166,7 @@ Then generate a key for that team and call the proxy as usual:
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>"}'
 ```
@@ -175,7 +175,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
   -H 'Authorization: Bearer $TEAM_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hello"}]}'
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hello"}]}'
 ```
 
 </TabItem>
@@ -185,7 +185,7 @@ A single key can name its own project, including keys that do not belong to a te
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"phoenix_project_name": "payments-canary"}}'
 ```
@@ -217,7 +217,7 @@ Phoenix assigns a whole trace to one project by whichever of its spans arrives f
 
 A gRPC-only Phoenix exporter cannot route: `x-project-name` is honored on OTLP/HTTP only. Point `PHOENIX_COLLECTOR_HTTP_ENDPOINT` at an HTTP `/v1/traces` URL (see [Picking the right collector endpoint](#picking-the-right-collector-endpoint)). Guardrail spans are not project-routed.
 
-This is different from [per-team destinations](./opentelemetry_v2#per-key--per-team-destinations-multi-tenant), which send traces to a different backend. Project routing stays on the one Phoenix collector and only changes the project name.
+This is different from [per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant), which send a tenant's traces to its own backend account. Project routing stays on the one Phoenix collector and only changes the project name.
 
 ## Advanced
 

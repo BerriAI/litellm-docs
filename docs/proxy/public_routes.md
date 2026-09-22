@@ -3,11 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Control Public & Private Routes
 
-:::info
-
-Requires a LiteLLM Enterprise License. [Get a free trial](https://enterprise.litellm.ai/demo).
-
-:::
+<EnterpriseFeature />
 
 Control which routes require authentication and which routes are publicly accessible.
 
@@ -27,7 +23,7 @@ Allow specific routes to be accessed without authentication:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   public_routes: ["LiteLLMRoutes.public_routes", "/spend/calculate"]
 ```
 
@@ -37,7 +33,7 @@ Restrict certain routes to only be accessible by Proxy Admin:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   admin_only_routes: ["/key/generate", "/key/delete"]
 ```
 
@@ -47,7 +43,7 @@ Only expose specific routes on the proxy:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   allowed_routes: ["/chat/completions", "/embeddings", "LiteLLMRoutes.public_routes"]
 ```
 
@@ -57,7 +53,7 @@ general_settings:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   public_routes: ["LiteLLMRoutes.public_routes", "/spend/calculate"]
   admin_only_routes: ["/key/generate"]
   allowed_routes: ["/chat/completions", "/spend/calculate", "LiteLLMRoutes.public_routes"]
@@ -76,7 +72,7 @@ curl --request POST \
   --url 'http://localhost:4000/spend/calculate' \
   --header 'Content-Type: application/json' \
   --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hey, how'\''s it going?"}]
   }'
 ```
@@ -127,7 +123,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 ```shell
 curl http://localhost:4000/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
 "model": "fake-openai-endpoint",
 "messages": [
@@ -141,7 +137,7 @@ curl http://localhost:4000/chat/completions \
 ```shell
 curl --location 'http://0.0.0.0:4000/embeddings' \
 --header 'Content-Type: application/json' \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
 "model": "text-embedding-ada-002",
 "input": ["write a litellm poem"]
@@ -182,21 +178,23 @@ Use wildcard patterns to match multiple routes at once.
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   public_routes:
     - "LiteLLMRoutes.public_routes"
     - "/api/v1/*"      # All routes under /api/v1/
     - "/health/*"       # All health check routes
 ```
 
-#### Restrict Admin Routes with Wildcards
+#### Admin Only Routes Do Not Support Wildcards
+
+`admin_only_routes` is an exact-match list. A pattern like `/key/*` will not match anything, so list each route explicitly:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   admin_only_routes:
-    - "/admin/*"        # All admin routes
-    - "/internal/*"     # All internal routes
+    - "/key/generate"
+    - "/key/delete"
 ```
 
 ### Testing Wildcard Routes
@@ -204,7 +202,7 @@ general_settings:
 **Config:**
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   public_routes:
     - "/public/*"
 ```

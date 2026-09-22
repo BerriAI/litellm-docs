@@ -43,9 +43,9 @@ export OPENAI_API_KEY=""
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo                          # The `openai/` prefix will call openai.chat.completions.create
+      model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
   - model_name: gpt-3.5-turbo-instruct
     litellm_params:
@@ -56,7 +56,7 @@ model_list:
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
 Use this to add all openai models with one API Key. **WARNING: This will not do any load balancing**
-This means requests to `gpt-4`, `gpt-3.5-turbo` , `gpt-4-turbo-preview` will all go through this route 
+This means requests to `{{openai_large}}`, `{{openai_small}}` will all go through this route 
 
 ```yaml
 model_list:
@@ -158,9 +158,5 @@ print(response)
 |---------------------|----------------------------------------------------|
 | gpt-3.5-turbo-instruct | `response = completion(model="gpt-3.5-turbo-instruct", messages=messages)` |
 | gpt-3.5-turbo-instruct-0914 | `response = completion(model="gpt-3.5-turbo-instruct-0914", messages=messages)` |
-| text-davinci-003    | `response = completion(model="text-davinci-003", messages=messages)` |
-| ada-001             | `response = completion(model="ada-001", messages=messages)` |
-| curie-001           | `response = completion(model="curie-001", messages=messages)` |
-| babbage-001         | `response = completion(model="babbage-001", messages=messages)` |
 | babbage-002         | `response = completion(model="babbage-002", messages=messages)` |
 | davinci-002         | `response = completion(model="davinci-002", messages=messages)` |

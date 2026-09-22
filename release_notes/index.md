@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.98.0: Provisioned Throughput Billing, Shadow Evals & Routing Groups](/release_notes/v1.98.0/v1-98-0)
+### [v1.102.0: Auto Router Controls, Native OCR & Gateway Reliability](/release_notes/v1.102.0/v1-102-0)
 
-_August 22, 2026_
+_September 19, 2026_
 
-Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cost_per_ptu_per_hour` on a deployment driving a per-model flat cost by active hour while per-token billing is switched off there, so a team paying for reserved capacity is not charged twice for the same traffic; a shadow eval job that samples a slice of one key's successful traffic, replays it through the auto-router in a detached task that never serves a response or adds latency, and has an LLM judge compare both answers blind, so the router can be measured before it is adopted; routing groups that are callable models, where `model=<group_name>` routes across the union of member deployments with the group's own strategy, appears in `/v1/models` for Claude Code and Codex discovery, and is grantable on keys and teams; six `x-litellm-response-cost-*` headers that split a response's cost into input, cache read, cache creation, output, reasoning, and tool usage; TPM reservations that follow declared output size per key, per team, and per model instead of one static floor for every tenant; and the largest step yet in the Admin UI's move off antd and Tremor, with 75 UI pull requests carrying the navbar, playground, usage, cost tracking, the log details drawer, and much of the shared component library onto shadcn. Note that the Langfuse metadata blob is now sourced from a StandardLoggingPayload allowlist, so roughly 20 fields no longer appear on the generation.
+Auto Router gains custom heuristic dimensions, editable scoring weights, an optional NON_REASONING tier, per-tier output limits, healthier tier fallbacks, and routed-model and session-savings feedback in coding agents; OCR runs natively by default across supported providers, alongside Meta Muse Voice realtime transcription, Mistral text-to-speech, Vertex Lyria music, and native Fireworks Responses. Gateway reliability adds optional shared PgBouncer connections and a spend collector, fewer database and Redis calls, stable behavior through Redis outages, and request and token-based autoscaling controls. The MCP gateway, logging, and guardrails pick up schema-discovery proxy mode, better OAuth compatibility and permission enforcement, configurable OTel trace URLs with HTTP/JSON export, PointFive logging, and Conduct Guard, alongside 99 new model catalog entries. This stable also folds in request-body hygiene, spend-tracking, routing, and license fixes backported after the rc.1 cut. Review the release's Breaking Changes section before upgrading.
 
 ---
 
@@ -22,6 +22,10 @@ Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cos
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |

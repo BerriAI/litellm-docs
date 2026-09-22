@@ -30,11 +30,11 @@ Supports **ALL** Langfuse Endpoints.
 
 Let's log a trace to Langfuse.
 
-1. Add Langfuse Public/Private keys to environment
+1. Add Langfuse Public/Secret keys to environment
 
 ```bash
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 2. Start LiteLLM Proxy 
@@ -82,7 +82,7 @@ Use this, to avoid giving developers the raw Google AI Studio key, but still let
 export DATABASE_URL=""
 export LITELLM_MASTER_KEY=""
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 ```bash
@@ -95,7 +95,7 @@ litellm
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -105,7 +105,7 @@ Expected Response
 ```bash
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -118,7 +118,7 @@ from langfuse import Langfuse
 langfuse = Langfuse(
     host="http://localhost:4000/langfuse", # your litellm proxy endpoint
     public_key="anything",        # no key required since this is a pass through
-    secret_key="sk-1234ewknldferwedojwojw",        # no key required since this is a pass through
+    secret_key="sk-<your-litellm-api-key>",        # no key required since this is a pass through
 )
 
 print("sending langfuse trace request")

@@ -1,14 +1,6 @@
 # ✨ [BETA] LiteLLM Managed Files with Finetuning
 
-
-:::info
-
-This is a free LiteLLM Enterprise feature.
-
-Available via the `litellm[proxy]` package or any `litellm` docker image.
-
-:::
-
+<EnterpriseFeature free />
 
 | Property | Value | Comments |
 | --- | --- | --- |
@@ -78,7 +70,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 # Upload file

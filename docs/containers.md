@@ -184,6 +184,20 @@ $ litellm
 # RUNNING on http://0.0.0.0:4000
 ```
 
+The OpenAI key can also live in `model_list` instead of the environment. Pass that deployment's `model` in the create body or as a `model` query param on list, and the proxy calls OpenAI with the deployment's `api_key` and `api_base`. Retrieve, delete, and container file calls need no `model`: the ID a routed create returns encodes the deployment, so they route on their own
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY_TEAM_A
+```
+
+```bash
+$ litellm --config config.yaml
+```
+
 **Custom Provider Specification**
 
 You can specify the custom LLM provider in multiple ways (priority order):
@@ -197,7 +211,7 @@ You can specify the custom LLM provider in multiple ways (priority order):
 ```bash
 # Default provider (openai)
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container",
@@ -211,7 +225,7 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via header
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: openai" \
     -H "Content-Type: application/json" \
     -d '{
@@ -222,10 +236,21 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via query parameter
 curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container"
+    }'
+```
+
+```bash
+# With model_list credentials: name the deployment
+curl -X POST "http://localhost:4000/v1/containers" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "name": "My Container",
+        "model": "gpt-5.6"
     }'
 ```
 
@@ -233,21 +258,27 @@ curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
 
 ```bash
 curl "http://localhost:4000/v1/containers?limit=20&order=desc" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+```bash
+# With model_list credentials: name the deployment
+curl "http://localhost:4000/v1/containers?model=gpt-5.6&limit=20&order=desc" \
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Retrieve a Container**
 
 ```bash
 curl "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Delete a Container**
 
 ```bash
 curl -X DELETE "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## **Using OpenAI Client with LiteLLM Proxy**
@@ -262,7 +293,7 @@ First, configure your OpenAI client to point to your LiteLLM proxy:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://localhost:4000"  # LiteLLM proxy URL
 )
 ```
@@ -284,6 +315,15 @@ print(f"Container Name: {container.name}")
 print(f"Created at: {container.created_at}")
 ```
 
+With `model_list` credentials, name the deployment in `extra_body`:
+
+```python
+container = client.containers.create(
+    name="test-container",
+    extra_body={"model": "gpt-5.6"}
+)
+```
+
 ### List Containers
 
 ```python
@@ -295,6 +335,15 @@ containers = client.containers.list(
 print(f"Found {len(containers.data)} containers")
 for container in containers.data:
     print(f"  - {container.id}: {container.name}")
+```
+
+With `model_list` credentials, name the deployment in `extra_query`, since list is a GET:
+
+```python
+containers = client.containers.list(
+    limit=20,
+    extra_query={"model": "gpt-5.6"}
+)
 ```
 
 ### Retrieve a Container
@@ -331,7 +380,7 @@ from openai import OpenAI
 
 # Initialize client
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

@@ -25,7 +25,7 @@ class MyCustomHandler(CustomLogger):
 
             kwargs["messages"] = [{"role": "user", "content": "MASK_THIS_ASYNC_VALUE"}]
 
-        return kwargs, responses
+        return kwargs, result
 
     def logging_hook(
         self, kwargs: dict, result: Any, call_type: str
@@ -42,7 +42,7 @@ class MyCustomHandler(CustomLogger):
 
             kwargs["messages"] = [{"role": "user", "content": "MASK_THIS_SYNC_VALUE"}]
 
-        return kwargs, responses
+        return kwargs, result
 
 
 customHandler = MyCustomHandler()
@@ -79,7 +79,7 @@ litellm.success_callback = ["langfuse"]
 
 
 ## sync 
-response = completion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -88,8 +88,8 @@ for chunk in response:
 ## async
 import asyncio 
 
-def async completion():
-    response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+async def completion():
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue

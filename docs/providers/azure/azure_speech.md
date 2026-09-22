@@ -37,7 +37,7 @@ response.stream_to_file(speech_file_path)
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
- - model_name: azure/tts-1
+  - model_name: azure/tts-1
     litellm_params:
       model: azure/tts-1
       api_base: "os.environ/AZURE_API_BASE_TTS"

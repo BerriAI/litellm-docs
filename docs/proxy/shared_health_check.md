@@ -7,7 +7,7 @@ This feature enables coordination of health checks across multiple LiteLLM proxy
 When running multiple LiteLLM proxy pods (e.g., in Kubernetes), each pod typically runs its own independent health checks on every model. This can result in:
 
 - **Duplicate health checks** across pods
-- **Increased costs** for expensive models (e.g., Gemini 2.5-pro)
+- **Increased costs** for expensive models (e.g., Gemini 3.1 Pro)
 - **Redundant monitoring/logging noise**
 - **Inefficient resource usage**
 
@@ -66,12 +66,9 @@ litellm_settings:
 
 ### Environment Variables
 
-You can also configure using environment variables:
+The feature itself is enabled only via `general_settings.use_shared_health_check` in the config file; there is no environment variable for it. The cache and lock TTLs can be tuned with environment variables:
 
 ```bash
-# Enable shared health check
-export USE_SHARED_HEALTH_CHECK=true
-
 # Health check TTL (seconds)
 export DEFAULT_SHARED_HEALTH_CHECK_TTL=300
 
@@ -224,9 +221,9 @@ general_settings:
 ```yaml
 # proxy_config.yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       health_check_timeout: 30  # 30 second timeout for health checks
@@ -270,9 +267,8 @@ spec:
       containers:
       - name: litellm-proxy
         image: docker.litellm.ai/berriai/litellm:latest
+        args: ["--config", "/app/proxy_config.yaml"]  # config sets use_shared_health_check: true
         env:
-        - name: USE_SHARED_HEALTH_CHECK
-          value: "true"
         - name: REDIS_HOST
           value: "redis-service"
         - name: REDIS_PASSWORD
@@ -305,6 +301,6 @@ general_settings:
 ## Related Features
 
 - [Background Health Checks](./health.md#background-health-checks)
-- [Redis Caching](./caching.md)
+- [Redis Caching](./caching_redis.md)
 - [Redis Transaction Buffer](./prod.md#redis-transaction-buffer)
 - [Health Check Endpoints](./health.md#other-health-endpoints)

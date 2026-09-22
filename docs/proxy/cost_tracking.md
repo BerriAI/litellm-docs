@@ -32,7 +32,7 @@ Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/
 ```python title="Send Request with Spend Tracking" showLineNumbers
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -64,7 +64,7 @@ Pass `metadata` as part of the request body
 ```shell title="Curl Request with Spend Tracking" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "llama3",
     "messages": [
@@ -93,7 +93,7 @@ from langchain.prompts.chat import (
 from langchain.schema import HumanMessage, SystemMessage
 import os
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
@@ -140,8 +140,8 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
 ```json title="Spend Log Entry Format" showLineNumbers
 {
   "api_key": "fe6b0cab4ff5a5a8df823196cc8a450*****",                            # Hash of API Key used
-  "user": "default_user",                                                       # Internal User (LiteLLM_UserTable) that owns `api_key=sk-1234`.
-  "team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32",                            # Team (LiteLLM_TeamTable) that owns `api_key=sk-1234`
+  "user": "default_user",                                                       # Internal User (LiteLLM_UserTable) that owns `api_key=sk-<your-litellm-api-key>`.
+  "team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32",                            # Team (LiteLLM_TeamTable) that owns `api_key=sk-<your-litellm-api-key>`
   "request_tags": ["jobID:214590dsff09fds", "taskName:run_page_classification"],# Tags sent in request
   "end_user": "palantir",                                                       # Customer - the `user` sent in the request
   "model_group": "llama3",                                                      # "model" passed to LiteLLM
@@ -153,7 +153,7 @@ The following spend gets tracked in Table `LiteLLM_SpendLogs`
   "metadata": {
     "attempted_fallbacks": 0,                                                    # 0 = requested model group served the request
     "original_model_group": "llama3"                                             # Model group originally requested
-  },
+  }
 
 }
 ```
@@ -164,6 +164,15 @@ Navigate to the Usage Tab on the LiteLLM UI (found on https://your-proxy-endpoin
 
 </TabItem>
 </Tabs>
+
+### Requests that price to $0
+
+A request that carries usage but prices to `$0` on a model whose pricing entry has a non-zero rate is still written to `LiteLLM_SpendLogs` with `spend = 0`, and LiteLLM flags it in two places so the gap is visible instead of silently under-billed
+
+- one `WARNING` line in the proxy log naming the model group, the deployment's pricing entry and the pricing key it is missing, for example `pricing entry '<model_id>' has no input_cost_per_token, output_cost_per_token`
+- the Prometheus counter `litellm_zero_cost_requests_total`, labelled by `requested_model`, `model`, `model_id`, `api_provider` and `reason` (`missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`), so you can alert on it (see [Prometheus metrics](prometheus#request-counting-metrics))
+
+Free models (every rate the request used is set to `0`) and requests that carry no usage are not flagged. To fix a `missing_pricing_key`, set the missing rate in the deployment's `model_info` or in the model cost map, or set every rate to `0` to mark the model free
 
 ### Allowing Non-Proxy Admins to access `/spend` endpoints
 
@@ -181,7 +190,7 @@ Create Key with with `permissions={"get_spend_routes": true}`
 
 ```shell title="Generate Key with Spend Route Permissions" showLineNumbers
 curl --location 'http://0.0.0.0:4000/key/generate' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
             "permissions": {"get_spend_routes": true}
@@ -212,7 +221,7 @@ Only the `LITELLM_MASTER_KEY` you set can access this route
 ```shell
 curl -X POST \
   'http://localhost:4000/global/spend/reset' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json'
 ```
 
@@ -365,12 +374,13 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             },
             "breakdown": {
                 "models": {
-                    "gpt-4o-mini": {
-                        "spend": 1.095e-05,
+                    "{{openai_small}}": {
+                        "spend": 1.82e-05,
                         "prompt_tokens": 37,
                         "completion_tokens": 9,
                         "total_tokens": 46,
                         "api_requests": 1
+                    }
                 },
                 "providers": { "openai": { ... }, "azure_ai": { ... } },
                 "api_keys": { "3126b6eaf1...": { ... } }
@@ -415,7 +425,7 @@ Requirements:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -431,7 +441,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -456,7 +466,7 @@ client = openai.OpenAI(
 
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -482,13 +492,13 @@ const openai = require("openai");
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://0.0.0.0:4000",
   });
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "{{openai_small}}",
       messages: [
         {
           role: "user",
@@ -520,7 +530,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -545,7 +555,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -605,7 +615,7 @@ Use the `/global/spend/report` endpoint to get spend reports
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=team' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Example Response
@@ -624,13 +634,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -642,7 +652,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "{{openai_small}}",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -667,7 +677,7 @@ params = {
 }
 
 headers = {
-    'Authorization': 'Bearer sk-1234'
+    'Authorization': 'Bearer sk-<your-litellm-api-key>'
 }
 
 # Make the GET request
@@ -695,22 +705,22 @@ Output from script
 # Date: 2024-05-11T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.003675099999999999
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.003675099999999999, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 3105}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: Unassigned Team
 # Total Spend: 3.4e-05
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 3.4e-05, 'api_key': '9569d13c9777dba68096dea49b0b03e0aaf4d2b65d4030eda9e8a2733c3cd6e0', 'total_tokens': 50}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: central
 # Total Spend: 0.000684
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.000684, 'api_key': '0323facdf3af551594017b9ef162434a9b9a8ca1bbd9ccbd9d6ce173b1015605', 'total_tokens': 498}]
 
 # Date: 2024-05-13T00:00:00+00:00
 # Team: local_test_team
 # Total Spend: 0.0005715000000000001
-# Metadata:  [{'model': 'gpt-3.5-turbo', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
+# Metadata:  [{'model': '{{openai_small}}', 'spend': 0.0005715000000000001, 'api_key': 'b94d5e0bc3a71a573917fe1335dc0c14728c7016337451af9714924ff3a729db', 'total_tokens': 423}]
 ```
 
 </TabItem>
@@ -735,7 +745,7 @@ Customer [this is `user` passed to `/chat/completions` request](#how-to-track-sp
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=customer' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Example Response
@@ -750,13 +760,13 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                 "total_spend": 0.0015265,
                 "metadata": [ # see the spend by unique(key + model)
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "88dc28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-4",
+                        "model": "{{openai_large}}",
                         "spend": 0.00123,
                         "total_tokens": 28,
                         "api_key": "a73dc2.." # the hashed api key
@@ -768,7 +778,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
                         "api_key": "898c28.." # the hashed api key
                     },
                     {
-                        "model": "gpt-3.5-turbo",
+                        "model": "{{openai_small}}",
                         "spend": 0.0000825,
                         "total_tokens": 85,
                         "api_key": "84dc28.." # the hashed api key
@@ -784,11 +794,11 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="per key" label="Spend for Specific API Key">
 
-👉 Key Change: Specify `api_key=sk-1234`
+👉 Key Change: Specify `api_key=sk-<your-litellm-api-key>`
 
 ```shell
-curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-1234' \
-  -H 'Authorization: Bearer sk-1234'
+curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-<your-litellm-api-key>' \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Example Response
@@ -832,7 +842,7 @@ Internal User (Key Owner): This is the value of `user_id` passed when calling [`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-12-30&internal_user_id=ishaan' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Example Response
@@ -866,7 +876,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
     "total_output_tokens": 27.0,
     "model_details": [
       {
-        "model": "gpt-3.5-turbo",
+        "model": "{{openai_small}}",
         "total_cost": 5.2499999999999995e-05,
         "total_input_tokens": 24,
         "total_output_tokens": 27
@@ -916,14 +926,14 @@ The `/spend/logs` endpoint now supports a `summarize` parameter to control data 
 
 ```bash title="Get Individual Transaction Logs" showLineNumbers
 curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=2024-01-02&summarize=false" \
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Get summarized data (default):**
 
 ```bash title="Get Summarized Spend Data" showLineNumbers
 curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=2024-01-02" \
--H "Authorization: Bearer sk-1234"
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Use Cases:**
@@ -931,15 +941,41 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 - `summarize=false`: Analytics dashboards, ETL processes, detailed audit trails
 - `summarize=true`: Daily spending reports, high-level cost tracking (legacy behavior)
 
+## Paginated Spend Logs - `/spend/logs/v2`
+
+Use `/spend/logs/v2` for programmatic access to individual spend logs with page-based pagination. The legacy `/spend/logs` endpoint above truncates results to the 10,000 most recent matching rows (the response then carries an `x-litellm-spend-logs-truncated: true` header), so `/spend/logs/v2` is the recommended endpoint for exports and integrations.
+
+```bash title="Get a page of spend logs" showLineNumbers
+curl -X GET "http://localhost:4000/spend/logs/v2?start_date=2024-01-01%2000:00:00&end_date=2024-01-02%2023:59:59&page=1&page_size=100" \
+-H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+`start_date` and `end_date` take `YYYY-MM-DD HH:MM:SS` timestamps. `page` starts at 1 and `page_size` accepts up to 1000 rows per page. The endpoint also accepts filters such as `api_key`, `user_id`, `team_id`, `model`, `status_filter`, `min_spend` and `max_spend`; the full list is on your proxy's Swagger page (`/docs`) under `/spend/logs/v2`.
+
+```json title="Response format"
+{
+  "data": ["..."],
+  "total": 10000,
+  "page": 1,
+  "page_size": 100,
+  "total_pages": 100,
+  "total_is_capped": true
+}
+```
+
+### The `total` count is capped at 10,000
+
+Counting every matching row in a large time window caused expensive full scans on the spend logs table, so since v1.93.0 the count query behind this endpoint is bounded at 10,000 rows. When more rows match, `total` reports exactly `10000`, `total_pages` is derived from that capped value, and `total_is_capped` is `true`. Only the advertised count is capped. The data itself is never truncated, so pages past the advertised `total_pages` keep returning rows until the results are exhausted.
+
+There are two ways to read every matching row. When `total_is_capped` is `true`, ignore `total_pages` and keep requesting pages until you receive an empty `data` array. Alternatively, chunk your query into smaller time windows so each window matches fewer than 10,000 rows; every window then reports an exact `total`. Prefer the windowing approach for large exports, since it also avoids deep offset pagination, which gets slower the further in you page.
+
+With `group_by_session=true`, pagination is bounded to the same 10,000-row window and a page starting past it returns no rows, so chunk the time window instead of paging past the cap.
+
 ## ✨ Custom Spend Log metadata
 
 Log specific key,value pairs as part of the metadata for a spend log
 
-:::info
-
-Logging specific key,value pairs in spend logs metadata is an enterprise feature.
-
-:::
+<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
@@ -953,7 +989,7 @@ Requirements:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -971,7 +1007,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -999,7 +1035,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1023,13 +1059,13 @@ print(response)
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 # Pass spend logs metadata via headers
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -1054,13 +1090,13 @@ const openai = require('openai');
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: 'sk-1234',
+    apiKey: 'sk-<your-api-key>',
     baseURL: 'http://0.0.0.0:4000'
   });
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1091,13 +1127,13 @@ const openai = require('openai');
 
 async function runOpenAI() {
   const client = new openai.OpenAI({
-    apiKey: 'sk-1234',
+    apiKey: 'sk-<your-api-key>',
     baseURL: 'http://0.0.0.0:4000'
   });
 
   try {
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: '{{openai_small}}',
       messages: [
         {
           role: 'user',
@@ -1130,7 +1166,7 @@ Pass `metadata` as part of the request body
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1154,10 +1190,10 @@ Pass `x-litellm-spend-logs-metadata` as a request header with JSON string
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'x-litellm-spend-logs-metadata: {"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -1181,7 +1217,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
         "metadata": {
@@ -1214,8 +1250,9 @@ print(response)
 #### `/spend/logs` Request Format 
 
 ```bash
-curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \ # e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
--H "Authorization: Bearer sk-1234"
+# request_id: e.g.: chatcmpl-9ZKMURhVYSi9D6r6PJ9vLcayIK0Vm
+curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### `/spend/logs` Response Format

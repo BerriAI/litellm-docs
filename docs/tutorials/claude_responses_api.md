@@ -53,7 +53,7 @@ model_list:
       model: anthropic/claude-haiku-4-5-20251001
       api_key: os.environ/ANTHROPIC_API_KEY
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
@@ -61,7 +61,7 @@ Set your environment variables:
 
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
-export LITELLM_MASTER_KEY="sk-1234567890"  # Generate a secure key
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"  # Generate a secure key
 ```
 
 :::tip
@@ -231,7 +231,7 @@ Common issues and solutions:
 
 **MCP tools filling the context window:**
 - Claude Code turns its tool search off when `ANTHROPIC_BASE_URL` is not a first-party Anthropic host, so `/context` shows every MCP tool schema inlined instead of `loaded on-demand`
-- Set `ENABLE_TOOL_SEARCH=true` in Claude Code's environment; see [Keep MCP tools out of the context window](./claude_mcp.md#keep-mcp-tools-out-of-the-context-window-tool-search)
+- Set the `ENABLE_TOOL_SEARCH=true` environment variable, ideally in the `env` block of `.claude/settings.json`; see [Keep MCP tools out of the context window](./claude_mcp.md#keep-mcp-tools-out-of-the-context-window-tool-search)
 
 ## Using Bedrock/Vertex AI/Azure Foundry Models
 
@@ -296,7 +296,7 @@ model_list:
       vertex_ai_location: "us-east5"
       vertex_credentials: os.environ/VERTEX_FILE_PATH_ENV_VAR # os.environ["VERTEX_FILE_PATH_ENV_VAR"] = "/path/to/service_account.json"
 
-litellm_settings:
+general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
