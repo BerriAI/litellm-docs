@@ -29,7 +29,7 @@ async def main():
 asyncio.run(main())
 ```
 
-The provider requests `contentFormat="passage"` and `maxLength=5000` by default, following the [Web IQ quick start](https://webiq.microsoft.ai/documentation/). `content` becomes the standard result's `snippet`, while `lastUpdatedAt` supplies `date` and `last_updated` when available. Crawl timestamps are preserved as `crawledAt`, not presented as publication dates. Other response metadata, including `traceId` and instrumentation fields, is preserved; the integration does not send instrumentation pings
+The provider requests `contentFormat="passage"` and `maxLength=5000` by default, following the [Web IQ quick start](https://webiq.microsoft.ai/documentation/). `content` becomes the standard result's `snippet`, while `lastUpdatedAt` supplies `date` and `last_updated` when available. Crawl timestamps are preserved as `crawledAt`, not presented as publication dates. Other response metadata, including `traceId` and instrumentation fields, is preserved unless its key conflicts with a standard LiteLLM response field; the integration does not send instrumentation pings
 
 ## Gateway
 
@@ -79,6 +79,6 @@ Pass native options such as `language`, `region`, `location`, `contentFormat`, `
 
 Domain filters narrow search relevance. Microsoft also notes that `site:` queries can return adult content regardless of `safeSearch`; see the API reference before relying on domain filtering in a restricted-content application
 
-The default API base is `https://api.microsoft.ai/v3`. `api_base` or the operator's `WEBIQ_API_BASE` can select a different base, with `/search/web` appended once. A caller-selected host cannot receive a server-managed API key unless the host matches the default or operator-configured base; pass explicit credentials for an intentional override
+The default API base is `https://api.microsoft.ai/v3`. Set `api_base` in the SDK call or proxy search configuration to select a different base, with `/search/web` appended once. A caller-selected host cannot receive a server-managed API key unless the host matches the default; pass an explicit `api_key` with a custom endpoint
 
 No default Web IQ price is registered by this integration. Do not interpret missing cost data as free usage. Live Web IQ validation requires an enabled account and a valid API key
