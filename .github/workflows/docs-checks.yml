@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
       - run: node scripts/check-writing-style.js docs blog release_notes
   structure:
     runs-on: ubuntu-latest
@@ -23,3 +23,23 @@ jobs:
           python-version: "3.13"
       - run: pip install pyyaml
       - run: python3 scripts/check-docs.py docs
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Build
+        shell: bash
+        run: npm run build 2>&1 | tee build.log
+      - name: Fail on build warnings
+        shell: bash
+        run: |
+          if grep -F '[WARNING]' build.log; then
+            echo "::error::docusaurus build emitted warnings"
+            exit 1
+          fi

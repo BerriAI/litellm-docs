@@ -9,6 +9,7 @@
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
+    "typecheck": "tsc",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
@@ -38,7 +39,12 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.10.2",
-    "dotenv": "16.6.1"
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
+    "@types/node": "20.19.43",
+    "@types/react": "18.3.31",
+    "dotenv": "16.6.1",
+    "typescript": "5.9.3"
   },
   "browserslist": {
     "production": [

@@ -1,0 +1,10 @@
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "strict": true,
+    "types": ["node", "@docusaurus/module-type-aliases", "@docusaurus/theme-classic"]
+  },
+  "include": ["src", "plugins", "scripts", "*.ts"],
+  "exclude": ["build", ".docusaurus", "node_modules"]
+}
