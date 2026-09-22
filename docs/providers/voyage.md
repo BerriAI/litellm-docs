@@ -54,6 +54,12 @@ All models listed here https://docs.voyageai.com/embeddings/#models-and-specific
 
 | Model Name              | Function Call                                              |
 |-------------------------|------------------------------------------------------------|
+| voyage-4-large          | `embedding(model="voyage/voyage-4-large", input)`          |
+| voyage-4                | `embedding(model="voyage/voyage-4", input)`                |
+| voyage-4-lite           | `embedding(model="voyage/voyage-4-lite", input)`           |
+| voyage-code-4           | `embedding(model="voyage/voyage-code-4", input)`           |
+| voyage-context-4        | `embedding(model="voyage/voyage-context-4", input)`        |
+| voyage-context-3        | `embedding(model="voyage/voyage-context-3", input)`        |
 | voyage-3.5              | `embedding(model="voyage/voyage-3.5", input)`              | 
 | voyage-3.5-lite         | `embedding(model="voyage/voyage-3.5-lite", input)`         | 
 | voyage-3-large          | `embedding(model="voyage/voyage-3-large", input)`          | 
@@ -63,7 +69,7 @@ All models listed here https://docs.voyageai.com/embeddings/#models-and-specific
 | voyage-finance-2        | `embedding(model="voyage/voyage-finance-2", input)`        | 
 | voyage-law-2            | `embedding(model="voyage/voyage-law-2", input)`            | 
 | voyage-code-2           | `embedding(model="voyage/voyage-code-2", input)`           | 
-| voyage-multilingual-2   | `embedding(model="voyage/voyage-multilingual-2	", input)`  | 
+| voyage-multilingual-2   | `embedding(model="voyage/voyage-multilingual-2", input)`   | 
 | voyage-large-2-instruct | `embedding(model="voyage/voyage-large-2-instruct", input)` | 
 | voyage-large-2          | `embedding(model="voyage/voyage-large-2", input)`          |
 | voyage-2                | `embedding(model="voyage/voyage-2", input)`                | 
@@ -72,19 +78,13 @@ All models listed here https://docs.voyageai.com/embeddings/#models-and-specific
 | voyage-lite-01          | `embedding(model="voyage/voyage-lite-01", input)`          |
 | voyage-lite-01-instruct | `embedding(model="voyage/voyage-lite-01-instruct", input)` |
 
-## Contextual Embeddings (voyage-context-3)
+## Contextual Embeddings (voyage-context-4, voyage-context-3)
 
-VoyageAI's `voyage-context-3` model provides contextualized chunk embeddings, where each chunk is embedded with awareness of its surrounding document context. This significantly improves retrieval quality compared to standard context-agnostic embeddings.
+Voyage's `voyage-context-4` and `voyage-context-3` models produce contextualized chunk embeddings: each chunk is embedded with awareness of the whole document it came from, which retrieves better on long documents than embedding the chunks on their own. LiteLLM sends any Voyage model with `context` in its name to Voyage's `/v1/contextualizedembeddings` endpoint, so the same `embedding()` call and `/v1/embeddings` proxy route work; only the input and response shapes differ from the regular models
 
-### Key Benefits
-- Chunks understand their position and role within the full document
-- Improved retrieval accuracy for long documents (outperforms competitors by 7-23%)
-- Better handling of ambiguous references and cross-chunk dependencies
-- Drop-in replacement for standard embeddings in RAG pipelines
+### Input shapes
 
-### Usage
-
-Contextual embeddings require a **nested input format** where each inner list represents chunks from a single document:
+A flat list of strings, or a single string, embeds each string as its own document. LiteLLM forwards it with `enable_auto_chunking: true`, `chunk_size: 32000`, and `input_type: "document"`, so a string of up to 32,000 tokens comes back as one embedding and a longer one is split into 32,000-token chunks on Voyage's side. Sending `input_type: "query"` skips those defaults and embeds each string as a search query. Any `input_type`, `chunk_size`, or `enable_auto_chunking` you pass yourself replaces the default
 
 ```python
 from litellm import embedding
@@ -92,9 +92,27 @@ import os
 
 os.environ['VOYAGE_API_KEY'] = "your-api-key"
 
+# Each string is embedded as its own document
+response = embedding(
+    model="voyage/voyage-context-4",
+    input=["The quick brown fox", "jumps over the lazy dog"],
+)
+print(f"Documents embedded: {len(response.data)}")
+
+# Search queries
+response = embedding(
+    model="voyage/voyage-context-4",
+    input=["what does the fox do", "who is lazy"],
+    input_type="query",
+)
+```
+
+A nested list is the pre-chunked form: each inner list is one document you already split into chunks, and LiteLLM forwards it unchanged
+
+```python
 # Single document with multiple chunks
 response = embedding(
-    model="voyage/voyage-context-3",
+    model="voyage/voyage-context-4",
     input=[
         [
             "Chapter 1: Introduction to AI",
@@ -107,7 +125,7 @@ print(f"Number of chunk groups: {len(response.data)}")
 
 # Multiple documents
 response = embedding(
-    model="voyage/voyage-context-3",
+    model="voyage/voyage-context-4",
     input=[
         ["Paris is the capital of France.", "It is known for the Eiffel Tower."],
         ["Tokyo is the capital of Japan.", "It is a major economic hub."]
@@ -116,40 +134,88 @@ response = embedding(
 print(f"Processed {len(response.data)} documents")
 ```
 
+### Response shape
+
+The response keeps Voyage's nested layout: `data` has one entry per input, and that entry's `data` holds one embedding per chunk. `response.data[0]["data"][0]["embedding"]` is the first chunk of the first input, which with flat input and the default chunk size is the whole string
+
+### LiteLLM Proxy
+
+Add the model to `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: voyage-context-4
+    litellm_params:
+      model: voyage/voyage-context-4
+      api_key: os.environ/VOYAGE_API_KEY
+```
+
+Flat list, one document per string:
+
+```bash
+curl http://localhost:4000/v1/embeddings \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "voyage-context-4",
+    "input": ["The quick brown fox", "jumps over the lazy dog"]
+  }'
+```
+
+Flat list as search queries:
+
+```bash
+curl http://localhost:4000/v1/embeddings \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "voyage-context-4",
+    "input": ["what does the fox do", "who is lazy"],
+    "input_type": "query"
+  }'
+```
+
+Nested list, one document already split into chunks:
+
+```bash
+curl http://localhost:4000/v1/embeddings \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "voyage-context-4",
+    "input": [["The quick brown fox", "jumps over the lazy dog"]]
+  }'
+```
+
 ### Specifications
-- Model: `voyage-context-3`
-- Context length: 32,000 tokens per document
-- Output dimensions: 256, 512, 1024 (default), or 2048
-- Max inputs: 1,000 per request
-- Max total tokens: 120,000
-- Max chunks: 16,000
-- Pricing: $0.18 per million tokens
 
-### When to Use Contextual Embeddings
+| Model | Per chunk | Per request | Output dimensions | Price/M tokens |
+|-------|-----------|-------------|-------------------|----------------|
+| voyage-context-4 | 32,000 tokens | 120,000 tokens, 1,000 inputs, 16,000 chunks | 256, 512, 1024 (default), 2048 | $0.12 |
+| voyage-context-3 | 32,000 tokens | 120,000 tokens, 1,000 inputs, 16,000 chunks | 256, 512, 1024 (default), 2048 | $0.18 |
 
-**Use `voyage-context-3` when:**
-- Processing long documents split into chunks
-- Document structure and flow are important
-- References between sections matter
-- You need to preserve document hierarchy
+The limits are Voyage's, from https://docs.voyageai.com/docs/contextualized-chunk-embeddings, and the per-request token total counts every chunk in the call
 
-**Use standard models (voyage-3.5, voyage-3-large) when:**
-- Embedding independent pieces of text
-- Processing short queries
-- Document context is not relevant
-- You need faster/cheaper processing
+### When to use contextual embeddings
+
+Reach for `voyage-context-4` when you split long documents into chunks and the surrounding document should inform each chunk's embedding, because structure, section references, and cross-chunk dependencies matter. Reach for `voyage-4-large`, `voyage-4`, or `voyage-4-lite` for independent pieces of text and short queries, where document context adds nothing and the standard models are cheaper and faster
 
 ## Model Selection Guide
 
 | Model | Best For | Context Length | Price/M Tokens |
 |-------|----------|----------------|----------------|
+| voyage-4-large | Best general-purpose and multilingual quality | 32K | $0.12 |
+| voyage-4 | General-purpose, multilingual | 32K | $0.06 |
+| voyage-4-lite | Latency-sensitive applications | 32K | $0.02 |
+| voyage-code-4 | Code retrieval and coding agents | 32K | $0.12 |
+| voyage-context-4 | Contextual document embeddings | 32K per chunk, 120K per request | $0.12 |
 | voyage-3.5 | General-purpose, multilingual | 32K | $0.06 |
 | voyage-3.5-lite | Latency-sensitive applications | 32K | $0.02 |
 | voyage-3-large | Best overall quality | 32K | $0.18 |
 | voyage-code-3 | Code retrieval and search | 32K | $0.18 |
 | voyage-finance-2 | Financial documents | 32K | $0.12 |
 | voyage-law-2 | Legal documents | 16K | $0.12 |
-| voyage-context-3 | Contextual document embeddings | 32K | $0.18 |
+| voyage-context-3 | Contextual document embeddings | 32K per chunk, 120K per request | $0.18 |
 
 ## Rerank
 
