@@ -74,6 +74,7 @@ mubashir:
   name: Mubashir Osmani
   url: https://www.linkedin.com/in/mubashirosmani
   image_url: https://github.com/mubashir1osmani.png
+
 yassin:
   name: Yassin Kortam
   title: Senior SWE @ LiteLLM
@@ -97,3 +98,34 @@ kerry:
   title: Software Engineer, LiteLLM
   url: https://github.com/kerry-berri
   image_url: https://github.com/kerry-berri.png
+
+gabriele:
+  name: Gabriele Michelli
+  title: LiteLLM
+  url: https://github.com/BerriAI/litellm
+
+# Pfizer AI Platform Engineering (guest authors)
+aleksandr-liadov:
+  name: Aleksandr Liadov
+  title: Pfizer AI Platform Engineering
+  url: https://www.linkedin.com/in/aleksandr-liadov-76766a152/
+
+praveena-mundolimoole:
+  name: Praveena Mundolimoole
+  title: Pfizer AI Platform Engineering
+  url: https://www.linkedin.com/in/pmundolimoole/
+
+pramod-naik:
+  name: Pramod Naik
+  title: Pfizer AI Platform Engineering
+  url: https://www.linkedin.com/in/pramod-naik-b02a6322a/
+
+tung-hoang:
+  name: Tung Hoang
+  title: Pfizer AI Platform Engineering
+  url: https://www.linkedin.com/in/tunghoangs/
+
+alexey-reznichenko:
+  name: Alexey Reznichenko
+  title: Pfizer AI Platform Engineering
+  url: https://www.linkedin.com/in/raaar/

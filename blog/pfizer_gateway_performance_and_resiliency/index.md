@@ -2,37 +2,7 @@
 slug: pfizer-gateway-performance-and-resiliency
 title: "How Pfizer Improved LiteLLM Gateway Performance and Resiliency at Scale"
 date: 2026-09-11T10:00:00
-authors:
-  - name: Ishaan Jaffer
-    title: CTO, LiteLLM
-    url: https://www.linkedin.com/in/reffajnaahsi/
-    image_url: https://pbs.twimg.com/profile_images/1613813310264340481/lz54oEiB_400x400.jpg
-  - name: Krrish Dholakia
-    title: CEO, LiteLLM
-    url: https://www.linkedin.com/in/krish-d/
-    image_url: https://pbs.twimg.com/profile_images/1298587542745358340/DZv3Oj-h_400x400.jpg
-  - name: Yassin Kortam
-    title: Senior SWE @ LiteLLM
-    url: https://www.linkedin.com/in/yassink/
-    image_url: /img/yassin.jpg
-  - name: Gabriele Michelli
-    title: LiteLLM
-    url: https://github.com/BerriAI/litellm
-  - name: Aleksandr Liadov
-    title: Pfizer AI Platform Engineering
-    url: https://www.linkedin.com/in/aleksandr-liadov-76766a152/
-  - name: Praveena Mundolimoole
-    title: Pfizer AI Platform Engineering
-    url: https://www.linkedin.com/in/pmundolimoole/
-  - name: Pramod Naik
-    title: Pfizer AI Platform Engineering
-    url: https://www.linkedin.com/in/pramod-naik-b02a6322a/
-  - name: Tung Hoang
-    title: Pfizer AI Platform Engineering
-    url: https://www.linkedin.com/in/tunghoangs/
-  - name: Alexey Reznichenko
-    title: Pfizer AI Platform Engineering
-    url: https://www.linkedin.com/in/raaar/
+authors: [ishaan, krrish, yassin, gabriele, aleksandr-liadov, praveena-mundolimoole, pramod-naik, tung-hoang, alexey-reznichenko]
 description: "How Pfizer AI Platform Engineering isolated a Redis connection handling bug that cut LiteLLM gateway throughput by ~48% with zero HTTP errors, reduced CI load-test latency by 76%, and built a regression prevention framework with LiteLLM."
 tags: [engineering, performance, redis, testing, customer-story]
 hide_table_of_contents: false

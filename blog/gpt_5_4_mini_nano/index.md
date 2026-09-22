@@ -2,19 +2,7 @@
 slug: gpt_5_4_mini_nano
 title: "Day 0 Support: GPT-5.4-mini and GPT-5.4-nano"
 date: 2026-03-17T10:00:00
-authors:
-  - name: Sameer Kankute
-    title: SWE @ LiteLLM (LLM Translation)
-    url: https://www.linkedin.com/in/sameer-kankute/
-    image_url: https://pbs.twimg.com/profile_images/2001352686994907136/ONgNuSk5_400x400.jpg
-  - name: Krrish Dholakia
-    title: "CEO, LiteLLM"
-    url: https://www.linkedin.com/in/krish-d/
-    image_url: https://pbs.twimg.com/profile_images/1298587542745358340/DZv3Oj-h_400x400.jpg
-  - name: Ishaan Jaff
-    title: "CTO, LiteLLM"
-    url: https://www.linkedin.com/in/reffajnaahsi/
-    image_url: https://pbs.twimg.com/profile_images/1613813310264340481/lz54oEiB_400x400.jpg
+authors: [sameer, krrish, ishaan]
 description: "GPT-5.4-mini and GPT-5.4-nano model support in LiteLLM"
 tags: [openai, gpt-5.4-mini, gpt-5.4-nano, completion]
 hide_table_of_contents: false
@@ -24,6 +12,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 LiteLLM now supports GPT-5.4-mini and GPT-5.4-nano, cost-effective models for simple completions and high-throughput workloads.
+
+{/* truncate */}
 
 :::note
 If you're on **v1.82.3-stable** or above, you don't need any update to use these models.

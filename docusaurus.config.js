@@ -272,6 +272,8 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        onInlineAuthors: 'throw',
+        onUntruncatedBlogPosts: 'throw',
       },
     ],
 
