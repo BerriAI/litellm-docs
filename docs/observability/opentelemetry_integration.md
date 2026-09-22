@@ -445,6 +445,8 @@ All flags below are read from environment variables unless noted. Boolean flags 
 | `LITELLM_LOGGER_NAME` | `litellm` | Logger name (when events enabled) |
 | `OTEL_LOGS_EXPORTER` | none | Logs exporter (e.g. `console`) when events are enabled |
 
+When the `otlp_http` exporter talks to a collector behind an internal CA, it honors `SSL_CERT_FILE` (a path to a CA bundle) and `litellm_settings.ssl_verify` (`false` disables verification). The OpenTelemetry SDK's own `OTEL_EXPORTER_OTLP_CERTIFICATE` still wins when set
+
 ### Span / metric / event toggles
 
 | Variable | Default | Effect |
