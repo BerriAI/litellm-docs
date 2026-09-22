@@ -57,7 +57,7 @@ For example:
 ```shell
 REDIS_SSL = "True"
 REDIS_SSL_CERT_REQS = "None" 
-REDIS_CONNECTION_POOL_KWARGS = '{"max_connections": 20}'
+REDIS_MAX_CONNECTIONS = "20"
 ```
 
 :::warning
@@ -272,6 +272,25 @@ litellm_settings:
     max_connections: 100
 ```
 
+The same key can be set in `general_settings.coordination_redis`, where unknown keys pass through to the coordination Redis client, and in `router_settings.cache_kwargs` for the router's Redis client:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: 6379
+    ssl: true
+    max_connections: 100
+    socket_timeout: 5.0
+
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: 6379
+  cache_kwargs:
+    max_connections: 100
+    socket_timeout: 5.0
+```
+
 ## Redis socket_timeout
 
 The proxy cache client waits at most `socket_timeout` seconds for each Redis command before it raises a timeout. The default is **5.0 s**, set by `RedisCache.__init__` in `litellm/caching/redis_cache.py`. Set it with `cache_params.socket_timeout`; the value is passed to the Redis client as is and applies to every topology (standalone, `REDIS_URL`, cluster and Sentinel):
@@ -283,6 +302,8 @@ litellm_settings:
     type: redis
     socket_timeout: 1.0 # seconds per Redis command, default 5.0
 ```
+
+`socket_timeout` is set the same way in `general_settings.coordination_redis` and `router_settings.cache_kwargs` (see the max_connections section above), and the 5.0 s default applies to those clients too
 
 The `REDIS_SOCKET_TIMEOUT` environment variable (default `0.1`) does not change the cache client's timeout. LiteLLM only applies it to Redis clients built without an explicit `socket_timeout`, which today is the Sentinel connection path in `litellm/_redis.py`. The proxy cache client always passes its own `socket_timeout` (the 5.0 s default or your `cache_params` value), and a caller kwarg outranks the `REDIS_*` environment mapping, so with `REDIS_SOCKET_TIMEOUT` set the cache client still runs at 5.0 s. That holds when the cache client connects through Sentinel too, since its kwarg is already present when the Sentinel default would apply. The one exception is `socket_timeout: null` in `cache_params`, which drops the kwarg and lets `REDIS_SOCKET_TIMEOUT` through
 
