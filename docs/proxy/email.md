@@ -72,6 +72,7 @@ set the following env variables
 ```shell showLineNumbers
 SENDGRID_API_KEY="SG.1234"
 SENDGRID_SENDER_EMAIL="notifications@your-domain.com"
+SENDGRID_REPLY_TO_EMAIL="support@your-domain.com" # optional: where replies go; defaults to the sender address
 ```
 
 ```yaml showLineNumbers title="proxy_config.yaml"
