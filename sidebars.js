@@ -530,6 +530,7 @@ const sidebars = {
           label: "Admin UI",
           items: [
             "proxy/ui",
+            "proxy/liteask",
             {
               type: "category",
               label: "Setup & SSO",
