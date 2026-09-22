@@ -219,6 +219,33 @@ When `include_metadata=true` is specified, the response includes fallback inform
 | `include_metadata` | boolean | Include additional model metadata including fallbacks |
 | `fallback_type` | string | Filter fallbacks by type: `general`, `context_window`, or `content_policy` |
 
+## **Reserve a deployment for a team during a time window**
+
+Set `model_info.access_windows` on a deployment to reserve it for specific teams during a daily local-time window. While a window is active the router only hands that deployment to requests whose key belongs to one of the listed teams; requests from other teams, and requests from keys with no team (including the master key), are routed to other deployments in the same model group or rejected with a `400` if every candidate is reserved. Outside the window routing is unchanged. The deployment stays listed in `/v1/models` and `/model/info` at all times.
+
+```yaml
+model_list:
+  - model_name: gpt-4o-ptu
+    litellm_params:
+      model: azure/gpt-4o-ptu
+      api_base: os.environ/AZURE_PTU_BASE
+      api_key: os.environ/AZURE_PTU_KEY
+    model_info:
+      access_windows:
+        - start: "22:00"
+          end: "06:00"
+          timezone: "America/New_York"
+          team_ids: ["team-nightly-batch"]
+```
+
+`start` and `end` are `HH:MM` wall-clock times in the given IANA `timezone` (daylight saving is applied automatically). `start` is inclusive and `end` is exclusive; a `start` later than `end` means the window crosses midnight. A deployment can list several windows; it is reserved whenever any of them is active. The proxy refuses to start when a window has an invalid time, an unknown timezone, an empty `team_ids`, or equal `start` and `end`.
+
+A rejected request looks like this:
+
+```json
+{"error":{"message":"litellm.BadRequestError: Deployment gpt-4o-ptu is reserved for another team until 06:00 America/New_York","type":"invalid_request_error","param":null,"code":"400"}}
+```
+
 ## Advanced: Model Access Groups
 
 For advanced use cases, use [Model Access Groups](./model_access_groups) to dynamically group multiple models and manage access without restarting the proxy.

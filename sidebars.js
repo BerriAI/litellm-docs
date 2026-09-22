@@ -471,6 +471,7 @@ const sidebars = {
               label: "MCP Gateway",
               items: [
                 "mcp",
+                "mcp_config_reference",
                 "mcp_usage",
                 {
                   type: "category",
@@ -908,6 +909,7 @@ const sidebars = {
           label: "/mcp - Model Context Protocol",
           items: [
             "mcp",
+            "mcp_config_reference",
             "mcp_usage",
             {
               type: "category",
@@ -975,6 +977,7 @@ const sidebars = {
             "pass_through/langfuse",
             "pass_through/mistral",
             "pass_through/openai_passthrough",
+            "pass_through/tinyfish",
             "pass_through/transcribe",
             "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
@@ -1323,6 +1326,7 @@ const sidebars = {
       },
       items: [
         "routing",
+        "fusion",
         "routing_plugins",
         "adaptive_router",
         "scheduler",
