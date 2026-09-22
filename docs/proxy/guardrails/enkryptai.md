@@ -143,7 +143,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## Video Walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/ff222211e0864937aee4aeef0f28c3b7" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/ff222211e0864937aee4aeef0f28c3b7" frameBorder="0" allowFullScreen></iframe>
 
 ## Advanced Configuration
 

@@ -16,7 +16,7 @@ This tutorial is based on [Anthropic's official LiteLLM configuration documentat
 
 ### Video Walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/3c17d683cdb74d36a3698763cc558f56" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/3c17d683cdb74d36a3698763cc558f56" frameBorder="0" allowFullScreen></iframe>
 
 ## Prerequisites
 
