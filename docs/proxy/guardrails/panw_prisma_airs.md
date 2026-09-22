@@ -116,7 +116,7 @@ On success, the guardrail name appears in the `x-litellm-applied-guardrails` res
 | `profile_name` | No | Security profile name configured in Strata Cloud Manager. Optional if API key has linked profile | - |
 | `app_name` | No | Application identifier for tracking in Prisma AIRS analytics (prefixed with "LiteLLM-") | `LiteLLM` |
 | `api_base` | No | Regional API endpoint. US: `https://service.api.aisecurity.paloaltonetworks.com`, EU: `https://service-de.api.aisecurity.paloaltonetworks.com`, India: `https://service-in.api.aisecurity.paloaltonetworks.com`, Singapore: `https://service-sg.api.aisecurity.paloaltonetworks.com` | US |
-| `mode` | No | When to run the guardrail (see mode table above) | `pre_call` |
+| `mode` | Yes | When to run the guardrail (see mode table above) | - |
 | `fallback_on_error` | No | Action when PANW API is unavailable: `"block"` (fail-closed) or `"allow"` (fail-open). Config errors always block. | `block` |
 | `timeout` | No | PANW API call timeout in seconds (recommended: 1-60) | `10.0` |
 | `violation_message_template` | No | Custom template for blocked requests. Supports `{guardrail_name}`, `{category}`, `{action_type}`, `{default_message}` placeholders. | - |
@@ -207,6 +207,7 @@ guardrails:
   - guardrail_name: "panw-high-availability"
     litellm_params:
       guardrail: panw_prisma_airs
+      mode: "pre_call"
       api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
       profile_name: "production"
       fallback_on_error: "allow"
@@ -237,12 +238,14 @@ guardrails:
   - guardrail_name: "panw-custom-message"
     litellm_params:
       guardrail: panw_prisma_airs
+      mode: "pre_call"
       api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
       violation_message_template: "Your request was blocked by our AI Security Policy."
 
   - guardrail_name: "panw-detailed-message"
     litellm_params:
       guardrail: panw_prisma_airs
+      mode: "pre_call"
       api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
       violation_message_template: "{action_type} blocked due to {category} violation. Please contact support."
 ```
