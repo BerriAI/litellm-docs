@@ -417,6 +417,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_requests_metric`             | **deprecated** use `litellm_proxy_total_requests_metric`. Total number of LLM calls to litellm, tracked per API key, team, user. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider"` |
+| `litellm_zero_cost_requests_total`    | Requests that carried usage but were logged at `$0` on a model whose pricing entry has a non-zero rate. Free models and requests without usage are not counted. Labels: `"requested_model", "model", "model_id", "api_provider", "reason"` where `reason` is `missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`. Each counted request also logs one warning naming the missing pricing key, see [Requests that price to $0](cost_tracking#requests-that-price-to-0) |
 
 ## Request Latency Metrics
 

@@ -1314,6 +1314,7 @@ const sidebars = {
       },
       items: [
         "routing",
+        "fusion",
         "routing_plugins",
         "adaptive_router",
         "scheduler",
