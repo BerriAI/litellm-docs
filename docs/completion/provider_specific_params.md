@@ -223,7 +223,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.OllamConfig(num_predict=200)
+litellm.OllamaConfig(num_predict=200)
 response_2 = litellm.completion(
             model="ollama/llama2",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
