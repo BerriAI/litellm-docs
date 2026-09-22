@@ -604,6 +604,8 @@ OIDC Auth for API: [**See Walkthrough**](https://www.loom.com/share/00fe2deab59a
 
 When a JWT token contains multiple teams (via `team_ids_jwt_field`), you can explicitly select which team to use for a request by passing the `x-litellm-team-id` header.
 
+The header accepts either the team's `team_id` or its `team_alias`. LiteLLM first checks the value against the team ids the JWT grants; when it is not one of them, LiteLLM looks up a team with that alias and accepts it only if that team's id is one the JWT grants. Either way the request runs as the canonical `team_id`, so budgets, model access, rate limits, spend logs and the `team_id` column in the database all show the id, never the alias. Sending the id skips the alias lookup
+
 ```bash
 curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
@@ -615,10 +617,26 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
+The same request with the alias of `team_id_2` (the `team_alias` set on `/team/new`) resolves to the same team:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer <your-jwt-token>' \
+-H 'x-litellm-team-id: team_2' \
+-d '{
+  "model": "{{openai_large}}",
+  "messages": [{"role": "user", "content": "Hello"}]
+}'
+```
+
 **Validation:**
-- The team ID in the header must exist in the JWT's `team_ids_jwt_field` list or match `team_id_jwt_field`
-- If an invalid team is specified, a 403 error is returned
+- The value must be a team id in the JWT's `team_ids_jwt_field` list (or the `team_id_jwt_field` value), or the alias of one of those teams
+- A value that is neither, including the alias of a team the JWT does not grant, returns a 403 whose message says the value matched no team id or team alias and lists the team ids the JWT allows
+- An alias shared by more than one team never resolves; keep aliases unique if you want to select teams by alias
 - If no header is provided, LiteLLM auto-selects the first team with access to the requested model
+
+With `fallback_to_db_teams: true` and a JWT that carries no team claim, the header is checked against the user's team memberships in the database instead of the JWT, and an alias is accepted there too: the value must be the id or the alias of a team the user belongs to, otherwise the request is denied with a 403
 
 
 ### Fall back to DB team when JWT claims don't resolve
