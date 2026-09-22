@@ -21,6 +21,22 @@ export const MIGRATION_STATUSES = {
   },
 };
 
+export const MAIN_MIGRATION_VERSION = 'v1.103.0-rc.1';
+
+export const MIGRATION_VERSIONS = [
+  'v1.96.0-rc.1',
+  'v1.97.0-rc.1',
+  'v1.98.0-rc.1',
+  'v1.99.0-rc.1',
+  'v1.99.0-rc.2',
+  'v1.100.0-rc.1',
+  'v1.101.0-rc.1',
+  'v1.101.0-rc.2',
+  'v1.102.0-rc.1',
+  'v1.102.0-rc.2',
+  MAIN_MIGRATION_VERSION,
+];
+
 export const MIGRATION_PURPOSES = [
   {
     id: 'ocr',
@@ -31,12 +47,14 @@ export const MIGRATION_PURPOSES = [
         id: 'ocr-mistral',
         label: 'Mistral',
         status: 'default',
-        release: {
-          date: '2026-09-13',
-          version: 'v1.102.0-rc.1',
-        },
+        introducedIn: 'v1.102.0-rc.1',
       },
-      {id: 'ocr-other-providers', label: 'Other providers', status: 'building'},
+      {
+        id: 'ocr-other-providers',
+        label: 'Other providers',
+        status: 'building',
+        introducedIn: MAIN_MIGRATION_VERSION,
+      },
     ],
   },
   {
@@ -44,10 +62,27 @@ export const MIGRATION_PURPOSES = [
     group: 'Routes',
     label: 'Messages',
     variants: [
-      {id: 'messages-anthropic', label: 'Anthropic', status: 'preview'},
-      {id: 'messages-bedrock', label: 'Bedrock', status: 'building', requires: ['auth-aws']},
-      {id: 'messages-vertex', label: 'Vertex AI', status: 'python', requires: ['auth-gcp']},
-      {id: 'messages-openai-adapter', label: 'OpenAI adapter', status: 'python'},
+      {
+        id: 'messages-anthropic',
+        label: 'Anthropic',
+        status: 'preview',
+        introducedIn: MAIN_MIGRATION_VERSION,
+      },
+      {
+        id: 'messages-bedrock',
+        label: 'Bedrock',
+        status: 'building',
+        introducedIn: null,
+        requires: ['auth-aws'],
+      },
+      {
+        id: 'messages-vertex',
+        label: 'Vertex AI',
+        status: 'python',
+        introducedIn: null,
+        requires: ['auth-gcp'],
+      },
+      {id: 'messages-openai-adapter', label: 'OpenAI adapter', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -55,8 +90,8 @@ export const MIGRATION_PURPOSES = [
     group: 'Routes',
     label: 'Chat completions',
     variants: [
-      {id: 'chat-openai', label: 'OpenAI', status: 'python'},
-      {id: 'chat-anthropic-adapter', label: 'Anthropic adapter', status: 'python'},
+      {id: 'chat-openai', label: 'OpenAI', status: 'python', introducedIn: null},
+      {id: 'chat-anthropic-adapter', label: 'Anthropic adapter', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -64,8 +99,13 @@ export const MIGRATION_PURPOSES = [
     group: 'Routes',
     label: 'Token counter',
     variants: [
-      {id: 'tokens-tiktoken', label: 'Tiktoken', status: 'python'},
-      {id: 'tokens-hugging-face', label: 'Hugging Face', status: 'python'},
+      {
+        id: 'tokens-tiktoken',
+        label: 'Tiktoken',
+        status: 'preview',
+        introducedIn: MAIN_MIGRATION_VERSION,
+      },
+      {id: 'tokens-hugging-face', label: 'Hugging Face', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -73,8 +113,8 @@ export const MIGRATION_PURPOSES = [
     group: 'Foundations',
     label: 'Auth',
     variants: [
-      {id: 'auth-aws', label: 'AWS', status: 'python'},
-      {id: 'auth-gcp', label: 'GCP', status: 'python'},
+      {id: 'auth-aws', label: 'AWS', status: 'python', introducedIn: null},
+      {id: 'auth-gcp', label: 'GCP', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -82,8 +122,8 @@ export const MIGRATION_PURPOSES = [
     group: 'Foundations',
     label: 'Cache',
     variants: [
-      {id: 'cache-redis', label: 'Redis', status: 'python'},
-      {id: 'cache-in-memory', label: 'In-memory', status: 'python'},
+      {id: 'cache-redis', label: 'Redis', status: 'python', introducedIn: null},
+      {id: 'cache-in-memory', label: 'In-memory', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -91,8 +131,8 @@ export const MIGRATION_PURPOSES = [
     group: 'Foundations',
     label: 'Secret manager',
     variants: [
-      {id: 'secrets-aws', label: 'AWS', status: 'python'},
-      {id: 'secrets-gcp', label: 'GCP', status: 'python'},
+      {id: 'secrets-aws', label: 'AWS', status: 'python', introducedIn: null},
+      {id: 'secrets-gcp', label: 'GCP', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -100,12 +140,7 @@ export const MIGRATION_PURPOSES = [
     group: 'Foundations',
     label: 'SQL manager',
     variants: [
-      {id: 'sql-postgres', label: 'PostgreSQL', status: 'python'},
+      {id: 'sql-postgres', label: 'PostgreSQL', status: 'python', introducedIn: null},
     ],
   },
 ];
-
-export const MIGRATION_START = {
-  date: '2026-06-22',
-  version: 'Migration announced',
-};

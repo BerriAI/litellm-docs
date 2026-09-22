@@ -1,10 +1,12 @@
 import React, {useState} from 'react';
 import Layout from '@theme/Layout';
 import {PostRow} from '@theme/BlogListPage';
+import * as semver from 'semver';
 import {
+  MAIN_MIGRATION_VERSION,
   MIGRATION_PURPOSES,
-  MIGRATION_START,
   MIGRATION_STATUSES,
+  MIGRATION_VERSIONS,
 } from '@site/src/data/rustMigration';
 import styles from './rust-migration.module.css';
 
@@ -34,56 +36,60 @@ const POSTS = [
 
 const MIGRATED_STATUSES = new Set(['default', 'rustOnly']);
 
-function formatDate(value) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${value}T00:00:00Z`));
-}
-
 function migrationUnits() {
   return MIGRATION_PURPOSES.flatMap(purpose => purpose.variants);
 }
 
 function migrationTimeline() {
   const units = migrationUnits();
-  const releases = units
-    .filter(unit => MIGRATED_STATUSES.has(unit.status) && unit.release)
-    .map(unit => unit.release)
-    .sort((left, right) => left.date.localeCompare(right.date));
-  const milestones = [...new Map(
-    [MIGRATION_START, ...releases].map(release => [`${release.date}-${release.version}`, release]),
-  ).values()];
+  const versions = [...MIGRATION_VERSIONS].sort(semver.compare);
+  const missingIntroduction = units.find(unit => !Object.hasOwn(unit, 'introducedIn'));
+  if (missingIntroduction) {
+    throw new Error(`Rust migration support unit must declare introducedIn: ${missingIntroduction.id}`);
+  }
+  if (versions.length < 10) {
+    throw new Error('Rust migration timeline must contain at least 10 RC versions');
+  }
+  if (!versions.some(version => semver.eq(version, MAIN_MIGRATION_VERSION))) {
+    throw new Error(`Rust migration timeline must contain main: ${MAIN_MIGRATION_VERSION}`);
+  }
+  const invalidVersion = [MAIN_MIGRATION_VERSION, ...versions, ...units.map(unit => unit.introducedIn)]
+    .filter(Boolean)
+    .find(version => semver.valid(version) === null || semver.prerelease(version)?.[0] !== 'rc');
+  if (invalidVersion) {
+    throw new Error(`Rust migration versions must be RC semver versions: ${invalidVersion}`);
+  }
 
-  return milestones.map(milestone => ({
-    ...milestone,
+  return versions.map(version => ({
+    version,
     migrated: units.filter(unit => (
       MIGRATED_STATUSES.has(unit.status)
-      && unit.release
-      && unit.release.date <= milestone.date
+      && unit.introducedIn
+      && semver.lte(unit.introducedIn, version)
     )).length,
     total: units.length,
   }));
 }
 
+function versionParts(version) {
+  const parsed = semver.parse(version);
+  if (!parsed) {
+    return [version, ''];
+  }
+  return [`v${parsed.major}.${parsed.minor}.${parsed.patch}`, parsed.prerelease.join('.')];
+}
+
 function MigrationTimeline() {
   const milestones = migrationTimeline();
   const width = 920;
-  const height = 330;
-  const plot = {left: 64, right: 24, top: 24, bottom: 68};
+  const height = 350;
+  const plot = {left: 64, right: 24, top: 24, bottom: 88};
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const dates = milestones.map(milestone => Date.parse(`${milestone.date}T00:00:00Z`));
-  const firstDate = dates[0];
-  const dateRange = dates[dates.length - 1] - firstDate;
-  const x = milestone => plot.left + (
-    dateRange === 0 ? 0 : ((Date.parse(`${milestone.date}T00:00:00Z`) - firstDate) / dateRange) * plotWidth
-  );
+  const x = index => plot.left + (index / (milestones.length - 1)) * plotWidth;
   const percentage = milestone => Math.round((milestone.migrated / milestone.total) * 100);
   const y = value => plot.top + plotHeight - (value / 100) * plotHeight;
-  const points = milestones.map(milestone => `${x(milestone)},${y(percentage(milestone))}`).join(' ');
+  const points = milestones.map((milestone, index) => `${x(index)},${y(percentage(milestone))}`).join(' ');
   const latest = milestones[milestones.length - 1];
 
   return (
@@ -105,7 +111,7 @@ function MigrationTimeline() {
         >
           <title id="timeline-title">Rust migration progress over time</title>
           <desc id="timeline-description">
-            {percentage(latest)} percent of tracked support units run on Rust by default as of {formatDate(latest.date)}.
+            {percentage(latest)} percent of tracked support units run on Rust by default in {MAIN_MIGRATION_VERSION}.
           </desc>
           {[0, 25, 50, 75, 100].map(tick => (
             <g key={tick}>
@@ -120,23 +126,44 @@ function MigrationTimeline() {
             </g>
           ))}
           <polyline className={styles.progressLine} points={points} />
-          {milestones.map(milestone => (
-            <g key={`${milestone.date}-${milestone.version}`}>
-              <circle className={styles.progressPointHalo} cx={x(milestone)} cy={y(percentage(milestone))} r="9" />
-              <circle className={styles.progressPoint} cx={x(milestone)} cy={y(percentage(milestone))} r="5">
-                <title>{percentage(milestone)}% on {formatDate(milestone.date)}, {milestone.version}</title>
-              </circle>
-              <text className={styles.pointValue} x={x(milestone)} y={y(percentage(milestone)) - 16} textAnchor="middle">
-                {percentage(milestone)}%
-              </text>
-              <text className={styles.axisLabel} x={x(milestone)} y={height - 35} textAnchor="middle">
-                {formatDate(milestone.date)}
-              </text>
-              <text className={styles.versionLabel} x={x(milestone)} y={height - 15} textAnchor="middle">
-                {milestone.version}
-              </text>
-            </g>
-          ))}
+          {milestones.map((milestone, index) => {
+            const previous = milestones[index - 1];
+            const notable = index === 0 || index === milestones.length - 1 || percentage(previous) !== percentage(milestone);
+            const [release, prerelease] = versionParts(milestone.version);
+            const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
+            return (
+              <g key={milestone.version}>
+                <line
+                  className={styles.versionTick}
+                  x1={x(index)}
+                  x2={x(index)}
+                  y1={plot.top + plotHeight}
+                  y2={plot.top + plotHeight + 6}
+                />
+                {notable && (
+                  <>
+                    <circle className={styles.progressPointHalo} cx={x(index)} cy={y(percentage(milestone))} r="9" />
+                    <circle className={styles.progressPoint} cx={x(index)} cy={y(percentage(milestone))} r="5">
+                      <title>{percentage(milestone)}% in {milestone.version}</title>
+                    </circle>
+                    <text className={styles.pointValue} x={x(index)} y={y(percentage(milestone)) - 16} textAnchor="middle">
+                      {percentage(milestone)}%
+                    </text>
+                  </>
+                )}
+                <text
+                  className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''}`}
+                  x={x(index)}
+                  y={height - 47}
+                  textAnchor="middle"
+                >
+                  <tspan x={x(index)}>{release}</tspan>
+                  <tspan x={x(index)} dy="14">{prerelease}</tspan>
+                  {isMain && <tspan x={x(index)} dy="14">main</tspan>}
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
       <p className={styles.methodNote}>Preview and in-progress units appear in the matrix but are not counted as migrated.</p>
@@ -178,9 +205,11 @@ function MigrationMatrix() {
                   <article className={`${styles.cell} ${styles[`cell_${variant.status}`]}`} key={variant.id}>
                     <span className={styles.cellStatus}>{status.label}</span>
                     <strong>{variant.label}</strong>
-                    {variant.release && (
-                      <span className={styles.cellRelease}>{variant.release.version}</span>
-                    )}
+                    <span className={styles.cellRelease}>
+                      {variant.introducedIn
+                        ? `First in ${variant.introducedIn}${semver.eq(variant.introducedIn, MAIN_MIGRATION_VERSION) ? ' · main' : ''}`
+                        : 'Not introduced'}
+                    </span>
                     {variant.requires && (
                       <span className={styles.cellDependency}>
                         Requires {variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}

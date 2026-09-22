@@ -235,7 +235,17 @@
 
 .versionLabel {
   fill: var(--ifm-color-emphasis-500);
-  font-size: 11px;
+  font-size: 9px;
+}
+
+.mainVersionLabel {
+  fill: var(--ifm-color-primary);
+  font-weight: 700;
+}
+
+.versionTick {
+  stroke: var(--ifm-color-emphasis-400);
+  stroke-width: 1;
 }
 
 .pointValue {
