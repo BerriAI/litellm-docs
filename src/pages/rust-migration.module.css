@@ -370,6 +370,32 @@
   stroke-width: 3;
 }
 
+.milestoneProjection {
+  fill: none;
+  stroke: var(--ifm-color-primary);
+  stroke-dasharray: 6 6;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.milestoneGoal circle {
+  fill: var(--ifm-background-color);
+  stroke: var(--ifm-color-primary);
+  stroke-width: 3;
+}
+
+.milestoneTargetValue,
+.milestoneAxisLabel {
+  fill: var(--ifm-color-primary);
+  font-family: var(--ifm-font-family-base);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.milestoneTargetValue {
+  font-size: 10px;
+}
+
 .progressPointHalo {
   fill: var(--ifm-color-primary-lightest);
   opacity: 0.35;
@@ -628,6 +654,14 @@
 
   .versionLabel {
     font-size: 30px;
+  }
+
+  .milestoneAxisLabel {
+    font-size: 26px;
+  }
+
+  .milestoneTargetValue {
+    font-size: 20px;
   }
 
   .hideOnMobile {

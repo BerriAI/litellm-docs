@@ -81,16 +81,22 @@ function releaseDate(version) {
 
 function MigrationTimeline() {
   const milestones = migrationTimeline();
+  const selectedMilestone = MIGRATION_MILESTONES[0];
   const width = 920;
   const height = 350;
-  const plot = {left: 76, right: 56, top: 24, bottom: 88};
+  const plot = {left: 76, right: 130, top: 24, bottom: 88};
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const x = index => plot.left + (index / (milestones.length - 1)) * plotWidth;
+  const milestoneGap = 140;
+  const historyWidth = plotWidth - milestoneGap;
+  const x = index => plot.left + (index / (milestones.length - 1)) * historyWidth;
+  const milestoneX = plot.left + plotWidth;
   const percentage = milestone => Math.round((milestone.migrated / milestone.total) * 100);
   const y = value => plot.top + plotHeight - (value / 100) * plotHeight;
   const points = milestones.map((milestone, index) => `${x(index)},${y(percentage(milestone))}`).join(' ');
   const latest = milestones[milestones.length - 1];
+  const latestX = x(milestones.length - 1);
+  const milestoneDate = DATE_FORMATTER.format(new Date(selectedMilestone.endsOn));
 
   return (
     <div className={styles.progressView}>
@@ -112,6 +118,7 @@ function MigrationTimeline() {
           <title id="timeline-title">Rust migration progress over time</title>
           <desc id="timeline-description">
             {percentage(latest)} percent of tracked support units run on Rust by default in {MAIN_MIGRATION_VERSION}.
+            The selected milestone targets 100 percent by {selectedMilestone.endsOn}.
           </desc>
           {[0, 25, 50, 75, 100].map(tick => (
             <g key={tick}>
@@ -126,6 +133,13 @@ function MigrationTimeline() {
             </g>
           ))}
           <polyline className={styles.progressLine} points={points} />
+          <line
+            className={styles.milestoneProjection}
+            x1={latestX}
+            x2={milestoneX}
+            y1={y(percentage(latest))}
+            y2={y(100)}
+          />
           {milestones.map((milestone, index) => {
             const previous = milestones[index - 1];
             const notable = index === 0 || index === milestones.length - 1 || percentage(previous) !== percentage(milestone);
@@ -174,12 +188,30 @@ function MigrationTimeline() {
               </g>
             );
           })}
+          <g className={styles.milestoneGoal}>
+            <title>{selectedMilestone.label}, 100% target by {selectedMilestone.endsOn}</title>
+            <circle cx={milestoneX} cy={y(100)} r="7" />
+            <text className={styles.milestoneTargetValue} x={milestoneX} y={y(100) + 20} textAnchor="end">
+              100% goal
+            </text>
+            <line
+              className={styles.versionTick}
+              x1={milestoneX}
+              x2={milestoneX}
+              y1={plot.top + plotHeight}
+              y2={plot.top + plotHeight + 6}
+            />
+            <text className={styles.milestoneAxisLabel} x={milestoneX} y={height - 38} textAnchor="end">
+              <tspan x={milestoneX}>{selectedMilestone.label}</tspan>
+              <tspan className={styles.versionDate} x={milestoneX} dy="17">{milestoneDate}</tspan>
+            </text>
+          </g>
         </svg>
       </div>
       <p className={styles.methodNote}>
         Preview and in-progress units appear in the matrix but are not counted as migrated. Published RCs come from{' '}
         <a href="https://github.com/BerriAI/litellm/releases">LiteLLM releases</a>; main is the next RC derived from the
-        repository version and is planned for the next Saturday.
+        repository version and is planned for the next Saturday. The dashed segment shows the selected milestone goal.
       </p>
     </div>
   );
