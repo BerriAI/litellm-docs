@@ -249,6 +249,6 @@ Both fields are returned in `GET /v1/agents` and `GET /v1/agents/{agent_id}`:
 }
 ```
 
-:::caution
+:::warning
 `static_headers` values are stored in the database and returned by the API. Treat them as you would any credential: do not store sensitive long-lived tokens here if your API is publicly accessible. Consider using short-lived tokens or environment-injected secrets instead.
 :::
