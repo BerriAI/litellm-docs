@@ -94,25 +94,25 @@ items={[
     icon: "📈",
     title: "Prometheus",
     description: "Metrics collection and monitoring.",
-    to: "../proxy/prometheus",
+    to: "/docs/proxy/prometheus",
   },
   {
     icon: "🚨",
     title: "PagerDuty",
     description: "Incident response and alerting.",
-    to: "../proxy/pagerduty",
+    to: "/docs/proxy/pagerduty",
   },
   {
     icon: "🔔",
     title: "Alerting",
     description: "Slack, Teams, and webhook alerts.",
-    to: "../proxy/alerting",
+    to: "/docs/proxy/alerting",
   },
   {
     icon: "🔍",
     title: "Pyroscope",
     description: "Continuous profiling.",
-    to: "../proxy/pyroscope_profiling",
+    to: "/docs/proxy/pyroscope_profiling",
   },
 ]}
 />
@@ -180,19 +180,19 @@ items={[
     icon: "📋",
     title: "Guardrail Policies",
     description: "Policy-based guardrail rules.",
-    to: "../proxy/guardrails/guardrail_policies",
+    to: "/docs/proxy/guardrails/guardrail_policies",
   },
   {
     icon: "🔀",
     title: "Policy Flow Builder",
     description: "Visual policy configuration.",
-    to: "../proxy/guardrails/policy_flow_builder",
+    to: "/docs/proxy/guardrails/policy_flow_builder",
   },
   {
     icon: "📄",
     title: "Policy Templates",
     description: "Pre-built policy templates.",
-    to: "../proxy/guardrails/policy_templates",
+    to: "/docs/proxy/guardrails/policy_templates",
   },
 ]}
 />
@@ -210,37 +210,37 @@ items={[
     icon: "💬",
     title: "OpenWebUI",
     description: "Self-hosted ChatGPT-style interface.",
-    to: "../tutorials/openweb_ui",
+    to: "/docs/tutorials/openweb_ui",
   },
   {
     icon: "🤖",
     title: "Claude Code",
     description: "Use LiteLLM with Claude Code.",
-    to: "../tutorials/claude_responses_api",
+    to: "/docs/tutorials/claude_responses_api",
   },
   {
     icon: "🖱️",
     title: "Cursor",
     description: "AI code editor integration.",
-    to: "../tutorials/cursor_integration",
+    to: "/docs/tutorials/cursor_integration",
   },
   {
     icon: "🐙",
     title: "GitHub Copilot",
     description: "GitHub Copilot integration.",
-    to: "../tutorials/github_copilot_integration",
+    to: "/docs/tutorials/github_copilot_integration",
   },
   {
     icon: "💻",
     title: "OpenCode",
     description: "Open source coding assistant.",
-    to: "../tutorials/opencode_integration",
+    to: "/docs/tutorials/opencode_integration",
   },
   {
     icon: "🔧",
     title: "Retool Assist",
     description: "Retool AI assistant.",
-    to: "../tutorials/retool_assist",
+    to: "/docs/tutorials/retool_assist",
   },
 ]}
 />
@@ -258,37 +258,37 @@ items={[
     icon: "🤖",
     title: "OpenAI Agents SDK",
     description: "Build agents with OpenAI's SDK.",
-    to: "../tutorials/openai_agents_sdk",
+    to: "/docs/tutorials/openai_agents_sdk",
   },
   {
     icon: "🧠",
     title: "Claude Agent SDK",
     description: "Build agents with Anthropic's SDK.",
-    to: "../tutorials/claude_agent_sdk",
+    to: "/docs/tutorials/claude_agent_sdk",
   },
   {
     icon: "🌐",
     title: "Google ADK",
     description: "Google Agent Development Kit.",
-    to: "../tutorials/google_adk",
+    to: "/docs/tutorials/google_adk",
   },
   {
     icon: "🚀",
     title: "CopilotKit",
     description: "In-app AI copilots.",
-    to: "../tutorials/copilotkit_sdk",
+    to: "/docs/tutorials/copilotkit_sdk",
   },
   {
     icon: "🧬",
     title: "Letta",
     description: "Build stateful LLM agents with persistent memory.",
-    to: "./letta",
+    to: "/docs/integrations/letta",
   },
   {
     icon: "🎙️",
     title: "LiveKit",
     description: "Real-time voice and video AI agents.",
-    to: "../tutorials/livekit_xai_realtime",
+    to: "/docs/tutorials/livekit_xai_realtime",
   },
 ]}
 />
@@ -306,19 +306,19 @@ items={[
     icon: "📝",
     title: "LiteLLM Prompt Management",
     description: "Built-in prompt management.",
-    to: "../proxy/litellm_prompt_management",
+    to: "/docs/proxy/litellm_prompt_management",
   },
   {
     icon: "🔌",
     title: "Custom Prompt Management",
     description: "Bring your own prompt store.",
-    to: "../proxy/custom_prompt_management",
+    to: "/docs/proxy/custom_prompt_management",
   },
   {
     icon: "🔥",
     title: "Arize Phoenix Prompts",
     description: "Prompt management with Phoenix.",
-    to: "../proxy/arize_phoenix_prompts",
+    to: "/docs/proxy/arize_phoenix_prompts",
   },
 ]}
 />
@@ -336,7 +336,7 @@ items={[
     icon: "🤖",
     title: "LiteLLM Skills",
     description: "Manage LiteLLM via Claude Code: create keys, teams, models, and more using natural language commands.",
-    to: "../tutorials/claude_code_skills",
+    to: "/docs/tutorials/claude_code_skills",
   },
 ]}
 />
