@@ -186,7 +186,7 @@ The API key was loaded from the CURSOR_API_KEY environment variable.
 Please check you have the right key, create a new one, or authenticate without it.
 ```
 
-The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](./openai_codex.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
+The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](../proxy/client_setup/codex_cli.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
 
 ## Troubleshooting
 
