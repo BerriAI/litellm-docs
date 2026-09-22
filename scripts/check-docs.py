@@ -218,12 +218,12 @@ class Site:
                 else:
                     slug_route = "/docs/" + "/".join(parts[:-1] + [slug]) if len(parts) > 1 else "/docs/" + slug
                 self.route_to_file[slug_route.rstrip("/")] = path
-        config = os.path.join(REPO_ROOT, "docusaurus.config.js")
+        config = os.path.join(REPO_ROOT, "docusaurus.config.ts")
         if os.path.exists(config):
             with open(config, encoding="utf-8") as f:
                 for m in REDIRECT_FROM_RE.finditer(f.read()):
                     self.extra_routes.add(m.group(1).rstrip("/"))
-        sidebars = os.path.join(REPO_ROOT, "sidebars.js")
+        sidebars = os.path.join(REPO_ROOT, "sidebars.ts")
         if os.path.exists(sidebars):
             with open(sidebars, encoding="utf-8") as f:
                 for m in SIDEBAR_SLUG_RE.finditer(f.read()):

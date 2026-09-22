@@ -1,9 +1,11 @@
-// @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
-
-require('dotenv').config();
-
-const {themes: prismThemes} = require('prism-react-renderer');
+import 'dotenv/config';
+import {themes as prismThemes} from 'prism-react-renderer';
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+import optimizeImages from './plugins/optimize-images';
+import remarkDocsModels from './src/remark/docs-models';
+import remarkRawMarkdown from './src/remark/raw-markdown';
+import {releaseNotesSidebarItems} from './src/sidebars/releaseNotesSidebarItems';
 
 const lightCodeTheme = prismThemes.vsLight;
 const darkCodeTheme = prismThemes.nightOwl;
@@ -63,8 +65,7 @@ const inkeepConfig = {
   },
 };
 
-/** @type {import('@docusaurus/types').Config} */
-const config = {
+const config: Config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
   favicon: '/img/favicon.ico', 
@@ -92,7 +93,7 @@ const config = {
       name: 'ignore-optional-canvas',
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
-    require('./plugins/optimize-images'),
+    optimizeImages,
     [
       '@docusaurus/plugin-client-redirects',
       {
@@ -175,93 +176,8 @@ const config = {
         id: 'release-notes',
         path: './release_notes',
         routeBasePath: 'release_notes',
-        sidebarPath: require.resolve('./sidebars-release-notes.js'),
-        async sidebarItemsGenerator({defaultSidebarItemsGenerator, docs, ...args}) {
-          const items = await defaultSidebarItemsGenerator({docs, ...args});
-
-          // Build map of doc id -> year from frontmatter date
-          const docYearMap = {};
-          for (const doc of docs) {
-            const date = doc.frontMatter && doc.frontMatter.date;
-            if (date) {
-              const year = new Date(date).getFullYear();
-              docYearMap[doc.id] = year;
-            }
-          }
-
-          function parseVersion(str) {
-            const match = (str || '').match(/v?(\d+)\.(\d+)\.(\d+)/);
-            if (!match) return [0, 0, 0];
-            return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
-          }
-          function compareVersionsDesc(a, b) {
-            const [aMaj, aMin, aPatch] = parseVersion(a.label || a.id || '');
-            const [bMaj, bMin, bPatch] = parseVersion(b.label || b.id || '');
-            if (bMaj !== aMaj) return bMaj - aMaj;
-            if (bMin !== aMin) return bMin - aMin;
-            return bPatch - aPatch;
-          }
-
-          // Flatten and transform doc items (filter index, shorten labels)
-          function flattenDocs(list) {
-            const result = [];
-            for (const item of list) {
-              if (item.type === 'doc' && item.id === 'index') continue;
-              if (item.type === 'doc') {
-                const label = item.id.replace(/\/index$/, '');
-                result.push({...item, label});
-              } else if (item.type === 'category') {
-                if (item.link && item.link.type === 'doc' && item.link.id !== 'index') {
-                  const id = item.link.id;
-                  const label = id.replace(/\/index$/, '');
-                  result.push({type: 'doc', id, label});
-                } else {
-                  result.push(...flattenDocs(item.items));
-                }
-              }
-            }
-            return result;
-          }
-
-          const docItems = flattenDocs(items);
-
-          const byYear = {};
-          for (const item of docItems) {
-            const year = docYearMap[item.id] || 'Other';
-            if (!byYear[year]) byYear[year] = [];
-            byYear[year].push(item);
-          }
-
-          function buildMinorCategories(yearItems, expandNewest) {
-            const byMinor = {};
-            for (const item of yearItems) {
-              const [maj, min] = parseVersion(item.label || item.id || '');
-              const key = `v${maj}.${min}.x`;
-              if (!byMinor[key]) byMinor[key] = {maj, min, items: []};
-              byMinor[key].items.push(item);
-            }
-            const keys = Object.keys(byMinor);
-            for (const key of keys) byMinor[key].items.sort(compareVersionsDesc);
-            keys.sort((a, b) =>
-              (byMinor[b].maj - byMinor[a].maj) || (byMinor[b].min - byMinor[a].min));
-            return keys.map((key, idx) => ({
-              type: 'category',
-              label: key,
-              collapsed: !(expandNewest && idx === 0),
-              items: byMinor[key].items,
-            }));
-          }
-
-          const years = Object.keys(byYear).sort(
-            (a, b) => Number.parseInt(b, 10) - Number.parseInt(a, 10),
-          );
-          return years.map((year, idx) => ({
-            type: 'category',
-            label: String(year),
-            collapsed: year !== String(years[0]),
-            items: buildMinorCategories(byYear[year], idx === 0),
-          }));
-        },
+        sidebarPath: './sidebars-release-notes.ts',
+        sidebarItemsGenerator: releaseNotesSidebarItems,
       },
     ],
     [
@@ -277,7 +193,7 @@ const config = {
         showReadingTime: false,
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
-        remarkPlugins: [require('./src/remark/raw-markdown')],
+        remarkPlugins: [remarkRawMarkdown],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
       },
@@ -315,8 +231,7 @@ const config = {
   presets: [
     [
       'classic',
-      /** @type {import('@docusaurus/preset-classic').Options} */
-      ({
+      {
         gtag:
           process.env.NODE_ENV === 'production'
             ? {
@@ -331,16 +246,16 @@ const config = {
               }
             : undefined,
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
-          remarkPlugins: [require('./src/remark/raw-markdown')],
+          sidebarPath: './sidebars.ts',
+          beforeDefaultRemarkPlugins: [remarkDocsModels],
+          remarkPlugins: [remarkRawMarkdown],
         },
         blog: false, // Disable the default blog plugin from preset-classic
         pages: {},
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: './src/css/custom.css',
         },
-      }),
+      } satisfies Preset.Options,
     ],
   ],
 
@@ -367,114 +282,112 @@ const config = {
     }
   ],
 
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      // Replace with your project's social card
-      image: 'img/docusaurus-social-card.png',
-      navbar: {
-        title: '🚅 LiteLLM',
-        items: [
-          {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
-            position: 'left',
-            label: 'Docs',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'integrationsSidebar',
-            position: 'left',
-            label: 'Integrations',
-          },
-          {
-            position: 'left',
-            label: 'Enterprise',
-            to: "docs/enterprise"
-          },
-          { to: '/release_notes', label: 'Changelog', position: 'left' },
-          { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'docSidebar',
-            sidebarId: 'autoRouterSidebar',
-            position: 'left',
-            label: 'Auto Router [Add-on]',
-          },
-          {
-            href: 'https://trust.litellm.ai/',
-            label: 'Trust Center',
-            position: 'right',
-          },
-          {
-            href: 'https://github.com/BerriAI/litellm',
-            position: 'right',
-            className: 'header-github-link',
-            'aria-label': 'GitHub repository',
-          },
-          {
-            href: 'https://www.litellm.ai/support',
-            position: 'right',
-            className: 'header-discord-link',
-            'aria-label': 'Discord / Slack community',
-          },
-          ...(hasInkeepSearch
-            ? [{type: 'search', position: 'right'}]
-            : []),
-        ],
-      },
-      footer: {
-        style: 'dark',
-        links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Discord',
-                href: 'https://discord.com/invite/wuPM9dRgDw',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/LiteLLM',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/BerriAI/litellm/',
-              },
-            ],
-          },
-        ],
-        copyright: `Copyright © ${new Date().getFullYear()} liteLLM`,
-      },
-      colorMode: {
-        defaultMode: 'light',
-        disableSwitch: false,
-        respectPrefersColorScheme: true,
-      },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    }),
+  themeConfig: {
+    // Replace with your project's social card
+    image: 'img/docusaurus-social-card.png',
+    navbar: {
+      title: '🚅 LiteLLM',
+      items: [
+        {
+          type: 'docSidebar',
+          sidebarId: 'tutorialSidebar',
+          position: 'left',
+          label: 'Docs',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'learnSidebar',
+          position: 'left',
+          label: 'Learn',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'integrationsSidebar',
+          position: 'left',
+          label: 'Integrations',
+        },
+        {
+          position: 'left',
+          label: 'Enterprise',
+          to: "docs/enterprise"
+        },
+        { to: '/release_notes', label: 'Changelog', position: 'left' },
+        { to: '/blog', label: 'Blog', position: 'left' },
+        {
+          type: 'docSidebar',
+          sidebarId: 'autoRouterSidebar',
+          position: 'left',
+          label: 'Auto Router [Add-on]',
+        },
+        {
+          href: 'https://trust.litellm.ai/',
+          label: 'Trust Center',
+          position: 'right',
+        },
+        {
+          href: 'https://github.com/BerriAI/litellm',
+          position: 'right',
+          className: 'header-github-link',
+          'aria-label': 'GitHub repository',
+        },
+        {
+          href: 'https://www.litellm.ai/support',
+          position: 'right',
+          className: 'header-discord-link',
+          'aria-label': 'Discord / Slack community',
+        },
+        ...(hasInkeepSearch
+          ? [{type: 'search', position: 'right' as const}]
+          : []),
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Docs',
+          items: [
+            {
+              label: 'Getting Started',
+              to: 'https://docs.litellm.ai/docs/',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'Discord',
+              href: 'https://discord.com/invite/wuPM9dRgDw',
+            },
+            {
+              label: 'Twitter',
+              href: 'https://twitter.com/LiteLLM',
+            },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'GitHub',
+              href: 'https://github.com/BerriAI/litellm/',
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} liteLLM`,
+    },
+    colorMode: {
+      defaultMode: 'light',
+      disableSwitch: false,
+      respectPrefersColorScheme: true,
+    },
+    prism: {
+      theme: lightCodeTheme,
+      darkTheme: darkCodeTheme,
+    },
+  } satisfies Preset.ThemeConfig,
 };
 
-module.exports = config;
+export default config;

@@ -9,10 +9,9 @@
  Create as many sidebars as you want.
  */
 
-// @ts-check
+import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
-const sidebars = {
+const sidebars: SidebarsConfig = {
   // // By default, Docusaurus generates a sidebar from the docs folder structure
   integrationsSidebar: [
     { type: "doc", id: "integrations/index" },
@@ -1443,7 +1442,7 @@ const sidebars = {
   ],
 };
 
-const learnSidebar = {
+const learnSidebar: SidebarsConfig = {
   learnSidebar: [
     // ── Landing page ──────────────────────────────────────────────────
     { type: "doc", id: "learn/index", label: "Learn" },
@@ -1755,7 +1754,7 @@ const learnSidebar = {
   ],
 };
 
-const autoRouterSidebar = {
+const autoRouterSidebar: SidebarsConfig = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
@@ -1779,4 +1778,4 @@ const autoRouterSidebar = {
   ],
 };
 
-module.exports = { ...sidebars, ...learnSidebar, ...autoRouterSidebar };
+export default {...sidebars, ...learnSidebar, ...autoRouterSidebar} satisfies SidebarsConfig;

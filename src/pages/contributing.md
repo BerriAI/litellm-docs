@@ -28,7 +28,7 @@ Open docs here: [http://localhost:3000/](http://localhost:3000/).
 ### Making changes to Docs
 - All the docs are placed under the `docs` directory
 - Blog posts are placed under the `blog` directory
-- If you are adding a new `.md` file or editing the hierarchy, check whether `sidebars.js` needs to be updated
+- If you are adding a new `.md` file or editing the hierarchy, check whether `sidebars.ts` needs to be updated
 
 ### Verify your changes
 
