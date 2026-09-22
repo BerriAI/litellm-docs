@@ -468,12 +468,11 @@ Tags enable powerful analytics capabilities:
 import requests
 
 response = requests.get(
-    "http://localhost:4000/global/spend/report",
+    "http://localhost:4000/global/spend/tags",
     headers={"Authorization": "Bearer sk-your-key"},
     params={
         "start_date": "2024-01-01",
         "end_date": "2024-12-31",
-        "group_by": "tags"
     }
 )
 
