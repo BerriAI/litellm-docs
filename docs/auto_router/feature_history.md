@@ -6,6 +6,25 @@ description: Which Auto Router features shipped in which LiteLLM release, so you
 
 Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
+## Coming Next
+
+Merged into `main` after `v1.103.0-rc.1` was cut; these changes are not included in that release candidate. Use a build containing the linked PRs until they appear under a tagged release below.
+
+:::danger Breaking Changes
+
+**Native context compaction is enabled by default.** For supported requests with full conversation history, summarize older turns near the selected model's input limit so it can keep serving the request. This works across Chat Completions, Responses, and Messages, requires an eligible native compactor, and adds a separately billed call. Set `context_compaction: false` to disable it. Stored or opaque native history remains client-managed. [#42074](https://github.com/BerriAI/litellm/pull/42074)
+
+**Context-window escalation becomes opt-in.** Omitting `enable_context_window_escalation` no longer moves a long request to a larger tier automatically. Set it to `true` to preserve automatic escalation. [#41872](https://github.com/BerriAI/litellm/pull/41872)
+
+:::
+
+- **Configurable Heuristic v2 threshold.** Set `heuristic_v2_success_threshold` in configuration or the dashboard to control the minimum predicted success rate for tier selection. Clear it to restore the trained artifact's default. [#42252](https://github.com/BerriAI/litellm/pull/42252)
+- **JEV dashboard setup and connection checks.** Configure JEV beside the LLM classifier, preserve its settings through edits, and test the classifier separately from tier models. Paid routing previews enforce virtual-key budgets; encrypted delegated tasks use the configured fallback without a JEV charge. [#41886](https://github.com/BerriAI/litellm/pull/41886), [#41879](https://github.com/BerriAI/litellm/pull/41879)
+- **Capability and Fuse forecast details.** Request logs show Capability's solve chance and threshold, or both Fuse solvers' chances and the quality gap. Forecasts remain visible when health or modality rules change the final placement. [#42057](https://github.com/BerriAI/litellm/pull/42057)
+- **More advanced settings in the dashboard.** Edit heuristic keyword overrides, housekeeping routing, reminder markers, plan-mode sentinels, output-token caps, and custom-classifier timeouts. Saving unrelated changes preserves these settings. [#42293](https://github.com/BerriAI/litellm/pull/42293)
+- **Internal-user savings and usage.** Admins can inspect an internal user's Savings and Auto-router usage tabs, including traffic attributed through JWTs. Other users can view their own Savings; router usage remains admin-only. [#42026](https://github.com/BerriAI/litellm/pull/42026)
+- **Prompt-cache affinity across moving breakpoints.** With the `prompt_caching` pre-call check enabled, deployment affinity survives Claude Code moving its cache breakpoint to a newer turn, helping preserve the provider's cached prefix. [#42080](https://github.com/BerriAI/litellm/pull/42080)
+
 ## v1.103.0-rc.1 (release candidate)
 
 [GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.103.0-rc.1), [Release notes](/release_notes/v1.103.0rc1/v1-103-0-rc-1)
