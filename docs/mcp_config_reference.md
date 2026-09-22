@@ -12,7 +12,7 @@ There is no supported per-server `spec_version` configuration field. The legacy 
 
 ## Two layers of authentication
 
-Every MCP request through LiteLLM involves up to two independent credentials. Keep the credentials separate
+Gateway and upstream authentication are configured separately. Keep their credentials separate
 
 1. **Gateway authentication (client to LiteLLM).** Your LiteLLM virtual key. Send it in the `x-litellm-api-key` header (`x-litellm-api-key: Bearer <key>`). `Authorization: Bearer sk-...` also works, but for MCP traffic prefer `x-litellm-api-key` so the `Authorization` header stays free for OAuth tokens and upstream credentials. Use the dedicated header when sending a separate upstream bearer token
 2. **Upstream authentication (LiteLLM to the MCP server).** Configured per server via `auth_type` (static keys, OAuth, SigV4, and so on), or supplied per request by the client via `x-mcp-{server_alias}-{header_name}` headers. See [Upstream auth matrix](#upstream-auth-matrix)
