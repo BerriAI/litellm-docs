@@ -270,6 +270,7 @@ function MigrationMatrix() {
     <div className={styles.detailsView}>
       <div className={styles.detailsIntro}>
         <p>Each cell is one tracked route, provider, adapter, or capability, grouped by layer.</p>
+        <p>Native Messages cells track provider transports. Bridge cells track paired request and return conversion through Chat or Responses</p>
         <div className={styles.legend} aria-label="Migration status legend">
           {Object.entries(MIGRATION_STATUSES).map(([status, metadata]) => (
             <span key={status}><i className={styles[status]} />{metadata.label}</span>

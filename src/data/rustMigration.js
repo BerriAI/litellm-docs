@@ -83,9 +83,9 @@ export const MIGRATION_PURPOSES = [
     ],
   },
   {
-    id: 'messages',
+    id: 'messages-native',
     layer: 'inference',
-    label: 'Messages',
+    label: 'Messages: native',
     variants: [
       {
         id: 'messages-anthropic',
@@ -94,8 +94,8 @@ export const MIGRATION_PURPOSES = [
         introducedIn: MAIN_MIGRATION_VERSION,
       },
       {
-        id: 'messages-bedrock',
-        label: 'Bedrock',
+        id: 'messages-bedrock-direct',
+        label: 'Bedrock direct',
         status: 'building',
         introducedIn: null,
         requires: ['auth-aws'],
@@ -107,7 +107,33 @@ export const MIGRATION_PURPOSES = [
         introducedIn: null,
         requires: ['auth-gcp'],
       },
-      {id: 'messages-openai-adapter', label: 'OpenAI adapter', status: 'python', introducedIn: null},
+      {
+        id: 'messages-azure-ai',
+        label: 'Azure AI',
+        status: 'preview',
+        introducedIn: 'v1.94.0-rc.1',
+      },
+      {
+        id: 'messages-compatible',
+        label: 'Compatible endpoints',
+        status: 'python',
+        introducedIn: null,
+      },
+      {
+        id: 'messages-github-copilot',
+        label: 'GitHub Copilot',
+        status: 'python',
+        introducedIn: null,
+      },
+    ],
+  },
+  {
+    id: 'messages-bridges',
+    layer: 'inference',
+    label: 'Messages: bridges',
+    variants: [
+      {id: 'messages-via-responses', label: 'Via Responses', status: 'python', introducedIn: null},
+      {id: 'messages-via-chat', label: 'Via Chat', status: 'python', introducedIn: null},
     ],
   },
   {
@@ -116,7 +142,7 @@ export const MIGRATION_PURPOSES = [
     label: 'Chat completions',
     variants: [
       {id: 'chat-openai', label: 'OpenAI', status: 'python', introducedIn: null},
-      {id: 'chat-anthropic-adapter', label: 'Anthropic adapter', status: 'python', introducedIn: null},
+      {id: 'chat-via-messages', label: 'Via Messages', status: 'python', introducedIn: null},
     ],
   },
   {
