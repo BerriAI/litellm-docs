@@ -6,6 +6,26 @@ description: Which Auto Router features shipped in which LiteLLM release, so you
 
 Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
+## v1.103.0-rc.1 (release candidate)
+
+[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.103.0-rc.1), [Release notes](/release_notes/v1.103.0rc1/v1-103-0-rc-1)
+
+Includes the Auto Router improvements from the 1.103.x development builds through this release candidate. Earlier development builds may not include every change below.
+
+- **Capability classification.** `classifier_type: capability` forecasts whether the efficient solver can finish the whole task and routes to the capable tier when the estimate falls below the configured threshold. [#41270](https://github.com/BerriAI/litellm/pull/41270)
+- **Fuse v2 classification (experimental).** `classifier_type: llm_v2` uses one judge call to forecast both solvers, then selects between them using a quality-gap policy. Invalid forecasts and provider errors fall back to the capable solver. [#41272](https://github.com/BerriAI/litellm/pull/41272)
+- **Capability and Fuse dashboard setup.** Configure efficient, capable, and judge models in dedicated tabs, with forecast policy controls and advanced routing options. Saving either form disables adaptive routing, context-window escalation, and escalation keywords. [#41315](https://github.com/BerriAI/litellm/pull/41315), [#41371](https://github.com/BerriAI/litellm/pull/41371)
+- **Fuse model and harness presets.** Select maintained solver and harness descriptions in YAML, the API, or the dashboard, preview their text, or replace them with custom descriptions. [#41617](https://github.com/BerriAI/litellm/pull/41617)
+- **TypeSafe JEV classifier.** `classifier_type: jev` uses JEV to select a complexity tier and records its probabilities, confidence, and classifier cost. Failures use the existing classifier fallback and circuit breaker. [#41615](https://github.com/BerriAI/litellm/pull/41615)
+- **Per-model Fast mode.** Toggle Fast beside reasoning effort for supported tier models, independently for each model. [#41282](https://github.com/BerriAI/litellm/pull/41282)
+- **Model affinity within each tier.** With deployment affinity enabled, a session reuses its chosen eligible model when it returns to a tier. Redis shares those choices across workers while tier reclassification remains active. [#41174](https://github.com/BerriAI/litellm/pull/41174)
+- **Team-member router management.** Admins can enable `/auto_router/manage` for a team so members can create routers and edit their own configurations, using models they are allowed to access. [#41175](https://github.com/BerriAI/litellm/pull/41175)
+- **More accurate savings estimates.** Baseline costs use durable cache-prefix history and expiry, preserve observed costs before routing diverges, and mark unavailable estimates as unknown. Anthropic Fast mode and geographic pricing modifiers are also included. [#41177](https://github.com/BerriAI/litellm/pull/41177), [#41341](https://github.com/BerriAI/litellm/pull/41341)
+- **Heuristic v2 score visibility.** Routing details show estimated success rates, the threshold, and the predicted tier even with message logging disabled. The prediction stays separate from the final tier after routing overrides. [#42001](https://github.com/BerriAI/litellm/pull/42001)
+- **Coding-agent session feedback.** LLM API keys can read their own router session stats. Claude Code shows the recorded served model, and both Claude Code and Codex label actual spend with the router's name. [#41116](https://github.com/BerriAI/litellm/pull/41116), [#41186](https://github.com/BerriAI/litellm/pull/41186)
+- **CLI command names.** Use `lite autoroute start` and `lite autoroute stop`; `up` and `down` remain deprecated aliases. [#41672](https://github.com/BerriAI/litellm/pull/41672)
+- **Capability and Fuse license limits.** One Capability router and one Fuse v2 router are available without the `auto_router` entitlement. Additional routers of either type require it. [#41326](https://github.com/BerriAI/litellm/pull/41326)
+
 ## v1.102.0
 
 [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.102.0), [Release notes](/release_notes/v1.102.0/v1-102-0)
