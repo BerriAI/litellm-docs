@@ -59,7 +59,7 @@ The component headers sum to the total: input + cache read + cache creation + ou
 ## LiteLLM Specific Headers
 | Header | Type | Description | Available on Pass-Through Endpoints |
 |--------|------|-------------|-------------|
-| `x-litellm-call-id` | string | Id for this request | ✅ |
+| `x-litellm-call-id` | string | Id for this request. With `general_settings.include_call_id_in_error_body: true` it is also inside JSON error bodies as `litellm_call_id` ([details](./error_reference.md#reporting-a-problem)) | ✅ |
 | `x-litellm-model-id` | string | Deployment id (`model_info.id`) | |
 | `x-litellm-model-api-base` | string | API base URL | ✅ |
 | `x-litellm-version` | string | LiteLLM version | |
