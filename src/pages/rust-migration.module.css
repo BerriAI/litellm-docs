@@ -85,26 +85,11 @@
   text-transform: uppercase;
 }
 
-.trackerCard {
-  overflow: hidden;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 14px;
-  background: var(--ifm-background-surface-color);
-}
-
-.trackerHeader {
+.trackerControls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--ifm-color-emphasis-200);
-}
-
-.trackerHeader h2 {
-  margin: 0;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
+  gap: 0.75rem;
+  width: min(720px, 100%);
 }
 
 .viewToggle {
@@ -146,7 +131,6 @@
 
 .trackerBody {
   display: grid;
-  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .viewPanel {
@@ -212,6 +196,110 @@
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 10px;
   background: var(--ifm-background-color);
+}
+
+.milestoneSelector {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 1.25rem;
+  padding: 3px 3px 3px 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 10px;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.milestoneSelectorLabel {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.milestoneTrack {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.milestoneTrack::before {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 25%;
+  left: 25%;
+  height: 1px;
+  background: var(--ifm-color-emphasis-300);
+  content: '';
+}
+
+.milestoneTrack button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  text-align: left;
+}
+
+.milestoneTrack button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.milestoneTrack .activeMilestone {
+  border-color: color-mix(in srgb, var(--ifm-color-primary) 35%, transparent);
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  color: var(--ifm-font-color-base);
+}
+
+.milestoneNumber {
+  display: grid;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 50%;
+  background: var(--ifm-background-color);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.activeMilestone .milestoneNumber {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: var(--ifm-color-white);
+}
+
+.milestoneText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.milestoneText strong {
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.milestoneText small {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.65rem;
 }
 
 .timeline {
@@ -484,21 +572,48 @@
     text-align: left;
   }
 
-  .trackerHeader {
-    align-items: flex-start;
+  .trackerControls {
+    align-items: stretch;
     flex-direction: column;
-    gap: 0.9rem;
-    padding: 1rem;
+    gap: 0.65rem;
+    width: 100%;
   }
 
-  .trackerBody {
-    padding: 1rem;
+  .trackerControls .viewToggle {
+    align-self: flex-start;
   }
 
   .viewIntro {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  .milestoneSelector {
+    display: block;
+    padding: 0.75rem;
+  }
+
+  .milestoneSelectorLabel {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .milestoneTrack {
+    gap: 0.4rem;
+  }
+
+  .milestoneTrack button {
+    gap: 0.4rem;
+    padding: 0.45rem;
+  }
+
+  .milestoneText strong {
+    font-size: 0.7rem;
+  }
+
+  .milestoneText small {
+    font-size: 0.58rem;
   }
 
   .axisLabel,
