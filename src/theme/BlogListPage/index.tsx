@@ -56,6 +56,7 @@ function searchableText(item: BlogListItem): string {
   return [
     metadata.title,
     metadata.description,
+    ...(metadata.frontMatter.keywords ?? []),
     ...metadata.tags.map(tag => tag.label),
     ...metadata.authors.map(author => author.name),
   ].filter(Boolean).join(' ').toLowerCase();
