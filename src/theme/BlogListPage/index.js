@@ -41,7 +41,7 @@ function searchableText(item) {
   return [
     metadata.title,
     metadata.description,
-    metadata.keywords,
+    ...(metadata.frontMatter?.keywords || []),
     ...(metadata.tags || []).map(tag => tag.label),
     ...(metadata.authors || []).map(author => author.name),
   ].filter(Boolean).join(' ').toLowerCase();
