@@ -1,7 +1,13 @@
-import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
+import {useState, useRef, useEffect, useCallback, type ReactNode} from 'react';
 
 type LogLevel = 'step' | 'info' | 'success' | 'warn' | 'error';
-type LogEntry = { level: LogLevel; tag: string; msg: string; time: string; id: number };
+type LogEntry = {
+  level: LogLevel;
+  tag: string;
+  msg: string;
+  time: string;
+  id: number;
+};
 type Status = 'idle' | 'connecting' | 'connected' | 'error';
 type Tab = 'logs' | 'sdp' | 'audio';
 
@@ -228,10 +234,13 @@ function useLog() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const add = useCallback((level: LogLevel, tag: string, msg: string) => {
     const time = new Date().toTimeString().slice(0, 8);
-    setEntries(prev => [...prev, { level, tag, msg, time, id: Date.now() + Math.random() }]);
+    setEntries((prev) => [
+      ...prev,
+      {level, tag, msg, time, id: Date.now() + Math.random()},
+    ]);
   }, []);
   const clear = useCallback(() => setEntries([]), []);
-  return { entries, add, clear };
+  return {entries, add, clear};
 }
 
 export default function DashboardWebRTCTester(): ReactNode {
@@ -255,7 +264,7 @@ export default function DashboardWebRTCTester(): ReactNode {
   const [bars, setBars] = useState<number[]>(Array(28).fill(2));
   const [connected, setConnected] = useState(false);
 
-  const { entries, add: log, clear: clearLogs } = useLog();
+  const {entries, add: log, clear: clearLogs} = useLog();
   const logRef = useRef<HTMLDivElement>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -277,7 +286,11 @@ export default function DashboardWebRTCTester(): ReactNode {
     if (!analyserRef.current) return;
     const data = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteFrequencyData(data);
-    setBars(Array.from({ length: 28 }, (_, i) => Math.max(2, ((data[i] || 0) / 255) * 42)));
+    setBars(
+      Array.from({length: 28}, (_, i) =>
+        Math.max(2, ((data[i] || 0) / 255) * 42),
+      ),
+    );
   }
 
   function setupAnalyser(stream: MediaStream) {
@@ -306,21 +319,33 @@ export default function DashboardWebRTCTester(): ReactNode {
     try {
       const r = await fetch(`${url}/v1/realtime/client_secrets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({ model: mdl }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify({model: mdl}),
       });
       log('info', 'HTTP', `${r.status} ${r.statusText}`);
       const raw = await r.text();
-      if (!r.ok) { log('error', 'ERR', raw); stopSession(); return; }
+      if (!r.ok) {
+        log('error', 'ERR', raw);
+        stopSession();
+        return;
+      }
       tokenResp = JSON.parse(raw);
       log('success', 'TOKEN', 'Received encrypted ephemeral token');
     } catch (e) {
       log('error', 'ERR', `client_secrets failed: ${errorMessage(e)}`);
-      stopSession(); return;
+      stopSession();
+      return;
     }
 
     const token = tokenResp?.client_secret?.value ?? tokenResp?.value;
-    if (!token) { log('error', 'ERR', `Cannot extract token: ${JSON.stringify(tokenResp)}`); stopSession(); return; }
+    if (!token) {
+      log('error', 'ERR', `Cannot extract token: ${JSON.stringify(tokenResp)}`);
+      stopSession();
+      return;
+    }
     tokenRef.current = token;
     setTokenPreview(token.slice(0, 10) + '…');
     log('info', 'TOKEN', `Preview: ${token.slice(0, 10)}…`);
@@ -333,10 +358,17 @@ export default function DashboardWebRTCTester(): ReactNode {
     pc.oniceconnectionstatechange = () => {
       setIceState(pc.iceConnectionState);
       log('info', 'ICE', pc.iceConnectionState);
-      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
-        setStatus('connected'); setFlowStep(3);
+      if (
+        pc.iceConnectionState === 'connected' ||
+        pc.iceConnectionState === 'completed'
+      ) {
+        setStatus('connected');
+        setFlowStep(3);
       }
-      if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+      if (
+        pc.iceConnectionState === 'failed' ||
+        pc.iceConnectionState === 'disconnected'
+      ) {
         setStatus('error');
       }
     };
@@ -348,25 +380,36 @@ export default function DashboardWebRTCTester(): ReactNode {
 
     pc.ontrack = (e) => {
       log('success', 'AUDIO', 'Remote audio track received from OpenAI');
-      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = e.streams[0];
+      if (remoteAudioRef.current)
+        remoteAudioRef.current.srcObject = e.streams[0];
       setupAnalyser(e.streams[0]);
       setAudioStatus('Receiving audio from OpenAI ✓');
     };
 
     const dc = pc.createDataChannel('oai-events');
     dcRef.current = dc;
-    dc.onopen = () => { setDcState('open'); log('success', 'DC', 'Data channel open — ready!'); setStatus('connected'); };
-    dc.onclose = () => { setDcState('closed'); log('warn', 'DC', 'Closed'); };
+    dc.onopen = () => {
+      setDcState('open');
+      log('success', 'DC', 'Data channel open — ready!');
+      setStatus('connected');
+    };
+    dc.onclose = () => {
+      setDcState('closed');
+      log('warn', 'DC', 'Closed');
+    };
     dc.onmessage = (e) => {
-      try { log('info', 'EVENT', JSON.parse(e.data).type ?? 'unknown'); }
-      catch { log('info', 'EVENT', e.data.slice(0, 100)); }
+      try {
+        log('info', 'EVENT', JSON.parse(e.data).type ?? 'unknown');
+      } catch {
+        log('info', 'EVENT', e.data.slice(0, 100));
+      }
     };
 
     // Mic
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
       streamRef.current = stream;
-      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
       log('success', 'MIC', 'Microphone access granted');
       setAudioStatus('Mic active — waiting for remote audio');
       micRef.current = true;
@@ -375,7 +418,7 @@ export default function DashboardWebRTCTester(): ReactNode {
       log('warn', 'MIC', `Mic denied: ${errorMessage(e)}`);
       const ctx = new AudioContext();
       const dest = ctx.createMediaStreamDestination();
-      dest.stream.getTracks().forEach(t => pc.addTrack(t, dest.stream));
+      dest.stream.getTracks().forEach((t) => pc.addTrack(t, dest.stream));
     }
 
     // Step 3: SDP offer
@@ -393,20 +436,35 @@ export default function DashboardWebRTCTester(): ReactNode {
     try {
       const r = await fetch(`${url}/v1/realtime/calls`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/sdp' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/sdp',
+        },
         body: offerSdp,
       });
       log('info', 'HTTP', `${r.status} ${r.statusText}`);
-      if (!r.ok) { log('error', 'ERR', await r.text()); stopSession(); return; }
+      if (!r.ok) {
+        log('error', 'ERR', await r.text());
+        stopSession();
+        return;
+      }
       const ans = await r.text();
-      log('success', 'SDP', `Answer received (${ans.split('\n').length} lines)`);
+      log(
+        'success',
+        'SDP',
+        `Answer received (${ans.split('\n').length} lines)`,
+      );
 
       // Step 5: remote description
       log('step', 'STEP 5', 'Setting remote description');
-      await pc.setRemoteDescription({ type: 'answer', sdp: ans });
+      await pc.setRemoteDescription({type: 'answer', sdp: ans});
       setSdpAnswer(ans);
       setAnswerActive(true);
-      log('success', 'CONN', '✓ Session established — Browser ↔ LiteLLM ↔ OpenAI');
+      log(
+        'success',
+        'CONN',
+        '✓ Session established — Browser ↔ LiteLLM ↔ OpenAI',
+      );
     } catch (e) {
       log('error', 'ERR', `calls failed: ${errorMessage(e)}`);
       stopSession();
@@ -414,9 +472,18 @@ export default function DashboardWebRTCTester(): ReactNode {
   }
 
   function stopSession() {
-    if (pcRef.current) { pcRef.current.close(); pcRef.current = null; }
-    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (animRef.current) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
     tokenRef.current = null;
     micRef.current = false;
     setConnected(false);
@@ -435,10 +502,15 @@ export default function DashboardWebRTCTester(): ReactNode {
   }
 
   function toggleMic() {
-    if (!streamRef.current) { log('warn', 'MIC', 'No active session'); return; }
+    if (!streamRef.current) {
+      log('warn', 'MIC', 'No active session');
+      return;
+    }
     const next = !micRef.current;
     micRef.current = next;
-    streamRef.current.getAudioTracks().forEach(t => { t.enabled = next; });
+    streamRef.current.getAudioTracks().forEach((t) => {
+      t.enabled = next;
+    });
     setMicActive(next);
     log('info', 'MIC', next ? 'Unmuted' : 'Muted');
   }
@@ -450,12 +522,16 @@ export default function DashboardWebRTCTester(): ReactNode {
       <style>{STYLES}</style>
       <div className="wrt-wrap">
         {/* Toggle header */}
-        <div className={`wrt-toggle${open ? '' : ' closed'}`} onClick={() => setOpen(o => !o)}>
+        <div
+          className={`wrt-toggle${open ? '' : ' closed'}`}
+          onClick={() => setOpen((o) => !o)}>
           <div className="wrt-toggle-left">
             <div className="wrt-live-dot" />
             <div>
               <div className="wrt-toggle-title">INTERACTIVE TESTER</div>
-              <div className="wrt-toggle-sub">Browser → LiteLLM → OpenAI · WebRTC</div>
+              <div className="wrt-toggle-sub">
+                Browser → LiteLLM → OpenAI · WebRTC
+              </div>
             </div>
           </div>
           <span className={`wrt-chevron${open ? ' open' : ''}`}>▼</span>
@@ -469,15 +545,27 @@ export default function DashboardWebRTCTester(): ReactNode {
                 <div className="wrt-label">Proxy Config</div>
                 <div className="wrt-field">
                   <label>Proxy URL</label>
-                  <input value={proxyUrl} onChange={e => setProxyUrl(e.target.value)} placeholder="http://localhost:4000" />
+                  <input
+                    value={proxyUrl}
+                    onChange={(e) => setProxyUrl(e.target.value)}
+                    placeholder="http://localhost:4000"
+                  />
                 </div>
                 <div className="wrt-field">
                   <label>API Key</label>
-                  <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-<your-litellm-api-key>" />
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-<your-litellm-api-key>"
+                  />
                 </div>
                 <div className="wrt-field">
                   <label>Model</label>
-                  <input value={model} onChange={e => setModel(e.target.value)} />
+                  <input
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -486,11 +574,21 @@ export default function DashboardWebRTCTester(): ReactNode {
               <div>
                 <div className="wrt-label">Flow</div>
                 <div className="wrt-flow">
-                  <div className={`wrt-flow-box${f(1) ? ' active' : ''}`}>Browser</div>
-                  <div className={`wrt-flow-arrow${f(1) ? ' active' : ''}`}>→</div>
-                  <div className={`wrt-flow-box${f(1) ? ' active' : ''}`}>LiteLLM</div>
-                  <div className={`wrt-flow-arrow${f(2) ? ' active' : ''}`}>→</div>
-                  <div className={`wrt-flow-box${f(2) ? ' active' : ''}`}>OpenAI</div>
+                  <div className={`wrt-flow-box${f(1) ? ' active' : ''}`}>
+                    Browser
+                  </div>
+                  <div className={`wrt-flow-arrow${f(1) ? ' active' : ''}`}>
+                    →
+                  </div>
+                  <div className={`wrt-flow-box${f(1) ? ' active' : ''}`}>
+                    LiteLLM
+                  </div>
+                  <div className={`wrt-flow-arrow${f(2) ? ' active' : ''}`}>
+                    →
+                  </div>
+                  <div className={`wrt-flow-box${f(2) ? ' active' : ''}`}>
+                    OpenAI
+                  </div>
                 </div>
               </div>
 
@@ -498,9 +596,24 @@ export default function DashboardWebRTCTester(): ReactNode {
 
               <div>
                 <div className="wrt-label">Controls</div>
-                <button className="wrt-btn wrt-btn-primary" onClick={startSession} disabled={connected}>▶ Start Session</button>
-                <button className="wrt-btn wrt-btn-danger" onClick={stopSession} disabled={!connected}>■ Stop</button>
-                <button className="wrt-btn wrt-btn-ghost" onClick={clearLogs} style={{marginTop: 5}}>✕ Clear Logs</button>
+                <button
+                  className="wrt-btn wrt-btn-primary"
+                  onClick={startSession}
+                  disabled={connected}>
+                  ▶ Start Session
+                </button>
+                <button
+                  className="wrt-btn wrt-btn-danger"
+                  onClick={stopSession}
+                  disabled={!connected}>
+                  ■ Stop
+                </button>
+                <button
+                  className="wrt-btn wrt-btn-ghost"
+                  onClick={clearLogs}
+                  style={{marginTop: 5}}>
+                  ✕ Clear Logs
+                </button>
               </div>
 
               <div className="wrt-divider" />
@@ -508,8 +621,16 @@ export default function DashboardWebRTCTester(): ReactNode {
               <div>
                 <div className="wrt-label">Session Info</div>
                 <div className="wrt-meta">
-                  {[['token', tokenPreview], ['ice', iceState], ['conn', connState], ['data ch.', dcState]].map(([k, v]) => (
-                    <div className="wrt-meta-row" key={k}><span>{k}</span><span>{v}</span></div>
+                  {[
+                    ['token', tokenPreview],
+                    ['ice', iceState],
+                    ['conn', connState],
+                    ['data ch.', dcState],
+                  ].map(([k, v]) => (
+                    <div className="wrt-meta-row" key={k}>
+                      <span>{k}</span>
+                      <span>{v}</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -520,60 +641,105 @@ export default function DashboardWebRTCTester(): ReactNode {
               <div className="wrt-header">
                 <span className="wrt-header-title">WEBRTC REALTIME TESTER</span>
                 <div className="wrt-status-pill">
-                  <div className={`wrt-status-dot${status !== 'idle' ? ` ${status}` : ''}`} />
-                  <span style={{fontSize:10, color:'#4a5568'}}>{status}</span>
+                  <div
+                    className={`wrt-status-dot${status !== 'idle' ? ` ${status}` : ''}`}
+                  />
+                  <span style={{fontSize: 10, color: '#4a5568'}}>{status}</span>
                 </div>
               </div>
 
               <div className="wrt-tabs">
-                {TABS.map(t => (
-                  <div key={t} className={`wrt-tab${activeTab===t?' active':''}`} onClick={() => setActiveTab(t)}>
+                {TABS.map((t) => (
+                  <div
+                    key={t}
+                    className={`wrt-tab${activeTab === t ? ' active' : ''}`}
+                    onClick={() => setActiveTab(t)}>
                     {t.toUpperCase()}
                   </div>
                 ))}
               </div>
 
               {/* Logs */}
-              <div className={`wrt-tab-content${activeTab==='logs'?' active':''}`}>
+              <div
+                className={`wrt-tab-content${activeTab === 'logs' ? ' active' : ''}`}>
                 <div className="wrt-log" ref={logRef}>
-                  {entries.length === 0
-                    ? <div className="wrt-empty"><div style={{fontSize:22,opacity:0.3}}>📡</div><div>Hit "Start Session" to begin</div></div>
-                    : entries.map(e => (
-                        <div key={e.id} className={`wrt-entry ${e.level}`}>
-                          <span className="we-time">{e.time}</span>
-                          <span className="we-tag">[{e.tag}]</span>
-                          <span className="we-msg">{e.msg}</span>
-                        </div>
-                      ))
-                  }
+                  {entries.length === 0 ? (
+                    <div className="wrt-empty">
+                      <div style={{fontSize: 22, opacity: 0.3}}>📡</div>
+                      <div>Hit "Start Session" to begin</div>
+                    </div>
+                  ) : (
+                    entries.map((e) => (
+                      <div key={e.id} className={`wrt-entry ${e.level}`}>
+                        <span className="we-time">{e.time}</span>
+                        <span className="we-tag">[{e.tag}]</span>
+                        <span className="we-msg">{e.msg}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* SDP */}
-              <div className={`wrt-tab-content${activeTab==='sdp'?' active':''}`}>
+              <div
+                className={`wrt-tab-content${activeTab === 'sdp' ? ' active' : ''}`}>
                 <div className="wrt-sdp-pane">
                   <div className="wrt-sdp-box">
-                    <div className="wrt-sdp-hdr"><div className={`wrt-sdp-dot${offerActive?' active':''}`}/>SDP OFFER</div>
-                    <textarea readOnly value={sdpOffer} placeholder="SDP offer appears here..." />
+                    <div className="wrt-sdp-hdr">
+                      <div
+                        className={`wrt-sdp-dot${offerActive ? ' active' : ''}`}
+                      />
+                      SDP OFFER
+                    </div>
+                    <textarea
+                      readOnly
+                      value={sdpOffer}
+                      placeholder="SDP offer appears here..."
+                    />
                   </div>
                   <div className="wrt-sdp-box">
-                    <div className="wrt-sdp-hdr"><div className={`wrt-sdp-dot${answerActive?' active':''}`}/>SDP ANSWER</div>
-                    <textarea readOnly value={sdpAnswer} placeholder="SDP answer appears here..." />
+                    <div className="wrt-sdp-hdr">
+                      <div
+                        className={`wrt-sdp-dot${answerActive ? ' active' : ''}`}
+                      />
+                      SDP ANSWER
+                    </div>
+                    <textarea
+                      readOnly
+                      value={sdpAnswer}
+                      placeholder="SDP answer appears here..."
+                    />
                   </div>
                 </div>
               </div>
 
               {/* Audio */}
-              <div className={`wrt-tab-content${activeTab==='audio'?' active':''}`}>
+              <div
+                className={`wrt-tab-content${activeTab === 'audio' ? ' active' : ''}`}>
                 <div className="wrt-audio-pane">
                   <div className="wrt-viz">
                     {bars.map((h, i) => (
-                      <div key={i} className="wrt-bar" style={{height: h+'px', background: `hsl(${150-(h/42)*30},100%,55%)`}} />
+                      <div
+                        key={i}
+                        className="wrt-bar"
+                        style={{
+                          height: h + 'px',
+                          background: `hsl(${150 - (h / 42) * 30},100%,55%)`,
+                        }}
+                      />
                     ))}
                   </div>
-                  <button className={`wrt-mic-btn${micActive?' active':''}`} onClick={toggleMic}>🎙️</button>
+                  <button
+                    className={`wrt-mic-btn${micActive ? ' active' : ''}`}
+                    onClick={toggleMic}>
+                    🎙️
+                  </button>
                   <div className="wrt-audio-status">{audioStatus}</div>
-                  <audio ref={remoteAudioRef} autoPlay style={{display:'none'}} />
+                  <audio
+                    ref={remoteAudioRef}
+                    autoPlay
+                    style={{display: 'none'}}
+                  />
                 </div>
               </div>
             </div>

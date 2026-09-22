@@ -22,8 +22,8 @@ const inkeepConfig = {
     theme: {
       styles: [
         {
-          key: "custom-theme",
-          type: "style",
+          key: 'custom-theme',
+          type: 'style',
           value: `
             .ikp-chat-button__button {
               margin-right: 80px !important;
@@ -40,14 +40,15 @@ const inkeepConfig = {
   searchSettings: {
     searchBarPlaceholder: 'Search docs, guides, API reference...',
     debounceTimeMs: 0,
-    maxResults: 7 
+    maxResults: 7,
   },
   aiChatSettings: {
     aiAssistantName: 'LiteLLM AI',
     chatSubjectName: 'LiteLLM',
     aiAssistantAvatar: '/img/favicon.ico',
     placeholder: 'Ask anything about LiteLLM...',
-    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
+    introMessage:
+      'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
     exampleQuestions: [
       'How do I set up the LiteLLM proxy?',
       'How do I route requests across multiple models?',
@@ -68,7 +69,7 @@ const inkeepConfig = {
 const config: Config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/favicon.ico', 
+  favicon: '/img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
@@ -279,7 +280,7 @@ const config: Config = {
       src: 'https://www.feedbackrocket.io/sdk/v1.2.js',
       'data-fr-id': 'GQwepB0f0L-x_ZH63kR_V',
       'data-fr-theme': 'dynamic',
-    }
+    },
   ],
 
   themeConfig: {
@@ -309,10 +310,10 @@ const config: Config = {
         {
           position: 'left',
           label: 'Enterprise',
-          to: "docs/enterprise"
+          to: 'docs/enterprise',
         },
-        { to: '/release_notes', label: 'Changelog', position: 'left' },
-        { to: '/blog', label: 'Blog', position: 'left' },
+        {to: '/release_notes', label: 'Changelog', position: 'left'},
+        {to: '/blog', label: 'Blog', position: 'left'},
         {
           type: 'docSidebar',
           sidebarId: 'autoRouterSidebar',

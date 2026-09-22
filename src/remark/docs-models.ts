@@ -17,7 +17,10 @@ export const TOKEN_RE = /\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g;
 
 let cached: Record<string, string> | undefined;
 function roles(): Record<string, string> {
-  cached ??= JSON.parse(fs.readFileSync(MODELS_PATH, 'utf8')) as Record<string, string>;
+  cached ??= JSON.parse(fs.readFileSync(MODELS_PATH, 'utf8')) as Record<
+    string,
+    string
+  >;
   return cached;
 }
 
@@ -46,12 +49,16 @@ function walk(node: Nodes, parent: Parent | null, index: number): void {
     const role = expressionRole(node.value);
     if (role && parent) {
       const text = {type: 'text' as const, value: roles()[role]};
-      parent.children[index] = node.type === 'mdxFlowExpression' ? {type: 'paragraph', children: [text]} : text;
+      parent.children[index] =
+        node.type === 'mdxFlowExpression'
+          ? {type: 'paragraph', children: [text]}
+          : text;
     }
     return;
   }
   if ('children' in node) {
-    for (let i = 0; i < node.children.length; i += 1) walk(node.children[i], node, i);
+    for (let i = 0; i < node.children.length; i += 1)
+      walk(node.children[i], node, i);
   }
 }
 
@@ -60,4 +67,3 @@ export default function remarkDocsModels() {
     walk(tree, null, 0);
   };
 }
-

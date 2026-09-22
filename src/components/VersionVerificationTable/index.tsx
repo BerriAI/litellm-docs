@@ -1,5 +1,5 @@
-import {useState, type ReactNode} from "react";
-import styles from "./styles.module.css";
+import {useState, type ReactNode} from 'react';
+import styles from './styles.module.css';
 
 interface VersionEntry {
   version: string;
@@ -11,7 +11,7 @@ interface Props {
   entries: VersionEntry[];
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({text}: {text: string}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -25,14 +25,13 @@ function CopyButton({ text }: { text: string }) {
     <button
       className={styles.copyBtn}
       onClick={handleCopy}
-      title="Copy full SHA-256"
-    >
-      {copied ? "✓" : "⧉"}
+      title="Copy full SHA-256">
+      {copied ? '✓' : '⧉'}
     </button>
   );
 }
 
-export default function VersionVerificationTable({ entries }: Props): ReactNode {
+export default function VersionVerificationTable({entries}: Props): ReactNode {
   return (
     <div className={styles.wrapper}>
       <table className={styles.table}>
@@ -67,8 +66,7 @@ export default function VersionVerificationTable({ entries }: Props): ReactNode 
                   className={styles.commitLink}
                   href={`https://github.com/BerriAI/litellm/commit/${entry.gitCommit}`}
                   target="_blank"
-                  rel="noopener noreferrer"
-                >
+                  rel="noopener noreferrer">
                   {entry.gitCommit}
                 </a>
               </td>

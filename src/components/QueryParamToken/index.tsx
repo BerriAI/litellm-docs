@@ -10,8 +10,17 @@ export default function QueryParamToken(): ReactNode {
   }, []);
 
   return (
-    <span style={{ padding: 0, margin: 0 }}>
-      {token ? <a href={`https://admin.litellm.ai/${token}`} target="_blank" rel="noopener noreferrer">admin.litellm.ai</a> : ""}
+    <span style={{padding: 0, margin: 0}}>
+      {token ? (
+        <a
+          href={`https://admin.litellm.ai/${token}`}
+          target="_blank"
+          rel="noopener noreferrer">
+          admin.litellm.ai
+        </a>
+      ) : (
+        ''
+      )}
     </span>
   );
 }

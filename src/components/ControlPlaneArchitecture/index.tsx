@@ -1,1 +1,1 @@
-export { default as ControlPlaneArchitecture } from './ControlPlaneArchitecture';
+export {default as ControlPlaneArchitecture} from './ControlPlaneArchitecture';

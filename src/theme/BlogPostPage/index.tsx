@@ -10,8 +10,18 @@ function BackLink(): ReactNode {
   return (
     <div className={styles.backOuter}>
       <a href="/blog" className={styles.backLink}>
-        <svg className={styles.backArrow} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+        <svg
+          className={styles.backArrow}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16l-4-4m0 0l4-4m-4 4h18"
+          />
         </svg>
         Blog
       </a>

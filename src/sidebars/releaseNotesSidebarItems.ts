@@ -9,7 +9,11 @@ type Version = [major: number, minor: number, patch: number];
 function parseVersion(value: string): Version {
   const match = value.match(/v?(\d+)\.(\d+)\.(\d+)/);
   if (!match) return [0, 0, 0];
-  return [Number.parseInt(match[1], 10), Number.parseInt(match[2], 10), Number.parseInt(match[3], 10)];
+  return [
+    Number.parseInt(match[1], 10),
+    Number.parseInt(match[2], 10),
+    Number.parseInt(match[3], 10),
+  ];
 }
 
 function docVersion(item: DocItem): Version {
@@ -34,7 +38,11 @@ function flattenDocs(list: SidebarItem[]): DocItem[] {
     } else if (item.type === 'category') {
       if (item.link?.type === 'doc' && item.link.id !== 'index') {
         const {id} = item.link;
-        result.push({type: 'doc' as const, id, label: id.replace(/\/index$/, '')});
+        result.push({
+          type: 'doc' as const,
+          id,
+          label: id.replace(/\/index$/, ''),
+        });
       } else {
         result.push(...flattenDocs(item.items));
       }
@@ -43,8 +51,14 @@ function flattenDocs(list: SidebarItem[]): DocItem[] {
   return result;
 }
 
-function buildMinorCategories(yearItems: DocItem[], expandNewest: boolean): CategoryItem[] {
-  const byMinor = new Map<string, {major: number; minor: number; items: DocItem[]}>();
+function buildMinorCategories(
+  yearItems: DocItem[],
+  expandNewest: boolean,
+): CategoryItem[] {
+  const byMinor = new Map<
+    string,
+    {major: number; minor: number; items: DocItem[]}
+  >();
   for (const item of yearItems) {
     const [major, minor] = docVersion(item);
     const key = `v${major}.${minor}.x`;
@@ -52,7 +66,7 @@ function buildMinorCategories(yearItems: DocItem[], expandNewest: boolean): Cate
     byMinor.get(key)!.items.push(item);
   }
   return [...byMinor.entries()]
-    .sort(([, a], [, b]) => (b.major - a.major) || (b.minor - a.minor))
+    .sort(([, a], [, b]) => b.major - a.major || b.minor - a.minor)
     .map(([key, group], index) => ({
       type: 'category',
       label: key,
@@ -82,7 +96,9 @@ export const releaseNotesSidebarItems: SidebarItemsGenerator = async ({
     byYear.get(year)!.push(item);
   }
 
-  const years = [...byYear.keys()].sort((a, b) => Number.parseInt(b, 10) - Number.parseInt(a, 10));
+  const years = [...byYear.keys()].sort(
+    (a, b) => Number.parseInt(b, 10) - Number.parseInt(a, 10),
+  );
   return years.map((year, index) => ({
     type: 'category',
     label: year,

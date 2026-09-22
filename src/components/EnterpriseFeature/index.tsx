@@ -8,7 +8,7 @@ const DEMO_URL = 'https://enterprise.litellm.ai/demo';
 // A one-line note written inline (<EnterpriseFeature>text</EnterpriseFeature>)
 // arrives as a plain string; block content separated by blank lines arrives
 // already wrapped in <p> elements by MDX.
-function Note({ children }: {children?: ReactNode}) {
+function Note({children}: {children?: ReactNode}) {
   if (children == null) return null;
   if (typeof children === 'string') return <p>{children}</p>;
   return <>{children}</>;
@@ -22,7 +22,11 @@ type Props = {
   children?: ReactNode;
 };
 
-export default function EnterpriseFeature({ feature, free = false, children }: Props): ReactNode {
+export default function EnterpriseFeature({
+  feature,
+  free = false,
+  children,
+}: Props): ReactNode {
   if (free) {
     return (
       <Admonition type="info" title="Free Enterprise feature">
@@ -39,8 +43,7 @@ export default function EnterpriseFeature({ feature, free = false, children }: P
     <Admonition type="info" title="Enterprise feature">
       <p>
         {feature ? `${feature} requires` : 'This feature requires'} a LiteLLM
-        Enterprise license. Start a{' '}
-        <a href={TRIAL_URL}>free 30-day trial</a> or{' '}
+        Enterprise license. Start a <a href={TRIAL_URL}>free 30-day trial</a> or{' '}
         <a href={DEMO_URL}>book a demo</a>.{' '}
         <Link to="/docs/enterprise">See what Enterprise includes</Link>.
       </p>

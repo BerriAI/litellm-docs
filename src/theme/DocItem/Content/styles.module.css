@@ -10,7 +10,9 @@
   border: 1px solid rgba(46, 133, 85, 0.2);
   border-radius: 6px;
   background-color: rgba(46, 133, 85, 0.05);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .rustMigrationBanner:hover {
@@ -99,7 +101,9 @@
   border: 1.5px solid var(--ifm-color-emphasis-300);
   background: var(--ifm-background-surface-color);
   color: var(--ifm-font-color-base);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
   box-shadow: none;
   white-space: nowrap;
   user-select: none;

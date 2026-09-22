@@ -51,7 +51,8 @@
 /* ── Wrapper ── */
 .wrapper {
   margin: 1.5rem 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ── Tab bar ── */
@@ -72,7 +73,9 @@
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .tab:hover {
@@ -207,7 +210,9 @@
   background: var(--cp-card-bg);
   padding: 1rem 1.25rem;
   text-align: center;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
   position: relative;
 }
 

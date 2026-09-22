@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import DashboardWebRTCTester from "./DashboardWebRTCTester";
+import DashboardWebRTCTester from './DashboardWebRTCTester';
 
 const LIGHT_MODE_OVERRIDES = `
 .wrt-wrap {

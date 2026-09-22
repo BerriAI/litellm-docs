@@ -15,25 +15,25 @@ type Props = {
   columns?: number;
 };
 
-export default function NavigationCards({ items, columns = 2 }: Props): ReactNode {
+export default function NavigationCards({
+  items,
+  columns = 2,
+}: Props): ReactNode {
   return (
     <div
       className={styles.grid}
-      style={{ '--nav-columns': columns } as CSSProperties}
-    >
+      style={{'--nav-columns': columns} as CSSProperties}>
       {items.map((item, i) => {
-        const isExternal = item.to.startsWith('http://') || item.to.startsWith('https://');
+        const isExternal =
+          item.to.startsWith('http://') || item.to.startsWith('https://');
         return (
           <Link
             key={i}
             to={item.to}
             className={styles.card}
             target={isExternal ? '_blank' : undefined}
-            rel={isExternal ? 'noopener noreferrer' : undefined}
-          >
-            {item.icon && (
-              <div className={styles.icon}>{item.icon}</div>
-            )}
+            rel={isExternal ? 'noopener noreferrer' : undefined}>
+            {item.icon && <div className={styles.icon}>{item.icon}</div>}
             <div className={styles.title}>{item.title}</div>
             {item.description && (
               <div className={styles.description}>{item.description}</div>
@@ -45,9 +45,7 @@ export default function NavigationCards({ items, columns = 2 }: Props): ReactNod
                 ))}
               </ul>
             )}
-            {isExternal && (
-              <span className={styles.externalIcon}>↗</span>
-            )}
+            {isExternal && <span className={styles.externalIcon}>↗</span>}
           </Link>
         );
       })}

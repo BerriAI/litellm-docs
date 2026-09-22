@@ -21,7 +21,9 @@
   text-decoration: none !important;
   color: inherit !important;
   background: var(--ifm-background-surface-color);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .card:hover {

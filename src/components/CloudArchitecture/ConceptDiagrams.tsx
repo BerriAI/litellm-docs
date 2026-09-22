@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 
 /* Shared primitives, mirrored from CloudArchitecture.tsx */
 
-function Icon({ file, className }: { file: string; className?: string }) {
+function Icon({file, className}: {file: string; className?: string}) {
   return (
     <img
       src={useBaseUrl(`/img/cloud_icons/${file}`)}
@@ -15,11 +15,19 @@ function Icon({ file, className }: { file: string; className?: string }) {
   );
 }
 
-function Clients({ label = 'Clients (OpenAI SDK, LangChain, curl)' }: { label?: string }) {
+function Clients({
+  label = 'Clients (OpenAI SDK, LangChain, curl)',
+}: {
+  label?: string;
+}) {
   return (
     <div className={styles.clients}>
       <div className={styles.clientsIcon}>
-        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          strokeWidth="2"
+          strokeLinecap="round">
           <circle cx="12" cy="8" r="4" />
           <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
         </svg>
@@ -115,7 +123,7 @@ function PillsNode({
   );
 }
 
-function ConnectorDown({ label }: { label?: string }) {
+function ConnectorDown({label}: {label?: string}) {
   if (!label) return <div className={styles.connectorDown} />;
   return (
     <div className={styles.connectorLabeled}>
@@ -125,7 +133,7 @@ function ConnectorDown({ label }: { label?: string }) {
   );
 }
 
-function Branch({ legs }: { legs: number }) {
+function Branch({legs}: {legs: number}) {
   const positions =
     legs === 2 ? ['30%', '70%'] : legs === 3 ? ['20%', '50%', '80%'] : ['50%'];
   return (
@@ -133,10 +141,13 @@ function Branch({ legs }: { legs: number }) {
       <div className={styles.branchStem} />
       <div
         className={styles.branchBar}
-        style={{ left: positions[0], right: `calc(100% - ${positions[positions.length - 1]})` }}
+        style={{
+          left: positions[0],
+          right: `calc(100% - ${positions[positions.length - 1]})`,
+        }}
       />
       {positions.map((p) => (
-        <div key={p} className={styles.branchLeg} style={{ left: p }} />
+        <div key={p} className={styles.branchLeg} style={{left: p}} />
       ))}
     </div>
   );
@@ -157,13 +168,15 @@ function Box({
     badgeColor === 'green'
       ? styles.badgeGreen
       : badgeColor === 'orange'
-      ? styles.badgeOrange
-      : styles.badgeBlue;
+        ? styles.badgeOrange
+        : styles.badgeBlue;
   return (
     <div className={styles.region}>
       <div className={styles.regionHeader}>
         <span className={styles.regionName}>{name}</span>
-        {badge && <span className={`${styles.badge} ${badgeCls}`}>{badge}</span>}
+        {badge && (
+          <span className={`${styles.badge} ${badgeCls}`}>{badge}</span>
+        )}
       </div>
       {children}
     </div>
@@ -179,26 +192,55 @@ export function RequestFlowDiagram(): ReactNode {
         <Clients />
         <ConnectorDown label="Authorization: Bearer sk-..." />
         <Box name="LiteLLM Gateway" badge=":4000" badgeColor="blue">
-          <StepNode n={1} title="Auth and budget checks" subtitle="virtual key: cache first, database on miss" />
+          <StepNode
+            n={1}
+            title="Auth and budget checks"
+            subtitle="virtual key: cache first, database on miss"
+          />
           <ConnectorDown />
-          <StepNode n={2} title="Rate limiting" subtitle="rpm / tpm for key, user, team, and server" />
+          <StepNode
+            n={2}
+            title="Rate limiting"
+            subtitle="rpm / tpm for key, user, team, and server"
+          />
           <Branch legs={2} />
           <div className={styles.dataRow}>
-            <Node icon="postgresql.svg" title="PostgreSQL" subtitle="keys, teams, spend" small />
-            <Node icon="redis.svg" title="Redis" subtitle="key cache, rate-limit counters" small />
+            <Node
+              icon="postgresql.svg"
+              title="PostgreSQL"
+              subtitle="keys, teams, spend"
+              small
+            />
+            <Node
+              icon="redis.svg"
+              title="Redis"
+              subtitle="key cache, rate-limit counters"
+              small
+            />
           </div>
           <ConnectorDown />
-          <StepNode n={3} title="Router" subtitle="load balancing, fallbacks, retries" />
+          <StepNode
+            n={3}
+            title="Router"
+            subtitle="load balancing, fallbacks, retries"
+          />
           <ConnectorDown />
-          <StepNode n={4} title="Provider translation" subtitle="litellm SDK, OpenAI format in and out" />
+          <StepNode
+            n={4}
+            title="Provider translation"
+            subtitle="litellm SDK, OpenAI format in and out"
+          />
         </Box>
         <ConnectorDown label="provider-native request" />
-        <PillsNode title="LLM providers" pills={['OpenAI', 'Anthropic', 'Bedrock', 'Vertex', '100+ more']} />
+        <PillsNode
+          title="LLM providers"
+          pills={['OpenAI', 'Anthropic', 'Bedrock', 'Vertex', '100+ more']}
+        />
         <div className={`${styles.callout} ${styles.calloutSuccess}`}>
           <span>
-            After the response is returned to the client, spend logging, rate-limit accounting, and
-            logging callbacks all run as asynchronous background tasks; no database write sits in
-            the request path.
+            After the response is returned to the client, spend logging,
+            rate-limit accounting, and logging callbacks all run as asynchronous
+            background tasks; no database write sits in the request path.
           </span>
         </div>
       </div>
@@ -212,13 +254,29 @@ export function RouterFlowDiagram(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <div className={styles.diagram}>
-        <StepNode title="Unified call" subtitle=".completion, .embeddings, and every other unified endpoint" accent="blue" />
+        <StepNode
+          title="Unified call"
+          subtitle=".completion, .embeddings, and every other unified endpoint"
+          accent="blue"
+        />
         <ConnectorDown />
-        <StepNode n={1} title="function_with_fallbacks" subtitle="catches failures; moves to the next model group in fallbacks" />
+        <StepNode
+          n={1}
+          title="function_with_fallbacks"
+          subtitle="catches failures; moves to the next model group in fallbacks"
+        />
         <ConnectorDown />
-        <StepNode n={2} title="function_with_retries" subtitle="retries on another available deployment in the same group" />
+        <StepNode
+          n={2}
+          title="function_with_retries"
+          subtitle="retries on another available deployment in the same group"
+        />
         <ConnectorDown />
-        <StepNode n={3} title="litellm.completion" subtitle="makes the provider API call" />
+        <StepNode
+          n={3}
+          title="litellm.completion"
+          subtitle="makes the provider API call"
+        />
         <ConnectorDown />
         <PillsNode
           title="model group: gpt-4o"
@@ -227,8 +285,8 @@ export function RouterFlowDiagram(): ReactNode {
         />
         <div className={`${styles.callout} ${styles.calloutSuccess}`}>
           <span>
-            Retries stay inside the model group that failed; fallbacks leave it for the next group
-            in your fallbacks configuration.
+            Retries stay inside the model group that failed; fallbacks leave it
+            for the next group in your fallbacks configuration.
           </span>
         </div>
       </div>
@@ -248,12 +306,23 @@ export function ImageFlowDiagram(): ReactNode {
         <Branch legs={2} />
         <div className={styles.regionsRow}>
           <Box name="Yes" badge="pass through" badgeColor="green">
-            <StepNode title="URL forwarded unchanged" subtitle="provider fetches the image itself" />
+            <StepNode
+              title="URL forwarded unchanged"
+              subtitle="provider fetches the image itself"
+            />
           </Box>
           <Box name="No" badge="convert" badgeColor="orange">
-            <StepNode n={1} title="Download the image" subtitle="up to 50MB (MAX_IMAGE_URL_DOWNLOAD_SIZE_MB)" />
+            <StepNode
+              n={1}
+              title="Download the image"
+              subtitle="up to 50MB (MAX_IMAGE_URL_DOWNLOAD_SIZE_MB)"
+            />
             <ConnectorDown />
-            <StepNode n={2} title="Send base64 to the provider" subtitle="conversion cached, up to 10 images in memory" />
+            <StepNode
+              n={2}
+              title="Send base64 to the provider"
+              subtitle="conversion cached, up to 10 images in memory"
+            />
           </Box>
         </div>
       </div>
@@ -269,12 +338,22 @@ export function TenancyDiagram(): ReactNode {
       <div className={styles.diagram}>
         <Box name="Organization" badge="enterprise" badgeColor="blue">
           <div className={styles.regionsRow}>
-            <Box name="Team: production" badge="budget + models" badgeColor="green">
+            <Box
+              name="Team: production"
+              badge="budget + models"
+              badgeColor="green">
               <PillsNode title="Users" pills={['alice', 'bob']} />
               <ConnectorDown />
-              <PillsNode title="Keys" subtitle="user keys and team service accounts" pills={['sk-alice', 'sk-svc-prod']} />
+              <PillsNode
+                title="Keys"
+                subtitle="user keys and team service accounts"
+                pills={['sk-alice', 'sk-svc-prod']}
+              />
             </Box>
-            <Box name="Team: experiments" badge="budget + models" badgeColor="green">
+            <Box
+              name="Team: experiments"
+              badge="budget + models"
+              badgeColor="green">
               <PillsNode title="Users" pills={['carol']} />
               <ConnectorDown />
               <PillsNode title="Keys" pills={['sk-carol']} />
@@ -283,9 +362,10 @@ export function TenancyDiagram(): ReactNode {
         </Box>
         <div className={`${styles.callout} ${styles.calloutSuccess}`}>
           <span>
-            Every request's spend is attributed to its key, user, team, and organization at once,
-            and budgets are enforced at each level; a request is blocked when any level on its path
-            is over budget. Teams are the top-level boundary in open source; Organizations add the
+            Every request's spend is attributed to its key, user, team, and
+            organization at once, and budgets are enforced at each level; a
+            request is blocked when any level on its path is over budget. Teams
+            are the top-level boundary in open source; Organizations add the
             outer layer and are an enterprise feature.
           </span>
         </div>

@@ -1,6 +1,6 @@
-import type {ReactNode} from "react";
-import matrix from "@site/src/data/compatibility-matrix.json";
-import styles from "./styles.module.css";
+import type {ReactNode} from 'react';
+import matrix from '@site/src/data/compatibility-matrix.json';
+import styles from './styles.module.css';
 
 /**
  * Claude Code compatibility matrix table.
@@ -15,7 +15,7 @@ import styles from "./styles.module.css";
  * checked into that commit said.
  */
 
-type CellStatus = "pass" | "fail" | "not_tested" | "not_applicable";
+type CellStatus = 'pass' | 'fail' | 'not_tested' | 'not_applicable';
 
 interface Cell {
   status: CellStatus;
@@ -39,25 +39,25 @@ interface Matrix {
 }
 
 const PROVIDER_LABELS: Record<string, string> = {
-  anthropic: "Anthropic",
-  bedrock_invoke: "Bedrock (Invoke)",
-  bedrock_converse: "Bedrock (Converse)",
-  vertex_ai: "Vertex AI",
-  azure: "Azure (Foundry)",
+  anthropic: 'Anthropic',
+  bedrock_invoke: 'Bedrock (Invoke)',
+  bedrock_converse: 'Bedrock (Converse)',
+  vertex_ai: 'Vertex AI',
+  azure: 'Azure (Foundry)',
 };
 
 const STATUS_GLYPH: Record<CellStatus, string> = {
-  pass: "✅",
-  fail: "❌",
-  not_tested: "—",
-  not_applicable: "n/a",
+  pass: '✅',
+  fail: '❌',
+  not_tested: '—',
+  not_applicable: 'n/a',
 };
 
 function cellTitle(cell: Cell): string {
-  if (cell.status === "fail" && cell.error) return cell.error;
-  if (cell.status === "not_applicable" && cell.reason) return cell.reason;
-  if (cell.status === "not_tested") return "no test ran for this combination";
-  return "passing";
+  if (cell.status === 'fail' && cell.error) return cell.error;
+  if (cell.status === 'not_applicable' && cell.reason) return cell.reason;
+  if (cell.status === 'not_tested') return 'no test ran for this combination';
+  return 'passing';
 }
 
 export default function ClaudeCodeCompatibilityTable(): ReactNode {
@@ -91,13 +91,14 @@ export default function ClaudeCodeCompatibilityTable(): ReactNode {
                 {feature.name}
               </th>
               {m.providers.map((p) => {
-                const cell = feature.providers[p] ?? { status: "not_tested" as const };
+                const cell = feature.providers[p] ?? {
+                  status: 'not_tested' as const,
+                };
                 return (
                   <td
                     key={p}
                     className={styles[`status_${cell.status}`]}
-                    title={cellTitle(cell)}
-                  >
+                    title={cellTitle(cell)}>
                     {STATUS_GLYPH[cell.status]}
                   </td>
                 );

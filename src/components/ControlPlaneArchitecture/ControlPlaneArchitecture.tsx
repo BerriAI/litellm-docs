@@ -3,7 +3,15 @@ import styles from './styles.module.css';
 
 /* ────────────────────── Shared small pieces ────────────────────── */
 
-function InfraBox({ icon, label, color }: { icon: string; label: string; color: 'green' | 'blue' | 'orange' }) {
+function InfraBox({
+  icon,
+  label,
+  color,
+}: {
+  icon: string;
+  label: string;
+  color: 'green' | 'blue' | 'orange';
+}) {
   const colorClass =
     color === 'green'
       ? styles.infraBoxGreen
@@ -69,7 +77,9 @@ function ArchitectureView() {
       <div className={`${styles.node} ${styles.nodeControlPlane}`}>
         <div className={styles.nodeHeader}>
           <span className={styles.nodeTitle}>Global Control Plane</span>
-          <span className={`${styles.badge} ${styles.badgeBlue}`}>ADMIN UI ONLY</span>
+          <span className={`${styles.badge} ${styles.badgeBlue}`}>
+            ADMIN UI ONLY
+          </span>
         </div>
         <div className={styles.nodeSubtitle}>cp.example.com</div>
         <div className={styles.nodeCaption}>

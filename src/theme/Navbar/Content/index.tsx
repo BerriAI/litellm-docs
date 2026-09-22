@@ -1,8 +1,5 @@
 import type {ReactNode} from 'react';
-import {
-  useThemeConfig,
-  ErrorCauseBoundary,
-} from '@docusaurus/theme-common';
+import {useThemeConfig, ErrorCauseBoundary} from '@docusaurus/theme-common';
 import {
   splitNavbarItems,
   useNavbarMobileSidebar,
@@ -18,7 +15,7 @@ function useNavbarItems(): NavbarItemConfig[] {
   return useThemeConfig().navbar.items as NavbarItemConfig[];
 }
 
-function NavbarItems({ items }: {items: NavbarItemConfig[]}): ReactNode {
+function NavbarItems({items}: {items: NavbarItemConfig[]}): ReactNode {
   return (
     <>
       {items.map((item, i) => (
@@ -27,7 +24,7 @@ function NavbarItems({ items }: {items: NavbarItemConfig[]}): ReactNode {
           onError={(error) =>
             new Error(
               `A theme navbar item failed to render.\n${JSON.stringify(item, null, 2)}`,
-              { cause: error },
+              {cause: error},
             )
           }>
           <NavbarItem {...item} />

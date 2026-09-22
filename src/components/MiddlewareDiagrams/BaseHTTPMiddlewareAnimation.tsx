@@ -110,8 +110,7 @@ export default function BaseHTTPMiddlewareAnimation(): ReactNode {
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') handleStageClick(i);
-              }}
-            >
+              }}>
               <div className={styles.stageNumber}>{i + 1}</div>
               <div className={styles.stageLabel}>{stage.label}</div>
               <div className={styles.stageSubtitle}>{stage.subtitle}</div>
@@ -120,8 +119,7 @@ export default function BaseHTTPMiddlewareAnimation(): ReactNode {
         ))}
       </div>
       <div
-        className={`${styles.codePanel} ${expandedStage !== null ? styles.codePanelOpen : ''}`}
-      >
+        className={`${styles.codePanel} ${expandedStage !== null ? styles.codePanelOpen : ''}`}>
         {expandedStage !== null && (
           <pre className={styles.codePanelCode}>
             <code>{STAGES[expandedStage].code}</code>

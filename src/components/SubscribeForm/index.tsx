@@ -2,7 +2,6 @@ import {useState, type FormEvent, type ReactNode} from 'react';
 import {LOOPS_FORM_URL} from './config';
 import styles from './styles.module.css';
 
-
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export default function SubscribeForm(): ReactNode {
@@ -32,7 +31,11 @@ export default function SubscribeForm(): ReactNode {
   }
 
   if (status === 'success') {
-    return <p className={`${styles.feedback} ${styles.success}`}>We'll keep you posted!</p>;
+    return (
+      <p className={`${styles.feedback} ${styles.success}`}>
+        We'll keep you posted!
+      </p>
+    );
   }
 
   return (
@@ -40,10 +43,16 @@ export default function SubscribeForm(): ReactNode {
       <input
         type="text"
         value={honeypot}
-        onChange={e => setHoneypot(e.target.value)}
+        onChange={(e) => setHoneypot(e.target.value)}
         tabIndex={-1}
         aria-hidden="true"
-        style={{position:'absolute',left:'-9999px',width:'1px',height:'1px',opacity:0}}
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+        }}
         name="website"
         autoComplete="off"
       />
@@ -51,18 +60,23 @@ export default function SubscribeForm(): ReactNode {
         <input
           type="email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
           disabled={status === 'loading'}
           className={styles.input}
         />
-        <button type="submit" disabled={status === 'loading'} className={styles.btn}>
+        <button
+          type="submit"
+          disabled={status === 'loading'}
+          className={styles.btn}>
           {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
         </button>
       </div>
       {status === 'error' && (
-        <p className={`${styles.feedback} ${styles.error}`}>Something went wrong. Try again.</p>
+        <p className={`${styles.feedback} ${styles.error}`}>
+          Something went wrong. Try again.
+        </p>
       )}
     </form>
   );

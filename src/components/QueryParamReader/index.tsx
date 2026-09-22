@@ -1,6 +1,6 @@
 import {useState, useEffect, type ReactNode} from 'react';
 
-function CodeBlock({ token }: {token: string | null}) {
+function CodeBlock({token}: {token: string | null}) {
   const codeWithToken = `
 import os
 from litellm import completion
@@ -33,11 +33,7 @@ response = completion(model="gpt-3.5-turbo", messages=messages)
 # cohere call
 response = completion("command-nightly", messages)
 `;
-  return (
-    <pre>
-      {token ? codeWithToken : codeWithoutToken}
-    </pre>
-  )
+  return <pre>{token ? codeWithToken : codeWithoutToken}</pre>;
 }
 
 export default function QueryParamReader(): ReactNode {

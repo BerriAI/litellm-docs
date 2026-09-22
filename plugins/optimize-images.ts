@@ -9,10 +9,11 @@ const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
 function walk(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   const files: string[] = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...walk(full));
-    else if (EXTENSIONS.has(path.extname(entry.name).toLowerCase())) files.push(full);
+    else if (EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+      files.push(full);
   }
   return files;
 }
@@ -23,9 +24,9 @@ async function optimizeFile(filePath: string): Promise<number> {
   try {
     const pipeline = sharp(filePath);
     if (ext === '.png') {
-      await pipeline.png({ quality: QUALITY, compressionLevel: 9 }).toFile(tmp);
+      await pipeline.png({quality: QUALITY, compressionLevel: 9}).toFile(tmp);
     } else {
-      await pipeline.jpeg({ quality: QUALITY, mozjpeg: true }).toFile(tmp);
+      await pipeline.jpeg({quality: QUALITY, mozjpeg: true}).toFile(tmp);
     }
     const orig = fs.statSync(filePath).size;
     const next = fs.statSync(tmp).size;
@@ -45,13 +46,19 @@ async function optimizeFile(filePath: string): Promise<number> {
 export default function optimizeImagesPlugin(): Plugin {
   return {
     name: 'optimize-images',
-    async postBuild({ outDir }) {
+    async postBuild({outDir}) {
       const files = walk(outDir);
       if (!files.length) return;
       let saved = 0;
-      await Promise.all(files.map(async (f) => { saved += await optimizeFile(f); }));
+      await Promise.all(
+        files.map(async (f) => {
+          saved += await optimizeFile(f);
+        }),
+      );
       const mb = (saved / 1024 / 1024).toFixed(1);
-      console.log(`\n[optimize-images] Compressed ${files.length} images, saved ${mb} MB`);
+      console.log(
+        `\n[optimize-images] Compressed ${files.length} images, saved ${mb} MB`,
+      );
     },
   };
 }

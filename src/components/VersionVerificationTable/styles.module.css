@@ -88,7 +88,9 @@
   padding: 2px 4px;
   font-size: 0.7rem;
   color: var(--ifm-color-emphasis-600);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .copyBtn:hover {

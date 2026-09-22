@@ -100,18 +100,30 @@
 .fadeLeft {
   pointer-events: none;
   position: absolute;
-  left: 0; top: 0; bottom: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 5rem;
-  background: linear-gradient(to right, var(--ifm-background-color, #fff), transparent);
+  background: linear-gradient(
+    to right,
+    var(--ifm-background-color, #fff),
+    transparent
+  );
   z-index: 10;
 }
 
 .fadeRight {
   pointer-events: none;
   position: absolute;
-  right: 0; top: 0; bottom: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   width: 5rem;
-  background: linear-gradient(to left, var(--ifm-background-color, #fff), transparent);
+  background: linear-gradient(
+    to left,
+    var(--ifm-background-color, #fff),
+    transparent
+  );
   z-index: 10;
 }
 
@@ -123,8 +135,12 @@
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .marqueeItem {
@@ -161,7 +177,9 @@
   border-radius: 8px;
   color: #111827;
   background: #fff;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .searchInput:focus-visible {
@@ -195,7 +213,9 @@
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
   margin-bottom: -1px;
 }
 

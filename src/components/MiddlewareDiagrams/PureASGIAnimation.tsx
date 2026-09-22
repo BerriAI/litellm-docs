@@ -7,8 +7,8 @@ interface Stage {
 }
 
 const STAGES: Stage[] = [
-  { label: 'Scope Check', subtitle: 'scope["type"] != "http"' },
-  { label: 'Direct Call', subtitle: 'await self.app(scope, receive, send)' },
+  {label: 'Scope Check', subtitle: 'scope["type"] != "http"'},
+  {label: 'Direct Call', subtitle: 'await self.app(scope, receive, send)'},
 ];
 
 const INTERVAL_MS = 1200;
@@ -53,8 +53,7 @@ export default function PureASGIAnimation(): ReactNode {
             <div
               className={`${styles.stage} ${styles.stageNoClick} ${
                 activeStage === i ? styles.stageActiveGreen : ''
-              }`}
-            >
+              }`}>
               <div className={styles.stageNumber}>{i + 1}</div>
               <div className={styles.stageLabel}>{stage.label}</div>
               <div className={styles.stageSubtitle}>{stage.subtitle}</div>

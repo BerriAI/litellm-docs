@@ -1,4 +1,11 @@
-import {Fragment, useState, useEffect, useRef, useCallback, type ReactNode} from 'react';
+import {
+  Fragment,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import styles from './styles.module.css';
 
 /* ── Constants ── */
@@ -15,28 +22,28 @@ const BEFORE_P50 = 21;
 const AFTER_P50 = 13;
 
 const BEFORE_LAYERS = [
-  { label: 'ab client', warning: false },
-  { label: 'uvicorn \u00B7 1 worker', warning: false },
-  { label: 'ASGI Middleware', warning: false },
-  { label: 'BaseHTTPMiddleware', warning: true },
-  { label: 'GET /health \u2192 "ok"', warning: false },
+  {label: 'ab client', warning: false},
+  {label: 'uvicorn \u00B7 1 worker', warning: false},
+  {label: 'ASGI Middleware', warning: false},
+  {label: 'BaseHTTPMiddleware', warning: true},
+  {label: 'GET /health \u2192 "ok"', warning: false},
 ];
 
 const AFTER_LAYERS = [
-  { label: 'ab client', warning: false },
-  { label: 'uvicorn \u00B7 1 worker', warning: false },
-  { label: 'ASGI Middleware', warning: false },
-  { label: 'ASGI Middleware', warning: false },
-  { label: 'GET /health \u2192 "ok"', warning: false },
+  {label: 'ab client', warning: false},
+  {label: 'uvicorn \u00B7 1 worker', warning: false},
+  {label: 'ASGI Middleware', warning: false},
+  {label: 'ASGI Middleware', warning: false},
+  {label: 'GET /health \u2192 "ok"', warning: false},
 ];
 
 const BENCHMARK_RUNS = [
-  { config: 'Before (1 ASGI + 1 BaseHTTP)', run: 1, rps: 3596, p50: 21 },
-  { config: 'Before (1 ASGI + 1 BaseHTTP)', run: 2, rps: 3599, p50: 21 },
-  { config: 'Before (1 ASGI + 1 BaseHTTP)', run: 3, rps: 4161, p50: 21 },
-  { config: 'After (2x Pure ASGI)', run: 1, rps: 6504, p50: 13 },
-  { config: 'After (2x Pure ASGI)', run: 2, rps: 6631, p50: 13 },
-  { config: 'After (2x Pure ASGI)', run: 3, rps: 6595, p50: 13 },
+  {config: 'Before (1 ASGI + 1 BaseHTTP)', run: 1, rps: 3596, p50: 21},
+  {config: 'Before (1 ASGI + 1 BaseHTTP)', run: 2, rps: 3599, p50: 21},
+  {config: 'Before (1 ASGI + 1 BaseHTTP)', run: 3, rps: 4161, p50: 21},
+  {config: 'After (2x Pure ASGI)', run: 1, rps: 6504, p50: 13},
+  {config: 'After (2x Pure ASGI)', run: 2, rps: 6631, p50: 13},
+  {config: 'After (2x Pure ASGI)', run: 3, rps: 6595, p50: 13},
 ];
 
 /* ── Dot type ── */
@@ -64,12 +71,18 @@ export default function BenchmarkVisualization(): ReactNode {
   const afterProgress = Math.min(elapsed / DURATION_AFTER_MS, 1);
   const beforeCompleted = Math.round(beforeProgress * TOTAL_REQUESTS);
   const afterCompleted = Math.round(afterProgress * TOTAL_REQUESTS);
-  const beforeCurrentRPS = running && !beforeDone
-    ? Math.round(BEFORE_RPS * (0.9 + Math.random() * 0.2))
-    : beforeDone ? 0 : 0;
-  const afterCurrentRPS = running && !afterDone
-    ? Math.round(AFTER_RPS * (0.9 + Math.random() * 0.2))
-    : afterDone ? 0 : 0;
+  const beforeCurrentRPS =
+    running && !beforeDone
+      ? Math.round(BEFORE_RPS * (0.9 + Math.random() * 0.2))
+      : beforeDone
+        ? 0
+        : 0;
+  const afterCurrentRPS =
+    running && !afterDone
+      ? Math.round(AFTER_RPS * (0.9 + Math.random() * 0.2))
+      : afterDone
+        ? 0
+        : 0;
 
   const reset = useCallback(() => {
     setElapsed(0);
@@ -95,7 +108,7 @@ export default function BenchmarkVisualization(): ReactNode {
           startSimulation();
         }
       },
-      { threshold: 0.3 }
+      {threshold: 0.3},
     );
 
     if (wrapperRef.current) {
@@ -145,13 +158,13 @@ export default function BenchmarkVisualization(): ReactNode {
 
       if (spawnBefore) {
         setBeforeDots((prev) => {
-          const dots = [...prev, { id: dotIdRef.current++, progress: 0 }];
+          const dots = [...prev, {id: dotIdRef.current++, progress: 0}];
           return dots.slice(-MAX_DOTS);
         });
       }
       if (spawnAfter) {
         setAfterDots((prev) => {
-          const dots = [...prev, { id: dotIdRef.current++, progress: 0 }];
+          const dots = [...prev, {id: dotIdRef.current++, progress: 0}];
           return dots.slice(-MAX_DOTS);
         });
       }
@@ -159,13 +172,13 @@ export default function BenchmarkVisualization(): ReactNode {
       // Advance existing dots
       setBeforeDots((prev) =>
         prev
-          .map((d) => ({ ...d, progress: d.progress + 0.08 }))
-          .filter((d) => d.progress <= 1)
+          .map((d) => ({...d, progress: d.progress + 0.08}))
+          .filter((d) => d.progress <= 1),
       );
       setAfterDots((prev) =>
         prev
-          .map((d) => ({ ...d, progress: d.progress + 0.14 }))
-          .filter((d) => d.progress <= 1)
+          .map((d) => ({...d, progress: d.progress + 0.14}))
+          .filter((d) => d.progress <= 1),
       );
     }, 100);
 
@@ -173,9 +186,9 @@ export default function BenchmarkVisualization(): ReactNode {
   }, [running, beforeDone, afterDone]);
 
   const renderFlowStack = (
-    layers: { label: string; warning: boolean }[],
+    layers: {label: string; warning: boolean}[],
     dots: Dot[],
-    isBefore: boolean
+    isBefore: boolean,
   ) => (
     <div className={styles.flowStack}>
       <div className={styles.dotsCanvas}>
@@ -195,10 +208,11 @@ export default function BenchmarkVisualization(): ReactNode {
         <Fragment key={i}>
           {i > 0 && <div className={styles.flowArrow}>&darr;</div>}
           <div
-            className={`${styles.flowLayer} ${layer.warning ? styles.flowLayerWarning : ''}`}
-          >
+            className={`${styles.flowLayer} ${layer.warning ? styles.flowLayerWarning : ''}`}>
             {layer.label}
-            {layer.warning && <span className={styles.overheadTag}>&larr; overhead</span>}
+            {layer.warning && (
+              <span className={styles.overheadTag}>&larr; overhead</span>
+            )}
           </div>
         </Fragment>
       ))}
@@ -219,17 +233,23 @@ export default function BenchmarkVisualization(): ReactNode {
           <div className={`${styles.columnTitle} ${styles.columnTitleBefore}`}>
             Before (1 ASGI + 1 BaseHTTP)
             {beforeDone && (
-              <span className={`${styles.doneBadge} ${styles.doneBadgeBefore}`}>done</span>
+              <span className={`${styles.doneBadge} ${styles.doneBadgeBefore}`}>
+                done
+              </span>
             )}
           </div>
           {renderFlowStack(BEFORE_LAYERS, beforeDots, true)}
           <div className={styles.statsRow}>
             <div className={styles.stat}>
-              <div className={styles.statValue}>{formatNum(beforeCurrentRPS)}</div>
+              <div className={styles.statValue}>
+                {formatNum(beforeCurrentRPS)}
+              </div>
               <div className={styles.statLabel}>RPS</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.statValue}>{formatNum(beforeCompleted)}</div>
+              <div className={styles.statValue}>
+                {formatNum(beforeCompleted)}
+              </div>
               <div className={styles.statLabel}>Completed</div>
             </div>
             <div className={styles.stat}>
@@ -240,7 +260,7 @@ export default function BenchmarkVisualization(): ReactNode {
           <div className={styles.progressBar}>
             <div
               className={`${styles.progressFill} ${styles.progressFillBefore}`}
-              style={{ width: `${beforeProgress * 100}%` }}
+              style={{width: `${beforeProgress * 100}%`}}
             />
           </div>
         </div>
@@ -250,17 +270,23 @@ export default function BenchmarkVisualization(): ReactNode {
           <div className={`${styles.columnTitle} ${styles.columnTitleAfter}`}>
             After (2x Pure ASGI)
             {afterDone && (
-              <span className={`${styles.doneBadge} ${styles.doneBadgeAfter}`}>done</span>
+              <span className={`${styles.doneBadge} ${styles.doneBadgeAfter}`}>
+                done
+              </span>
             )}
           </div>
           {renderFlowStack(AFTER_LAYERS, afterDots, false)}
           <div className={styles.statsRow}>
             <div className={styles.stat}>
-              <div className={styles.statValue}>{formatNum(afterCurrentRPS)}</div>
+              <div className={styles.statValue}>
+                {formatNum(afterCurrentRPS)}
+              </div>
               <div className={styles.statLabel}>RPS</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.statValue}>{formatNum(afterCompleted)}</div>
+              <div className={styles.statValue}>
+                {formatNum(afterCompleted)}
+              </div>
               <div className={styles.statLabel}>Completed</div>
             </div>
             <div className={styles.stat}>
@@ -271,7 +297,7 @@ export default function BenchmarkVisualization(): ReactNode {
           <div className={styles.progressBar}>
             <div
               className={`${styles.progressFill} ${styles.progressFillAfter}`}
-              style={{ width: `${afterProgress * 100}%` }}
+              style={{width: `${afterProgress * 100}%`}}
             />
           </div>
         </div>
@@ -293,13 +319,11 @@ export default function BenchmarkVisualization(): ReactNode {
       <div className={styles.collapsible}>
         <button
           className={styles.collapsibleToggle}
-          onClick={() => setTableOpen(!tableOpen)}
-        >
+          onClick={() => setTableOpen(!tableOpen)}>
           <span
             className={`${styles.collapsibleChevron} ${
               tableOpen ? styles.collapsibleChevronOpen : ''
-            }`}
-          >
+            }`}>
             &#9654;
           </span>
           Per-run data (3 runs each)
@@ -307,8 +331,7 @@ export default function BenchmarkVisualization(): ReactNode {
         <div
           className={`${styles.collapsibleContent} ${
             tableOpen ? styles.collapsibleContentOpen : ''
-          }`}
-        >
+          }`}>
           <table className={styles.dataTable}>
             <thead>
               <tr>
@@ -331,7 +354,6 @@ export default function BenchmarkVisualization(): ReactNode {
           </table>
         </div>
       </div>
-
     </div>
   );
 }

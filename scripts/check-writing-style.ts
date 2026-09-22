@@ -25,12 +25,12 @@
  * if you are writing the sentence yourself, rewrite it instead.
  */
 
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs';
+import path from 'node:path';
 
-type Finding = { file: string; lineNo: number; line: string; message: string };
+type Finding = {file: string; lineNo: number; line: string; message: string};
 
-const EM_DASH = "\u2014";
+const EM_DASH = '\u2014';
 
 const WORD_PATTERNS: [RegExp, string][] = [
   [/\butiliz(e|es|ed|ing)\b/i, 'use "use"'],
@@ -39,19 +39,28 @@ const WORD_PATTERNS: [RegExp, string][] = [
   [/\bseamless(ly)?\b/i, 'use "smooth", "easy", or drop it'],
   [/\bcomprehensive(ly)?\b/i, 'use "complete", "full", or drop it'],
   [/\bdelve[sd]?\b|\bdeep dive\b/i, 'use "examine" or "explore"'],
-  [/\bit'?s important to note that\b|\bit is worth noting that\b/i, "state it directly"],
+  [
+    /\bit'?s important to note that\b|\bit is worth noting that\b/i,
+    'state it directly',
+  ],
   [/\bcould potentially\b|\bmay potentially\b/i, 'use "may" or "can"'],
-  [/\bgenuinely\b|\btruly\b/i, "drop the intensifier if it adds nothing"],
-  [/\bgame-?changer\b|\brevolutioniz(e|es|ed|ing)\b|\bsupercharge[sd]?\b/i, "describe the actual effect"],
-  [/\bunlock(s|ed|ing)? (the|your|its) (power|potential)\b/i, "say what it does"],
+  [/\bgenuinely\b|\btruly\b/i, 'drop the intensifier if it adds nothing'],
+  [
+    /\bgame-?changer\b|\brevolutioniz(e|es|ed|ing)\b|\bsupercharge[sd]?\b/i,
+    'describe the actual effect',
+  ],
+  [
+    /\bunlock(s|ed|ing)? (the|your|its) (power|potential)\b/i,
+    'say what it does',
+  ],
 ];
 
 function collectFiles(target: string): string[] {
   const stat = fs.statSync(target);
   if (!stat.isDirectory()) return /\.mdx?$/.test(target) ? [target] : [];
   const out: string[] = [];
-  for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
+  for (const entry of fs.readdirSync(target, {withFileTypes: true})) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
     out.push(...collectFiles(path.join(target, entry.name)));
   }
   return out;
@@ -59,31 +68,32 @@ function collectFiles(target: string): string[] {
 
 // A dash that only labels a list item or table cell is typography, not prose.
 const LIST_LABEL = new RegExp(
-  `^([-*+]|\\d+\\.)\\s+(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\([^)]+\\)|\`[^\`]+\`)\\s*${EM_DASH}`
+  `^([-*+]|\\d+\\.)\\s+(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\([^)]+\\)|\`[^\`]+\`)\\s*${EM_DASH}`,
 );
 
 // The escape hatch, deliberately scoped to a single following line and
 // required to carry a reason.
-const ALLOW_NEXT_LINE = /^\{\/\*\s*style-lint-allow-next-line\s+em-dash\s*:\s*\S.*\*\/\}$/;
+const ALLOW_NEXT_LINE =
+  /^\{\/\*\s*style-lint-allow-next-line\s+em-dash\s*:\s*\S.*\*\/\}$/;
 
 function isExemptDashLine(line: string): boolean {
   const trimmed = line.trim();
-  if (trimmed.startsWith("|")) return true;
-  const count = (line.match(new RegExp(EM_DASH, "g")) || []).length;
+  if (trimmed.startsWith('|')) return true;
+  const count = (line.match(new RegExp(EM_DASH, 'g')) || []).length;
   return count === 1 && LIST_LABEL.test(trimmed);
 }
 
-function checkFile(file: string): { errors: Finding[]; warnings: Finding[] } {
-  const lines = fs.readFileSync(file, "utf8").split("\n");
+function checkFile(file: string): {errors: Finding[]; warnings: Finding[]} {
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
   const errors: Finding[] = [];
   const warnings: Finding[] = [];
   let inFence = false;
-  let inFrontmatter = lines[0] === "---";
+  let inFrontmatter = lines[0] === '---';
 
   lines.forEach((line, idx) => {
     const lineNo = idx + 1;
     if (inFrontmatter) {
-      if (lineNo > 1 && line === "---") inFrontmatter = false;
+      if (lineNo > 1 && line === '---') inFrontmatter = false;
       return;
     }
     if (/^\s*(```|~~~)/.test(line)) {
@@ -92,22 +102,28 @@ function checkFile(file: string): { errors: Finding[]; warnings: Finding[] } {
     }
     if (inFence) return;
 
-    const allowedByPragma = ALLOW_NEXT_LINE.test((lines[idx - 1] || "").trim());
+    const allowedByPragma = ALLOW_NEXT_LINE.test((lines[idx - 1] || '').trim());
     if (line.includes(EM_DASH) && !isExemptDashLine(line) && !allowedByPragma) {
-      errors.push({ file, lineNo, line, message: "em dash in prose: use a comma, colon, semicolon, or two sentences" });
+      errors.push({
+        file,
+        lineNo,
+        line,
+        message:
+          'em dash in prose: use a comma, colon, semicolon, or two sentences',
+      });
     }
 
-    const prose = line.replace(/`[^`]*`/g, "").replace(/\]\([^)]*\)/g, "]");
+    const prose = line.replace(/`[^`]*`/g, '').replace(/\]\([^)]*\)/g, ']');
     for (const [pattern, hint] of WORD_PATTERNS) {
       const match = prose.match(pattern);
       if (match) {
-        warnings.push({ file, lineNo, line, message: `"${match[0]}": ${hint}` });
+        warnings.push({file, lineNo, line, message: `"${match[0]}": ${hint}`});
         break;
       }
     }
   });
 
-  return { errors, warnings };
+  return {errors, warnings};
 }
 
 function report(items: Finding[], label: string): void {
@@ -120,10 +136,10 @@ function report(items: Finding[], label: string): void {
 
 function main(): void {
   const args = process.argv.slice(2);
-  const strict = args.includes("--strict");
-  const showWarnings = strict || args.includes("--warnings");
-  const targets = args.filter((a) => !a.startsWith("--"));
-  const roots = targets.length ? targets : ["docs"];
+  const strict = args.includes('--strict');
+  const showWarnings = strict || args.includes('--warnings');
+  const targets = args.filter((a) => !a.startsWith('--'));
+  const roots = targets.length ? targets : ['docs'];
 
   const files = roots.flatMap(collectFiles);
   const errors: Finding[] = [];
@@ -134,19 +150,19 @@ function main(): void {
     warnings.push(...result.warnings);
   }
 
-  console.log(`Checked ${files.length} markdown files in: ${roots.join(", ")}`);
-  if (showWarnings && warnings.length) report(warnings, "Vocabulary warnings");
-  if (errors.length) report(errors, "Errors");
+  console.log(`Checked ${files.length} markdown files in: ${roots.join(', ')}`);
+  if (showWarnings && warnings.length) report(warnings, 'Vocabulary warnings');
+  if (errors.length) report(errors, 'Errors');
 
   const failed = errors.length > 0 || (strict && warnings.length > 0);
   if (failed) {
     console.log(
-      "\nSee AGENTS.md for the writing rules. Rewrite the flagged lines instead of adding exceptions."
+      '\nSee AGENTS.md for the writing rules. Rewrite the flagged lines instead of adding exceptions.',
     );
     process.exit(1);
   }
   console.log(
-    `No prose em dashes found.${showWarnings ? "" : ` ${warnings.length} vocabulary warnings (run with --warnings to list).`}`
+    `No prose em dashes found.${showWarnings ? '' : ` ${warnings.length} vocabulary warnings (run with --warnings to list).`}`,
   );
 }
 
