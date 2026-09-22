@@ -5,6 +5,7 @@ import {PostRow} from '@theme/BlogListPage';
 import * as semver from 'semver';
 import {
   MAIN_MIGRATION_VERSION,
+  MIGRATION_MILESTONES,
   MIGRATION_PURPOSES,
   MIGRATION_RELEASES,
   MIGRATION_STATUSES,
@@ -17,6 +18,12 @@ const RELEASE_METADATA = new Map(MIGRATION_RELEASES.map(release => [release.vers
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
+  timeZone: 'UTC',
+});
+const MILESTONE_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
   timeZone: 'UTC',
 });
 
@@ -238,11 +245,31 @@ function MigrationTracker() {
 
   return (
     <section className={styles.trackerSection} aria-labelledby="migration-tracker-title">
-      <div className={styles.trackerCard}>
-        <div className={styles.trackerHeader}>
-          <div>
-            <p className={styles.kicker}>Migration tracker</p>
-            <h2 id="migration-tracker-title">Rust migration progress</h2>
+      <div className={styles.sectionHeading}>
+        <div>
+          <p className={styles.kicker}>Migration tracker</p>
+          <h2 id="migration-tracker-title">Rust migration progress</h2>
+        </div>
+        <div className={styles.trackerControls}>
+          <div className={styles.milestoneSelector} aria-label="Migration milestone">
+            <span className={styles.milestoneSelectorLabel}>Milestone</span>
+            <div className={styles.milestoneTrack}>
+              {MIGRATION_MILESTONES.map((milestone, index) => (
+                <button
+                  className={index === 0 ? styles.activeMilestone : undefined}
+                  type="button"
+                  aria-pressed={index === 0}
+                  disabled={milestone.disabled}
+                  key={milestone.id}
+                >
+                  <span className={styles.milestoneNumber}>{index + 1}</span>
+                  <span className={styles.milestoneText}>
+                    <strong>{milestone.label}</strong>
+                    <small>Ends {MILESTONE_DATE_FORMATTER.format(new Date(milestone.endsOn))}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
           <div className={styles.viewToggle} role="group" aria-label="Migration tracker view">
             <button
@@ -263,19 +290,19 @@ function MigrationTracker() {
             </button>
           </div>
         </div>
-        <div className={styles.trackerBody}>
-          <div
-            className={`${styles.viewPanel} ${view === 'progress' ? styles.activePanel : ''}`}
-            aria-hidden={view !== 'progress'}
-          >
-            <MigrationTimeline />
-          </div>
-          <div
-            className={`${styles.viewPanel} ${view === 'details' ? styles.activePanel : ''}`}
-            aria-hidden={view !== 'details'}
-          >
-            <MigrationMatrix />
-          </div>
+      </div>
+      <div className={styles.trackerBody}>
+        <div
+          className={`${styles.viewPanel} ${view === 'progress' ? styles.activePanel : ''}`}
+          aria-hidden={view !== 'progress'}
+        >
+          <MigrationTimeline />
+        </div>
+        <div
+          className={`${styles.viewPanel} ${view === 'details' ? styles.activePanel : ''}`}
+          aria-hidden={view !== 'details'}
+        >
+          <MigrationMatrix />
         </div>
       </div>
     </section>

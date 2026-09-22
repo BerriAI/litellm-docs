@@ -29,6 +29,21 @@ export const MIGRATION_RELEASES = [...releaseSnapshot.published, releaseSnapshot
 
 export const MIGRATION_VERSIONS = MIGRATION_RELEASES.map(release => release.version);
 
+export const MIGRATION_MILESTONES = [
+  {
+    id: 'core-chat-routes',
+    label: 'Core Chat Routes',
+    endsOn: '2026-12-31',
+    disabled: false,
+  },
+  {
+    id: 'remaining-routes',
+    label: 'Remaining Routes',
+    endsOn: '2027-04-30',
+    disabled: true,
+  },
+];
+
 export const MIGRATION_PURPOSES = [
   {
     id: 'ocr',
