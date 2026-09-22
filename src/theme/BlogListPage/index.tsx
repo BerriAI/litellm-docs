@@ -246,6 +246,8 @@ function formatDate(dateStr: string): string {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+    // Same date on the server and in every visitor's timezone.
+    timeZone: 'UTC',
   });
 }
 

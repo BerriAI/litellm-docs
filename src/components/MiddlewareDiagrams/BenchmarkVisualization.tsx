@@ -219,7 +219,7 @@ export default function BenchmarkVisualization(): ReactNode {
     </div>
   );
 
-  const formatNum = (n: number) => n.toLocaleString();
+  const formatNum = (n: number) => n.toLocaleString('en-US');
 
   return (
     <div className={styles.benchmarkWrapper} ref={wrapperRef}>
