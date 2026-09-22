@@ -107,7 +107,7 @@ curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/cal
 
 | Field | Supported Values | Notes |
 |-------|------------------|-------|
-| `callback_name` | `"langfuse"`, `"gcs_bucket"`| Currently only supports `"langfuse"`, `"gcs_bucket"` |
+| `callback_name` | `"langfuse"`, `"gcs_bucket"`, `"arize"` | Supports `"langfuse"`, `"gcs_bucket"`, `"arize"` |
 | `callback_type` | `"success"`, `"failure"`, `"success_and_failure"` | |
 | `callback_vars` | | dict of callback settings |
 | &nbsp;&nbsp;&nbsp;&nbsp;`langfuse_public_key` | string | Required for Langfuse |
@@ -115,6 +115,10 @@ curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/cal
 | &nbsp;&nbsp;&nbsp;&nbsp;`langfuse_host` | string | Optional for Langfuse (defaults to https://cloud.langfuse.com) |
 | &nbsp;&nbsp;&nbsp;&nbsp;`gcs_bucket_name` | string | Required for GCS Bucket. Name of your GCS bucket |
 | &nbsp;&nbsp;&nbsp;&nbsp;`gcs_path_service_account` | string | Required for GCS Bucket. Path to your service account json |
+| &nbsp;&nbsp;&nbsp;&nbsp;`arize_api_key` | string | Required for Arize |
+| &nbsp;&nbsp;&nbsp;&nbsp;`arize_space_id` | string | Required for Arize |
+| &nbsp;&nbsp;&nbsp;&nbsp;`arize_success_sampling_rate` | number between 0.0 and 1.0 | Optional for Arize. Fraction of successful requests exported, unset exports all |
+| &nbsp;&nbsp;&nbsp;&nbsp;`arize_error_sampling_rate` | number between 0.0 and 1.0 | Optional for Arize. Fraction of failed requests exported, unset exports all |
 
 #### 2. Create key for team
 

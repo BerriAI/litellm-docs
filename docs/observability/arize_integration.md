@@ -134,6 +134,28 @@ litellm_settings:
 
 Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
+### Per-team success and error sampling rates
+
+Teams with very different traffic volumes rarely want the same fraction of requests exported. Set `arize_success_sampling_rate` and `arize_error_sampling_rate` on a team's Arize callback to control how much of that team's traffic reaches Arize. Both take a number between `0.0` and `1.0` inclusive. The success rate applies to requests that succeed and the error rate applies to requests that fail, so a team can keep every error while sampling successes down. `1.0` exports everything, `0.0` exports nothing, and leaving a rate unset keeps the current behavior of exporting every request. The proxy draws one random number per request and exports when the draw is at or below the configured rate, so the same decision covers every span of that request
+
+```shell
+curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+-d '{
+  "callback_name": "arize",
+  "callback_type": "success_and_failure",
+  "callback_vars": {
+    "arize_api_key": "...",
+    "arize_space_id": "...",
+    "arize_success_sampling_rate": "0.1",
+    "arize_error_sampling_rate": "1.0"
+  }
+}'
+```
+
+Values outside `0.0` to `1.0`, or values that are not numbers, are rejected with a `400` when the callback is saved. The same two fields are available in the Admin UI under the team's Logging Settings when the Arize callback is selected
+
 ## Full OpenTelemetry reference
 
 This page covers the Arize-specific setup. For span attributes, prompt and response capture, metrics, distributed tracing, and which routes are traced, see the [OpenTelemetry v2 guide](./opentelemetry_v2).
