@@ -207,20 +207,8 @@
   background: #087f5b;
 }
 
-.matrixGroup + .matrixGroup {
-  margin-top: 2.5rem;
-}
-
-.matrixGroup h3 {
-  margin: 0 0 0.75rem;
-  color: var(--ifm-color-emphasis-700);
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
 .matrix {
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 14px;
 }
@@ -228,6 +216,7 @@
 .matrixRow {
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr);
+  min-width: var(--matrix-min-width);
   min-height: 116px;
 }
 
@@ -249,15 +238,19 @@
 }
 
 .purposeLabel span {
+  order: -1;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.72rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .cells {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(var(--matrix-columns), minmax(0, 1fr));
   gap: 1px;
-  background: var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
 }
 
 .cell {
@@ -350,16 +343,4 @@
     text-align: left;
   }
 
-  .matrixRow {
-    display: block;
-  }
-
-  .purposeLabel {
-    border-right: 0;
-    border-bottom: 1px solid var(--ifm-color-emphasis-200);
-  }
-
-  .cells {
-    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-  }
 }

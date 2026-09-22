@@ -149,7 +149,7 @@ function MigrationTimeline() {
 }
 
 function MigrationMatrix() {
-  const groups = [...new Set(MIGRATION_PURPOSES.map(purpose => purpose.group))];
+  const columnCount = Math.max(...MIGRATION_PURPOSES.map(purpose => purpose.variants.length));
   const unitLabels = new Map(MIGRATION_PURPOSES.flatMap(purpose => (
     purpose.variants.map(variant => [variant.id, `${purpose.label}: ${variant.label}`])
   )));
@@ -170,40 +170,41 @@ function MigrationMatrix() {
         ))}
       </div>
 
-      {groups.map(group => (
-        <div className={styles.matrixGroup} key={group}>
-          <h3>{group}</h3>
-          <div className={styles.matrix}>
-            {MIGRATION_PURPOSES.filter(purpose => purpose.group === group).map(purpose => (
-              <div className={styles.matrixRow} key={purpose.id}>
-                <div className={styles.purposeLabel}>
-                  <strong>{purpose.label}</strong>
-                  <span>{purpose.variants.length} {purpose.variants.length === 1 ? 'variant' : 'variants'}</span>
-                </div>
-                <div className={styles.cells}>
-                  {purpose.variants.map(variant => {
-                    const status = MIGRATION_STATUSES[variant.status];
-                    return (
-                      <article className={`${styles.cell} ${styles[`cell_${variant.status}`]}`} key={variant.id}>
-                        <span className={styles.cellStatus}>{status.label}</span>
-                        <strong>{variant.label}</strong>
-                        {variant.release && (
-                          <span className={styles.cellRelease}>{variant.release.version}</span>
-                        )}
-                        {variant.requires && (
-                          <span className={styles.cellDependency}>
-                            Requires {variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}
-                          </span>
-                        )}
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+      <div
+        className={styles.matrix}
+        style={{
+          '--matrix-columns': columnCount,
+          '--matrix-min-width': `${170 + columnCount * 150}px`,
+        }}
+      >
+        {MIGRATION_PURPOSES.map(purpose => (
+          <div className={styles.matrixRow} key={purpose.id}>
+            <div className={styles.purposeLabel}>
+              <span>{purpose.group}</span>
+              <strong>{purpose.label}</strong>
+            </div>
+            <div className={styles.cells}>
+              {purpose.variants.map(variant => {
+                const status = MIGRATION_STATUSES[variant.status];
+                return (
+                  <article className={`${styles.cell} ${styles[`cell_${variant.status}`]}`} key={variant.id}>
+                    <span className={styles.cellStatus}>{status.label}</span>
+                    <strong>{variant.label}</strong>
+                    {variant.release && (
+                      <span className={styles.cellRelease}>{variant.release.version}</span>
+                    )}
+                    {variant.requires && (
+                      <span className={styles.cellDependency}>
+                        Requires {variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}
+                      </span>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </section>
   );
 }
