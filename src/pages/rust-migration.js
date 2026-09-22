@@ -5,6 +5,7 @@ import * as semver from 'semver';
 import {
   MAIN_MIGRATION_VERSION,
   MIGRATION_PURPOSES,
+  MIGRATION_RELEASES,
   MIGRATION_STATUSES,
   MIGRATION_VERSIONS,
 } from '@site/src/data/rustMigration';
@@ -35,6 +36,12 @@ const POSTS = [
 ];
 
 const MIGRATED_STATUSES = new Set(['default', 'rustOnly']);
+const RELEASE_METADATA = new Map(MIGRATION_RELEASES.map(release => [release.version, release]));
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
 
 function migrationUnits() {
   return MIGRATION_PURPOSES.flatMap(purpose => purpose.variants);
@@ -77,6 +84,12 @@ function versionParts(version) {
     return [version, ''];
   }
   return [`v${parsed.major}.${parsed.minor}.${parsed.patch}`, parsed.prerelease.join('.')];
+}
+
+function releaseDate(version) {
+  const release = RELEASE_METADATA.get(version);
+  const date = release?.releasedAt ?? release?.plannedFor;
+  return date ? DATE_FORMATTER.format(new Date(date)) : '';
 }
 
 function MigrationTimeline() {
@@ -131,6 +144,7 @@ function MigrationTimeline() {
             const notable = index === 0 || index === milestones.length - 1 || percentage(previous) !== percentage(milestone);
             const [release, prerelease] = versionParts(milestone.version);
             const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
+            const date = releaseDate(milestone.version);
             return (
               <g key={milestone.version}>
                 <line
@@ -159,6 +173,7 @@ function MigrationTimeline() {
                 >
                   <tspan x={x(index)}>{release}</tspan>
                   <tspan x={x(index)} dy="14">{prerelease}</tspan>
+                  <tspan x={x(index)} dy="14">{date}{isMain ? ' planned' : ''}</tspan>
                   {isMain && <tspan x={x(index)} dy="14">main</tspan>}
                 </text>
               </g>
@@ -166,7 +181,11 @@ function MigrationTimeline() {
           })}
         </svg>
       </div>
-      <p className={styles.methodNote}>Preview and in-progress units appear in the matrix but are not counted as migrated.</p>
+      <p className={styles.methodNote}>
+        Preview and in-progress units appear in the matrix but are not counted as migrated. Published RCs come from{' '}
+        <a href="https://github.com/BerriAI/litellm/releases">LiteLLM releases</a>; main is the next RC derived from the
+        repository version and is planned for the next Saturday.
+      </p>
     </div>
   );
 }

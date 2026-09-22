@@ -1,3 +1,5 @@
+import releaseSnapshot from './rustMigrationReleases.json';
+
 export const MIGRATION_STATUSES = {
   python: {
     label: 'Python',
@@ -21,21 +23,11 @@ export const MIGRATION_STATUSES = {
   },
 };
 
-export const MAIN_MIGRATION_VERSION = 'v1.103.0-rc.1';
+export const MAIN_MIGRATION_VERSION = releaseSnapshot.main.version;
 
-export const MIGRATION_VERSIONS = [
-  'v1.96.0-rc.1',
-  'v1.97.0-rc.1',
-  'v1.98.0-rc.1',
-  'v1.99.0-rc.1',
-  'v1.99.0-rc.2',
-  'v1.100.0-rc.1',
-  'v1.101.0-rc.1',
-  'v1.101.0-rc.2',
-  'v1.102.0-rc.1',
-  'v1.102.0-rc.2',
-  MAIN_MIGRATION_VERSION,
-];
+export const MIGRATION_RELEASES = [...releaseSnapshot.published, releaseSnapshot.main];
+
+export const MIGRATION_VERSIONS = MIGRATION_RELEASES.map(release => release.version);
 
 export const MIGRATION_PURPOSES = [
   {
