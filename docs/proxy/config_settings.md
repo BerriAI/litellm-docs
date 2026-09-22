@@ -1371,6 +1371,7 @@ router_settings:
 | ONYX_API_KEY | API key for Onyx Security AI Guard service
 | ONYX_TIMEOUT | Timeout in seconds for Onyx Guard server requests. Default is 10
 | OTEL_ENDPOINT | OpenTelemetry endpoint for traces
+| OTEL_EXPORTER_OTLP_CERTIFICATE | Path to a CA bundle the OTLP HTTP exporters trust. Set by the OpenTelemetry SDK; when set it takes precedence over `SSL_CERT_FILE` and `ssl_verify` for OTLP exports
 | OTEL_EXPORTER_OTLP_ENDPOINT | OpenTelemetry endpoint for traces
 | OTEL_ENVIRONMENT_NAME | Environment name for OpenTelemetry
 | OTEL_EXPORTER | Exporter type for OpenTelemetry
