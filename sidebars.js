@@ -338,11 +338,6 @@ const sidebars = {
           href: "/docs/#litellm-python-sdk",
         },
         {
-          type: "doc",
-          id: "completion/fusion",
-          label: "Fusion model",
-        },
-        {
           type: "category",
           label: "SDK Functions",
           items: [
@@ -1319,6 +1314,7 @@ const sidebars = {
       },
       items: [
         "routing",
+        "fusion",
         "routing_plugins",
         "adaptive_router",
         "scheduler",

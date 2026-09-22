@@ -1,6 +1,7 @@
 ---
 title: Fusion model
 sidebar_label: Fusion model
+description: Use litellm/fusion-1 for judge-synthesized answers from a parallel model panel.
 ---
 
 import Tabs from '@theme/Tabs';
