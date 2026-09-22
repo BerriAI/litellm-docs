@@ -587,7 +587,7 @@ import os
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
 
-model = "meta/jamba-1.5-mini@001"
+model = "jamba-1.5-mini@001"
 
 vertex_ai_project = "your-vertex-project" # can also set this as os.environ["VERTEXAI_PROJECT"]
 vertex_ai_location = "your-vertex-location" # can also set this as os.environ["VERTEXAI_LOCATION"]
