@@ -24,7 +24,7 @@ LiteLLM supports Azure OpenAI's video generation models including Sora with full
 ```python
 import os 
 os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_OPENAI_API_BASE"] = "https://your-resource.openai.azure.com/"
+os.environ["AZURE_API_BASE"] = "https://your-resource.openai.azure.com/"
 ```
 
 ### Basic Usage
@@ -35,7 +35,7 @@ import os
 import time
 
 os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_OPENAI_API_BASE"] = "https://your-resource.openai.azure.com/"
+os.environ["AZURE_API_BASE"] = "https://your-resource.openai.azure.com/"
 
 # Generate video
 response = video_generation(
