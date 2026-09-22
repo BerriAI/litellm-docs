@@ -6,7 +6,7 @@ description: Try LiteLLM's complexity-based auto-routing locally against your re
 
 `lite autoroute` is a subcommand of `lite`, the [LiteLLM proxy CLI](../proxy/management_cli.md) that also gives you `lite login`, `lite up`, `lite claude` and the model, key, and team management commands. It lets you try LiteLLM's complexity-based auto-routing locally, against models your key already has access to on your real, running proxy. It picks a cheaper or more expensive model depending on how complex a prompt looks, without editing your proxy's `config.yaml` and without any request bypassing it. It stands up a throwaway local proxy that forwards every request back to your real proxy, then points Claude Code at that local proxy for the session.
 
-:::info Preview feature; we want your feedback
+:::info[Preview feature; we want your feedback]
 
 `lite autoroute` is early and evolving. Tell us what works, what breaks, and what you want next in the [Autorouter discussion on GitHub](https://github.com/BerriAI/litellm/discussions/32168). Your feedback directly shapes where this goes.
 

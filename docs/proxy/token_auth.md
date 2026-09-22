@@ -7,7 +7,7 @@ Use JWT's to auth admins / users / projects into the proxy.
 
 <EnterpriseFeature feature="JWT-based Auth" />
 
-:::tip JWT → Virtual Key Mapping
+:::tip[JWT → Virtual Key Mapping]
 
 Want per-user model restrictions, spend limits, and rate limits without distributing API keys? See **[JWT → Virtual Key Mapping](./jwt_key_mapping.md)** for granular access control for JWT-authenticated users (e.g. Claude Code + SSO).
 

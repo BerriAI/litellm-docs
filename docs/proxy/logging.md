@@ -2622,7 +2622,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 
-<!-- ## (BETA) Moderation with Azure Content Safety
+{/* ## (BETA) Moderation with Azure Content Safety
 
 Note: This page is for logging callbacks and this is a moderation service. Commenting until we found a better location for this.
 
@@ -2709,4 +2709,4 @@ litellm_settings:
 :::info
 `thresholds` are not required by default, but you can tune the values to your needs.
 Default values is `4` for all categories
-::: -->
+::: */}

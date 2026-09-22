@@ -258,7 +258,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## Managing Access Groups via API
 
-:::warning Database Models Only
+:::warning[Database Models Only]
 Access group management APIs only work with models stored in the database (added via `/model/new`). 
 
 Models defined in `config.yaml` cannot be managed through these APIs and must be configured directly in the config file.

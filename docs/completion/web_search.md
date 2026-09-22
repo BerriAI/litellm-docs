@@ -24,7 +24,7 @@ Each provider uses their own search backend:
 | **Anthropic** (`claude-3-5-sonnet`) | Anthropic's web search | Real-time web data |
 | **Perplexity** | Perplexity's search engine | AI-powered search and reasoning |
 
-:::warning Important: Only Search Models Support `web_search_options`
+:::warning[Important: Only Search Models Support `web_search_options`]
 For OpenAI, only dedicated search models support the `web_search_options` parameter:
 - `gpt-4o-search-preview`
 - `gpt-4o-mini-search-preview`
@@ -33,7 +33,7 @@ For OpenAI, only dedicated search models support the `web_search_options` parame
 **Regular models like `{{openai_large}}` and `{{openai_small}}` do not support `web_search_options`**
 :::
 
-:::tip The `web_search_options` parameter is optional
+:::tip[The `web_search_options` parameter is optional]
 Search models (like `gpt-4o-search-preview`) **automatically search the web** even without the `web_search_options` parameter.
 
 Use `web_search_options` when you need to:
@@ -54,7 +54,7 @@ OpenAI offers two distinct ways to use web search depending on the endpoint and 
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
 | **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
 
-:::tip Search models search automatically
+:::tip[Search models search automatically]
 Search models like `gpt-5-search-api` **automatically search the web** even without the `web_search_options` parameter. Use `web_search_options` to set `search_context_size` (`"low"`, `"medium"`, `"high"`) or specify `user_location` for localized results.
 :::
 

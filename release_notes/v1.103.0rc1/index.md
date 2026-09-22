@@ -45,7 +45,7 @@ pip install litellm==1.103.0rc1
 
 The published GitHub tag is `v1.103.0-rc.1`. These notes compare it with `v1.102.0-rc.1`, the previous release candidate cut from `main`. Changes backported onto `rc/1.102.0` and already shipped in `v1.102.0` are omitted
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 These callouts cover changes to behavior available in `v1.102.0`, the latest stable release
 

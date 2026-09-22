@@ -398,7 +398,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 </Tabs>
 
 
-## Tool Search {#tool-search}
+## Tool Search {/* #tool-search */}
 
 This lets Claude work with thousands of tools, by dynamically loading tools on-demand, instead of loading all tools into the context window upfront.
 
@@ -617,7 +617,7 @@ tools = [
 
 ---
 
-## Programmatic Tool Calling {#programmatic-tool-calling}
+## Programmatic Tool Calling {/* #programmatic-tool-calling */}
 
 Programmatic tool calling allows Claude to write code that calls your tools programmatically. [Learn more](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)
 
@@ -776,7 +776,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ---
 
-## Tool Input Examples {#tool-input-examples}
+## Tool Input Examples {/* #tool-input-examples */}
 
 You can now provide Claude with examples of how to use your tools. [Learn more](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-input-examples)
 
@@ -964,7 +964,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ---
 
-## Effort Parameter: Control Token Usage {#effort-parameter}
+## Effort Parameter: Control Token Usage {/* #effort-parameter */}
 
 Control how much effort Claude puts into its response using the `reasoning_effort` parameter. This allows you to trade off between response thoroughness and token efficiency.
 

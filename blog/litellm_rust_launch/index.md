@@ -20,7 +20,7 @@ import Head from '@docusaurus/Head';
 
 Over the past year, we have heard the same thing from our users and our community: they want the fastest, most lightweight AI gateway they can run. We have heard you. We are addressing it by moving LiteLLM to Rust, and committing to sub-`1ms` overhead with a sub-`100MB` memory binary you can deploy. By the end of this migration, you will get a pure Rust server that can serve 100% of your AI traffic, with every hot path operation, including auth and rate limiting, running in Rust.
 
-:::tip Want to help us build it?
+:::tip[Want to help us build it?]
 
 We are opening an early beta and want to work directly with teams who care about a fast, lightweight gateway. If that is you, [sign up here](https://docs.google.com/forms/d/e/1FAIpQLSecWdOjkzjEson2UiZpDftOoZPs8RQbtlAM40KSvDXZqEgYaA/viewform?usp=dialog) and we will get you testing the Rust gateway in your own stack, with a direct line to our team.
 

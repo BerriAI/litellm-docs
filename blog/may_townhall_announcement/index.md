@@ -12,7 +12,7 @@ hide_table_of_contents: true
 
 import Image from '@theme/IdealImage';
 
-:::note Rescheduled
+:::note[Rescheduled]
 
 Apologies: due to technical difficulties, the May townhall has been moved from Monday, 18 May to **Tuesday, 19 May at 7:30 AM PST**. Thanks for your patience!
 

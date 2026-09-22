@@ -12,7 +12,7 @@ Supported Providers:
 - Deepseek API (`deepseek/`)
 - xAI (`xai/`)
 
-:::warning Minimum token requirements
+:::warning[Minimum token requirements]
 Prompt caching is silently skipped when the input is below the provider's minimum, and **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
 
 | Provider | Minimum input tokens |
@@ -450,7 +450,7 @@ print(response.usage)
 </TabItem>
 </Tabs>
 
-:::tip Minimum tokens (Anthropic)
+:::tip[Minimum tokens (Anthropic)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model | Min tokens |
@@ -466,7 +466,7 @@ Prompts below the minimum are processed without caching, and no error is returne
 
 LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format, so no changes are needed to your existing code if you're already using `cache_control`.
 
-:::tip Minimum tokens (Bedrock)
+:::tip[Minimum tokens (Bedrock)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model family | Min tokens per request |
@@ -984,7 +984,7 @@ This checks our maintained [model info/cost map](https://github.com/BerriAI/lite
 
 ## Read More
 
-:::tip Auto-Inject Prompt Caching
+:::tip[Auto-Inject Prompt Caching]
 Want LiteLLM to automatically add `cache_control` directives without modifying your code? 
 
 See [**Auto-Inject Prompt Caching Tutorial**](../tutorials/prompt_caching.md) to learn how to use `cache_control_injection_points` to automatically cache system messages, specific messages by index, or custom injection patterns.

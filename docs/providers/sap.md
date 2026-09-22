@@ -21,7 +21,7 @@ Before you begin, ensure you have:
 3. **Service Key** created for your AI Core instance (this contains your credentials)
 4. **Resource Group** with deployed AI models (check with your SAP administrator)
 
-:::tip Where to Find Your Credentials
+:::tip[Where to Find Your Credentials]
 Your credentials come from the **Service Key** you create in SAP BTP Cockpit:
 
 1. Navigate to your **Subaccount** → **Instances and Subscriptions**
@@ -42,7 +42,7 @@ The service key JSON looks like this:
 }
 ```
 
-:::info Resource Group
+:::info[Resource Group]
 The resource group is typically configured separately in your AI Core deployment, not in the service key itself. You can set it via the `AICORE_RESOURCE_GROUP` environment variable (defaults to "default").
 :::
 
@@ -487,7 +487,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::note SAP Platform Requirement
+:::note[SAP Platform Requirement]
 When using `json_object` type, SAP's orchestration service requires the word "json" to appear in your prompt. This ensures explicit intent for JSON formatting. For schema-validated output without this requirement, use `json_schema` instead (recommended).
 :::
 
@@ -781,7 +781,7 @@ print(response.choices[0].message.content)
 
 For the complete and up-to-date list of available models provided by SAP Gen AI Hub, please refer to the [SAP AI Core Generative AI Hub documentation](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/models-and-scenarios-in-generative-ai-hub).
 
-:::info Model Availability
+:::info[Model Availability]
 Model availability varies by SAP deployment region and your subscription. Contact your SAP administrator to confirm which models are available in your environment.
 :::
 

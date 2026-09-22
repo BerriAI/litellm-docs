@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 
 <br />
 
-:::tip Gemini API vs Vertex AI
+:::tip[Gemini API vs Vertex AI]
 | Model Format | Provider | Auth Required |
 |-------------|----------|---------------|
 | `gemini/gemini-2.0-flash` | Gemini API | `GEMINI_API_KEY` (simple API key) |
@@ -82,11 +82,11 @@ LiteLLM translates OpenAI's `reasoning_effort` to Gemini's `thinking` parameter.
 Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
-:::tip Gemini 3 Models
+:::tip[Gemini 3 Models]
 For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model: Flash-family models also support `medium`, and `minimal` up to 3.6 Flash. 3.7 and 3.8 Flash reject `minimal`, so LiteLLM sends `low` for `minimal`, `none` and `disable` on them, driven by `supports_minimal_reasoning_effort: false` on their cost-map entries. If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
-:::warning Image Models
+:::warning[Image Models]
 **Gemini image models** (e.g., `gemini-3-pro-image-preview`, `gemini-2.0-flash-exp-image-generation`) do **not** support the `thinking_level` parameter. LiteLLM automatically excludes image models from receiving thinking configuration to prevent API errors.
 :::
 

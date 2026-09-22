@@ -47,7 +47,7 @@ guardrails:
         plr_scanners: true
 ```
 
-:::warning Important
+:::warning[Important]
 - The `api_base` must be exactly `https://api.pillar.security/api/v1/integrations/litellm`, the only endpoint that supports the Generic Guardrail API integration.
 - The value `guardrail: generic_guardrail_api` must not be changed. This is the LiteLLM built-in guardrail type. However, you can customize the `guardrail_name` to any value you prefer.
 :::
@@ -90,7 +90,7 @@ Pillar Security supports three execution modes:
 
 ### Why Dual Mode is Recommended
 
-:::tip Recommended
+:::tip[Recommended]
 Use `[pre_call, post_call]` for complete protection of both inputs and outputs.
 :::
 

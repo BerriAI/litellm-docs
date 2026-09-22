@@ -169,7 +169,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 # os.environ["LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX"] = "true" # [OPTIONAL] Disable automatic URL suffix appending
 ```
 
-:::tip Azure Foundry Support
+:::tip[Azure Foundry Support]
 
 Claude models are also available via Microsoft Azure Foundry. Use the `azure_ai/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
 
@@ -207,7 +207,7 @@ With `LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX=true`:
 
 ### Azure AI Foundry (Alternative Method)
 
-:::tip Recommended Method
+:::tip[Recommended Method]
 For full Azure support including Azure AD authentication, use the dedicated [Azure Anthropic provider](./azure/azure_anthropic) with `azure_ai/` prefix.
 :::
 

@@ -7,7 +7,7 @@ OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives 
 
 It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps).
 
-:::info Opt-in feature
+:::info[Opt-in feature]
 
 OTel v2 is **off by default**. Nothing in it runs until you set `LITELLM_OTEL_V2=true`. It is separate from the existing [OpenTelemetry integration](./opentelemetry_integration), so pick one. If you are moving from v1, see [Migrating to OpenTelemetry v2](./opentelemetry_v2_migration).
 
@@ -225,7 +225,7 @@ AGENTOPS_API_KEY="your-api-key"
 
 </Tabs>
 
-:::tip Send to several backends at once
+:::tip[Send to several backends at once]
 
 To send the same traces to multiple vendors, list each preset in `callbacks` and set each one's env vars. For example, Langfuse and Arize together:
 
@@ -618,7 +618,7 @@ Each successful LLM call records the standard OpenTelemetry GenAI client metrics
 | `gen_ai.server.time_per_output_token` | `s` | Average time per output token |
 | `gen_ai.client.response.duration` | `s` | Provider-side generation time |
 
-:::note Renamed in this release
+:::note[Renamed in this release]
 
 `gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
 

@@ -117,7 +117,7 @@ Here's how to use `thinking` blocks by Anthropic with tool calling.
 
 ### Important: OpenAI-Compatible API Limitations
 
-:::warning Compatibility Notice
+:::warning[Compatibility Notice]
 
 Anthropic extended thinking with tool calling is **not fully compatible** with OpenAI-compatible API clients. This is due to fundamental architectural differences between how OpenAI and Anthropic handle reasoning in multi-turn conversations.
 
@@ -138,7 +138,7 @@ When using Anthropic models with `thinking` enabled and tool calling, you **must
 3. When these clients reconstruct the assistant message for the next turn, the thinking blocks are lost
 4. Anthropic rejects the request because the assistant message doesn't start with a thinking block
 
-:::tip LiteLLM supports thinking_blocks
+:::tip[LiteLLM supports thinking_blocks]
 LiteLLM's `completion()` API **does support** sending `thinking_blocks` in assistant messages. If you're using LiteLLM directly (not through an OpenAI-compatible client), you can preserve and resend `thinking_blocks` and everything will work correctly.
 :::
 
@@ -666,7 +666,7 @@ Expected Response
 </TabItem>
 </Tabs>
 
-:::tip gpt-5.4: reasoning_effort + function tools
+:::tip[gpt-5.4: reasoning_effort + function tools]
 
 When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 

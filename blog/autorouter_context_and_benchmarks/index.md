@@ -33,7 +33,7 @@ v1.97 makes three changes to the auto router.
 * A new Benchmarks view prices routed traffic against an all-frontier baseline and reports the difference, and those savings now also appear in the Cost Optimization totals.
 * Session affinity is now off by default, following our [previous post](/blog/auto-router-prompt-caching-benchmark) showing this was leading to worse quality without cost improvements.
 
-:::warning Two defaults changed
+:::warning[Two defaults changed]
 
 `classifier_context_window_size` now defaults to `3` (LLM classifier only), and `session_affinity` now defaults to `false` (all routers). Config files are not modified, but the new defaults apply to any key left unset, so a config that never mentioned `session_affinity` will reclassify every turn after upgrading. Configs that set either key explicitly are unaffected.
 

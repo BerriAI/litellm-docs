@@ -2,7 +2,7 @@
 
 You can now override the default api key auth.
 
-:::warning Enforcement with custom auth
+:::warning[Enforcement with custom auth]
 
 By default, custom auth enforces only the rate limits you set on the returned object. Budgets and model-access require a flag. The table below shows, for each control, where to configure it and which flags it needs.
 

@@ -12,7 +12,7 @@ hide_table_of_contents: true
 
 import Image from '@theme/IdealImage';
 
-:::note Rescheduled
+:::note[Rescheduled]
 
 The June townhall has been moved from Thursday, 18 June to **Thursday, 25 June at 7:30 AM PST**. Thanks for your patience!
 

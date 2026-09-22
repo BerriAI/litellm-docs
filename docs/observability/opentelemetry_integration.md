@@ -8,13 +8,13 @@ OpenTelemetry is a CNCF standard for observability. It connects to any observabi
 
 <Image img={require('../../img/traceloop_dash.png')} />
 
-:::tip Looking for full-request tracing?
+:::tip[Looking for full-request tracing?]
 
 There's a newer, opt-in **[OpenTelemetry v2](./opentelemetry_v2)** integration for LiteLLM Proxy that produces one trace per request (HTTP → auth → guardrails → LLM call → DB writes), follows the official GenAI semantic conventions, and ships with presets for Arize, Phoenix, Langfuse, Weave, and more. Enable it with `LITELLM_OTEL_V2=true`.
 
 :::
 
-:::note Change in v1.81.0
+:::note[Change in v1.81.0]
 
 From v1.81.0, the request/response is set as attributes on the parent `Received Proxy Server Request` span by default, and there is **no** separate `litellm_request` span unless you opt in. To restore nested `litellm_request` spans, set `USE_OTEL_LITELLM_REQUEST_SPAN=true`. See [Span Hierarchy](#span-hierarchy) for the full picture and [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span) for when to flip the flag.
 
@@ -527,7 +527,7 @@ LiteLLM emits the following histograms when `enable_metrics=True` is set on the 
 | `gen_ai.server.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
 | `gen_ai.client.response.duration` | `s` | LLM API generation time, excluding LiteLLM overhead. |
 
-:::note Renamed in this release
+:::note[Renamed in this release]
 
 `gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
 

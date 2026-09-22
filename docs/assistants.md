@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # /assistants
 
-:::warning Deprecation Notice
+:::warning[Deprecation Notice]
 
 OpenAI has deprecated the Assistants API. It will shut down on **August 26, 2026**.
 
