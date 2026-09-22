@@ -1,10 +1,11 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {PostRow} from '@theme/BlogListPage';
 import * as semver from 'semver';
 import {
   MAIN_MIGRATION_VERSION,
+  MIGRATION_LAYERS,
   MIGRATION_MILESTONES,
   MIGRATION_PURPOSES,
   MIGRATION_RELEASES,
@@ -79,146 +80,188 @@ function releaseDate(version) {
   return date ? DATE_FORMATTER.format(new Date(date)) : '';
 }
 
+function useElementWidth(fallback) {
+  const ref = useRef(null);
+  const [width, setWidth] = useState(fallback);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return undefined;
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      const nextWidth = Math.round(entry.contentRect.width);
+      if (nextWidth > 0) {
+        setWidth(nextWidth);
+      }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, width];
+}
+
+function MilestoneSelector() {
+  return (
+    <div className={styles.milestoneSelector} role="group" aria-label="Migration milestone">
+      {MIGRATION_MILESTONES.map((milestone, index) => (
+        <button
+          className={index === 0 ? styles.activeMilestone : undefined}
+          type="button"
+          aria-pressed={index === 0}
+          disabled={milestone.disabled}
+          key={milestone.id}
+        >
+          <strong>{milestone.label}</strong>
+          <span>{MILESTONE_DATE_FORMATTER.format(new Date(milestone.endsOn))}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function MigrationTimeline() {
   const milestones = migrationTimeline();
   const selectedMilestone = MIGRATION_MILESTONES[0];
-  const width = 920;
-  const height = 350;
-  const plot = {left: 76, right: 130, top: 24, bottom: 88};
+  const [chartRef, width] = useElementWidth(920);
+  const compact = width < 560;
+  const height = compact ? 240 : 336;
+  const plot = compact
+    ? {left: 40, right: 20, top: 36, bottom: 56}
+    : {left: 48, right: 40, top: 40, bottom: 64};
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const milestoneGap = 140;
-  const historyWidth = plotWidth - milestoneGap;
-  const x = index => plot.left + (index / (milestones.length - 1)) * historyWidth;
-  const milestoneX = plot.left + plotWidth;
+  const goalGap = compact ? 72 : 120;
+  const x = index => plot.left + (index / (milestones.length - 1)) * (plotWidth - goalGap);
+  const goalX = plot.left + plotWidth;
+  const baseline = plot.top + plotHeight;
   const percentage = milestone => Math.round((milestone.migrated / milestone.total) * 100);
-  const y = value => plot.top + plotHeight - (value / 100) * plotHeight;
-  const points = milestones.map((milestone, index) => `${x(index)},${y(percentage(milestone))}`).join(' ');
+  const y = value => baseline - (value / 100) * plotHeight;
   const latest = milestones[milestones.length - 1];
   const latestX = x(milestones.length - 1);
-  const milestoneDate = DATE_FORMATTER.format(new Date(selectedMilestone.endsOn));
+  const linePath = milestones
+    .map((milestone, index) => (
+      index === 0
+        ? `M${x(0)},${y(percentage(milestone))}`
+        : `H${x(index)}V${y(percentage(milestone))}`
+    ))
+    .join('');
+  const areaPath = `${linePath}V${baseline}H${x(0)}Z`;
 
   return (
     <div className={styles.progressView}>
-      <div className={styles.viewIntro}>
-        <p>Percentage of tracked support units that run on Rust by default or require Rust.</p>
-        <div className={styles.progressSummary}>
-          <strong>{percentage(latest)}%</strong>
-          <span>{latest.migrated} of {latest.total} support units</span>
+      <div className={styles.chartCard}>
+        <div className={styles.chartHeader}>
+          <div className={styles.progressSummary}>
+            <strong>{percentage(latest)}%</strong>
+          </div>
+          <MilestoneSelector />
         </div>
-      </div>
 
-      <div className={styles.chartFrame}>
-        <svg
-          className={styles.timeline}
-          viewBox={`0 0 ${width} ${height}`}
-          role="img"
-          aria-labelledby="timeline-title timeline-description"
-        >
-          <title id="timeline-title">Rust migration progress over time</title>
-          <desc id="timeline-description">
-            {percentage(latest)} percent of tracked support units run on Rust by default in {MAIN_MIGRATION_VERSION}.
-            The selected milestone targets 100 percent by {selectedMilestone.endsOn}.
-          </desc>
-          {[0, 25, 50, 75, 100].map(tick => (
-            <g key={tick}>
-              <line
-                className={styles.gridLine}
-                x1={plot.left}
-                x2={width - plot.right}
-                y1={y(tick)}
-                y2={y(tick)}
-              />
-              <text className={styles.axisLabel} x={plot.left - 12} y={y(tick) + 4} textAnchor="end">{tick}%</text>
-            </g>
-          ))}
-          <polyline className={styles.progressLine} points={points} />
-          <line
-            className={styles.milestoneProjection}
-            x1={latestX}
-            x2={milestoneX}
-            y1={y(percentage(latest))}
-            y2={y(100)}
-          />
-          {milestones.map((milestone, index) => {
-            const previous = milestones[index - 1];
-            const notable = index === 0 || index === milestones.length - 1 || percentage(previous) !== percentage(milestone);
-            const version = compactVersion(milestone.version);
-            const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
-            const date = releaseDate(milestone.version);
-            const hideOnMobile = !notable;
-            return (
-              <g key={milestone.version}>
-                <title>
-                  {milestone.version}, {isMain ? `planned for ${date}` : `released ${date}`}
-                </title>
+        <div className={styles.chartBody} ref={chartRef}>
+          <svg
+            className={styles.timeline}
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            role="img"
+            aria-labelledby="timeline-title timeline-description"
+          >
+            <title id="timeline-title">Rust migration progress over time</title>
+            <desc id="timeline-description">
+              {percentage(latest)} percent of tracked support units run on Rust by default in {MAIN_MIGRATION_VERSION}.
+              The selected milestone targets 100 percent by {selectedMilestone.endsOn}.
+            </desc>
+            <defs>
+              <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" className={styles.areaStart} />
+                <stop offset="100%" className={styles.areaEnd} />
+              </linearGradient>
+            </defs>
+            {[0, 50, 100].map(tick => (
+              <g key={tick}>
                 <line
-                  className={styles.versionTick}
-                  x1={x(index)}
-                  x2={x(index)}
-                  y1={plot.top + plotHeight}
-                  y2={plot.top + plotHeight + 6}
+                  className={tick === 0 ? styles.baseline : styles.gridLine}
+                  x1={plot.left}
+                  x2={goalX}
+                  y1={y(tick)}
+                  y2={y(tick)}
                 />
-                {notable && (
-                  <>
-                    <circle className={styles.progressPointHalo} cx={x(index)} cy={y(percentage(milestone))} r="9" />
-                    <circle className={styles.progressPoint} cx={x(index)} cy={y(percentage(milestone))} r="5">
-                      <title>{percentage(milestone)}% in {milestone.version}</title>
-                    </circle>
-                    <text className={styles.pointValue} x={x(index)} y={y(percentage(milestone)) - 16} textAnchor="middle">
+                <text className={styles.axisLabel} x={plot.left - 10} y={y(tick) + 4} textAnchor="end">{tick}%</text>
+              </g>
+            ))}
+            <path className={styles.progressArea} d={areaPath} fill="url(#progress-area)" />
+            <line
+              className={styles.goalLine}
+              x1={latestX}
+              x2={goalX}
+              y1={y(percentage(latest))}
+              y2={y(100)}
+            />
+            <path className={styles.progressLine} d={linePath} />
+            {milestones.map((milestone, index) => {
+              const previous = milestones[index - 1];
+              const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
+              const changed = previous !== undefined && percentage(previous) !== percentage(milestone);
+              const notable = index === 0 || isMain || changed;
+              const date = releaseDate(milestone.version);
+              const cy = y(percentage(milestone));
+              return (
+                <g key={milestone.version}>
+                  <title>
+                    {milestone.version}: {percentage(milestone)}%, {isMain ? `planned for ${date}` : `released ${date}`}
+                  </title>
+                  <circle
+                    className={isMain ? styles.mainPoint : styles.progressPoint}
+                    cx={x(index)}
+                    cy={cy}
+                    r={isMain ? 5 : 3.5}
+                  />
+                  {changed && (
+                    <text className={styles.pointValue} x={x(index)} y={cy - 12} textAnchor="middle">
                       {percentage(milestone)}%
                     </text>
-                  </>
-                )}
-                <text
-                  className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''} ${hideOnMobile ? styles.hideOnMobile : ''}`}
-                  x={x(index)}
-                  y={height - 38}
-                  textAnchor="middle"
-                >
-                  <tspan x={x(index)}>{version}</tspan>
-                  <tspan className={styles.versionDate} x={x(index)} dy="17">{date}</tspan>
-                </text>
-                {isMain && (
-                  <g className={styles.mainBadge}>
-                    <rect x={x(index) - 18} y={height - 66} width="36" height="14" rx="7" />
-                    <text x={x(index)} y={height - 56} textAnchor="middle">MAIN</text>
-                  </g>
-                )}
-              </g>
-            );
-          })}
-          <g className={styles.milestoneGoal}>
-            <title>{selectedMilestone.label}, 100% target by {selectedMilestone.endsOn}</title>
-            <circle cx={milestoneX} cy={y(100)} r="7" />
-            <text className={styles.milestoneTargetValue} x={milestoneX} y={y(100) + 20} textAnchor="end">
-              100% goal
-            </text>
-            <line
-              className={styles.versionTick}
-              x1={milestoneX}
-              x2={milestoneX}
-              y1={plot.top + plotHeight}
-              y2={plot.top + plotHeight + 6}
-            />
-            <text className={styles.milestoneAxisLabel} x={milestoneX} y={height - 38} textAnchor="end">
-              <tspan x={milestoneX}>{selectedMilestone.label}</tspan>
-              <tspan className={styles.versionDate} x={milestoneX} dy="17">{milestoneDate}</tspan>
-            </text>
-          </g>
-        </svg>
+                  )}
+                  {(notable || !compact) && (
+                    <text
+                      className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''}`}
+                      x={x(index)}
+                      y={baseline + 26}
+                      textAnchor={compact && index === 0 ? 'start' : 'middle'}
+                    >
+                      <tspan x={x(index)}>{compactVersion(milestone.version)}</tspan>
+                      <tspan className={styles.versionDate} x={x(index)} dy="16">
+                        {isMain && !compact ? `${date} · main` : date}
+                      </tspan>
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+            <g className={styles.goal}>
+              <title>{selectedMilestone.label}: 100% by {selectedMilestone.endsOn}</title>
+              <circle cx={goalX} cy={y(100)} r="5" />
+              <text className={styles.goalLabel} x={goalX} y={y(100) - 14} textAnchor="end">
+                100% goal
+              </text>
+              <text className={styles.goalAxisLabel} x={goalX} y={baseline + 26} textAnchor="end">
+                <tspan x={goalX}>Goal</tspan>
+                <tspan className={styles.versionDate} x={goalX} dy="16">
+                  {DATE_FORMATTER.format(new Date(selectedMilestone.endsOn))}
+                </tspan>
+              </text>
+            </g>
+          </svg>
+        </div>
       </div>
-      <p className={styles.methodNote}>
-        Preview and in-progress units appear in the matrix but are not counted as migrated. Published RCs come from{' '}
-        <a href="https://github.com/BerriAI/litellm/releases">LiteLLM releases</a>; main is the next RC derived from the
-        repository version and is planned for the next Saturday. The dashed segment shows the selected milestone goal.
-      </p>
     </div>
   );
 }
 
 function MigrationMatrix() {
   const columnCount = Math.max(...MIGRATION_PURPOSES.map(purpose => purpose.variants.length));
+  const layerOrder = MIGRATION_LAYERS.map(layer => layer.id);
+  const layerLabels = new Map(MIGRATION_LAYERS.map(layer => [layer.id, layer.label]));
+  const purposes = [...MIGRATION_PURPOSES].sort((a, b) => layerOrder.indexOf(a.layer) - layerOrder.indexOf(b.layer));
   const unitLabels = new Map(MIGRATION_PURPOSES.flatMap(purpose => (
     purpose.variants.map(variant => [variant.id, `${purpose.label}: ${variant.label}`])
   )));
@@ -226,7 +269,7 @@ function MigrationMatrix() {
   return (
     <div className={styles.detailsView}>
       <div className={styles.detailsIntro}>
-        <p>Each cell is one independently tracked route, provider, adapter, or foundation capability.</p>
+        <p>Each cell is one tracked route, provider, adapter, or capability, grouped by layer.</p>
         <div className={styles.legend} aria-label="Migration status legend">
           {Object.entries(MIGRATION_STATUSES).map(([status, metadata]) => (
             <span key={status}><i className={styles[status]} />{metadata.label}</span>
@@ -238,35 +281,41 @@ function MigrationMatrix() {
         className={styles.matrix}
         style={{'--matrix-columns': columnCount}}
       >
-        {MIGRATION_PURPOSES.map(purpose => (
-          <div className={styles.matrixRow} key={purpose.id}>
-            <div className={styles.purposeLabel}>
-              <span>{purpose.group}</span>
-              <strong>{purpose.label}</strong>
-            </div>
-            <div className={styles.cells}>
-              {purpose.variants.map(variant => {
-                const status = MIGRATION_STATUSES[variant.status];
-                return (
-                  <article className={`${styles.cell} ${styles[`cell_${variant.status}`]}`} key={variant.id}>
-                    <span className={styles.cellStatus}>{status.label}</span>
-                    <strong>{variant.label}</strong>
-                    <span className={styles.cellRelease}>
-                      {variant.introducedIn
-                        ? `First in ${variant.introducedIn}${semver.eq(variant.introducedIn, MAIN_MIGRATION_VERSION) ? ' · main' : ''}`
-                        : 'Not introduced'}
-                    </span>
-                    {variant.requires && (
-                      <span className={styles.cellDependency}>
-                        Requires {variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}
+        {purposes.map((purpose, index) => {
+          const firstInLayer = purposes[index - 1]?.layer !== purpose.layer;
+          return (
+            <div
+              className={`${styles.matrixRow} ${firstInLayer && index > 0 ? styles.layerStart : ''}`}
+              key={purpose.id}
+            >
+              <div className={styles.purposeLabel}>
+                <span>{firstInLayer ? layerLabels.get(purpose.layer) : ''}</span>
+                <strong>{purpose.label}</strong>
+              </div>
+              <div className={styles.cells}>
+                {purpose.variants.map(variant => {
+                  const status = MIGRATION_STATUSES[variant.status];
+                  return (
+                    <article
+                      className={`${styles.cell} ${styles[`cell_${variant.status}`]}`}
+                      title={variant.requires
+                        ? `Requires ${variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}`
+                        : undefined}
+                      key={variant.id}
+                    >
+                      <strong>{variant.label}</strong>
+                      <span className={styles.cellMeta}>
+                        {status.label}
+                        {variant.introducedIn && ` · ${compactVersion(variant.introducedIn)}`}
+                        {variant.introducedIn && semver.eq(variant.introducedIn, MAIN_MIGRATION_VERSION) && ' (main)'}
                       </span>
-                    )}
-                  </article>
-                );
-              })}
+                    </article>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -282,45 +331,23 @@ function MigrationTracker() {
           <p className={styles.kicker}>Migration tracker</p>
           <h2 id="migration-tracker-title">Rust migration progress</h2>
         </div>
-        <div className={styles.trackerControls}>
-          <div className={styles.milestoneSelector} aria-label="Migration milestone">
-            <span className={styles.milestoneSelectorLabel}>Milestone</span>
-            <div className={styles.milestoneTrack}>
-              {MIGRATION_MILESTONES.map((milestone, index) => (
-                <button
-                  className={index === 0 ? styles.activeMilestone : undefined}
-                  type="button"
-                  aria-pressed={index === 0}
-                  disabled={milestone.disabled}
-                  key={milestone.id}
-                >
-                  <span className={styles.milestoneNumber}>{index + 1}</span>
-                  <span className={styles.milestoneText}>
-                    <strong>{milestone.label}</strong>
-                    <small>Ends {MILESTONE_DATE_FORMATTER.format(new Date(milestone.endsOn))}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.viewToggle} role="group" aria-label="Migration tracker view">
-            <button
-              className={view === 'progress' ? styles.activeToggle : undefined}
-              type="button"
-              aria-pressed={view === 'progress'}
-              onClick={() => setView('progress')}
-            >
-              Progress
-            </button>
-            <button
-              className={view === 'details' ? styles.activeToggle : undefined}
-              type="button"
-              aria-pressed={view === 'details'}
-              onClick={() => setView('details')}
-            >
-              Details
-            </button>
-          </div>
+        <div className={styles.viewToggle} role="group" aria-label="Migration tracker view">
+          <button
+            className={view === 'progress' ? styles.activeToggle : undefined}
+            type="button"
+            aria-pressed={view === 'progress'}
+            onClick={() => setView('progress')}
+          >
+            Progress
+          </button>
+          <button
+            className={view === 'details' ? styles.activeToggle : undefined}
+            type="button"
+            aria-pressed={view === 'details'}
+            onClick={() => setView('details')}
+          >
+            Details
+          </button>
         </div>
       </div>
       <div className={styles.trackerBody}>

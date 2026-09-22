@@ -1,4 +1,9 @@
 .page {
+  --status-0: var(--ifm-color-emphasis-300);
+  --status-1: #b7e4c7;
+  --status-2: #74c69d;
+  --status-3: #2d9d68;
+  --status-4: #0b6b45;
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
@@ -85,13 +90,6 @@
   text-transform: uppercase;
 }
 
-.trackerControls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: min(720px, 100%);
-}
-
 .viewToggle {
   display: inline-flex;
   flex: 0 0 auto;
@@ -131,10 +129,12 @@
 
 .trackerBody {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .viewPanel {
   grid-area: 1 / 1;
+  min-width: 0;
   visibility: hidden;
 }
 
@@ -150,15 +150,6 @@
   flex-direction: column;
 }
 
-.viewIntro {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 1rem;
-}
-
-.viewIntro > p,
 .detailsIntro > p {
   max-width: 680px;
   margin: 0;
@@ -167,257 +158,211 @@
 }
 
 .detailsIntro {
+  display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chartCard {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color);
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem 0;
 }
 
 .progressSummary {
-  flex: 0 0 auto;
-  text-align: right;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .progressSummary strong {
-  display: block;
-  color: var(--ifm-color-primary);
-  font-size: 2.5rem;
+  color: var(--ifm-font-color-base);
+  font-size: 2.25rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.04em;
   line-height: 1;
 }
 
-.progressSummary span {
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.75rem;
-}
-
-.chartFrame {
-  min-height: 0;
-  flex: 0 0 auto;
-  overflow: hidden;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 10px;
-  background: var(--ifm-background-color);
-}
-
 .milestoneSelector {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  min-width: 0;
-  flex: 1 1 auto;
-  gap: 1.25rem;
-  padding: 3px 3px 3px 0.75rem;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 3px;
   border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--ifm-color-emphasis-100);
 }
 
-.milestoneSelectorLabel {
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.milestoneTrack {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.milestoneTrack::before {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  right: 25%;
-  left: 25%;
-  height: 1px;
-  background: var(--ifm-color-emphasis-300);
-  content: '';
-}
-
-.milestoneTrack button {
-  position: relative;
-  z-index: 1;
+.milestoneSelector button {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-radius: 5px;
   background: transparent;
-  color: var(--ifm-color-emphasis-700);
-  text-align: left;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
 }
 
-.milestoneTrack button:disabled {
+.milestoneSelector button strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.milestoneSelector button span {
+  color: var(--ifm-color-emphasis-500);
+  font-size: 0.7rem;
+}
+
+.milestoneSelector button:disabled {
   cursor: not-allowed;
-  opacity: 0.42;
+  opacity: 0.5;
 }
 
-.milestoneTrack .activeMilestone {
-  border-color: color-mix(in srgb, var(--ifm-color-primary) 35%, transparent);
-  background: var(--ifm-background-surface-color);
+.milestoneSelector button:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.milestoneSelector .activeMilestone {
+  background: var(--ifm-background-color);
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
   color: var(--ifm-font-color-base);
 }
 
-.milestoneNumber {
-  display: grid;
-  width: 1.4rem;
-  height: 1.4rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--ifm-color-emphasis-400);
-  border-radius: 50%;
-  background: var(--ifm-background-color);
-  font-size: 0.65rem;
-  font-weight: 700;
-}
-
-.activeMilestone .milestoneNumber {
-  border-color: var(--ifm-color-primary);
-  background: var(--ifm-color-primary);
-  color: var(--ifm-color-white);
-}
-
-.milestoneText {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.milestoneText strong {
-  overflow: hidden;
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.milestoneText small {
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.65rem;
+.chartBody {
+  padding: 0 0.5rem 0.5rem;
 }
 
 .timeline {
   display: block;
-  height: auto;
-  width: 100%;
+  overflow: visible;
 }
 
 .gridLine {
   stroke: var(--ifm-color-emphasis-200);
-  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.baseline {
+  stroke: var(--ifm-color-emphasis-300);
 }
 
 .axisLabel,
 .versionLabel,
-.pointValue {
-  fill: var(--ifm-color-emphasis-600);
+.pointValue,
+.goalLabel,
+.goalAxisLabel {
   font-family: var(--ifm-font-family-base);
-  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.axisLabel {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 11px;
 }
 
 .versionLabel {
-  fill: var(--ifm-color-emphasis-800);
+  fill: var(--ifm-color-emphasis-700);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .versionDate {
-  fill: var(--ifm-color-emphasis-600);
+  fill: var(--ifm-color-emphasis-500);
   font-size: 10px;
   font-weight: 400;
 }
 
-.mainVersionLabel {
+.mainVersionLabel,
+.goalAxisLabel {
   fill: var(--ifm-color-primary);
-  font-weight: 700;
-}
-
-.mainBadge rect {
-  fill: var(--ifm-color-primary);
-  opacity: 0.14;
-}
-
-.mainBadge text {
-  fill: var(--ifm-color-primary);
-  font-family: var(--ifm-font-family-base);
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.versionTick {
-  stroke: var(--ifm-color-emphasis-400);
-  stroke-width: 1;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .pointValue {
   fill: var(--ifm-font-color-base);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.areaStart {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0.22;
+}
+
+.areaEnd {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0;
 }
 
 .progressLine {
   fill: none;
   stroke: var(--ifm-color-primary);
-  stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 3;
-}
-
-.milestoneProjection {
-  fill: none;
-  stroke: var(--ifm-color-primary);
-  stroke-dasharray: 6 6;
-  stroke-linecap: round;
   stroke-width: 2;
 }
 
-.milestoneGoal circle {
-  fill: var(--ifm-background-color);
+.goalLine {
   stroke: var(--ifm-color-primary);
-  stroke-width: 3;
-}
-
-.milestoneTargetValue,
-.milestoneAxisLabel {
-  fill: var(--ifm-color-primary);
-  font-family: var(--ifm-font-family-base);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.milestoneTargetValue {
-  font-size: 10px;
-}
-
-.progressPointHalo {
-  fill: var(--ifm-color-primary-lightest);
-  opacity: 0.35;
+  stroke-dasharray: 4 5;
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
 }
 
 .progressPoint {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-primary);
+  stroke-width: 1.5;
+}
+
+.mainPoint {
   fill: var(--ifm-color-primary);
   stroke: var(--ifm-background-surface-color);
   stroke-width: 2;
 }
 
-.methodNote {
-  margin: 0.75rem 0 0;
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.75rem;
+.goal circle {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-primary);
+  stroke-dasharray: 2 2;
+  stroke-width: 1.5;
+}
+
+.goalLabel {
+  fill: var(--ifm-color-primary);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem 1.25rem;
-  margin: 0.65rem 0 1rem;
+  gap: 0.4rem 1rem;
+  margin: 0;
   color: var(--ifm-color-emphasis-700);
   font-size: 0.75rem;
 }
@@ -432,31 +377,51 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: var(--status-color);
 }
 
-.python {
-  background: var(--ifm-color-emphasis-400);
+.python,
+.cell_python {
+  --status-color: var(--status-0);
 }
 
-.building {
-  background: #e0a328;
+.building,
+.cell_building {
+  --status-color: var(--status-1);
 }
 
-.preview {
-  background: #8b7cf6;
+.preview,
+.cell_preview {
+  --status-color: var(--status-2);
 }
 
-.default {
-  background: #2fba72;
+.default,
+.cell_default {
+  --status-color: var(--status-3);
 }
 
-.rustOnly {
-  background: #087f5b;
+.rustOnly,
+.cell_rustOnly {
+  --status-color: var(--status-4);
+}
+
+.cell_building {
+  --status-fill: 8%;
+}
+
+.cell_preview {
+  --status-fill: 14%;
+}
+
+.cell_default {
+  --status-fill: 22%;
+}
+
+.cell_rustOnly {
+  --status-fill: 32%;
 }
 
 .matrix {
-  min-height: 0;
-  flex: 1 1 auto;
   overflow: hidden;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 10px;
@@ -464,25 +429,33 @@
 
 .matrixRow {
   display: grid;
-  grid-template-columns: 170px minmax(0, 1fr);
-  min-height: 58px;
+  grid-template-columns: 150px minmax(0, 1fr);
+  min-height: 44px;
 }
 
 .matrixRow + .matrixRow {
   border-top: 1px solid var(--ifm-color-emphasis-200);
 }
 
+.matrixRow.layerStart {
+  border-top: 1px solid var(--ifm-color-emphasis-400);
+}
+
 .purposeLabel {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0.5rem 0.85rem;
+  padding: 0.35rem 0.85rem;
   border-right: 1px solid var(--ifm-color-emphasis-200);
   background: var(--ifm-color-emphasis-100);
 }
 
 .purposeLabel strong {
   font-size: 0.82rem;
+}
+
+.purposeLabel span:empty {
+  display: none;
 }
 
 .purposeLabel span {
@@ -501,33 +474,16 @@
 }
 
 .cell {
-  --cell-status-color: var(--ifm-color-emphasis-400);
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  padding: 0.45rem 0.75rem;
-  background: var(--ifm-background-surface-color);
+  padding: 0.35rem 0.75rem;
+  background: color-mix(in srgb, var(--status-color) var(--status-fill, 0%), var(--ifm-background-surface-color));
 }
 
 .cell + .cell {
   border-left: 1px solid var(--ifm-color-emphasis-200);
-}
-
-.cell_building {
-  --cell-status-color: #d99a20;
-}
-
-.cell_preview {
-  --cell-status-color: #8172e8;
-}
-
-.cell_default {
-  --cell-status-color: #2ca96a;
-}
-
-.cell_rustOnly {
-  --cell-status-color: #087f5b;
 }
 
 .cell strong {
@@ -537,33 +493,24 @@
   white-space: nowrap;
 }
 
-.cellStatus {
+.cellMeta {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  margin-bottom: 0.2rem;
+  overflow: hidden;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
-.cellStatus::before {
+.cellMeta::before {
   width: 6px;
   height: 6px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: var(--cell-status-color);
+  background: var(--status-color);
   content: '';
-}
-
-.cellRelease,
-.cellDependency {
-  margin-top: 0.15rem;
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.62rem;
-  line-height: 1.25;
 }
 
 .list {
@@ -588,93 +535,31 @@
     padding: 2.25rem 0;
   }
 
-  .sectionHeading {
+  .chartHeader {
     align-items: flex-start;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.85rem;
+    padding: 1rem 1rem 0;
   }
 
   .progressSummary {
-    text-align: left;
-  }
-
-  .trackerControls {
-    align-items: stretch;
     flex-direction: column;
-    gap: 0.65rem;
-    width: 100%;
-  }
-
-  .trackerControls .viewToggle {
-    align-self: flex-start;
-  }
-
-  .viewIntro {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.35rem;
   }
 
   .milestoneSelector {
-    display: block;
-    padding: 0.75rem;
+    max-width: 100%;
   }
 
-  .milestoneSelectorLabel {
-    display: block;
-    margin-bottom: 0.5rem;
+  .milestoneSelector button {
+    flex-direction: column;
+    gap: 0;
+    padding: 0.35rem 0.6rem;
   }
 
-  .milestoneTrack {
-    gap: 0.4rem;
-  }
-
-  .milestoneTrack button {
-    gap: 0.4rem;
-    padding: 0.45rem;
-  }
-
-  .milestoneText strong {
-    font-size: 0.7rem;
-  }
-
-  .milestoneText small {
-    font-size: 0.58rem;
-  }
-
-  .axisLabel,
-  .versionLabel,
-  .pointValue {
-    font-size: 22px;
-  }
-
-  .versionDate {
-    font-size: 26px;
-  }
-
-  .versionLabel {
-    font-size: 30px;
-  }
-
-  .milestoneAxisLabel {
-    font-size: 26px;
-  }
-
-  .milestoneTargetValue {
-    font-size: 20px;
-  }
-
-  .hideOnMobile {
-    display: none;
-  }
-
-  .mainBadge text {
-    font-size: 14px;
-  }
-
-  .gridLine,
-  .progressLine {
-    vector-effect: non-scaling-stroke;
+  .sectionHeading {
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
   .matrixRow {
@@ -682,7 +567,7 @@
   }
 
   .purposeLabel {
-    min-height: 54px;
+    min-height: 40px;
     border-right: 0;
     border-bottom: 1px solid var(--ifm-color-emphasis-200);
   }
@@ -692,7 +577,7 @@
   }
 
   .cell {
-    min-height: 68px;
+    min-height: 44px;
   }
 
   .cell:nth-child(odd) {
@@ -702,5 +587,12 @@
   .cell:nth-child(n + 3) {
     border-top: 1px solid var(--ifm-color-emphasis-200);
   }
+}
 
+[data-theme='dark'] .page {
+  --status-0: var(--ifm-color-emphasis-300);
+  --status-1: #1f4d38;
+  --status-2: #2f7a55;
+  --status-3: #3fae76;
+  --status-4: #6fe0a4;
 }

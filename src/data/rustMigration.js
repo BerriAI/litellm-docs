@@ -44,10 +44,28 @@ export const MIGRATION_MILESTONES = [
   },
 ];
 
+// Ordered bottom-up, following the Rust TDD: shared foundations, then Inference,
+// Router, and Gateway, which each build on the layers before them.
+export const MIGRATION_LAYERS = [
+  {id: 'foundation', label: 'Foundation'},
+  {id: 'inference', label: 'Inference'},
+  {id: 'router', label: 'Router'},
+  {id: 'gateway', label: 'Gateway'},
+];
+
 export const MIGRATION_PURPOSES = [
   {
+    id: 'auth',
+    layer: 'foundation',
+    label: 'Auth',
+    variants: [
+      {id: 'auth-aws', label: 'AWS', status: 'python', introducedIn: null},
+      {id: 'auth-gcp', label: 'GCP', status: 'python', introducedIn: null},
+    ],
+  },
+  {
     id: 'ocr',
-    group: 'Routes',
+    layer: 'inference',
     label: 'OCR',
     variants: [
       {
@@ -66,7 +84,7 @@ export const MIGRATION_PURPOSES = [
   },
   {
     id: 'messages',
-    group: 'Routes',
+    layer: 'inference',
     label: 'Messages',
     variants: [
       {
@@ -94,7 +112,7 @@ export const MIGRATION_PURPOSES = [
   },
   {
     id: 'chat-completions',
-    group: 'Routes',
+    layer: 'inference',
     label: 'Chat completions',
     variants: [
       {id: 'chat-openai', label: 'OpenAI', status: 'python', introducedIn: null},
@@ -103,7 +121,7 @@ export const MIGRATION_PURPOSES = [
   },
   {
     id: 'token-counter',
-    group: 'Routes',
+    layer: 'inference',
     label: 'Token counter',
     variants: [
       {
@@ -116,17 +134,8 @@ export const MIGRATION_PURPOSES = [
     ],
   },
   {
-    id: 'auth',
-    group: 'Foundations',
-    label: 'Auth',
-    variants: [
-      {id: 'auth-aws', label: 'AWS', status: 'python', introducedIn: null},
-      {id: 'auth-gcp', label: 'GCP', status: 'python', introducedIn: null},
-    ],
-  },
-  {
     id: 'cache',
-    group: 'Foundations',
+    layer: 'inference',
     label: 'Cache',
     variants: [
       {id: 'cache-redis', label: 'Redis', status: 'python', introducedIn: null},
@@ -135,7 +144,7 @@ export const MIGRATION_PURPOSES = [
   },
   {
     id: 'secret-manager',
-    group: 'Foundations',
+    layer: 'inference',
     label: 'Secret manager',
     variants: [
       {id: 'secrets-aws', label: 'AWS', status: 'python', introducedIn: null},
@@ -144,7 +153,7 @@ export const MIGRATION_PURPOSES = [
   },
   {
     id: 'sql-manager',
-    group: 'Foundations',
+    layer: 'gateway',
     label: 'SQL manager',
     variants: [
       {id: 'sql-postgres', label: 'PostgreSQL', status: 'python', introducedIn: null},
