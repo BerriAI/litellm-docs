@@ -632,7 +632,7 @@ general_settings:
 
 ### Enforce a key_alias naming pattern
 
-Set `litellm_settings.key_alias_pattern` to a regex and every `key_alias` sent to `/key/generate`, `/key/service-account/generate`, `/key/update`, and `/key/{key}/regenerate` has to match it, which covers the Admin UI create, edit, and regenerate key flows. The whole alias has to match (Python `re.fullmatch`), so `team-[a-z]+` accepts `team-search` and rejects `team-search-2`
+Set `litellm_settings.key_alias_pattern` to a regex and every `key_alias` sent to `/key/generate`, `/key/service-account/generate`, `/key/update`, and `/key/{key}/regenerate` has to match it, which covers the Admin UI create, edit, and regenerate key flows. The whole alias has to match (Python `re.fullmatch`), so `team-[a-z]+` accepts `team-search` and rejects `team-search-2`. Aliases are capped at 255 characters before the pattern runs, so a pattern that backtracks badly never sees an unbounded alias
 
 ```yaml
 litellm_settings:
@@ -649,7 +649,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 ```
 
 ```json
-{"error": {"message": "Invalid key_alias format. Must match the configured key_alias_pattern: ^[a-z0-9]+(-[a-z0-9]+)*$", "type": "bad_request_error", "param": "key_alias", "code": "400"}}
+{"error": {"message": "Invalid key_alias format. Must be at most 255 characters and match the configured key_alias_pattern: ^[a-z0-9]+(-[a-z0-9]+)*$", "type": "bad_request_error", "param": "key_alias", "code": "400"}}
 ```
 
 `key_alias_pattern` replaces the built-in rule that `enable_key_alias_format_validation` turns on, so set one or the other. An update or regenerate that leaves `key_alias` unchanged is not checked, so keys named before the pattern was configured can still be edited, and the pattern applies the moment the alias changes. Path traversal and control characters in an alias are rejected whatever the pattern allows. A pattern that does not compile fails proxy startup with `Invalid regex set for litellm_settings.key_alias_pattern`
