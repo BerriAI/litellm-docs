@@ -150,10 +150,6 @@ docker run -d \
 </TabItem>
 </Tabs>
 
-:::note
-PR #42489 priced the first-party route. The Bedrock, Gemini Enterprise Agent Platform, and Azure ids route and run, but are not in the cost map yet, so spend on those logs as $0 until their rows land.
-:::
-
 **3. Test it!**
 
 The request is the same regardless of which provider you configured above:
