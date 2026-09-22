@@ -136,14 +136,15 @@ Pass a `fusion` dictionary alongside `model="litellm/fusion-1"`. Every field is 
 | `models` | LiteLLM default panel | One to eight models that answer independently in parallel. |
 | `judge.model` | LiteLLM default judge | Model that compares successful panel responses and writes the final answer. |
 | `judge.criteria` | `None` | Instructions used to compare the panel responses. |
-| `max_tool_calls` | `4` | Maximum internal tool-calling steps per panel or judge call. |
 | `max_completion_tokens` | `16000` | Maximum output tokens, including reasoning, for each internal call. |
 | `reasoning` | Provider default | Reasoning effort forwarded to panel and judge calls. |
 | `temperature` | Provider default | Temperature forwarded to panel calls. The judge uses temperature `0`. |
 
 ## Tools and streaming
 
-Standard tools and streaming remain available on the public request. Client tool schemas are kept private from panel and comparison calls. The judge receives them when it authors the final response.
+Standard tools remain available on the public request. Client tool schemas are kept private from panel and comparison calls. The judge receives them when it authors the final response.
+
+Streaming uses the async SDK methods: `litellm.acompletion()`, `litellm.anthropic.messages.acreate()`, or `litellm.aresponses()`. Synchronous streaming is rejected with guidance to the matching async method.
 
 ## Cost and recursion
 
