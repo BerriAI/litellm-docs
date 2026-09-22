@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 When LiteLLM acts as an MCP gateway, traffic flows `Client -> LiteLLM Proxy -> MCP Server`, and OAuth-enabled setups add an authorization server for metadata discovery. This page is a symptom-to-fix runbook: run one diagnostic, match the symptom in the matrix, and follow the row to the fix. If you still need to escalate, collect the [support bundle](#support-bundle) so nobody has to reconstruct context later
 
-For provisioning steps, transport options, and configuration fields, refer to [mcp.md](./mcp.md)
+For provisioning steps and configuration fields, refer to [mcp.md](./mcp.md). For choosing endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference)
 
 ## Five-Minute Triage {#locate-the-error-source}
 

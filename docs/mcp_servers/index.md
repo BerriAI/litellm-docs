@@ -4,6 +4,8 @@
 
 Each guide covers the server's endpoint, the auth LiteLLM needs, how to register it, and how to reach its tools from an agent. The gateway treats every server the same regardless of vendor: one endpoint for all clients, permissions by key, team, and organization, cost tracking per tool call, and a single audit trail.
 
+For shared endpoint, transport, and authentication rules, see the [MCP Configuration Reference](../mcp_config_reference)
+
 ## Servers
 
 | Server | Endpoint | Auth | Covers |

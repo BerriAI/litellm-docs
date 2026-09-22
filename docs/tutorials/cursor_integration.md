@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 
 # Cursor Integration
 
-Route Cursor IDE requests through LiteLLM for unified logging, budget controls, and access to any model.
+Route Cursor IDE requests through LiteLLM for unified logging, budget controls, and access to any model. To connect Cursor to MCP tools, use the direct-client URL and headers in the [MCP Configuration Reference](../mcp_config_reference#common-client-configs)
 
 :::info
 **Supported modes:** Ask, Plan, Agent. With the base URL override, agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
