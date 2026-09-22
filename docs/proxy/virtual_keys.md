@@ -630,6 +630,30 @@ general_settings:
   custom_key_policy: custom_auth.custom_key_policy_fn
 ```
 
+### Enforce a key_alias naming pattern
+
+Set `litellm_settings.key_alias_pattern` to a regex and every `key_alias` sent to `/key/generate`, `/key/service-account/generate`, `/key/update`, and `/key/{key}/regenerate` has to match it, which covers the Admin UI create, edit, and regenerate key flows. The whole alias has to match (Python `re.fullmatch`), so `team-[a-z]+` accepts `team-search` and rejects `team-search-2`
+
+```yaml
+litellm_settings:
+  key_alias_pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+```
+
+A request whose alias does not match fails with a `400` that names the pattern:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"key_alias": "Prod Key"}'
+```
+
+```json
+{"error": {"message": "Invalid key_alias format. Must match the configured key_alias_pattern: ^[a-z0-9]+(-[a-z0-9]+)*$", "type": "bad_request_error", "param": "key_alias", "code": "400"}}
+```
+
+`key_alias_pattern` replaces the built-in rule that `enable_key_alias_format_validation` turns on, so set one or the other. An update or regenerate that leaves `key_alias` unchanged is not checked, so keys named before the pattern was configured can still be edited, and the pattern applies the moment the alias changes. Path traversal and control characters in an alias are rejected whatever the pattern allows. A pattern that does not compile fails proxy startup with `Invalid regex set for litellm_settings.key_alias_pattern`
+
 ### Upperbound /key/generate params
 Use this, if you need to set default upperbounds for `max_budget`, `budget_duration` or any `key/generate` param per key. 
 
