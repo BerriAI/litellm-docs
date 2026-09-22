@@ -191,17 +191,6 @@ $ litellm --model petals/meta-llama/Llama-2-70b-chat-hf
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
-
-```shell
-$ export PALM_API_KEY=my-palm-key
-```
-```shell
-$ litellm --model palm/chat-bison
-```
-
-</TabItem>
-
 <TabItem value="ai21" label="AI21">
 
 ```shell
