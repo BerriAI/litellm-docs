@@ -1,4 +1,4 @@
-import React, {type ReactNode} from "react";
+import type {ReactNode} from "react";
 import {VegaEmbed} from "react-vega";
 import type {VisualizationSpec} from "vega-embed";
 import styles from "./styles.module.css";

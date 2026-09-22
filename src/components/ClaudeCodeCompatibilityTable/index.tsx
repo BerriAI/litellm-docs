@@ -1,4 +1,4 @@
-import React, {type ReactNode} from "react";
+import type {ReactNode} from "react";
 import matrix from "@site/src/data/compatibility-matrix.json";
 import styles from "./styles.module.css";
 

@@ -1,4 +1,4 @@
-import React, {useEffect, type ReactNode} from 'react';
+import {useEffect, type ReactNode} from 'react';
 import OriginalBlogPostPage from '@theme-original/BlogPostPage';
 import type BlogPostPageType from '@theme/BlogPostPage';
 import type {WrapperProps} from '@docusaurus/types';

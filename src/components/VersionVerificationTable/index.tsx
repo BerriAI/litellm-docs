@@ -1,4 +1,4 @@
-import React, {useState, type ReactNode} from "react";
+import {useState, type ReactNode} from "react";
 import styles from "./styles.module.css";
 
 interface VersionEntry {

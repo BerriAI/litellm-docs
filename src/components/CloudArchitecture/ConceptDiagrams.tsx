@@ -1,4 +1,4 @@
-import React, {type ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
@@ -151,7 +151,7 @@ function Box({
   name: string;
   badge?: string;
   badgeColor?: 'blue' | 'green' | 'orange';
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const badgeCls =
     badgeColor === 'green'

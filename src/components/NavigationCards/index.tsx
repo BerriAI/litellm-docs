@@ -1,4 +1,4 @@
-import React, {type CSSProperties, type ReactNode} from 'react';
+import type {CSSProperties, ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
 

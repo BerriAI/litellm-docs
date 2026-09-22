@@ -1,4 +1,4 @@
-import React, {useState, type ReactNode} from 'react';
+import {useState, type ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import {ThemeClassNames} from '@docusaurus/theme-common';

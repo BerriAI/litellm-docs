@@ -1,4 +1,4 @@
-import React, {type ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import Admonition from '@theme/Admonition';
 import Link from '@docusaurus/Link';
 

@@ -1,4 +1,4 @@
-import React, {type ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import clsx from 'clsx';
 import TOCItems from '@theme/TOCItems';
 import Link from '@docusaurus/Link';

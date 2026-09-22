@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback, type ReactNode} from 'react';
+import {Fragment, useState, useEffect, useRef, useCallback, type ReactNode} from 'react';
 import styles from './styles.module.css';
 
 /* ── Constants ── */
@@ -192,7 +192,7 @@ export default function BenchmarkVisualization(): ReactNode {
         ))}
       </div>
       {layers.map((layer, i) => (
-        <React.Fragment key={i}>
+        <Fragment key={i}>
           {i > 0 && <div className={styles.flowArrow}>&darr;</div>}
           <div
             className={`${styles.flowLayer} ${layer.warning ? styles.flowLayerWarning : ''}`}
@@ -200,7 +200,7 @@ export default function BenchmarkVisualization(): ReactNode {
             {layer.label}
             {layer.warning && <span className={styles.overheadTag}>&larr; overhead</span>}
           </div>
-        </React.Fragment>
+        </Fragment>
       ))}
     </div>
   );

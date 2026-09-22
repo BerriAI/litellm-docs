@@ -1,4 +1,4 @@
-import React, {useState, type ReactNode} from 'react';
+import {Fragment, useState, type ReactNode} from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import SubscribeForm from '@site/src/components/SubscribeForm';
@@ -175,14 +175,14 @@ function AuthorList({authors}: {authors?: readonly Author[]}): ReactNode {
   return (
     <>
       {authors.map((a, i) => (
-        <React.Fragment key={a.name}>
+        <Fragment key={a.name}>
           {i > 0 && <span className={styles.authorSep}> </span>}
           {a.url ? (
             <a href={a.url} target="_blank" rel="noopener" className={styles.authorLink}>{a.name}</a>
           ) : (
             <span className={styles.authorName}>{a.name}</span>
           )}
-        </React.Fragment>
+        </Fragment>
       ))}
     </>
   );

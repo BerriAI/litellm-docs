@@ -1,4 +1,4 @@
-import React, {useState, type ReactNode} from 'react';
+import {useState, type ReactNode} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
@@ -362,7 +362,7 @@ function Region({
   name: string;
   brandIcon: string;
   primary?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className={`${styles.region} ${primary ? styles.regionPrimary : ''}`}>

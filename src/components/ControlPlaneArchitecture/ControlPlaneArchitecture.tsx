@@ -1,4 +1,4 @@
-import React, {type ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import styles from './styles.module.css';
 
 /* ────────────────────── Shared small pieces ────────────────────── */

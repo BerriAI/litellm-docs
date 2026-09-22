@@ -1,4 +1,4 @@
-import React, {useState, useEffect, type ReactNode} from 'react';
+import {useState, useEffect, type ReactNode} from 'react';
 
 function CodeBlock({ token }: {token: string | null}) {
   const codeWithToken = `
