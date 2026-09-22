@@ -51,8 +51,8 @@ guardrails:
 #### Supported values for `mode`
 
 - `pre_call` Run **before** LLM call, on **input**
-- `post_call` Run **after** LLM call, on **input & output**
-- `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call. Response not returned until guardrail check completes
+
+`pre_call` is the only supported mode for the Javelin guardrail. Setting `mode` to `post_call` or `during_call` will fail validation at startup.
 
 ### 2. Start LiteLLM Gateway 
 
