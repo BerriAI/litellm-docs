@@ -7,13 +7,13 @@ Have a question, need help getting set up, or want to talk about pricing? Reach 
 <a className="contact-card" href="mailto:support@berri.ai">
   <div className="contact-card__icon">📧</div>
   <div className="contact-card__title">Support</div>
-  <div className="contact-card__desc">support@berri.ai</div>
+  <div className="contact-card__desc">{'support@berri.ai'}</div>
 </a>
 
 <a className="contact-card" href="mailto:sales@berri.ai">
   <div className="contact-card__icon">💼</div>
   <div className="contact-card__title">Sales</div>
-  <div className="contact-card__desc">sales@berri.ai</div>
+  <div className="contact-card__desc">{'sales@berri.ai'}</div>
 </a>
 
 <a className="contact-card" href="https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version">

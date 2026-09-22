@@ -10,9 +10,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
   img={require('../img/mcp_2.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models</p>
 
 ## Overview
 | Feature | Description |
