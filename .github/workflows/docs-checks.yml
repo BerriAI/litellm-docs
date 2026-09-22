@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: node scripts/check-writing-style.js docs blog release_notes
+      - run: node scripts/check-writing-style.ts docs blog release_notes
   structure:
     runs-on: ubuntu-latest
     steps:

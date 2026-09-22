@@ -1,13 +1,14 @@
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import sharp from 'sharp';
+import type {Plugin} from '@docusaurus/types';
 
 const QUALITY = 75;
 const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
 
-function walk(dir) {
+function walk(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
-  const files = [];
+  const files: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...walk(full));
@@ -16,7 +17,7 @@ function walk(dir) {
   return files;
 }
 
-async function optimizeFile(filePath) {
+async function optimizeFile(filePath: string): Promise<number> {
   const ext = path.extname(filePath).toLowerCase();
   const tmp = filePath + '.opt';
   try {
@@ -40,7 +41,8 @@ async function optimizeFile(filePath) {
   }
 }
 
-module.exports = function optimizeImagesPlugin() {
+// Recompresses PNG/JPEG files in the build output when that makes them smaller.
+export default function optimizeImagesPlugin(): Plugin {
   return {
     name: 'optimize-images',
     async postBuild({ outDir }) {
@@ -52,4 +54,4 @@ module.exports = function optimizeImagesPlugin() {
       console.log(`\n[optimize-images] Compressed ${files.length} images, saved ${mb} MB`);
     },
   };
-};
+}

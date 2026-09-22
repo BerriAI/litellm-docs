@@ -26,7 +26,7 @@ Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
 block that is intentionally a fragment.
 
 Model ids in examples are `{{role}}` placeholders filled from docs-models.json
-at build time (src/remark/docs-models.js). This script applies the same
+at build time (src/remark/docs-models.ts). This script applies the same
 substitution before parsing a block, and the model-literal rule fails a block
 that writes the current id itself, because that block would not follow the
 next bump. Add `keep-model-ids` to the fence line when the exact id is the
@@ -427,7 +427,7 @@ KNOWN_META_RE = re.compile(r"^(showLineNumbers|nolint|keep-model-ids|keep-python
 
 
 def load_roles():
-    """{role: value} from docs-models.json, the file src/remark/docs-models.js reads."""
+    """{role: value} from docs-models.json, the file src/remark/docs-models.ts reads."""
     with open(os.path.join(REPO_ROOT, "docs-models.json"), encoding="utf-8") as f:
         return json.load(f)
 

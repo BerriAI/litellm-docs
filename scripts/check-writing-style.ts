@@ -9,7 +9,7 @@
  *   - inflated vocabulary that reads as AI-generated ("utilize", "seamless", ...)
  *
  * Usage:
- *   node scripts/check-writing-style.js [--strict] [--warnings] [paths...]
+ *   node scripts/check-writing-style.ts [--strict] [--warnings] [paths...]
  *
  * Defaults to scanning `docs/`. Table cells, fenced code blocks, and
  * `- **Term** — description` list labels are exempt: there the dash is
@@ -25,12 +25,14 @@
  * if you are writing the sentence yourself, rewrite it instead.
  */
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
+
+type Finding = { file: string; lineNo: number; line: string; message: string };
 
 const EM_DASH = "\u2014";
 
-const WORD_PATTERNS = [
+const WORD_PATTERNS: [RegExp, string][] = [
   [/\butiliz(e|es|ed|ing)\b/i, 'use "use"'],
   [/\bin order to\b/i, 'use "to"'],
   [/\bleverag(e|es|ed|ing)\b/i, 'use "use"'],
@@ -44,10 +46,10 @@ const WORD_PATTERNS = [
   [/\bunlock(s|ed|ing)? (the|your|its) (power|potential)\b/i, "say what it does"],
 ];
 
-function collectFiles(target) {
+function collectFiles(target: string): string[] {
   const stat = fs.statSync(target);
   if (!stat.isDirectory()) return /\.mdx?$/.test(target) ? [target] : [];
-  const out = [];
+  const out: string[] = [];
   for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
     out.push(...collectFiles(path.join(target, entry.name)));
@@ -64,17 +66,17 @@ const LIST_LABEL = new RegExp(
 // required to carry a reason.
 const ALLOW_NEXT_LINE = /^\{\/\*\s*style-lint-allow-next-line\s+em-dash\s*:\s*\S.*\*\/\}$/;
 
-function isExemptDashLine(line) {
+function isExemptDashLine(line: string): boolean {
   const trimmed = line.trim();
   if (trimmed.startsWith("|")) return true;
   const count = (line.match(new RegExp(EM_DASH, "g")) || []).length;
   return count === 1 && LIST_LABEL.test(trimmed);
 }
 
-function checkFile(file) {
+function checkFile(file: string): { errors: Finding[]; warnings: Finding[] } {
   const lines = fs.readFileSync(file, "utf8").split("\n");
-  const errors = [];
-  const warnings = [];
+  const errors: Finding[] = [];
+  const warnings: Finding[] = [];
   let inFence = false;
   let inFrontmatter = lines[0] === "---";
 
@@ -108,7 +110,7 @@ function checkFile(file) {
   return { errors, warnings };
 }
 
-function report(items, label) {
+function report(items: Finding[], label: string): void {
   console.log(`\n${label} (${items.length}):`);
   for (const item of items) {
     console.log(`  ${item.file}:${item.lineNo}  ${item.message}`);
@@ -116,7 +118,7 @@ function report(items, label) {
   }
 }
 
-function main() {
+function main(): void {
   const args = process.argv.slice(2);
   const strict = args.includes("--strict");
   const showWarnings = strict || args.includes("--warnings");
@@ -124,8 +126,8 @@ function main() {
   const roots = targets.length ? targets : ["docs"];
 
   const files = roots.flatMap(collectFiles);
-  const errors = [];
-  const warnings = [];
+  const errors: Finding[] = [];
+  const warnings: Finding[] = [];
   for (const file of files) {
     const result = checkFile(file);
     errors.push(...result.errors);
