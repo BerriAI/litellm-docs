@@ -88,6 +88,7 @@ const config = {
   },
   plugins: [
     require('./plugins/optimize-images'),
+    require('./plugins/rust-migration-posts'),
     [
       '@docusaurus/plugin-client-redirects',
       {
@@ -402,8 +403,9 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'autoRouterSidebar',
             position: 'left',
-            label: 'Auto Router [Add-on]',
+            label: 'Auto Router',
           },
+          { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://trust.litellm.ai/',
             label: 'Trust Center',
