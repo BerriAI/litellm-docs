@@ -50,7 +50,7 @@ This release improves team and tag based usage tracking at 1m+ spend logs, makin
 
 ## Unified Responses API
 
-This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/proxy/client_setup/codex_cli) with your own models. 
+This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/proxy/client_setup/codex_cli) with your own models.
 
 <Image img={require('../../img/release_notes/unified_responses_api_rn.png')}/>
 
