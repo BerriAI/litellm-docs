@@ -35,7 +35,6 @@ response = completion("command-nightly", messages)
 `;
   return (
     <pre>
-        {console.log("token: ", token)}
       {token ? codeWithToken : codeWithoutToken}
     </pre>
   )
@@ -46,7 +45,6 @@ const QueryParamReader = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    console.log("urlParams: ", urlParams)
     const token = urlParams.get('token');
     setToken(token);
   }, []);

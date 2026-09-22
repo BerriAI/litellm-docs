@@ -86,6 +86,12 @@ const config = {
     locales: ['en'],
   },
   plugins: [
+    // vega-canvas tries to load the optional node `canvas` package during SSR.
+    // Charts render as SVG, so resolve it to an empty module.
+    () => ({
+      name: 'ignore-optional-canvas',
+      configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
+    }),
     require('./plugins/optimize-images'),
     [
       '@docusaurus/plugin-client-redirects',
