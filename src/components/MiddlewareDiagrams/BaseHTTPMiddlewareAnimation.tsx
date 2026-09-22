@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useRef, type ReactNode} from 'react';
 import styles from './styles.module.css';
 
 interface Stage {
@@ -48,7 +48,7 @@ const STAGES: Stage[] = [
 const INTERVAL_MS = 1200;
 const PAUSE_MS = 600;
 
-export default function BaseHTTPMiddlewareAnimation() {
+export default function BaseHTTPMiddlewareAnimation(): ReactNode {
   const [activeStage, setActiveStage] = useState(0);
   const [paused, setPaused] = useState(false);
   const [expandedStage, setExpandedStage] = useState<number | null>(null);

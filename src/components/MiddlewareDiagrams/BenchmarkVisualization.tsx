@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useCallback, type ReactNode} from 'react';
 import styles from './styles.module.css';
 
 /* ── Constants ── */
@@ -46,7 +46,7 @@ interface Dot {
 }
 
 /* ── Component ── */
-export default function BenchmarkVisualization() {
+export default function BenchmarkVisualization(): ReactNode {
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [afterDone, setAfterDone] = useState(false);

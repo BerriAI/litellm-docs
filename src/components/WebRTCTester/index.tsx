@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import DashboardWebRTCTester from "./DashboardWebRTCTester";
 
 const LIGHT_MODE_OVERRIDES = `
@@ -73,7 +74,7 @@ const LIGHT_MODE_OVERRIDES = `
 }
 `;
 
-export default function WebRTCTester() {
+export default function WebRTCTester(): ReactNode {
   return (
     <>
       <DashboardWebRTCTester />

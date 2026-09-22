@@ -1,16 +1,28 @@
-import React from 'react';
+import React, {type CSSProperties, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
 
-export default function NavigationCards({ items, columns = 2 }) {
+export type NavigationCardItem = {
+  title: ReactNode;
+  to: string;
+  icon?: ReactNode;
+  description?: ReactNode;
+  listDescription?: ReactNode[];
+};
+
+type Props = {
+  items: NavigationCardItem[];
+  columns?: number;
+};
+
+export default function NavigationCards({ items, columns = 2 }: Props): ReactNode {
   return (
     <div
       className={styles.grid}
-      style={{ '--nav-columns': columns }}
+      style={{ '--nav-columns': columns } as CSSProperties}
     >
       {items.map((item, i) => {
-        const isExternal =
-          item.to && (item.to.startsWith('http://') || item.to.startsWith('https://'));
+        const isExternal = item.to.startsWith('http://') || item.to.startsWith('https://');
         return (
           <Link
             key={i}

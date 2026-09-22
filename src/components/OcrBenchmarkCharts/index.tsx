@@ -1,4 +1,4 @@
-import React from "react";
+import React, {type ReactNode} from "react";
 import {VegaEmbed} from "react-vega";
 import type {VisualizationSpec} from "vega-embed";
 import styles from "./styles.module.css";
@@ -164,7 +164,7 @@ const delayChecks: Pair[] = [
   {round: "Concurrency 64", python: 108.2, rust: 167.0},
 ];
 
-export function OcrThroughputChart() {
+export function OcrThroughputChart(): ReactNode {
   return (
     <figure className={styles.chart}>
       <Chart spec={pairedSpec(
@@ -184,7 +184,7 @@ export function OcrThroughputChart() {
   );
 }
 
-export function OcrProviderDelayChart() {
+export function OcrProviderDelayChart(): ReactNode {
   return (
     <figure className={styles.chart}>
       <Chart spec={pairedSpec(
@@ -198,7 +198,7 @@ export function OcrProviderDelayChart() {
   );
 }
 
-export function OcrFixedArrivalChart() {
+export function OcrFixedArrivalChart(): ReactNode {
   return (
     <figure className={styles.chart}>
       <div className={styles.split}>

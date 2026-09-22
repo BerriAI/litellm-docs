@@ -1,4 +1,4 @@
-import React from "react";
+import React, {type ReactNode} from "react";
 import matrix from "@site/src/data/compatibility-matrix.json";
 import styles from "./styles.module.css";
 
@@ -60,7 +60,7 @@ function cellTitle(cell: Cell): string {
   return "passing";
 }
 
-export default function ClaudeCodeCompatibilityTable(): JSX.Element {
+export default function ClaudeCodeCompatibilityTable(): ReactNode {
   const m = matrix as Matrix;
   return (
     <div className={styles.wrapper}>

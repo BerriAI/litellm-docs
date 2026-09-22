@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, type ReactNode} from 'react';
 
-const CodeBlock = ({ token }) => {
+function CodeBlock({ token }: {token: string | null}) {
   const codeWithToken = `
 import os
 from litellm import completion
@@ -40,8 +40,8 @@ response = completion("command-nightly", messages)
   )
 }
 
-const QueryParamReader = () => {
-  const [token, setToken] = useState(null);
+export default function QueryParamReader(): ReactNode {
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -55,5 +55,3 @@ const QueryParamReader = () => {
     </div>
   );
 }
-
-export default QueryParamReader;

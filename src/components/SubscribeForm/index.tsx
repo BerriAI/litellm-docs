@@ -1,14 +1,16 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import {LOOPS_FORM_URL} from './config';
 import styles from './styles.module.css';
 
 
-export default function SubscribeForm() {
+type Status = 'idle' | 'loading' | 'success' | 'error';
+
+export default function SubscribeForm(): ReactNode {
   const [email, setEmail] = React.useState('');
   const [honeypot, setHoneypot] = React.useState('');
-  const [status, setStatus] = React.useState('idle'); // idle | loading | success | error
+  const [status, setStatus] = React.useState<Status>('idle');
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (honeypot) return;
     setStatus('loading');

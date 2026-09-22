@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState, type ReactNode} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
@@ -239,7 +239,7 @@ const CLOUD_SPECS: Record<
   },
 };
 
-export function CloudArchitecture({ cloud }: { cloud: CloudKey }) {
+export function CloudArchitecture({ cloud }: { cloud: CloudKey }): ReactNode {
   const spec = CLOUD_SPECS[cloud];
   return (
     <div className={styles.wrapper}>
@@ -304,7 +304,7 @@ const CSP_TABS: {
   },
 ];
 
-export function CloudArchitectureSelector() {
+export function CloudArchitectureSelector(): ReactNode {
   const [cspKey, setCspKey] = useState('aws');
   const csp = CSP_TABS.find((t) => t.key === cspKey) ?? CSP_TABS[0];
   const [variantByCsp, setVariantByCsp] = useState<Record<string, CloudKey>>({});
@@ -406,7 +406,7 @@ const MULTI_REGION_SPECS = {
   },
 } as const;
 
-export function MultiRegionArchitecture() {
+export function MultiRegionArchitecture(): ReactNode {
   const [csp, setCsp] = useState<keyof typeof MULTI_REGION_SPECS>('aws');
   const spec = MULTI_REGION_SPECS[csp];
   return (

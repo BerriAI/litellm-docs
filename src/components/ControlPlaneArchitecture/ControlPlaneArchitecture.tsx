@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import styles from './styles.module.css';
 
 /* ────────────────────── Shared small pieces ────────────────────── */
@@ -111,7 +111,7 @@ function ArchitectureView() {
 
 /* ────────────────────── Main component ────────────────────── */
 
-export default function ControlPlaneArchitecture() {
+export default function ControlPlaneArchitecture(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <ArchitectureView />

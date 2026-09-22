@@ -1,6 +1,8 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 
-const TIERS = [
+type Tier = {name: string; desc: string; color: string};
+
+const TIERS: Tier[] = [
   { name: 'SIMPLE', desc: 'smallest, cheapest model', color: '#14b8a6' },
   { name: 'MEDIUM', desc: 'mid-size model', color: '#3b82f6' },
   { name: 'COMPLEX', desc: 'frontier model', color: '#8b5cf6' },
@@ -17,21 +19,21 @@ const CLS = { x: 262, y: 106, w: 176, h: 88 };
 const TIER = { x: 512, w: 224, h: 50, gap: 20, top: 18 };
 const RES = { x: 794, y: 116, w: 156, h: 68 };
 
-function hexToRgba(hex, alpha) {
+function hexToRgba(hex: string, alpha: number): string {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-function tierY(i) {
+function tierY(i: number): number {
   return TIER.top + i * (TIER.h + TIER.gap);
 }
 
-function curve(x1, y1, x2, y2) {
+function curve(x1: number, y1: number, x2: number, y2: number): string {
   const mx = (x1 + x2) / 2;
   return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
 }
 
-function Arrowhead({ id, color }) {
+function Arrowhead({ id, color }: {id: string; color: string}) {
   return (
     <marker id={id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" style={{ fill: color }} />
@@ -39,7 +41,7 @@ function Arrowhead({ id, color }) {
   );
 }
 
-export default function AutoRouterDiagram() {
+export default function AutoRouterDiagram(): ReactNode {
   const clsMidY = CLS.y + CLS.h / 2;
   const resMidY = RES.y + RES.h / 2;
   return (

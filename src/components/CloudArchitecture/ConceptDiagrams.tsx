@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
@@ -172,7 +172,7 @@ function Box({
 
 /* ────────────────────── Life of a Request ────────────────────── */
 
-export function RequestFlowDiagram() {
+export function RequestFlowDiagram(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <div className={styles.diagram}>
@@ -208,7 +208,7 @@ export function RequestFlowDiagram() {
 
 /* ────────────────────── Router: fallbacks and retries ────────────────────── */
 
-export function RouterFlowDiagram() {
+export function RouterFlowDiagram(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <div className={styles.diagram}>
@@ -238,7 +238,7 @@ export function RouterFlowDiagram() {
 
 /* ────────────────────── Image URL handling ────────────────────── */
 
-export function ImageFlowDiagram() {
+export function ImageFlowDiagram(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <div className={styles.diagram}>
@@ -263,7 +263,7 @@ export function ImageFlowDiagram() {
 
 /* ────────────────────── Tenancy hierarchy ────────────────────── */
 
-export function TenancyDiagram() {
+export function TenancyDiagram(): ReactNode {
   return (
     <div className={styles.wrapper}>
       <div className={styles.diagram}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState, type ReactNode} from "react";
 import styles from "./styles.module.css";
 
 interface VersionEntry {
@@ -32,7 +32,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function VersionVerificationTable({ entries }: Props) {
+export default function VersionVerificationTable({ entries }: Props): ReactNode {
   return (
     <div className={styles.wrapper}>
       <table className={styles.table}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useCallback, type ReactNode} from 'react';
 import styles from './styles.module.css';
 
 interface Stage {
@@ -14,7 +14,7 @@ const STAGES: Stage[] = [
 const INTERVAL_MS = 1200;
 const PAUSE_MS = 600;
 
-export default function PureASGIAnimation() {
+export default function PureASGIAnimation(): ReactNode {
   const [activeStage, setActiveStage] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

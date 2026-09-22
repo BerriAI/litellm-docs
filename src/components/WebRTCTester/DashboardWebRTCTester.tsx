@@ -1,4 +1,15 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
+
+type LogLevel = 'step' | 'info' | 'success' | 'warn' | 'error';
+type LogEntry = { level: LogLevel; tag: string; msg: string; time: string; id: number };
+type Status = 'idle' | 'connecting' | 'connected' | 'error';
+type Tab = 'logs' | 'sdp' | 'audio';
+
+const TABS: Tab[] = ['logs', 'sdp', 'audio'];
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 const STYLES = `
 .wrt-wrap {
@@ -214,8 +225,8 @@ const STYLES = `
 `;
 
 function useLog() {
-  const [entries, setEntries] = useState([]);
-  const add = useCallback((level, tag, msg) => {
+  const [entries, setEntries] = useState<LogEntry[]>([]);
+  const add = useCallback((level: LogLevel, tag: string, msg: string) => {
     const time = new Date().toTimeString().slice(0, 8);
     setEntries(prev => [...prev, { level, tag, msg, time, id: Date.now() + Math.random() }]);
   }, []);
@@ -223,13 +234,13 @@ function useLog() {
   return { entries, add, clear };
 }
 
-export default function WebRTCTester() {
+export default function DashboardWebRTCTester(): ReactNode {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('logs');
+  const [activeTab, setActiveTab] = useState<Tab>('logs');
   const [proxyUrl, setProxyUrl] = useState('http://localhost:4000');
   const [apiKey, setApiKey] = useState('sk-<your-litellm-api-key>');
   const [model, setModel] = useState('gpt-4o-realtime-preview');
-  const [status, setStatus] = useState('idle');
+  const [status, setStatus] = useState<Status>('idle');
   const [flowStep, setFlowStep] = useState(0);
   const [tokenPreview, setTokenPreview] = useState('—');
   const [iceState, setIceState] = useState('—');
@@ -241,21 +252,21 @@ export default function WebRTCTester() {
   const [answerActive, setAnswerActive] = useState(false);
   const [audioStatus, setAudioStatus] = useState('Start a session first');
   const [micActive, setMicActive] = useState(false);
-  const [bars, setBars] = useState(Array(28).fill(2));
+  const [bars, setBars] = useState<number[]>(Array(28).fill(2));
   const [connected, setConnected] = useState(false);
 
   const { entries, add: log, clear: clearLogs } = useLog();
-  const logRef = useRef(null);
+  const logRef = useRef<HTMLDivElement>(null);
 
-  const pcRef = useRef(null);
-  const dcRef = useRef(null);
-  const streamRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const analyserRef = useRef(null);
-  const animRef = useRef(null);
-  const tokenRef = useRef(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animRef = useRef<number | null>(null);
+  const tokenRef = useRef<string | null>(null);
   const micRef = useRef(false);
-  const remoteAudioRef = useRef(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -269,12 +280,14 @@ export default function WebRTCTester() {
     setBars(Array.from({ length: 28 }, (_, i) => Math.max(2, ((data[i] || 0) / 255) * 42)));
   }
 
-  function setupAnalyser(stream) {
-    audioCtxRef.current = new AudioContext();
-    const src = audioCtxRef.current.createMediaStreamSource(stream);
-    analyserRef.current = audioCtxRef.current.createAnalyser();
-    analyserRef.current.fftSize = 64;
-    src.connect(analyserRef.current);
+  function setupAnalyser(stream: MediaStream) {
+    const audioCtx = new AudioContext();
+    audioCtxRef.current = audioCtx;
+    const src = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    analyserRef.current = analyser;
+    src.connect(analyser);
     drawBars();
   }
 
@@ -289,7 +302,7 @@ export default function WebRTCTester() {
 
     // Step 1: ephemeral token
     log('step', 'STEP 1', `POST ${url}/v1/realtime/client_secrets`);
-    let tokenResp;
+    let tokenResp: {client_secret?: {value?: string}; value?: string};
     try {
       const r = await fetch(`${url}/v1/realtime/client_secrets`, {
         method: 'POST',
@@ -302,7 +315,7 @@ export default function WebRTCTester() {
       tokenResp = JSON.parse(raw);
       log('success', 'TOKEN', 'Received encrypted ephemeral token');
     } catch (e) {
-      log('error', 'ERR', `client_secrets failed: ${e.message}`);
+      log('error', 'ERR', `client_secrets failed: ${errorMessage(e)}`);
       stopSession(); return;
     }
 
@@ -359,7 +372,7 @@ export default function WebRTCTester() {
       micRef.current = true;
       setMicActive(true);
     } catch (e) {
-      log('warn', 'MIC', `Mic denied: ${e.message}`);
+      log('warn', 'MIC', `Mic denied: ${errorMessage(e)}`);
       const ctx = new AudioContext();
       const dest = ctx.createMediaStreamDestination();
       dest.stream.getTracks().forEach(t => pc.addTrack(t, dest.stream));
@@ -369,9 +382,10 @@ export default function WebRTCTester() {
     log('step', 'STEP 3', 'Creating SDP offer');
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    setSdpOffer(offer.sdp);
+    const offerSdp = offer.sdp ?? '';
+    setSdpOffer(offerSdp);
     setOfferActive(true);
-    log('info', 'SDP', `Offer created (${offer.sdp.split('\n').length} lines)`);
+    log('info', 'SDP', `Offer created (${offerSdp.split('\n').length} lines)`);
 
     // Step 4: SDP exchange
     setFlowStep(2);
@@ -380,7 +394,7 @@ export default function WebRTCTester() {
       const r = await fetch(`${url}/v1/realtime/calls`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/sdp' },
-        body: offer.sdp,
+        body: offerSdp,
       });
       log('info', 'HTTP', `${r.status} ${r.statusText}`);
       if (!r.ok) { log('error', 'ERR', await r.text()); stopSession(); return; }
@@ -394,7 +408,7 @@ export default function WebRTCTester() {
       setAnswerActive(true);
       log('success', 'CONN', '✓ Session established — Browser ↔ LiteLLM ↔ OpenAI');
     } catch (e) {
-      log('error', 'ERR', `calls failed: ${e.message}`);
+      log('error', 'ERR', `calls failed: ${errorMessage(e)}`);
       stopSession();
     }
   }
@@ -429,7 +443,7 @@ export default function WebRTCTester() {
     log('info', 'MIC', next ? 'Unmuted' : 'Muted');
   }
 
-  const f = (n) => flowStep >= n;
+  const f = (n: number) => flowStep >= n;
 
   return (
     <>
@@ -512,7 +526,7 @@ export default function WebRTCTester() {
               </div>
 
               <div className="wrt-tabs">
-                {['logs','sdp','audio'].map(t => (
+                {TABS.map(t => (
                   <div key={t} className={`wrt-tab${activeTab===t?' active':''}`} onClick={() => setActiveTab(t)}>
                     {t.toUpperCase()}
                   </div>

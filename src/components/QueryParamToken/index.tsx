@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, type ReactNode} from 'react';
 
-const QueryParamToken = () => {
-  const [token, setToken] = useState(null);
+export default function QueryParamToken(): ReactNode {
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -15,5 +15,3 @@ const QueryParamToken = () => {
     </span>
   );
 }
-
-export default QueryParamToken;
