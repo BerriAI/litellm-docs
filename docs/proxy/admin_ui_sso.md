@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 
 ### Video Walkthrough
 
-<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameBorder="0" allowFullScreen></iframe>
 
 #### Step 1: Create an OIDC Application in Okta
 

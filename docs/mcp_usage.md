@@ -11,7 +11,7 @@ This document covers how to use LiteLLM as an MCP Gateway. You can see how to us
 
 Follow this walkthrough to use your MCP on LiteLLM UI
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/57e0763267254bc79dbe6658d0b8758c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/57e0763267254bc79dbe6658d0b8758c" frameBorder="0" allowFullScreen></iframe>
 
 ### Use with Responses API
 

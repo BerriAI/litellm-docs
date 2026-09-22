@@ -94,7 +94,7 @@ LiteLLM supports the following MCP transports:
 
 This video walks through adding and using an HTTP MCP server on LiteLLM UI and using it in Cursor IDE.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/e2aebce78e8d46beafeb4bacdde31f14" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/e2aebce78e8d46beafeb4bacdde31f14" frameBorder="0" allowFullScreen></iframe>
 
 <br/>
 <br/>
@@ -103,7 +103,7 @@ This video walks through adding and using an HTTP MCP server on LiteLLM UI and u
 
 This video walks through adding and using an SSE MCP server on LiteLLM UI and using it in Cursor IDE.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/07e04e27f5e74475b9cf8ef8247d2c3e" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/07e04e27f5e74475b9cf8ef8247d2c3e" frameBorder="0" allowFullScreen></iframe>
 
 <br/>
 <br/>
@@ -172,7 +172,7 @@ These headers get sent with every request to the server. That's it.
 
 Store credentials on the server and reference them in static headers or authentication with `${VAR_NAME}` (e.g. `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`). Scope each variable as **Instance** (shared) or **Per-user** (each user supplies their own).
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameBorder="0" allowFullScreen></iframe>
 
 **When to use this:**
 - Each user needs to connect with their own static credentials
@@ -1091,7 +1091,7 @@ LiteLLM exposes an MCP Gateway for admins to add all their MCP servers to LiteLL
 
 This video demonstrates how you can onboard an MCP server to LiteLLM Proxy, use it and set access controls.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/f7aa8d217879430987f3e64291757bfc" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/f7aa8d217879430987f3e64291757bfc" frameBorder="0" allowFullScreen></iframe>
 
 ## LiteLLM Python SDK MCP Bridge
 

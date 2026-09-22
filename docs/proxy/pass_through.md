@@ -383,7 +383,7 @@ curl --location 'http://0.0.0.0:4000/v1/messages' \
 
 In this video, we'll add the Azure OpenAI Assistants API as a pass through endpoint to LiteLLM Proxy.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/12965cb299d24fc0bd7b6b413ab6d0ad" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/12965cb299d24fc0bd7b6b413ab6d0ad" frameBorder="0" allowFullScreen></iframe>
 
 <br/>
 <br/>

@@ -6,7 +6,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 
 ### Video Walkthrough
 
-<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameBorder="0" allowFullScreen></iframe>
 
 <TenancyDiagram />
 
