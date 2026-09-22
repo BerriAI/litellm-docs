@@ -8,12 +8,12 @@ When making public-facing docs, PR descriptions, comments, issues, commit messag
 
 ## Release notes: breaking changes
 
-Every breaking change in a release note must be surfaced in a dedicated red `:::danger Breaking Changes` admonition placed immediately after the "Deploy this version" block and before "Key Highlights"; do not leave it as a regular Key Highlights bullet. A breaking change is anything that alters existing default behavior, removes or renames a field, tightens who may do something, or otherwise requires action to preserve prior behavior; opt-in additions and pure bug fixes are not breaking. Lead each entry with a bolded one-sentence summary of what changed, then state the upgrade impact and link the PR. Group multiple breaking changes in the same release inside one admonition. Use the following shape:
+Every breaking change in a release note must be surfaced in a dedicated red `:::danger[Breaking Changes]` admonition placed immediately after the "Deploy this version" block and before "Key Highlights"; do not leave it as a regular Key Highlights bullet. A breaking change is anything that alters existing default behavior, removes or renames a field, tightens who may do something, or otherwise requires action to preserve prior behavior; opt-in additions and pure bug fixes are not breaking. Lead each entry with a bolded one-sentence summary of what changed, then state the upgrade impact and link the PR. Group multiple breaking changes in the same release inside one admonition. Use the following shape:
 
 ```md
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **One-sentence summary of the change.** What breaks for someone upgrading and how to restore the prior behavior if applicable. See [PR #12345](https://github.com/BerriAI/litellm/pull/12345).
 
@@ -30,3 +30,7 @@ Every new stable release note must link the GitHub releases page, https://github
 
 This release is published as [`ghcr.io/berriai/litellm:vX.Y.Z`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/vX.Y.Z) and the full [releases page](https://github.com/BerriAI/litellm/releases).
 ```
+
+## Code and MDX conventions
+
+Follow the MDX syntax rules in section 4 and the "Code in `src/`" section of CONTRIBUTING.md, and run `npm run typecheck`, `npm run format:check`, and `npm run build` before opening a PR.

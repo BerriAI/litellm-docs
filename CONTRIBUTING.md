@@ -11,7 +11,10 @@ cd litellm-docs
 
 ## 2. Install dependencies
 
+The site needs Node 22.18 or newer; `.nvmrc` pins the version CI uses.
+
 ```bash
+nvm use
 npm install
 ```
 
@@ -23,7 +26,7 @@ npm start
 
 Open http://localhost:3000.
 
-The site uses Docusaurus 3, so most docs and blog changes reload automatically while the dev server is running.
+The site uses Docusaurus 3 with the v4 future flags turned on, so most docs and blog changes reload automatically while the dev server is running.
 
 ## 4. Make your changes
 
@@ -35,17 +38,25 @@ Custom standalone pages live in `src/pages/`.
 
 If you add, remove, or move docs pages, check whether `sidebars.ts` needs to be updated.
 
-To mark a page or section as Enterprise-gated, put `<EnterpriseFeature />` on its own line with a blank line before and after it, instead of writing the admonition by hand. It is registered globally in `src/theme/MDXComponents.js`, so no import is needed. Pass `feature="SSO"` to name the feature in the first sentence, use `<EnterpriseFeature free />` for features that ship in `litellm[proxy]` without a license, and put a one-line note between `<EnterpriseFeature>` and `</EnterpriseFeature>` when the page needs an extra sentence, such as a user limit. The component lives in `src/components/EnterpriseFeature/`.
+To mark a page or section as Enterprise-gated, put `<EnterpriseFeature />` on its own line with a blank line before and after it, instead of writing the admonition by hand. It is registered globally in `src/theme/MDXComponents.tsx`, so no import is needed. Pass `feature="SSO"` to name the feature in the first sentence, use `<EnterpriseFeature free />` for features that ship in `litellm[proxy]` without a license, and put a one-line note between `<EnterpriseFeature>` and `</EnterpriseFeature>` when the page needs an extra sentence, such as a user limit. The component lives in `src/components/EnterpriseFeature/`.
+
+Pages are compiled as MDX 3 without the MDX 1 compatibility layer, so write admonition titles as `:::note[Title]`, explicit heading ids as `## Heading {/* #my-id */}`, and comments as `{/* comment */}`; HTML comments and `{#my-id}` fail the build. Use `:::warning` rather than the deprecated `:::caution`. JSX attributes use React names, such as `frameBorder` and `allowFullScreen` on an iframe. Link to other pages by file (`./other-page.md`) or by absolute path (`/docs/proxy/logging`); a bare relative URL such as `./other-page` resolves differently on the server and in the browser on index pages and sends readers to a 404.
+
+### Code in `src/`
+
+Everything under `src/`, `plugins/`, and `scripts/`, plus the Docusaurus config and sidebars, is TypeScript. Each component gets its own `PascalCase` folder under `src/components/` with an `index.tsx` and, when it has styles, a `styles.module.css` next to it. Components are function declarations that return `ReactNode`, and props get a `Props` type; swizzled theme components in `src/theme/` take their props from the matching `@theme/*` type. Rely on the automatic JSX runtime and import hooks and types by name instead of `import React`. Anything rendered during the build must produce the same output in the browser, so avoid inline `<style>` text, and pass an explicit locale and time zone when formatting numbers or dates. Scripts in `scripts/` run with Node's built-in type stripping (`node scripts/check-writing-style.ts`), so they may only use syntax that erases to JavaScript.
 
 ## 5. Verify your changes
 
 Before opening a PR, run:
 
 ```bash
+npm run typecheck
+npm run format:check
 npm run build
 ```
 
-This catches broken links, invalid MDX, and other Docusaurus build issues.
+`typecheck` runs `tsc` in strict mode, `format:check` runs Prettier on the TypeScript and CSS sources (`npm run format` fixes them), and `build` catches broken links, invalid MDX, and other Docusaurus build issues. CI runs all three and also fails when the build prints any warning.
 
 Also run the writing style check, which CI enforces on every PR:
 
