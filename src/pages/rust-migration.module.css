@@ -170,7 +170,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   color: var(--ifm-color-emphasis-700);
   font-size: 0.75rem;
 }
@@ -210,14 +210,14 @@
 .matrix {
   overflow-x: auto;
   border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
 .matrixRow {
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr);
   min-width: var(--matrix-min-width);
-  min-height: 116px;
+  min-height: 78px;
 }
 
 .matrixRow + .matrixRow {
@@ -228,19 +228,19 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   border-right: 1px solid var(--ifm-color-emphasis-200);
   background: var(--ifm-color-emphasis-100);
 }
 
 .purposeLabel strong {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .purposeLabel span {
   order: -1;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -249,66 +249,73 @@
 .cells {
   display: grid;
   grid-template-columns: repeat(var(--matrix-columns), minmax(0, 1fr));
-  gap: 1px;
   background: var(--ifm-background-surface-color);
 }
 
 .cell {
+  --cell-status-color: var(--ifm-color-emphasis-400);
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  padding: 1rem;
-  border-top: 3px solid transparent;
+  padding: 0.65rem 0.85rem;
   background: var(--ifm-background-surface-color);
 }
 
-.cell_python {
-  border-top-color: var(--ifm-color-emphasis-400);
+.cell + .cell {
+  border-left: 1px solid var(--ifm-color-emphasis-200);
 }
 
 .cell_building {
-  border-top-color: #e0a328;
-  background: color-mix(in srgb, #e0a328 7%, var(--ifm-background-surface-color));
+  --cell-status-color: #d99a20;
 }
 
 .cell_preview {
-  border-top-color: #8b7cf6;
-  background: color-mix(in srgb, #8b7cf6 8%, var(--ifm-background-surface-color));
+  --cell-status-color: #8172e8;
 }
 
 .cell_default {
-  border-top-color: #2fba72;
-  background: color-mix(in srgb, #2fba72 8%, var(--ifm-background-surface-color));
+  --cell-status-color: #2ca96a;
 }
 
 .cell_rustOnly {
-  border-top-color: #087f5b;
-  background: color-mix(in srgb, #087f5b 8%, var(--ifm-background-surface-color));
+  --cell-status-color: #087f5b;
 }
 
 .cell strong {
   overflow: hidden;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .cellStatus {
-  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
+.cellStatus::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cell-status-color);
+  content: '';
+}
+
 .cellRelease,
 .cellDependency {
-  margin-top: 0.3rem;
+  margin-top: 0.15rem;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.67rem;
-  line-height: 1.35;
+  font-size: 0.62rem;
+  line-height: 1.25;
 }
 
 .list {
