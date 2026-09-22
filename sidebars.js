@@ -338,6 +338,11 @@ const sidebars = {
           href: "/docs/#litellm-python-sdk",
         },
         {
+          type: "doc",
+          id: "completion/fusion",
+          label: "Fusion model",
+        },
+        {
           type: "category",
           label: "SDK Functions",
           items: [
