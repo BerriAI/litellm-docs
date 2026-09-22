@@ -1,5 +1,5 @@
 import React from 'react';
-import {LOOPS_FORM_URL} from '@site/src/config';
+import {LOOPS_FORM_URL} from './config';
 import styles from './styles.module.css';
 
 

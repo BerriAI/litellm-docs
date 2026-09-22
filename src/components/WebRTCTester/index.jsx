@@ -1,4 +1,4 @@
-import DashboardWebRTCTester from "./DashboardWebRTCTester.jsx";
+import DashboardWebRTCTester from "./DashboardWebRTCTester";
 
 const LIGHT_MODE_OVERRIDES = `
 .wrt-wrap {

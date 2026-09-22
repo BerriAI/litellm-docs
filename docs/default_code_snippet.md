@@ -3,8 +3,8 @@ displayed_sidebar: tutorialSidebar
 ---
 # Get Started
 
-import QueryParamReader from '../src/components/queryParamReader.js'
-import TokenComponent from '../src/components/queryParamToken.js'
+import QueryParamReader from '@site/src/components/QueryParamReader';
+import TokenComponent from '@site/src/components/QueryParamToken';
 
 :::info
 
