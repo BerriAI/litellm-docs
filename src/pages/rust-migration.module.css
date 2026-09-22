@@ -234,13 +234,33 @@
 }
 
 .versionLabel {
-  fill: var(--ifm-color-emphasis-500);
-  font-size: 9px;
+  fill: var(--ifm-color-emphasis-800);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.versionDate {
+  fill: var(--ifm-color-emphasis-600);
+  font-size: 10px;
+  font-weight: 400;
 }
 
 .mainVersionLabel {
   fill: var(--ifm-color-primary);
   font-weight: 700;
+}
+
+.mainBadge rect {
+  fill: var(--ifm-color-primary);
+  opacity: 0.14;
+}
+
+.mainBadge text {
+  fill: var(--ifm-color-primary);
+  font-family: var(--ifm-font-family-base);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .versionTick {
@@ -485,6 +505,22 @@
   .versionLabel,
   .pointValue {
     font-size: 22px;
+  }
+
+  .versionDate {
+    font-size: 26px;
+  }
+
+  .versionLabel {
+    font-size: 30px;
+  }
+
+  .hideOnMobile {
+    display: none;
+  }
+
+  .mainBadge text {
+    font-size: 14px;
   }
 
   .gridLine,
