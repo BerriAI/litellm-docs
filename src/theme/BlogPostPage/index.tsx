@@ -1,8 +1,12 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, type ReactNode} from 'react';
 import OriginalBlogPostPage from '@theme-original/BlogPostPage';
+import type BlogPostPageType from '@theme/BlogPostPage';
+import type {WrapperProps} from '@docusaurus/types';
 import styles from './styles.module.css';
 
-function BackLink() {
+type Props = WrapperProps<typeof BlogPostPageType>;
+
+function BackLink(): ReactNode {
   return (
     <div className={styles.backOuter}>
       <a href="/blog" className={styles.backLink}>
@@ -15,7 +19,7 @@ function BackLink() {
   );
 }
 
-export default function BlogPostPage(props) {
+export default function BlogPostPage(props: Props): ReactNode {
   // Add body class so CSS can hide the sidebar
   useEffect(() => {
     document.body.classList.add('blog-post-body');

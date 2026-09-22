@@ -1,10 +1,25 @@
-import React, {useState} from 'react';
+import React, {useState, type ReactNode} from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import SubscribeForm from '@site/src/components/SubscribeForm';
+import type {Props} from '@theme/BlogListPage';
 import styles from './styles.module.css';
 
-const TABS = [
+type BlogListItem = Props['items'][number];
+type BlogPostMetadata = BlogListItem['content']['metadata'];
+type TabId = 'all' | 'autorouter' | 'engineering' | 'ideas' | 'security' | 'infrastructure';
+type Author = {name?: string; url?: string};
+
+/** The fields PostRow renders; also used for curated lists outside the blog. */
+export type PostSummary = {
+  title: string;
+  permalink: string;
+  date: string;
+  description?: string;
+  authors?: readonly Author[];
+};
+
+const TABS: {id: TabId; label: string}[] = [
   {id: 'all', label: 'All'},
   {id: 'autorouter', label: 'Auto Router'},
   {id: 'engineering', label: 'Engineering'},
@@ -18,12 +33,12 @@ const INFRA_TAGS = ['performance', 'reliability', 'infrastructure'];
 const IDEAS_TAGS = ['ideas', 'thesis'];
 const AUTOROUTER_TAGS = ['complexity-router', 'auto-router'];
 
-function hasTag(item, tagSet) {
-  const tags = item.content?.metadata?.tags || [];
+function hasTag(item: BlogListItem, tagSet: string[]): boolean {
+  const tags = item.content.metadata.tags;
   return tags.some(t => tagSet.includes(t.label));
 }
 
-function filterItems(items, tab) {
+function filterItems(items: readonly BlogListItem[], tab: TabId): readonly BlogListItem[] {
   if (tab === 'all') return items;
   if (tab === 'autorouter') return items.filter(i => hasTag(i, AUTOROUTER_TAGS));
   if (tab === 'security') return items.filter(i => hasTag(i, SECURITY_TAGS));
@@ -36,28 +51,27 @@ function filterItems(items, tab) {
   );
 }
 
-function searchableText(item) {
-  const metadata = item.content?.metadata || {};
+function searchableText(item: BlogListItem): string {
+  const metadata: BlogPostMetadata = item.content.metadata;
   return [
     metadata.title,
     metadata.description,
-    metadata.keywords,
-    ...(metadata.tags || []).map(tag => tag.label),
-    ...(metadata.authors || []).map(author => author.name),
+    ...metadata.tags.map(tag => tag.label),
+    ...metadata.authors.map(author => author.name),
   ].filter(Boolean).join(' ').toLowerCase();
 }
 
-function queryTokens(query) {
+function queryTokens(query: string): string[] {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 }
 
-function maxEditDistance(token) {
+function maxEditDistance(token: string): number {
   if (token.length <= 3) return 0;
   if (token.length <= 5) return 1;
   return 2;
 }
 
-function levenshteinDistance(first, second, maxDistance) {
+function levenshteinDistance(first: string, second: string, maxDistance: number): number {
   if (Math.abs(first.length - second.length) > maxDistance) return maxDistance + 1;
 
   let previous = Array.from({length: second.length + 1}, (_, index) => index);
@@ -76,7 +90,7 @@ function levenshteinDistance(first, second, maxDistance) {
   return previous[second.length];
 }
 
-function isSubsequence(token, word) {
+function isSubsequence(token: string, word: string): boolean {
   let tokenIndex = 0;
   for (const character of word) {
     if (character === token[tokenIndex]) tokenIndex++;
@@ -84,7 +98,7 @@ function isSubsequence(token, word) {
   return tokenIndex === token.length;
 }
 
-function tokenScore(word, token) {
+function tokenScore(word: string, token: string): number | null {
   if (word === token) return 4;
   if (word.startsWith(token)) return 3;
   if (word.includes(token)) return 2;
@@ -93,14 +107,14 @@ function tokenScore(word, token) {
   return null;
 }
 
-function itemScore(item, tokens) {
+function itemScore(item: BlogListItem, tokens: string[]): number | null {
   if (tokens.length === 0) return 0;
 
   const words = searchableText(item).match(/[\p{L}\p{N}]+/gu) || [];
-  return tokens.reduce((score, token) => {
-    const bestTokenScore = words.reduce((best, word) => {
+  return tokens.reduce<number | null>((score, token) => {
+    const bestTokenScore = words.reduce<number | null>((best, word) => {
       const current = tokenScore(word, token);
-      return current !== null && current > best ? current : best;
+      return current !== null && (best === null || current > best) ? current : best;
     }, null);
 
     return score === null || bestTokenScore === null ? null : score + bestTokenScore;
@@ -127,7 +141,7 @@ const PROVIDERS = [
 
 const DOUBLED = [...PROVIDERS, ...PROVIDERS];
 
-function ProviderMarquee() {
+function ProviderMarquee(): ReactNode {
   return (
     <div className={styles.marqueeWrap}>
       <p className={styles.marqueeLabel}>Routing to 100+ providers</p>
@@ -149,13 +163,13 @@ function ProviderMarquee() {
 }
 
 // ── Post row ──────────────────────────────────────────────────────────────
-function formatDate(dateStr) {
+function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
 }
 
-function AuthorList({authors}) {
+function AuthorList({authors}: {authors?: readonly Author[]}): ReactNode {
   if (!authors || authors.length === 0) return null;
   return (
     <>
@@ -173,7 +187,7 @@ function AuthorList({authors}) {
   );
 }
 
-export function PostRow({post}) {
+export function PostRow({post}: {post: PostSummary}): ReactNode {
   const {title, permalink, date, description, authors} = post;
   return (
     <article className={styles.post}>
@@ -190,7 +204,7 @@ export function PostRow({post}) {
   );
 }
 
-function Pagination({metadata}) {
+function Pagination({metadata}: {metadata: Props['metadata']}): ReactNode {
   const {previousPage, nextPage} = metadata;
   if (!previousPage && !nextPage) return null;
   return (
@@ -202,16 +216,14 @@ function Pagination({metadata}) {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
-export default function BlogListPage(props) {
-  const items = props.items || [];
-  const metadata = props.metadata || {};
-  const [activeTab, setActiveTab] = useState('all');
+export default function BlogListPage({items, metadata}: Props): ReactNode {
+  const [activeTab, setActiveTab] = useState<TabId>('all');
   const [query, setQuery] = useState('');
   const tokens = queryTokens(query);
   const filtered = filterItems(items, activeTab)
     .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
     .filter(({score}) => score !== null)
-    .sort((first, second) => second.score - first.score || first.index - second.index)
+    .sort((first, second) => second.score! - first.score! || first.index - second.index)
     .map(({item}) => item);
 
   return (

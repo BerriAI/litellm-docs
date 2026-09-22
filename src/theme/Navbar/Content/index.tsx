@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import {
   useThemeConfig,
   ErrorCauseBoundary,
@@ -7,18 +7,18 @@ import {
   splitNavbarItems,
   useNavbarMobileSidebar,
 } from '@docusaurus/theme-common/internal';
-import NavbarItem from '@theme/NavbarItem';
+import NavbarItem, {type Props as NavbarItemConfig} from '@theme/NavbarItem';
 import NavbarColorModeToggle from '@theme/Navbar/ColorModeToggle';
 import NavbarMobileSidebarToggle from '@theme/Navbar/MobileSidebar/Toggle';
 import NavbarLogo from '@theme/Navbar/Logo';
 import NavbarSearch from '@theme/Navbar/Search';
 import SearchBar from '@theme/SearchBar';
 
-function useNavbarItems() {
-  return useThemeConfig().navbar.items;
+function useNavbarItems(): NavbarItemConfig[] {
+  return useThemeConfig().navbar.items as NavbarItemConfig[];
 }
 
-function NavbarItems({ items }) {
+function NavbarItems({ items }: {items: NavbarItemConfig[]}): ReactNode {
   return (
     <>
       {items.map((item, i) => (
@@ -37,7 +37,7 @@ function NavbarItems({ items }) {
   );
 }
 
-export default function NavbarContent() {
+export default function NavbarContent(): ReactNode {
   const mobileSidebar = useNavbarMobileSidebar();
   const items = useNavbarItems();
   const [leftItems, rightItems] = splitNavbarItems(items);
