@@ -711,6 +711,8 @@ router_settings:
 | COMETAPI_API_KEY | API key for CometAPI, read after `COMETAPI_KEY`
 | COMETAPI_BASE_URL | Base URL for CometAPI image generation, read before `COMETAPI_API_BASE`
 | CONFIG_FILE_PATH | File path for configuration file
+| CRUISE_API_BASE | Base URL for BytesBrains Cruise. Default is https://cruise.bytesbrains.net/v1
+| CRUISE_API_KEY | API key for BytesBrains Cruise
 | CRW_API_BASE | Base URL for the FastCRW search provider
 | CYBERARK_ACCOUNT | CyberArk account name for secret management
 | CYBERARK_API_BASE | Base URL for CyberArk API
