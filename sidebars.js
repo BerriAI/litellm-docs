@@ -269,6 +269,7 @@ const sidebars = {
         "tutorials/litellm_gemini_cli",
         "tutorials/litellm_qwen_code_cli",
         "tutorials/openai_codex",
+        "tutorials/openai_codex_byok",
         "tutorials/retool_assist",
         "tutorials/cost_tracking_coding"
       ]
