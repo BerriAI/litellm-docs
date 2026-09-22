@@ -445,6 +445,14 @@ const config = {
                 label: 'Twitter',
                 href: 'https://twitter.com/LiteLLM',
               },
+              {
+                label: 'YouTube',
+                href: 'https://www.youtube.com/@LiteLLMAIGateway',
+              },
+              {
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/litellm',
+              },
             ],
           },
           {
