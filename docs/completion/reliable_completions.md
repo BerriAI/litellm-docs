@@ -64,7 +64,7 @@ The `fallbacks` list should include the primary model you want to use, followed 
 #### switch models 
 ```python
 response = completion(model="bad-model", messages=messages, 
-    fallbacks=["{{openai_small}}" "command-nightly"])
+    fallbacks=["{{openai_small}}", "command-nightly"])
 ```
 
 #### switch api keys/bases (E.g. azure deployment)
