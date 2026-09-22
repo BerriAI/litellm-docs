@@ -2477,33 +2477,14 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </Tabs>
 
 
-## Chat Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| chat-bison-32k   | `completion('chat-bison-32k', messages)` |
-| chat-bison       | `completion('chat-bison', messages)`     |
-| chat-bison@001   | `completion('chat-bison@001', messages)` |
-
-## Code Chat Models
-| Model Name           | Function Call                              |
-|----------------------|--------------------------------------------|
-| codechat-bison       | `completion('codechat-bison', messages)`     |
-| codechat-bison-32k   | `completion('codechat-bison-32k', messages)` |
-| codechat-bison@001   | `completion('codechat-bison@001', messages)` |
-
 ## Text Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| text-bison       | `completion('text-bison', messages)` |
-| text-bison@001   | `completion('text-bison@001', messages)` |
 
-## Code Text Models
+The PaLM 2 `chat-bison`, `codechat-bison`, `text-bison`, `code-bison` and `code-gecko` models have been removed from LiteLLM's model map, so calling them without a provider prefix no longer resolves to Vertex AI. Use `vertex_ai/<model>` for any model not listed here.
+
 | Model Name       | Function Call                        |
 |------------------|--------------------------------------|
-| code-bison       | `completion('code-bison', messages)` |
-| code-bison@001   | `completion('code-bison@001', messages)` |
-| code-gecko@001   | `completion('code-gecko@001', messages)` |
-| code-gecko@latest| `completion('code-gecko@latest', messages)` |
+| text-unicorn     | `completion('text-unicorn', messages)` |
+| text-unicorn@001 | `completion('text-unicorn@001', messages)` |
 
 
 ## **Embedding Models**
