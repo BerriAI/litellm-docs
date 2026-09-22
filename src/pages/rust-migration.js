@@ -55,12 +55,15 @@ function migrationTimeline() {
   }));
 }
 
-function versionParts(version) {
+function compactVersion(version) {
   const parsed = semver.parse(version);
   if (!parsed) {
-    return [version, ''];
+    return version;
   }
-  return [`v${parsed.major}.${parsed.minor}.${parsed.patch}`, parsed.prerelease.join('.')];
+  const release = parsed.patch === 0
+    ? `${parsed.major}.${parsed.minor}`
+    : `${parsed.major}.${parsed.minor}.${parsed.patch}`;
+  return `${release} rc${parsed.prerelease[1]}`;
 }
 
 function releaseDate(version) {
@@ -73,7 +76,7 @@ function MigrationTimeline() {
   const milestones = migrationTimeline();
   const width = 920;
   const height = 350;
-  const plot = {left: 64, right: 24, top: 24, bottom: 88};
+  const plot = {left: 76, right: 56, top: 24, bottom: 88};
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
   const x = index => plot.left + (index / (milestones.length - 1)) * plotWidth;
@@ -119,11 +122,15 @@ function MigrationTimeline() {
           {milestones.map((milestone, index) => {
             const previous = milestones[index - 1];
             const notable = index === 0 || index === milestones.length - 1 || percentage(previous) !== percentage(milestone);
-            const [release, prerelease] = versionParts(milestone.version);
+            const version = compactVersion(milestone.version);
             const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
             const date = releaseDate(milestone.version);
+            const hideOnMobile = !notable;
             return (
               <g key={milestone.version}>
+                <title>
+                  {milestone.version}, {isMain ? `planned for ${date}` : `released ${date}`}
+                </title>
                 <line
                   className={styles.versionTick}
                   x1={x(index)}
@@ -143,16 +150,20 @@ function MigrationTimeline() {
                   </>
                 )}
                 <text
-                  className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''}`}
+                  className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''} ${hideOnMobile ? styles.hideOnMobile : ''}`}
                   x={x(index)}
-                  y={height - 47}
+                  y={height - 38}
                   textAnchor="middle"
                 >
-                  <tspan x={x(index)}>{release}</tspan>
-                  <tspan x={x(index)} dy="14">{prerelease}</tspan>
-                  <tspan x={x(index)} dy="14">{date}{isMain ? ' planned' : ''}</tspan>
-                  {isMain && <tspan x={x(index)} dy="14">main</tspan>}
+                  <tspan x={x(index)}>{version}</tspan>
+                  <tspan className={styles.versionDate} x={x(index)} dy="17">{date}</tspan>
                 </text>
+                {isMain && (
+                  <g className={styles.mainBadge}>
+                    <rect x={x(index) - 18} y={height - 66} width="36" height="14" rx="7" />
+                    <text x={x(index)} y={height - 56} textAnchor="middle">MAIN</text>
+                  </g>
+                )}
               </g>
             );
           })}
