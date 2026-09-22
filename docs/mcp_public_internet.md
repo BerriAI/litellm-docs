@@ -210,7 +210,7 @@ mcp_servers:
     url: https://exa.ai/mcp
     auth_type: api_key
     auth_value: os.environ/EXA_API_KEY
-    available_on_public_internet: false  # internal only (default)
+    available_on_public_internet: false  # internal only (the default is true)
 ```
 
 </TabItem>
