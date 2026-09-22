@@ -16,8 +16,8 @@ import Image from '@theme/IdealImage';
 | Inference provider | **Gateway** |
 | Gateway base URL | `<LITELLM_PROXY_BASE_URL>` (e.g. `http://localhost:4000`) |
 | Gateway API key | Your LiteLLM [virtual key](../virtual_keys.md), auth scheme **Bearer** |
-| MCP endpoint | `<LITELLM_PROXY_BASE_URL>/mcp`, or `<LITELLM_PROXY_BASE_URL>/mcp/<server_name>` for one server |
-| MCP auth header | `Authorization: Bearer <virtual key>` |
+| MCP endpoint | `<LITELLM_PROXY_BASE_URL>/mcp`, or `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` for one server |
+| MCP auth header | `x-litellm-api-key: Bearer <virtual key>` |
 
 ## LLM setup
 
@@ -37,7 +37,7 @@ Open the Claude menu, click **Developer**, then **Configure Third-Party Inferenc
 
 ### 3. Enter your gateway URL and virtual key
 
-In the **Connection** section set **Inference provider** to **Gateway**, put your LiteLLM proxy URL in **Gateway base URL** and your virtual key in **Gateway API key**, and leave **Gateway auth scheme** at **bearer** (LiteLLM also accepts `x-api-key`). Click **Apply locally**.
+In the **Connection** section set **Inference provider** to **Gateway**, put your LiteLLM proxy URL in **Gateway base URL** and your virtual key in **Gateway API key**, and leave **Gateway auth scheme** at **bearer** (LiteLLM also accepts `x-api-key`). Click **Apply Changes** (called **Apply locally** in older versions).
 
 <Image img={require('../../../img/client_setup/claude_desktop_04_gateway_url_and_key.jpeg')} />
 
@@ -53,7 +53,13 @@ Restart Claude Desktop. The model picker is built from `GET /v1/models` on your 
 
 ## MCP setup
 
-Claude Desktop on third-party inference takes MCP servers as `managedMcpServers` entries, and the gateway becomes one entry: the virtual key travels in the entry's headers as a bearer token. The **Connectors** section of the same configuration window has a form for each server (name, transport, URL, headers) and a **Test this connection** button that runs `initialize` and `tools/list` against it. In the exported configuration the entry looks like this:
+The MCP screenshots below use Claude Desktop 2.2553.13 on Linux and a local demonstration gateway. Menu labels can differ by app version.
+
+### 1. Add the gateway connector
+
+Open **Configure Third-Party Inference** and find **Connectors**. Add a server named `litellm`, select **Streamable HTTP**, and enter `http://localhost:4000/mcp` as the URL. Replace the base URL with your gateway address. This endpoint exposes the servers your key can access.
+
+Set the header `x-litellm-api-key` to `Bearer <your virtual key>`. Grant the key access to that MCP server as described in [the overview](./overview.md#the-values-you-will-reuse-everywhere). In the exported configuration, this is an entry in `managedMcpServers`:
 
 ```json
 [
@@ -61,12 +67,26 @@ Claude Desktop on third-party inference takes MCP servers as `managedMcpServers`
     "name": "litellm",
     "transport": "http",
     "url": "http://localhost:4000/mcp",
-    "headers": {"Authorization": "Bearer sk-1234", "x-mcp-servers": "my_mcp_server"}
+    "headers": {"x-litellm-api-key": "Bearer sk-1234"}
   }
 ]
 ```
 
-`x-mcp-servers` narrows the entry to specific servers; `my_mcp_server` must match a key under `mcp_servers:` in your gateway config, and the per-server path `http://localhost:4000/mcp/my_mcp_server` does the same without the header. The key needs access to the server (see [the overview](./overview.md#the-values-you-will-reuse-everywhere)); the tools then appear as `<server>-<tool>` in a session.
+### 2. Test the connection
+
+Click **Sign in & test** (called **Test this connection** in some versions). Claude runs MCP initialization and tool discovery with the URL and credentials you entered, then displays the discovered tools or a connection error. Check that the tools belong to the intended server before saving the configuration.
+
+<Image img={require('../../../img/client_setup/claude_desktop_02_mcp_connector_connected_tools.png')} alt="Claude connector settings showing the LiteLLM MCP URL, a demonstration key, and three discovered tools" />
+
+The screenshot uses the local demonstration key `sk-1234`; use your own virtual key. Claude may flag a static authentication header as credential-like. For managed deployments, the [advanced guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers a credential helper instead.
+
+### 3. Verify in Cowork
+
+Apply the configuration and restart Claude Desktop. Start a Cowork task that uses a read-only tool from the connector, approve it if prompted, and check that the tool returns a result. Tools use the `<server>-<tool>` naming convention.
+
+<Image img={require('../../../img/client_setup/claude_cowork_04_mcp_tool_result.png')} alt="Claude Cowork displaying a read-only DeepWiki tool result through the LiteLLM connector" />
+
+To select one server, use `/<server_name>/mcp` instead. The [MCP configuration reference](../../mcp_config_reference.md) covers endpoint selection, server filtering, and authentication.
 
 Claude Desktop's built-in connectors (`github`, `microsoft365`, `websearch`) run inside the app against those vendors' APIs and never pass through LiteLLM; only `url` entries do. For servers that need the user's own upstream login, set `"oauth": true` on the per-server URL and let LiteLLM run the flow; see [MCP OAuth passthrough](../../mcp_oauth_passthrough.md). The [full guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers `headersHelper` for single sign-on fleets and per-tool policies.
 

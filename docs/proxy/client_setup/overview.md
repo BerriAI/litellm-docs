@@ -36,7 +36,7 @@ Create a virtual key from the Admin UI under **Virtual Keys -> + Create New Key*
 | MCP endpoint | `<base URL>/mcp` for every server the key can see, or `<base URL>/<server_name>/mcp` for one | `http://localhost:4000/my_mcp_server/mcp` |
 | MCP auth header | Your virtual key as a bearer token, in `Authorization` or `x-litellm-api-key` | `Authorization: Bearer sk-1234` |
 
-LiteLLM accepts the virtual key on the MCP endpoint in either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`. Clients that only offer a bearer token setting (Codex, Claude Desktop) use `Authorization`; when you can set an arbitrary header (Claude Code, Cursor) prefer `x-litellm-api-key`, which leaves `Authorization` free for an upstream server's own OAuth token. See [MCP auth](../../mcp.md#using-your-mcp-with-client-side-credentials) for the full header table.
+LiteLLM accepts the virtual key on the MCP endpoint in either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`. When configuring a bearer token setting, use your virtual key; the client sends it in `Authorization`. When configuring custom headers, prefer `x-litellm-api-key`, which leaves `Authorization` free for an upstream server's own OAuth token. See the [MCP configuration reference](../../mcp_config_reference.md) for endpoint and header selection.
 
 :::info Grant the key access to the MCP server
 
