@@ -16,17 +16,17 @@
     "lint:docs": "python3 scripts/check-docs.py docs"
   },
   "dependencies": {
-    "@docusaurus/core": "3.8.1",
-    "@docusaurus/faster": "^3.10.1",
-    "@docusaurus/plugin-client-redirects": "^3.8.1",
-    "@docusaurus/plugin-google-gtag": "3.8.1",
-    "@docusaurus/plugin-ideal-image": "3.8.1",
-    "@docusaurus/preset-classic": "3.8.1",
-    "@docusaurus/theme-mermaid": "3.8.1",
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/faster": "3.10.2",
+    "@docusaurus/plugin-client-redirects": "3.10.2",
+    "@docusaurus/plugin-google-gtag": "3.10.2",
+    "@docusaurus/plugin-ideal-image": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@docusaurus/theme-mermaid": "3.10.2",
     "@inkeep/cxkit-docusaurus": "0.5.107",
     "@mdx-js/react": "3.1.1",
     "clsx": "1.2.1",
-    "prism-react-renderer": "1.3.5",
+    "prism-react-renderer": "2.4.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-vega": "^8.0.0",
@@ -37,7 +37,7 @@
     "vega-lite": "^6.4.3"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.8.1",
+    "@docusaurus/module-type-aliases": "3.10.2",
     "dotenv": "16.6.1"
   },
   "browserslist": {
@@ -53,8 +53,7 @@
     ]
   },
   "engines": {
-    "node": ">=16.14",
-    "npm": ">=8.3.0"
+    "node": ">=20.0"
   },
   "overrides": {
     "gray-matter": "4.0.3",

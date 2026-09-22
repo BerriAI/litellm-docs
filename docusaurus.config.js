@@ -3,10 +3,10 @@
 
 require('dotenv').config();
 
-// @ts-ignore
-const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
-// @ts-ignore
-const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
+const {themes: prismThemes} = require('prism-react-renderer');
+
+const lightCodeTheme = prismThemes.vsLight;
+const darkCodeTheme = prismThemes.nightOwl;
 
 const inkeepApiKey = process.env.INKEEP_API_KEY;
 // Conditional check: docs should work if this key is missing.
@@ -77,7 +77,6 @@ const config = {
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
-  onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -338,18 +337,17 @@ const config = {
   ],
 
   future: {
-    experimental_faster: {
-      swcJsLoader: true,
-      swcJsMinimizer: true,
-      swcHtmlMinimizer: true,
-      lightningCssMinimizer: true,
-      mdxCrossCompilerCache: true,
-    },
+    // Opts into every Docusaurus v4 default, including the Rspack-based
+    // "faster" build pipeline.
+    v4: true,
   },
 
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
   },
 
   scripts: [
