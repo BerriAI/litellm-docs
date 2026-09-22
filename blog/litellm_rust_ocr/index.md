@@ -13,6 +13,8 @@ import {OcrFixedArrivalChart, OcrProviderDelayChart, OcrThroughputChart} from '@
 
 Starting with LiteLLM `v1.102.0-rc.1`, OCR runs on Rust by default. 
 
+{/* truncate */}
+
 ## No action required
 
 Continue using the existing OCR API:

@@ -13,6 +13,8 @@ hide_table_of_contents: false
 
 Over the past few months, we've heard our users report more bugs and regressions. We take that feedback seriously, and today we're sharing exactly what we're doing about it.
 
+{/* truncate */}
+
 We're kicking off a stability sprint for LiteLLM with one bar in mind: 0 reported regressions by our next release on August 29th. The sprint has 2 goals:
 
 - Close 20 reported bugs in core functionality - [here](https://github.com/BerriAI/litellm/issues/30484)
