@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Layout from '@theme/Layout';
 import {PostRow} from '@theme/BlogListPage';
 import {
@@ -87,13 +87,9 @@ function MigrationTimeline() {
   const latest = milestones[milestones.length - 1];
 
   return (
-    <section className={styles.section} aria-labelledby="migration-progress-title">
-      <div className={styles.sectionHeading}>
-        <div>
-          <p className={styles.kicker}>View 1</p>
-          <h2 id="migration-progress-title">Migration progress</h2>
-          <p>Percentage of tracked support units that run on Rust by default or require Rust.</p>
-        </div>
+    <div className={styles.progressView}>
+      <div className={styles.viewIntro}>
+        <p>Percentage of tracked support units that run on Rust by default or require Rust.</p>
         <div className={styles.progressSummary}>
           <strong>{percentage(latest)}%</strong>
           <span>{latest.migrated} of {latest.total} support units</span>
@@ -144,7 +140,7 @@ function MigrationTimeline() {
         </svg>
       </div>
       <p className={styles.methodNote}>Preview and in-progress units appear in the matrix but are not counted as migrated.</p>
-    </section>
+    </div>
   );
 }
 
@@ -155,27 +151,19 @@ function MigrationMatrix() {
   )));
 
   return (
-    <section className={styles.section} aria-labelledby="migration-matrix-title">
-      <div className={styles.sectionHeading}>
-        <div>
-          <p className={styles.kicker}>View 2</p>
-          <h2 id="migration-matrix-title">Support matrix</h2>
-          <p>Each cell is one independently tracked route, provider, adapter, or foundation capability.</p>
+    <div className={styles.detailsView}>
+      <div className={styles.detailsIntro}>
+        <p>Each cell is one independently tracked route, provider, adapter, or foundation capability.</p>
+        <div className={styles.legend} aria-label="Migration status legend">
+          {Object.entries(MIGRATION_STATUSES).map(([status, metadata]) => (
+            <span key={status}><i className={styles[status]} />{metadata.label}</span>
+          ))}
         </div>
-      </div>
-
-      <div className={styles.legend} aria-label="Migration status legend">
-        {Object.entries(MIGRATION_STATUSES).map(([status, metadata]) => (
-          <span key={status}><i className={styles[status]} />{metadata.label}</span>
-        ))}
       </div>
 
       <div
         className={styles.matrix}
-        style={{
-          '--matrix-columns': columnCount,
-          '--matrix-min-width': `${170 + columnCount * 150}px`,
-        }}
+        style={{'--matrix-columns': columnCount}}
       >
         {MIGRATION_PURPOSES.map(purpose => (
           <div className={styles.matrixRow} key={purpose.id}>
@@ -205,6 +193,55 @@ function MigrationMatrix() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MigrationTracker() {
+  const [view, setView] = useState('progress');
+
+  return (
+    <section className={styles.trackerSection} aria-labelledby="migration-tracker-title">
+      <div className={styles.trackerCard}>
+        <div className={styles.trackerHeader}>
+          <div>
+            <p className={styles.kicker}>Migration tracker</p>
+            <h2 id="migration-tracker-title">Rust migration progress</h2>
+          </div>
+          <div className={styles.viewToggle} role="group" aria-label="Migration tracker view">
+            <button
+              className={view === 'progress' ? styles.activeToggle : undefined}
+              type="button"
+              aria-pressed={view === 'progress'}
+              onClick={() => setView('progress')}
+            >
+              Progress
+            </button>
+            <button
+              className={view === 'details' ? styles.activeToggle : undefined}
+              type="button"
+              aria-pressed={view === 'details'}
+              onClick={() => setView('details')}
+            >
+              Details
+            </button>
+          </div>
+        </div>
+        <div className={styles.trackerBody}>
+          <div
+            className={`${styles.viewPanel} ${view === 'progress' ? styles.activePanel : ''}`}
+            aria-hidden={view !== 'progress'}
+          >
+            <MigrationTimeline />
+          </div>
+          <div
+            className={`${styles.viewPanel} ${view === 'details' ? styles.activePanel : ''}`}
+            aria-hidden={view !== 'details'}
+          >
+            <MigrationMatrix />
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -223,8 +260,7 @@ export default function RustMigrationPage() {
           <p className={styles.prototypeNote}>Experimental view. The initial coverage inventory is illustrative and will change.</p>
         </header>
 
-        <MigrationTimeline />
-        <MigrationMatrix />
+        <MigrationTracker />
 
         <section className={styles.updates} aria-labelledby="migration-updates-title">
           <div className={styles.sectionHeading}>

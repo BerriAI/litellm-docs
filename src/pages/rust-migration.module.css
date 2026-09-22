@@ -45,7 +45,7 @@
   font-size: 0.7rem;
 }
 
-.section,
+.trackerSection,
 .updates {
   padding: 3rem 0;
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
@@ -85,6 +85,107 @@
   text-transform: uppercase;
 }
 
+.trackerCard {
+  overflow: hidden;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  background: var(--ifm-background-surface-color);
+}
+
+.trackerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.trackerHeader h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.viewToggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.viewToggle button {
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.viewToggle button:hover {
+  color: var(--ifm-font-color-base);
+}
+
+.viewToggle button:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.viewToggle .activeToggle {
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  color: var(--ifm-font-color-base);
+}
+
+.trackerBody {
+  display: grid;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.viewPanel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.activePanel {
+  visibility: visible;
+}
+
+.progressView,
+.detailsView {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.viewIntro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.viewIntro > p,
+.detailsIntro > p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.82rem;
+}
+
+.detailsIntro {
+  flex: 0 0 auto;
+}
+
 .progressSummary {
   flex: 0 0 auto;
   text-align: right;
@@ -105,15 +206,17 @@
 }
 
 .chartFrame {
-  overflow-x: auto;
+  min-height: 0;
+  flex: 0 0 auto;
+  overflow: hidden;
   border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 14px;
-  background: var(--ifm-background-surface-color);
+  border-radius: 10px;
+  background: var(--ifm-background-color);
 }
 
 .timeline {
   display: block;
-  min-width: 680px;
+  height: auto;
   width: 100%;
 }
 
@@ -170,7 +273,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem 1.25rem;
-  margin-bottom: 1.25rem;
+  margin: 0.65rem 0 1rem;
   color: var(--ifm-color-emphasis-700);
   font-size: 0.75rem;
 }
@@ -208,7 +311,9 @@
 }
 
 .matrix {
-  overflow-x: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 10px;
 }
@@ -216,8 +321,7 @@
 .matrixRow {
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr);
-  min-width: var(--matrix-min-width);
-  min-height: 78px;
+  min-height: 58px;
 }
 
 .matrixRow + .matrixRow {
@@ -228,7 +332,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.85rem;
   border-right: 1px solid var(--ifm-color-emphasis-200);
   background: var(--ifm-color-emphasis-100);
 }
@@ -258,7 +362,7 @@
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  padding: 0.65rem 0.85rem;
+  padding: 0.45rem 0.75rem;
   background: var(--ifm-background-surface-color);
 }
 
@@ -335,7 +439,7 @@
     font-size: 2rem;
   }
 
-  .section,
+  .trackerSection,
   .updates {
     padding: 2.25rem 0;
   }
@@ -348,6 +452,60 @@
 
   .progressSummary {
     text-align: left;
+  }
+
+  .trackerHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .trackerBody {
+    padding: 1rem;
+  }
+
+  .viewIntro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .axisLabel,
+  .versionLabel,
+  .pointValue {
+    font-size: 22px;
+  }
+
+  .gridLine,
+  .progressLine {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .matrixRow {
+    display: block;
+  }
+
+  .purposeLabel {
+    min-height: 54px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  }
+
+  .cells {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cell {
+    min-height: 68px;
+  }
+
+  .cell:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .cell:nth-child(n + 3) {
+    border-top: 1px solid var(--ifm-color-emphasis-200);
   }
 
 }
