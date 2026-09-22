@@ -41,12 +41,12 @@ Azure Anthropic supports two authentication methods:
 import os
 
 # Option 1: API Key authentication
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Option 2: Azure AD Token authentication
 os.environ["AZURE_AD_TOKEN"] = "your-azure-ad-token"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Optional: Azure AD Token Provider (for automatic token refresh)
 os.environ["AZURE_TENANT_ID"] = "your-tenant-id"
@@ -63,8 +63,8 @@ os.environ["AZURE_SCOPE"] = "https://cognitiveservices.azure.com/.default"
 from litellm import completion
 
 # Set environment variables
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Make a completion request
 response = completion(
@@ -171,8 +171,8 @@ print(response)
 ### 1. Save key in your environment
 
 ```bash
-export AZURE_API_KEY="your-azure-api-key"
-export AZURE_API_BASE="https://<resource-name>.services.ai.azure.com/anthropic"
+export AZURE_AI_API_KEY="your-azure-api-key"
+export AZURE_AI_API_BASE="https://<resource-name>.services.ai.azure.com/anthropic"
 ```
 
 ### 2. Configure the proxy
@@ -183,7 +183,7 @@ model_list:
     litellm_params:
       model: azure_ai/{{anthropic}}
       api_base: https://<resource-name>.services.ai.azure.com/anthropic
-      api_key: os.environ/AZURE_API_KEY
+      api_key: os.environ/AZURE_AI_API_KEY
 ```
 
 ### 3. Test it
@@ -326,8 +326,8 @@ import os
 from litellm import completion
 
 # Configure Azure Anthropic
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
 
 # Make a request
 response = completion(
@@ -351,7 +351,7 @@ print(response.choices[0].message.content)
 If you see an error about missing API base, ensure you've set:
 
 ```python
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 ```
 
 Or pass it directly:
@@ -366,7 +366,7 @@ response = completion(
 
 ### Authentication Errors
 
-- **API Key**: Ensure `AZURE_API_KEY` is set or passed as `api_key` parameter
+- **API Key**: Ensure `AZURE_AI_API_KEY` is set or passed as `api_key` parameter
 - **Azure AD Token**: Ensure `AZURE_AD_TOKEN` is set or passed as `azure_ad_token` parameter
 - **Token Provider**: For automatic token refresh, configure `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`
 
