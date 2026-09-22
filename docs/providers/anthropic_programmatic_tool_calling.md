@@ -387,7 +387,7 @@ For example, calling 10 tools directly uses ~10x the tokens of calling them prog
 LiteLLM supports programmatic tool calling across the following Anthropic-compatible providers:
 
 - **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
-- **Azure Anthropic / Microsoft Foundry** (`azure/{{anthropic}}`) ✅
+- **Azure Anthropic / Microsoft Foundry** (`azure_ai/{{anthropic}}`) ✅
 - **Amazon Bedrock** (`bedrock/invoke/anthropic.{{anthropic}}`) ✅
 - **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
