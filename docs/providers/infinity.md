@@ -230,13 +230,11 @@ curl http://0.0.0.0:4000/embeddings \
 
 ```python
 from litellm import embedding
-import os
-
-os.environ["INFINITY_API_BASE"] = "http://localhost:8080"
 
 response = embedding(
     model="infinity/bge-small",
-    input=["good morning from litellm"]
+    input=["good morning from litellm"],
+    api_base="http://localhost:8080"
 )
 
 print(response.data[0]['embedding'])
