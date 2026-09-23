@@ -1,83 +1,35 @@
 import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
-import {PostRow} from '@theme/BlogListPage';
+import Link from '@docusaurus/Link';
 import * as semver from 'semver';
+import {Select} from '@base-ui/react/select';
 import {
-  MAIN_MIGRATION_VERSION,
-  MIGRATION_LAYERS,
-  MIGRATION_MILESTONES,
-  MIGRATION_PURPOSES,
-  MIGRATION_RELEASES,
-  MIGRATION_STATUSES,
-  MIGRATION_VERSIONS,
+  GOALS,
+  MAIN_VERSION,
+  RELEASES,
+  RELEASE_NOTES,
+  STAGES,
+  progressAt,
+  stageAt,
 } from '@site/src/data/rustMigration';
 import styles from './rust-migration.module.css';
 
-const MIGRATED_STATUSES = new Set(['default', 'rustOnly']);
-const RELEASE_METADATA = new Map(MIGRATION_RELEASES.map(release => [release.version, release]));
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  timeZone: 'UTC',
-});
-const MILESTONE_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
+const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
+const FULL_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
 
-function migrationUnits() {
-  return MIGRATION_PURPOSES.flatMap(purpose => purpose.variants);
-}
+const formatDate = (formatter, date) => formatter.format(new Date(date));
 
-function migrationTimeline() {
-  const units = migrationUnits();
-  const versions = [...MIGRATION_VERSIONS].sort(semver.compare);
-  const missingIntroduction = units.find(unit => !Object.hasOwn(unit, 'introducedIn'));
-  if (missingIntroduction) {
-    throw new Error(`Rust migration support unit must declare introducedIn: ${missingIntroduction.id}`);
-  }
-  if (versions.length < 10) {
-    throw new Error('Rust migration timeline must contain at least 10 RC versions');
-  }
-  if (!versions.some(version => semver.eq(version, MAIN_MIGRATION_VERSION))) {
-    throw new Error(`Rust migration timeline must contain main: ${MAIN_MIGRATION_VERSION}`);
-  }
-  const invalidVersion = [MAIN_MIGRATION_VERSION, ...versions, ...units.map(unit => unit.introducedIn)]
-    .filter(Boolean)
-    .find(version => semver.valid(version) === null || semver.prerelease(version)?.[0] !== 'rc');
-  if (invalidVersion) {
-    throw new Error(`Rust migration versions must be RC semver versions: ${invalidVersion}`);
-  }
-
-  return versions.map(version => ({
-    version,
-    migrated: units.filter(unit => (
-      MIGRATED_STATUSES.has(unit.status)
-      && unit.introducedIn
-      && semver.lte(unit.introducedIn, version)
-    )).length,
-    total: units.length,
-  }));
-}
+// Each goal's progress at every release on the timeline.
+const GOAL_TIMELINES = new Map(GOALS.map(goal => [
+  goal.id,
+  RELEASES.map(release => ({...release, percent: progressAt(goal, release.version)})),
+]));
 
 function compactVersion(version) {
-  const parsed = semver.parse(version);
-  if (!parsed) {
-    return version;
-  }
-  const release = parsed.patch === 0
-    ? `${parsed.major}.${parsed.minor}`
-    : `${parsed.major}.${parsed.minor}.${parsed.patch}`;
-  return `${release} rc${parsed.prerelease[1]}`;
-}
-
-function releaseDate(version) {
-  const release = RELEASE_METADATA.get(version);
-  const date = release?.releasedAt ?? release?.plannedFor;
-  return date ? DATE_FORMATTER.format(new Date(date)) : '';
+  const {major, minor, patch, prerelease} = semver.parse(version);
+  const release = patch === 0 ? `${major}.${minor}` : `${major}.${minor}.${patch}`;
+  return `${release} rc${prerelease[1]}`;
 }
 
 function useElementWidth(fallback) {
@@ -100,28 +52,33 @@ function useElementWidth(fallback) {
   return [ref, width];
 }
 
-function MilestoneSelector() {
-  return (
-    <div className={styles.milestoneSelector} role="group" aria-label="Migration milestone">
-      {MIGRATION_MILESTONES.map((milestone, index) => (
-        <button
-          className={index === 0 ? styles.activeMilestone : undefined}
-          type="button"
-          aria-pressed={index === 0}
-          disabled={milestone.disabled}
-          key={milestone.id}
-        >
-          <strong>{milestone.label}</strong>
-          <span>{MILESTONE_DATE_FORMATTER.format(new Date(milestone.endsOn))}</span>
-        </button>
-      ))}
-    </div>
-  );
+const LABEL_SPACING = 100;
+
+// Label as many releases as fit without overlapping. The first release, main,
+// and releases where progress moved claim their spots before the rest.
+function pickLabeledPoints(points, x, goalX) {
+  const priority = index => {
+    if (index === 0 || points[index].isMain) {
+      return 2;
+    }
+    return points[index - 1].percent !== points[index].percent ? 1 : 0;
+  };
+  const byPriority = points
+    .map((point, index) => index)
+    .sort((a, b) => priority(b) - priority(a) || a - b);
+  const labeled = new Set();
+  for (const index of byPriority) {
+    const fits = [...labeled].every(other => Math.abs(x(index) - x(other)) >= LABEL_SPACING)
+      && (points[index].isMain || goalX - x(index) >= LABEL_SPACING);
+    if (priority(index) === 2 || fits) {
+      labeled.add(index);
+    }
+  }
+  return labeled;
 }
 
-function MigrationTimeline() {
-  const milestones = migrationTimeline();
-  const selectedMilestone = MIGRATION_MILESTONES[0];
+function MigrationTimeline({goal}) {
+  const points = GOAL_TIMELINES.get(goal.id);
   const [chartRef, width] = useElementWidth(920);
   const compact = width < 560;
   const height = compact ? 240 : 336;
@@ -131,274 +88,309 @@ function MigrationTimeline() {
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
   const goalGap = compact ? 72 : 120;
-  const x = index => plot.left + (index / (milestones.length - 1)) * (plotWidth - goalGap);
-  const goalX = plot.left + plotWidth;
+  const x = index => plot.left + (index / (points.length - 1)) * (plotWidth - goalGap);
   const baseline = plot.top + plotHeight;
-  const percentage = milestone => Math.round((milestone.migrated / milestone.total) * 100);
-  const y = value => baseline - (value / 100) * plotHeight;
-  const latest = milestones[milestones.length - 1];
-  const latestX = x(milestones.length - 1);
-  const linePath = milestones
-    .map((milestone, index) => (
-      index === 0
-        ? `M${x(0)},${y(percentage(milestone))}`
-        : `H${x(index)}V${y(percentage(milestone))}`
-    ))
+  const y = percent => baseline - (percent / 100) * plotHeight;
+  const goalX = plot.left + plotWidth;
+  const latest = points.at(-1);
+  const linePath = points
+    .map((point, index) => (index === 0 ? `M${x(0)},${y(point.percent)}` : `H${x(index)}V${y(point.percent)}`))
     .join('');
   const areaPath = `${linePath}V${baseline}H${x(0)}Z`;
+  const labeled = pickLabeledPoints(points, x, goalX);
 
   return (
-    <div className={styles.progressView}>
-      <div className={styles.chartCard}>
-        <div className={styles.chartHeader}>
-          <div className={styles.progressSummary}>
-            <strong>{percentage(latest)}%</strong>
-          </div>
-          <MilestoneSelector />
-        </div>
-
-        <div className={styles.chartBody} ref={chartRef}>
-          <svg
-            className={styles.timeline}
-            width={width}
-            height={height}
-            viewBox={`0 0 ${width} ${height}`}
-            role="img"
-            aria-labelledby="timeline-title timeline-description"
-          >
-            <title id="timeline-title">Rust migration progress over time</title>
-            <desc id="timeline-description">
-              {percentage(latest)} percent of tracked support units run on Rust by default in {MAIN_MIGRATION_VERSION}.
-              The selected milestone targets 100 percent by {selectedMilestone.endsOn}.
-            </desc>
-            <defs>
-              <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" className={styles.areaStart} />
-                <stop offset="100%" className={styles.areaEnd} />
-              </linearGradient>
-            </defs>
-            {[0, 50, 100].map(tick => (
-              <g key={tick}>
-                <line
-                  className={tick === 0 ? styles.baseline : styles.gridLine}
-                  x1={plot.left}
-                  x2={goalX}
-                  y1={y(tick)}
-                  y2={y(tick)}
-                />
-                <text className={styles.axisLabel} x={plot.left - 10} y={y(tick) + 4} textAnchor="end">{tick}%</text>
-              </g>
-            ))}
-            <path className={styles.progressArea} d={areaPath} fill="url(#progress-area)" />
-            <line
-              className={styles.goalLine}
-              x1={latestX}
-              x2={goalX}
-              y1={y(percentage(latest))}
-              y2={y(100)}
-            />
-            <path className={styles.progressLine} d={linePath} />
-            {milestones.map((milestone, index) => {
-              const previous = milestones[index - 1];
-              const isMain = semver.eq(milestone.version, MAIN_MIGRATION_VERSION);
-              const changed = previous !== undefined && percentage(previous) !== percentage(milestone);
-              const notable = index === 0 || isMain || changed;
-              const date = releaseDate(milestone.version);
-              const cy = y(percentage(milestone));
-              return (
-                <g key={milestone.version}>
-                  <title>
-                    {milestone.version}: {percentage(milestone)}%, {isMain ? `planned for ${date}` : `released ${date}`}
-                  </title>
-                  <circle
-                    className={isMain ? styles.mainPoint : styles.progressPoint}
-                    cx={x(index)}
-                    cy={cy}
-                    r={isMain ? 5 : 3.5}
-                  />
-                  {changed && (
-                    <text className={styles.pointValue} x={x(index)} y={cy - 12} textAnchor="middle">
-                      {percentage(milestone)}%
-                    </text>
-                  )}
-                  {(notable || !compact) && (
-                    <text
-                      className={`${styles.versionLabel} ${isMain ? styles.mainVersionLabel : ''}`}
-                      x={x(index)}
-                      y={baseline + 26}
-                      textAnchor={compact && index === 0 ? 'start' : 'middle'}
-                    >
-                      <tspan x={x(index)}>{compactVersion(milestone.version)}</tspan>
-                      <tspan className={styles.versionDate} x={x(index)} dy="16">
-                        {isMain && !compact ? `${date} · main` : date}
-                      </tspan>
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-            <g className={styles.goal}>
-              <title>{selectedMilestone.label}: 100% by {selectedMilestone.endsOn}</title>
-              <circle cx={goalX} cy={y(100)} r="5" />
-              <text className={styles.goalLabel} x={goalX} y={y(100) - 14} textAnchor="end">
-                100% goal
-              </text>
-              <text className={styles.goalAxisLabel} x={goalX} y={baseline + 26} textAnchor="end">
-                <tspan x={goalX}>Goal</tspan>
-                <tspan className={styles.versionDate} x={goalX} dy="16">
-                  {DATE_FORMATTER.format(new Date(selectedMilestone.endsOn))}
-                </tspan>
-              </text>
-            </g>
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MigrationMatrix() {
-  const columnCount = Math.max(...MIGRATION_PURPOSES.map(purpose => purpose.variants.length));
-  const layerOrder = MIGRATION_LAYERS.map(layer => layer.id);
-  const layerLabels = new Map(MIGRATION_LAYERS.map(layer => [layer.id, layer.label]));
-  const purposes = [...MIGRATION_PURPOSES].sort((a, b) => layerOrder.indexOf(a.layer) - layerOrder.indexOf(b.layer));
-  const unitLabels = new Map(MIGRATION_PURPOSES.flatMap(purpose => (
-    purpose.variants.map(variant => [variant.id, `${purpose.label}: ${variant.label}`])
-  )));
-
-  return (
-    <div className={styles.detailsView}>
-      <div className={styles.detailsIntro}>
-        <p>Each cell is one tracked route, provider, adapter, or capability, grouped by layer.</p>
-        <p>Native Messages cells track provider transports. Bridge cells track paired request and return conversion through Chat or Responses</p>
-        <div className={styles.legend} aria-label="Migration status legend">
-          {Object.entries(MIGRATION_STATUSES).map(([status, metadata]) => (
-            <span key={status}><i className={styles[status]} />{metadata.label}</span>
-          ))}
-        </div>
-      </div>
-
-      <div
-        className={styles.matrix}
-        style={{'--matrix-columns': columnCount}}
+    <div className={styles.chartBody} ref={chartRef}>
+      <svg
+        className={styles.timeline}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-labelledby="timeline-title timeline-description"
       >
-        {purposes.map((purpose, index) => {
-          const firstInLayer = purposes[index - 1]?.layer !== purpose.layer;
+        <title id="timeline-title">Rust migration progress over time</title>
+        <desc id="timeline-description">
+          {latest.percent} percent of the work for {goal.text} is done in {MAIN_VERSION}.
+          The goal targets 100 percent by {goal.endsOn}.
+        </desc>
+        <defs>
+          <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" className={styles.areaStart} />
+            <stop offset="100%" className={styles.areaEnd} />
+          </linearGradient>
+        </defs>
+        {[0, 50, 100].map(tick => (
+          <g key={tick}>
+            <line
+              className={tick === 0 ? styles.baseline : styles.gridLine}
+              x1={plot.left}
+              x2={goalX}
+              y1={y(tick)}
+              y2={y(tick)}
+            />
+            <text className={styles.axisLabel} x={plot.left - 10} y={y(tick) + 4} textAnchor="end">{tick}%</text>
+          </g>
+        ))}
+        <path d={areaPath} fill="url(#progress-area)" />
+        <line
+          className={styles.goalLine}
+          x1={x(points.length - 1)}
+          x2={goalX}
+          y1={y(latest.percent)}
+          y2={y(100)}
+        />
+        <path className={styles.progressLine} d={linePath} />
+        {points.map((point, index) => {
+          const cx = x(index);
+          const cy = y(point.percent);
+          const date = formatDate(SHORT_DATE, point.date);
           return (
-            <div
-              className={`${styles.matrixRow} ${firstInLayer && index > 0 ? styles.layerStart : ''}`}
-              key={purpose.id}
-            >
-              <div className={styles.purposeLabel}>
-                <span>{firstInLayer ? layerLabels.get(purpose.layer) : ''}</span>
-                <strong>{purpose.label}</strong>
-              </div>
-              <div className={styles.cells}>
-                {purpose.variants.map(variant => {
-                  const status = MIGRATION_STATUSES[variant.status];
-                  return (
-                    <article
-                      className={`${styles.cell} ${styles[`cell_${variant.status}`]}`}
-                      title={variant.requires
-                        ? `Requires ${variant.requires.map(id => unitLabels.get(id) ?? id).join(', ')}`
-                        : undefined}
-                      key={variant.id}
-                    >
-                      <strong>{variant.label}</strong>
-                      <span className={styles.cellMeta}>
-                        {status.label}
-                        {variant.introducedIn && ` · ${compactVersion(variant.introducedIn)}`}
-                        {variant.introducedIn && semver.eq(variant.introducedIn, MAIN_MIGRATION_VERSION) && ' (main)'}
-                      </span>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
+            <g key={point.version}>
+              <title>
+                {point.version}: {point.percent}%, {point.isMain ? 'planned for' : 'released'} {date}
+              </title>
+              <circle
+                className={point.isMain ? styles.mainPoint : styles.progressPoint}
+                cx={cx}
+                cy={cy}
+                r={point.isMain ? 5 : 3.5}
+              />
+              {point.isMain && (
+                <text className={styles.pointValue} x={cx} y={cy - 12} textAnchor="middle">
+                  {point.percent}%
+                </text>
+              )}
+              {labeled.has(index) && (
+                <text
+                  className={`${styles.versionLabel} ${point.isMain ? styles.mainVersionLabel : ''}`}
+                  x={cx}
+                  y={baseline + 26}
+                  textAnchor={compact && index === 0 ? 'start' : 'middle'}
+                >
+                  <tspan x={cx}>{compactVersion(point.version)}</tspan>
+                  <tspan className={styles.versionDate} x={cx} dy="16">
+                    {point.isMain && !compact ? `${date} · main` : date}
+                  </tspan>
+                </text>
+              )}
+            </g>
           );
         })}
-      </div>
+        <g className={styles.goal}>
+          <title>{goal.text}: 100% by {goal.endsOn}</title>
+          <circle cx={goalX} cy={y(100)} r="5" />
+          <text className={styles.goalLabel} x={goalX} y={y(100) - 14} textAnchor="end">
+            100% goal
+          </text>
+          <text className={styles.goalAxisLabel} x={goalX} y={baseline + 26} textAnchor="end">
+            <tspan x={goalX}>Goal</tspan>
+            <tspan className={styles.versionDate} x={goalX} dy="16">
+              {formatDate(SHORT_DATE, goal.endsOn)}
+            </tspan>
+          </text>
+        </g>
+      </svg>
     </div>
   );
 }
 
+function GraphNode({node}) {
+  return (
+    <li>
+      <div className={styles.node}>
+        <span className={styles.nodeText}>{node.text}</span>
+        {node.rollout ? (
+          <FeatureStage feature={node} />
+        ) : (
+          <span className={styles.nodeMeta}>{progressAt(node, MAIN_VERSION)}%</span>
+        )}
+      </div>
+      {node.children.length > 0 && (
+        <ul>
+          {node.children.map(child => <GraphNode node={child} key={child.id} />)}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+// The current stage and when it landed, with one pip per stage past Python.
+function FeatureStage({feature}) {
+  const stage = stageAt(feature, MAIN_VERSION);
+  const lastStep = feature.rollout.at(-1);
+  const history = feature.rollout
+    .map(step => `${STAGES[step.stage].label} in ${step.version}`)
+    .join(', then ');
+  return (
+    <span className={`${styles.nodeMeta} ${stage > 0 ? styles.onRust : ''}`} title={history || 'Python only'}>
+      {/* Python only is the default, so empty pips say enough. */}
+      {stage > 0 && `${STAGES[stage].label} · ${lastStep.version === MAIN_VERSION ? 'next release' : compactVersion(lastStep.version)}`}
+      <span className={styles.pips} aria-hidden="true">
+        {STAGES.slice(1).map((item, index) => (
+          <i className={index < stage ? styles.pipOn : undefined} key={item.id} />
+        ))}
+      </span>
+    </span>
+  );
+}
+
+const GOAL_ITEMS = GOALS.map(goal => ({value: goal.id, label: goal.text}));
+
+function GoalSelect({goal, onChange}) {
+  return (
+    <Select.Root
+      items={GOAL_ITEMS}
+      value={goal.id}
+      onValueChange={id => onChange(GOALS.find(item => item.id === id))}
+    >
+      <Select.Trigger className={styles.sentenceControl} aria-label="Migration goal">
+        <Select.Value />
+        <Select.Icon className={styles.selectIcon}>
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        </Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Positioner className={styles.selectPositioner} sideOffset={8} align="start" alignItemWithTrigger={false}>
+          <Select.Popup className={styles.selectPopup}>
+            <Select.List>
+              {GOALS.map(item => (
+                <Select.Item className={styles.selectItem} value={item.id} key={item.id}>
+                  <Select.ItemText className={styles.selectLabel}>{item.text}</Select.ItemText>
+                  <span className={styles.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
+                  {/* Answers "what is in this goal" right where it is picked. */}
+                  <span className={styles.selectScope}>
+                    {item.summary ?? item.children.map(child => child.text).join(', ')}
+                  </span>
+                </Select.Item>
+              ))}
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
+// Icons mirror the views they open: a stepped progress line and a dependency tree.
+const VIEW_ICONS = {
+  timeline: <path d="M2 13h3V9h4V6h5" />,
+  breakdown: (
+    <>
+      <path d="M4 5v8h5M4 8.5h5" />
+      <circle cx="4" cy="3.5" r="1.5" />
+      <circle cx="11" cy="8.5" r="1.5" />
+      <circle cx="11" cy="13" r="1.5" />
+    </>
+  ),
+};
+
 function MigrationTracker() {
-  const [view, setView] = useState('progress');
+  const [goal, setGoal] = useState(GOALS[0]);
+  const [view, setView] = useState('timeline');
+  const otherView = view === 'timeline' ? 'breakdown' : 'timeline';
 
   return (
-    <section className={styles.trackerSection} aria-labelledby="migration-tracker-title">
-      <div className={styles.sectionHeading}>
-        <div>
-          <p className={styles.kicker}>Migration tracker</p>
-          <h2 id="migration-tracker-title">Rust migration progress</h2>
+    <section className={styles.section} aria-labelledby="migration-tracker-title">
+      <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
+      <div className={styles.chartCard}>
+        <p className={styles.goalSentence}>
+          <strong className={styles.progressSummary} title={`Across ${goal.features.length} features`}>
+            {progressAt(goal, MAIN_VERSION)}%
+          </strong>
+          {' of '}
+          <GoalSelect goal={goal} onChange={setGoal} />
+          {' migrated to Rust, '}
+          <span className={styles.keepTogether}>
+            {'shown as a '}
+            <button
+              className={styles.sentenceControl}
+              type="button"
+              title={`Show the ${otherView}`}
+              onClick={() => setView(otherView)}
+            >
+              {/* Keyed so the word pops each time it flips. */}
+              <span className={styles.viewWord} key={view}>
+                {view}
+                <svg viewBox="0 0 16 16" aria-hidden="true">{VIEW_ICONS[view]}</svg>
+              </span>
+            </button>
+            .
+          </span>
+        </p>
+        {/* The chart stays mounted so it keeps its measured width. */}
+        <div hidden={view !== 'timeline'}>
+          <MigrationTimeline goal={goal} />
         </div>
-        <div className={styles.viewToggle} role="group" aria-label="Migration tracker view">
-          <button
-            className={view === 'progress' ? styles.activeToggle : undefined}
-            type="button"
-            aria-pressed={view === 'progress'}
-            onClick={() => setView('progress')}
-          >
-            Progress
-          </button>
-          <button
-            className={view === 'details' ? styles.activeToggle : undefined}
-            type="button"
-            aria-pressed={view === 'details'}
-            onClick={() => setView('details')}
-          >
-            Details
-          </button>
-        </div>
-      </div>
-      <div className={styles.trackerBody}>
-        <div
-          className={`${styles.viewPanel} ${view === 'progress' ? styles.activePanel : ''}`}
-          aria-hidden={view !== 'progress'}
-        >
-          <MigrationTimeline />
-        </div>
-        <div
-          className={`${styles.viewPanel} ${view === 'details' ? styles.activePanel : ''}`}
-          aria-hidden={view !== 'details'}
-        >
-          <MigrationMatrix />
-        </div>
+        {/* The sentence above already names the goal, so the tree starts at its children. */}
+        <ul className={styles.tree} hidden={view !== 'breakdown'}>
+          {goal.children.map(node => <GraphNode node={node} key={node.id} />)}
+        </ul>
       </div>
     </section>
   );
 }
 
-export default function RustMigrationPage() {
+function SectionHeading({id, kicker, title}) {
+  return (
+    <header className={styles.sectionHeading}>
+      <p className={styles.kicker}>{kicker}</p>
+      <h2 id={id}>{title}</h2>
+    </header>
+  );
+}
+
+const RELEASE_EVENTS = RELEASE_NOTES.map(note => ({
+  kind: 'Release',
+  title: `Released ${note.version}`,
+  href: `https://github.com/BerriAI/litellm/releases/tag/${note.version}`,
+  date: note.releasedOn,
+  changes: note.changes,
+}));
+
+function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
+  const events = [
+    ...posts.map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date})),
+    ...RELEASE_EVENTS,
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <Layout
-      title="LiteLLM Rust Migration"
-      description="Updates from LiteLLM's migration to Rust."
-    >
+    <section className={styles.section} aria-labelledby="migration-updates-title">
+      <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
+      <ol className={styles.events}>
+        {events.map(event => (
+          <li className={`${styles.event} ${event.changes ? styles.releaseEvent : ''}`} key={event.href}>
+            <p className={styles.eventMeta}>
+              <time dateTime={event.date}>{formatDate(FULL_DATE, event.date)}</time>
+              {' · '}
+              {event.kind}
+            </p>
+            <Link className={styles.eventTitle} to={event.href}>{event.title}</Link>
+            {event.changes && (
+              <ul className={styles.eventChanges}>
+                {event.changes.map(change => <li key={change}>{change}</li>)}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+export default function RustMigrationPage() {
+  return (
+    <Layout title="LiteLLM Rust Migration" description="Updates from LiteLLM's migration to Rust.">
       <main className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Rust Migration</p>
           <h1 className={styles.title}>LiteLLM is moving to Rust</h1>
-          <p className={styles.description}>Follow migration progress across routes, providers, adapters, and foundational services.</p>
-          <p className={styles.prototypeNote}>Experimental view. The initial coverage inventory is illustrative and will change.</p>
+          <p className={styles.description}>See what already runs on Rust and what is next.</p>
         </header>
-
         <MigrationTracker />
-
-        <section className={styles.updates} aria-labelledby="migration-updates-title">
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.kicker}>Engineering updates</p>
-              <h2 id="migration-updates-title">How we are getting there</h2>
-            </div>
-          </div>
-          <div className={styles.list}>
-            {posts.map(post => <PostRow key={post.permalink} post={post} />)}
-          </div>
-        </section>
+        <MigrationUpdates />
       </main>
     </Layout>
   );
