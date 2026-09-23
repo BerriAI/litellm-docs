@@ -1126,6 +1126,7 @@ const sidebars = {
         },
         "providers/anthropic",
         "providers/anthropic_tool_search",
+        "providers/anthropic_preserved_thinking",
         "providers/aws_sagemaker",
         {
           type: "category",
