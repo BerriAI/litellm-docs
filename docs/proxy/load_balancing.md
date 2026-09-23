@@ -366,7 +366,7 @@ The fallback chain for the above config: `order=1` → `order=2` → `gpt-4-fall
 
 For 429 (rate limit) errors specifically, the failed deployment is immediately placed on cooldown. If all `order=1` deployments are on cooldown, the router picks `order=2` deployments directly during retries without waiting for the fallback path.
 
-### Team-scoped models and legacy `model_aliases` {/* #team-scoped-models-and-legacy-model_aliases */}
+### Team-scoped models and legacy `model_aliases` {#team-scoped-models-and-legacy-model_aliases}
 
 Team-scoped deployments are identified by `model_info.team_id` and `model_info.team_public_model_name`. Requests should use the **public** model name; the router resolves all sibling deployments (same public name, different `api_base` / `order`, etc.) for routing, failover, and deployment `order`.
 

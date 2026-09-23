@@ -566,7 +566,7 @@ savings = cost(baseline model, this request)
 - **The classifier's own charge counts against the saving** (v1.100 and later). An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
 - **Zero savings retains both costs.** For supported native Anthropic requests, complete observed usage establishes equal model costs while the recorded session has used the exact baseline deployment at the same prices, including overlapping requests. Both costs remain nonzero when the request was billable. A recorded classifier charge still counts against savings. After routing diverges, returning to the same model requires cache-history evidence; model identity alone does not establish zero savings. Missing pricing or evidence produces an unavailable estimate
 
-### Cache-prefix history and expiry {/* #the-baseline-is-priced-with-a-warm-cache */}
+### Cache-prefix history and expiry {#the-baseline-is-priced-with-a-warm-cache}
 
 For supported native Anthropic `/v1/messages` requests, a baseline cache read requires a matching prefix that was available when the request started and remained within its five-minute or one-hour TTL. A prefix known to have expired is charged as a write. Requests served by cheaper models advance the hypothetical baseline history too. An assistant message alone does not establish a cache hit
 

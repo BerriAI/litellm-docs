@@ -66,8 +66,7 @@ STATIC_ROOT = os.path.join(REPO_ROOT, "static")
 FENCE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})\s*([^\s`{]*)\s*(.*)$")
 FRONTMATTER_DELIM = "---"
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
-# Explicit heading IDs use the MDX comment form: ## Heading {/* #my-id */}
-CUSTOM_ID_RE = re.compile(r"\s*\{/\*\s*#([^\s*]+)\s*\*/\}\s*$")
+CUSTOM_ID_RE = re.compile(r"\s*\{#([^}]+)\}\s*$")
 HTML_ID_RE = re.compile(r"""(?:\sid|\sname)=["']([^"']+)["']""")
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 MD_LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
@@ -159,7 +158,7 @@ class Page:
 
     def anchor_ids(self):
         """All anchors a link could target: heading slugs (github-slugger style,
-        with duplicate suffixes), explicit {/* #id */}, and HTML id= attributes."""
+        with duplicate suffixes), explicit {#id}, and HTML id= attributes."""
         ids = set()
         seen = {}
         for text in self.headings():

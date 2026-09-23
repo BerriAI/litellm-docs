@@ -15,7 +15,7 @@ Both forward the token exactly as the caller sent it. LiteLLM does not decode it
 
 Both also take an orthogonal `dcr_bridge` flag that changes where an OAuth-only client discovers its authorization server. Turn it on for clients that cannot register with the upstream IdP themselves or cannot send two separate credentials, such as OpenCode, Claude Code, Cursor, and Claude Desktop. See [Gateway-hosted sign-in (DCR bridge)](#gateway-hosted-sign-in-dcr-bridge).
 
-## Audience-locked tokens: passthrough or token exchange {/* #audience-locked-tokens-passthrough-or-token-exchange */}
+## Audience-locked tokens: passthrough or token exchange {#audience-locked-tokens-passthrough-or-token-exchange}
 
 An OAuth access token carries an audience (`aud`, or the resource it was requested for). A well-behaved upstream MCP server rejects any token whose audience names something else, for example a token an agent obtained for a SaaS API and then presented to the MCP server. Because `true_passthrough` and `oauth_delegate` forward the token verbatim, that rejection shows up as the upstream's own `401` relayed back to the client. This is the correct confused-deputy-safe outcome: the gateway did not launder a token minted for one resource into access to another, and it is not a LiteLLM bug to file.
 
@@ -172,7 +172,7 @@ At request time: admission in `x-litellm-api-key`, upstream token in `Authorizat
 
 Because admission runs, the full LiteLLM permission model applies on top of whatever the upstream enforces: [per-key and per-team tool permissions](./mcp_control.md#per-entity-tool-level-permissions), the server-level `allowed_tools` list, per-key rate limits, and spend logging of every tool call under the admitted identity.
 
-## Multi-server aggregate requests {/* #multi-server-aggregate-requests */}
+## Multi-server aggregate requests {#multi-server-aggregate-requests}
 
 A request to the aggregate `/mcp` endpoint (or one carrying `x-mcp-servers: a,b`) fans out to several upstreams, but the request can only carry one `Authorization` header. If two of those upstreams both forward the caller's token, sending that one header to both would replay a single bearer across unrelated resources (the cross-resource replay RFC 9700 warns about). LiteLLM therefore applies two rules to `true_passthrough` and `oauth_delegate` servers inside an aggregate scope.
 
@@ -196,13 +196,13 @@ Sending the same token value on two per-server headers is your decision, made ex
 
 For `true_passthrough` there is an additional constraint: the transparent admission path fires only when every server in the scope is `true_passthrough`. Mixing a `true_passthrough` server into an aggregate with any other mode falls back to normal LiteLLM admission, so the caller needs a LiteLLM credential for that request.
 
-## Previewing tools in the Admin UI {/* #previewing-tools-in-the-admin-ui */}
+## Previewing tools in the Admin UI {#previewing-tools-in-the-admin-ui}
 
 LiteLLM holds no upstream token for these servers, so the create and edit forms cannot list tools on their own. Both forms show an "Authorize & Fetch Tools (browser-only)" button for `true_passthrough` and `oauth_delegate`. It runs the upstream OAuth flow in the admin's browser and keeps the resulting token in that browser session only, forwarding it per server for the tool preview and for configuring `allowed_tools`. The token is not written to the server row, to the per-user credential store, or to any cache; closing the tab discards it.
 
 The optional OAuth Client ID and Client Secret next to that button are different: they are saved with the server as declared configuration. Set them when the upstream issuer does not support dynamic client registration and every admin should authorize through one pre-registered app.
 
-## Intentional limits {/* #intentional-limits */}
+## Intentional limits {#intentional-limits}
 
 The following are consequences of forwarding a token verbatim without inspecting it, and they are by design rather than defects.
 
@@ -212,7 +212,7 @@ Sender-constrained tokens (DPoP, RFC 9449, or mTLS-bound tokens, RFC 8705) canno
 
 Revoked tokens are not detected at connect time. LiteLLM keeps no state about a forwarded token and does not introspect it, so a token revoked at the issuer is forwarded and rejected by the upstream on the request that uses it. The client sees the upstream's `401` at that point, exactly as it would talking to the upstream directly.
 
-## Gateway-hosted sign-in (DCR bridge) {/* #gateway-hosted-sign-in-dcr-bridge */}
+## Gateway-hosted sign-in (DCR bridge) {#gateway-hosted-sign-in-dcr-bridge}
 
 OAuth-only MCP clients (OpenCode, Claude Code, Cursor, Claude Desktop) connect by running a single Dynamic Client Registration (RFC 7591) plus PKCE flow against whatever authorization server the discovery metadata advertises. They:
 
@@ -366,7 +366,7 @@ OpenCode reads them from `opencode.json`:
 | `url` | Yes | The upstream MCP server URL. |
 | `dcr_bridge` | Yes | `true` so the gateway hosts sign-in for OAuth-only clients. Off relays the upstream's own OAuth metadata instead. |
 
-## Delegate Auth to Upstream (PKCE Passthrough) {/* #delegate-auth-to-upstream-pkce-passthrough */}
+## Delegate Auth to Upstream (PKCE Passthrough) {#delegate-auth-to-upstream-pkce-passthrough}
 
 :::warning[Deprecated]
 

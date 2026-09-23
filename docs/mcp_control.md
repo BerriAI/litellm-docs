@@ -711,7 +711,7 @@ When creating API keys, you can assign them to specific access groups for permis
 />
 
 
-## Per-entity Tool-Level Permissions {/* #per-entity-tool-level-permissions */}
+## Per-entity Tool-Level Permissions {#per-entity-tool-level-permissions}
 
 Control which tools different teams can access from the same MCP server. For example, give your Engineering team access to `list_repositories`, `create_issue`, and `search_code`, while Sales only gets `search_code` and `close_issue`.
 
@@ -818,7 +818,7 @@ curl -X POST "http://localhost:4000/user/update" \
 </TabItem>
 </Tabs>
 
-### Entitling a person rather than a credential {/* #per-user-tool-permissions */}
+### Entitling a person rather than a credential {#per-user-tool-permissions}
 
 Every other level describes a credential or a group: the key's scope, the team's scope, the organization's ceiling. The internal user level describes the human, so an admin can say which people may perform which MCP tool calls without chasing down every key those people hold
 

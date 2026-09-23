@@ -56,7 +56,7 @@ curl --location 'http://0.0.0.0:4000/v1/embeddings' \
     "model": "sagemaker-embeddings",
 }'
 ```
-## Default `encoding_format` {/* #embedding-encoding-format */}
+## Default `encoding_format` {#embedding-encoding-format}
 
 For embeddings routed through LiteLLM’s **OpenAI-compatible embedding path** (for example OpenAI models, `openai/...` with a custom `api_base`, or the proxy `/v1/embeddings` route that forwards to that path), LiteLLM sends an explicit `encoding_format` when the caller omits it.
 

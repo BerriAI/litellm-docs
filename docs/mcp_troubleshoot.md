@@ -6,7 +6,7 @@ When LiteLLM acts as an MCP gateway, traffic flows `Client -> LiteLLM Proxy -> M
 
 For provisioning steps and configuration fields, refer to [mcp.md](./mcp.md). For choosing endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference)
 
-## Five-Minute Triage {/* #locate-the-error-source */}
+## Five-Minute Triage {#locate-the-error-source}
 
 Every command on this page uses the quickstart conventions: proxy at `http://localhost:4000`, LiteLLM key in `x-litellm-api-key`, and a server alias like `deepwiki` from `mcp_servers` in `config.yaml`. Substitute your own host, key, and alias
 
@@ -65,7 +65,7 @@ The endpoints speak MCP streamable HTTP. Responses arrive as `text/event-stream`
 
 Every response below was captured against a live proxy with the quickstart config and a `deepwiki` server, plus deliberately broken servers for the network and TLS rows
 
-### 401 and 403: authentication {/* #auth-failures */}
+### 401 and 403: authentication {#auth-failures}
 
 Missing or malformed key:
 
@@ -83,7 +83,7 @@ HTTP/1.1 401 Unauthorized
 
 A 403 means the key authenticated but lacks MCP permissions for that server; fix the key/team [permission assignment](./mcp_control.md) rather than the credential
 
-### 404: server or route {/* #server-route-404 */}
+### 404: server or route {#server-route-404}
 
 Unknown alias, LiteLLM routing rejected it:
 
@@ -101,7 +101,7 @@ HTTP/1.1 404 Not Found
 
 The two bodies look similar but mean different things: the first is a config/alias problem, the second is a URL problem
 
-### 405 and 406: transport or endpoint mismatch {/* #transport-mismatch */}
+### 405 and 406: transport or endpoint mismatch {#transport-mismatch}
 
 A non-JSON-RPC method (for example PUT) returns 405 with the allowed methods:
 
@@ -120,7 +120,7 @@ HTTP/1.1 406 Not Acceptable
 
 Both indicate the client's transport configuration, not the upstream server. GET on the endpoint opens a streamable HTTP event stream (you will see `: ping` keepalives), which is expected behavior, not an error
 
-### OAuth discovery, DCR, and redirects {/* #oauth-issues */}
+### OAuth discovery, DCR, and redirects {#oauth-issues}
 
 Confirm the proxy publishes OAuth metadata before debugging any client flow:
 
@@ -134,7 +134,7 @@ curl -sS http://localhost:4000/.well-known/oauth-authorization-server
 
 The `issuer` must match the origin users type into their browser. If it shows an internal hostname behind an ingress, see the redirect_uri section below. For token flow debugging, `SAME_AS_LITELLM_KEY` in `x-mcp-debug-oauth2-token` means the LiteLLM key is leaking upstream instead of an OAuth token; see [Debugging OAuth](./mcp_oauth#debugging-oauth)
 
-#### MCP OAuth: Connect returns `{"detail":"invalid_request"}` {/* #mcp-oauth-invalid-request */}
+#### MCP OAuth: Connect returns `{"detail":"invalid_request"}` {#mcp-oauth-invalid-request}
 
 **Symptom.** Clicking **Connect** on an MCP OAuth server in the LiteLLM UI returns:
 
@@ -184,7 +184,7 @@ For pre-registered OAuth applications, see [Redirect URLs for static OAuth clien
 
 For Dynamic Client Registration failures, collect the client's error response and the authorization server metadata shown above. The metadata lists the supported grant types.
 
-### Network, TLS, and timeouts {/* #network-tls-timeouts */}
+### Network, TLS, and timeouts {#network-tls-timeouts}
 
 An unreachable upstream does not surface as a gateway 502. The named endpoint returns 200 with an empty tool list and a per-server status:
 
@@ -209,7 +209,7 @@ TLS failure (expired or untrusted certificate):
 
 For timeouts, time the diagnostic curl and compare timestamps between proxy and MCP-server logs to see which side stalled
 
-### Empty tool lists and tool naming {/* #empty-tools */}
+### Empty tool lists and tool naming {#empty-tools}
 
 On the aggregate `/mcp` endpoint, one broken server does not fail the request. Healthy servers still return tools and `litellm.ai/server_outcomes` reports each server separately:
 
@@ -224,7 +224,7 @@ HTTP/1.1 200 OK
 data: {"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"Error: Tool 'nonexistent_tool' not found"}],"isError":true}}
 ```
 
-### Responses and Chat Completions failures {/* #responsescompletions-with-embedded-mcp-calls */}
+### Responses and Chat Completions failures {#responsescompletions-with-embedded-mcp-calls}
 
 During `/v1/responses` or `/v1/chat/completions`, LiteLLM executes MCP tool calls mid-request when the request includes an MCP tool with `server_url: "litellm_proxy"`. A working request shows the MCP hop explicitly in the output items:
 
@@ -241,7 +241,7 @@ curl -sS http://localhost:4000/v1/responses \
 
 Success contains `mcp_tools_fetched` and `tool_execution_results` items alongside the assistant message. If `server_label` does not match any configured alias, the request still returns 200 but those items are absent and the model answers without tools; that silent degradation is the symptom to look for. The same applies to `/v1/chat/completions` with the identical `tools` array. If the tool items are present but the tool result contains an error, jump to the row for that error (unknown tool name, upstream unreachable) since the embedded call goes through the same MCP path as a direct curl
 
-## Debug Headers {/* #debug-headers */}
+## Debug Headers {#debug-headers}
 
 Add `x-litellm-mcp-debug: true` to any MCP request to get masked diagnostic response headers:
 
@@ -317,7 +317,7 @@ ERROR:LiteLLM:MCP client list_tools failed - Error Type: ExceptionGroup, Error: 
   httpx.ConnectError: All connection attempts failed
 ```
 
-## Support Bundle {/* #support-bundle */}
+## Support Bundle {#support-bundle}
 
 If the matrix did not resolve the issue, collect everything below in one pass. A complete bundle replaces the discovery call where support reconstructs your setup
 
