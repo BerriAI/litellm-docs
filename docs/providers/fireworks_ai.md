@@ -38,7 +38,7 @@ import os
 
 os.environ['FIREWORKS_AI_API_KEY'] = ""
 response = completion(
-    model="fireworks_ai/glm-5p2", 
+    model="fireworks_ai/glm-5p3-flash", 
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -46,7 +46,7 @@ response = completion(
 print(response)
 ```
 
-A bare serverless slug like `glm-5p2` is expanded to `accounts/fireworks/models/glm-5p2` for you, so you can pass either the short slug or the full resource id.
+A bare serverless slug like `glm-5p3-flash` is expanded to `accounts/fireworks/models/glm-5p3-flash` for you, so you can pass either the short slug or the full resource id.
 
 ## Sample Usage - Serverless Models - Streaming
 ```python
@@ -55,7 +55,7 @@ import os
 
 os.environ['FIREWORKS_AI_API_KEY'] = ""
 response = completion(
-    model="fireworks_ai/glm-5p2", 
+    model="fireworks_ai/glm-5p3-flash", 
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -88,7 +88,7 @@ import os
 
 os.environ['FIREWORKS_AI_API_KEY'] = "YOUR_DIRECT_API_KEY"
 response = completion(
-    model="fireworks_ai/accounts/fireworks/models/qwen2p5-coder-7b#accounts/gitlab/deployments/2fb7764c", 
+    model="fireworks_ai/accounts/fireworks/models/deepseek-v4p1-flash#accounts/gitlab/deployments/2fb7764c", 
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -97,7 +97,7 @@ response = completion(
 print(response)
 ```
 
-> **Note:** The above is for the chat interface, if you want to use the text completion interface it's model="text-completion-openai/accounts/fireworks/models/qwen2p5-coder-7b#accounts/gitlab/deployments/2fb7764c"
+> **Note:** The above is for the chat interface, if you want to use the text completion interface it's model="text-completion-openai/accounts/fireworks/models/deepseek-v4p1-flash#accounts/gitlab/deployments/2fb7764c"
 
 
 ## Sample Usage - Routers
@@ -118,7 +118,7 @@ response = completion(
 print(response)
 ```
 
-The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
+The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p3-fast`) are treated as routers even without the `routers/` prefix.
 
 ## Usage with LiteLLM Proxy 
 
@@ -126,9 +126,9 @@ The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is s
 
 ```yaml
 model_list:
-  - model_name: fireworks-glm-5p2
+  - model_name: fireworks-glm-5p3
     litellm_params:
-      model: fireworks_ai/glm-5p2
+      model: fireworks_ai/glm-5p3-flash
       api_key: "os.environ/FIREWORKS_AI_API_KEY"
 ```
 
@@ -148,7 +148,7 @@ litellm --config config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "fireworks-glm-5p2",
+      "model": "fireworks-glm-5p3",
       "messages": [
         {
           "role": "user",
@@ -169,7 +169,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="fireworks-glm-5p2", messages = [
+response = client.chat.completions.create(model="fireworks-glm-5p3", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -193,7 +193,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "fireworks-glm-5p2",
+    model = "fireworks-glm-5p3",
     temperature=0.1
 )
 
@@ -449,7 +449,7 @@ We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when se
 
 | Model Name               | Function Call                                                                                                                                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| glm-5p2 | `completion(model="fireworks_ai/glm-5p2", messages)` |
+| glm-5p3-flash | `completion(model="fireworks_ai/glm-5p3-flash", messages)` |
 | deepseek-v4-pro | `completion(model="fireworks_ai/deepseek-v4-pro", messages)` |
 | kimi-k3 | `completion(model="fireworks_ai/kimi-k3", messages)` |
 | qwen3p8-max | `completion(model="fireworks_ai/qwen3p8-max", messages)` |
