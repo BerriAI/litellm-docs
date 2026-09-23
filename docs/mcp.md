@@ -10,9 +10,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
   img={require('../img/mcp_2.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models</p>
 
 ## Overview
 | Feature | Description |
@@ -22,7 +20,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
 | Supported MCP Transports | • Streamable HTTP<br/>• SSE<br/>• Standard Input/Output (stdio) |
 | LiteLLM Permission Management | • By Key<br/>• By Team<br/>• By Organization |
 
-:::caution[MCP protocol update]
+:::warning[MCP protocol update]
 The gateway negotiates the protocol version during `initialize`. See [tested versions and capability limits](./mcp_config_reference#protocol-version).<br/>
 LiteLLM namespaces multiple MCP servers by prefixing each tool name with its MCP server name, so newly created servers now must use names that comply with SEP-986; noncompliant names cannot be added anymore. Existing servers that still violate SEP-986 only emit warnings today, but future MCP-side rollouts may block those names entirely, so we recommend updating any legacy server names proactively before MCP enforcement makes them unusable.
 :::

@@ -2062,9 +2062,7 @@ ModelResponse(
   img={require('../../img/callback_api.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Send LiteLLM logs to a custom API endpoint
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Send LiteLLM logs to a custom API endpoint</p>
 
 <EnterpriseFeature />
 
