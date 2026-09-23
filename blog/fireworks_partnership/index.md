@@ -20,7 +20,7 @@ We measured what happens when the easy majority runs on an open model served by 
 
 We ran mini-SWE-agent over 12 SWE-bench Verified tasks twice, once on fixed `anthropic/claude-opus-5` and once through a router that picks a model per agent phase, then scored both with the official SWE-bench harness. Exploration went to `fireworks_ai/deepseek-v4-flash`, verification to Haiku, and implementation to Opus.
 
-Across the 9 tasks both configurations solved, quality was identical and cost was not.
+Fixed Opus resolved 9 of the 12 tasks, so the head-to-head below is restricted to those 9 for a fair comparison. Across them, quality was identical and cost was not.
 
 | | Fixed Opus | Phase router |
 |---|---|---|
@@ -28,7 +28,7 @@ Across the 9 tasks both configurations solved, quality was identical and cost wa
 | Total LLM cost | $2.82 | $1.51 |
 | Cost per solved task | $0.31 | $0.17 |
 
-The interesting number is where the turns went. Over all 382 turns of the full 12-task run:
+The interesting number is where the turns went. This second table covers all 382 turns of the full 12-task run, so its costs do not sum to the 9-task router total above:
 
 | Model | Turns | Share | Cost |
 |---|---|---|---|
@@ -36,6 +36,8 @@ The interesting number is where the turns went. Over all 382 turns of the full 1
 | `claude-haiku-4-5` (verify) | 38 | 10% | $0.34 |
 | `claude-sonnet-5` (opening) | 12 | 3% | $0.08 |
 | `claude-opus-5` (implement) | 55 | 14% | $2.56 |
+
+The opening turns of a session, before any tool call has established a phase, go to the default model, Sonnet, which is the 12 turns on that row.
 
 Seventy-three percent of every turn the agent took cost fourteen cents in total. Exploration is close to free once it runs on a model priced for it, and Fireworks is where that model lives.
 
@@ -68,7 +70,7 @@ The router reads the agent's tool-call history, classifies each call as explore,
 
 A phase router only pays off if the cheap tier is genuinely cheap and genuinely fast. Agent loops are latency-sensitive in a way single-shot prompts are not, because a session spends hundreds of turns there.
 
-LiteLLM supports every model Fireworks serves, so the tier can be tuned to the workload without leaving the provider. Version 1.90.0 alone added 24 of them, including DeepSeek V4 Pro, GLM, Kimi K2.6 and K2.7, MiniMax M3, Qwen3.7 Plus, and both GPT-OSS sizes. Fireworks routes and account-hosted deployments resolve through the same model names, and prompt caching stays warm across turns because LiteLLM sends the Fireworks session affinity header from a caller-supplied session id rather than a per-request trace id. Fireworks is also in our end-to-end test suite, so provider regressions surface before a release ships.
+LiteLLM supports every model Fireworks serves, so the tier can be tuned to the workload without leaving the provider. Version 1.90.0 alone added 24 of them, including DeepSeek V4 Pro, GLM, Kimi K2.6 and K2.7, MiniMax M3, Qwen3.7 Plus, and both GPT-OSS sizes. Fireworks routes and account-hosted deployments resolve through the same model names, and prompt caching stays warm across turns because LiteLLM sends the Fireworks session affinity header from a caller-supplied session id rather than a per-request trace id.
 
 ## What this is and is not
 
