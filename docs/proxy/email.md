@@ -8,9 +8,7 @@ import TabItem from '@theme/TabItem';
   img={require('../../img/email_2_0.png')}
   style={{width: '70%', display: 'block', margin: '0 0 2rem 0'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM Email Notifications
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM Email Notifications</p>
 
 ## Overview
 

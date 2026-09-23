@@ -423,7 +423,7 @@ curl http://localhost:4000/v1/chat/completions \
 # ban is treated as advisory rather than failing the request
 ```
 
-:::caution
+:::warning
 Falling back to the default-tagged pool can still return a deployment the request explicitly tried to exclude, for any constraint attributable to the caller. Only set `allow_fail_open` on a model group where a `!`/`&` constraint that can't be honored is acceptable to degrade rather than fail; do not set it on a group where the constraint is a hard compliance requirement (for example, "never route this account's traffic to Provider X").
 
 A constraint inherited from key- or team-level policy is protected from being discarded. The proxy tracks which tags came from key/team metadata separately from what the request itself supplied (`metadata.inherited_tags`), so `allow_fail_open` only ever drops a constraint the caller controlled. That holds even if the caller also resubmits the inherited tag's exact value alongside a conflicting one, a value-collision that plain set subtraction could not tell apart from an honest caller-only tag. If dropping the caller-controlled portion alone still leaves nothing to route to, the request raises instead of falling open.
@@ -592,7 +592,7 @@ With this config, `chat-compliance` evaluates tags on every request even though 
 
 Use `tag_regex` on a deployment to match incoming requests by their headers (e.g. `User-Agent`) without requiring the client to send explicit tags. Patterns are operator-configured and compiled server-side, not supplied by callers.
 
-:::caution
+:::warning
 User-Agent is a client-supplied header and can be set to any value by any caller. Use `tag_regex` for traffic classification, not access-control enforcement.
 
 Header-based routing is not a security boundary on its own. It is only meaningful when requests pass through an upstream authentication layer (e.g., an API gateway or reverse proxy that validates credentials and rejects unauthenticated traffic before it reaches LiteLLM). Without such a layer, any client can spoof the User-Agent and be routed to a deployment it should not reach.
