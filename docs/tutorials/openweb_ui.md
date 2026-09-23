@@ -115,7 +115,7 @@ To track spend and usage for each Open WebUI user, configure both Open WebUI and
 
 This video walks through on how we can map the openweb ui headers to LiteLLM user roles 
 
-<iframe src="https://www.loom.com/embed/a1b6a4635fc0478ba4fd34cae16e2ffd?sid=791c2dcc-7e65-45be-bf7f-27d2601c123e" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen width="840" height="500"></iframe>
+<iframe src="https://www.loom.com/embed/a1b6a4635fc0478ba4fd34cae16e2ffd?sid=791c2dcc-7e65-45be-bf7f-27d2601c123e" frameBorder="0" allowFullScreen width="840" height="500"></iframe>
 
 <br/>
 <br/>

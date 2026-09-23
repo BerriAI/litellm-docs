@@ -24,7 +24,7 @@ Route Claude Code Max subscription traffic through LiteLLM AI Gateway.
 
 Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/2d069b9e3bcc4cecaa5eb27a72ba7b3c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/2d069b9e3bcc4cecaa5eb27a72ba7b3c" frameBorder="0" allowFullScreen></iframe>
 
 ## Prerequisites
 
