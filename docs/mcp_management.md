@@ -29,7 +29,7 @@ Configure a remote MCP connection with these settings:
 | Transport | Streamable HTTP |
 | Credential header | `Authorization: Bearer <your-litellm-key>` |
 
-The endpoint also accepts `x-litellm-api-key`. Keep credentials in your client's secret storage. No external MCP server registration is required, and this endpoint is separate from the aggregate `/mcp` endpoint
+The endpoint also accepts `x-litellm-api-key`. If your deployment sets `general_settings.litellm_key_header_name`, use that configured header with `Bearer <your-litellm-key>`. Keep credentials in your client's secret storage. No external MCP server registration is required, and this endpoint is separate from the aggregate `/mcp` endpoint
 
 The client initializes the connection and discovers the generated tools with `tools/list`. Tool names come from OpenAPI operation IDs. Inputs use `path`, `query`, and `body` sections as declared by each tool's schema
 
