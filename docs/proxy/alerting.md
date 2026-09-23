@@ -521,6 +521,43 @@ general_settings:
         major_outage_alert_threshold: 10 # number of errors to trigger a major alert
 ```
 
+## User spend anomalies
+
+Turn on `user_spend_anomalies` to get a Slack alert when an internal user's spend for the current UTC day jumps above their recent daily average. Spend is summed by `user_id` from `LiteLLM_DailyUserSpend`. A virtual key is included when its requests are logged under that user. Requests with no user id are left out.
+
+`user_spend_anomalies` stays off until you add it to `alert_types`. Setting `alert_types` replaces the default list, so include every other alert type you still want. See [all alert types](#all-possible-alert-types).
+
+The proxy needs Slack alerting and a connected database. One instance runs the check. The default interval is one hour.
+
+```yaml
+general_settings:
+  alerting: ["slack"]
+  alert_types: ["user_spend_anomalies"]
+  alerting_args:
+    spend_anomaly_multiplier: 3.0       # today's spend must be above this multiple of the daily average
+    spend_anomaly_baseline_days: 7      # trailing days used for the average. Today is not included
+    spend_anomaly_min_spend: 10.0       # USD floor for today before an alert can fire
+    user_spend_check_interval: 3600     # seconds between checks
+```
+
+An alert fires when spend today is at least `spend_anomaly_min_spend` (default $10) and spend today is above `spend_anomaly_multiplier` times the average daily spend over the previous `spend_anomaly_baseline_days` days. The average is total spend in that window divided by the number of days, and days with no spend still count. Today is not in the window.
+
+A user with no spend in the trailing window alerts on the first day they cross the minimum. Each user is alerted at most once per UTC day. The alert level is High.
+
+### Fixed daily and monthly caps
+
+`user_spend_thresholds` is on by default, and it alerts when a user's spend crosses a dollar amount you set. Nothing is sent until you set `daily_spend_per_user_threshold`, `monthly_spend_per_user_threshold`, or both. Those values have no default.
+
+```yaml
+general_settings:
+  alerting: ["slack"]
+  alerting_args:
+    daily_spend_per_user_threshold: 50
+    monthly_spend_per_user_threshold: 500
+```
+
+A daily cap alerts once per user per UTC day. A monthly cap alerts once per user per calendar month.
+
 ## **All Possible Alert Types**
 
 👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
@@ -546,6 +583,8 @@ Budget and Spend Alerts
 | `failed_tracking_spend` | Alerts when spend tracking fails | ✅ |
 | `daily_reports` | Daily Spend reports | ✅ |
 | `fallback_reports` | Weekly Reports on LLM fallback occurrences | ✅ |
+| `user_spend_thresholds` | Alerts when a user's daily or monthly spend crosses a dollar amount you set. On by default, and silent until a threshold is set | ✅ |
+| `user_spend_anomalies` | Alerts when a user's spend today is above a multiple of their recent daily average | ❌ |
 
 Database Alerts
 
@@ -581,3 +620,9 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | `major_outage_alert_threshold` | 10 | Number of errors that trigger a major outage alert (400 errors not counted) |
 | `max_outage_alert_list_size` | 1000 | Maximum number of errors to store in cache per model/region |
 | `log_to_console` | false | If true, prints alerting payload to console as a `.warning` log. |
+| `daily_spend_per_user_threshold` | unset | USD amount. Alert when a user's spend for the current UTC day crosses it. Requires `user_spend_thresholds` |
+| `monthly_spend_per_user_threshold` | unset | USD amount. Alert when a user's spend for the current calendar month crosses it. Requires `user_spend_thresholds` |
+| `spend_anomaly_multiplier` | 3.0 | Today's spend must be above this multiple of the trailing daily average. Requires `user_spend_anomalies` |
+| `spend_anomaly_baseline_days` | 7 | Trailing days used for that average. Today is not included |
+| `spend_anomaly_min_spend` | 10.0 | Minimum USD spend today before an anomaly alert can fire |
+| `user_spend_check_interval` | 3600 (1 hour) | How often to check per-user spend thresholds and anomalies, in seconds. Minimum 60 |
