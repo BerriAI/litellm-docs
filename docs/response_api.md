@@ -1498,6 +1498,8 @@ router_settings:
 
 LiteLLM allows you to call non-Responses API models via a bridge to LiteLLM's `/chat/completions` endpoint. This is useful for calling Anthropic, Gemini and even non-Responses API OpenAI models.
 
+When a request goes through the bridge in the other direction (`/chat/completions` served over a provider's Responses API), an invalid `reasoning_effort` value is forwarded to the provider as `reasoning.effort` and rejected there with `param` reading `reasoning.effort`; LiteLLM does not drop it.
+
 
 #### Python SDK Usage
 
