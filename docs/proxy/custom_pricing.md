@@ -107,7 +107,7 @@ There are other keys you can use to specify costs for different scenarios and mo
 - `input_cost_per_token_priority` / `output_cost_per_token_priority` - Priority/PayGo pricing (Vertex AI Gemini, Bedrock)
 - `input_cost_per_token_flex` / `output_cost_per_token_flex` - Batch/flex pricing
 - `ocr_cost_per_page` / `annotation_cost_per_page` - Per-page pricing for `/v1/ocr` calls (Mistral OCR)
-- `ocr_cost_per_page_batches` / `annotation_cost_per_page_batches` - Per-page pricing for OCR pages processed through `/v1/batches`, falling back to the synchronous per-page keys when unset. See [Batch OCR cost tracking](../providers/mistral#batch-ocr-cost-tracking)
+- `ocr_cost_per_page_batches` / `annotation_cost_per_page_batches` - Per-page pricing for OCR pages processed through `/v1/batches`, falling back to the synchronous per-page keys when unset. See [Batch OCR cost tracking](../providers/mistral_batches#batch-ocr-cost-tracking)
 
 These keys evolve based on how new models handle multimodality. The latest version can be found at [https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 

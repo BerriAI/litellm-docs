@@ -27,8 +27,12 @@
   --ifm-font-size-base: 15px;
   --ifm-line-height-base: 1.65;
   --ifm-border-radius: 6px;
-  /* Code fences: slightly more inset than Infima default (1rem), esp. next to bash left accent */
+  /* Code fences: slightly more inset than Infima default (1rem) */
   --ifm-pre-padding: 1.25rem;
+  /* One shared code-block base color: slightly darker than the page so blocks
+     stand out, and the sticky line-number gutter (which paints
+     --ifm-pre-background) stays the same color as the code base */
+  --ifm-pre-background: #f6f8fa;
   /* Wider reading column — reduces excessive whitespace on large monitors */
   --ifm-container-width: 1380px;
   --ifm-container-width-xl: 1560px;
@@ -63,6 +67,8 @@ body,
   --ifm-background-color: #0d1117;
   --ifm-background-surface-color: #161b22;
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.07);
+  /* Match the prism-react-renderer nightOwl background (same reason as light mode) */
+  --ifm-pre-background: #011627;
 }
 
 /* =========================================
@@ -324,6 +330,15 @@ li.tabs__item--active {
   border-radius: var(--ifm-border-radius);
   font-size: 12.5px !important;
   line-height: 1.6;
+  /* One base color for every language, same as the line-number gutter
+     (--ifm-pre-background); overrides the prism theme's inline background */
+  background-color: var(--ifm-pre-background) !important;
+}
+
+/* Lift code blocks off the page in light mode */
+[data-theme='light'] .theme-code-block {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 /* Docusaurus line-number mode uses vertical-only padding on the inner wrapper; restore horizontal inset */
@@ -766,33 +781,8 @@ video {
    BASH / SHELL CODE BLOCKS
    ========================================= */
 
-/* Subtle grey bash/shell blocks — light mode */
-[data-theme='light'] [class*='language-bash'] .prism-code,
-[data-theme='light'] [class*='language-sh'] .prism-code,
-[data-theme='light'] [class*='language-shell'] .prism-code,
-[data-theme='light'] [class*='language-zsh'] .prism-code {
-  background-color: #f3f4f6 !important;
-  border: 1px solid #d1d5db !important;
-  border-left: 3px solid #6b7280 !important;
-  color: #1f2937 !important;
-}
-
-[data-theme='light'] [class*='language-bash'] .prism-code span,
-[data-theme='light'] [class*='language-sh'] .prism-code span,
-[data-theme='light'] [class*='language-shell'] .prism-code span,
-[data-theme='light'] [class*='language-zsh'] .prism-code span {
-  color: #1f2937 !important;
-}
-
-/* Dark mode — slightly lighter than the default near-black */
-[data-theme='dark'] [class*='language-bash'] .prism-code,
-[data-theme='dark'] [class*='language-sh'] .prism-code,
-[data-theme='dark'] [class*='language-shell'] .prism-code,
-[data-theme='dark'] [class*='language-zsh'] .prism-code {
-  background-color: #1c2130 !important;
-  border: 1px solid #2d3748 !important;
-  border-left: 3px solid #4b5563 !important;
-}
+/* Bash/shell blocks use the same Prism theme background as every other language
+   (a per-language background made the base and line-number gutter colors diverge). */
 
 /* "$ " terminal prompt prefix on bash title bar */
 [class*='language-bash'] [class*='codeBlockTitle']::before,
