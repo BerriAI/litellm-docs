@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 ## Setup
 
-Configure the Vertex model in your config.yaml. `gcs_bucket_name` is the GCS bucket batch prediction files are stored in — a required param for vertexai to store files.
+Configure the Vertex model in your config.yaml. `gcs_bucket_name` is the GCS bucket batch prediction files are stored in, a required param for vertexai to store files.
 
 ```yaml showLineNumbers title="litellm-config.yaml"
 model_list:
