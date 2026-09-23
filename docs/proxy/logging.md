@@ -1336,6 +1336,8 @@ litellm_settings:
     s3_batch_file_upload: false # [OPTIONAL] write each flush as one NDJSON .jsonl file per object key prefix instead of one object per request
 ```
 
+The default of 16 for `s3_max_concurrent_uploads` comes from the flush budget rather than from an S3 limit: a full queue of `DEFAULT_S3_BATCH_SIZE` (512) entries has to drain inside `DEFAULT_S3_FLUSH_INTERVAL_SECONDS` (10s), and at a pessimistic 300ms per PUT that needs `512 * 0.3 / 10 = 15.4` uploads in flight, so 16 is the smallest round number that fits. It is also an order of magnitude under the [3,500 PUT/s per prefix](https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html) S3 supports, and in the same range as boto3's `max_concurrency` of 10 or Fluentd's suggested 8 flush threads. Raising it past 16 buys little at realistic latencies; if one worker needs more throughput, turn on `s3_batch_file_upload` instead so each flush is a handful of objects. The limit is per uvicorn worker, so process wide concurrency is `workers * 16`
+
 With `s3_batch_file_upload` enabled, each flush produces one `batch_<HH-MM-SS>_<uuid>.jsonl` object per object key prefix, so batch files sit next to the per request objects they replace and team or API key prefixes are preserved. Uploads that fail stay in the queue and are retried on the next flush. The flag is ignored with a warning when `cold_storage_custom_logger: s3_v2` is set, because spend log lookups require per request objects
 
 **Step 3**: Start the proxy, make a test request
