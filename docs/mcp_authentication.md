@@ -7,7 +7,7 @@ LiteLLM handles two separate authentication hops for an MCP request:
 - **Client to LiteLLM:** the MCP client proves that it can use the LiteLLM gateway, usually with a LiteLLM API key.
 - **LiteLLM to the upstream MCP server:** LiteLLM authenticates to the selected upstream according to that server's `auth_type`.
 
-The `auth_type` on an MCP server controls the second hop. A LiteLLM API key used for gateway admission is not copied to the upstream server.
+The `auth_type` on an MCP server controls the second hop. A LiteLLM API key used for gateway admission is not copied to the upstream server. To let individual users or service-account keys use their own upstream credential for a shared server instead of the one stored on it, see [Per-User and Per-Key Upstream Credentials](./mcp_per_user_auth.md).
 
 :::note[Transport scope]
 
