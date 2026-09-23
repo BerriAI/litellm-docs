@@ -7,6 +7,8 @@ import TabItem from '@theme/TabItem';
 
 Set allowed models for a key using the `models` param
 
+The `models` list both hides a model from `GET /v1/models` and blocks calls to it. To hide a model from the listing endpoints without blocking calls to it, set `model_info.discoverable: false` on the model instead ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
+
 
 ```shell
 curl 'http://0.0.0.0:4000/key/generate' \

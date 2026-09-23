@@ -301,6 +301,8 @@ router_settings:
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
 
+To hide a `model_list` entry itself rather than an alias, set `model_info.discoverable: false` on it ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
+
 ### Complete Spec 
 
 ```python
