@@ -1,6 +1,6 @@
 .page {
   width: 100%;
-  max-width: 860px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
 }
@@ -35,8 +35,453 @@
   line-height: 1.65;
 }
 
-.list {
-  margin-top: 0.5rem;
+.section {
+  padding: 3rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.section:last-child {
+  border-bottom: 0;
+}
+
+/* flow-root keeps the heading's bottom margin from collapsing into the gap below. */
+.sectionHeading {
+  display: flow-root;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeading h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.kicker {
+  margin: 0 0 0.45rem;
+  color: var(--ifm-color-primary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chartCard {
+  overflow: hidden;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color);
+}
+
+.goalSentence {
+  margin: 0;
+  padding: 1.25rem 1.5rem 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.progressSummary {
+  margin-right: 0.05em;
+  color: var(--ifm-font-color-base);
+  font-size: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  vertical-align: -0.1em;
+}
+
+/* The larger control text needs a touch more room than a plain space gives. */
+.sentenceControl {
+  position: relative;
+  margin-left: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-bottom: 1.5px dashed var(--ifm-color-emphasis-400);
+  background: none;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15em;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 140ms, border-color 140ms;
+}
+
+.sentenceControl:hover,
+.sentenceControl:focus-within {
+  border-bottom-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+
+.sentenceControl:focus-within {
+  border-bottom-style: solid;
+  outline: none;
+}
+
+.sentenceControl svg {
+  width: 0.8em;
+  height: 0.8em;
+  margin-left: 0.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.keepTogether {
+  white-space: nowrap;
+}
+
+.viewWord {
+  display: inline-flex;
+  align-items: center;
+  animation: view-flip 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.viewWord svg {
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.3rem;
+}
+
+@keyframes view-flip {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) scale(0.9);
+  }
+}
+
+.selectIcon {
+  display: inline-flex;
+}
+
+.selectIcon svg {
+  transition: transform 160ms;
+}
+
+.sentenceControl[data-popup-open] .selectIcon svg {
+  transform: rotate(180deg);
+}
+
+.selectPositioner {
+  z-index: 100;
+}
+
+.selectPopup {
+  min-width: var(--anchor-width);
+  padding: 0.3rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 10px;
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  transform-origin: var(--transform-origin);
+  transition: opacity 140ms, transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.selectPopup[data-starting-style],
+.selectPopup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96) translateY(-4px);
+}
+
+.selectItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.75rem;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 0.65rem 0.9rem 0.7rem;
+  border-radius: 8px;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.selectItem + .selectItem {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.selectItem[data-highlighted] {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.selectItem[data-selected] .selectLabel {
+  color: var(--ifm-color-primary);
+}
+
+.selectLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.selectMeta {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.selectScope {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.chartBody {
+  padding: 0 0.5rem 0.5rem;
+}
+
+.timeline {
+  display: block;
+  overflow: visible;
+  font-family: var(--ifm-font-family-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.gridLine {
+  stroke: var(--ifm-color-emphasis-200);
+  stroke-dasharray: 2 4;
+}
+
+.baseline {
+  stroke: var(--ifm-color-emphasis-300);
+}
+
+.axisLabel {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 11px;
+}
+
+.versionLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.versionDate {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.mainVersionLabel {
+  fill: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.goalAxisLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pointValue {
+  fill: var(--ifm-font-color-base);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.areaStart {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0.22;
+}
+
+.areaEnd {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0;
+}
+
+.progressLine {
+  fill: none;
+  stroke: var(--ifm-color-primary);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.goalLine {
+  stroke: var(--ifm-color-emphasis-400);
+  stroke-dasharray: 4 5;
+  stroke-width: 1.5;
+}
+
+.progressPoint {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-primary);
+  stroke-width: 1.5;
+}
+
+.mainPoint {
+  fill: var(--ifm-color-primary);
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 2;
+}
+
+.goal circle {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-emphasis-500);
+  stroke-dasharray: 2 2;
+  stroke-width: 1.5;
+}
+
+.goalLabel {
+  fill: var(--ifm-color-emphasis-600);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Top-level work flows into up to two columns and never splits across them. */
+.tree {
+  margin: 0;
+  padding: 1rem 1.5rem 1.25rem;
+  columns: 2 300px;
+  column-gap: 2.5rem;
+  list-style: none;
+}
+
+/* Guide lines run from each parent's marker down past its children. */
+.tree ul {
+  margin: 0 0 0 3.5px;
+  padding: 0 0 0 1rem;
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+  list-style: none;
+}
+
+.node {
+  display: flex;
+  min-height: 26px;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.tree > li {
+  padding-bottom: 0.4rem;
+  break-inside: avoid;
+}
+
+.tree > li > .node {
+  font-weight: 600;
+}
+
+.node::before {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-left: -0.5px;
+  border: 1.5px solid var(--ifm-color-emphasis-400);
+  border-radius: 50%;
+  background: var(--ifm-background-surface-color);
+  content: '';
+}
+
+.nodeText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeMeta {
+  margin-left: auto;
+  padding-left: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.nodeMeta.onRust {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.pips {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 0.5rem;
+  vertical-align: 1px;
+}
+
+.pips i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--ifm-color-emphasis-300);
+}
+
+.pips .pipOn {
+  background: var(--ifm-color-primary);
+}
+
+/* A vertical rail with one dot per event; releases get a filled dot. */
+.events {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+  list-style: none;
+}
+
+.event {
+  position: relative;
+  padding-bottom: 1.75rem;
+}
+
+.event:last-child {
+  padding-bottom: 0;
+}
+
+.event::before {
+  position: absolute;
+  top: 0.3rem;
+  left: calc(-1.5rem - 5px);
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ifm-color-emphasis-400);
+  border-radius: 50%;
+  background: var(--ifm-background-color);
+  content: '';
+}
+
+.releaseEvent::before {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+}
+
+.eventMeta {
+  margin: 0 0 0.2rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.eventTitle {
+  color: var(--ifm-font-color-base);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.eventTitle:hover {
+  color: var(--ifm-color-primary);
+}
+
+.eventChanges {
+  margin: 0.4rem 0 0;
+  list-style: disc;
+  padding-left: 1.1rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.88rem;
 }
 
 @media (max-width: 640px) {
@@ -50,5 +495,23 @@
 
   .title {
     font-size: 2rem;
+  }
+
+  .section {
+    padding: 2.25rem 0;
+  }
+
+  .goalSentence {
+    padding: 1rem 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  .progressSummary {
+    font-size: 1.75rem;
+  }
+
+  .tree {
+    padding-right: 1rem;
+    padding-left: 1rem;
   }
 }
