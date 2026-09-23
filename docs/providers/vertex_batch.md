@@ -20,7 +20,7 @@ model_list:
       mode: batch
 ```
 
-When `gcs_bucket_name` (or `bucket_name`) and `vertex_credentials` are not set on the model's `litellm_params`, LiteLLM falls back to these env vars. `GCS_BATCH_BUCKET_NAME` is checked first so batch files can live in a different bucket than the one `GCS_BUCKET_NAME` points at for GCS logging. If it is unset, `GCS_BUCKET_NAME` is used
+When `gcs_bucket_name` (or `bucket_name`) and `vertex_credentials` are not set on the model's `litellm_params`, LiteLLM falls back to these env vars. `GCS_BATCH_BUCKET_NAME` exists because the [`gcs_bucket` logging callback](../observability/gcs_bucket_integration) already uses `GCS_BUCKET_NAME` as the bucket it writes LLM request logs to, so setting `GCS_BUCKET_NAME` to your batch bucket would also send request logs there. `GCS_BATCH_BUCKET_NAME` is checked first for batch files and, when it is unset, `GCS_BUCKET_NAME` is used
 
 ```bash
 # GCS Bucket settings, used to store batch prediction files in
