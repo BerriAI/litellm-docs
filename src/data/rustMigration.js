@@ -9,61 +9,159 @@ export const STAGES = [
   {id: 'rustRequired', label: 'Rust only'},
 ];
 
-// Goals are milestones over the work below. `scope` lists the top-level work a
-// goal covers, and may name an earlier goal to include all of its scope. The
-// optional `summary` describes the scope in the goal picker instead of listing it.
+// Goals are milestones over the work below. `scope` lists the areas a goal
+// covers, and may name an earlier goal to include all of its scope. The optional
+// `summary` describes the scope in the goal picker instead of listing it.
 const GOAL_DECLARATIONS = [
-  {id: 'major-apis', text: 'Major APIs', endsOn: '2026-12-31', scope: ['messages', 'responses', 'chat-completions']},
+  {
+    id: 'major-apis',
+    text: 'Major APIs',
+    endsOn: '2026-12-31',
+    scope: ['chat-completions', 'messages', 'responses', 'auth'],
+    summary: 'Chat completions, Messages, Responses',
+  },
   {
     id: 'all-apis',
     text: 'All APIs',
     endsOn: '2027-04-30',
-    summary: 'Major APIs, MCP, OCR, and many more',
-    scope: ['major-apis', 'token-counter', 'mcp', 'ocr'],
+    scope: ['major-apis', 'embeddings', 'transcription', 'ocr', 'token-counter', 'mcp'],
+    summary: 'Major APIs, Embeddings, OCR, MCP, and many more',
   },
 ];
 
-// The work is a dependency graph, declared flat. `parent` names the node, or
-// nodes, that need this work; top-level work has none and belongs to a goal's
-// scope instead. A node with `rollout` is a feature, mapping each release to the
-// stage the feature entered there; `{}` means it is still Python only. Every
-// other node groups its children.
-const NODES = [
-  {id: 'messages', text: 'Messages'},
-  {id: 'messages-anthropic', text: 'Anthropic', parent: 'messages', rollout: {'v1.103.0-rc.2': 'rustOptIn'}},
-  {id: 'messages-bedrock', text: 'Bedrock', parent: 'messages', rollout: {}},
-  {id: 'messages-vertex', text: 'Vertex AI', parent: 'messages', rollout: {}},
-  {id: 'messages-azure-ai', text: 'Azure AI', parent: 'messages', rollout: {'v1.94.0-rc.1': 'rustOptIn'}},
-  {id: 'messages-compatible', text: 'Compatible endpoints', parent: 'messages', rollout: {}},
-  {id: 'messages-github-copilot', text: 'GitHub Copilot', parent: 'messages', rollout: {}},
-  {id: 'messages-via-responses', text: 'Via Responses', parent: 'messages', rollout: {}},
-  {id: 'messages-via-chat', text: 'Via Chat', parent: 'messages', rollout: {}},
+// Display names for the litellm provider ids the areas below list.
+const PROVIDERS = {
+  'anthropic': 'Anthropic',
+  'assemblyai': 'AssemblyAI',
+  'aws_textract': 'AWS Textract',
+  'azure': 'Azure OpenAI',
+  'azure_ai': 'Azure AI',
+  'azure_ai/doc-intelligence': 'Azure Document Intelligence',
+  'bedrock': 'Bedrock',
+  'cerebras': 'Cerebras',
+  'cohere': 'Cohere',
+  'databricks': 'Databricks',
+  'deepgram': 'Deepgram',
+  'deepinfra': 'DeepInfra',
+  'deepseek': 'DeepSeek',
+  'elevenlabs': 'ElevenLabs',
+  'fireworks_ai': 'Fireworks AI',
+  'gemini': 'Gemini',
+  'github_copilot': 'GitHub Copilot',
+  'groq': 'Groq',
+  'hosted_vllm': 'vLLM',
+  'huggingface': 'Hugging Face',
+  'infinity': 'Infinity',
+  'jina_ai': 'Jina AI',
+  'minimax': 'MiniMax',
+  'mistral': 'Mistral',
+  'nvidia_nim': 'NVIDIA NIM',
+  'nvidia_riva': 'NVIDIA Riva',
+  'oci': 'Oracle OCI',
+  'ollama': 'Ollama',
+  'openai': 'OpenAI',
+  'openai_like': 'OpenAI-compatible',
+  'openrouter': 'OpenRouter',
+  'perplexity': 'Perplexity',
+  'reducto': 'Reducto',
+  'sagemaker': 'SageMaker',
+  'snowflake': 'Snowflake',
+  'soniox': 'Soniox',
+  'together_ai': 'Together AI',
+  'vertex_ai': 'Vertex AI',
+  'voyage': 'Voyage AI',
+  'watsonx': 'watsonx',
+  'xai': 'xAI',
+};
 
-  {id: 'responses', text: 'Responses'},
-  {id: 'responses-openai', text: 'OpenAI', parent: 'responses', rollout: {}},
-
-  {id: 'chat-completions', text: 'Chat completions'},
-  {id: 'chat-openai', text: 'OpenAI', parent: 'chat-completions', rollout: {}},
-  {id: 'chat-via-messages', text: 'Via Messages', parent: 'chat-completions', rollout: {}},
-
-  {id: 'token-counter', text: 'Token counter'},
-  {id: 'tokens-tiktoken', text: 'Tiktoken', parent: 'token-counter', rollout: {'v1.103.0-rc.2': 'rustOptIn'}},
-  {id: 'tokens-hugging-face', text: 'Hugging Face', parent: 'token-counter', rollout: {}},
-
-  {id: 'mcp', text: 'MCP'},
-  {id: 'mcp-gateway', text: 'MCP gateway', parent: 'mcp', rollout: {}},
-
-  {id: 'ocr', text: 'OCR'},
-  {id: 'ocr-mistral', text: 'Mistral', parent: 'ocr', rollout: {'v1.102.0-rc.1': 'rustOptOut'}},
-  {id: 'ocr-azure-ai', text: 'Azure AI', parent: 'ocr', rollout: {}},
-  {id: 'ocr-azure-document-intelligence', text: 'Azure Document Intelligence', parent: 'ocr', rollout: {}},
-  {id: 'ocr-vertex', text: 'Vertex AI', parent: 'ocr', rollout: {}},
-  {id: 'ocr-cohere', text: 'Cohere', parent: 'ocr', rollout: {}},
-
-  // Shared by features across several APIs.
-  {id: 'auth-aws', text: 'AWS auth', parent: 'messages-bedrock', rollout: {}},
-  {id: 'auth-gcp', text: 'GCP auth', parent: ['messages-vertex', 'ocr-vertex'], rollout: {}},
+// Each area of work and its units, where a unit is one provider an API must
+// serve from Rust. A string unit is a litellm provider id from PROVIDERS; work
+// that is not a provider names itself as `{id, text}`. Provider lists follow
+// what litellm serves for each API today, with OpenAI-compatible endpoints
+// standing in for the long tail that shares one implementation.
+const AREAS = [
+  {
+    id: 'chat-completions',
+    text: 'Chat completions',
+    units: [
+      'openai', 'azure', 'anthropic', 'bedrock', 'vertex_ai', 'gemini', 'azure_ai', 'mistral', 'cohere', 'groq',
+      'xai', 'deepseek', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'watsonx', 'perplexity',
+      'deepinfra', 'cerebras', 'nvidia_nim', 'sagemaker', 'ollama', 'hosted_vllm', 'openai_like',
+    ],
+  },
+  {
+    id: 'messages',
+    text: 'Messages',
+    units: [
+      'anthropic', 'bedrock', 'vertex_ai', 'azure_ai', 'github_copilot', 'deepseek', 'minimax', 'openai', 'azure',
+      'gemini', 'mistral', 'groq', 'xai', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'ollama',
+      'hosted_vllm', 'openai_like',
+    ],
+  },
+  {
+    id: 'responses',
+    text: 'Responses',
+    units: [
+      'openai', 'azure', 'azure_ai', 'anthropic', 'bedrock', 'vertex_ai', 'gemini', 'xai', 'mistral', 'groq',
+      'deepseek', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'perplexity', 'github_copilot',
+      'ollama', 'hosted_vllm', 'openai_like',
+    ],
+  },
+  {
+    id: 'auth',
+    text: 'Provider auth',
+    units: [{id: 'aws', text: 'AWS'}, {id: 'azure', text: 'Azure'}, {id: 'gcp', text: 'Google Cloud'}],
+  },
+  {
+    id: 'embeddings',
+    text: 'Embeddings',
+    units: [
+      'openai', 'azure', 'azure_ai', 'bedrock', 'vertex_ai', 'gemini', 'cohere', 'mistral', 'voyage', 'jina_ai',
+      'huggingface', 'sagemaker', 'watsonx', 'databricks', 'fireworks_ai', 'together_ai', 'nvidia_nim',
+      'snowflake', 'oci', 'ollama', 'hosted_vllm', 'infinity', 'openrouter', 'openai_like',
+    ],
+  },
+  {
+    id: 'transcription',
+    text: 'Audio transcription',
+    units: [
+      'openai', 'azure', 'bedrock', 'deepgram', 'elevenlabs', 'mistral', 'xai', 'watsonx', 'soniox', 'nvidia_riva',
+      'hosted_vllm',
+    ],
+  },
+  {
+    id: 'ocr',
+    text: 'OCR',
+    units: ['mistral', 'azure_ai', 'azure_ai/doc-intelligence', 'vertex_ai', 'cohere', 'reducto', 'aws_textract'],
+  },
+  {
+    id: 'token-counter',
+    text: 'Token counter',
+    units: [{id: 'tiktoken', text: 'Tiktoken'}, {id: 'huggingface', text: 'Hugging Face'}],
+  },
+  {
+    id: 'mcp',
+    text: 'MCP',
+    units: [{id: 'gateway', text: 'MCP gateway'}],
+  },
 ];
+
+// Rollout history for every unit that has left Python, keyed by `area/unit`.
+// Each entry maps a release to the stage the unit entered there; units not
+// listed are still Python only.
+const ROLLOUTS = {
+  'messages/anthropic': {'v1.103.0-rc.2': 'rustOptIn'},
+  'messages/azure_ai': {'v1.94.0-rc.1': 'rustOptIn'},
+  'transcription/bedrock': {'v1.103.0-rc.1': 'rustRequired'},
+  'ocr/mistral': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/azure_ai': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/azure_ai/doc-intelligence': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/vertex_ai': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/cohere': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/reducto': {'v1.102.0-rc.1': 'rustOptOut'},
+  'ocr/aws_textract': {'v1.103.0-rc.1': 'rustRequired'},
+  'token-counter/tiktoken': {'v1.103.0-rc.2': 'rustOptIn'},
+};
 
 // Releases worth calling out next to the blog posts; only add ones that changed
 // what runs on Rust. The date is kept here because the release snapshot only
@@ -72,7 +170,12 @@ export const RELEASE_NOTES = [
   {
     version: 'v1.102.0-rc.1',
     releasedOn: '2026-09-13',
-    changes: ['Mistral OCR runs on Rust by default, with the Python implementation kept as a fallback.'],
+    changes: ['OCR runs on Rust by default for every provider except AWS Textract, with the Python implementation kept as a fallback.'],
+  },
+  {
+    version: 'v1.103.0-rc.1',
+    releasedOn: '2026-09-20',
+    changes: ['AWS Textract OCR and Bedrock audio transcription run on Rust only.'],
   },
 ];
 
@@ -112,81 +215,69 @@ RELEASE_NOTES.forEach(note => checkVersion(note.version));
 
 const STAGE_INDEX = new Map(STAGES.map((stage, index) => [stage.id, index]));
 
-// Normalized nodes: `children` holds node objects in declaration order, and a
-// feature's `rollout` becomes `{version, stage}` steps, oldest first, where
-// `stage` indexes STAGES.
-const nodesById = new Map();
-for (const {parent, rollout, ...node} of NODES) {
-  if (nodesById.has(node.id)) {
-    fail(`duplicate node id: ${node.id}`);
+function parseRollout(id, rollout) {
+  return Object.entries(rollout)
+    .map(([version, stage]) => {
+      checkVersion(version);
+      if (!STAGE_INDEX.has(stage)) {
+        fail(`${id} has unknown rollout stage: ${stage}`);
+      }
+      return {version, stage: STAGE_INDEX.get(stage)};
+    })
+    .sort((left, right) => semver.compare(left.version, right.version));
+}
+
+// The page model is a tree of nodes with `text` and `children`. `features`
+// lists the units at or beneath a node, which are all that count toward its
+// progress, and a unit's `rollout` holds `{version, stage}` steps, oldest
+// first, where `stage` indexes STAGES.
+const areasById = new Map();
+const unusedRollouts = new Set(Object.keys(ROLLOUTS));
+for (const area of AREAS) {
+  if (areasById.has(area.id)) {
+    fail(`duplicate area: ${area.id}`);
   }
-  nodesById.set(node.id, {
-    ...node,
-    children: [],
-    rollout: rollout && Object.entries(rollout)
-      .map(([version, stage]) => {
-        checkVersion(version);
-        if (!STAGE_INDEX.has(stage)) {
-          fail(`${node.id} has unknown rollout stage: ${stage}`);
-        }
-        return {version, stage: STAGE_INDEX.get(stage)};
-      })
-      .sort((left, right) => semver.compare(left.version, right.version)),
+  const units = area.units.map(unit => {
+    const {id, text} = typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
+    const key = `${area.id}/${id}`;
+    if (!text) {
+      fail(`${key} has no display name in PROVIDERS`);
+    }
+    unusedRollouts.delete(key);
+    const node = {id: key, text, children: [], rollout: parseRollout(key, ROLLOUTS[key] ?? {})};
+    node.features = [node];
+    return node;
   });
-}
-for (const {id, parent} of NODES) {
-  for (const parentId of [parent ?? []].flat()) {
-    if (!nodesById.has(parentId)) {
-      fail(`${id} has unknown parent: ${parentId}`);
-    }
-    nodesById.get(parentId).children.push(nodesById.get(id));
+  if (new Set(units.map(unit => unit.id)).size !== units.length) {
+    fail(`${area.id} lists a unit twice`);
   }
+  areasById.set(area.id, {id: area.id, text: area.text, children: units, features: units});
 }
-
-// Every node beneath `node`, counted once even when several paths reach it.
-function descendantsOf(node, found = new Set()) {
-  for (const child of node.children) {
-    if (!found.has(child)) {
-      found.add(child);
-      descendantsOf(child, found);
-    }
-  }
-  return found;
+if (unusedRollouts.size > 0) {
+  fail(`rollouts name units no area lists: ${[...unusedRollouts].join(', ')}`);
 }
 
-// `features` lists the features at or beneath each node; only they count toward progress.
-for (const node of nodesById.values()) {
-  const descendants = descendantsOf(node);
-  if (descendants.has(node)) {
-    fail(`${node.id} depends on itself`);
-  }
-  if (!node.rollout && node.children.length === 0) {
-    fail(`${node.id} has no children, so it must be a feature with rollout`);
-  }
-  node.features = [node, ...descendants].filter(item => item.rollout);
-}
-
-// Goals in declaration order, each with the same `children` and `features` a
-// node has, so the page treats a goal as the root of its own tree.
+// Goals in declaration order, shaped like nodes so the page treats a goal as
+// the root of its own tree.
 const goalsById = new Map();
 for (const {scope, ...goal} of GOAL_DECLARATIONS) {
   const children = new Set(scope.flatMap(id => {
     if (goalsById.has(id)) {
       return goalsById.get(id).children;
     }
-    if (!nodesById.has(id)) {
+    if (!areasById.has(id)) {
       fail(`goal ${goal.id} has unknown scope: ${id}`);
     }
-    return [nodesById.get(id)];
+    return [areasById.get(id)];
   }));
-  const features = new Set([...children].flatMap(child => child.features));
-  goalsById.set(goal.id, {...goal, children: [...children], features: [...features]});
+  const features = [...children].flatMap(child => child.features);
+  goalsById.set(goal.id, {...goal, children: [...children], features});
 }
 export const GOALS = [...goalsById.values()];
 
-for (const {id, parent} of NODES) {
-  if (!parent && !GOALS.some(goal => goal.children.includes(nodesById.get(id)))) {
-    fail(`${id} has no parent, so a goal's scope must include it`);
+for (const area of areasById.values()) {
+  if (!GOALS.some(goal => goal.children.includes(area))) {
+    fail(`no goal's scope includes ${area.id}`);
   }
 }
 
