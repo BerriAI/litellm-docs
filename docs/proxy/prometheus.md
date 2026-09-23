@@ -77,7 +77,7 @@ scrape_configs:
       - targets: ["litellm:4001"]
 ```
 
-:::warning Secure the metrics listener
+:::warning[Secure the metrics listener]
 The dedicated listener does not use LiteLLM virtual-key authentication. `require_auth_for_metrics_endpoint` applies only to `/metrics` on the proxy port. Permit access only from trusted Prometheus or collector networks, and do not publish the dedicated port through a public ingress or load balancer.
 :::
 

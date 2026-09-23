@@ -23,7 +23,7 @@ LiteLLM now supports the [GPT-5.6 family](https://openai.com/index/previewing-gp
 
 GPT-5.6 introduces a new naming system where the number identifies the generation and the tier name identifies a durable capability level. `gpt-5.6-sol` is the flagship for complex reasoning and agentic workloads, `gpt-5.6-terra` is a balanced model for everyday work with performance competitive with GPT-5.5 at roughly half the cost, and `gpt-5.6-luna` is the fastest and most affordable tier. Per OpenAI, the family sets a new state of the art on agentic coding (Terminal-Bench 2.1) with broad gains in long-horizon biology and cybersecurity workflows. GPT-5.6 also adds a new `max` reasoning effort for the deepest single-agent thinking and an `ultra` mode that coordinates subagents on the most complex tasks.
 
-:::info Living post
+:::info[Living post]
 **This post is updated as GPT-5.6 support expands.** GPT-5.6 is now available on Azure OpenAI in addition to OpenAI direct. Global Azure deployments match OpenAI list pricing, and regional deployments (`azure/us/*` and `azure/eu/*`) are tracked with the standard 10% regional uplift.
 :::
 

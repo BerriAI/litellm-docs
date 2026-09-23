@@ -55,7 +55,7 @@ general_settings:
   forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
 ```
 
-:::info Why `forward_client_headers_to_llm_api`?
+:::info[Why `forward_client_headers_to_llm_api`?]
 
 This setting forwards the user's OAuth token (in the `Authorization` header) through LiteLLM to the Anthropic API, enabling per-user authentication with their Max subscription while LiteLLM handles tracking and controls.
 

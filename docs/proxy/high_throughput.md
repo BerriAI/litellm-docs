@@ -4,7 +4,7 @@ Large prompts put meaningful work on the gateway before a request reaches the mo
 
 This deployment profile separates that work and scales the gateway using request volume and token volume. In our large-prompt benchmark, it sustained 3,000 requests per second with 50K to 100K-token prompts while using 33 gateway pods. See the [full benchmark](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts) for the test setup and results.
 
-:::warning Development preview
+:::warning[Development preview]
 The high-throughput deployment profile is still in development and is available in nightly builds. The install example below pins the earliest available version. Use the latest nightly for evaluation, and validate it in a non-production environment before rollout.
 :::
 

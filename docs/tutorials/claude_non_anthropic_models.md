@@ -255,7 +255,7 @@ On startup, Claude Code will call `GET /v1/models` against your `ANTHROPIC_BASE_
 
 and select any LiteLLM-managed model (`{{openai_large}}`, `{{gemini_flash}}`, `anthropic-vertex`, etc.) to switch without restarting the session.
 
-:::info Requirements
+:::info[Requirements]
 
 - Claude Code **v2.1.129** or later.
 - `ANTHROPIC_BASE_URL` must point at a gateway that serves the Anthropic Messages API format. LiteLLM does this on `/v1/messages`.
@@ -263,7 +263,7 @@ and select any LiteLLM-managed model (`{{openai_large}}`, `{{gemini_flash}}`, `a
 
 :::
 
-:::tip Surface only specific models
+:::tip[Surface only specific models]
 
 If you only want a subset of your LiteLLM models to show up in the `/model` picker, issue a [virtual key](../proxy/virtual_keys) scoped to those models and use that key as `ANTHROPIC_AUTH_TOKEN`. `/v1/models` will only return models the key can access.
 

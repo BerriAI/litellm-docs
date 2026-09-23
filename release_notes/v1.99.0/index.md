@@ -49,7 +49,7 @@ PyPI and Docker artifacts for this release were built from different SHAs, but a
 
 :::
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Audit logging now defaults to on for proxies running an Enterprise license.** `store_audit_logs` becomes tri-state: unset plus a premium license resolves to enabled, replacing roughly fifteen scattered gate checks with one resolver, and `LITELLM_STORE_AUDIT_LOGS` is now honoured by the key hooks that previously ignored it. An enterprise proxy that never set the flag starts writing audit rows on upgrade, which will grow the audit table. Set `store_audit_logs: false` explicitly to keep the prior behavior. See [PR #37518](https://github.com/BerriAI/litellm/pull/37518).
 

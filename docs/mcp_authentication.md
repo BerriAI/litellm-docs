@@ -9,7 +9,7 @@ LiteLLM handles two separate authentication hops for an MCP request:
 
 The `auth_type` on an MCP server controls the second hop. A LiteLLM API key used for gateway admission is not copied to the upstream server.
 
-:::note Transport scope
+:::note[Transport scope]
 
 The wire examples on this page cover remote MCP servers using SSE or Streamable HTTP. [OpenAPI-generated MCP tools](./mcp_openapi.md) have separate auth-header handling.
 
@@ -74,7 +74,7 @@ Host: mcp.example.com
 Content-Type: application/json
 ```
 
-:::warning Do not put credentials in the URL
+:::warning[Do not put credentials in the URL]
 
 A URL such as `https://username:password@mcp.example.com/mcp` is rejected when `auth_type` is `none`. LiteLLM does not infer Basic Auth from URL userinfo. Remove the credentials from the URL and configure [`auth_type: basic`](#basic-auth) instead.
 

@@ -129,7 +129,7 @@ If an agent has no pinned version, LiteLLM infers the served version from the cl
 | Request header `a2a-version: 1.x` | `1.0` |
 | Otherwise (e.g. `message/send` with no header) | `0.3` |
 
-:::tip Always pin `protocolVersion`
+:::tip[Always pin `protocolVersion`]
 
 The proxied agent card defaults to `1.0` when unset, but legacy `message/send` callers without an `a2a-version` header receive **0.3**-shaped responses. Pin `protocolVersion` explicitly so your card and responses always match.
 

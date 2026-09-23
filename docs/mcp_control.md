@@ -17,7 +17,7 @@ LiteLLM provides fine-grained permission management for MCP servers, allowing yo
 
 This ensures that only authorized entities can discover and use MCP tools, providing an additional security layer for your MCP infrastructure.
 
-:::info Related Documentation
+:::info[Related Documentation]
 - [MCP Overview](./mcp.md) - Learn about MCP in LiteLLM
 - [Grant MCP Server Access to Keys and Teams](./mcp_grant_access.md) - Step-by-step Admin UI and API procedure for key and team grants
 - [MCP Cost Tracking](./mcp_cost.md) - Track costs for MCP tool calls
@@ -857,11 +857,11 @@ The same grant is editable from the Admin UI on the internal user's detail page 
   alt="MCP entitlements section on the internal user detail page"
 />
 
-:::info Only a proxy admin can set this
+:::info[Only a proxy admin can set this]
 `/user/new` and `/user/update` accept `object_permission` from a proxy admin only. A non-admin editing their own record is rejected, since an empty grant list means "no restriction" and a self-write would otherwise lift a ceiling an admin placed on them.
 :::
 
-:::note An admin role is not a waiver
+:::note[An admin role is not a waiver]
 A caller with an admin role and no explicit key-level `mcp_servers` list normally sees the whole MCP server registry. Once that human carries an entitlement of their own, that shortcut no longer applies and the entitlement binds them; the admin role widens what the credential reaches, and leaves the scope attached to the person in place.
 :::
 
@@ -928,6 +928,6 @@ If you want other systems (for example external agent frameworks such as MCP-cap
 2. LiteLLM will serve the registry at `GET /v1/mcp/registry.json`.
 3. Each entry points to either `/mcp` (built-in server) or `/{mcp_server_name}/mcp` for your custom servers, so clients can connect directly using the advertised Streamable HTTP URL.
 
-:::note Permissions still apply
+:::note[Permissions still apply]
 The registry only advertises server URLs. Actual access control is still enforced by LiteLLM when the client connects to `/mcp` or `/{server}/mcp`, so publishing the registry does not bypass per-key permissions.
 :::

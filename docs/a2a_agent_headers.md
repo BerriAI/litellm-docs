@@ -155,7 +155,7 @@ curl -X POST http://localhost:4000/a2a/my-agent \
 
 The `x-a2a-other-agent-authorization` header sent in the same request is **not** forwarded to `my-agent`; it is silently ignored.
 
-:::tip Matches both agent name and agent ID
+:::tip[Matches both agent name and agent ID]
 Both the human-readable name (e.g. `my-agent`) and the UUID (e.g. `abc123-...`) are valid. Use whichever is convenient for the client.
 :::
 

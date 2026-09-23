@@ -19,11 +19,11 @@ Team soft budget alerts let you:
 - **Target specific recipients** — send alerts to specific email addresses (e.g. team leads, finance), not just the team members
 - **Work without global alerting** — team soft budget alerts are sent via email independently of Slack or other global alerting configuration
 
-:::warning Email integration required
+:::warning[Email integration required]
 Team soft budget alerts are sent via email. You must have an active email integration (SendGrid, Resend, or SMTP) configured on your proxy for alerts to be delivered. See [Email Notifications](./email.md) for setup instructions.
 :::
 
-:::info Automatically active
+:::info[Automatically active]
 Team soft budget alerts are **automatically active** once you configure a soft budget and at least one alerting email on a team. No additional proxy configuration or restart is needed; alerts are checked on every request.
 :::
 
@@ -100,7 +100,7 @@ Once the team's spend crosses the soft budget, an email alert is sent to the con
 | **Soft Budget (USD)**           | The spending threshold that triggers an email alert. Requests are **not** blocked when this limit is exceeded.                                |
 | **Soft Budget Alerting Emails** | Comma-separated email addresses that receive the alert when the soft budget is crossed. At least one email is required for alerts to be sent. |
 
-:::tip Soft Budget vs. Max Budget
+:::tip[Soft Budget vs. Max Budget]
 
 - **Soft Budget**: Advisory threshold. Sends email alerts but does **not** block requests.
 - **Max Budget**: Hard limit. Blocks requests once the budget is exceeded.

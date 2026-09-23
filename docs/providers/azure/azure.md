@@ -27,7 +27,7 @@ os.environ["AZURE_AD_TOKEN"] = ""
 os.environ["AZURE_API_TYPE"] = ""
 ```
 
-:::info Azure Foundry Claude Models
+:::info[Azure Foundry Claude Models]
 
 Claude models via Azure Foundry are routed through the `azure_ai/` provider, not `azure/`. Use `azure_ai/claude-*` model names (e.g., `azure_ai/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](/docs/providers/azure/azure_anthropic) for details.
 

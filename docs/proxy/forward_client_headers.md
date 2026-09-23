@@ -86,7 +86,7 @@ When `forward_llm_provider_auth_headers: true`, the following LLM provider authe
 | `api-key` | Azure OpenAI | `api-key: your-azure-key` |
 | `ocp-apim-subscription-key` | Azure APIM | `ocp-apim-subscription-key: your-key` |
 
-:::warning Important Security Note
+:::warning[Important Security Note]
 The proxy's `Authorization` header (used for proxy authentication) is **never** forwarded to LLM providers, even with this setting enabled. This ensures your proxy authentication remains secure.
 :::
 

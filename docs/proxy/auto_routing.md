@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 
 One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, JEV through TypeSafe System One Choice, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier
 
-:::info Availability
+:::info[Availability]
 
 Auto routing is in **beta**, so config keys and defaults can still change between releases. Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
@@ -416,7 +416,7 @@ session_affinity_ttl_seconds: 3600
 
 `session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual, whatever this is set to. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working. `session_affinity` is ignored when routing `plugins` are configured, so a mid-session policy change still applies on later turns rather than being skipped by a cached pin. That is routing `plugins` specifically; a `classifier_plugin` picks the tier on the turns that are classified and leaves the pin in place.
 
-:::info Changed default
+:::info[Changed default]
 
 `session_affinity` used to default to `true`. Routers created before that changed have no `session_affinity` key stored, so they pick up the new `false` default and start reclassifying every turn. Add `session_affinity: true` to any router that should keep pinning.
 
@@ -543,7 +543,7 @@ Because `model` is a standard OpenAI response field, every SDK and framework alr
 
 Two things change once the flag is on. Callers stop getting back the alias they sent, which some clients assert on. And the value is the resolved model as the deployment reports it, so a provider-prefixed identifier such as `hosted_vllm/my-model` reaches the client verbatim rather than the `model_list` `model_name` that the [decision log](#decision-log) prints as `routed_model=`.
 
-:::info No dedicated body field
+:::info[No dedicated body field]
 
 The v1.99 release candidates briefly carried a separate `router_model_name` body field for this ([PR #37725](https://github.com/BerriAI/litellm/pull/37725)), added with LangChain callers in mind. It never reached them: `@langchain/openai` builds `additional_kwargs` and `response_metadata` from fixed key allowlists and drops unknown fields at both the top level of a chunk and inside `delta`, so no proxy-side placement of a namespaced key could work. The field was removed before the stable release in favor of `return_raw_model_name`, which lands in the `model` field that LangChain does propagate.
 
@@ -655,7 +655,7 @@ Both values then appear on `/v1/models`, `/model/info`, and `/model_group/info`,
 
 Where a `model_name` fronts both a router marker and ordinary deployments, `/model_group/info` reports the largest `max_input_tokens` in that group rather than the smallest, since model-group metadata aggregates by maximum across deployments.
 
-:::info Cost fields read zero on a router entry
+:::info[Cost fields read zero on a router entry]
 
 `/model_group/info` reports `input_cost_per_token` and `output_cost_per_token` as `0.0` for an auto router, and its `providers` as an empty string, because custom pricing on a strategy alias is deliberately excluded from the cost map. Spend is still tracked against the tier model that served the request, so those zeros are a gap in this metadata view rather than untracked usage.
 

@@ -789,7 +789,7 @@ asyncio.run(main())
 
 When calling your LiteLLM Proxy's `/v1/responses` endpoint to use MCP tools, use `server_url: "litellm_proxy"` for all permitted servers, or `litellm_proxy/mcp/<server_alias>` for one server in the tools array. This tells the proxy to use its configured MCP servers.
 
-:::important Do not use the full proxy URL
+:::important[Do not use the full proxy URL]
 Using `server_url: "https://your-proxy.com/mcp"` is incorrect when the request is already going to the proxy. Use the [documented sentinel forms](./mcp_config_reference#endpoint-matrix) to route to configured MCP servers. Direct MCP clients use the network URL instead.
 :::
 
@@ -1052,7 +1052,7 @@ Existing deployments can rename the deprecated broadcast header. See the [centra
 
 ## Use MCP tools with `/chat/completions`
 
-:::tip Works with all providers
+:::tip[Works with all providers]
 This flow is **provider-agnostic**: the same MCP tool definition works for _every_ LLM backend behind LiteLLM (OpenAI, Azure OpenAI, Anthropic, Amazon Bedrock, Vertex, self-hosted deployments, etc.).
 :::
 

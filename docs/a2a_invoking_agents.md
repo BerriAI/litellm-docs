@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Learn how to invoke A2A agents through LiteLLM using different methods.
 
-:::tip Deploy Your Own A2A Agent
+:::tip[Deploy Your Own A2A Agent]
 
 Want to test with your own agent? Deploy this template A2A agent powered by Google Gemini:
 
@@ -23,7 +23,7 @@ pip install "a2a-sdk>=1.1.0,<2.0" httpx
 
 Pin `protocolVersion: "1.0"` on the agent (recommended) so responses match the 1.x SDK. For legacy `0.3` wire format, pin `"0.3"` instead. See [Protocol versioning](./a2a#protocol-versioning).
 
-:::info Migration from a2a-sdk 0.3.x
+:::info[Migration from a2a-sdk 0.3.x]
 
 a2a-sdk 1.x replaces `A2AClient` + dict `MessageSendParams` with `ClientFactory`, protobuf `Message` / `Part` types, and `send_message` as an async generator of stream events. See the examples below.
 
@@ -339,7 +339,7 @@ LiteLLM forwards `tasks/get`, `tasks/list`, `tasks/cancel`, push-notification me
 | **A2A SDK** | Native A2A protocol integration | • Full A2A protocol support<br/>• Access to task states and artifacts<br/>• Context management |
 | **OpenAI SDK** | Familiar OpenAI-style interface | • Drop-in replacement for OpenAI calls<br/>• Easier migration from LLM to agent workflows<br/>• Works with existing OpenAI tooling |
 
-:::tip Model Prefix
+:::tip[Model Prefix]
 
 When using the OpenAI SDK, always prefix your agent name with `a2a/` (e.g., `a2a/my-agent`) to route requests to the A2A agent instead of an LLM provider.
 

@@ -78,7 +78,7 @@ curl -X POST "http://localhost:4000/v1/rag/ingest" \
 
 When `index_name` is omitted LiteLLM generates one (`litellm-index-<id>`). Pass an explicit `index_name` to keep ingesting into the same index across requests. The full list of ingest options is in the [RAG Ingest reference](../rag_ingest.md#vector_store-aws-s3-vectors).
 
-:::warning Keep the embedding model consistent
+:::warning[Keep the embedding model consistent]
 The index dimension is fixed at creation time from the ingest embedding model (auto-detected, e.g. 1536 for `text-embedding-3-small`). Searches must embed the query with a model of the same dimension. Set `embedding_model` inside the `vector_store` block (as above) or on the registry entry; if it is not set anywhere, search falls back to `text-embedding-3-small`.
 :::
 

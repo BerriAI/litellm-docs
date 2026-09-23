@@ -46,7 +46,7 @@ The `include_list` keeps metric attributes to a bounded set, which is what lets 
 
 Start the proxy and send a request. Traces land in Tempo, metrics in the hosted Prometheus, both queryable from Explore
 
-:::info Why `Basic%20` and not `Basic `
+:::info[Why `Basic%20` and not `Basic `]
 
 `OTEL_HEADERS` follows the OTLP spec, which encodes values in [W3C Baggage](https://www.w3.org/TR/baggage/#baggage-http-header-format) format, so a space is written `%20`. Grafana Cloud's setup screens hand you the value in exactly this form. A literal space works too
 

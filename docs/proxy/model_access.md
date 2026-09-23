@@ -118,7 +118,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Use the `/v1/models` endpoint to discover available fallback models for a given model. This helps you understand which backup models are available when your primary model is unavailable or restricted.
 
-:::info Extension Point
+:::info[Extension Point]
 
 The `include_metadata` parameter serves as an extension point for exposing additional model metadata in the future. While currently focused on fallback models, this approach will be expanded to include other model metadata such as pricing information, capabilities, rate limits, and more.
 

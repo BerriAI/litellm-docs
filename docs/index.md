@@ -193,7 +193,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 
 📖 [Full output format reference →](/docs/completion/output)
 
-:::tip Open in Colab
+:::tip[Open in Colab]
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_Getting_Started.ipynb">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
@@ -381,7 +381,7 @@ print(response.choices[0].message.content)
 
 👉 [Full proxy quickstart →](/docs/proxy/docker_quick_start)
 
-:::tip Debugging tool
+:::tip[Debugging tool]
 Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 

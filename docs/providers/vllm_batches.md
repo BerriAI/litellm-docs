@@ -54,7 +54,7 @@ Every line has to name the same `url`, and it has to match the `endpoint` you gi
 
 ### 4. Upload File & Create Batch
 
-:::tip Model Routing
+:::tip[Model Routing]
 The upload has to name the deployment, either with the `x-litellm-model` header, the `?model=` query parameter, or the `target_model_names` form field. Use `purpose=batch`: an upload with another purpose to a deployment LiteLLM runs batches for answers 400, because there is no server to keep the file on. The returned file id is a long base64 id, not an OpenAI-style `file-...` id; batch operations on it route to the same deployment automatically
 :::
 
