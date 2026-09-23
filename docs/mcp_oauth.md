@@ -10,6 +10,8 @@ LiteLLM supports several OAuth 2.0 patterns for MCP servers. Every `auth_type: o
 | **Passthrough (transparent)** | n/a (uses `auth_type: true_passthrough`) | Client already holds the upstream token; LiteLLM adds no auth of its own | Forwards the client's `Authorization` verbatim, no LiteLLM admission. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
 | **Delegated upstream OAuth** | n/a (uses `auth_type: oauth_delegate`) | LiteLLM admits the caller; the upstream owns tool authorization | LiteLLM admission plus a separate forwarded upstream bearer, keeps spend and rate limits. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
 
+Per-user tokens from the interactive flow are stored under the calling key's `user_id`. For how that interacts with service-account keys, and for the non-OAuth per-user options (per-request headers, BYOK keys, per-user env vars), see [Per-User and Per-Key Upstream Credentials](./mcp_per_user_auth.md).
+
 ## Interactive OAuth (PKCE)
 
 For user-facing MCP clients (Claude Code, Cursor), LiteLLM supports the full OAuth 2.0 authorization code flow with PKCE.
