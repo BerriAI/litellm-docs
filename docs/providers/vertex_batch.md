@@ -3,7 +3,24 @@ import TabItem from '@theme/TabItem';
 
 # Vertex Batch APIs
 
-Just add the following Vertex env vars to your environment. 
+## Setup
+
+Configure the Vertex model in your config.yaml. `gcs_bucket_name` is the GCS bucket batch prediction files are stored in, a required param for vertexai to store files.
+
+```yaml showLineNumbers title="litellm-config.yaml"
+model_list:
+  - model_name: vertex-batch
+    litellm_params:
+      model: vertex_ai/{{gemini_flash}}
+      vertex_project: my-project
+      vertex_location: us-central1
+      vertex_credentials: /path/to/service_account.json
+      gcs_bucket_name: my-batch-bucket # required param for vertexai to store files
+    model_info:
+      mode: batch
+```
+
+When `gcs_bucket_name` and `vertex_credentials` are not set on the model's `litellm_params`, LiteLLM falls back to these env vars:
 
 ```bash
 # GCS Bucket settings, used to store batch prediction files in
