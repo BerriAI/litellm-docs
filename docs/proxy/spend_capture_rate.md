@@ -58,20 +58,27 @@ general_settings:
 | `providers` | `["openai"]` | Providers to check. `openai` is the only value today |
 | `threshold` | `0.9` | Alert when the rate over the window is under this. Over 0 and at most 1 |
 | `lookback_days` | `7` | Closed UTC days to compare, from yesterday back. 1 to 180 |
-| `openai_project_ids` | `[]` | OpenAI project ids to scope the bill to. Empty means the whole organization |
+| `openai_project_ids` | `[]` | OpenAI project ids to scope the bill to. Empty means the whole organization. Captured spend is never scoped, so list every project LiteLLM's OpenAI keys belong to |
 
 An unknown key or an out-of-range value fails proxy boot with a validation error, so a typo never runs as a silent
-default
+default. The section is read again right before every run, so a change that arrives through a config reload from the
+database applies at the next run without a restart, and an invalid value that arrives that way fails that run with the
+same validation error in the proxy log
 
 The job runs every day at 01:15 UTC, and once about two minutes after the proxy boots so that enabling it gives you a
-first reading right away. When several replicas are deployed it takes a cross-pod Redis lock and one replica runs it
+first reading right away. It runs in every worker process of every replica, so each process sets its own Prometheus
+gauge. When Redis is configured, a replica whose finished check has something to alert on claims a cross-replica lock
+held for 15 minutes, and only the replica that claimed it sends the alert, so a window under the threshold produces
+one alert rather than one per worker. A replica whose check failed part way never claims the lock, so it cannot
+silence a replica that got through. Without Redis, or when the lock cannot be read, every replica alerts, since a
+missed alert costs more than a duplicate
 
 The check publishes the rate to Prometheus and alerts through the proxy's configured [alerting](./alerting) (alert
 type `failed_tracking_spend`, level High) when the rate over the window is under the threshold, when
 `OPENAI_ADMIN_KEY` is not set on the proxy, or when the OpenAI costs API cannot be read. The alert names the rate, the
 threshold, the captured and billed dollars, and the date range, and links back to this page
 
-A window where OpenAI billed nothing has no rate: nothing is published and nothing alerts. A rate above 1.0 is
+A window where OpenAI billed nothing has no rate: the gauge is set to `NaN` and nothing alerts. A rate above 1.0 is
 published but never alerts
 
 ## Prometheus gauge
@@ -81,10 +88,13 @@ publishes one gauge:
 
 | Metric | Labels | Value |
 | --- | --- | --- |
-| `litellm_spend_capture_rate` | `api_provider` | The rate over the check's window |
+| `litellm_spend_capture_rate` | `api_provider` | The rate over the check's window. `NaN` when the last check produced no rate |
 
-Only the scheduled check sets the gauge. The on-demand endpoint below never touches it, and a window with no bill
-leaves it as it was
+Only the scheduled check sets the gauge. The on-demand endpoint below never touches it. A check that produced no rate
+(OpenAI billed nothing, `OPENAI_ADMIN_KEY` is not set, or the costs API could not be read) sets it to `NaN` rather than
+leaving the last good value in place, so a stale rate never reads as current. `NaN` compares false in PromQL, so the
+rule below stays quiet on it; the missing-key and unreadable-bill cases reach you through the proxy's own alert
+instead
 
 A Prometheus alerting rule that fires when the rate stays under 0.9 for an hour:
 
@@ -119,7 +129,7 @@ curl "http://localhost:4000/spend/capture_rate?provider=openai&start_date=2026-0
 | `end_date` | yes | | Last UTC day, `YYYY-MM-DD`, inclusive |
 | `provider` | no | `openai` | Provider to compare. `openai` is the only value today |
 | `threshold` | no | `0.9` | Ratio under which `below_threshold` is true. Over 0 and at most 1 |
-| `project_ids` | no | | OpenAI project ids to scope the bill to. Repeat it for several |
+| `project_ids` | no | | OpenAI project ids to scope the bill to. Repeat it for several. Captured spend is never scoped |
 
 Response:
 
@@ -145,8 +155,9 @@ case `below_threshold` is `false`. Values are returned as computed, without roun
 
 | Status | When |
 | --- | --- |
-| `400` | `end_date` is before `start_date` |
-| `403` | The key is not a proxy admin |
+| `400` | `end_date` is before `start_date`, or the range is over 180 days |
+| `401` | The key is not a proxy admin |
+| `422` | A query parameter fails validation, such as a malformed date or a `threshold` outside (0, 1] |
 | `500` | The proxy has no database |
 | `502` | The OpenAI costs API could not be read. The detail carries OpenAI's status and message |
 | `503` | `OPENAI_ADMIN_KEY` is not set on the proxy |
@@ -156,10 +167,11 @@ case `below_threshold` is `false`. Values are returned as computed, without roun
 The comparison is per closed UTC day. The scheduled check never includes today, and an endpoint range that includes
 today is partial on both sides, so read today's row as in progress rather than as a gap
 
-The OpenAI bill is organization-wide unless `openai_project_ids` (or `project_ids` on the endpoint) scopes it. An
-organization with any traffic outside LiteLLM reads under 1.0 for that reason alone. Scope the check to the project
-or projects LiteLLM's keys belong to, or treat the gap as a measure of the direct traffic and raise it with the teams
-sending it
+The OpenAI bill is organization-wide unless `openai_project_ids` (or `project_ids` on the endpoint) scopes it, while
+captured spend is always everything LiteLLM tracked for OpenAI. An organization with any traffic outside LiteLLM reads
+under 1.0 for that reason alone. Scope the check to every project LiteLLM's keys belong to (leaving one out makes the
+rate read high, since its captured spend still counts), or treat the gap as a measure of the direct traffic and raise
+it with the teams sending it
 
 Every deployment configured with `custom_llm_provider: openai` counts as captured spend, including one whose
 `api_base` points at an OpenAI-compatible server such as a vLLM box or another gateway. That spend never shows up on
