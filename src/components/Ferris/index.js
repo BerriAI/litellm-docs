@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useLocation} from '@docusaurus/router';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
 const LINES = [
@@ -13,28 +14,48 @@ const LINES = [
   'rust never sleeps. i do.',
 ];
 
-const EYES = {idle: 0, peek: -3, drag: 1, poke: 2};
-
 export default function Ferris() {
   const {pathname} = useLocation();
+  const ferris = useBaseUrl('/img/ferris.svg');
+  const train = useBaseUrl('/img/litellm-train-nose.png');
   const crab = useRef(null);
-  const [pos, setPos] = useState({x: 28, y: 28});
-  const [mood, setMood] = useState('idle');
+  const [x, setX] = useState(24);
+  const [facing, setFacing] = useState(1);
   const [line, setLine] = useState(null);
-  const drag = useRef(null);
+  const [poked, setPoked] = useState(false);
+  const paused = useRef(false);
   const hideTimer = useRef(null);
 
   useEffect(() => {
-    const place = () => {
-      const width = crab.current?.offsetWidth ?? 92;
-      setPos({
-        x: Math.max(16, window.innerWidth - width - 28),
-        y: Math.max(16, window.innerHeight - 132),
-      });
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return undefined;
+    let frame;
+    let last = performance.now();
+    let dir = 1;
+    const step = (now) => {
+      const dt = Math.min(48, now - last);
+      last = now;
+      if (!paused.current) {
+        const width = crab.current?.offsetWidth ?? 150;
+        const max = Math.max(8, window.innerWidth - width - 8);
+        setX((current) => {
+          let next = current + dir * dt * 0.07;
+          if (next <= 8) {
+            next = 8;
+            dir = 1;
+            setFacing(1);
+          } else if (next >= max) {
+            next = max;
+            dir = -1;
+            setFacing(-1);
+          }
+          return next;
+        });
+      }
+      frame = requestAnimationFrame(step);
     };
-    place();
-    window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
   }, [pathname]);
 
   useEffect(() => () => clearTimeout(hideTimer.current), []);
@@ -45,40 +66,10 @@ export default function Ferris() {
     hideTimer.current = setTimeout(() => setLine(null), 2600);
   };
 
-  const onPointerDown = (event) => {
-    if (event.button !== 0) return;
-    const rect = crab.current.getBoundingClientRect();
-    drag.current = {
-      dx: event.clientX - rect.left,
-      dy: event.clientY - rect.top,
-      moved: false,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setMood('drag');
-  };
-
-  const onPointerMove = (event) => {
-    if (!drag.current) return;
-    drag.current.moved = true;
-    const width = crab.current.offsetWidth;
-    const height = crab.current.offsetHeight;
-    setPos({
-      x: Math.min(Math.max(8, event.clientX - drag.current.dx), window.innerWidth - width - 8),
-      y: Math.min(Math.max(8, event.clientY - drag.current.dy), window.innerHeight - height - 8),
-    });
-  };
-
-  const onPointerUp = () => {
-    if (!drag.current) return;
-    const moved = drag.current.moved;
-    drag.current = null;
-    if (moved) {
-      setMood('idle');
-      return;
-    }
-    setMood('poke');
+  const onClick = () => {
+    setPoked(true);
     say(LINES[Math.floor(Math.random() * LINES.length)]);
-    window.setTimeout(() => setMood('idle'), 700);
+    window.setTimeout(() => setPoked(false), 700);
   };
 
   if (!pathname.startsWith('/docs')) return null;
@@ -87,34 +78,23 @@ export default function Ferris() {
     <div
       ref={crab}
       className={styles.crab}
-      style={{left: pos.x, top: pos.y}}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}>
+      style={{transform: `translateX(${x}px)`}}
+      onMouseEnter={() => {
+        paused.current = true;
+      }}
+      onMouseLeave={() => {
+        paused.current = false;
+      }}>
       {line && <div className={styles.bubble}>{line}</div>}
       <button
         type="button"
         className={styles.button}
-        aria-label="Ferris, the Rust mascot. Drag to move, click for a line.">
-        <svg viewBox="0 0 120 96" className={styles.svg} aria-hidden="true">
-          <g className={styles.clawLeft}>
-            <path d="M28 34c-8-10-20-8-22 2-2 8 6 14 14 12" />
-            <path d="M24 42c-9 2-14 10-10 16 4 6 12 2 14-4" />
-          </g>
-          <g className={styles.clawRight}>
-            <path d="M92 34c8-10 20-8 22 2 2 8-6 14-14 12" />
-            <path d="M96 42c9 2 14 10 10 16-4 6-12 2-14-4" />
-          </g>
-          <ellipse className={styles.body} cx="60" cy="52" rx="34" ry="26" />
-          <g className={styles.eyes} style={{transform: `translateY(${EYES[mood]}px)`}}>
-            <circle cx="46" cy="30" r="11" />
-            <circle cx="74" cy="30" r="11" />
-            <circle className={styles.pupil} cx="48" cy="31" r="4.2" />
-            <circle className={styles.pupil} cx="76" cy="31" r="4.2" />
-          </g>
-          <path className={styles.smile} d="M50 58c4 6 16 6 20 0" />
-        </svg>
+        onClick={onClick}
+        aria-label="Ferris, walking the bottom of the page with the LiteLLM train. Click for a line.">
+        <span className={`${styles.stage} ${poked ? styles.poke : ''}`} style={{scale: `${facing} 1`}}>
+          <img className={styles.ferris} src={ferris} alt="" />
+          <img className={styles.train} src={train} alt="" />
+        </span>
       </button>
     </div>
   );

@@ -1,8 +1,10 @@
 .crab {
   position: fixed;
   z-index: 200;
-  width: 92px;
-  touch-action: none;
+  bottom: 0;
+  left: 0;
+  width: 132px;
+  touch-action: manipulation;
   user-select: none;
 }
 
@@ -12,74 +14,47 @@
   padding: 0;
   border: 0;
   background: transparent;
-  cursor: grab;
+  cursor: pointer;
 }
 
-.button:active {
-  cursor: grabbing;
+.stage {
+  position: relative;
+  display: block;
+  transform-origin: 50% 100%;
+  animation: walk 0.42s ease-in-out infinite;
 }
 
-.svg {
+.poke {
+  animation: boop 0.55s ease;
+}
+
+.ferris {
   display: block;
   width: 100%;
   height: auto;
-  overflow: visible;
-  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 18%));
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 16%));
 }
 
-.body,
-.eyes circle,
-.clawLeft,
-.clawRight {
-  fill: none;
-  stroke: #ce422b;
-  stroke-width: 5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.body {
-  fill: #f4efe6;
-}
-
-.eyes circle {
-  fill: #fffdf8;
-}
-
-.pupil {
-  fill: #1f2328;
-  stroke: none;
-}
-
-.smile {
-  fill: none;
-  stroke: #ce422b;
-  stroke-width: 4;
-  stroke-linecap: round;
-}
-
-.eyes {
-  transform-box: fill-box;
-  transition: transform 180ms ease;
-}
-
-.clawLeft,
-.clawRight {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: wave 2.4s ease-in-out infinite;
-}
-
-.clawRight {
-  animation-delay: -1.2s;
+/* Train nose from the transparent logo, tucked between the raised claws */
+.train {
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  width: 28%;
+  height: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 18%));
+  animation: carry 0.42s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .bubble {
   position: absolute;
-  right: 0;
-  bottom: calc(100% + 8px);
+  left: 50%;
+  bottom: calc(100% + 10px);
   width: max-content;
   max-width: 180px;
+  transform: translateX(-50%);
   padding: 0.45rem 0.65rem;
   border-radius: 12px;
   background: #1f2328;
@@ -92,34 +67,55 @@
 .bubble::after {
   content: '';
   position: absolute;
-  right: 28px;
+  left: 50%;
   bottom: -6px;
+  transform: translateX(-50%);
   border: 6px solid transparent;
   border-top-color: #1f2328;
   border-bottom: 0;
 }
 
-@keyframes wave {
+@keyframes walk {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: translateY(0) rotate(-2.5deg);
   }
   50% {
-    transform: rotate(-8deg);
+    transform: translateY(-5px) rotate(2.5deg);
+  }
+}
+
+@keyframes carry {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(-4deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(4deg);
+  }
+}
+
+@keyframes boop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08) rotate(-4deg);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
 @media (max-width: 576px) {
   .crab {
-    width: 72px;
+    width: 112px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .clawLeft,
-  .clawRight,
-  .eyes {
+  .stage,
+  .train {
     animation: none;
-    transition: none;
   }
 }
