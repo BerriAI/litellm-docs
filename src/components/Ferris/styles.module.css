@@ -1,11 +1,20 @@
 .crab {
   position: fixed;
-  z-index: 200;
-  bottom: 0;
-  left: 0;
+  z-index: 40;
+  bottom: -6px;
+  left: -46px;
   width: 132px;
+  /* Corner seat, tipped toward the page so the eyes clear the edge */
+  transform: rotate(16deg);
+  transform-origin: 18% 88%;
+  transition: transform 280ms ease;
   touch-action: manipulation;
   user-select: none;
+}
+
+.open,
+.crab:focus-within {
+  transform: rotate(8deg) translateX(10px);
 }
 
 .button {
@@ -20,12 +29,6 @@
 .stage {
   position: relative;
   display: block;
-  transform-origin: 50% 100%;
-  animation: walk 0.42s ease-in-out infinite;
-}
-
-.poke {
-  animation: boop 0.55s ease;
 }
 
 .ferris {
@@ -35,7 +38,6 @@
   filter: drop-shadow(0 6px 6px rgb(0 0 0 / 16%));
 }
 
-/* Train nose from the transparent logo, tucked between the raised claws */
 .train {
   position: absolute;
   top: 7%;
@@ -44,17 +46,15 @@
   height: auto;
   transform: translateX(-50%);
   filter: drop-shadow(0 2px 2px rgb(0 0 0 / 18%));
-  animation: carry 0.42s ease-in-out infinite;
   pointer-events: none;
 }
 
 .bubble {
   position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
+  left: 108%;
+  bottom: 70%;
   width: max-content;
   max-width: 180px;
-  transform: translateX(-50%);
   padding: 0.45rem 0.65rem;
   border-radius: 12px;
   background: #1f2328;
@@ -67,55 +67,21 @@
 .bubble::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%);
+  left: -6px;
+  bottom: 12px;
   border: 6px solid transparent;
-  border-top-color: #1f2328;
-  border-bottom: 0;
+  border-right-color: #1f2328;
+  border-left: 0;
 }
 
-@keyframes walk {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2.5deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(2.5deg);
-  }
-}
-
-@keyframes carry {
-  0%,
-  100% {
-    transform: translateX(-50%) rotate(-4deg);
-  }
-  50% {
-    transform: translateX(-50%) rotate(4deg);
-  }
-}
-
-@keyframes boop {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.08) rotate(-4deg);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 576px) {
+@media (max-width: 996px) {
   .crab {
-    width: 112px;
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage,
-  .train {
-    animation: none;
+  .crab {
+    transition: none;
   }
 }
