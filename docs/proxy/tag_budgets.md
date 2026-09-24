@@ -279,6 +279,44 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
          }'
 ```
 
+### Restrict a Tag to One Team
+
+A tag can optionally be owned by a team. Once a tag has an owning team, only keys whose `team_id` matches that team can send it on a request. Keys of another team, keys with no team, and the master key get a `403` that names the tag and the owning team, before any spend is recorded. Tags without an owner, and tags that were never created via `/tag/new`, keep working for every key. This keeps another team from sending your tag and polluting your per-team spend reports
+
+Set the owner when creating the tag, or later with `/tag/update`. Omitting `team_id` on an update keeps the current owner; sending `"team_id": null` clears it. Only a proxy admin or an admin of the team(s) involved can set or change the owner, and the team must already exist
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/new' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+           "name": "engineering",
+           "team_id": "team-eng-123"
+         }'
+
+curl -X POST 'http://0.0.0.0:4000/tag/update' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+           "name": "engineering",
+           "team_id": null
+         }'
+```
+
+A request carrying the tag from a key of another team is rejected:
+
+```json
+{
+  "error": {
+    "message": "{'error': 'Tag engineering is owned by team team-eng-123 and can only be sent by keys of that team'}",
+    "type": "auth_error",
+    "code": "403"
+  }
+}
+```
+
+In the Admin UI, the owning team is set from the optional Owning Team field on the create tag form and on the tag's edit view, and shown in the Owning Team column of the tag table. `/tag/info` and `/tag/list` return it as `team_id`
+
 ### Delete Tag
 
 ```shell
