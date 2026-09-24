@@ -418,7 +418,7 @@ A group can also carry one shared budget that every key granted the group draws 
 
 ### API Reference - Access Group Management
 
-For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://litellm-api.up.railway.app/#/model%20management/create_model_group_access_group_new_post).
+For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://docs.litellm.ai/api-reference/#/model%20management/create_model_group_access_group_new_post).
 
 ## Managing Access Groups via UI
 

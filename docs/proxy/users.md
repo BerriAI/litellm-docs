@@ -89,7 +89,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -292,7 +292,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -1035,7 +1035,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -1101,7 +1101,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -1116,7 +1116,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Expected Response**
 

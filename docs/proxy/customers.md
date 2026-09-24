@@ -503,7 +503,7 @@ Create and assign customers to pricing tiers.
 </TabItem>
 <TabItem value="api" label="API">
 
-Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://litellm-api.up.railway.app/#/budget%20management/new_budget_budget_new_post)
+Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management/new_budget_budget_new_post)
 
 ```bash showLineNumbers title="Create budget via API"
 curl -X POST 'http://localhost:4000/budget/new' \

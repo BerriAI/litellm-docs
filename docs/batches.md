@@ -620,4 +620,4 @@ The initial submission and the completed aggregate are recorded separately. The 
 
 Batch cost tracking does not change the TPM or RPM counters reserved at submission. Those counters remain based on the input-file calculation described above.
 
-## [Swagger API Reference](https://litellm-api.up.railway.app/#/batch)
+## [Swagger API Reference](https://docs.litellm.ai/api-reference/#/batch)

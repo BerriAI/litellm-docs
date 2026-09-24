@@ -12,6 +12,7 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
+    "update:openapi": "bash scripts/update-openapi.sh",
     "update:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs",
     "check:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs --check",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
