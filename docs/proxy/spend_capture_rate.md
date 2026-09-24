@@ -64,7 +64,10 @@ An unknown key or an out-of-range value fails proxy boot with a validation error
 default
 
 The job runs every day at 01:15 UTC, and once about two minutes after the proxy boots so that enabling it gives you a
-first reading right away. When several replicas are deployed it takes a cross-pod Redis lock and one replica runs it
+first reading right away. It runs in every worker process of every replica, so each process sets its own Prometheus
+gauge. When Redis is configured, a cross-replica lock held for 15 minutes picks one replica to send the alert, so a
+window under the threshold produces one alert rather than one per worker. Without Redis, or when the lock cannot be
+read, every replica alerts, since a missed alert costs more than a duplicate
 
 The check publishes the rate to Prometheus and alerts through the proxy's configured [alerting](./alerting) (alert
 type `failed_tracking_spend`, level High) when the rate over the window is under the threshold, when
