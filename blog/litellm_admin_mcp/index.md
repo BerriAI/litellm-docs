@@ -10,12 +10,14 @@ image: ./hero.png
 ---
 
 import ThemedImage from '@theme/ThemedImage';
+import HeroLight from './hero.png';
+import HeroDark from './hero-dark.png';
 
 <ThemedImage
   alt="Manage your gateway with LiteLLM Admin MCP. Create virtual keys and add model deployments from your MCP client."
   sources={{
-    light: require('./hero.png').default,
-    dark: require('./hero-dark.png').default,
+    light: HeroLight,
+    dark: HeroDark,
   }}
   style={{width: '100%'}}
 />
