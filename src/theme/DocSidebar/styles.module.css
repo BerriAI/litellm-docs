@@ -71,3 +71,9 @@
 .sidebarScroll :global(.menu) {
   padding-top: 0.25rem;
 }
+
+/* Collapse chevron sits under the scroll area, like the docusaurus.io sidebar. */
+.sidebarContainer > button {
+  flex-shrink: 0;
+  width: 100%;
+}
