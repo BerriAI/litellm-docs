@@ -264,6 +264,17 @@ curl -X POST 'http://0.0.0.0:4000/tag/info' \
 }
 ```
 
+### View Virtual Keys Using a Tag
+
+Keys carry tags through the key's `tags` field on `/key/generate` and `/key/update` (an enterprise feature), stored in the key's `metadata.tags`. To list the keys that carry a tag, pass `tag` to `/key/list`. It is an exact match on the tag name and combines with the other `/key/list` filters, such as `team_id`. It never widens what the caller is already allowed to see.
+
+```shell
+curl -X GET 'http://0.0.0.0:4000/key/list?tag=engineering&team_id=team-a' \
+     -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+On the Admin UI, click a tag in **Tag Management** to open its details page. The **Virtual Keys** card lists the keys carrying that tag, with the key alias (or the masked key name when there is no alias) linking to the key, its team ID and its spend. It shows "No virtual keys use this tag" when there are none. At most 100 keys are shown, most recently created first, with a note when there are more.
+
 ### Update Tag Budget
 
 Update an existing tag's budget:
