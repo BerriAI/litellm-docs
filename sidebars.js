@@ -15,8 +15,8 @@
 const sidebars = {
   // // By default, Docusaurus generates a sidebar from the docs folder structure
   integrationsSidebar: [
-    { type: "doc", id: "integrations/index" },
-    { type: "doc", id: "integrations/community" },
+    { type: "doc", translatable: true, id: "integrations/index" },
+    { type: "doc", translatable: true, id: "integrations/community" },
     {
       type: "category",
       label: "Observability",
@@ -289,9 +289,9 @@ const sidebars = {
         "tutorials/google_genai_sdk",
         "tutorials/livekit_xai_realtime",
         "integrations/letta",
-        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM" },
-        { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM" },
+        { type: "doc", translatable: true, id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM" },
+        { type: "doc", translatable: true, id: "tutorials/instructor", label: "Instructor with LiteLLM" },
+        { type: "doc", translatable: true, id: "langchain/langchain", label: "LangChain with LiteLLM" },
         "projects/openai-agents"
       ]
     },
@@ -321,10 +321,10 @@ const sidebars = {
       collapsible: false,
       collapsed: false,
       items: [
-        { type: "doc", id: "index", label: "Quickstart" },
+        { type: "doc", translatable: true, id: "index", label: "Quickstart" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
-        { type: "doc", id: "benchmarks", label: "Benchmarks" },
+        { type: "doc", translatable: true, id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -431,7 +431,7 @@ const sidebars = {
           type: "category",
           label: "Deploy the Gateway",
           items: [
-            { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+            { type: "doc", translatable: true, id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
             "proxy/manifests_to_microservices",
             "proxy/prod",
@@ -521,7 +521,7 @@ const sidebars = {
                 "skills_gateway",
               ],
             },
-            { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
+            { type: "doc", translatable: true, id: "auth_overview", label: "Gateway Auth Reference" },
           ],
         },
         {
@@ -1235,7 +1235,7 @@ const sidebars = {
         "providers/nlp_cloud",
         "providers/nano-gpt",
         "providers/novita",
-        { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
+        { type: "doc", translatable: true, id: "providers/nscale", label: "Nscale (EU Sovereign)" },
         {
           type: "category",
           label: "Nvidia NIM",
@@ -1468,7 +1468,7 @@ const sidebars = {
 const learnSidebar = {
   learnSidebar: [
     // ── Landing page ──────────────────────────────────────────────────
-    { type: "doc", id: "learn/index", label: "Learn" },
+    { type: "doc", translatable: true, id: "learn/index", label: "Learn" },
     {
       type: "category",
       label: "Start Here",
@@ -1480,7 +1480,7 @@ const learnSidebar = {
         "learn/enterprise_quickstart",
       ],
     },
-    { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
+    { type: "doc", translatable: true, id: "learn/autorouter_cli", label: "lite autoroute" },
 
     // ── Guides ────────────────────────────────────────────────────────
     {
@@ -1779,14 +1779,14 @@ const learnSidebar = {
 
 const autoRouterSidebar = {
   autoRouterSidebar: [
-    { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/evaluate", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/feature_history", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/user_setup", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/benchmarks", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/evaluate", className: "autorouter-nav-item" },
+    { type: "doc", translatable: true, id: "auto_router/feature_history", className: "autorouter-nav-item" },
     {
       type: "category",
       label: "Reference",
