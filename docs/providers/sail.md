@@ -143,6 +143,16 @@ model_list:
       input_cost_per_token: 0.00000008
       output_cost_per_token: 0.00000028
       cache_read_input_token_cost: 0.00000002
+  - model_name: glm-5.3-flash-flex
+    litellm_params:
+      model: sail/zai-org/GLM-5.3-Flash
+      api_key: os.environ/SAIL_API_KEY
+      extra_body:
+        metadata:
+          completion_window: flex
+      input_cost_per_token: 0.00000005
+      output_cost_per_token: 0.00000018
+      cache_read_input_token_cost: 0.00000001
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -200,9 +210,8 @@ curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
-    "model": "glm-5.3-flash",
+    "model": "glm-5.3-flash-flex",
     "input": "hello from litellm",
-    "metadata": {"completion_window": "flex"},
     "background": true
   }'
 ```
@@ -216,7 +225,9 @@ You can also add Sail from the Admin UI. Go to Models, then Add Model, pick Sail
 
 The `sail/` models are registered in LiteLLM's model cost map at Sail's `asap` prices, so per-request spend is computed automatically, returned in the `x-litellm-response-cost` response header, and recorded in spend logs under provider `sail`. Cached input tokens reported by Sail are billed at the cache read rate
 
-Sail charges less for `balanced` and `flex`, and LiteLLM does not read the window back out of the request. For a deployment pinned to one of those windows, set `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` on that deployment to the matching Sail price, as in the proxy config above. Those overrides take precedence over the cost map
+Sail charges less for `balanced` and `flex`, and LiteLLM does not read the window back out of the request. For a deployment pinned to one of those windows, set `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` on that deployment to the matching Sail price, as in the proxy config above. Those overrides take precedence over the cost map. A per-request `completion_window` on a deployment without overrides is still billed at that deployment's price, so route windows through their own deployments when the price matters
+
+A background Responses request returns before Sail has generated anything, so there is no usage to price at request time. The proxy records that spend later through its [background cost poller](../response_api#background-cost-tracking), which needs a Postgres database and the enterprise package; the minimal config above submits the request but does not log its spend
 
 ## Unsupported OpenAI parameters
 
