@@ -37,6 +37,10 @@ function isRcVersion(version) {
   return semver.valid(version) !== null && semver.prerelease(version)?.[0] === 'rc';
 }
 
+function isStableVersion(version) {
+  return semver.valid(version) !== null && semver.prerelease(version) === null;
+}
+
 function baseVersion(version) {
   const parsed = semver.parse(version);
   if (!parsed) {
@@ -66,10 +70,14 @@ async function generateSnapshot() {
     request(RELEASES_URL, 'application/vnd.github+json'),
     request(PYPROJECT_URL, 'text/plain'),
   ]);
-  const releases = JSON.parse(releasesBody)
+  const allReleases = JSON.parse(releasesBody)
     .map(release => ({version: release.tag_name, releasedAt: release.published_at}))
-    .filter(release => isRcVersion(release.version) && release.releasedAt)
+    .filter(release => release.releasedAt && semver.valid(release.version) !== null)
     .sort((left, right) => semver.compare(left.version, right.version));
+  const releases = allReleases.filter(release => isRcVersion(release.version));
+  // Every stable release and RC in the fetched window, so readers can look up
+  // the one they run. `published` stays the chart's short window.
+  const stable = allReleases.filter(release => isStableVersion(release.version));
   const projectVersion = pyproject.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
   if (!projectVersion || semver.valid(projectVersion) === null) {
     throw new Error('Could not read a valid project version from main/pyproject.toml');
@@ -86,6 +94,8 @@ async function generateSnapshot() {
   return `${JSON.stringify({
     source: 'BerriAI/litellm',
     published,
+    candidates: releases,
+    stable,
     main,
   }, null, 2)}\n`;
 }
