@@ -38,7 +38,7 @@ jobs:
           bash scripts/update-openapi.sh http://localhost:4000
       - name: Resolve installed litellm version
         id: version
-        run: echo "litellm_version=$(python -c "import litellm; print(litellm.__version__)")" >> "$GITHUB_OUTPUT"
+        run: echo "litellm_version=$(python -c "from importlib.metadata import version; print(version('litellm'))")" >> "$GITHUB_OUTPUT"
       - uses: peter-evans/create-pull-request@v7
         id: pr
         with:
