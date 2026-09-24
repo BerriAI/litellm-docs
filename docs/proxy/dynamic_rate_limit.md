@@ -343,3 +343,38 @@ This video walks through setting up dynamic rate limiting with priority reservat
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
+## PTU share ceilings on Azure provisioned deployments
+
+An Azure provisioned throughput (PTU) deployment split across teams with `model_info.ptu_shares` gets a per-team, per-minute ceiling without any `model_tpm_limit` worked out by hand. The proxy converts each team's share through the Azure sizing table it ships (input TPM per PTU and the output-to-input ratio for the model) and charges each request in Azure's normalized tokens, so the ceiling stays in step with the reservation when the shares change:
+
+```yaml
+model_list:
+  - model_name: gpt-4.1-ptu
+    litellm_params:
+      model: azure/<your-deployment-name>
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+    model_info:
+      id: gpt-4.1-ptu-shared
+      base_model: gpt-4.1
+      ptu_count: 50
+      cost_per_ptu_per_hour: 1.0
+      ptu_effective_from: "2026-01-01T00:00:00Z"
+      ptu_shares:
+        <team a id>: 30
+        <team b id>: 20
+```
+
+Team A's 30 PTUs of gpt-4.1 are 30 x 3,000 = 90,000 normalized tokens a minute (output counted at 4x), and the first request past that gets a 429 while team B keeps its own 20 PTUs:
+
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type: tokens. Current limit: 90000, Remaining: 0. Limit resets at: ...",
+    "type": "throttling_error",
+    "code": "429"
+  }
+}
+```
+
+The ceiling shares the per-minute window of a team's `model_tpm_limit` and needs only `LITELLM_ENABLE_PTU_COST_ATTRIBUTION=True`. Setup, the cost split by share, and PTU-hours on the usage routes are covered in [Azure PTU Flat Cost Attribution](./ptu_flat_cost.md#share-a-deployment-across-teams)
