@@ -432,6 +432,7 @@ const sidebars = {
           items: [
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
+            "proxy/manifests_to_microservices",
             "proxy/prod",
             "proxy/redis_requirements",
             "proxy/db_sizing",
