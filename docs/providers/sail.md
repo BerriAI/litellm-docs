@@ -227,7 +227,7 @@ The `sail/` models are registered in LiteLLM's model cost map at Sail's `asap` p
 
 Sail charges less for `balanced` and `flex`, and LiteLLM does not read the window back out of the request. For a deployment pinned to one of those windows, set `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` on that deployment to the matching Sail price, as in the proxy config above. Those overrides take precedence over the cost map. A per-request `completion_window` on a deployment without overrides is still billed at that deployment's price, so route windows through their own deployments when the price matters
 
-A background Responses request returns before Sail has generated anything, so there is no usage to price at request time. The proxy records that spend later through its [background cost poller](../response_api#background-cost-tracking), which needs a Postgres database and the enterprise package; the minimal config above submits the request but does not log its spend
+A background Responses request returns before Sail has generated anything, so there is no usage to price at request time. The proxy records that spend later through its [background cost poller](../response_api#cost-tracking-for-background-responses), which needs a Postgres database and the enterprise package; the minimal config above submits the request but does not log its spend
 
 ## Unsupported OpenAI parameters
 
