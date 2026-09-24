@@ -6,7 +6,7 @@ import {
   FEATURES,
   LATEST_STABLE_VERSION,
   MAIN_VERSION,
-  RELEASES,
+  RC_RELEASES,
   STABLE_RELEASES,
   STAGES,
 } from '@site/src/data/rustMigration';
@@ -25,7 +25,7 @@ const VERSION_INFO = new Map([
     date: release.date,
     kind: release.version === LATEST_STABLE_VERSION ? 'Latest stable' : 'Stable',
   }]),
-  ...RELEASES.filter(release => !release.isMain).map(release => [release.version, {date: release.date, kind: 'RC'}]),
+  ...RC_RELEASES.map(release => [release.version, {date: release.date, kind: 'RC'}]),
 ]);
 const VERSIONS = [...VERSION_INFO.keys()].sort(semver.rcompare);
 const DEFAULT_VERSION = LATEST_STABLE_VERSION ?? VERSIONS[0];

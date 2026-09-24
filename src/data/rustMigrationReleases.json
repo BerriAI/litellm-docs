@@ -42,6 +42,96 @@
       "releasedAt": "2026-09-20T07:10:47Z"
     }
   ],
+  "candidates": [
+    {
+      "version": "v1.91.0-rc.1",
+      "releasedAt": "2026-06-28T03:46:48Z"
+    },
+    {
+      "version": "v1.92.0-rc.1",
+      "releasedAt": "2026-07-05T00:32:05Z"
+    },
+    {
+      "version": "v1.92.0-rc.2",
+      "releasedAt": "2026-07-09T00:15:47Z"
+    },
+    {
+      "version": "v1.93.0-rc.1",
+      "releasedAt": "2026-07-12T01:31:27Z"
+    },
+    {
+      "version": "v1.93.0-rc.2",
+      "releasedAt": "2026-07-16T05:26:50Z"
+    },
+    {
+      "version": "v1.94.0-rc.1",
+      "releasedAt": "2026-07-19T00:14:52Z"
+    },
+    {
+      "version": "v1.94.0-rc.2",
+      "releasedAt": "2026-07-20T22:12:27Z"
+    },
+    {
+      "version": "v1.94.0-rc.3",
+      "releasedAt": "2026-07-22T04:32:29Z"
+    },
+    {
+      "version": "v1.95.0-rc.1",
+      "releasedAt": "2026-07-30T00:12:53Z"
+    },
+    {
+      "version": "v1.95.0-rc.2",
+      "releasedAt": "2026-07-31T03:55:34Z"
+    },
+    {
+      "version": "v1.95.0-rc.3",
+      "releasedAt": "2026-08-01T01:15:56Z"
+    },
+    {
+      "version": "v1.96.0-rc.1",
+      "releasedAt": "2026-08-03T19:18:02Z"
+    },
+    {
+      "version": "v1.97.0-rc.1",
+      "releasedAt": "2026-08-08T23:40:43Z"
+    },
+    {
+      "version": "v1.98.0-rc.1",
+      "releasedAt": "2026-08-16T03:12:53Z"
+    },
+    {
+      "version": "v1.99.0-rc.1",
+      "releasedAt": "2026-08-23T00:23:56Z"
+    },
+    {
+      "version": "v1.99.0-rc.2",
+      "releasedAt": "2026-08-30T03:47:19Z"
+    },
+    {
+      "version": "v1.100.0-rc.1",
+      "releasedAt": "2026-08-30T03:26:35Z"
+    },
+    {
+      "version": "v1.101.0-rc.1",
+      "releasedAt": "2026-09-06T03:20:59Z"
+    },
+    {
+      "version": "v1.101.0-rc.2",
+      "releasedAt": "2026-09-10T07:39:23Z"
+    },
+    {
+      "version": "v1.102.0-rc.1",
+      "releasedAt": "2026-09-13T04:56:38Z"
+    },
+    {
+      "version": "v1.102.0-rc.2",
+      "releasedAt": "2026-09-16T20:29:51Z"
+    },
+    {
+      "version": "v1.103.0-rc.1",
+      "releasedAt": "2026-09-20T07:10:47Z"
+    }
+  ],
   "stable": [
     {
       "version": "v1.85.7",

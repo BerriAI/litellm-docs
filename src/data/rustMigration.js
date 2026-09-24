@@ -261,6 +261,12 @@ export const STABLE_RELEASES = releaseSnapshot.stable
 
 export const LATEST_STABLE_VERSION = STABLE_RELEASES.at(-1)?.version;
 
+// Every published RC in the snapshot, oldest first. The timeline above only
+// keeps the latest few; this is the full list readers pick their version from.
+export const RC_RELEASES = releaseSnapshot.candidates
+  .map(release => ({version: release.version, date: release.releasedAt}))
+  .sort((left, right) => semver.compare(left.version, right.version));
+
 function checkVersion(version) {
   if (semver.valid(version) === null || semver.prerelease(version)?.[0] !== 'rc') {
     fail(`versions must be RC semver versions: ${version}`);

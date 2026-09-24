@@ -387,16 +387,26 @@ const FAQ = [
   {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
 ];
 
-const hashId = () => decodeURIComponent(window.location.hash.slice(1));
+// A malformed escape like `#%` reads as no hash rather than breaking the FAQ.
+function hashId() {
+  try {
+    return decodeURIComponent(window.location.hash.slice(1));
+  } catch {
+    return '';
+  }
+}
 
 // Point the URL at an open answer so it can be shared, without adding a history
-// entry per toggle. A deeper link already inside the answer, like a stage, is kept.
+// entry per toggle. A deeper link already inside the answer, like a stage, is
+// kept while it is open and cleared when it closes, so following the same link
+// again fires `hashchange` and reopens it.
 function syncHash(details) {
   const current = hashId();
+  const pointsInside = Boolean(current) && details.contains(document.getElementById(current));
   const {pathname, search} = window.location;
-  if (details.open && !(current && details.contains(document.getElementById(current)))) {
+  if (details.open && !pointsInside) {
     window.history.replaceState(window.history.state, '', `${pathname}${search}#${details.id}`);
-  } else if (!details.open && current === details.id) {
+  } else if (!details.open && pointsInside) {
     window.history.replaceState(window.history.state, '', `${pathname}${search}`);
   }
 }
