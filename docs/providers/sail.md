@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `sail/` |
 | Link to Provider Doc | [Sail Documentation](https://docs.sailresearch.com) |
 | Default Base URL | `https://api.sailresearch.com/v1` |
-| Supported Operations | `/chat/completions`, `/responses` |
+| Supported Operations | `/chat/completions`, `/responses`, `/v1/messages` |
 
 ## API Key
 
@@ -97,6 +97,30 @@ response = responses(
 
 print(response.output_text)
 ```
+
+### Anthropic Messages API
+
+Sail serves `POST /v1/messages` natively, so LiteLLM forwards the Anthropic request shape as is instead of translating it to chat completions. `max_tokens`, `system`, `thinking`, tools and `image` blocks all reach Sail unchanged
+
+```python showLineNumbers title="Sail Anthropic Messages API"
+import asyncio
+import os
+from litellm import anthropic_messages
+
+os.environ["SAIL_API_KEY"] = "your-api-key"
+
+response = asyncio.run(
+    anthropic_messages(
+        model="sail/zai-org/GLM-5.3-Flash",
+        messages=[{"role": "user", "content": "Explain a binary search in two sentences"}],
+        max_tokens=1024,
+    )
+)
+
+print([block for block in response["content"] if block["type"] == "text"])
+```
+
+Reasoning models put a `thinking` block before the text block, so select content by `type` rather than reading `content[0]`. Sail's Messages endpoint is in beta and does not yet apply `cache_control` (accepted, no cache read or write), `stop_sequences`, `top_k`, document blocks or images inside `tool_result`. A non-streaming Messages request waits up to nine minutes before Sail returns a 408 with the response id in `X-Sail-Message-Id`; stream long-running requests instead
 
 ## Completion windows
 
@@ -203,6 +227,27 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 
+<TabItem value="anthropic-sdk" label="Anthropic SDK">
+
+```python showLineNumbers title="Sail via Proxy - Anthropic SDK"
+from anthropic import Anthropic
+
+client = Anthropic(
+    base_url="http://localhost:4000",
+    api_key="sk-local-sail",
+)
+
+message = client.messages.create(
+    model="glm-5.3-flash",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "hello from litellm"}],
+)
+
+print(next(block.text for block in message.content if block.type == "text"))
+```
+
+</TabItem>
+
 <TabItem value="responses" label="Responses API">
 
 ```bash showLineNumbers title="Sail via Proxy - flex background Responses"
@@ -231,7 +276,31 @@ A background Responses request returns before Sail has generated anything, so th
 
 ## Unsupported OpenAI parameters
 
-Sail rejects a number of OpenAI chat parameters instead of ignoring them: `frequency_penalty`, `presence_penalty`, `logit_bias`, `stop`, `seed`, `logprobs`, `top_logprobs`, `verbosity`, `prediction`, `audio`, `modalities`, `web_search_options`, `functions`, `function_call` and the deprecated `max_tokens` (LiteLLM already rewrites that one). Sail's JSON mode only supports `response_format: {"type": "json_schema", ...}`, so `json_object` is refused. On the Responses API, `previous_response_id`, `conversation` and `prompt` are not supported, and `truncation` only accepts `"disabled"`. To have LiteLLM drop parameters Sail cannot take instead of forwarding them, set `litellm.drop_params = True` or `drop_params: true` on the deployment
+Sail rejects a number of OpenAI chat parameters with a 400 instead of ignoring them: `frequency_penalty`, `presence_penalty`, `logit_bias`, `stop`, `seed`, `logprobs`, `top_logprobs`, `n` other than 1, `verbosity`, `prediction`, `audio`, `modalities`, `web_search_options`, `functions`, `function_call` and the deprecated `max_tokens` (LiteLLM already rewrites that one). LiteLLM knows the first seven are unsupported on `sail/`, so with `litellm.drop_params = True` or `drop_params: true` on the deployment they are removed before the request leaves LiteLLM, and without it LiteLLM raises `UnsupportedParamsError` client-side. On the Responses API, `previous_response_id`, `conversation` and `prompt` are not supported, `truncation` only accepts `"disabled"`, `parallel_tool_calls` is accepted but has no effect, and server-side tools such as web search are stripped. Chat completions accept `response_format` of type `text`, `json_object` and `json_schema`; the Responses API accepts `text.format` of type `text` and `json_schema` only. `tool_choice: "required"` fails the request when the model does not call a tool, which Sail does not guarantee for `openai/gpt-oss-*`
+
+## Other Sail request options
+
+Everything below is a request field Sail reads and LiteLLM forwards untouched through `extra_body` (chat completions), `metadata` (Responses and Messages) or `extra_headers`. None of it changes how LiteLLM routes, retries or prices the request
+
+Completion webhooks: `metadata.completion_webhook` is a URL Sail POSTs the finished response to, with `metadata.webhook_token` sent as its bearer token. Delivery is best effort and may repeat, so make the receiver idempotent
+
+Supercache: `metadata.supercache_write: "24h"` writes a prompt prefix of at least 1,025 tokens to Sail's 24 hour cache, at 100x the input price; later requests sharing the prefix read it automatically at 10% of the cached input price. Sail reports those reads inside `usage.input_tokens_details.cached_tokens`, which LiteLLM bills at the regular cache read rate, so Supercache spend is overstated in LiteLLM unless you override the deployment's prices
+
+Prompt cache routing: `prompt_cache_key` and `user` are forwarded, so requests that share one land on the same Sail replica and reuse its prompt cache
+
+Idempotency: pass `extra_headers={"Idempotency-Key": "..."}` on chat completions and Responses, or `anthropic-idempotency-key` on Messages. Sail returns the original response for a repeated key with the same body and a 400 for the same key with a different body. Keys are scoped to your Sail API key and capped at 255 bytes
+
+US-only inference: `extra_body={"routing": {"allowed_countries": ["US"]}}` pins the request to US capacity on Sail's Pro and Enterprise plans, at a surcharge Sail bills but LiteLLM's cost map does not reflect. An `asap` request with no US capacity gets a 429; `balanced` and `flex` wait for it
+
+Images: on models flagged `supports_vision`, up to 20 images of 20 MB each (JPEG, PNG, WebP, GIF) per request, as `image_url` parts on chat completions, `input_image` on Responses or `image` blocks on Messages. Public URLs must load within 10 seconds. Audio and file parts are rejected on every endpoint
+
+## Rate limits and retries
+
+All keys in a Sail organization share its request and concurrency limits. A 429 means a limit was hit and a 503 with code `model_capacity_unavailable` means the model is temporarily out of capacity; both carry `Retry-After`, which the LiteLLM Router honors when it retries. A timeout or 5xx on a request Sail may already have accepted can be billed twice if you retry it blindly, so for long `balanced` and `flex` work prefer background Responses and poll the id, or send an idempotency key. A streamed response can return HTTP 200 and still emit an error event later, so read the stream to the end
+
+## Not supported through LiteLLM
+
+Sail's Batch API (`/v1/batches`), LoRA adapters (`moonshotai/Kimi-K2.6` accepts rank 32 adapters uploaded through Sail), `POST /v1/messages/count_tokens` and `GET /v1/messages/{id}` retrieval have no LiteLLM route yet. Sail has no embeddings, image generation, audio or moderation endpoints, and LiteLLM rejects those calls on `sail/` before sending anything upstream
 
 ## Custom Endpoints
 
