@@ -146,7 +146,7 @@ curl -X POST 'http://0.0.0.0:4000/key/update' \
 
 #### 2. Set `LiteLLM-Changed-By` in request headers
 
-Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://litellm-api.up.railway.app/#/team%20management).
+Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://docs.litellm.ai/api-reference/#/team%20management).
 
 - Update Team budget with the opted-in admin key. 
 - Attribute change to 'krrish@berri.ai'. 

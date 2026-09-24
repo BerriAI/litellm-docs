@@ -58,5 +58,5 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ```
 
 
-## [API Reference](https://litellm-api.up.railway.app/#/budget%20management)
+## [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management)
 

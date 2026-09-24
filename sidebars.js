@@ -616,7 +616,7 @@ const sidebars = {
         {
           type: "link",
           label: "All Endpoints (Swagger)",
-          href: "https://litellm-api.up.railway.app/",
+          href: "https://docs.litellm.ai/api-reference/",
         },
         {
           type: "category",

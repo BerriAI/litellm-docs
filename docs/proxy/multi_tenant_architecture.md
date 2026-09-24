@@ -18,10 +18,10 @@ Teams and Virtual Keys are available in open source, and Teams alone can serve a
 
 LiteLLM models tenancy as four nested levels: Organizations contain Teams, Teams contain Users, and Users and Teams own Keys. Each level is a boundary for isolation and for spend attribution.
 
-- Organizations are the top-level tenant and can hold multiple teams. [API Reference](https://litellm-api.up.railway.app/#/organization%20management)
-- Teams are collections of users and can hold multiple users. [API Reference](https://litellm-api.up.railway.app/#/team%20management)
-- Users belong to teams (possibly several at once) and can own multiple keys. [API Reference](https://litellm-api.up.railway.app/#/user%20management)
-- Keys authenticate requests and belong to a user, a team, or both. [API Reference](https://litellm-api.up.railway.app/#/key%20management)
+- Organizations are the top-level tenant and can hold multiple teams. [API Reference](https://docs.litellm.ai/api-reference/#/organization%20management)
+- Teams are collections of users and can hold multiple users. [API Reference](https://docs.litellm.ai/api-reference/#/team%20management)
+- Users belong to teams (possibly several at once) and can own multiple keys. [API Reference](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
+- Keys authenticate requests and belong to a user, a team, or both. [API Reference](https://docs.litellm.ai/api-reference/#/key%20management)
 
 ### Organizations
 

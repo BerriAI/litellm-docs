@@ -1,0 +1,53 @@
+name: Update OpenAPI snapshot
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-openapi:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install "litellm[proxy]"
+      - name: Write minimal proxy config
+        run: |
+          cat > /tmp/config.yaml <<'EOF'
+          model_list:
+            - model_name: gpt-4o-mini
+              litellm_params:
+                model: openai/gpt-4o-mini
+                api_key: fake
+          EOF
+      - name: Start proxy and snapshot the spec
+        run: |
+          LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true litellm --config /tmp/config.yaml --port 4000 &
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:4000/openapi.json -o /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          bash scripts/update-openapi.sh http://localhost:4000
+      - name: Resolve installed litellm version
+        id: version
+        run: echo "litellm_version=$(python -c "import litellm; print(litellm.__version__)")" >> "$GITHUB_OUTPUT"
+      - uses: peter-evans/create-pull-request@v7
+        id: pr
+        with:
+          branch: litellm_openapi_snapshot
+          commit-message: "docs: refresh the OpenAPI snapshot to litellm ${{ steps.version.outputs.litellm_version }}"
+          title: "docs: refresh the OpenAPI snapshot to litellm ${{ steps.version.outputs.litellm_version }}"
+          body: "Regenerated the OpenAPI snapshot behind https://docs.litellm.ai/api-reference/ from litellm ${{ steps.version.outputs.litellm_version }} on PyPI."
+      - name: Squash-merge once Vercel checks pass
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
