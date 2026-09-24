@@ -156,7 +156,8 @@ case `below_threshold` is `false`. Values are returned as computed, without roun
 | Status | When |
 | --- | --- |
 | `400` | `end_date` is before `start_date`, or the range is over 180 days |
-| `403` | The key is not a proxy admin |
+| `401` | The key is not a proxy admin |
+| `422` | A query parameter fails validation, such as a malformed date or a `threshold` outside (0, 1] |
 | `500` | The proxy has no database |
 | `502` | The OpenAI costs API could not be read. The detail carries OpenAI's status and message |
 | `503` | `OPENAI_ADMIN_KEY` is not set on the proxy |
