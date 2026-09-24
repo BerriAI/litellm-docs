@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import {useThemeConfig} from '@docusaurus/theme-common';
 import Logo from '@theme/Logo';
 import Content from '@theme/DocSidebar/Desktop/Content';
-import styles from '@theme/DocSidebar/Desktop/styles.module.css';
+import styles from './styles.module.css';
 
 function DocSidebarDesktop({path, sidebar, isHidden}) {
   const {
