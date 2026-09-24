@@ -2,11 +2,23 @@ import * as semver from 'semver';
 import releaseSnapshot from './rustMigrationReleases.json';
 
 // Rollout stages in order, matching `Rollout` in litellm/rust_bridge/configuration.py.
+// `switch` is the `LITELLM_RUST` value that flips a stage's default, for the
+// two stages that honor it.
 export const STAGES = [
-  {id: 'pythonOnly', label: 'Python'},
-  {id: 'rustOptIn', label: 'Opt-in'},
-  {id: 'rustOptOut', label: 'Rust default'},
-  {id: 'rustRequired', label: 'Rust only'},
+  {id: 'pythonOnly', label: 'Python', description: 'Runs on Python.'},
+  {
+    id: 'rustOptIn',
+    label: 'Opt-in',
+    description: 'Python runs by default. Turn Rust on to try it, with Python as the fallback.',
+    switch: {value: '1', effect: 'Run on Rust'},
+  },
+  {
+    id: 'rustOptOut',
+    label: 'Rust default',
+    description: 'Rust runs by default, with Python as the fallback. Turn Rust off to stay on Python.',
+    switch: {value: '0', effect: 'Stay on Python'},
+  },
+  {id: 'rustRequired', label: 'Rust only', description: 'Always runs on Rust. The Python path is gone and the switch has no effect.'},
 ];
 
 // Goals are milestones over the work below. `scope` lists the areas a goal
@@ -17,8 +29,8 @@ const GOAL_DECLARATIONS = [
     id: 'major-apis',
     text: 'Major APIs',
     endsOn: '2026-12-31',
-    scope: ['chat-completions', 'messages', 'responses', 'auth'],
-    summary: 'Chat completions, Messages, Responses',
+    scope: ['foundation', 'messages', 'responses', 'chat-completions'],
+    summary: 'Messages, Responses, Chat completions',
   },
   {
     id: 'all-apis',
@@ -79,14 +91,61 @@ const PROVIDERS = {
 // that is not a provider names itself as `{id, text}`. Provider lists follow
 // what litellm serves for each API today, with OpenAI-compatible endpoints
 // standing in for the long tail that shares one implementation.
+//
+// A unit with its own `units` is a group that only collects the units beneath
+// it. Units roll out through STAGES by default. A unit marked `task: true` has
+// no rollout of its own and is simply done or not, like the cloud auth that
+// many providers and APIs share.
 const AREAS = [
   {
-    id: 'chat-completions',
-    text: 'Chat completions',
+    id: 'foundation',
+    text: 'Foundation',
     units: [
-      'openai', 'azure', 'anthropic', 'bedrock', 'vertex_ai', 'gemini', 'azure_ai', 'mistral', 'cohere', 'groq',
-      'xai', 'deepseek', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'watsonx', 'perplexity',
-      'deepinfra', 'cerebras', 'nvidia_nim', 'sagemaker', 'ollama', 'hosted_vllm', 'openai_like',
+      {
+        id: 'auth',
+        text: 'Auth',
+        units: [
+          {id: 'aws', text: 'AWS', task: true},
+          {id: 'azure', text: 'Azure', task: true},
+          {id: 'gcp', text: 'Google Cloud', task: true},
+        ],
+      },
+      {id: 'http', text: 'HTTP client', task: true},
+      {id: 'streaming', text: 'Streaming', task: true},
+      {id: 'model-catalog', text: 'Model catalog', task: true},
+      {id: 'cost', text: 'Cost tracking', task: true},
+      {id: 'logging', text: 'Logging'},
+      {
+        id: 'caching',
+        text: 'Caching',
+        units: [
+          {id: 'local', text: 'In-memory'},
+          {id: 'redis', text: 'Redis'},
+          {id: 'redis-semantic', text: 'Redis semantic'},
+          {id: 'valkey-semantic', text: 'Valkey semantic'},
+          {id: 'qdrant-semantic', text: 'Qdrant semantic'},
+          {id: 's3', text: 'S3'},
+          {id: 'gcs', text: 'Google Cloud Storage'},
+          {id: 'azure-blob', text: 'Azure Blob Storage'},
+          {id: 'disk', text: 'Disk'},
+        ],
+      },
+      {
+        id: 'secret-managers',
+        text: 'Secret managers',
+        units: [
+          {id: 'aws-secret-manager', text: 'AWS Secrets Manager'},
+          {id: 'aws-kms', text: 'AWS KMS'},
+          {id: 'azure-key-vault', text: 'Azure Key Vault'},
+          {id: 'google-secret-manager', text: 'Google Secret Manager'},
+          {id: 'google-kms', text: 'Google KMS'},
+          {id: 'hashicorp-vault', text: 'HashiCorp Vault'},
+          {id: 'cyberark', text: 'CyberArk'},
+          {id: 'local', text: 'Environment variables'},
+          {id: 'custom', text: 'Custom'},
+        ],
+      },
+      {id: 'callbacks', text: 'Callbacks'},
     ],
   },
   {
@@ -108,9 +167,13 @@ const AREAS = [
     ],
   },
   {
-    id: 'auth',
-    text: 'Provider auth',
-    units: [{id: 'aws', text: 'AWS'}, {id: 'azure', text: 'Azure'}, {id: 'gcp', text: 'Google Cloud'}],
+    id: 'chat-completions',
+    text: 'Chat completions',
+    units: [
+      'openai', 'azure', 'anthropic', 'bedrock', 'vertex_ai', 'gemini', 'azure_ai', 'mistral', 'cohere', 'groq',
+      'xai', 'deepseek', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'watsonx', 'perplexity',
+      'deepinfra', 'cerebras', 'nvidia_nim', 'sagemaker', 'ollama', 'hosted_vllm', 'openai_like',
+    ],
   },
   {
     id: 'embeddings',
@@ -147,20 +210,27 @@ const AREAS = [
 ];
 
 // Rollout history for every unit that has left Python, keyed by `area/unit`.
-// Each entry maps a release to the stage the unit entered there; units not
-// listed are still Python only.
+// Each entry lists the steps the unit took, oldest first: the release and the
+// stage it entered there. A task has no stages, so its one step only names the
+// release it was done in.
+// Units not listed are still Python only.
 const ROLLOUTS = {
-  'messages/anthropic': {'v1.103.0-rc.2': 'rustOptIn'},
-  'messages/azure_ai': {'v1.94.0-rc.1': 'rustOptIn'},
-  'transcription/bedrock': {'v1.103.0-rc.1': 'rustRequired'},
-  'ocr/mistral': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/azure_ai': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/azure_ai/doc-intelligence': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/vertex_ai': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/cohere': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/reducto': {'v1.102.0-rc.1': 'rustOptOut'},
-  'ocr/aws_textract': {'v1.103.0-rc.1': 'rustRequired'},
-  'token-counter/tiktoken': {'v1.103.0-rc.2': 'rustOptIn'},
+  'foundation/auth/aws': [{version: 'v1.95.0-rc.1'}],
+  'foundation/auth/azure': [{version: 'v1.102.0-rc.1'}],
+  'foundation/auth/gcp': [{version: 'v1.102.0-rc.1'}],
+  'foundation/http': [{version: 'v1.103.0-rc.1'}],
+  'foundation/logging': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
+  'messages/anthropic': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
+  'messages/azure_ai': [{version: 'v1.94.0-rc.1', stage: 'rustOptIn'}],
+  'transcription/bedrock': [{version: 'v1.103.0-rc.1', stage: 'rustRequired'}],
+  'ocr/mistral': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/azure_ai': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/azure_ai/doc-intelligence': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/vertex_ai': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/cohere': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/reducto': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
+  'ocr/aws_textract': [{version: 'v1.103.0-rc.1', stage: 'rustRequired'}],
+  'token-counter/tiktoken': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
 };
 
 // Releases worth calling out next to the blog posts; only add ones that changed
@@ -215,16 +285,31 @@ RELEASE_NOTES.forEach(note => checkVersion(note.version));
 
 const STAGE_INDEX = new Map(STAGES.map((stage, index) => [stage.id, index]));
 
-function parseRollout(id, rollout) {
-  return Object.entries(rollout)
-    .map(([version, stage]) => {
-      checkVersion(version);
-      if (!STAGE_INDEX.has(stage)) {
-        fail(`${id} has unknown rollout stage: ${stage}`);
-      }
-      return {version, stage: STAGE_INDEX.get(stage)};
-    })
-    .sort((left, right) => semver.compare(left.version, right.version));
+// Steps come out as `{version, stage}`, where `stage` indexes STAGES and a
+// finished task counts as the last stage.
+function parseRollout(id, steps = [], task) {
+  if (!Array.isArray(steps)) {
+    fail(`${id} rollout must list its steps`);
+  }
+  if (task && steps.length > 1) {
+    fail(`${id} is a task, so it has one step at most`);
+  }
+  const parsed = steps.map(({version, stage}) => {
+    checkVersion(version);
+    if (task !== (stage === undefined)) {
+      fail(`${id} ${task ? 'is a task and takes no stage' : `needs a stage in ${version}`}`);
+    }
+    if (!task && !STAGE_INDEX.has(stage)) {
+      fail(`${id} has unknown rollout stage: ${stage}`);
+    }
+    return {version, stage: task ? STAGES.length - 1 : STAGE_INDEX.get(stage)};
+  });
+  parsed.forEach((step, index) => {
+    if (index > 0 && semver.lte(step.version, parsed[index - 1].version)) {
+      fail(`${id} steps must be in release order`);
+    }
+  });
+  return parsed;
 }
 
 // The page model is a tree of nodes with `text` and `children`. `features`
@@ -233,25 +318,35 @@ function parseRollout(id, rollout) {
 // first, where `stage` indexes STAGES.
 const areasById = new Map();
 const unusedRollouts = new Set(Object.keys(ROLLOUTS));
+
+function group(id, text, children) {
+  if (new Set(children.map(child => child.id)).size !== children.length) {
+    fail(`${id} lists a unit twice`);
+  }
+  return {id, text, children, features: children.flatMap(child => child.features)};
+}
+
+function buildUnit(parentId, unit) {
+  const {id, text, task = false, units} = typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
+  const key = `${parentId}/${id}`;
+  if (!text) {
+    fail(`${key} has no display name in PROVIDERS`);
+  }
+  if (units) {
+    return group(key, text, units.map(child => buildUnit(key, child)));
+  }
+  unusedRollouts.delete(key);
+  const node = {id: key, text, task, children: [], rollout: parseRollout(key, ROLLOUTS[key], task)};
+  node.features = [node];
+  return node;
+}
+
 for (const area of AREAS) {
   if (areasById.has(area.id)) {
     fail(`duplicate area: ${area.id}`);
   }
-  const units = area.units.map(unit => {
-    const {id, text} = typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
-    const key = `${area.id}/${id}`;
-    if (!text) {
-      fail(`${key} has no display name in PROVIDERS`);
-    }
-    unusedRollouts.delete(key);
-    const node = {id: key, text, children: [], rollout: parseRollout(key, ROLLOUTS[key] ?? {})};
-    node.features = [node];
-    return node;
-  });
-  if (new Set(units.map(unit => unit.id)).size !== units.length) {
-    fail(`${area.id} lists a unit twice`);
-  }
-  areasById.set(area.id, {id: area.id, text: area.text, children: units, features: units});
+  const units = area.units.map(unit => buildUnit(area.id, unit));
+  areasById.set(area.id, group(area.id, area.text, units));
 }
 if (unusedRollouts.size > 0) {
   fail(`rollouts name units no area lists: ${[...unusedRollouts].join(', ')}`);
