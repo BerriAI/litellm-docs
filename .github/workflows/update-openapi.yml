@@ -40,8 +40,14 @@ jobs:
         id: version
         run: echo "litellm_version=$(python -c "import litellm; print(litellm.__version__)")" >> "$GITHUB_OUTPUT"
       - uses: peter-evans/create-pull-request@v7
+        id: pr
         with:
           branch: litellm_openapi_snapshot
           commit-message: "docs: refresh the OpenAPI snapshot to litellm ${{ steps.version.outputs.litellm_version }}"
           title: "docs: refresh the OpenAPI snapshot to litellm ${{ steps.version.outputs.litellm_version }}"
           body: "Regenerated the OpenAPI snapshot behind https://docs.litellm.ai/api-reference/ from litellm ${{ steps.version.outputs.litellm_version }} on PyPI."
+      - name: Squash-merge once Vercel checks pass
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
