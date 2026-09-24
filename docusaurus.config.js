@@ -3,10 +3,9 @@
 
 require('dotenv').config();
 
-// @ts-ignore
-const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
-// @ts-ignore
-const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
+// Same code-block palettes as docusaurus.io (github + vsDark, with their token overrides).
+const lightCodeTheme = require('./src/utils/prismLight');
+const darkCodeTheme = require('./src/utils/prismDark');
 
 const inkeepApiKey = process.env.INKEEP_API_KEY;
 // Conditional check: docs should work if this key is missing.
@@ -443,8 +442,24 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
+                label: 'Quickstart',
+                to: '/docs/proxy/docker_quick_start',
+              },
+              {
+                label: 'Production Deployment',
+                to: '/docs/proxy/deploy',
+              },
+              {
+                label: '[Beta] Rust AI Gateway',
+                to: '/docs/proxy/rust_gateway',
+              },
+              {
+                label: 'MCP Gateway',
+                to: '/docs/mcp',
+              },
+              {
+                label: 'Agent Gateway',
+                to: '/docs/a2a',
               },
             ],
           },
@@ -454,6 +469,14 @@ const config = {
               {
                 label: 'Discord',
                 href: 'https://discord.com/invite/wuPM9dRgDw',
+              },
+              {
+                label: 'Slack',
+                href: 'https://litellmossslack.slack.com/',
+              },
+              {
+                label: 'YouTube',
+                href: 'https://www.youtube.com/@LiteLLMAIGateway',
               },
               {
                 label: 'Twitter',
