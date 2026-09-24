@@ -16,8 +16,8 @@ import HeroDark from './hero-dark.png';
 <ThemedImage
   alt="Manage your gateway with LiteLLM Admin MCP. Create virtual keys and add model deployments from your MCP client."
   sources={{
-    light: HeroLight,
-    dark: HeroDark,
+    light: typeof HeroLight === 'string' ? HeroLight : HeroLight.src.images.at(-1).path,
+    dark: typeof HeroDark === 'string' ? HeroDark : HeroDark.src.images.at(-1).path,
   }}
   style={{width: '100%'}}
 />
