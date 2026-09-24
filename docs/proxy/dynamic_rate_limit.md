@@ -377,4 +377,4 @@ Team A's 30 PTUs of gpt-4.1 are 30 x 3,000 = 90,000 normalized tokens a minute (
 }
 ```
 
-The ceiling shares the per-minute window of a team's `model_tpm_limit` and needs only `LITELLM_ENABLE_PTU_COST_ATTRIBUTION=True`. Setup, the cost split by share, and PTU-hours on the usage routes are covered in [Azure PTU Flat Cost Attribution](./ptu_flat_cost.md#share-a-deployment-across-teams)
+The ceiling shares the per-minute window of a team's `model_tpm_limit` and needs only `LITELLM_ENABLE_PTU_COST_ATTRIBUTION=True`; the share filter itself (which teams the deployment is served to) applies without the flag. Setup, the cost split by share, and PTU-hours on the usage routes are covered in [Azure PTU Flat Cost Attribution](./ptu_flat_cost.md#share-a-deployment-across-teams)

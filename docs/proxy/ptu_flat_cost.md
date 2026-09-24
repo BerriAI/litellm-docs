@@ -131,7 +131,7 @@ model_list:
 
 `ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike
 
-A shared deployment keeps its public model name and stays visible in model lists, but the proxy serves it only to the teams named in `ptu_shares`. A key from any other team, a key with no team, and the master key all get a 400 on it:
+A shared deployment keeps its public model name and stays visible in model lists, but the proxy serves it only to the teams named in `ptu_shares`. A key from any other team, a key with no team, and the master key all get a 400 on it, whether or not `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` is set, because a declared split is an access rule; the ceiling, the cost split, and PTU-hours below need the flag:
 
 ```
 Deployment gpt-4.1-ptu is reserved for the teams holding a PTU share of it
@@ -146,13 +146,13 @@ team ceiling per minute = share x input TPM per PTU for the model
 tokens charged per request = uncached input + cached input x cached ratio + output x output ratio
 ```
 
-Team A's 30 PTUs of gpt-4.1 (3,000 input TPM per PTU, output counted at 4x) are 90,000 normalized tokens a minute. The first request past that gets a 429 with a `retry-after` header, and team B's 20 PTUs are untouched:
+Team A's 30 PTUs of gpt-4.1 (3,000 input TPM per PTU, output counted at 4x) are 90,000 normalized tokens a minute. Each request reserves its input plus its output budget (`max_tokens`, or the proxy's estimate without one) in those units before the call and settles at the usage the response reports, so a burst of concurrent requests cannot together pass the share. The first request past it gets a 429 with a `retry-after` header, and team B's 20 PTUs are untouched:
 
 ```
 Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type: tokens. Current limit: 90000, Remaining: 0. Limit resets at: ...
 ```
 
-The ceiling lives on the same per-minute window as a team's `model_tpm_limit`, so it reads and resets the way the limits you already set do, and it needs nothing beyond `LITELLM_ENABLE_PTU_COST_ATTRIBUTION`. The sizing row is looked up by `model_info.base_model` first, then by the model in `litellm_params`, because an Azure deployment name is arbitrary. A reserved deployment whose model has no row logs a warning at startup, sets no ceiling, and reports no PTU-hours; set `base_model` to the Azure model name to fix it
+The ceiling lives on the same per-minute window as a team's `model_tpm_limit`, so it reads and resets the way the limits you already set do, and it needs nothing beyond `LITELLM_ENABLE_PTU_COST_ATTRIBUTION`. The sizing row is looked up by `model_info.base_model` first, then by the model in `litellm_params`, because an Azure deployment name is arbitrary. A shared deployment, or an Azure deployment reserved for one team, whose model has no row logs a warning at startup, sets no ceiling, and reports no PTU-hours; set `base_model` to the Azure model name to fix it. A single-team reservation on another provider only feeds the flat-cost rollup, which needs no sizing, so it is not warned about
 
 A deployment owned by one team through `team_id` gets no ceiling, since that team already owns all of it, but its usage does report PTU-hours
 
