@@ -120,6 +120,69 @@ print(response)
 
 The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
 
+## FireRouter (auto router)
+
+[FireRouter](https://docs.fireworks.ai/ecosystem/firerouter/litellm) is Fireworks' managed router. Instead of pointing at one model, the `accounts/fireworks/routers/firerouter` resource picks a model per request, and the response `model` field reports which one served it.
+
+LiteLLM accepts three equivalent spellings:
+
+```python
+model="fireworks_ai/firerouter"                                        # default router
+model="fireworks_ai/firerouter/kimi-k3/glm-5p2"                        # custom slug: restrict the pool
+model="fireworks_ai/accounts/fireworks/routers/firerouter"             # full resource id
+```
+
+### Bring your own key for pass-through legs
+
+Fireworks does not resell closed models. When FireRouter picks a Claude or GPT leg, it forwards the request to that provider under your own credentials, so the caller must supply `x-anthropic-api-key` or `x-openai-api-key`. Without it Fireworks fails closed with a 401.
+
+Attach the header server-side on the deployment with `litellm_params.extra_headers`, or let each client send its own by enabling `forward_client_headers_to_llm_api` globally or per model group.
+
+```yaml
+model_list:
+  - model_name: firerouter
+    litellm_params:
+      model: fireworks_ai/firerouter
+      api_key: os.environ/FIREWORKS_AI_API_KEY
+      extra_headers:
+        x-anthropic-api-key: os.environ/ANTHROPIC_API_KEY
+```
+
+```yaml
+general_settings:
+  forward_client_headers_to_llm_api: true
+# or per model group:
+# model_group_settings:
+#   forward_client_headers_to_llm_api: [firerouter]
+```
+
+```bash
+curl -X POST http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "firerouter", "messages": [{"role": "user", "content": "hello"}]}'
+```
+
+The same headers go through the SDK on `completion()`:
+
+```python
+from litellm import completion
+
+response = completion(
+    model="fireworks_ai/firerouter",
+    messages=[{"role": "user", "content": "hello"}],
+    extra_headers={"x-anthropic-api-key": "sk-ant-..."},
+)
+```
+
+### Routing preference
+
+`x-routing-preference` steers the router on a 1–5 scale, where 1 is cheapest and 5 is highest quality. It travels the same way as the BYOK headers: `litellm_params.extra_headers` server-side, client-supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`.
+
+### Cost tracking
+
+LiteLLM prices each request off the model Fireworks reports it routed to. Fireworks-hosted legs are billed at Fireworks rates; pass-through legs (for example a Claude leg) are billed at that provider's own list price. Your invoice is split across two vendor bills, the Fireworks key covering open models and your Anthropic or OpenAI key covering pass-through, but LiteLLM spend logs and budgets sum both under the one model group.
+
 ## Usage with LiteLLM Proxy 
 
 ### 1. Set Fireworks AI Models on config.yaml
