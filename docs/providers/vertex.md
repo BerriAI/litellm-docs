@@ -8,11 +8,15 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Vertex AI is a fully-managed AI development platform for building and using generative AI. |
+| Description | Vertex AI, renamed Gemini Enterprise Agent Platform by Google in 2026, is Google Cloud's fully-managed platform for building and using generative AI. |
 | Provider Route on LiteLLM | `vertex_ai/` |
-| Link to Provider Doc | [Vertex AI ↗](https://cloud.google.com/vertex-ai) |
+| Link to Provider Doc | [Gemini Enterprise Agent Platform (formerly Vertex AI) ↗](https://cloud.google.com/products/gemini-enterprise-agent-platform) |
 | Base URL | 1. Regional endpoints<br/>`https://{vertex_location}-aiplatform.googleapis.com/`<br/>2. Global endpoints (limited availability)<br/>`https://aiplatform.googleapis.com/`|
 | Supported Operations | [`/chat/completions`](#sample-usage), `/completions`, [`/embeddings`](#embedding-models), [`/audio/speech`](/docs/providers/vertex_speech), [`/audio/transcriptions`](/docs/providers/vertex_transcription), [`/fine_tuning`](#fine-tuning-apis), [`/batches`](/docs/providers/vertex_batch), [`/files`](/docs/providers/vertex_batch), `/images`, [`/rerank`](#rerank-api) |
+
+:::info[Vertex AI is now Gemini Enterprise Agent Platform]
+Google renamed Vertex AI to Gemini Enterprise Agent Platform (Agent Platform for short) in 2026. It is a brand rename only: the API host (`{vertex_location}-aiplatform.googleapis.com`), the model IDs, GCP authentication, and the request and response shapes are unchanged, so LiteLLM keeps `vertex_ai/` as the provider route. Nothing changes in your `model_list`, credentials, routing, or cost tracking. Google's [name change table](https://docs.cloud.google.com/gemini-enterprise-agent-platform/vertex-ai-name-changes) maps each old product name to its new one.
+:::
 
 :::tip[Vertex AI vs Gemini API]
 | Model Format | Provider | Auth Required |
@@ -35,7 +39,7 @@ Models without a prefix default to Vertex AI which requires GCP authentication.
 
 ## `vertex_ai/` route 
 
-The `vertex_ai/` route uses uses [VertexAI's REST API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference#syntax).
+The `vertex_ai/` route uses [Vertex AI's REST API](https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/models/inference#syntax).
 
 ```python
 from litellm import completion
