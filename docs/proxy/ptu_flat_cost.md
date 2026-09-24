@@ -146,7 +146,7 @@ team ceiling per minute = share x input TPM per PTU for the model
 tokens charged per request = uncached input + cached input x cached ratio + output x output ratio
 ```
 
-Team A's 30 PTUs of gpt-4.1 (3,000 input TPM per PTU, output counted at 4x) are 90,000 normalized tokens a minute. Each request reserves its input plus its output budget (`max_tokens`, or the proxy's estimate without one) in those units before the call and settles at the usage the response reports, so a burst of concurrent requests cannot together pass the share. The first request past it gets a 429 with a `retry-after` header, and team B's 20 PTUs are untouched:
+Team A's 30 PTUs of gpt-4.1 (3,000 input TPM per PTU, output counted at 4x) are 90,000 normalized tokens a minute. Each request reserves its input plus its output budget (`max_tokens`, or without one the proxy's output floor, sized so it never takes more than a quarter of the share) in those units before the call and settles at the usage the response reports, so a burst of concurrent requests cannot together pass the share. The first request past it gets a 429 with a `retry-after` header, and team B's 20 PTUs are untouched:
 
 ```
 Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type: tokens. Current limit: 90000, Remaining: 0. Limit resets at: ...
