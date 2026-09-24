@@ -45,9 +45,30 @@ model_info:
 
 `weekday_timezone` is an optional IANA timezone name for the block. Hours are always UTC; the timezone only decides which calendar day a moment belongs to when weekdays are checked. That matters when the provider defines its schedule by its local weekday: 23:00 UTC on Friday is already Saturday in Asia/Shanghai, so with the config above it matches the weekend rule. The default is UTC, and an unrecognized name falls back to UTC.
 
+## Date exceptions
+
+Two optional date lists sit beside the windows, each read on the `weekday_timezone` calendar (default UTC). `off_peak_dates` lists ISO `YYYY-MM-DD` dates that are off-peak all day, for public holidays; a listed date wins over every window rule. `weekday_dates` lists dates that follow the Monday-to-Friday rules even when they fall on a Saturday or Sunday, for the make-up workdays some calendars declare; a make-up day never matches weekend-only rules
+
+```yaml
+model_info:
+  off_peak_pricing:
+    weekday_timezone: Asia/Shanghai
+    off_peak_dates: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"]
+    weekday_dates: ["2026-01-04", "2026-10-10"]
+    windows:
+      - hours_utc: ["10:00-01:00", "04:00-06:00"]
+        weekdays: [mon, tue, wed, thu, fri]
+      - hours_utc: "00:00-00:00"   # whole day
+        weekdays: [sat, sun]
+    input_cost_per_token: 1.35e-7
+    output_cost_per_token: 5.5e-7
+```
+
+The shipped DeepSeek cost map entries carry the 2026 PRC public holidays and make-up workdays from the State Council notice, so they need refreshing each year
+
 ## How the rates apply
 
-An off-peak rate replaces the rate that would otherwise apply rather than discounting it. That includes tiered `above_{N}k` pricing: while a window is open, the flat off-peak rate bills the whole request. The block supports `input_cost_per_token`, `output_cost_per_token`, `output_cost_per_reasoning_token`, `cache_read_input_token_cost`, and `cache_creation_input_token_cost`; any of them left unset falls back to the standard rate. When `output_cost_per_reasoning_token` is unset, reasoning tokens bill the way they do outside the window: at the model's dedicated reasoning rate if it has one, otherwise at the output rate, off-peak included. The one-hour cache creation rate (`cache_creation_input_token_cost_above_1hr`) is never affected.
+`off_peak_dates` is checked before any window rule, so a listed date is off-peak for the whole calendar day regardless of the schedule. An off-peak rate replaces the rate that would otherwise apply rather than discounting it. That includes tiered `above_{N}k` pricing: while a window is open, the flat off-peak rate bills the whole request. The block supports `input_cost_per_token`, `output_cost_per_token`, `output_cost_per_reasoning_token`, `cache_read_input_token_cost`, and `cache_creation_input_token_cost`; any of them left unset falls back to the standard rate. When `output_cost_per_reasoning_token` is unset, reasoning tokens bill the way they do outside the window: at the model's dedicated reasoning rate if it has one, otherwise at the output rate, off-peak included. The one-hour cache creation rate (`cache_creation_input_token_cost_above_1hr`) is never affected.
 
 A request is priced by its completion time. A request that starts at the standard rate and finishes inside a window bills entirely at the off-peak rate, and one that crosses out of the window bills entirely at the standard rate.
 
