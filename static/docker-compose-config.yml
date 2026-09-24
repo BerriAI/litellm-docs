@@ -1,0 +1,22 @@
+# LiteLLM config-only stack: the gateway alone, with no database, reading its
+# models from litellm_config.yaml next to this file.
+# Used by https://docs.litellm.ai/docs/proxy/docker_quick_start#running-without-a-database
+#
+# Start it with:
+#   curl -sSLO https://docs.litellm.ai/docker-compose-config.yml
+#   docker compose -f docker-compose-config.yml up -d
+#
+# Add one environment variable per provider key referenced from
+# litellm_config.yaml, and pin the image to a release tag instead of `latest`
+# before any real use.
+services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:latest
+    ports:
+      - "4000:4000"
+    environment:
+      LITELLM_MASTER_KEY: sk-1234
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    command: ["--config=/app/config.yaml"]
