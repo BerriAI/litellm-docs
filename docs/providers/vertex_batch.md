@@ -164,7 +164,7 @@ curl --request POST \
     "finalizing_at": null,
     "in_progress_at": null,
     "metadata": null,
-    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}",
+    "output_file_id": null,
     "request_counts": null,
     "usage": null
 }
@@ -172,7 +172,7 @@ curl --request POST \
 
 #### 4. Retrieve batch status
 
-Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`.
+Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`. The `output_file_id` is `null` until the batch reaches `completed`.
 
 <Tabs>
 <TabItem value="python" label="Python">
