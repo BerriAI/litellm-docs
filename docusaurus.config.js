@@ -442,8 +442,24 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
+                label: 'Quickstart',
+                to: '/docs/proxy/docker_quick_start',
+              },
+              {
+                label: 'Production Deployment',
+                to: '/docs/proxy/deploy',
+              },
+              {
+                label: '[Beta] Rust AI Gateway',
+                to: '/docs/proxy/rust_gateway',
+              },
+              {
+                label: 'MCP Gateway',
+                to: '/docs/mcp',
+              },
+              {
+                label: 'Agent Gateway',
+                to: '/docs/a2a',
               },
             ],
           },

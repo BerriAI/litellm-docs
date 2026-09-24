@@ -324,6 +324,7 @@ const sidebars = {
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
+        { type: "doc", id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -1354,7 +1355,6 @@ const sidebars = {
         "proxy/health_check_routing"
       ],
     },
-    "benchmarks",
     {
       type: "category",
       label: "Contributing",
