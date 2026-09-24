@@ -2,6 +2,13 @@
 
 **Get API Key:** [https://www.parallel.ai](https://www.parallel.ai)
 
+## Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `PARALLEL_AI_API_KEY` | API key. `PARALLEL_API_KEY` is accepted as a fallback when it is unset. |
+| `PARALLEL_AI_API_BASE` | Overrides the API base. Defaults to `https://api.parallel.ai`. |
+
 ## LiteLLM Python SDK
 
 ```python showLineNumbers title="Parallel AI Search"
