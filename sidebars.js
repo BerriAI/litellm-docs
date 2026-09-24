@@ -160,6 +160,7 @@ const sidebars = {
           "proxy/guardrails/microsoft_agent_365",
           "proxy/guardrails/microsoft_purview",
           "proxy/guardrails/model_armor",
+          "proxy/guardrails/needlepath",
           "proxy/guardrails/noma_security",
           "proxy/guardrails/dynamoai",
           "proxy/guardrails/openai_moderation",
