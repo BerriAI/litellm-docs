@@ -12,7 +12,7 @@
 
 ## API Key
 
-Create an API key in the [Bitdeer AI Console](https://www.bitdeer.ai/en/model/apikeys), then set it as an environment variable:
+Create an API key in the [Bitdeer AI Console](https://www.bitdeer.ai/model/apikeys), then set it as an environment variable:
 
 ```bash
 export BITDEER_API_KEY="your-api-key"
