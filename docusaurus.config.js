@@ -83,7 +83,16 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'zh-Hans'],
+    localeConfigs: {
+      en: {
+        label: 'English',
+      },
+      'zh-Hans': {
+        label: '简体中文',
+        htmlLang: 'zh-Hans',
+      },
+    },
   },
   plugins: [
     // vega-canvas tries to load the optional node `canvas` package during SSR.
@@ -413,6 +422,10 @@ const config = {
             label: 'Auto Router',
           },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
+          {
+            type: 'localeDropdown',
+            position: 'right',
+          },
           {
             href: 'https://trust.litellm.ai/',
             label: 'Trust Center',
