@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import {Select} from '@base-ui/react/select';
 import {
   GOALS,
@@ -346,6 +347,9 @@ function RolloutStages() {
       description: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
     },
   ];
+  // Other pages link to these cards, so the build's anchor check must know them.
+  const brokenLinks = useBrokenLinks();
+  stages.forEach(stage => brokenLinks.collectAnchor(stageAnchor(stage.kind)));
   return (
     <>
       <p className={styles.sectionLead}>
