@@ -35,7 +35,7 @@ Model names keep Sail's `org/model` id after the `sail/` prefix. Prices below ar
 | `sail/deepseek-ai/DeepSeek-V4-Flash-0731` | 1,048,576 | $0.09 | $0.18 | $0.02 |
 | `sail/deepseek-ai/DeepSeek-V4.1-Flash` | 1,048,576 | $0.15 | $0.60 | $0.006 |
 | `sail/moonshotai/Kimi-K2.6` | 262,144 | $1.00 | $4.00 | $0.20 |
-| `sail/google/gemma-4-31B-it` | 262,144 | $0.40 | $0.60 | $0.20 |
+| `sail/google/gemma-4-31B-it` | 256,000 | $0.40 | $0.60 | $0.20 |
 | `sail/nvidia/Gemma-4-31B-IT-NVFP4` | 262,144 | $0.14 | $0.40 | $0.07 |
 | `sail/google/gemma-4-12B-it` | 16,384 | $0.30 | $2.00 | $0.15 |
 | `sail/openai/gpt-oss-120b` | 131,072 | $0.06 | $0.40 | $0.03 |
@@ -124,14 +124,33 @@ Reasoning models put a `thinking` block before the text block, so select content
 
 ## Completion windows
 
-Sail picks how fast a request runs from `metadata.completion_window`: `asap` (the default, standard latency), `balanced` (slower, cheaper) or `flex` (slowest, cheapest). It is a plain metadata key, so pass it through `extra_body` on chat completions and through `metadata` on the Responses API. `service_tier` is not the selector; Sail only accepts `service_tier: "auto"`
+Sail picks how fast a request runs from `metadata.completion_window`: `asap` (the default, standard latency), `balanced` (slower, cheaper) or `flex` (slowest, cheapest). Sail only accepts `service_tier: "auto"`, so LiteLLM translates the OpenAI-style parameter for you: `service_tier: "flex"` or `"balanced"` on a sail model is sent as `metadata.completion_window` and removed from the body, `service_tier: "priority"` or `"default"` maps to `asap`, and `"auto"` or no tier sends no window. Cost tracking prices each tier at its own rate from the cost map, so a `flex` request is billed at the flex price. Passing the window directly through `extra_body` on chat completions or `metadata` on the Responses API still works and is priced the same way; a caller-set `completion_window` always wins over `service_tier`
 
-```python showLineNumbers title="Balanced window on chat completions"
+```python showLineNumbers title="Balanced window via service_tier"
+response = completion(
+    model="sail/zai-org/GLM-5.3-Flash",
+    messages=[{"role": "user", "content": "Summarize this document"}],
+    service_tier="balanced",  # sent as metadata.completion_window=balanced
+)
+```
+
+```python showLineNumbers title="Balanced window via extra_body"
 response = completion(
     model="sail/zai-org/GLM-5.3-Flash",
     messages=[{"role": "user", "content": "Summarize this document"}],
     extra_body={"metadata": {"completion_window": "balanced"}},
 )
+```
+
+```bash showLineNumbers title="Flex window against the proxy"
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-local-sail" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sail/zai-org/GLM-5.3-Flash",
+    "messages": [{"role": "user", "content": "Summarize this document"}],
+    "service_tier": "flex"
+  }'
 ```
 
 Sail may hold a `flex` chat completion open for minutes and time it out, so for `flex` it recommends a background Responses request and polling the returned id. Background mode accepts `balanced` and `flex` only; `asap` with `background: true` is a 400. LiteLLM forwards `background` and `metadata` as is:
@@ -270,7 +289,7 @@ You can also add Sail from the Admin UI. Go to Models, then Add Model, pick Sail
 
 The `sail/` models are registered in LiteLLM's model cost map at Sail's `asap` prices, so per-request spend is computed automatically, returned in the `x-litellm-response-cost` response header, and recorded in spend logs under provider `sail`. Cached input tokens reported by Sail are billed at the cache read rate
 
-Sail charges less for `balanced` and `flex`, and LiteLLM does not read the window back out of the request. For a deployment pinned to one of those windows, set `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` on that deployment to the matching Sail price, as in the proxy config above. Those overrides take precedence over the cost map. A per-request `completion_window` on a deployment without overrides is still billed at that deployment's price, so route windows through their own deployments when the price matters
+Sail charges less for `balanced` and `flex`, and LiteLLM prices each window at its own rate from the cost map: a `completion_window` or `service_tier` on the request picks the matching `*_balanced` or `*_flex` cost keys, and `asap` (or no window) uses the base price. The explicit `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` overrides on the deployments above still take precedence over the cost map, so keep them if you want a deployment pinned to a custom price
 
 A background Responses request returns before Sail has generated anything, so there is no usage to price at request time. The proxy records that spend later through its [background cost poller](../response_api#cost-tracking-for-background-responses), which needs a Postgres database and the enterprise package; the minimal config above submits the request but does not log its spend
 
