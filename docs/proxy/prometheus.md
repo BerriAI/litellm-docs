@@ -396,6 +396,12 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 |----------------------|--------------------------------------|
 | `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
 
+### Spend Capture Rate
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_spend_capture_rate`       | Share of the provider's bill LiteLLM captured as spend over the [scheduled capture-rate check](spend_capture_rate)'s window (captured spend / provider bill). `NaN` when the last check produced no rate, and on every proxy with a database where the check is not configured. Labels: `"api_provider"` |
+
 ### Deployment State 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|

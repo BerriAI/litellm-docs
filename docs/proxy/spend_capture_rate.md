@@ -96,6 +96,12 @@ leaving the last good value in place, so a stale rate never reads as current. `N
 rule below stays quiet on it; the missing-key and unreadable-bill cases reach you through the proxy's own alert
 instead
 
+The gauge exists on every proxy that has a database and the Prometheus callback, even when `spend_capture_rate_check`
+is not configured: the job then sets it to `NaN` for every supported provider, so a dashboard or rule keyed on the
+metric name finds the series before the check is turned on. With `prometheus_metrics_config` set, list
+`litellm_spend_capture_rate` under a group or it is not emitted. Excluding `api_provider` through
+`prometheus_exclude_labels` leaves the gauge with no labels, one series for the one supported provider
+
 A Prometheus alerting rule that fires when the rate stays under 0.9 for an hour:
 
 ```yaml
