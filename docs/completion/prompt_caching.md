@@ -18,11 +18,11 @@ Prompt caching is silently skipped when the input is below the provider's minimu
 | Provider | Minimum input tokens |
 |---|---|
 | OpenAI | 1,024 |
-| Anthropic (Claude 3.x) | 1,024 |
-| Anthropic (Claude Sonnet 4.x, Opus 4, 4.1) | 1,024 |
+| Anthropic (Claude Opus 5, Fable 5, Mythos 5) | 512 |
+| Anthropic (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Opus 4, 4.1, Claude 3.x) | 1,024 |
 | Anthropic (Claude Haiku 4.5, Opus 4.5, 4.6) | 4,096 |
-| Bedrock (Claude 3.5, 3.7) | 1,024 |
-| Bedrock (Claude Sonnet 4.x) | 1,024 |
+| Bedrock (Claude Opus 5) | 512 |
+| Bedrock (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Claude 3.5, 3.7) | 1,024 |
 | Bedrock (Claude Haiku 4.5, Opus 4.5, 4.6, 4.7) | 4,096 |
 | Google Gemini | 1,024 |
 :::
@@ -456,12 +456,13 @@ Prompts below the minimum are processed without caching, and no error is returne
 
 | Model | Min tokens |
 |---|---|
-| Claude 3 Haiku, 3 Sonnet, 3 Opus | 1,024 |
-| Claude 3.5 Sonnet, 3.7 Sonnet | 1,024 |
-| Claude 3.5 Haiku | 2,048 |
-| Claude Sonnet 4, Sonnet 4.5, Sonnet 4.6, Opus 4, Opus 4.1 | 1,024 |
+| Claude Opus 5, Fable 5, Mythos 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
 | Claude Opus 4.7 | 2,048 |
 | Claude Haiku 4.5, Opus 4.5, Opus 4.6 | 4,096 |
+| Claude Sonnet 4, Sonnet 4.5, Sonnet 4.6, Opus 4, Opus 4.1 | 1,024 |
+| Claude 3.5 Haiku | 2,048 |
+| Claude 3.x Haiku, Sonnet, Opus, 3.5 Sonnet, 3.7 Sonnet | 1,024 |
 
 See [Anthropic's prompt caching docs](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) for the full list; these minimums apply on every platform where each model is available.
 :::
@@ -475,9 +476,11 @@ Prompts below the minimum are processed without caching, and no error is returne
 
 | Model family | Min tokens per request |
 |---|---|
-| Claude 3.5 Sonnet v2, Claude 3.7 Sonnet | 1,024 |
-| Claude Sonnet 4.5, Sonnet 4.6 | 1,024 |
+| Claude Opus 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
 | Claude Haiku 4.5, Opus 4.5, Opus 4.6, Opus 4.7 | 4,096 |
+| Claude Sonnet 4.5, Sonnet 4.6 | 1,024 |
+| Claude 3.5 Sonnet v2, Claude 3.7 Sonnet | 1,024 |
 
 See [the Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) for the full per-model table.
 :::
@@ -559,6 +562,9 @@ curl -X POST http://localhost:4000/chat/completions \
 
 | Model | Bedrock Model ID | Min Tokens | TTL Options |
 |---|---|---|---|
+| Claude Opus 5 | `anthropic.claude-opus-5` | 512 | 5 min, 1 hour |
+| Claude Sonnet 5 | `anthropic.claude-sonnet-5` | 1,024 | 5 min, 1 hour |
+| Claude Opus 4.8 | `anthropic.claude-opus-4-8` | 1,024 | 5 min, 1 hour |
 | Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
 | Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
 | Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
