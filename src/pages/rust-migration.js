@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
-import * as semver from 'semver';
 import {Select} from '@base-ui/react/select';
 import {
   GOALS,
@@ -11,8 +10,8 @@ import {
   RELEASE_NOTES,
   STAGES,
   progressAt,
-  stageAt,
 } from '@site/src/data/rustMigration';
+import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
 import styles from './rust-migration.module.css';
 
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
@@ -25,12 +24,6 @@ const GOAL_TIMELINES = new Map(GOALS.map(goal => [
   goal.id,
   RELEASES.map(release => ({...release, percent: progressAt(goal, release.version)})),
 ]));
-
-function compactVersion(version) {
-  const {major, minor, patch, prerelease} = semver.parse(version);
-  const release = patch === 0 ? `${major}.${minor}` : `${major}.${minor}.${patch}`;
-  return `${release} rc${prerelease[1]}`;
-}
 
 function useElementWidth(fallback) {
   const ref = useRef(null);
@@ -195,43 +188,54 @@ function MigrationTimeline({goal}) {
   );
 }
 
+// Every row leads with the same ring. Its arc is the node's progress, a group
+// draws its chevron inside, and once a node is complete the ring fills solid
+// with the glyph cut out of it: the chevron for a group, a check otherwise.
+function ProgressMarker({percent, expandable}) {
+  const complete = percent === 100;
+  return (
+    <svg className={`${styles.marker} ${complete ? styles.markerComplete : ''}`} viewBox="0 0 16 16" aria-hidden="true">
+      <circle className={styles.markerTrack} cx="8" cy="8" r="6.5" />
+      {percent > 0 && !complete && (
+        <circle className={styles.markerArc} cx="8" cy="8" r="6.5" pathLength="100" strokeDasharray={`${percent} 100`} />
+      )}
+      {expandable && <path className={styles.markerGlyph} d="M7 5.5 9.5 8 7 10.5" />}
+      {!expandable && complete && <path className={styles.markerGlyph} d="M5.3 8.2 7.2 10 10.7 6.2" />}
+    </svg>
+  );
+}
+
 function GraphNode({node}) {
+  if (!node.rollout) {
+    return <GroupNode group={node} />;
+  }
   return (
     <li>
       <div className={styles.node}>
+        <ProgressMarker percent={progressAt(node, MAIN_VERSION)} />
         <span className={styles.nodeText}>{node.text}</span>
-        {node.rollout ? (
-          <FeatureStage feature={node} />
-        ) : (
-          <span className={styles.nodeMeta}>{progressAt(node, MAIN_VERSION)}%</span>
-        )}
+        <span className={styles.nodeMeta}><StageBadge feature={node} /></span>
       </div>
-      {node.children.length > 0 && (
-        <ul>
-          {node.children.map(child => <GraphNode node={child} key={child.id} />)}
-        </ul>
-      )}
     </li>
   );
 }
 
-// The current stage and when it landed, with one pip per stage past Python.
-function FeatureStage({feature}) {
-  const stage = stageAt(feature, MAIN_VERSION);
-  const lastStep = feature.rollout.at(-1);
-  const history = feature.rollout
-    .map(step => `${STAGES[step.stage].label} in ${step.version}`)
-    .join(', then ');
+// Groups start collapsed so the list stays scannable; opening one shows what it holds.
+function GroupNode({group}) {
+  const percent = progressAt(group, MAIN_VERSION);
   return (
-    <span className={`${styles.nodeMeta} ${stage > 0 ? styles.onRust : ''}`} title={history || 'Python only'}>
-      {/* Python only is the default, so empty pips say enough. */}
-      {stage > 0 && `${STAGES[stage].label} · ${lastStep.version === MAIN_VERSION ? 'next release' : compactVersion(lastStep.version)}`}
-      <span className={styles.pips} aria-hidden="true">
-        {STAGES.slice(1).map((item, index) => (
-          <i className={index < stage ? styles.pipOn : undefined} key={item.id} />
-        ))}
-      </span>
-    </span>
+    <li>
+      <details className={styles.group}>
+        <summary className={styles.node}>
+          <ProgressMarker percent={percent} expandable />
+          <span className={styles.nodeText}>{group.text}</span>
+          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>{percent}%</span>
+        </summary>
+        <ul>
+          {group.children.map(child => <GraphNode node={child} key={child.id} />)}
+        </ul>
+      </details>
+    </li>
   );
 }
 
@@ -324,9 +328,48 @@ function MigrationTracker() {
         </div>
         {/* The sentence above already names the goal, so the tree starts at its children. */}
         <ul className={styles.tree} hidden={view !== 'breakdown'}>
-          {goal.children.map(node => <GraphNode node={node} key={node.id} />)}
+          {goal.children.map(area => <GroupNode group={area} key={area.id} />)}
         </ul>
       </div>
+    </section>
+  );
+}
+
+// Explains each rollout stage once, so the tracker's badges can stay terse and
+// link here instead.
+function RolloutStages() {
+  const stages = [
+    ...STAGES.slice(1).map(stage => ({kind: stage.id, ...stage})),
+    {
+      kind: 'done',
+      label: 'Done',
+      description: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
+    },
+  ];
+  return (
+    <section className={styles.section} aria-labelledby="rollout-stages-title">
+      <SectionHeading id="rollout-stages-title" kicker="Rollout stages" title="How a feature moves to Rust" />
+      <p className={styles.sectionLead}>
+        Each feature starts on Python and moves through these stages one release at a time. For the two middle stages,
+        the <code>LITELLM_RUST</code> environment variable flips the default for the whole process.
+      </p>
+      <ul className={styles.stages}>
+        {stages.map(stage => (
+          <li className={styles.stage} id={stageAnchor(stage.kind)} key={stage.kind}>
+            <p className={styles.stageName}>
+              <StageIcon kind={stage.kind} className={styles.stageIcon} />
+              {stage.label}
+            </p>
+            <p className={styles.stageDescription}>{stage.description}</p>
+            {stage.switch && (
+              <p className={styles.stageSwitch}>
+                <code>LITELLM_RUST={stage.switch.value}</code>
+                <span>{stage.switch.effect}</span>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -390,6 +433,7 @@ export default function RustMigrationPage() {
           <p className={styles.description}>See what already runs on Rust and what is next.</p>
         </header>
         <MigrationTracker />
+        <RolloutStages />
         <MigrationUpdates />
       </main>
     </Layout>

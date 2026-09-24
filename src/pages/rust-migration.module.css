@@ -344,14 +344,12 @@
 .tree {
   margin: 0;
   padding: 1rem 1.5rem 1.25rem;
-  columns: 2 300px;
-  column-gap: 2.5rem;
   list-style: none;
 }
 
 /* Guide lines run from each parent's marker down past its children. */
 .tree ul {
-  margin: 0 0 0 3.5px;
+  margin: 0 0 0 7.5px;
   padding: 0 0 0 1rem;
   border-left: 1px solid var(--ifm-color-emphasis-200);
   list-style: none;
@@ -359,30 +357,94 @@
 
 .node {
   display: flex;
-  min-height: 26px;
+  min-height: 28px;
   align-items: center;
   gap: 0.55rem;
   font-size: 0.8rem;
 }
 
-.tree > li {
-  padding-bottom: 0.4rem;
-  break-inside: avoid;
+.tree > li + li {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
 }
 
-.tree > li > .node {
-  font-weight: 600;
+/* Undo the site-wide boxed styling for `details` in docs content. */
+.tree .group,
+.tree .group > .node {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font-weight: 400 !important;
 }
 
-.node::before {
-  width: 8px;
-  height: 8px;
+.group > .node {
+  cursor: pointer;
+  list-style: none;
+}
+
+.group > .node::-webkit-details-marker {
+  display: none;
+}
+
+/* Top-level groups are the APIs and Foundation, so they read as section rows. */
+.tree > li > .group > .node {
+  min-height: 40px;
+  font-weight: 600 !important;
+}
+
+.group > .node:hover .nodeText {
+  color: var(--ifm-color-primary);
+}
+
+.group > ul {
+  margin-bottom: 0.4rem;
+}
+
+.marker {
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
-  margin-left: -0.5px;
-  border: 1.5px solid var(--ifm-color-emphasis-400);
-  border-radius: 50%;
-  background: var(--ifm-background-surface-color);
-  content: '';
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.markerTrack {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-emphasis-400);
+}
+
+/* A complete node fills solid, and its glyph is cut out of the fill. */
+.markerComplete .markerTrack {
+  fill: var(--ifm-color-primary);
+  stroke: var(--ifm-color-primary);
+}
+
+.markerComplete .markerGlyph {
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 1.75;
+}
+
+/* The arc starts at twelve o'clock and runs clockwise. */
+.markerArc {
+  stroke: var(--ifm-color-primary);
+  stroke-width: 2.5;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.markerGlyph {
+  stroke: var(--ifm-color-emphasis-700);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 8px 8px;
+  transition: transform 150ms ease;
+}
+
+.group[open] > .node .markerGlyph {
+  transform: rotate(90deg);
 }
 
 .nodeText {
@@ -407,22 +469,74 @@
   font-weight: 600;
 }
 
-.pips {
-  display: inline-flex;
-  gap: 2px;
-  margin-left: 0.5rem;
-  vertical-align: 1px;
+.sectionLead {
+  max-width: 640px;
+  margin: 0 0 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
 }
 
-.pips i {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: var(--ifm-color-emphasis-300);
+.stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.pips .pipOn {
-  background: var(--ifm-color-primary);
+/* Linked from the tracker's badges, so leave room under the sticky navbar. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 10px;
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+.stage:target {
+  border-color: var(--ifm-color-primary);
+}
+
+.stageName {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.4rem;
+  color: var(--ifm-color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stageIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.stageDescription {
+  margin: 0;
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.stageSwitch {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: auto 0 0;
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.stageSwitch code {
+  font-weight: 600;
+}
+
+.stageSwitch span {
+  color: var(--ifm-color-emphasis-600);
 }
 
 /* A vertical rail with one dot per event; releases get a filled dot. */
