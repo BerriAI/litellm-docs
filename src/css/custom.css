@@ -184,6 +184,101 @@ body,
   --ifm-alert-border-color: #2264ab !important;
 }
 
+/* Enterprise comparison: one card per capability, OSS then Enterprise */
+.enterprise-compare {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1.75rem;
+}
+
+.enterprise-compare > div,
+.enterprise-compare-head {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 1fr;
+  gap: 0.75rem 1.25rem;
+  align-items: start;
+}
+
+.enterprise-compare > div {
+  padding: 0.9rem 1rem;
+  border: 1px solid #e9eef2;
+  border-radius: var(--ifm-border-radius);
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+}
+
+.enterprise-compare-head {
+  padding: 0 1rem;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.enterprise-compare-head span:last-child {
+  color: var(--ifm-color-primary-dark);
+}
+
+.enterprise-compare strong {
+  font-size: 14px;
+}
+
+.enterprise-compare span {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #3d4754;
+}
+
+.enterprise-compare span:last-child {
+  color: var(--ifm-color-primary-darkest);
+  font-weight: 500;
+}
+
+[data-theme='dark'] .enterprise-compare > div {
+  background: #1c2130;
+  border-color: #2d3748;
+}
+
+[data-theme='dark'] .enterprise-compare-head {
+  color: #9aa4b2;
+}
+
+[data-theme='dark'] .enterprise-compare-head span:last-child {
+  color: #4fddbf;
+}
+
+[data-theme='dark'] .enterprise-compare span {
+  color: #c9d1d9;
+}
+
+[data-theme='dark'] .enterprise-compare span:last-child {
+  color: #b7f0d8;
+}
+
+@media (max-width: 700px) {
+  .enterprise-compare-head {
+    display: none;
+  }
+
+  .enterprise-compare > div {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .enterprise-compare > div span:first-of-type::before {
+    content: 'OSS. ';
+    font-weight: 650;
+    color: #64748b;
+  }
+
+  .enterprise-compare > div span:last-child::before {
+    content: 'Enterprise. ';
+    font-weight: 650;
+  }
+}
+
 .alert--success {
   --ifm-alert-background-color: #f0fff8 !important;
   --ifm-alert-border-color: #09bda8 !important;
