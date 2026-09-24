@@ -147,7 +147,11 @@ To see where you stand, take the latest stable line and count back four. If your
 ## FAQ
 
 <details>
-<summary>How do I set up and verify an Enterprise license?</summary>
+<summary>
+
+### How do I set up and verify an Enterprise License?
+
+</summary>
 
 Add the license key to your environment, then restart the proxy.
 
@@ -160,21 +164,33 @@ Open `http://<your-proxy-host>:<port>/`. The API docs page should show **Enterpr
 </details>
 
 <details>
-<summary>Where can I read more about data security and compliance?</summary>
+<summary>
+
+### Where can I read more about data security and compliance?
+
+</summary>
 
 See [Data Security, Legal, and Compliance FAQs](./data_security.md).
 
 </details>
 
 <details>
-<summary>How is pricing structured?</summary>
+<summary>
+
+### How is pricing structured?
+
+</summary>
 
 Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for a quote tailored to your team.
 
 </details>
 
 <details>
-<summary>How do I get day-0 support for new models without restarting?</summary>
+<summary>
+
+### How do I get day-0 support for new models without restarting?
+
+</summary>
 
 Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule, with no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.
 
