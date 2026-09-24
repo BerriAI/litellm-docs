@@ -22,26 +22,28 @@ import HeroDark from './hero-dark.png';
   style={{width: '100%'}}
 />
 
-“Create a key for Engineering with a $100 monthly budget.”
-
-With **LiteLLM Admin MCP**, you can give that request to an agent in your MCP client. Ask it to look up the team, create the key with the budget you specify, and return the settings for you to review.
-
-We’ve released LiteLLM Admin MCP as a standalone, open-source connector for managing your LiteLLM gateway. You can connect it to an MCP client or build it into an agent of your own.
+Manage your LiteLLM gateway through an agent with **LiteLLM Admin MCP**, or from Slack with the **LiteLLM Admin App**.
 
 {/* truncate */}
 
-You can handle a project’s model access in one conversation. Ask your agent to create a virtual key with the models and spend limit the project needs. For a model rollout, ask it to add a deployment using a credential you configured on the gateway, then retrieve the deployment’s settings.
+## LiteLLM Admin MCP
 
-You can use the same tools to investigate spending. Ask which teams account for this month’s usage, inspect a key’s budget, or look up request logs before changing a limit. Follow a budget question with a request to update that budget.
+Use 65 admin operations from your MCP client or custom agent:
 
-The connector covers 65 administrative operations across models, keys, teams, budgets and reporting. You can limit an agent to lookups or choose the actions it can use. Developers can reuse that management integration across MCP clients and custom agents.
+- **Create keys:** Set model access and project budgets.
+- **Add models:** Register deployments using existing gateway credentials.
+- **Manage spend:** Check usage by team or key and update budgets.
+- **Investigate requests:** Inspect request logs to troubleshoot usage.
+- **Control agent access:** Choose allowed tools or restrict the agent to lookups.
 
-[Try LiteLLM Admin MCP on GitHub](https://github.com/BerriAI/litellm-admin-mcp).
+**[Try LiteLLM Admin MCP →](https://github.com/BerriAI/litellm-admin-mcp)**
 
-You can bring these workflows into Slack with the **LiteLLM Admin App**. Your team can ask for model access or check a budget from a DM with **LiteLLM Admin**, using a personal LiteLLM admin account.
+## LiteLLM Admin App for Slack
 
-Ask, “Show Engineering’s spending this week,” or “Increase Engineering’s monthly budget to $500.” You can ask follow-up questions about the team’s model access and use the conversation to request changes. For a model rollout, give the app the deployment name and a gateway credential reference.
+Use the same Admin MCP tools from a Slack DM, with your personal LiteLLM admin account:
 
-The Admin App handles the Slack conversation and account connection. Your team hosts it for your gateway and workspace. The app uses the standalone Admin MCP for gateway operations, so you can use the same management tools through Slack or another MCP client.
+- “Create a key for Engineering with a $100 monthly budget.”
+- “Show Engineering’s spending this week.”
+- “Increase Engineering’s monthly budget to $500.”
 
-[Try the LiteLLM Admin App on GitHub](https://github.com/BerriAI/litellm-admin-agent).
+**[Try the LiteLLM Admin App →](https://github.com/BerriAI/litellm-admin-agent)**
