@@ -172,7 +172,7 @@ print(response)
 
 ```
 
-:::info Langfuse v4 semantics
+:::info[Langfuse v4 semantics]
 
 - **Custom `trace_id`**: Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). LiteLLM first lowercases your `trace_id` and strips hyphens, so a UUID such as `01234567-89AB-CDEF-0123-456789ABCDEF` becomes `0123456789abcdef0123456789abcdef` and is used as is. Anything that still isn't 32 hex chars is deterministically hashed to one (via `Langfuse.create_trace_id(seed=<your id>)`). The same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the normalized or hashed form, not your original string.
 - **`version` / `trace_version`**: Langfuse v4 has a single `version` attribute. On a new trace, `trace_version` takes precedence over `version`; on an `existing_trace_id` continuation, `version` still lands on the generation.
