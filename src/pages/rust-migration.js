@@ -7,11 +7,11 @@ import {
   GOALS,
   MAIN_VERSION,
   RELEASES,
-  RELEASE_NOTES,
   STAGES,
   progressAt,
 } from '@site/src/data/rustMigration';
 import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
+import picker from '@site/src/components/RustMigration/Picker.module.css';
 import styles from './rust-migration.module.css';
 
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
@@ -248,22 +248,22 @@ function GoalSelect({goal, onChange}) {
       value={goal.id}
       onValueChange={id => onChange(GOALS.find(item => item.id === id))}
     >
-      <Select.Trigger className={styles.sentenceControl} aria-label="Migration goal">
+      <Select.Trigger className={picker.sentenceControl} aria-label="Migration goal">
         <Select.Value />
-        <Select.Icon className={styles.selectIcon}>
+        <Select.Icon className={picker.selectIcon}>
           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Positioner className={styles.selectPositioner} sideOffset={8} align="start" alignItemWithTrigger={false}>
-          <Select.Popup className={styles.selectPopup}>
+        <Select.Positioner className={picker.selectPositioner} sideOffset={8} align="start" alignItemWithTrigger={false}>
+          <Select.Popup className={picker.selectPopup}>
             <Select.List>
               {GOALS.map(item => (
-                <Select.Item className={styles.selectItem} value={item.id} key={item.id}>
-                  <Select.ItemText className={styles.selectLabel}>{item.text}</Select.ItemText>
-                  <span className={styles.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
+                <Select.Item className={picker.selectItem} value={item.id} key={item.id}>
+                  <Select.ItemText className={picker.selectLabel}>{item.text}</Select.ItemText>
+                  <span className={picker.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
                   {/* Answers "what is in this goal" right where it is picked. */}
-                  <span className={styles.selectScope}>
+                  <span className={picker.selectScope}>
                     {item.summary ?? item.children.map(child => child.text).join(', ')}
                   </span>
                 </Select.Item>
@@ -308,7 +308,7 @@ function MigrationTracker() {
           <span className={styles.keepTogether}>
             {'shown as a '}
             <button
-              className={styles.sentenceControl}
+              className={picker.sentenceControl}
               type="button"
               title={`Show the ${otherView}`}
               onClick={() => setView(otherView)}
@@ -347,8 +347,7 @@ function RolloutStages() {
     },
   ];
   return (
-    <section className={styles.section} aria-labelledby="rollout-stages-title">
-      <SectionHeading id="rollout-stages-title" kicker="Rollout stages" title="How a feature moves to Rust" />
+    <>
       <p className={styles.sectionLead}>
         Each feature starts on Python and moves through these stages one release at a time. For the two middle stages,
         the <code>LITELLM_RUST</code> environment variable flips the default for the whole process.
@@ -370,6 +369,74 @@ function RolloutStages() {
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+const FAQ = [
+  {
+    id: 'faq-my-version',
+    question: 'I am on a specific version. What is the impact for me?',
+    answer: (
+      <p className={styles.sectionLead}>
+        Pick your version on the <Link to="/rust-migration/version">version impact page</Link> to see what already
+        runs on Rust for you and what changes when you upgrade.
+      </p>
+    ),
+  },
+  {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
+];
+
+const hashId = () => decodeURIComponent(window.location.hash.slice(1));
+
+// Point the URL at an open answer so it can be shared, without adding a history
+// entry per toggle. A deeper link already inside the answer, like a stage, is kept.
+function syncHash(details) {
+  const current = hashId();
+  const {pathname, search} = window.location;
+  if (details.open && !(current && details.contains(document.getElementById(current)))) {
+    window.history.replaceState(window.history.state, '', `${pathname}${search}#${details.id}`);
+  } else if (!details.open && current === details.id) {
+    window.history.replaceState(window.history.state, '', `${pathname}${search}`);
+  }
+}
+
+// Answers start collapsed, and each one is addressable as `#<id>`. A link to an
+// answer, or to something inside one like a stage badge's "What this means",
+// opens it first so the target is visible.
+function Faq() {
+  const listRef = useRef(null);
+  useEffect(() => {
+    const openHashTarget = () => {
+      const id = hashId();
+      const target = id && document.getElementById(id);
+      const details = target && listRef.current?.contains(target) && target.closest('details');
+      if (details && !details.open) {
+        details.open = true;
+        target.scrollIntoView();
+      }
+    };
+    openHashTarget();
+    window.addEventListener('hashchange', openHashTarget);
+    return () => window.removeEventListener('hashchange', openHashTarget);
+  }, []);
+
+  return (
+    <section className={styles.section} id="faq" aria-labelledby="faq-title">
+      <SectionHeading id="faq-title" kicker="FAQ" title="Frequently asked questions" />
+      <ul className={styles.faq} ref={listRef}>
+        {FAQ.map(item => (
+          <li key={item.id}>
+            <details className={styles.faqItem} id={item.id} onToggle={event => syncHash(event.currentTarget)}>
+              <summary className={styles.faqQuestion}>
+                {item.question}
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+              </summary>
+              <div className={styles.faqAnswer}>{item.answer}</div>
+            </details>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -383,39 +450,29 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
-const RELEASE_EVENTS = RELEASE_NOTES.map(note => ({
-  kind: 'Release',
-  title: `Released ${note.version}`,
-  href: `https://github.com/BerriAI/litellm/releases/tag/${note.version}`,
-  date: note.releasedOn,
-  changes: note.changes,
-}));
-
 function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
-  const events = [
-    ...posts.map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date})),
-    ...RELEASE_EVENTS,
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const events = posts
+    .map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date}))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
       <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
+      <p className={styles.sectionLead}>
+        For what each release moved to Rust, pick your version on
+        the <Link to="/rust-migration/version">version impact page</Link>.
+      </p>
       <ol className={styles.events}>
         {events.map(event => (
-          <li className={`${styles.event} ${event.changes ? styles.releaseEvent : ''}`} key={event.href}>
+          <li className={styles.event} key={event.href}>
             <p className={styles.eventMeta}>
               <time dateTime={event.date}>{formatDate(FULL_DATE, event.date)}</time>
               {' · '}
               {event.kind}
             </p>
             <Link className={styles.eventTitle} to={event.href}>{event.title}</Link>
-            {event.changes && (
-              <ul className={styles.eventChanges}>
-                {event.changes.map(change => <li key={change}>{change}</li>)}
-              </ul>
-            )}
           </li>
         ))}
       </ol>
@@ -433,8 +490,8 @@ export default function RustMigrationPage() {
           <p className={styles.description}>See what already runs on Rust and what is next.</p>
         </header>
         <MigrationTracker />
-        <RolloutStages />
         <MigrationUpdates />
+        <Faq />
       </main>
     </Layout>
   );

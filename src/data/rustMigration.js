@@ -92,6 +92,9 @@ const PROVIDERS = {
 // what litellm serves for each API today, with OpenAI-compatible endpoints
 // standing in for the long tail that shares one implementation.
 //
+// An area marked `groundwork: true` holds shared work rather than API and
+// provider pairs, so views about what a request runs on leave it out.
+//
 // A unit with its own `units` is a group that only collects the units beneath
 // it. Units roll out through STAGES by default. A unit marked `task: true` has
 // no rollout of its own and is simply done or not, like the cloud auth that
@@ -100,6 +103,7 @@ const AREAS = [
   {
     id: 'foundation',
     text: 'Foundation',
+    groundwork: true,
     units: [
       {
         id: 'auth',
@@ -219,9 +223,9 @@ const ROLLOUTS = {
   'foundation/auth/azure': [{version: 'v1.102.0-rc.1'}],
   'foundation/auth/gcp': [{version: 'v1.102.0-rc.1'}],
   'foundation/http': [{version: 'v1.103.0-rc.1'}],
-  'foundation/logging': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
-  'messages/anthropic': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
-  'messages/azure_ai': [{version: 'v1.94.0-rc.1', stage: 'rustOptIn'}],
+  'foundation/logging': [{version: 'v1.104.0-rc.1', stage: 'rustOptIn'}],
+  'messages/anthropic': [{version: 'v1.104.0-rc.1', stage: 'rustOptIn'}],
+  'messages/azure_ai': [{version: 'v1.104.0-rc.1', stage: 'rustOptIn'}],
   'transcription/bedrock': [{version: 'v1.103.0-rc.1', stage: 'rustRequired'}],
   'ocr/mistral': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
   'ocr/azure_ai': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
@@ -230,24 +234,8 @@ const ROLLOUTS = {
   'ocr/cohere': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
   'ocr/reducto': [{version: 'v1.102.0-rc.1', stage: 'rustOptOut'}],
   'ocr/aws_textract': [{version: 'v1.103.0-rc.1', stage: 'rustRequired'}],
-  'token-counter/tiktoken': [{version: 'v1.103.0-rc.2', stage: 'rustOptIn'}],
+  'token-counter/tiktoken': [{version: 'v1.104.0-rc.1', stage: 'rustOptIn'}],
 };
-
-// Releases worth calling out next to the blog posts; only add ones that changed
-// what runs on Rust. The date is kept here because the release snapshot only
-// holds the latest releases.
-export const RELEASE_NOTES = [
-  {
-    version: 'v1.102.0-rc.1',
-    releasedOn: '2026-09-13',
-    changes: ['OCR runs on Rust by default for every provider except AWS Textract, with the Python implementation kept as a fallback.'],
-  },
-  {
-    version: 'v1.103.0-rc.1',
-    releasedOn: '2026-09-20',
-    changes: ['AWS Textract OCR and Bedrock audio transcription run on Rust only.'],
-  },
-];
 
 // Everything below derives the page model from the declarations above and
 // fails the build when they drift out of shape.
@@ -263,6 +251,15 @@ export const RELEASES = [
 ].sort((left, right) => semver.compare(left.version, right.version));
 
 export const MAIN_VERSION = releaseSnapshot.main.version;
+
+// Stable releases, oldest first. A stable release carries the rollouts of the
+// RCs it was cut from, which semver ordering already gives: v1.102.1 sorts
+// after v1.102.0-rc.2 and before v1.103.0-rc.1.
+export const STABLE_RELEASES = releaseSnapshot.stable
+  .map(release => ({version: release.version, date: release.releasedAt}))
+  .sort((left, right) => semver.compare(left.version, right.version));
+
+export const LATEST_STABLE_VERSION = STABLE_RELEASES.at(-1)?.version;
 
 function checkVersion(version) {
   if (semver.valid(version) === null || semver.prerelease(version)?.[0] !== 'rc') {
@@ -280,8 +277,6 @@ RELEASES.forEach(release => checkVersion(release.version));
 if (!RELEASES.at(-1).isMain) {
   fail(`main (${MAIN_VERSION}) must be newer than every published release`);
 }
-
-RELEASE_NOTES.forEach(note => checkVersion(note.version));
 
 const STAGE_INDEX = new Map(STAGES.map((stage, index) => [stage.id, index]));
 
@@ -326,17 +321,20 @@ function group(id, text, children) {
   return {id, text, children, features: children.flatMap(child => child.features)};
 }
 
-function buildUnit(parentId, unit) {
+// `path` holds the display names from the area down to the unit, like
+// `['OCR', 'Mistral']`, so a unit can be named outside its tree.
+function buildUnit(parentId, parentPath, unit) {
   const {id, text, task = false, units} = typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
   const key = `${parentId}/${id}`;
+  const path = [...parentPath, text];
   if (!text) {
     fail(`${key} has no display name in PROVIDERS`);
   }
   if (units) {
-    return group(key, text, units.map(child => buildUnit(key, child)));
+    return group(key, text, units.map(child => buildUnit(key, path, child)));
   }
   unusedRollouts.delete(key);
-  const node = {id: key, text, task, children: [], rollout: parseRollout(key, ROLLOUTS[key], task)};
+  const node = {id: key, text, path, task, children: [], rollout: parseRollout(key, ROLLOUTS[key], task)};
   node.features = [node];
   return node;
 }
@@ -345,12 +343,20 @@ for (const area of AREAS) {
   if (areasById.has(area.id)) {
     fail(`duplicate area: ${area.id}`);
   }
-  const units = area.units.map(unit => buildUnit(area.id, unit));
-  areasById.set(area.id, group(area.id, area.text, units));
+  const units = area.units.map(unit => buildUnit(area.id, [area.text], unit));
+  const node = {...group(area.id, area.text, units), groundwork: area.groundwork ?? false};
+  node.features.forEach(feature => {
+    feature.area = node;
+  });
+  areasById.set(area.id, node);
 }
 if (unusedRollouts.size > 0) {
   fail(`rollouts name units no area lists: ${[...unusedRollouts].join(', ')}`);
 }
+
+// Every unit in every area, in declaration order. Each one links back to its
+// area as `area`.
+export const FEATURES = [...areasById.values()].flatMap(area => area.features);
 
 // Goals in declaration order, shaped like nodes so the page treats a goal as
 // the root of its own tree.
