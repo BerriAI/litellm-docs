@@ -1,0 +1,125 @@
+.crab {
+  position: fixed;
+  z-index: 200;
+  width: 92px;
+  touch-action: none;
+  user-select: none;
+}
+
+.button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.button:active {
+  cursor: grabbing;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 18%));
+}
+
+.body,
+.eyes circle,
+.clawLeft,
+.clawRight {
+  fill: none;
+  stroke: #ce422b;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.body {
+  fill: #f4efe6;
+}
+
+.eyes circle {
+  fill: #fffdf8;
+}
+
+.pupil {
+  fill: #1f2328;
+  stroke: none;
+}
+
+.smile {
+  fill: none;
+  stroke: #ce422b;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.eyes {
+  transform-box: fill-box;
+  transition: transform 180ms ease;
+}
+
+.clawLeft,
+.clawRight {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wave 2.4s ease-in-out infinite;
+}
+
+.clawRight {
+  animation-delay: -1.2s;
+}
+
+.bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: 180px;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: #1f2328;
+  color: #f4efe6;
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  right: 28px;
+  bottom: -6px;
+  border: 6px solid transparent;
+  border-top-color: #1f2328;
+  border-bottom: 0;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+
+@media (max-width: 576px) {
+  .crab {
+    width: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clawLeft,
+  .clawRight,
+  .eyes {
+    animation: none;
+    transition: none;
+  }
+}
