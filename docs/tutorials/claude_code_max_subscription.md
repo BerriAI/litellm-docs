@@ -312,6 +312,21 @@ curl -X POST "http://localhost:4000/key/generate" \
   }'
 ```
 
+### Seeing Which Requests Were Billed to a Seat
+
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the Max seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. Rows written by a LiteLLM version before this field existed have no value
+
+`spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
+
+Filter the Logs page at `http://localhost:4000/ui/?page=logs` with the **Credential** dropdown (**Client OAuth token** or **Configured key**); the row's detail drawer shows the same value under Request Details. The same filter is available on the spend logs API:
+
+```bash showLineNumbers title="List Seat-Billed Requests"
+curl "http://localhost:4000/spend/logs/ui?used_client_oauth_token=true" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+Pass `used_client_oauth_token=false` for the requests the configured key paid for
+
 ## Troubleshooting
 
 ### OAuth Token Not Being Forwarded
