@@ -42,6 +42,6 @@ You can bring these workflows into Slack with the **LiteLLM Admin App**. Your te
 
 Ask, “Show Engineering’s spending this week,” or “Increase Engineering’s monthly budget to $500.” You can ask follow-up questions about the team’s model access and use the conversation to request changes. For a model rollout, give the app the deployment name and a gateway credential reference.
 
-The Admin App handles the Slack conversation and account connection. Your team hosts it for your gateway and workspace. We’re connecting the app to the standalone Admin MCP so you can use the same management tools through Slack or another MCP client.
+The Admin App handles the Slack conversation and account connection. Your team hosts it for your gateway and workspace. The app uses the standalone Admin MCP for gateway operations, so you can use the same management tools through Slack or another MCP client.
 
 [Try the LiteLLM Admin App on GitHub](https://github.com/BerriAI/litellm-admin-agent).
