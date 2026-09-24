@@ -79,7 +79,7 @@ Examples:
 - `"0 0 * * sun"` – Run at midnight every Sunday
 - `"*/30 * * * *"` – Run every 30 minutes
 
-:::warning Use day names in the weekday field
+:::warning[Use day names in the weekday field]
 
 Use day names (`sun`, `mon`, ...) instead of numbers in the weekday field. LiteLLM schedules the cleanup with APScheduler, which numbers weekdays 0=Monday through 6=Sunday, while standard cron uses 0=Sunday through 6=Saturday. Numeric weekday values are not translated between the two conventions, so `"0 0 * * 0"` fires on Monday, not Sunday. Day names mean the same thing in both conventions and always behave as expected.
 
@@ -103,7 +103,7 @@ Wall-clock budget for the whole run, in the same duration format as the retentio
 
 Postgres `statement_timeout` and `lock_timeout` applied to each statement the job issues. Default is `30s`. A statement that cannot finish, or cannot take its lock, inside this window is cancelled by the database instead of holding a lock while user traffic queues behind it. Environment default: `SPEND_LOG_CLEANUP_BATCH_TIMEOUT_SECONDS`, expressed in seconds
 
-:::warning Keep the batch timeout above what one batch legitimately needs
+:::warning[Keep the batch timeout above what one batch legitimately needs]
 
 A cancelled statement counts as a batch failure, and `SPEND_LOG_CLEANUP_MAX_CONSECUTIVE_BATCH_FAILURES` failures in a row (default 3) abort the run. Set the timeout below the time a batch honestly needs and every batch is cancelled, so the run aborts having deleted nothing and logs `Aborting LiteLLM_SpendLogs cleanup after 3 consecutive batch failures; total deleted before abort: 0`. If you raise `maximum_spend_logs_cleanup_batch_size`, check that the timeout still leaves the larger statement room to finish
 

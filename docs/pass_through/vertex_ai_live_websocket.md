@@ -48,17 +48,18 @@ litellm_settings:
 
 ### Query Parameters
 
-- `project_id` (optional): Google Cloud project ID (can be set in config)
-- `location` (optional): Vertex AI location (can be set in config, default: us-central1)
+- `vertex_project` (optional): Google Cloud project ID (can be set in config)
+- `vertex_location` (optional): Vertex AI location (can be set in config, default: us-central1)
+- `model` (optional): model name, used to determine the Vertex region for global models
 
 ### Example Connection
 
 ```javascript
-// If project_id and location are set in config, you can connect without query params
+// If vertex_project and vertex_location are set in config, you can connect without query params
 const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live');
 
 // Or specify them explicitly
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id&location=us-central1');
+const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id&vertex_location=us-central1');
 ```
 
 ## Cost Tracking
@@ -170,7 +171,7 @@ import json
 import websockets
 
 async def chat_with_gemini():
-    uri = "ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id"
+    uri = "ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id"
     
     async with websockets.connect(uri) as websocket:
         # Setup
@@ -209,7 +210,7 @@ asyncio.run(chat_with_gemini())
 ### JavaScript Client
 
 ```javascript
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?project_id=your-project-id');
+const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id');
 
 ws.onopen = function() {
     // Send setup

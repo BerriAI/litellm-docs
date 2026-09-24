@@ -3,11 +3,29 @@ import TabItem from '@theme/TabItem';
 
 # Vertex Batch APIs
 
-Just add the following Vertex env vars to your environment. 
+## Setup
+
+Configure the Vertex model in your config.yaml. `gcs_bucket_name` is the GCS bucket batch prediction files are stored in, a required param for vertexai to store files. The older `bucket_name` litellm param is still supported and is treated the same as `gcs_bucket_name`. If both are set on the same deployment, `gcs_bucket_name` wins
+
+```yaml showLineNumbers title="litellm-config.yaml"
+model_list:
+  - model_name: vertex-batch
+    litellm_params:
+      model: vertex_ai/{{gemini_flash}}
+      vertex_project: my-project
+      vertex_location: us-central1
+      vertex_credentials: /path/to/service_account.json
+      gcs_bucket_name: my-batch-bucket # required param for vertexai to store files
+    model_info:
+      mode: batch
+```
+
+When `gcs_bucket_name` (or `bucket_name`) and `vertex_credentials` are not set on the model's `litellm_params`, LiteLLM falls back to these env vars. `GCS_BATCH_BUCKET_NAME` exists because the [`gcs_bucket` logging callback](../observability/gcs_bucket_integration) already uses `GCS_BUCKET_NAME` as the bucket it writes LLM request logs to, so setting `GCS_BUCKET_NAME` to your batch bucket would also send request logs there. `GCS_BATCH_BUCKET_NAME` is checked first for batch files and, when it is unset, `GCS_BUCKET_NAME` is used
 
 ```bash
 # GCS Bucket settings, used to store batch prediction files in
-export GCS_BUCKET_NAME="my-batch-bucket" # the bucket you want to store batch prediction files in
+export GCS_BATCH_BUCKET_NAME="my-batch-bucket" # bucket for batch prediction files, takes precedence over GCS_BUCKET_NAME
+export GCS_BUCKET_NAME="my-logging-bucket" # used for batch files only when GCS_BATCH_BUCKET_NAME is unset
 export GCS_PATH_SERVICE_ACCOUNT="/path/to/service_account.json" # path to your service account json file
 
 # Vertex /batch endpoint settings, used for LLM API requests
@@ -34,7 +52,7 @@ Create a file called `batch_requests.jsonl` with your requests:
 
 #### 2. Upload the file
 
-Upload your JSONL file. For `vertex_ai`, the file will be stored in your configured GCS bucket provided by `GCS_BUCKET_NAME`.
+Upload your JSONL file. For `vertex_ai`, the file will be stored in the deployment's `gcs_bucket_name` (or `bucket_name`), falling back to `GCS_BATCH_BUCKET_NAME` and then `GCS_BUCKET_NAME`.
 
 <Tabs>
 <TabItem value="python" label="Python">

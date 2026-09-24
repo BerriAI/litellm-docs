@@ -83,9 +83,9 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 ## Spend Tracking 
 
 Get spend per:
-- key - via `/key/info` [Swagger](https://litellm-api.up.railway.app/#/key%20management/info_key_fn_key_info_get)
-- user - via `/user/info` [Swagger](https://litellm-api.up.railway.app/#/user%20management/user_info_user_info_get)
-- team - via `/team/info` [Swagger](https://litellm-api.up.railway.app/#/team%20management/team_info_team_info_get)  
+- key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
+- user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
+- team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
 - ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
@@ -630,6 +630,30 @@ general_settings:
   custom_key_policy: custom_auth.custom_key_policy_fn
 ```
 
+### Enforce a key_alias naming pattern
+
+Set `litellm_settings.key_alias_pattern` to a regex and every `key_alias` sent to `/key/generate`, `/key/service-account/generate`, `/key/update`, and `/key/{key}/regenerate` has to match it, which covers the Admin UI create, edit, and regenerate key flows. The whole alias has to match (Python `re.fullmatch`), so `team-[a-z]+` accepts `team-search` and rejects `team-search-2`. Aliases are capped at 255 characters before the pattern runs, so a pattern that backtracks badly never sees an unbounded alias
+
+```yaml
+litellm_settings:
+  key_alias_pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+```
+
+A request whose alias does not match fails with a `400` that names the pattern:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"key_alias": "Prod Key"}'
+```
+
+```json
+{"error": {"message": "Invalid key_alias format. Must be at most 255 characters and match the configured key_alias_pattern: ^[a-z0-9]+(-[a-z0-9]+)*$", "type": "bad_request_error", "param": "key_alias", "code": "400"}}
+```
+
+`key_alias_pattern` replaces the built-in rule that `enable_key_alias_format_validation` turns on, so set one or the other. An update or regenerate that leaves `key_alias` unchanged is not checked, so keys named before the pattern was configured can still be edited, and the pattern applies the moment the alias changes. Path traversal and control characters in an alias are rejected whatever the pattern allows. A pattern that does not compile fails proxy startup with `Invalid regex set for litellm_settings.key_alias_pattern`
+
 ### Upperbound /key/generate params
 Use this, if you need to set default upperbounds for `max_budget`, `budget_duration` or any `key/generate` param per key. 
 
@@ -699,7 +723,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -803,7 +827,7 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 -d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
 ```
 
-[API Reference](https://litellm-api.up.railway.app/#/key%20management/update_key_fn_key_update_post)
+[API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
 
 ### Restricting Key Generation
@@ -891,16 +915,16 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/user%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/team%20management)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 
 

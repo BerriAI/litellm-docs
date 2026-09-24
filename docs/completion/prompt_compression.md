@@ -1,6 +1,6 @@
 # Prompt Compression (`compress()`)
 
-:::info Beta
+:::info[Beta]
 
 This feature is in beta. APIs and behavior may change before general availability.
 

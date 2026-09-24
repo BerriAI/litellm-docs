@@ -10,11 +10,11 @@ LiteLLM automatically tracks spend for all known models. See our [model cost map
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
-:::tip Keep Pricing Data Updated
+:::tip[Keep Pricing Data Updated]
 [Sync model pricing data from GitHub](./sync_models_github.md) to ensure accurate cost tracking.
 :::
 
-:::info Cost does not match your provider bill?
+:::info[Cost does not match your provider bill?]
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
@@ -164,6 +164,15 @@ Navigate to the Usage Tab on the LiteLLM UI (found on https://your-proxy-endpoin
 
 </TabItem>
 </Tabs>
+
+### Requests that price to $0
+
+A request that carries usage but prices to `$0` on a model whose pricing entry has a non-zero rate is still written to `LiteLLM_SpendLogs` with `spend = 0`, and LiteLLM flags it in two places so the gap is visible instead of silently under-billed
+
+- one `WARNING` line in the proxy log naming the model group, the deployment's pricing entry and the pricing key it is missing, for example `pricing entry '<model_id>' has no input_cost_per_token, output_cost_per_token`
+- the Prometheus counter `litellm_zero_cost_requests_total`, labelled by `requested_model`, `model`, `model_id`, `api_provider` and `reason` (`missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`), so you can alert on it (see [Prometheus metrics](prometheus#request-counting-metrics))
+
+Free models (every rate the request used is set to `0`) and requests that carry no usage are not flagged. To fix a `missing_pricing_key`, set the missing rate in the deployment's `model_info` or in the model cost map, or set every rate to `0` to mark the model free
 
 ### Allowing Non-Proxy Admins to access `/spend` endpoints
 
@@ -389,7 +398,7 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
 
 ### API Reference
 
-See our [Swagger API](https://litellm-api.up.railway.app/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
+See our [Swagger API](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
 :::info
 Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
@@ -397,7 +406,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 
 ## Custom Tags
 
-:::tip See Full Request Tags Documentation
+:::tip[See Full Request Tags Documentation]
 For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
 :::
 
@@ -825,7 +834,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 :::info
 
-Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://litellm-api.up.railway.app/#/key%20management/generate_key_fn_key_generate_post)
+Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://docs.litellm.ai/api-reference/#/key%20management/generate_key_fn_key_generate_post)
 
 :::
 

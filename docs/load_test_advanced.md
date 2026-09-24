@@ -28,7 +28,7 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
 
 **Note:**  we're currently migrating to aiohttp which has 10x higher throughput. We recommend using the `openai/` provider for load testing.
 
-:::tip Setting Up a Fake OpenAI Endpoint
+:::tip[Setting Up a Fake OpenAI Endpoint]
 You can use our hosted fake endpoint or self-host your own using [github.com/BerriAI/example_openai_endpoint](https://github.com/BerriAI/example_openai_endpoint).
 :::
 

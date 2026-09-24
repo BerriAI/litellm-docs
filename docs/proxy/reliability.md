@@ -107,7 +107,7 @@ litellm --config /path/to/config.yaml
 
 ### 3. Test Fallbacks
 
-:::warning Deprecated for Proxy requests
+:::warning[Deprecated for Proxy requests]
 Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, and `mock_testing_content_policy_fallbacks` are stripped from incoming Proxy requests and have no effect. These flags remain supported only for direct `litellm.Router` calls in tests.
 :::
 

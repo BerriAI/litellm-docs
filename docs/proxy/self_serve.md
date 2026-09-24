@@ -249,6 +249,8 @@ This budget only applies to personal keys created by that user - seen under `Def
 
 This budget does not apply to keys created under non-default teams.
 
+A user's personal `max_budget` is also the ceiling for the personal keys they create from the UI. A user with a $500 budget can create a personal key with a $100 `max_budget`, while a $600 request is rejected with `max_budget (600.0) cannot exceed the caller's own max_budget (500.0)`. A user with no personal budget falls back to the UI session budget ([`max_ui_session_budget`](./config_settings.md), default $1; `null` removes the ceiling) as the cap for an explicit key `max_budget`. Leaving `max_budget` off the key sets no key-level cap; spend on that key is still limited by the user's own budget. Changing a user's `max_budget` through `/user/update`, `/user/bulk_update`, or the Internal Users page takes effect on the instance that handled the update immediately. With Redis configured the change is broadcast to the other proxy instances as well; without Redis, other instances can keep enforcing the previous ceiling until their cached user record expires (about 60 seconds)
+
 
 ### Set max budget for teams
 

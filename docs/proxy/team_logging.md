@@ -215,10 +215,10 @@ Every entry registered under that `callback_name` is removed, across callback ty
 
 ### Team Logging Endpoints
 
-- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
-- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://litellm-api.up.railway.app/#/team%20management/get_team_callbacks_team__team_id__callback_get)
-- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://litellm-api.up.railway.app/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
-- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://litellm-api.up.railway.app/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
+- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://docs.litellm.ai/api-reference/#/team%20management/add_team_callbacks_team__team_id__callback_post)
+- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://docs.litellm.ai/api-reference/#/team%20management/get_team_callbacks_team__team_id__callback_get)
+- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
+- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
 
 
 
@@ -339,7 +339,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
 `os.environ/...` references inside API-supplied `callback_vars` are rejected (since v1.84). Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
 
-<iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameBorder="0" allowFullScreen></iframe>
 
 </TabItem>
 <TabItem label="GCS Bucket" value="gcs_bucket">

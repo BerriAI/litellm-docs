@@ -23,7 +23,7 @@ LiteLLM supports all anthropic models.
 | Property | Details |
 |-------|-------|
 | Description | Claude is a highly performant, trustworthy, and intelligent AI platform built by Anthropic. Claude excels at tasks involving language, reasoning, analysis, coding, and more. Also available via Azure Foundry. |
-| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
+| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure_ai/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
 | Provider Doc | [Anthropic ↗](https://docs.anthropic.com/en/docs/build-with-claude/overview), [Azure Foundry Claude ↗](https://learn.microsoft.com/en-us/azure/ai-services/foundry-models/claude) |
 | API Endpoint for Provider | https://api.anthropic.com (or Azure Foundry endpoint: `https://<resource-name>.services.ai.azure.com/anthropic`) |
 | Supported Endpoints | `/chat/completions`, `/v1/messages` (passthrough) |
@@ -169,14 +169,14 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 # os.environ["LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX"] = "true" # [OPTIONAL] Disable automatic URL suffix appending
 ```
 
-:::tip Azure Foundry Support
+:::tip[Azure Foundry Support]
 
-Claude models are also available via Microsoft Azure Foundry. Use the `azure/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
+Claude models are also available via Microsoft Azure Foundry. Use the `azure_ai/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
 
 Example:
 ```python
 response = completion(
-    model="azure/{{anthropic}}",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[{"role": "user", "content": "Hello!"}]
@@ -207,7 +207,7 @@ With `LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX=true`:
 
 ### Azure AI Foundry (Alternative Method)
 
-:::tip Recommended Method
+:::tip[Recommended Method]
 For full Azure support including Azure AD authentication, use the dedicated [Azure Anthropic provider](./azure/azure_anthropic) with `azure_ai/` prefix.
 :::
 

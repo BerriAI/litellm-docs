@@ -1215,7 +1215,7 @@ To enable session continuity for Responses API in your LiteLLM proxy, set `optio
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
-:::tip Recommended: Use `encrypted_content_affinity`
+:::tip[Recommended: Use `encrypted_content_affinity`]
 For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
 :::
 

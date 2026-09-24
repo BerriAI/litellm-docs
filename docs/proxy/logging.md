@@ -1336,7 +1336,17 @@ litellm_settings:
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
     s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
     s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
+    s3_max_concurrent_uploads: 16 # [OPTIONAL] cap on simultaneous PUTs per flush; values below 1 or non integers fall back to 16 with a warning
+    s3_batch_file_upload: false # [OPTIONAL] write each flush as one NDJSON .jsonl file per object key prefix instead of one object per request
 ```
+
+The default of 16 for `s3_max_concurrent_uploads` comes from the flush budget rather than from an S3 limit: a full queue of `DEFAULT_S3_BATCH_SIZE` (512) entries has to drain inside `DEFAULT_S3_FLUSH_INTERVAL_SECONDS` (10s), and at a pessimistic 300ms per PUT that needs `512 * 0.3 / 10 = 15.4` uploads in flight, so 16 is the smallest round number that fits. It is also an order of magnitude under the [3,500 PUT/s per prefix](https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html) S3 supports, and in the same range as boto3's `max_concurrency` of 10 or Fluentd's suggested 8 flush threads. The limit is per uvicorn worker, so process wide concurrency is `workers * 16`
+
+The bound is a sliding window, not a batch size: the 17th upload starts as soon as one of the first 16 finishes, so a worker ships about `s3_max_concurrent_uploads / PUT latency` objects per second. Measured against a us-east-1 bucket, one small PUT took about 100ms round trip, so 16 sustains roughly 160 logs per second per worker, 32 about 320, and 64 about 610. Cross region or under `503 SlowDown` the latency is closer to 300ms and those numbers drop to a third. Size it with `s3_max_concurrent_uploads >= peak requests per second per worker * PUT latency in seconds`, rounded up to the next power of two. A worker doing 250 requests per second at 100ms needs 25, so set 32
+
+When the bound is too low for the traffic nothing is lost, but delivery lags: a flush takes longer than `DEFAULT_S3_FLUSH_INTERVAL_SECONDS`, objects show up in the bucket later than the flush interval, and `log_queue` grows in memory until traffic drops. If you see objects arriving minutes late while the proxy log shows no `Error uploading to s3` lines, that is the signal to raise the bound. If the number you compute is above 64, turn on `s3_batch_file_upload` instead: each flush then becomes one object per key prefix, so the bound stops mattering and the bucket sees a handful of PUTs per tick. Raising the bound far above what the formula gives moves you back toward the burst shape that makes S3 throttle: eight workers at a few hundred in flight each measured about 4,500 PUTs per second into one fresh daily prefix and got `503 SlowDown` on 11 to 18 percent of them, while the same eight workers at 16 saw 0.08 percent, all recovered on the first retry
+
+With `s3_batch_file_upload` enabled, each flush produces one `batch_<HH-MM-SS>_<uuid>.jsonl` object per object key prefix, so batch files sit next to the per request objects they replace and team or API key prefixes are preserved. Uploads that fail stay in the queue and are retried on the next flush. The flag is ignored with a warning when `cold_storage_custom_logger: s3_v2` is set, because spend log lookups require per request objects
 
 **Step 3**: Start the proxy, make a test request
 
@@ -2066,9 +2076,7 @@ ModelResponse(
   img={require('../../img/callback_api.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Send LiteLLM logs to a custom API endpoint
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Send LiteLLM logs to a custom API endpoint</p>
 
 <EnterpriseFeature />
 
@@ -2626,7 +2634,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 
-<!-- ## (BETA) Moderation with Azure Content Safety
+{/* ## (BETA) Moderation with Azure Content Safety
 
 Note: This page is for logging callbacks and this is a moderation service. Commenting until we found a better location for this.
 
@@ -2713,4 +2721,4 @@ litellm_settings:
 :::info
 `thresholds` are not required by default, but you can tune the values to your needs.
 Default values is `4` for all categories
-::: -->
+::: */}

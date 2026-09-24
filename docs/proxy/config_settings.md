@@ -138,7 +138,8 @@ general_settings:
   disable_budget_reservation: boolean  # disable pre-request budget reservation; may allow overspend under concurrency
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
   key_management_system: google_kms  # either google_kms or azure_kms
-  master_key: string
+  master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or sk-1234
+  dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or with sk-1234
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
   user_mcp_management_mode: restricted  # or "view_all"
@@ -188,7 +189,10 @@ router_settings:
     "TimeoutErrorRetries": 3,
     "RateLimitErrorRetries": 3,
     "ContentPolicyViolationErrorRetries": 4,
-    "InternalServerErrorRetries": 4
+    "InternalServerErrorRetries": 4,
+    "ServiceUnavailableErrorRetries": 4,
+    "NotFoundErrorRetries": 0,             # never retry a 404
+    "DefaultRetries": 2                    # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "BadRequestErrorAllowedFails": 1000, # Allow 1000 BadRequestErrors before cooling down a deployment
@@ -246,6 +250,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_hf_tokenizer_download | boolean | `false` | If true, it defaults to using the openai tokenizer for all models (including huggingface models). |
 | enable_json_schema_validation | boolean | `false` | If true, enables json schema validation for all requests. |
 | enable_key_alias_format_validation | boolean | `false` | If true, validates `key_alias` format on `/key/generate` and `/key/update`. Must be 2-255 chars, start/end with alphanumeric, only allow `a-zA-Z0-9_-/.@`. |
+| key_alias_pattern | string | `None` | Regex every `key_alias` must fully match on `/key/generate`, `/key/update`, and `/key/{key}/regenerate`. Replaces the built-in rule `enable_key_alias_format_validation` turns on. Aliases are capped at 255 characters. A non-matching alias is rejected with a `400` that names the pattern. [Further docs](./virtual_keys#enforce-a-key_alias-naming-pattern) |
 | require_managed_files | boolean | `false` | When `true`, `POST /v1/files` requires `target_model_names` and rejects classic provider file uploads with `400`. Use to enforce LiteLLM managed files for file ownership and access control. [Further docs](./litellm_managed_files#optional-enforce-managed-files-on-upload) |
 | user_url_validation | boolean | `true` | When `true`, the proxy validates user-controlled URLs (e.g. OpenAPI `spec_path` when it is an `http(s)` URL, image URLs, and similar) before fetching: DNS is resolved and connections to non–globally-routable addresses (RFC1918, loopback, link-local, etc.) are blocked unless the **hostname in the URL** is listed in `user_url_allowed_hosts`. Set to `false` to skip validation (only if you trust who can supply URLs). **Must be set under `litellm_settings`**, not `general_settings`. |
 | user_url_allowed_hosts | array of strings | `[]` | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf). |
@@ -257,7 +262,6 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | add_function_to_prompt | boolean | `false` | If true, when the provider does not support function/tool calling, appends the function definitions to the prompt instead of raising. |
 | ssl_verify | boolean or string | `true` | Controls TLS certificate verification for outgoing LLM requests. Set to `false` to disable verification, or to a string path to a CA bundle. |
 | return_response_headers | boolean | `false` | If true, surfaces the provider's rate-limit response headers (e.g. `x-ratelimit-remaining-requests`) on the response. |
-| telemetry | boolean | `true` | If true, LiteLLM sends anonymous library-usage telemetry. No prompts, keys, or request content are included. Set to `false` to opt out. |
 | max_budget | float | `0` (no cap) | Global spend cap in USD across all providers for this instance. `0` disables the cap. |
 | max_internal_user_budget | float | `null` | Default max budget (USD) applied to every internal user. `null` means no per-user cap. [Further docs](./self_serve#set-default-max-budget-for-internal-users) |
 | default_max_internal_user_budget | float | `null` | Fallback max budget (USD) for internal users when `max_internal_user_budget` is unset. `null` means no cap. |
@@ -297,7 +301,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_budget_reservation | boolean | `false` | Default `false`. Set to `true` to disable pre-request cost reservation. This can allow concurrent requests to exceed a configured budget; requests are still rejected when the budget is already exhausted. LiteLLM logs a warning while this option is enabled. See [Budget reservation](./users#budget-reservation). |
 | allowed_routes | array of strings | `null` (all routes) | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | `null` | Specifies the key management system. [Doc Secret Managers](../secret) |
-| master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy [Set up Virtual Keys](virtual_keys) |
+| master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Set up Virtual Keys](virtual_keys), [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
+| dangerously_permit_weak_or_unset_master_key | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or is `sk-1234`, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY` env var. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
 | database_url | string | `null` (falls back to `DATABASE_URL`) | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
 | database_connection_pool_limit | integer | `10` | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
 | database_connection_timeout | integer | `60` (seconds) | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](./configs.md#configure-db-pool-limits--connection-timeouts) |
@@ -364,6 +369,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | moderation_model | str | `null` | The default model to use for moderation. |
 | custom_sso | str | `null` | Path to a python file that implements custom SSO logic. [Doc on custom SSO](./custom_sso.md) |
 | allow_cli_sso_verification_uri_complete | boolean | `false` | Default `false`. When `true`, `POST /sso/cli/start` also returns `verification_uri_complete`, and `lite login` opens the browser verification page with the code already filled in so the user only confirms it. Off by default so the code has to be typed by hand. [Doc on CLI SSO](./cli_sso.md#pre-fill-the-verification-code) |
+| include_call_id_in_error_body | boolean | `false` | Default `false`. When `true`, JSON error bodies also carry the value of the `x-litellm-call-id` response header, as `error.litellm_call_id` on the OpenAI-shaped routes and `/v1/messages` and as a top-level `litellm_call_id` on pass-through routes, so a client that only prints the body still names the request to look up. [Doc on reporting a problem](./error_reference.md#reporting-a-problem) |
 | allow_client_side_credentials | boolean | `false` | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md) |
 | admin_only_routes | List[str] | `null` | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes) |
 | use_azure_key_vault | boolean | `false` | If true, load keys from azure key vault |
@@ -459,7 +465,10 @@ router_settings:
     "TimeoutErrorRetries": 3,
     "RateLimitErrorRetries": 3,
     "ContentPolicyViolationErrorRetries": 4,
-    "InternalServerErrorRetries": 4
+    "InternalServerErrorRetries": 4,
+    "ServiceUnavailableErrorRetries": 4,
+    "NotFoundErrorRetries": 0,             # never retry a 404
+    "DefaultRetries": 2                    # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "BadRequestErrorAllowedFails": 1000, # Allow 1000 BadRequestErrors before cooling down a deployment
@@ -500,8 +509,6 @@ router_settings:
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
 | timeout | Optional[float] | `null` (uses `litellm_settings.request_timeout`) | The default timeout for a request. Default is 10 minutes. |
 | stream_timeout | Optional[float] | `null` (uses `timeout`) | The default timeout for a streaming request. If not set, the 'timeout' value is used. |
-| ttft_timeout | Optional[float] | `null` (off) | Raise a `litellm.Timeout` if no first token arrives within this many seconds of the connection being accepted, to detect providers that hang before sending any content. When set, a non-streaming call is internally promoted to streaming and the caller still receives a standard response. Best set per deployment. |
-| stream_idle_timeout | Optional[float] | `null` (off) | Raise a `litellm.Timeout` if the gap between consecutive tokens exceeds this many seconds, to detect providers that stall mid-stream. Keep it well above the model's per-token p99 so it acts as a freeze detector rather than a slowness detector. Best set per deployment. |
 | keepalive_seconds | Optional[float] | `null` (off) | Send an SSE `: ping` comment on a streaming response whenever the upstream model goes silent for longer than this many seconds, repeating every `keepalive_seconds` until real content resumes. Use this to stop load balancers or reverse proxies from closing SSE connections that look idle during long silent gaps (e.g. extended thinking before the first visible token). Operator-only by default: a request-level `keepalive_seconds` in the request body is ignored unless the deployment also sets `allow_client_keepalive_override: true`, in which case a request can narrow or change the deployment's value, including disabling it with an explicit `0`. A deployment-level `0` is always a hard disable a request can't override, regardless of override permission. Effective value is clamped to the range 1-300 seconds. Defaults to None (off). |
 | allow_client_keepalive_override | Optional[bool] | `false` | Whether a request's `keepalive_seconds` is allowed to override this deployment's `keepalive_seconds`. Defaults to `false`, meaning `keepalive_seconds` is operator-only for this deployment and any request-level value is silently ignored. |
 | debug_level | Literal["DEBUG", "INFO"] | `INFO` | The debug level for the logging library in the router. |
@@ -756,10 +763,13 @@ router_settings:
 | DYNAMOAI_POLICY_IDS | Comma-separated list of DynamoAI policy IDs to apply
 | DD_BASE_URL | Base URL for Datadog integration
 | DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
+| EDENAI_API_BASE | Base URL for Eden AI. Default is https://api.edenai.run/v3; set https://api.eu.edenai.run/v3 for the EU endpoint
+| EDENAI_API_KEY | API key for Eden AI
 | ELEVENLABS_API_BASE | Base URL for ElevenLabs. Default is https://api.elevenlabs.io
 | EMPOWER_API_BASE | Base URL for Empower. Default is https://app.empower.dev/api/v1
 | EXA_API_BASE | Base URL for the Exa AI search provider
 | FAL_AI_API_BASE | Base URL for fal.ai image generation
+| FAL_AI_QUEUE_API_BASE | Base URL for fal.ai queue requests forwarded through the `/fal_ai` pass-through route. Default is https://queue.fal.run
 | FEATHERLESS_AI_API_BASE | Base URL for Featherless AI, read before `FEATHERLESS_API_BASE`
 | FEATHERLESS_API_BASE | Alias for `FEATHERLESS_AI_API_BASE`
 | FEATHERLESS_API_KEY | Alias for `FEATHERLESS_AI_API_KEY`
@@ -818,10 +828,10 @@ router_settings:
 | PG_VECTOR_API_KEY | API key for a pgvector vector store
 | PINSTRIPES_API_KEY | API key for Pinstripes
 | PROMETHEUS_SELECTED_INSTANCE | Prometheus `instance` label to restrict to when the proxy queries `PROMETHEUS_URL` for fallback metrics. Series carrying any other instance are skipped; when unset, every instance is counted
-| QWEN_AI_PLATFORM_API_BASE | Base URL for Qwen AI Platform (mainland China). Default is https://dashscope.aliyuncs.com/compatible-mode/v1
-| QWEN_AI_PLATFORM_API_BASE_IMAGE | Base URL for Qwen AI Platform image generation. Default is https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
-| QWEN_AI_PLATFORM_API_BASE_RERANK | Base URL for Qwen AI Platform rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
-| QWEN_AI_PLATFORM_API_KEY | API key for Qwen AI Platform, read before the `DASHSCOPE_API_KEY` fallback
+| QWEN_AI_PLATFORM_API_BASE | Base URL for Qianwen AI Platform (mainland China). Default is https://dashscope.aliyuncs.com/compatible-mode/v1
+| QWEN_AI_PLATFORM_API_BASE_IMAGE | Base URL for Qianwen AI Platform image generation. Default is https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+| QWEN_AI_PLATFORM_API_BASE_RERANK | Base URL for Qianwen AI Platform rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
+| QWEN_AI_PLATFORM_API_KEY | API key for Qianwen AI Platform, read before the `DASHSCOPE_API_KEY` fallback
 | QWENCLOUD_API_BASE | Base URL for QwenCloud. Default is https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 | QWENCLOUD_API_BASE_IMAGE | Base URL for QwenCloud image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | QWENCLOUD_API_BASE_RERANK | Base URL for QwenCloud rerank. Default is https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks
@@ -832,6 +842,8 @@ router_settings:
 | RUNWAYML_API_BASE | Base URL for RunwayML
 | RUNWAYML_API_SECRET | API key for RunwayML, read before `RUNWAYML_API_KEY`
 | SAMBANOVA_API_BASE | Base URL for SambaNova. Default is https://api.sambanova.ai/v1
+| SCHEDULED_JOB_SHUTDOWN_CANCEL_TIMEOUT_SECONDS | Seconds proxy shutdown waits for cancelled scheduled jobs to record their outcome before giving up on them. Default 5
+| SCHEDULED_JOB_SHUTDOWN_FINISH_TIMEOUT_SECONDS | Seconds proxy shutdown waits for in-flight scheduled jobs (spend log cleanup, spend writes) to finish before cancelling them. Default 5
 | SCX_API_BASE | Base URL for SCX.ai. Default is https://api.scx.ai/v1
 | SCX_API_KEY | API key for SCX.ai
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
@@ -841,7 +853,10 @@ router_settings:
 | SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
 | STABILITY_API_BASE | Base URL for Stability AI image generation and editing
 | TAVILY_API_BASE | Base URL for the Tavily search provider
+| TINYFISH_AGENT_API_BASE | Base URL for the TinyFish Agent pass-through. Default is https://agent.tinyfish.ai
+| TINYFISH_ALLOW_AUTHENTICATED_RUNS | Set to `true` to let TinyFish Agent pass-through requests use vault and browser-profile fields
 | TINYFISH_API_BASE | Base URL for the TinyFish search provider
+| TINYFISH_COST_PER_STEP | Per-step USD rate for TinyFish Agent pass-through spend tracking. Default is 0.016
 | TOGETHER_AI_API_BASE | Base URL for Together AI. Default is https://api.together.xyz/v1
 | TOGETHER_AI_API_KEY | Alias for the Together AI API key, read after `TOGETHER_API_KEY` and before `TOGETHERAI_API_KEY`
 | TOGETHER_AI_TOKEN | Last of the four accepted names for the Together AI API key, after `TOGETHER_API_KEY`, `TOGETHER_AI_API_KEY` and `TOGETHERAI_API_KEY`
@@ -966,6 +981,7 @@ router_settings:
 | DEFAULT_SQS_FLUSH_INTERVAL_SECONDS | Default flush interval for SQS logging. Default is 10
 | DEFAULT_S3_BATCH_SIZE | Default batch size for S3 logging. Default is 512
 | DEFAULT_S3_FLUSH_INTERVAL_SECONDS | Default flush interval for S3 logging. Default is 10
+| DEFAULT_S3_MAX_CONCURRENT_UPLOADS | Maximum simultaneous S3 PUT uploads per flush for s3_v2 logging. Default is 16
 | DEFAULT_SLACK_ALERTING_THRESHOLD | Default threshold for Slack alerting. Default is 300
 | DEFAULT_SOFT_BUDGET | Default soft budget for LiteLLM proxy keys. Default is 50.0
 | DEFAULT_TRIM_RATIO | Default ratio of tokens to trim from prompt end. Default is 0.75
@@ -1035,6 +1051,7 @@ router_settings:
 | GALILEO_USERNAME | Username for Galileo enterprise Observe authentication
 | GOOGLE_SECRET_MANAGER_PROJECT_ID | Project ID for Google Secret Manager
 | GRACEFUL_SHUTDOWN_TIMEOUT | Seconds the proxy waits for in-flight requests to drain on shutdown (SIGTERM or the `/health/drain` preStop hook) before proceeding with teardown. **Default is 30**
+| GCS_BATCH_BUCKET_NAME | GCS bucket used by Vertex AI files and batches. Takes precedence over GCS_BUCKET_NAME so batch data can live apart from the logging bucket
 | GCS_BUCKET_NAME | Name of the Google Cloud Storage bucket
 | GCS_MOCK | Enable mock mode for GCS integration testing. When set to true, intercepts GCS API calls and returns mock responses without making actual network calls. Default is false
 | GCS_MOCK_LATENCY_MS | Mock latency in milliseconds for GCS API calls when mock mode is enabled. Simulates network round-trip time. Default is 150ms
@@ -1192,6 +1209,7 @@ router_settings:
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
 | LITELLM_CORS_ALLOW_CREDENTIALS | Set to `true` to explicitly allow credentials in CORS responses. When not set, credentials are disabled automatically if `LITELLM_CORS_ORIGINS` is `*` (wildcard) to prevent the browser security misconfiguration of reflecting any origin with credentials
 | LITELLM_CORS_ORIGINS | Comma-separated list of allowed CORS origins (e.g. `https://app.example.com,https://admin.example.com`). Defaults to `*` (all origins) when not set
+| LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY | For local development only: set to `true` to let the proxy start when the master key is not set, is empty, or is `sk-1234`. Same as `general_settings.dangerously_permit_weak_or_unset_master_key`. **Default is false**. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_DD_AGENT_HOST | Hostname or IP of DataDog agent for LiteLLM-specific logging. When set, logs are sent to agent instead of direct API
 | LITELLM_DEPLOYMENT_ENVIRONMENT | Environment name for the deployment (e.g., "production", "staging"). Used as a fallback when OTEL_ENVIRONMENT_NAME is not set. Sets the `environment` tag in telemetry data
 | LITELLM_DETAILED_TIMING | When true, adds detailed per-phase timing headers to responses (`x-litellm-timing-{pre-processing,llm-api,post-processing,message-copy}-ms`). Default is false. See [latency overhead docs](../troubleshoot/latency_overhead.md)
@@ -1213,9 +1231,11 @@ router_settings:
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of exact request paths whose uvicorn access-log lines should be dropped (e.g. health checks, root probes, metrics scrapes that flood logs). Path is matched against the portion before any query string. Empty/unset disables filtering.
 | LITELLM_MIGRATION_DIR | Custom migrations directory for prisma migrations, used for baselining db in read-only file systems.
 | LITELLM_HOSTED_UI | URL of the hosted UI for LiteLLM
+| LITELLM_LITEASK_MODEL | Model alias used by the native LiteAsk admin chat, on gateway versions that include LiteAsk. Unset by default, which hides the widget. Configure a tool-calling model on the gateway or management backend. Only current proxy admins can use it, under their own credentials. Reads work without Redis; approved changes require shared Redis for single-use approvals.
 | LITELLM_UI_API_DOC_BASE_URL | Optional override for the API Reference base URL (used in sample code/docs) when the admin UI runs on a different host than the proxy. Defaults to `PROXY_BASE_URL` when unset.
 | LITELLM_UI_PATH | Path to directory for Admin UI files. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/ui` in Docker.
 | LITELLM_UI_SESSION_DURATION | Duration for UI login session (username/password, SSO, invitation links). Format: "30s", "30m", "24h", "7d". Does not apply to EXPERIMENTAL_UI_LOGIN flow, which uses a fixed 10-minute expiry for security. Default is "24h"
+| LITELLM_EXECUTED_BATCH_CONCURRENCY | How many lines of one batch LiteLLM runs in parallel when it executes the batch itself, which it does for `hosted_vllm` deployments whose server has no Files API. Default is 4. See [vLLM batches](../providers/vllm_batches)
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_BATCH_SIZE | Maximum number of expired LiteLLM dashboard session keys to delete per cleanup run. Default is 1000.
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_INTERVAL_SECONDS | Interval in seconds for how often to run the expired LiteLLM dashboard session key cleanup job. Default is 86400 (24 hours).
@@ -1247,7 +1267,8 @@ router_settings:
 | PYROSCOPE_SAMPLE_RATE | Optional. Sample rate for Pyroscope profiling (integer). No default; when unset, the pyroscope-io library default is used.
 | PYROSCOPE_GRAFANA_USER | Optional. Grafana Cloud Pyroscope user/tenant ID for basic auth. Required when PYROSCOPE_GRAFANA_API_TOKEN is set.
 | PYROSCOPE_GRAFANA_API_TOKEN | Optional. Grafana Cloud API/access policy token for Pyroscope basic auth. Required when PYROSCOPE_GRAFANA_USER is set.
-| LITELLM_MASTER_KEY | Master key for proxy authentication
+| LITELLM_MASTER_KEY | Master key for proxy authentication. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_MIGRATE_FROM_MASTER_KEY | The previous master key. When set together with a new, safe `LITELLM_MASTER_KEY` and no `LITELLM_SALT_KEY`, the proxy re-encrypts every stored value that decrypts under the previous key at boot, before serving traffic, and logs when the variable can be deleted. Leaving it set afterwards is a no-op. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
@@ -1359,6 +1380,7 @@ router_settings:
 | ONYX_API_KEY | API key for Onyx Security AI Guard service
 | ONYX_TIMEOUT | Timeout in seconds for Onyx Guard server requests. Default is 10
 | OTEL_ENDPOINT | OpenTelemetry endpoint for traces
+| OTEL_EXPORTER_OTLP_CERTIFICATE | Path to a CA bundle the OTLP HTTP exporters trust. Set by the OpenTelemetry SDK; when set it takes precedence over `SSL_CERT_FILE` and `ssl_verify` for OTLP exports
 | OTEL_EXPORTER_OTLP_ENDPOINT | OpenTelemetry endpoint for traces
 | OTEL_ENVIRONMENT_NAME | Environment name for OpenTelemetry
 | OTEL_EXPORTER | Exporter type for OpenTelemetry
@@ -1414,7 +1436,9 @@ router_settings:
 | PROXY_BATCH_POLLING_INTERVAL | Time in seconds to wait before polling a batch, to check if it's completed. Default is 3600s (1 hour)
 | PROXY_BATCH_POLLING_ENABLED | Set to `false` to disable the `CheckBatchCost` and `CheckResponsesCost` background polling jobs entirely. Useful for emergency mitigation on installs with large numbers of stale managed objects. Default is `true`
 | PROXY_CONFIG_RELOAD_INTERVAL_SECONDS | How often each pod reloads config-in-DB objects (models, credentials, guardrails, etc.) from the database when `store_model_in_db` is enabled. Lower values speed up cross-pod convergence at the cost of more DB load; applied on proxy startup. Default is 30
+| PROXY_DB_LOOKUP_DEADLINE_SECONDS | Seconds a pre-request DB lookup may take, including the wait for a `PROXY_DB_LOOKUP_MAX_CONCURRENCY` gate slot, before the request fails with 503 instead of parking on the lookup. Default is 10, minimum is 0.1
 | PROXY_DB_LOOKUP_MAX_CONCURRENCY | Maximum number of key-object DB fallback lookups and spend-counter reseed lookups the proxy sends to the Prisma query engine at once. Extra lookups wait in the proxy instead of queueing inside the engine's HTTP client, whose per-request bookkeeping grows with the number of queued requests and starves the event loop during cache-miss bursts. Default is 25
+| PROXY_DB_LOOKUP_STALL_WINDOW_SECONDS | How long after a lookup exceeds `PROXY_DB_LOOKUP_DEADLINE_SECONDS` the `/health/readiness` endpoint reports `"db":"stalled"`. Set to 0 to disable. Default is 30
 | MAX_OBJECTS_PER_POLL_CYCLE | Maximum number of managed objects (batches / responses) fetched per polling cycle. Prevents OOM on installs with many stale rows. Default is `50`
 | MANAGED_OBJECT_STALENESS_CUTOFF_DAYS | Managed objects older than this many days in a non-terminal state are marked `stale_expired` at the start of each poll cycle and skipped. Default is `7`
 | PROXY_BUDGET_RESCHEDULER_MAX_TIME | Maximum time in seconds to wait before checking database for budget resets. Default is 605
@@ -1522,6 +1546,7 @@ router_settings:
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
 | USE_DDTRACE | Flag to enable Datadog tracing. Runs `ddtrace.patch_all()` at proxy startup and swaps LiteLLM's internal no-op tracer for the real ddtrace tracer, so LiteLLM's own spans are emitted too. **Default is False**
 | USE_LITELLM_PROXY | Flag to route every `litellm` SDK completion call through a LiteLLM proxy by default, which lets model names stay in their original provider format such as `gemini/gemini-3.5-flash`. Environment equivalent of `litellm.use_litellm_proxy = True`. **Default is False**
+| USE_V2_MIGRATION_RESOLVER | Flag selecting which resolver applies database migrations at startup. The v2 resolver skips the diff-and-force recovery that caused schema thrashing when two LiteLLM versions ran migrations against the same database during a rolling deploy. Set to `false` to fall back to the legacy v1 resolver. **Default is True**
 | USE_PRISMA_MIGRATE | Removed in [PR #13555](https://github.com/BerriAI/litellm/pull/13555); `prisma migrate deploy` is now the default. Setting this has no effect and it is safe to remove.
 | VANTAGE_API_KEY | API key for Vantage cost-import integration
 | VANTAGE_BASE_URL | Base URL for Vantage API. Default is `https://api.vantage.sh`

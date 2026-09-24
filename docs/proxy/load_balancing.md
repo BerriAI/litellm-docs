@@ -29,7 +29,7 @@ LiteLLM automatically distributes requests across multiple deployments of the sa
 | **latency-based-routing** | Routes to fastest responding deployment | Latency-critical applications |
 | **cost-based-routing** | Routes to deployment with lowest cost | Cost-sensitive applications |
 
-:::tip Deployment Priority
+:::tip[Deployment Priority]
 Use the `order` parameter to prioritize specific deployments. [See Deployment Ordering](#deployment-ordering-priority) for details.
 :::
 
@@ -73,7 +73,7 @@ router_settings:
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
 
-:::tip Separate input/output limits
+:::tip[Separate input/output limits]
 Set `itpm` and `otpm` instead of `tpm`/`rpm` when a provider publishes distinct input and output throughput limits. See [Separate ITPM / OTPM Rate Limits](./io_token_rate_limits).
 :::
 
@@ -300,6 +300,8 @@ router_settings:
       model: "{{openai_small}}"  # Actual model name in 'model_list'
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
+
+To hide a `model_list` entry itself rather than an alias, set `model_info.discoverable: false` on it ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
 
 ### Complete Spec 
 

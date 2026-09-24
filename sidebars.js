@@ -247,6 +247,7 @@ const sidebars = {
             "tutorials/claude_code_autorouter",
             "tutorials/claude_responses_api",
             "tutorials/claude_code_okta_sso",
+            "tutorials/claude_code_gateway",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
             "tutorials/claude_code_customer_tracking",
@@ -267,7 +268,6 @@ const sidebars = {
         "tutorials/github_copilot_integration",
         "tutorials/litellm_gemini_cli",
         "tutorials/litellm_qwen_code_cli",
-        "tutorials/openai_codex",
         "tutorials/retool_assist",
         "tutorials/cost_tracking_coding"
       ]
@@ -324,6 +324,7 @@ const sidebars = {
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
+        { type: "doc", id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -417,10 +418,22 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Setup & Deployment",
+          label: "Client Setup",
+          items: [
+            "proxy/client_setup/overview",
+            "proxy/client_setup/claude_code",
+            "proxy/client_setup/claude_desktop",
+            "proxy/client_setup/codex_chatgpt_desktop",
+            "proxy/client_setup/codex_cli",
+          ],
+        },
+        {
+          type: "category",
+          label: "Deploy the Gateway",
           items: [
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
+            "proxy/manifests_to_microservices",
             "proxy/prod",
             "proxy/redis_requirements",
             "proxy/db_sizing",
@@ -437,11 +450,6 @@ const sidebars = {
             "proxy/master_key_rotations",
             "proxy/billing_metrics",
           ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
         },
         {
           type: "category",
@@ -465,6 +473,7 @@ const sidebars = {
               label: "MCP Gateway",
               items: [
                 "mcp",
+                "mcp_config_reference",
                 "mcp_usage",
                 {
                   type: "category",
@@ -479,6 +488,7 @@ const sidebars = {
                 "mcp_rest_api",
                 "mcp_openapi",
                 "mcp_authentication",
+                "mcp_per_user_auth",
                 "mcp_oauth",
                 "mcp_oauth_passthrough",
                 "mcp_obo_auth",
@@ -513,6 +523,11 @@ const sidebars = {
             },
             { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
           ],
+        },
+        {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
         },
         {
           type: "category",
@@ -601,7 +616,7 @@ const sidebars = {
         {
           type: "link",
           label: "All Endpoints (Swagger)",
-          href: "https://litellm-api.up.railway.app/",
+          href: "https://docs.litellm.ai/api-reference/",
         },
         {
           type: "category",
@@ -897,6 +912,7 @@ const sidebars = {
           label: "/mcp - Model Context Protocol",
           items: [
             "mcp",
+            "mcp_config_reference",
             "mcp_usage",
             {
               type: "category",
@@ -911,6 +927,7 @@ const sidebars = {
             "mcp_rest_api",
             "mcp_openapi",
             "mcp_authentication",
+            "mcp_per_user_auth",
             "mcp_oauth",
             "mcp_oauth_passthrough",
             "mcp_obo_auth",
@@ -964,6 +981,7 @@ const sidebars = {
             "pass_through/langfuse",
             "pass_through/mistral",
             "pass_through/openai_passthrough",
+            "pass_through/tinyfish",
             "pass_through/transcribe",
             "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
@@ -1163,6 +1181,7 @@ const sidebars = {
         "providers/deepinfra",
         "providers/deepseek",
         "providers/docker_model_runner",
+        "providers/edenai",
         "providers/elevenlabs",
         "providers/empiriolabs",
         "providers/fal_ai",
@@ -1200,7 +1219,14 @@ const sidebars = {
         "providers/meta",
         "providers/meta_llama",
         "providers/milvus_vector_stores",
-        "providers/mistral",
+        {
+          type: "category",
+          label: "Mistral AI",
+          items: [
+            "providers/mistral",
+            "providers/mistral_batches",
+          ]
+        },
         "providers/minimax",
         "providers/mongodb_vector_stores",
         "providers/moonshot",
@@ -1266,7 +1292,14 @@ const sidebars = {
         "providers/v0",
         "providers/valkey_vector_stores",
         "providers/vercel_ai_gateway",
-        "providers/vllm",
+        {
+          type: "category",
+          label: "vLLM",
+          items: [
+            "providers/vllm",
+            "providers/vllm_batches",
+          ]
+        },
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
@@ -1304,6 +1337,7 @@ const sidebars = {
       },
       items: [
         "routing",
+        "fusion",
         "routing_plugins",
         "adaptive_router",
         "scheduler",
@@ -1321,7 +1355,6 @@ const sidebars = {
         "proxy/health_check_routing"
       ],
     },
-    "benchmarks",
     {
       type: "category",
       label: "Contributing",
@@ -1748,6 +1781,7 @@ const autoRouterSidebar = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },

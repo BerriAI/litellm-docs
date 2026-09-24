@@ -29,13 +29,13 @@ litellm_settings:
   forward_llm_provider_auth_headers: true  # Required for the x-api-key path; not needed for /login
 ```
 
-:::info Why `forward_llm_provider_auth_headers`?
+:::info[Why `forward_llm_provider_auth_headers`?]
 
 By default, LiteLLM strips `x-api-key` from client requests for security. Setting this to `true` allows a client-provided Anthropic API key to be forwarded to Anthropic, overriding any proxy-configured key. This setting only governs `x-api-key` and similar provider-key headers; it has no effect on `/login`, which authenticates via an `Authorization: Bearer` OAuth token that LiteLLM forwards regardless of this setting, provided you authenticate to the proxy with a different header (such as `x-litellm-api-key`) rather than `Authorization`.
 
 :::
 
-:::tip Configure via UI instead of config.yaml
+:::tip[Configure via UI instead of config.yaml]
 
 You can also complete this setup from the LiteLLM admin UI:
 
@@ -76,7 +76,7 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"
 
 Replace `sk-<your-litellm-api-key>` with your actual LiteLLM virtual key.
 
-:::tip Multiple headers
+:::tip[Multiple headers]
 
 For multiple headers, use newline-separated values:
 

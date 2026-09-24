@@ -267,7 +267,7 @@ print("Response from creating file=", file_obj)
 
 **List Files**
 ```python
-files = await litellm.alist_files(
+files = await litellm.afile_list(
     custom_llm_provider="openai",
     limit=10
 )
@@ -276,7 +276,7 @@ print("files=", files)
 
 **Retrieve File Information**
 ```python
-file = await litellm.aretrieve_file(
+file = await litellm.afile_retrieve(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )
@@ -285,7 +285,7 @@ print("file=", file)
 
 **Delete File**
 ```python
-response = await litellm.adelete_file(
+response = await litellm.afile_delete(
     file_id="file-abc123",
     custom_llm_provider="openai"
 )
@@ -332,4 +332,4 @@ print("file content=", content.text)
 Anthropic Files API has a different purpose than OpenAI's. Rather than serving Batches or Fine-tuning, it lets you upload a file once and reference it by `file_id` in multiple messages, avoiding re-uploads. File API operations are free; file content used in Messages requests is priced as input tokens.
 :::
 
-## [Swagger API Reference](https://litellm-api.up.railway.app/#/files)
+## [Swagger API Reference](https://docs.litellm.ai/api-reference/#/files)

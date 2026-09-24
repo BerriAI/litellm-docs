@@ -92,6 +92,60 @@ sequenceDiagram
 
 **Result**: One API call from user → Complete answer with search results
 
+## The Search Tool the Model Sees
+
+Whatever web search tool the request carries, LiteLLM replaces it with its own `litellm_web_search` definition before the model sees it. Anthropic's `web_search_20250305`, the Responses API's `web_search_preview`, Claude Code's `web_search`, and a `litellm_web_search` function tool you define yourself with only a `query` parameter all reach the model as the schema below, in the tool format of the API you called (an Anthropic `input_schema`, a Chat Completions `function.parameters`, or a flat Responses function tool).
+
+```json title="litellm_web_search input schema"
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The search query to execute"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Natural-language description of the goal behind the search, including any source or freshness requirements."
+    },
+    "search_queries": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Two to five short keyword queries (3-6 words each) covering different angles of the objective, e.g. varying names, synonyms, or phrasings. Provide together with objective for the best results."
+    }
+  },
+  "required": ["query"]
+}
+```
+
+`query` is required and is what most search providers receive. `objective` and `search_queries` are optional: they let the model say what it is after and fan out several keyword searches in one tool call. LiteLLM forwards them only to search providers whose API takes that shape natively, which today means [Parallel AI](../search/parallel_ai.md). There the `search_queries` list becomes the provider's queries and `objective` goes alongside it, unless the search tool's `litellm_params` already sets an `objective`, which is kept over the model's. Every other search provider (Perplexity, Tavily, Exa, and the rest) keeps receiving the single `query` string, and a model that fills only `query` behaves exactly as before on every provider.
+
+The optional fields are validated before they are forwarded: a blank `objective` is ignored, `search_queries` has to be an array (a bare string is ignored rather than split into characters), entries that are not non-empty strings are dropped, and only the first five queries are kept, matching Parallel's own cap.
+
+With a Parallel AI search tool configured, a tool call from the model and the request LiteLLM builds from it look like this. The outbound body is what `--detailed_debug` prints as the request sent to `https://api.parallel.ai/v1/search`.
+
+```json title="Tool call emitted by the model"
+{
+  "name": "litellm_web_search",
+  "input": {
+    "query": "latest stable Node.js release",
+    "objective": "Find the most current stable Node.js release version and what changes were included in that release",
+    "search_queries": ["latest stable Node.js release", "Node.js newest version changelog", "current Node.js LTS release"]
+  }
+}
+```
+
+```json title="Request LiteLLM sends to Parallel AI"
+{
+  "objective": "Find the most current stable Node.js release version and what changes were included in that release",
+  "search_queries": ["latest stable Node.js release", "Node.js newest version changelog", "current Node.js LTS release"],
+  "mode": "basic",
+  "advanced_settings": {"max_results": 5}
+}
+```
+
+The same tool call with a Tavily search tool sends Tavily `"query": "latest stable Node.js release"` and nothing from the other two fields. For clients that sent an Anthropic-native `web_search_*` tool, the `server_tool_use` block in the final response still shows only `query`.
+
 ## Supported Providers
 
 Web search integration works with **all providers** that use:

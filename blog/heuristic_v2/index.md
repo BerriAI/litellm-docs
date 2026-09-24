@@ -115,11 +115,11 @@ model_list:
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
           REASONING: claude-opus-5
-        classifier_type: trained_heuristic
+        classifier_type: heuristic_v2
       complexity_router_default_model: claude-sonnet-5
 ```
 
-:::note Free trial scope
+:::note[Free trial scope]
 
 The free trial covers Heuristic v2 on one auto router. If you want it on more than one, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) and we'll sort it out with you directly.
 

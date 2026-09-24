@@ -37,7 +37,7 @@ guardrails:
 
 - `pre_call` - Run **before** LLM call to validate **user input**. Blocks requests with detected policy violations (jailbreaks, harmful prompts, PII, malicious files, etc.)
 - `post_call` - Run **after** LLM call to validate **model output**. Blocks responses containing harmful content, policy violations, or sensitive information
-- `during_call` - Run **both** pre and post call validation
+- `during_call` - Run **in parallel** with the LLM call to validate **user input**. Same checks as `pre_call`, but without adding latency before the LLM call. Does not validate model output; add a second guardrail with `mode: "post_call"` for that
 
 ### 2. Set Environment Variables
 
@@ -544,7 +544,7 @@ Solution: Ensure files are properly base64-encoded in data URLs
 
 ## Best Practices
 
-1. **Use `during_call` mode** to cover both inputs and outputs
+1. **Use both `pre_call` (or `during_call`) and `post_call` modes** to cover both inputs and outputs
 2. **Enable for production workloads** using `default_on: true` to protect all requests by default
 3. **Configure user tracking** to identify patterns across user sessions
 4. **Monitor violations** in Prompt Security dashboard to tune policies

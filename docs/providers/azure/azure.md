@@ -10,8 +10,8 @@ import TabItem from '@theme/TabItem';
 | Property | Details |
 |-------|-------|
 | Description | Azure OpenAI Service provides REST API access to OpenAI's powerful language models including o1, o1-mini, GPT-5, GPT-4o, GPT-4o mini, GPT-4 Turbo with Vision, GPT-4, GPT-3.5-Turbo, and Embeddings model series. Also supports Claude models via Azure Foundry. |
-| Provider Route on LiteLLM | `azure/`, [`azure/o_series/`](#o-series-models), [`azure/gpt5_series/`](#gpt-5-models), [`azure/claude-*`](./azure_anthropic) (Claude models via Azure Foundry) |
-| Supported Operations | [`/chat/completions`](#azure-openai-chat-completion-models), [`/responses`](./azure_responses), [`/completions`](#azure-instruct-models), [`/embeddings`](./azure_embedding), [`/audio/speech`](azure_speech), [`/audio/transcriptions`](../../audio_transcription), `/fine_tuning`, [`/batches`](#azure-batches-api), `/files`, [`/images`](../../image_generation#azure-openai-image-generation-models), [`/anthropic/v1/messages`](./azure_anthropic) |
+| Provider Route on LiteLLM | `azure/`, [`azure/o_series/`](#o-series-models), [`azure/gpt5_series/`](#gpt-5-models). Claude models via Azure Foundry use the [`azure_ai/claude-*`](/docs/providers/azure/azure_anthropic) route instead. |
+| Supported Operations | [`/chat/completions`](#azure-openai-chat-completion-models), [`/responses`](/docs/providers/azure/azure_responses), [`/completions`](#azure-instruct-models), [`/embeddings`](/docs/providers/azure/azure_embedding), [`/audio/speech`](/docs/providers/azure/azure_speech), [`/audio/transcriptions`](/docs/audio_transcription), `/fine_tuning`, [`/batches`](#azure-batches-api), `/files`, [`/images`](/docs/image_generation#azure-openai-image-generation-models) |
 | Link to Provider Doc | [Azure OpenAI ↗](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview), [Azure Foundry Claude ↗](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-claude)
 
 ## API Keys, Params
@@ -27,9 +27,9 @@ os.environ["AZURE_AD_TOKEN"] = ""
 os.environ["AZURE_API_TYPE"] = ""
 ```
 
-:::info Azure Foundry Claude Models
+:::info[Azure Foundry Claude Models]
 
-Azure also supports Claude models via Azure Foundry. Use `azure/claude-*` model names (e.g., `azure/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](./azure_anthropic) for details.
+Claude models via Azure Foundry are routed through the `azure_ai/` provider, not `azure/`. Use `azure_ai/claude-*` model names (e.g., `azure_ai/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](/docs/providers/azure/azure_anthropic) for details.
 
 :::
 
@@ -650,7 +650,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Example video of using `tenant_id`, `client_id`, `client_secret` with LiteLLM Proxy Server
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/70d3f219ee7f4e5d84778b7f17bba506?sid=04b8ff29-485f-4cb8-929e-6b392722f36d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/70d3f219ee7f4e5d84778b7f17bba506?sid=04b8ff29-485f-4cb8-929e-6b392722f36d" frameBorder="0" allowFullScreen></iframe>
 
 ### Entra ID - use client_id, username, password
 

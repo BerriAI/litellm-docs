@@ -86,9 +86,9 @@ async def apply_guardrail(inputs, request_data, input_type):
 |-------|------|-------------|
 | `texts` | `List[str]` | Extracted text from the request/response |
 | `images` | `List[str]` | Extracted images (for image guardrails) |
-| `tools` | `List[dict]` | Tools sent to the LLM, on request and response scans |
+| `tools` | `List[dict]` | Tools sent to the LLM |
 | `tool_calls` | `List[dict]` | Tool calls returned from the LLM |
-| `structured_messages` | `List[dict]` | Full messages with role info (system/user/assistant). On a response scan, ends with the model reply as an assistant turn |
+| `structured_messages` | `List[dict]` | Full messages with role info (system/user/assistant) |
 | `model` | `str` | The model being used |
 
 ### `request_data` Parameter

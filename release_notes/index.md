@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.101.0: Heuristic Auto Router, Semantic MCP Tool Search & Off-Peak Pricing](/release_notes/v1.101.0/v1-101-0)
+### [v1.102.0: Auto Router Controls, Native OCR & Gateway Reliability](/release_notes/v1.102.0/v1-102-0)
 
-_September 14, 2026_
+_September 19, 2026_
 
-Heuristic and hybrid auto-router classifiers route locally or defer to an LLM near tier boundaries; semantic MCP tool search ranks authorized tools and follows complete upstream catalogs; spend controls add off-peak pricing, streamed usage costs, and per-model budgets across replicas. Proxy hardening includes per-worker admission control, a default password policy, grant-scoped agent and vector store listings, and database TLS verification. This stable also includes MongoDB Vector Search through an optional sidecar, tenant trace destinations, team-admin callback APIs, dashboard dependency updates, and Redis reliability fixes. Review the release's Breaking Changes section before upgrading.
+Auto Router gains custom heuristic dimensions, editable scoring weights, an optional NON_REASONING tier, per-tier output limits, healthier tier fallbacks, and routed-model and session-savings feedback in coding agents; OCR runs natively by default across supported providers, alongside Meta Muse Voice realtime transcription, Mistral text-to-speech, Vertex Lyria music, and native Fireworks Responses. Gateway reliability adds optional shared PgBouncer connections and a spend collector, fewer database and Redis calls, stable behavior through Redis outages, and request and token-based autoscaling controls. The MCP gateway, logging, and guardrails pick up schema-discovery proxy mode, better OAuth compatibility and permission enforcement, configurable OTel trace URLs with HTTP/JSON export, PointFive logging, and Conduct Guard, alongside 99 new model catalog entries. This stable also folds in request-body hygiene, spend-tracking, routing, and license fixes backported after the rc.1 cut. Review the release's Breaking Changes section before upgrading.
 
 ---
 
@@ -22,6 +22,7 @@ Heuristic and hybrid auto-router classifiers route locally or defer to an LLM ne
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
 | [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
 | [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
 | [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |

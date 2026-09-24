@@ -185,7 +185,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite models delete <model-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/model%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/model%20management)
 
 ### Credentials Management
 
@@ -201,7 +201,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite credentials delete azure-cred
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/credential%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/credential%20management)
 
 ### Keys Management
 
@@ -228,7 +228,7 @@ lite logout             # clear the keychain entry and the token file, and revok
     --created-since 2026-01-01
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/key%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/key%20management)
 
 ### User Management
 
@@ -247,7 +247,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite users delete <user-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/Internal%20User%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
 
 ### Teams Management
 
@@ -262,18 +262,19 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   Running `lite teams assign-key` without `--team-id` prompts you to pick a team interactively.
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/team%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/team%20management)
 
 ### Chat Completions
 
-- Ask for chat completions from the proxy server.
+- Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
 - Example:
 
   ```bash
-  lite chat completions {{openai_large}} -m "user:Hello, how are you?"
+  lite chat {{openai_large}}
+  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
 
 ### General HTTP Requests
 
@@ -286,7 +287,7 @@ lite logout             # clear the keychain entry and the token file, and revok
     --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
-  [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
+  [All APIs (OpenAPI)](https://docs.litellm.ai/api-reference/#/)
 
 ### Encryption Migration
 
@@ -340,11 +341,11 @@ lite logout             # clear the keychain entry and the token file, and revok
      --key-alias=my-key
    ```
 
-5. **Chat completion:**
+5. **Interactive chat:**
 
    ```bash
-   lite chat completions {{openai_large}} \
-     -m "user:Write a story"
+   lite chat {{openai_large}} \
+     --system "You are a helpful coding assistant"
    ```
 
 6. **Custom HTTP request:**

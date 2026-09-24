@@ -43,7 +43,7 @@ pip install litellm==1.93.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Keys are now throttled instead of revoked when they hit a spend limit.** A key that exceeds its budget is rate-limited rather than losing access outright, so workflows that depended on a hard block at the limit will see requests slowed instead of rejected. See [PR #31300](https://github.com/BerriAI/litellm/pull/31300).
 

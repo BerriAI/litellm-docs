@@ -17,7 +17,7 @@ We've made it easier than ever to setup and test your Auto-Router, and with cust
 
 {/* truncate */}
 
-:::info Availability
+:::info[Availability]
 
 Everything below ships in **v1.97.x**.
 

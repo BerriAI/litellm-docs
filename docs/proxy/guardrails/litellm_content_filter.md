@@ -251,7 +251,7 @@ Contact me at [EMAIL_REDACTED]
 |-------------|-------------|---------|
 | `us_ssn` | US Social Security Numbers | `123-45-6789` |
 | `email` | Email addresses | `user@example.com` |
-| `phone` | Phone numbers | `+1-555-123-4567` |
+| `us_phone` | US phone numbers | `+1-555-123-4567` |
 | `visa` | Visa credit cards | `4532-1234-5678-9010` |
 | `mastercard` | Mastercard credit cards | `5425-2334-3010-9903` |
 | `amex` | American Express cards | `3782-822463-10005` |
@@ -567,7 +567,7 @@ Reference any category below by name; no `category_file:` is required
 | `claims_prior_auth_gaming` | Prior authorization gaming attempts |
 | `claims_system_override` | Claims system override / role impersonation attempts |
 
-:::info Bias Detection Considerations
+:::info[Bias Detection Considerations]
 
 Bias detection is **complex and context-dependent**. Rule-based systems catch explicit discriminatory language but may generate false positives on legitimate discussions. Start with **high severity thresholds** and test thoroughly. For mission-critical bias detection, consider combining with AI-based guardrails (e.g., HiddenLayer, Lakera).
 

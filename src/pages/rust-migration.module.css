@@ -1,0 +1,561 @@
+.page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.hero {
+  padding: 3.5rem 0 1.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--ifm-color-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.description {
+  max-width: 620px;
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.section {
+  padding: 3rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.section:last-child {
+  border-bottom: 0;
+}
+
+/* flow-root keeps the heading's bottom margin from collapsing into the gap below. */
+.sectionHeading {
+  display: flow-root;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeading h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.kicker {
+  margin: 0 0 0.45rem;
+  color: var(--ifm-color-primary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chartCard {
+  overflow: hidden;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color);
+}
+
+.goalSentence {
+  margin: 0;
+  padding: 1.25rem 1.5rem 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.progressSummary {
+  margin-right: 0.05em;
+  color: var(--ifm-font-color-base);
+  font-size: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  vertical-align: -0.1em;
+}
+
+.keepTogether {
+  white-space: nowrap;
+}
+
+.viewWord {
+  display: inline-flex;
+  align-items: center;
+  animation: view-flip 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.viewWord svg {
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.3rem;
+}
+
+@keyframes view-flip {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) scale(0.9);
+  }
+}
+
+.chartBody {
+  padding: 0 0.5rem 0.5rem;
+}
+
+.timeline {
+  display: block;
+  overflow: visible;
+  font-family: var(--ifm-font-family-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.gridLine {
+  stroke: var(--ifm-color-emphasis-200);
+  stroke-dasharray: 2 4;
+}
+
+.baseline {
+  stroke: var(--ifm-color-emphasis-300);
+}
+
+.axisLabel {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 11px;
+}
+
+.versionLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.versionDate {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.mainVersionLabel {
+  fill: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.goalAxisLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pointValue {
+  fill: var(--ifm-font-color-base);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.areaStart {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0.22;
+}
+
+.areaEnd {
+  stop-color: var(--ifm-color-primary);
+  stop-opacity: 0;
+}
+
+.progressLine {
+  fill: none;
+  stroke: var(--ifm-color-primary);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.goalLine {
+  stroke: var(--ifm-color-emphasis-400);
+  stroke-dasharray: 4 5;
+  stroke-width: 1.5;
+}
+
+.progressPoint {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-primary);
+  stroke-width: 1.5;
+}
+
+.mainPoint {
+  fill: var(--ifm-color-primary);
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 2;
+}
+
+.goal circle {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-emphasis-500);
+  stroke-dasharray: 2 2;
+  stroke-width: 1.5;
+}
+
+.goalLabel {
+  fill: var(--ifm-color-emphasis-600);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Top-level work flows into up to two columns and never splits across them. */
+.tree {
+  margin: 0;
+  padding: 1rem 1.5rem 1.25rem;
+  list-style: none;
+}
+
+/* Guide lines run from each parent's marker down past its children. */
+.tree ul {
+  margin: 0 0 0 7.5px;
+  padding: 0 0 0 1rem;
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+  list-style: none;
+}
+
+.node {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.tree > li + li {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* Undo the site-wide boxed styling for `details` in docs content. */
+.tree .group,
+.tree .group > .node {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font-weight: 400 !important;
+}
+
+.group > .node {
+  cursor: pointer;
+  list-style: none;
+}
+
+.group > .node::-webkit-details-marker {
+  display: none;
+}
+
+/* Top-level groups are the APIs and Foundation, so they read as section rows. */
+.tree > li > .group > .node {
+  min-height: 40px;
+  font-weight: 600 !important;
+}
+
+.group > .node:hover .nodeText {
+  color: var(--ifm-color-primary);
+}
+
+.group > ul {
+  margin-bottom: 0.4rem;
+}
+
+.marker {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.markerTrack {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-emphasis-400);
+}
+
+/* A complete node fills solid, and its glyph is cut out of the fill. */
+.markerComplete .markerTrack {
+  fill: var(--ifm-color-primary);
+  stroke: var(--ifm-color-primary);
+}
+
+.markerComplete .markerGlyph {
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 1.75;
+}
+
+/* The arc starts at twelve o'clock and runs clockwise. */
+.markerArc {
+  stroke: var(--ifm-color-primary);
+  stroke-width: 2.5;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.markerGlyph {
+  stroke: var(--ifm-color-emphasis-700);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 8px 8px;
+  transition: transform 150ms ease;
+}
+
+.group[open] > .node .markerGlyph {
+  transform: rotate(90deg);
+}
+
+.nodeText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeMeta {
+  margin-left: auto;
+  padding-left: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.nodeMeta.onRust {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.sectionLead {
+  max-width: 640px;
+  margin: 0 0 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+}
+
+.stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Linked from the tracker's badges, so leave room under the sticky navbar. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 10px;
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+.stage:target {
+  border-color: var(--ifm-color-primary);
+}
+
+.stageName {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.4rem;
+  color: var(--ifm-color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stageIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.stageDescription {
+  margin: 0;
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.stageSwitch {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: auto 0 0;
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.stageSwitch code {
+  font-weight: 600;
+}
+
+.stageSwitch span {
+  color: var(--ifm-color-emphasis-600);
+}
+
+.faq {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  list-style: none;
+}
+
+.faq > li {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* Undo the site-wide boxed styling for `details` in docs content. */
+.faq .faqItem,
+.faq .faqItem > .faqQuestion {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.faqItem {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 52px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600 !important;
+  list-style: none;
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.faq .faqQuestion:hover {
+  color: var(--ifm-color-primary) !important;
+}
+
+.faqQuestion svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--ifm-color-emphasis-600);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  transition: transform 150ms ease;
+}
+
+.faqItem[open] > .faqQuestion svg {
+  transform: rotate(180deg);
+}
+
+.faqAnswer {
+  padding-bottom: 1.25rem;
+}
+
+/* A vertical rail with one dot per event; releases get a filled dot. */
+.events {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+  list-style: none;
+}
+
+.event {
+  position: relative;
+  padding-bottom: 1.75rem;
+}
+
+.event:last-child {
+  padding-bottom: 0;
+}
+
+.event::before {
+  position: absolute;
+  top: 0.3rem;
+  left: calc(-1.5rem - 5px);
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ifm-color-emphasis-400);
+  border-radius: 50%;
+  background: var(--ifm-background-color);
+  content: '';
+}
+
+.eventMeta {
+  margin: 0 0 0.2rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.eventTitle {
+  color: var(--ifm-font-color-base);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.eventTitle:hover {
+  color: var(--ifm-color-primary);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 0 1.25rem 3rem;
+  }
+
+  .hero {
+    padding-top: 2rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .section {
+    padding: 2.25rem 0;
+  }
+
+  .goalSentence {
+    padding: 1rem 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  .progressSummary {
+    font-size: 1.75rem;
+  }
+
+  .tree {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+}

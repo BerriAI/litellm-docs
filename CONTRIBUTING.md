@@ -53,7 +53,7 @@ Also run the writing style check, which CI enforces on every PR:
 npm run lint:writing
 ```
 
-It covers `docs/`, `blog/`, and `release_notes/`. It fails on em dashes used as prose punctuation (see CLAUDE.md) and, with `--warnings`, lists inflated wording such as "utilize", "leverage", or "seamless".
+It covers `docs/`, `blog/`, and `release_notes/`. It fails on em dashes used as prose punctuation (see AGENTS.md) and, with `--warnings`, lists inflated wording such as "utilize", "leverage", or "seamless".
 
 Also run the structural check, which CI enforces on every PR:
 

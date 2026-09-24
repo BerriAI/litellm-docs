@@ -7,6 +7,8 @@ import TabItem from '@theme/TabItem';
 
 Set allowed models for a key using the `models` param
 
+The `models` list both hides a model from `GET /v1/models` and blocks calls to it. To hide a model from the listing endpoints without blocking calls to it, set `model_info.discoverable: false` on the model instead ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
+
 
 ```shell
 curl 'http://0.0.0.0:4000/key/generate' \
@@ -65,7 +67,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 </Tabs>
 
 
-### [API Reference](https://litellm-api.up.railway.app/#/key%20management/generate_key_fn_key_generate_post)
+### [API Reference](https://docs.litellm.ai/api-reference/#/key%20management/generate_key_fn_key_generate_post)
 
 ## **Restrict models by `team_id`**
 `litellm-dev` can only access `azure-gpt-3.5`
@@ -111,14 +113,14 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 {"error":{"message":"Invalid model for team litellm-dev: BEDROCK_GROUP.  Valid models for team are: ['azure-gpt-3.5']\n\n\nTraceback (most recent call last):\n  File \"/Users/ishaanjaffer/Github/litellm/litellm/proxy/proxy_server.py\", line 2298, in chat_completion\n    _is_valid_team_configs(\n  File \"/Users/ishaanjaffer/Github/litellm/litellm/proxy/utils.py\", line 1296, in _is_valid_team_configs\n    raise Exception(\nException: Invalid model for team litellm-dev: BEDROCK_GROUP.  Valid models for team are: ['azure-gpt-3.5']\n\n","type":"None","param":"None","code":500}}%            
 ```         
 
-### [API Reference](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+### [API Reference](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 
 ## **View Available Fallback Models**
 
 Use the `/v1/models` endpoint to discover available fallback models for a given model. This helps you understand which backup models are available when your primary model is unavailable or restricted.
 
-:::info Extension Point
+:::info[Extension Point]
 
 The `include_metadata` parameter serves as an extension point for exposing additional model metadata in the future. While currently focused on fallback models, this approach will be expanded to include other model metadata such as pricing information, capabilities, rate limits, and more.
 
@@ -218,6 +220,33 @@ When `include_metadata=true` is specified, the response includes fallback inform
 |-----------|------|-------------|
 | `include_metadata` | boolean | Include additional model metadata including fallbacks |
 | `fallback_type` | string | Filter fallbacks by type: `general`, `context_window`, or `content_policy` |
+
+## **Reserve a deployment for a team during a time window**
+
+Set `model_info.access_windows` on a deployment to reserve it for specific teams during a daily local-time window. While a window is active the router only hands that deployment to requests whose key belongs to one of the listed teams; requests from other teams, and requests from keys with no team (including the master key), are routed to other deployments in the same model group or rejected with a `400` if every candidate is reserved. Outside the window routing is unchanged. The deployment stays listed in `/v1/models` and `/model/info` at all times.
+
+```yaml
+model_list:
+  - model_name: gpt-4o-ptu
+    litellm_params:
+      model: azure/gpt-4o-ptu
+      api_base: os.environ/AZURE_PTU_BASE
+      api_key: os.environ/AZURE_PTU_KEY
+    model_info:
+      access_windows:
+        - start: "22:00"
+          end: "06:00"
+          timezone: "America/New_York"
+          team_ids: ["team-nightly-batch"]
+```
+
+`start` and `end` are `HH:MM` wall-clock times in the given IANA `timezone` (daylight saving is applied automatically). `start` is inclusive and `end` is exclusive; a `start` later than `end` means the window crosses midnight. A deployment can list several windows; it is reserved whenever any of them is active. The proxy refuses to start when a window has an invalid time, an unknown timezone, an empty `team_ids`, or equal `start` and `end`.
+
+A rejected request looks like this:
+
+```json
+{"error":{"message":"litellm.BadRequestError: Deployment gpt-4o-ptu is reserved for another team until 06:00 America/New_York","type":"invalid_request_error","param":null,"code":"400"}}
+```
 
 ## Advanced: Model Access Groups
 

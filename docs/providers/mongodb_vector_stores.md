@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # MongoDB - Vector Store (BETA)
 
-:::warning BETA
+:::warning[BETA]
 The MongoDB vector store integration is a **BETA** feature. It supports searching existing MongoDB Vector Search indexes through the optional [LiteLLM MongoDB sidecar](https://github.com/BerriAI/litellm-mongodb). Prepare your collections, indexes, and embedded documents before connecting them to LiteLLM.
 :::
 
@@ -30,7 +30,7 @@ pip install 'litellm[proxy]'
 
 For direct Python SDK use, install `litellm`, deploy the sidecar, then follow [Search with the Python SDK](#search-with-the-python-sdk). Neither the SDK nor the standard LiteLLM images need PyMongo. LiteLLM does not start or install the sidecar automatically.
 
-:::note RC configuration change
+:::note[RC configuration change]
 If you tried MongoDB in `v1.101.0-rc.1`, move `mongodb_connection_string` to the sidecar's `MONGODB_CONNECTION_STRING` environment variable. Replace it in your LiteLLM registration with `api_base` and `api_key`. Existing MongoDB data and indexes stay in place; application search and chat requests stay the same. This integration remains BETA.
 :::
 
@@ -251,7 +251,7 @@ The registration is stored in the LiteLLM database. See [Managed Vector Stores](
 </TabItem>
 </Tabs>
 
-:::note First registration through the UI or management API
+:::note[First registration through the UI or management API]
 If the proxy started without any registered vector stores, direct search can work before chat retrieval is ready. Wait for the proxy's database sync or restart it after saving the first store before using `file_search` in chat completions. Loading a store through `config.yaml` at startup avoids this initial delay.
 :::
 

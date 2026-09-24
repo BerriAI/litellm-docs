@@ -8,9 +8,7 @@ import TabItem from '@theme/TabItem';
   img={require('../../img/email_2_0.png')}
   style={{width: '70%', display: 'block', margin: '0 0 2rem 0'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM Email Notifications
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM Email Notifications</p>
 
 ## Overview
 
@@ -360,15 +358,13 @@ If environment variables are not set, LiteLLM will use default templates:
 
 ## Template Variables
 
-When setting custom email subjects, you can use template variables that will be replaced with actual values:
+When setting custom email subjects, the only supported template variable is `\{event_message\}`, which is replaced with the event message (for example "Welcome to LiteLLM Proxy" or "API Key Created"). Any other placeholder, such as `\{company_name\}`, causes a `KeyError` when the email is built and the email is not sent. Use plain text for anything else:
 
 ```bash
 # Examples of template variable usage
-EMAIL_SUBJECT_INVITATION="Welcome to \{company_name\}!"
-EMAIL_SUBJECT_KEY_CREATED="Your \{company_name\} API Key"
+EMAIL_SUBJECT_INVITATION="Welcome to Acme! \{event_message\}"
+EMAIL_SUBJECT_KEY_CREATED="Your Acme API Key"
 ```
-
-The system will automatically replace `\{event_message\}` and other template variables with their actual values when sending emails.
 
 ## FAQ 
 

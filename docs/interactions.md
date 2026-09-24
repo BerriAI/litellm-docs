@@ -15,12 +15,12 @@ import TabItem from '@theme/TabItem';
 ### Quick Start
 
 ```python showLineNumbers title="Create Interaction"
-from litellm import create_interaction
+import litellm
 import os
 
 os.environ["GEMINI_API_KEY"] = "your-api-key"
 
-response = create_interaction(
+response = litellm.interactions.create(
     model="gemini/{{gemini_flash}}",
     input="Tell me a short joke about programming."
 )
@@ -31,14 +31,14 @@ print(response.outputs[-1].text)
 ### Async Usage
 
 ```python showLineNumbers title="Async Create Interaction"
-from litellm import acreate_interaction
+import litellm
 import os
 import asyncio
 
 os.environ["GEMINI_API_KEY"] = "your-api-key"
 
 async def main():
-    response = await acreate_interaction(
+    response = await litellm.interactions.acreate(
         model="gemini/{{gemini_flash}}",
         input="Tell me a short joke about programming."
     )
@@ -50,12 +50,12 @@ asyncio.run(main())
 ### Streaming
 
 ```python showLineNumbers title="Streaming Interaction"
-from litellm import create_interaction
+import litellm
 import os
 
 os.environ["GEMINI_API_KEY"] = "your-api-key"
 
-response = create_interaction(
+response = litellm.interactions.create(
     model="gemini/{{gemini_flash}}",
     input="Write a 3 paragraph story about a robot.",
     stream=True

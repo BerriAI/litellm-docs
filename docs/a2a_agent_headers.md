@@ -155,7 +155,7 @@ curl -X POST http://localhost:4000/a2a/my-agent \
 
 The `x-a2a-other-agent-authorization` header sent in the same request is **not** forwarded to `my-agent`; it is silently ignored.
 
-:::tip Matches both agent name and agent ID
+:::tip[Matches both agent name and agent ID]
 Both the human-readable name (e.g. `my-agent`) and the UUID (e.g. `abc123-...`) are valid. Use whichever is convenient for the client.
 :::
 
@@ -249,6 +249,6 @@ Both fields are returned in `GET /v1/agents` and `GET /v1/agents/{agent_id}`:
 }
 ```
 
-:::caution
+:::warning
 `static_headers` values are stored in the database and returned by the API. Treat them as you would any credential: do not store sensitive long-lived tokens here if your API is publicly accessible. Consider using short-lived tokens or environment-injected secrets instead.
 :::

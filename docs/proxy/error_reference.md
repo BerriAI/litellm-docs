@@ -332,4 +332,29 @@ Include the `x-litellm-call-id` from the failed response. It is the join key acr
 
 Alongside it, include the full `error` object, the HTTP status, the response headers, and the `model` you requested. If the message contains a `<Provider>Exception`, check the provider's own status page first; the gateway reported the failure but did not cause it
 
+Clients that only print `str(e)` (`Error code: 400 - {...}`) drop the headers, so the id can also be written into the error body. Set `general_settings.include_call_id_in_error_body: true` and every JSON error the gateway writes carries the same value as the header. It is off by default, so error bodies stay byte-identical to today's until you turn it on
+
+```yaml
+general_settings:
+  include_call_id_in_error_body: true
+```
+
+On the OpenAI-shaped routes (`/v1/chat/completions`, `/v1/responses`, streaming first-chunk errors included) and on `/v1/messages`, the id sits inside the `error` object, which is the part the OpenAI SDK keeps as `e.body`:
+
+```json
+{"error": {"message": "Invalid model name passed in model=gpt-nope", "type": "invalid_request_error", "param": "model", "code": "400", "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}}
+```
+
+```json
+{"type": "error", "error": {"type": "invalid_request_error", "message": "Invalid model name passed in model=gpt-nope", "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}}
+```
+
+Pass-through routes relay the provider's own error body, so the id is added at the top level and the provider's `error` object is left as it was:
+
+```json
+{"type": "error", "error": {"type": "not_found_error", "message": "model: claude-nope"}, "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}
+```
+
+The setting only adds the id where the gateway already set the `x-litellm-call-id` header on a JSON body, so 422 request-validation errors, authentication failures rejected before an id exists, errors that arrive mid-stream, and non-JSON pass-through bodies are unchanged
+
 To see the exact request the gateway sent upstream, restart with `--detailed_debug` or set `LITELLM_LOG=DEBUG`, or add `"litellm_request_debug": true` to a single request body. See [Debugging](/docs/proxy/debugging)

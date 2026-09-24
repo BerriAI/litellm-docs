@@ -16,7 +16,7 @@ LiteLLM Server (LLM Gateway) manages:
 $ uv tool install 'litellm[proxy]'
 ```
 
-:::warning Minimum Python version
+:::warning[Minimum Python version]
 LiteLLM 1.84.0 and newer require Python {{python_min_version}} or higher (`requires-python >={{python_min_version}}`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on an older interpreter pip silently resolves down to the last release whose `requires-python` still allowed it (1.83.9 for the previous floor), with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to {{python_min_version}}+ (or use uv), then reinstall
 :::
 
@@ -429,7 +429,7 @@ print(message.content)
 
 
 
-## 📖 Proxy Endpoints - [Swagger Docs](https://litellm-api.up.railway.app/)
+## 📖 Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
 - POST `/chat/completions` - chat completions endpoint to call 100+ LLMs
 - POST `/completions` - completions endpoint
 - POST `/embeddings` - embedding endpoint for Azure, OpenAI, Huggingface endpoints
@@ -461,7 +461,9 @@ Detailed information
 export LITELLM_LOG=DEBUG
 ```
 
-No Logs
+Errors only
 ```shell
-export LITELLM_LOG=None
+export LITELLM_LOG=ERROR
 ```
+
+`LITELLM_LOG` must be a valid Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Setting it to `None` makes `import litellm` fail.

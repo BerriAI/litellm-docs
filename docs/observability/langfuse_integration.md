@@ -11,7 +11,7 @@ Example trace in Langfuse using multiple models via LiteLLM:
 <Image img={require('../../img/langfuse-example-trace-multiple-models-min.png')} />
 
 
-:::tip Recommended: Use OpenTelemetry v2
+:::tip[Recommended: Use OpenTelemetry v2]
 
 For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
 

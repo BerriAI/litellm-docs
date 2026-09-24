@@ -1,10 +1,12 @@
 ---
-title: Setup
-sidebar_label: Setup
-description: Every way to set up an Auto Router, from adding one in the dashboard to a hand-written config.yaml, and how to point Claude Code at it.
+title: Admin Setup
+sidebar_label: Admin Setup
+description: Create and configure an Auto Router through the dashboard, an agent skill, config.yaml, the model-management API, or lite autoroute.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
+
+Create an Auto Router for your team using one of the methods below. To connect your coding agent to an existing router, follow [User Setup](/docs/auto_router/user_setup).
 
 Five ways in. All of them create the same `auto_router/complexity_router` deployment.
 
@@ -75,29 +77,67 @@ model_list:
 - `classifier_type: llm` with a small model raises accuracy on agent traffic for a fraction of a cent per request. See [benchmarks](/docs/auto_router/benchmarks).
 - Everything else (keyword rules, tier pools, session affinity, scorer tuning): [configuration reference](/docs/proxy/auto_routing).
 
-## Jev classifier (TypeSafe AI)
+## JEV classifier (TypeSafe AI)
 
-`classifier_type: jev` sends the newest ask, plus the caller's system prompt when present, to TypeSafe's System One endpoint as one `choice` question. The question criteria are the router's tier labels, and the returned choice selects the tier
+`classifier_type: jev` uses TypeSafe System One Choice evaluation to select a tier inside the existing Auto Router. LiteLLM sends the classifier input to `POST /v1/systemone` as `state`, with one `questions.tier` question whose criteria describe the configured tiers. The chosen tier's model serves the completion
 
-```yaml
-classifier_type: jev
-jev_classifier_config:
-  model: jev-latest
-  api_key: null
-  api_base: null
-  timeout_ms: 3000
-  instructions: null
-  circuit_breaker_enabled: true
-  circuit_breaker_cooldown_seconds: 30
+### Set the server key
+
+Provision `TYPESAFE_API_KEY` in the proxy process through your deployment's secret manager. The dashboard does not need the provider key. Clients keep using a LiteLLM virtual key
+
+```bash
+export TYPESAFE_API_BASE="https://api.typesafe.ai"
+litellm --config config.yaml
 ```
 
-`model` defaults to `jev-latest`. When `api_key` is omitted or null, LiteLLM reads `TYPESAFE_API_KEY`. When `api_base` is omitted or null, LiteLLM reads `TYPESAFE_API_BASE` and then uses `https://api.typesafe.ai`. Setting `api_base` without `api_key` is rejected, so `TYPESAFE_API_KEY` is only ever sent to `TYPESAFE_API_BASE` or the default host. Team members editing an auto router through the management API cannot set `api_key` or `api_base` at all. `instructions` replaces the built-in question instructions when provided
+`TYPESAFE_API_BASE` is optional and defaults to `https://api.typesafe.ai`. Omitting `jev_classifier_config.api_key` and `api_base` uses these server settings. A missing TypeSafe key prevents JEV initialization. An explicit `api_base` requires an explicit `api_key`, so a configuration override cannot redirect the server's environment key to a different host. Team members using the management API cannot set either field
 
-Spend-log routing decisions carry `cause: jev_classifier`, `classifier_model: typesafe/<model>` where `<model>` is the version TypeSafe reports for the call (`typesafe/jev-1.13.0` for `jev-latest` today), `classifier_probabilities` for each tier label, `classifier_confidence`, and `classifier_cost` calculated from that model's registry row
+### Create or edit in the dashboard
 
-Failures, timeouts, an open circuit, and unknown labels use the same fallback behavior as the LLM classifier. A custom tier set routes to `fallback_tier`, while the built-in tier set uses `classifier_fallback`
+In **Models + Endpoints**, open **Auto Router** and add a router, or edit an existing router. Configure its tier models, then choose **JEV Classifier** under **Classification Method** in Detailed Configuration
 
-Jev works with `tier_definitions`, where each definition's description becomes that tier's criterion, and with `enable_non_reasoning_tier`. For the pass-through endpoint, see [TypeSafe AI pass-through](/docs/pass_through/typesafe)
+Set **JEV Model** (`jev-latest` by default) and **JEV Timeout (ms)** (`3000` by default). Review the circuit breaker, classifier fallback, **Context Window Size**, **Context Character Budget**, and assistant-turn setting. Enterprise users can replace the built-in rubric with **JEV Instructions**, or restore the built-in instructions
+
+JEV uses the same history defaults as the LLM classifier: up to three prior user turns within an 8,000-character prior-turn budget, with assistant turns excluded. This history is sent to the configured TypeSafe endpoint, which can differ from your completion provider. Set **Context Window Size** to `0` to omit history; the current ask and selected system text are still sent
+
+When upgrading an existing JEV router to the [dashboard and context integration](https://github.com/BerriAI/litellm/pull/41886), omitting these settings enables those defaults. Set `classifier_context_window_size: 0` before upgrading if the router should continue sending no prior conversation
+
+**Test Routing** classifies your input without creating a router or calling the selected completion model. It can make a paid JEV request, and semantic keyword matching can also make a paid embedding request. **Test Connection** checks the configured model dependencies and makes a separate JEV classification probe. Its JEV result reports an error when routing used a fallback, even if the selected completion model is reachable. These probes can incur provider charges
+
+Save the router and call its model name through the normal completion API. Reopen the edit form to change the classifier settings. To investigate a decision, inspect its cause and classifier metadata in the routing-decision card rather than assuming that a successful completion proves JEV answered
+
+### Configure in YAML
+
+Add this router entry alongside the tier deployments in your `model_list`. The tier values and default model must name deployments already configured on the proxy
+
+```yaml title="config.yaml"
+- model_name: jev-router
+  litellm_params:
+    model: auto_router/complexity_router
+    complexity_router_default_model: {{openai_large}}
+    complexity_router_config:
+      tiers:
+        SIMPLE: {{openai_small}}
+        MEDIUM: {{openai_large}}
+        COMPLEX: {{anthropic}}
+        REASONING: {{anthropic_large}}
+      classifier_type: jev
+      jev_classifier_config:
+        model: jev-latest
+        timeout_ms: 3000
+        circuit_breaker_enabled: true
+        circuit_breaker_cooldown_seconds: 30
+      classifier_fallback: default_model
+      classifier_context_window_size: 3
+      classifier_context_budget_chars: 8000
+      classifier_context_include_assistant_turns: false
+```
+
+This example explicitly chooses `default_model` fallback. The shipped `classifier_fallback` default is `heuristic`. The prior-turn character budget does not bound the current ask or system text, so review classifier input separately from the completion model's context window
+
+Built-in JEV classification uses the same licensing policy as the built-in LLM classifier. Custom `instructions` and `tier_definitions` use the existing Enterprise custom-classifier capability. JEV also supports `enable_non_reasoning_tier`
+
+See the [JEV reference](/docs/proxy/auto_routing#jev-classifier) for defaults, context, recovery, authorization and accounting, the [measured comparison](/blog/jev-auto-router-benchmark) for quality and cost scope, and [TypeSafe pass-through](/docs/pass_through/typesafe) for calling System One directly
 
 ## Model-management API
 

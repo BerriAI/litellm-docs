@@ -41,7 +41,7 @@ function searchableText(item) {
   return [
     metadata.title,
     metadata.description,
-    metadata.keywords,
+    ...(metadata.frontMatter?.keywords || []),
     ...(metadata.tags || []).map(tag => tag.label),
     ...(metadata.authors || []).map(author => author.name),
   ].filter(Boolean).join(' ').toLowerCase();
@@ -152,6 +152,7 @@ function ProviderMarquee() {
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
+    timeZone: 'UTC',
   });
 }
 
@@ -173,7 +174,7 @@ function AuthorList({authors}) {
   );
 }
 
-function PostRow({post}) {
+export function PostRow({post}) {
   const {title, permalink, date, description, authors} = post;
   return (
     <article className={styles.post}>

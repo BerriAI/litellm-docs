@@ -95,18 +95,18 @@ Every key in `inputs` is optional, so you only get the ones this call actually h
 |-----|--------------|
 | `texts` | The text to check. This is the one most guardrails use. |
 | `images` | Images from the request, as base64 or URLs. |
-| `tools` | Tool definitions sent to the LLM. Present on both directions, so a post-call check on a tool call can look up the tool's schema. |
+| `tools` | Tool definitions sent to the LLM. |
 | `tool_calls` | Tool calls the LLM asked for. |
-| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. On `input_type="response"` the list ends with the model reply as an `assistant` turn, so you get the conversation that produced the text in `texts`. |
+| `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
 | `model` | The model this call is routed to. |
 
 **To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place; LiteLLM maps them back onto the original request or response.
 
-`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored. Rewritten `structured_messages` and `tools` only take effect on request scans; on a response scan, `texts` and `tool_calls` are the only fields written back.
+`structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
 
 While streaming, you can also set `stream_holdback_chars`, a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
-:::tip Advanced: Using Individual Event Hooks
+:::tip[Advanced: Using Individual Event Hooks]
 
 If you need more fine-grained control, you can implement individual event hooks instead of (or in addition to) `apply_guardrail`:
 
@@ -144,7 +144,7 @@ guardrails:
       api_base: https://api.myguardrail.com
 ```
 
-:::info Mode Options
+:::info[Mode Options]
 
 `apply_guardrail` runs in all three modes. The mode decides *when* it runs and whether it sees the request or the response.
 
@@ -160,7 +160,7 @@ If you implement the individual event hooks instead, the same three modes call `
 
 :::
 
-:::note Streaming and post_call guardrails
+:::note[Streaming and post_call guardrails]
 
 For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This makes `post_call` guardrails on streaming **audit-only**: they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
 

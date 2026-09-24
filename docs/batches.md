@@ -7,7 +7,7 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
@@ -24,14 +24,32 @@ uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
 
 - Retrieve the Specific Batch and File Content
 
+**Create the batch input file**
+
+Each line is one request in the [OpenAI batch file format](https://platform.openai.com/docs/guides/batch). `custom_id`, `method`, `url`, and `body` are required on every line:
+
+```json showLineNumbers title="mydata.jsonl"
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are an unhelpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+```
 
 <Tabs>
 <TabItem value="proxy" label="LiteLLM PROXY Server">
 
+**Setup config.yaml and start the proxy**
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+```
+
 ```bash
 $ export OPENAI_API_KEY="sk-..."
 
-$ litellm
+$ litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
 ```
@@ -87,7 +105,7 @@ import asyncio
 
 os.environ["OPENAI_API_KEY"] = "sk-.."
 
-file_name = "openai_batch_completions.jsonl"
+file_name = "mydata.jsonl"
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(_current_dir, file_name)
 file_obj = await litellm.acreate_file(
@@ -438,6 +456,8 @@ LiteLLM supports the following provider-native batch APIs:
 | OpenAI | [Quick start](#quick-start) |
 | Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
+| Mistral AI | [Mistral AI Batch API](./providers/mistral_batches) |
+| vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
@@ -600,4 +620,4 @@ The initial submission and the completed aggregate are recorded separately. The 
 
 Batch cost tracking does not change the TPM or RPM counters reserved at submission. Those counters remain based on the input-file calculation described above.
 
-## [Swagger API Reference](https://litellm-api.up.railway.app/#/batch)
+## [Swagger API Reference](https://docs.litellm.ai/api-reference/#/batch)

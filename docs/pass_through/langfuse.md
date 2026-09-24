@@ -31,11 +31,11 @@ Supports **ALL** Langfuse Endpoints.
 
 Let's log a trace to Langfuse.
 
-1. Add Langfuse Public/Private keys to environment
+1. Add Langfuse Public/Secret keys to environment
 
 ```bash
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 2. Start LiteLLM Proxy 
@@ -84,7 +84,7 @@ Use this, to avoid giving developers the raw Google AI Studio key, but still let
 export DATABASE_URL=""
 export LITELLM_MASTER_KEY=""
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 ```bash

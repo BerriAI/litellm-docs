@@ -149,7 +149,7 @@ sequenceDiagram
     LiteLLM-->>Client: MCP response
 ```
 
-:::warning Keep the two credentials in separate headers
+:::warning[Keep the two credentials in separate headers]
 
 If a caller sends a single credential in `Authorization` with no `x-litellm-api-key`, LiteLLM treats it as the admission credential (virtual key, IdP JWT, or SSO session token) and never forwards it upstream. That is the leak defense keeping a LiteLLM or IdP token from reaching a third-party MCP server.
 
@@ -270,7 +270,7 @@ An OAuth-only client cannot present a LiteLLM key inline, so identity comes from
 - LiteLLM seals that identity plus the upstream token into a gateway-bound credential.
 - The client stores that credential and replays it on every later request; admission, spend, and audit resolve against it.
 
-:::warning Two prerequisites
+:::warning[Two prerequisites]
 
 - **The gateway needs a working browser sign-in** (SSO or username/password). Without one there is no identity to bind and the authorize step cannot proceed. A missing gateway sign-in is the usual reason an `oauth_delegate` bridge connection stalls at the login page.
 - **The client's OAuth flow must run in an interactive browser session.** OpenCode, Claude Code, Cursor, and Claude Desktop all do.
@@ -368,7 +368,7 @@ OpenCode reads them from `opencode.json`:
 
 ## Delegate Auth to Upstream (PKCE Passthrough) {#delegate-auth-to-upstream-pkce-passthrough}
 
-:::warning Deprecated
+:::warning[Deprecated]
 
 `delegate_auth_to_upstream` is the original flag-based form of transparent passthrough and is planned for deprecation. It is the direct predecessor of `auth_type: true_passthrough` and behaves the same way (same how-it-works, same fail-closed behavior, same security trade-offs), so new servers should use `true_passthrough`. The section below is kept for existing configs.
 
@@ -389,7 +389,7 @@ mcp_servers:
 
 Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
 
-:::warning Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation
+:::warning[Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation]
 
 Using **`available_on_public_internet: false`** together with **`delegate_auth_to_upstream: true`** on an **`auth_type: oauth2`** interactive server (not `oauth2_flow: client_credentials`) still allows **anonymous** callers to reach the upstream OAuth2 **`/authorize`** flow and complete PKCE for matching MCP routes **without a LiteLLM API key session**. The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)); it does **not** disable this delegate bypass.
 

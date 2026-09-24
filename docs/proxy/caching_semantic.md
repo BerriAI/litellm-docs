@@ -86,7 +86,7 @@ on**
 
 Semantic caching on a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, such as AWS ElastiCache for Valkey. RediSearch and RedisVL are not required.
 
-:::info Requirements
+:::info[Requirements]
 
 The `valkey-search` module must be loaded (check with `MODULE LIST` / `FT._LIST`). On AWS ElastiCache, vector search needs a **node-based Valkey 8.2+ cluster**; a cluster-mode-disabled node group is supported and recommended, and a primary with read replicas is fine since only horizontal sharding is unsupported. ElastiCache **Serverless does not support vector search**. Multi-shard (cluster-mode-enabled) endpoints are not supported here, so use a cluster-mode-disabled endpoint and scale vertically.
 

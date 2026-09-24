@@ -81,7 +81,8 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `pre_call` Run **before** LLM call, on **input**
 - `post_call` Run **after** LLM call, on **input & output**
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
-- A list of the above values to run multiple modes, e.g. `mode: [pre_call, post_call]`
+- `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
+- A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
 ### Skip system messages in guardrail evaluation
 
@@ -276,6 +277,46 @@ curl -i http://localhost:4000/v1/chat/completions \
     "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
   }'
 ```
+
+### Inspect guardrail results in the response **(OSS)**
+
+Set `include_guardrail_response: true` in the request body to get the guardrail execution records back on the response as a top-level `guardrail_information` list. Without it the response body is unchanged, so existing clients are unaffected. The flag is stripped before the request reaches the provider
+
+```shell
+curl -i http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{
+    "model": "{{openai_small}}",
+    "messages": [{"role": "user", "content": "Reply OK"}],
+    "guardrails": ["aporia-pre-guard"],
+    "include_guardrail_response": true
+  }'
+```
+
+Expected response (other fields omitted)
+
+```json
+{
+  "id": "chatcmpl-EQjb0XEZzNUUGhbbYLfB2FApCuPJc",
+  "choices": [{"message": {"role": "assistant", "content": "OK"}}],
+  "guardrail_information": [
+    {
+      "guardrail_name": "aporia-pre-guard",
+      "guardrail_provider": "aporia",
+      "guardrail_mode": "pre_call",
+      "guardrail_status": "success",
+      "guardrail_response": [],
+      "start_time": 1790040506.278482,
+      "end_time": 1790040506.278695,
+      "duration": 0.000214,
+      "masked_entity_count": {}
+    }
+  ]
+}
+```
+
+Each entry has the same shape as `guardrail_information` in the [`StandardLoggingPayload`](../logging_spec#standardloggingguardrailinformation). `guardrail_information` is `[]` when no guardrail ran for the request. Only the exact JSON boolean `true` enables it; `"true"` or `1` are treated as off. Streaming responses do not carry the field. Any `keyword`, `snippet`, `match`, or `regex` values inside `guardrail_response` are returned as `"[REDACTED]"` so masked content is never echoed back to the caller
 
 ### Expose to your users **(Enterprise)**
 

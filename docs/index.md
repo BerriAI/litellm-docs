@@ -16,7 +16,7 @@ import Image from '@theme/IdealImage';
 - Call any provider using the same `completion()` interface, with no API to re-learn for each one
 - Consistent output format regardless of which provider or model you use
 - Built-in retry / fallback logic across multiple deployments via the [Router](./routing.md)
-- Self-hosted [LLM Gateway (Proxy)](./simple_proxy) with virtual keys, cost tracking, and an admin UI
+- Self-hosted [LLM Gateway (Proxy)](/docs/simple_proxy) with virtual keys, cost tracking, and an admin UI
 
 [![PyPI](https://img.shields.io/pypi/v/litellm.svg)](https://pypi.org/project/litellm/)
 [![GitHub Stars](https://img.shields.io/github/stars/BerriAI/litellm?style=social)](https://github.com/BerriAI/litellm)
@@ -191,9 +191,9 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 }
 ```
 
-📖 [Full output format reference →](./completion/output)
+📖 [Full output format reference →](/docs/completion/output)
 
-:::tip Open in Colab
+:::tip[Open in Colab]
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_Getting_Started.ipynb">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
@@ -319,7 +319,7 @@ litellm.completion(
 )
 ```
 
-📖 [Custom callback docs →](./observability/custom_callback)
+📖 [Custom callback docs →](/docs/observability/custom_callback)
 
 ---
 
@@ -379,13 +379,13 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-👉 [Full proxy quickstart →](./proxy/docker_quick_start)
+👉 [Full proxy quickstart →](/docs/proxy/docker_quick_start)
 
-:::tip Debugging tool
+:::tip[Debugging tool]
 Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
-🔗 [Interactive API explorer (Swagger) →](https://litellm-api.up.railway.app/)
+🔗 [Interactive API explorer (Swagger) →](https://docs.litellm.ai/api-reference/)
 
 ---
 

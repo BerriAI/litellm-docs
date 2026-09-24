@@ -3,10 +3,9 @@
 
 require('dotenv').config();
 
-// @ts-ignore
-const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
-// @ts-ignore
-const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
+// Same code-block palettes as docusaurus.io (github + vsDark, with their token overrides).
+const lightCodeTheme = require('./src/utils/prismLight');
+const darkCodeTheme = require('./src/utils/prismDark');
 
 const inkeepApiKey = process.env.INKEEP_API_KEY;
 // Conditional check: docs should work if this key is missing.
@@ -87,7 +86,14 @@ const config = {
     locales: ['en'],
   },
   plugins: [
+    // vega-canvas tries to load the optional node `canvas` package during SSR.
+    // Charts render as SVG, so resolve it to an empty module.
+    () => ({
+      name: 'ignore-optional-canvas',
+      configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
+    }),
     require('./plugins/optimize-images'),
+    require('./plugins/rust-migration-posts'),
     [
       '@docusaurus/plugin-client-redirects',
       {
@@ -99,6 +105,10 @@ const config = {
           {
             from: '/docs/proxy/high_availability_control_plane',
             to: '/docs/proxy/global_control_plane',
+          },
+          {
+            from: '/docs/tutorials/openai_codex',
+            to: '/docs/proxy/client_setup/codex_cli',
           },
           {
             from: '/docs/proxy/deploy_cloud',
@@ -273,6 +283,8 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        onInlineAuthors: 'throw',
+        onUntruncatedBlogPosts: 'throw',
       },
     ],
 
@@ -366,6 +378,11 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
+      docs: {
+        sidebar: {
+          hideable: true,
+        },
+      },
       navbar: {
         title: '🚅 LiteLLM',
         items: [
@@ -398,8 +415,9 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'autoRouterSidebar',
             position: 'left',
-            label: 'Auto Router [Add-on]',
+            label: 'Auto Router',
           },
+          { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://trust.litellm.ai/',
             label: 'Trust Center',
@@ -429,8 +447,24 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
+                label: 'Quickstart',
+                to: '/docs/proxy/docker_quick_start',
+              },
+              {
+                label: 'Production Deployment',
+                to: '/docs/proxy/deploy',
+              },
+              {
+                label: '[Beta] Rust AI Gateway',
+                to: '/docs/proxy/rust_gateway',
+              },
+              {
+                label: 'MCP Gateway',
+                to: '/docs/mcp',
+              },
+              {
+                label: 'Agent Gateway',
+                to: '/docs/a2a',
               },
             ],
           },
@@ -440,6 +474,14 @@ const config = {
               {
                 label: 'Discord',
                 href: 'https://discord.com/invite/wuPM9dRgDw',
+              },
+              {
+                label: 'Slack',
+                href: 'https://litellmossslack.slack.com/',
+              },
+              {
+                label: 'YouTube',
+                href: 'https://www.youtube.com/@LiteLLMAIGateway',
               },
               {
                 label: 'Twitter',

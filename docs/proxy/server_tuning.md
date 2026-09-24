@@ -20,7 +20,7 @@ LiteLLM Proxy runs on [Uvicorn](https://uvicorn.dev/) by default. Passing `--run
 | **Worker recycling** | Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits). | Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests), the battle-tested mechanism Gunicorn has shipped for years. |
 | **Process supervision** | Uvicorn's built-in multiprocess manager. | Gunicorn's [arbiter](https://gunicorn.org/design/#arbiter), which restarts workers one at a time as they exit. |
 
-:::tip Recommendation
+:::tip[Recommendation]
 
 On Kubernetes, run **one Uvicorn worker per pod** and scale **horizontally** (more pods) rather than vertically (more workers per pod). One process per pod keeps latency predictable under load, lets the Horizontal Pod Autoscaler use the [thresholds in the production checklist](./prod.md#autoscaling) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time. Reach for Gunicorn only when you must pack multiple workers into one container.
 
@@ -141,7 +141,7 @@ Enabling this routes provider traffic through httpx instead of aiohttp, which wa
 
 ## Granian ASGI server [Beta]
 
-:::info Beta feature
+:::info[Beta feature]
 `--run_granian` is in **beta**. Uvicorn is still the default server. Try Granian when you need more gateway throughput or see instability under load with uvicorn; report issues on [GitHub](https://github.com/BerriAI/litellm/issues).
 :::
 

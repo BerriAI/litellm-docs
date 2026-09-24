@@ -384,6 +384,10 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --form 'model="voxtral"'
 ```
 
+## Files and Batches API
+
+LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's Files and Batch APIs. See [Mistral AI Batch API](./mistral_batches) for the full flow and cost tracking.
+
 ## Sample Usage - Embedding
 ```python
 from litellm import embedding
