@@ -5,11 +5,12 @@ import Image from '@theme/IdealImage';
 
 # Google ADK with LiteLLM
 
-<Image 
+Use Google ADK with the LiteLLM Python SDK or the LiteLLM Proxy.
+
+<Image
   img={require('../../img/litellm_adk.png')}
   style={{width: '90%', display: 'block', margin: '2rem 0'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>Use Google ADK with LiteLLM Python SDK, LiteLLM Proxy</p>
 
 
 This tutorial shows you how to create intelligent agents using Agent Development Kit (ADK) with support for multiple Large Language Model (LLM) providers with LiteLLM.
