@@ -25,7 +25,7 @@ Per tool call
 2. The guardrail reads the Entra token from `Authorization`. Missing: HTTP 401. On the per-server `/mcp` route the 401 carries a sign-in challenge, see [Browser sign-in](#browser-sign-in-from-the-mcp-client)
 3. OBO exchange, cached for the token's lifetime
 4. The pending call goes to Agent 365: tool name, arguments, server name, `conversationId`, and the tool's description and input schema when the server published them. The user's prompt is never sent
-5. Allow with `defender.status: Evaluated`: LiteLLM runs the tool. Block: HTTP 400 with the Defender message and correlation id, and the MCP server is never contacted. Allowed but not evaluated (`Skipped`, `FailedOpen`): treated as unscanned, `unreachable_fallback` decides
+5. Allow with `defender.status: Evaluated`: LiteLLM runs the tool. Block: HTTP 400 with the Defender message and correlation id, and the MCP server is never contacted. Allowed but not evaluated (`Skipped`, `FailedOpen`): treated as unscanned, `unreachable_fallback` decides (allowed by default)
 
 The guardrail can only be attached to MCP servers whose `Authorization` header stays with the gateway: `auth_type` `none`, `api_key`, `bearer_token`, `basic`, `authorization`, `token`, `aws_sigv4` (with no `Authorization` entry in `extra_headers`) and `oauth2_token_exchange`, where the same Entra token is what LiteLLM exchanges for the upstream. On `oauth2`, `oauth2_id_jag`, `oauth_delegate` and `true_passthrough` servers that header already carries an upstream or gateway OAuth token, so the guardrail never sees a user token and refuses every call with 401. Leave it off those servers or move them to `oauth2_token_exchange`. Forwarding a client key header such as `x-api-key` under `extra_headers` is fine, it travels in its own header
 
@@ -173,19 +173,25 @@ LiteLLM decides which keys, users and teams reach which servers and tools ([MCP 
 | `resource_app_id` | No | App id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
 | `agent_id` | No | Agent identity reported with every evaluation. Defaults to the caller's key alias |
 | `timeout` | No | Seconds per token exchange and evaluation request. Defaults to 10 |
-| `unreachable_fallback` | No | `fail_closed` (default) blocks when Agent 365 or Entra is unreachable, when Entra rejects the gateway's own credentials, or when Defender did not evaluate. `fail_open` allows those calls unscanned. Caller-side failures always block |
+| `unreachable_fallback` | No | What happens when Agent 365 or Entra is unreachable, when Entra rejects the gateway's own credentials, or when Defender did not evaluate. `fail_open` (default) lets the call through unscanned and counts it. `fail_closed` blocks with HTTP 503. Blocks, rejections, throttling and caller-side failures always block |
 
 ## Failure behavior
+
+The guardrail sits in the request path, so by default it fails open: when Agent 365 cannot be asked, the call runs and is recorded as unscanned rather than held up. Set `unreachable_fallback: fail_closed` to block instead
 
 | Situation | Result |
 |-----------|--------|
 | Defender blocks | HTTP 400 with the Defender message and correlation id. Always blocks |
 | Agent 365 rejects the request (4xx other than 408/429) | HTTP 400. Always blocks |
-| Allowed but Defender did not evaluate (`Skipped`, `FailedOpen`) | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| Allowed but Defender did not evaluate (`Skipped`, `FailedOpen`) | `fail_open` (default): allowed, recorded as unscanned. `fail_closed`: HTTP 503 |
 | No Entra token, or Entra rejects the caller's token (`invalid_grant`, expired, wrong audience, consent missing, malformed assertion) | HTTP 401 naming the guardrail. Always blocks. On the per-server `/mcp` route the response carries the `WWW-Authenticate` challenge so the client signs the user in |
-| Entra rejects the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed`: HTTP 503 naming the setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt |
+| Entra rejects the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_open` (default): allowed, recorded as unscanned. `fail_closed`: HTTP 503 naming the setting to check. Never a 401, so clients do not re-prompt |
 | Agent 365 or Entra returns 408 or 429 | HTTP 503, recorded as Throttled. Always blocks |
-| Agent 365 or Entra unreachable, timeout or 5xx | `fail_closed`: HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| Agent 365 or Entra unreachable, timeout, 5xx or unparseable verdict | `fail_open` (default): allowed, recorded as unscanned. `fail_closed`: HTTP 503 |
+
+### Watching fail-open calls
+
+Every call let through unscanned is logged at error level with the reason, shows a `Unscanned` verdict with `guardrail_failed_to_respond` on its Logs row and OpenTelemetry span, and increments the Prometheus counter `litellm_guardrail_errors_total{guardrail_name="<name>", error_type="fail_open", hook_type="pre_call"}` ([Prometheus](/docs/proxy/prometheus)). Alert on that counter; a steady rate means Agent 365 is not evaluating your tool calls
 
 ## Conversation grouping
 
