@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 
 :::info
 
-Viktor is an agent, not a bare LLM. Each request starts a Viktor run that can use Viktor's own tools next to the tools you pass, can take minutes (up to 600 seconds), and may act on the team's connected systems. Every request is a billed run. Set a long timeout and turn retries off, because a retry runs the work again.
+Viktor is an agent, not a bare LLM. Each request starts a Viktor run that can use Viktor's own tools next to the tools you pass, can take minutes (up to 600 seconds), and may act on the team's connected systems. Set a long timeout and turn retries off, because a retry runs the work again.
 
 :::
 
