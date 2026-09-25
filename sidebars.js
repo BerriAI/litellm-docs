@@ -53,6 +53,7 @@ const sidebars = {
             "observability/braintrust",
             "observability/grafana_cloud",
             "observability/opik_integration",
+            "observability/palimpsests_integration",
             "observability/deepeval_integration",
             "observability/helicone_integration",
             "observability/humanloop",
