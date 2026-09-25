@@ -59,6 +59,10 @@ mateo:
   url: https://www.linkedin.com/in/mateo-wang
   image_url: /img/mateo.jpeg
 
+oliver:
+  name: Oliver Jensen
+  title: Director of Security, LiteLLM
+
 misbah:
   name: Misbah Syed
   title: DevRel Engineer, LiteLLM
