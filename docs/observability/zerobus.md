@@ -2,7 +2,7 @@
 
 Send LiteLLM Gateway request logs to a Unity Catalog Delta table with Databricks Zerobus Ingest. Query model usage, latency, cost, and request metadata in Databricks, alongside your existing enterprise data.
 
-This quickstart creates a destination table, configures service principal authentication, connects LiteLLM, and verifies a request in Databricks SQL. You can configure the integration through YAML or the LiteLLM Admin UI.
+This quickstart connects an existing LiteLLM Gateway deployment to Databricks. Create a destination table, configure service principal authentication, enable the integration, and verify a request made with a LiteLLM virtual key. You can configure the integration through your deployment's YAML configuration or the LiteLLM Admin UI.
 
 ```text
 Application → LiteLLM Gateway → Model provider
@@ -14,32 +14,28 @@ LiteLLM buffers logs and sends JSON batches to the Zerobus REST API using OAuth 
 
 ## Before you begin
 
-You need a Databricks workspace with Unity Catalog in a [supported Zerobus region](https://docs.databricks.com/aws/en/resources/feature-region-support#ingestion-availability), a catalog and schema for a managed Delta table, and access to a SQL warehouse or notebook compute. A Databricks administrator must be able to create a service principal and grant access to the destination. You also need a model provider API key and a machine that can run LiteLLM and reach both Databricks endpoints over HTTPS.
+You need an existing LiteLLM Gateway deployment, its HTTPS URL, and administrator access to configure logging. The gateway must already have a working model, and you need a LiteLLM virtual key authorized to call that model. Your gateway's cloud environment must allow outbound HTTPS connections to the Databricks workspace and Zerobus endpoints.
+
+You also need a Databricks workspace with Unity Catalog in a [supported Zerobus region](https://docs.databricks.com/aws/en/resources/feature-region-support#ingestion-availability), a catalog and schema for a managed Delta table, and access to a SQL warehouse or notebook compute. A Databricks administrator must be able to create a service principal and grant access to the destination.
 
 Your Databricks user also needs `USE CATALOG`, `USE SCHEMA`, and `SELECT` to run the verification query. These reader privileges are separate from the ingestion principal's grants.
 
-The YAML setup does not require a LiteLLM database. To configure the integration through the Admin UI, connect LiteLLM to PostgreSQL and sign in as a proxy administrator.
+To configure the integration through the Admin UI, your deployment must have PostgreSQL connected and `general_settings.store_model_in_db: true` enabled. Sign in using your organization's configured authentication method with proxy administrator access.
 
 The examples use `my_catalog.my_schema.litellm_traces`. Replace `my_catalog` and `my_schema` with your existing catalog and schema everywhere they appear. Screenshots show an example workspace using a Databricks-hosted model. Zerobus logging works with other supported model providers as well. Use your own workspace URL, ID, region, and service principal credentials.
 
-## 1. Install LiteLLM
+## 1. Prepare gateway access
 
-Create an environment with Python {{python_min_version}} or later and install the gateway:
+Get your gateway's HTTPS base URL and a [virtual key](https://docs.litellm.ai/docs/proxy/virtual_keys) from your platform administrator. If you manage keys, open **Virtual Keys → + Create New Key** in your deployed Admin UI, select the appropriate team and allowed model, and create a key with the budget and expiration required by your organization.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade "litellm[proxy]"
-```
-
-Set your provider API key and generate a gateway master key. The model configuration later in this guide uses OpenAI; you can substitute another [supported provider](https://docs.litellm.ai/docs/providers).
+In the environment where you will send the verification request, set your deployment URL and virtual key:
 
 ```bash
-export OPENAI_API_KEY="<your-openai-api-key>"
-export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+export LITELLM_BASE_URL="https://litellm.example.com"
+export LITELLM_API_KEY="<your-litellm-virtual-key>"
 ```
 
-Keep the master key available for the test request in step 6. Use [virtual keys](https://docs.litellm.ai/docs/proxy/virtual_keys) for application traffic in an existing deployment.
+Replace the example domain with your deployed gateway URL, without a trailing slash or `/v1` suffix. Note an existing model alias that this key can access; you will use it in step 6. The virtual key authenticates requests to LiteLLM. The Databricks service principal created below authenticates log delivery from the gateway to Databricks.
 
 ## 2. Identify your Databricks endpoints
 
@@ -56,7 +52,7 @@ Open the destination Databricks workspace. Copy the base URL from the address ba
 
 ## 3. Create the destination table
 
-Generate the table definition from the LiteLLM package you installed. This keeps the table schema aligned with the rows that your gateway sends:
+Generate the table definition using the same LiteLLM version as your deployed gateway. Run this command in the gateway's container or in an administration environment with the matching package version. Alternatively, use the full table definition below:
 
 ```bash
 python - <<'PY'
@@ -158,68 +154,30 @@ Choose one configuration method. YAML enables logging for both successful and fa
 
 ### Option A: Configure with YAML
 
-Set the five connection values in the same terminal as your provider and master keys:
+Add the following environment variables to your gateway deployment through your platform's configuration and secret management system. Make them available to every gateway replica. Store the client secret as a secret and inject it at runtime.
 
-```bash
-export ZEROBUS_WORKSPACE_URL="https://<your-workspace-host>"
-export ZEROBUS_SERVER_ENDPOINT="https://<workspace-id>.zerobus.<region>.cloud.databricks.com"
-export ZEROBUS_CLIENT_ID="<service-principal-application-id>"
-export ZEROBUS_CLIENT_SECRET="<service-principal-oauth-secret>"
-export ZEROBUS_TABLE_NAME="my_catalog.my_schema.litellm_traces"
-```
+| Gateway environment variable | Value |
+| --- | --- |
+| `ZEROBUS_WORKSPACE_URL` | `https://<your-workspace-host>` |
+| `ZEROBUS_SERVER_ENDPOINT` | `https://<workspace-id>.zerobus.<region>.cloud.databricks.com` |
+| `ZEROBUS_CLIENT_ID` | The service principal's application ID |
+| `ZEROBUS_CLIENT_SECRET` | The service principal's OAuth secret, injected from your secret manager |
+| `ZEROBUS_TABLE_NAME` | `my_catalog.my_schema.litellm_traces` |
 
-Create `config.yaml`:
+Merge the following into the configuration used by your deployment. If `litellm_settings.callbacks` already contains entries, append `zerobus` to that list and preserve your existing callbacks and other configuration:
 
 ```yaml
-model_list:
-  - model_name: quickstart-model
-    litellm_params:
-      model: openai/{{openai_small}}
-      api_key: os.environ/OPENAI_API_KEY
-
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-
 litellm_settings:
   callbacks: ["zerobus"]
 ```
 
-Start the gateway and leave it running:
+Apply the configuration and secret changes using your deployment's normal rollout process, and confirm that the gateway replicas become healthy.
 
-```bash
-litellm --config config.yaml --port 4000
-```
-
-LiteLLM reads the connection values from the environment. Missing required values fail callback initialization. Authentication and table access are checked when the first batch is sent, so continue through the verification steps even if the gateway starts successfully.
+LiteLLM reads the connection values from each gateway process's environment. Setting these variables only in the terminal used to send requests does not configure the deployed gateway. Missing required values fail callback initialization. Authentication and table access are checked when the first batch is sent, so continue through the verification steps after the rollout succeeds.
 
 ### Option B: Configure in the Admin UI
 
-For an existing gateway with PostgreSQL and admin access, ensure `general_settings.store_model_in_db: true` is configured, then open its `/ui` page and proceed to **Logging & Alerts** below. This setting enables loading the configuration saved through the UI. For a new local gateway, set `DATABASE_URL` to your PostgreSQL connection string and use this `config.yaml`:
-
-```bash
-export DATABASE_URL="postgresql://<user>:<password>@<host>:5432/<database>"
-export UI_USERNAME="admin"
-export UI_PASSWORD="<your-admin-password>"
-```
-
-```yaml
-model_list:
-  - model_name: quickstart-model
-    litellm_params:
-      model: openai/{{openai_small}}
-      api_key: os.environ/OPENAI_API_KEY
-
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: os.environ/DATABASE_URL
-  store_model_in_db: true
-```
-
-```bash
-litellm --config config.yaml --port 4000
-```
-
-Open [http://localhost:4000/ui](http://localhost:4000/ui) in Chrome and sign in with the admin credentials. See the [Admin UI guide](https://docs.litellm.ai/docs/proxy/ui) for production account and SSO setup.
+Open your deployed Admin UI, for example `https://litellm.example.com/ui`, and sign in through your organization's configured authentication method. Your deployment must have PostgreSQL connected and `general_settings.store_model_in_db: true` enabled so that it can load the configuration saved through the UI. See the [Admin UI guide](https://docs.litellm.ai/docs/proxy/ui) for administrator access and SSO setup.
 
 Open **Settings → Logging & Alerts**, select **Add Callback**, and choose **Databricks Zerobus**. Fill in the following fields:
 
@@ -241,17 +199,15 @@ Select **Add Callback**. Confirm that **Databricks Zerobus** appears in the logg
 
 ## 6. Send a request through LiteLLM
 
-Open a second terminal and set `LITELLM_MASTER_KEY` to the same key used by the running gateway. Send a chat completion to the model alias configured above:
+From a client that can reach your deployed gateway, send a chat completion using the base URL and virtual key from step 1. Replace `your-model-alias` with an existing model alias authorized for that key:
 
 ```bash
-export LITELLM_MASTER_KEY="<the-master-key-used-to-start-the-gateway>"
-
 curl --fail-with-body --silent --show-error \
-  http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  "${LITELLM_BASE_URL}/v1/chat/completions" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "quickstart-model",
+    "model": "your-model-alias",
     "messages": [
       {"role": "user", "content": "Reply with: Zerobus integration verified."}
     ],
@@ -279,7 +235,7 @@ If your gateway has a database, open **Logs** in the Admin UI and select the req
 
 ## 7. Verify the request in Databricks
 
-Keep the gateway running while its queue flushes. With the defaults, allow at least 10 seconds for the next flush, then allow for Databricks ingestion and query visibility. A successful model response by itself does not confirm delivery to the table.
+With the defaults, allow at least 10 seconds for the next gateway flush, then allow for Databricks ingestion and query visibility. A successful model response by itself does not confirm delivery to the table.
 
 In Databricks SQL Editor or a SQL notebook cell, run this query, replacing the response ID placeholder with the exact value returned in step 6:
 
@@ -374,13 +330,7 @@ LiteLLM acquires OAuth tokens automatically and refreshes them before expiry. Wh
 
 ## Troubleshooting
 
-Temporarily start the gateway with `LITELLM_LOG=DEBUG` to inspect callback activity:
-
-```bash
-LITELLM_LOG=DEBUG litellm --config config.yaml --port 4000
-```
-
-Look for `zerobus:` messages and `CustomLogger` batch flush messages. Use debug logging only while diagnosing the integration because logs can contain request details.
+Inspect your deployed gateway's container or service logs for `zerobus:` messages and `CustomLogger` batch flush messages. If more detail is needed, temporarily set `LITELLM_LOG=DEBUG` in the gateway deployment and apply the change through your normal rollout process. Restore the previous log level after diagnosing the integration because debug logs can contain request details.
 
 | Symptom | What to check |
 | --- | --- |
@@ -390,7 +340,8 @@ Look for `zerobus:` messages and `CustomLogger` batch flush messages. Use debug 
 | `insert returned 400` with an empty body | Check that the endpoint's numeric workspace ID and region belong to `ZEROBUS_WORKSPACE_URL`. An incorrect endpoint can cause this response. |
 | `Record decoder/encoder error` | Compare the destination columns and types with `create_table_sql(...)` from the running LiteLLM version, including the nested `VARIANT` fields. |
 | SQL Editor reports `INSUFFICIENT_PERMISSIONS` | The signed-in reader needs `USE CATALOG`, `USE SCHEMA`, and `SELECT`. Ingestion can succeed even when a different browser user cannot query the table. |
-| Request succeeds but no row appears | Keep the gateway running, allow a flush interval plus ingestion time, rerun the query, and inspect token and insert errors. Confirm the queried table matches `ZEROBUS_TABLE_NAME`. |
+| Request succeeds but no row appears | Allow a flush interval plus ingestion time, rerun the query, and inspect the deployed gateway's token and insert errors. Confirm every replica has the integration configuration and the queried table matches `ZEROBUS_TABLE_NAME`. |
+| Test request returns `401` or `403` | Check that the virtual key belongs to this LiteLLM deployment, is valid, and is authorized for the requested model alias. |
 | Successes appear but failures do not | The Admin UI registers a success callback. Use `litellm_settings.callbacks: ["zerobus"]` for success and failure events. Failures rejected before model-call logging may not produce a row. |
 | Repeated retries or queue overflow | Check network reachability and Databricks responses. Resolve the destination error before the in-memory queue reaches its limit. |
 
