@@ -1157,16 +1157,22 @@ router_settings:
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
 | LAGO_API_EVENT_CODE | Event code for Lago API events
 | LAGO_API_KEY | API key for accessing Lago services
-| LANGFUSE_BASE_URL | Base URL for Langfuse service |
-| LANGFUSE_DEBUG | Toggle debug mode for Langfuse
-| LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
+| LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
+| LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
+| LANGFUSE_FLUSH_AT | Number of spans the Langfuse callback batches per OTLP export request; defaults to `512`. Values that are not a whole number between `1` and `100000` log a warning and use the default
+| LANGFUSE_FLUSH_INTERVAL | Seconds the Langfuse callback waits between OTLP export batches; defaults to `1`. Values that are not a whole number above `0` log a warning and use the default
+| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt. Must be a whole number of seconds: the Langfuse SDK reads it as an integer when it is imported, so any other value (for example `abc` or `2.5`) fails the callback with an error naming this variable; a negative value logs a warning and uses the default
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
-| LANGFUSE_HOST | Deprecated host URL for Langfuse service |
+| LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
 | LANGFUSE_MOCK_LATENCY_MS | Mock latency in milliseconds for Langfuse API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGFUSE_PUBLIC_KEY | Public key for Langfuse authentication
-| LANGFUSE_RELEASE | Release version of Langfuse integration
+| LANGFUSE_MAX_RETRIES | How many times the Langfuse callback retries an OTLP export request that times out, fails to connect or gets a retryable status before the batch is dropped; defaults to `3`, with waits of 1, 2 and 4 seconds between attempts that keep doubling up to 64 seconds. Values that are not a whole number log a warning and use the default, and values above `1000` log a warning and use `1000`
+| LANGFUSE_RELEASE | Release recorded on every Langfuse trace. When unset, the callback falls back to the first of `RENDER_GIT_COMMIT`, `CI_COMMIT_SHA`, `CIRCLE_SHA1`, `SOURCE_VERSION`, `TRAVIS_COMMIT`, `GIT_COMMIT`, `GITHUB_SHA`, `BITBUCKET_COMMIT`, `BUILD_SOURCEVERSION` and `DRONE_COMMIT_SHA` that is set, the same list the Langfuse SDK reads
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
+| LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request and each REST request (prompts, credential check, project lookup) the Langfuse callback sends; defaults to `20` and accepts decimals such as `2.5`. An export request that times out or fails to connect is retried `LANGFUSE_MAX_RETRIES` times before the batch is dropped
+| LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
+| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`. Values outside that range or not numeric log a warning and export every trace
 | LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
 | LANGSMITH_API_KEY | API key for Langsmith platform
 | LANGSMITH_BASE_URL | Base URL for Langsmith service
@@ -1531,11 +1537,11 @@ router_settings:
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for the built-in Admin UI login. If unset, the master key is accepted as the password. This is a shared cleartext admin credential meant for bootstrapping only; create per-user admin accounts and set `general_settings.disable_env_credential_login: true` to turn this login path off. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login)
 | UI_USERNAME | Username for the built-in Admin UI login. Default `admin`. Ignored when `disable_env_credential_login` is enabled
-| UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse
-| UPSTREAM_LANGFUSE_HOST | Host URL for upstream Langfuse service
-| UPSTREAM_LANGFUSE_PUBLIC_KEY | Public key for upstream Langfuse authentication
-| UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
-| UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
+| UPSTREAM_LANGFUSE_DEBUG | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_HOST | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_RELEASE | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | USAGE_TOP_API_KEYS_LIMIT | Max number of API keys (ranked by spend) listed in the Admin Usage aggregated activity response. Totals and the model, provider, MCP and endpoint rollups always cover every key. **Default is 100**
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
