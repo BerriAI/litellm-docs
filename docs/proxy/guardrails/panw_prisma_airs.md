@@ -106,6 +106,7 @@ On success, the guardrail name appears in the `x-litellm-applied-guardrails` res
 | `post_call` | After LLM call | Response output |
 | `pre_mcp_call` | Before MCP tool execution | MCP tool input |
 | `during_mcp_call` | Parallel with MCP tool execution | MCP tool input |
+| `post_mcp_call` | After MCP tool execution | MCP tool result |
 
 
 ### Configuration Parameters
@@ -284,11 +285,27 @@ Tool invocations are sent to AIRS as structured `tool_event` payloads containing
 
 **What is scanned:** LLM-driven `tool_calls` (name + arguments) and MCP request-side invocations when `mcp_tool_name` (or fallback `name`) is present. Response-side OpenAI-compatible `tool_calls` are also scanned when surfaced into `apply_guardrail()`.
 
-**What is not scanned:** Tool definitions in `inputs["tools"]` and post-MCP tool results (no `post_mcp_call` hook exists yet).
+**What is not scanned:** Tool definitions in `inputs["tools"]`.
 
+### Scanning MCP tool results
+
+With `mode: post_mcp_call`, the guardrail scans the result an MCP server returns, before it reaches the model, as a response-side scan. Every text content block and every string value inside `structuredContent` is sent to AIRS. A `block` verdict rejects the tool call. With `mask_response_content: true`, the masked text AIRS returns is written back into the tool result in place; a masking hit on a `structuredContent` key or a non-string value cannot be rewritten and is treated as a block. This applies to both the MCP gateway (`/mcp`) and MCP tools the Responses API executes on the model's behalf.
+
+```yaml
+guardrails:
+  - guardrail_name: "panw-mcp-results"
+    litellm_params:
+      guardrail: panw_prisma_airs
+      mode: "post_mcp_call"
+      api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
+      profile_name: os.environ/PANW_PRISMA_AIRS_PROFILE_NAME
+      mask_response_content: true
+      default_on: true
+```
+
+Unlike `pre_call` and `during_call`, which also run on `pre_mcp_call` and `during_mcp_call`, a `post_call` guardrail does not scan MCP tool results. Set `mode: post_mcp_call` explicitly.
 
 ### Current Limitations
 
-- **No post-MCP response scanning.** Actual post-MCP tool-result scanning is not supported because there is no `post_mcp_call` hook in the framework. Response-side MCP events are only scanned when they appear as regular `tool_calls` in the LLM response.
-- **Guardrail selection not inherited by MCP sub-calls.** With `default_on: false`, MCP request-side child-call scans can be skipped because the parent request's guardrail selection is not propagated to the synthetic MCP payload. Workaround: use a dedicated guardrail with `mode: pre_mcp_call` and `default_on: true`.
+- **Guardrail selection not inherited by MCP sub-calls.** With `default_on: false`, MCP child-call scans can be skipped because the parent request's guardrail selection is not propagated to the synthetic MCP payload. Workaround: use a dedicated guardrail with `mode: pre_mcp_call` or `mode: post_mcp_call` and `default_on: true`.
 - **MCP transaction correlation.** MCP tool scans use the parent `litellm_call_id` when available; otherwise a fallback ID is synthesized and will not be grouped with the parent request in AIRS dashboards.
