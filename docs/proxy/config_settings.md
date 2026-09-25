@@ -617,6 +617,7 @@ router_settings:
 | AWS_BEDROCK_RUNTIME_ENDPOINT | Endpoint URL for the Bedrock runtime, used when neither `api_base` nor `aws_bedrock_runtime_endpoint` is passed per request. Overrides the endpoint LiteLLM would otherwise derive from the AWS region
 | AWS_DEFAULT_REGION | Default AWS region for service interactions when AWS_REGION is not set
 | AWS_PROFILE_NAME | AWS CLI profile name to be used
+| AWS_RDS_IAM_IGNORE_WEB_IDENTITY_TOKEN | Set to `True` to make RDS IAM DB auth (`IAM_TOKEN_DB_AUTH`) ignore `AWS_WEB_IDENTITY_TOKEN` and `AWS_WEB_IDENTITY_TOKEN_FILE` (auto-injected on EKS) and authenticate with the explicit AWS credentials or `AWS_ROLE_NAME` instead
 | AWS_REGION | AWS region for service interactions (takes precedence over AWS_DEFAULT_REGION)
 | AWS_REGION_NAME | Default AWS region for service interactions
 | AWS_ROLE_ARN | ARN of the AWS IAM role to assume for authentication
@@ -625,6 +626,7 @@ router_settings:
 | AWS_S3_OUTPUT_BUCKET_NAME | Name of the AWS S3 output bucket for batch operations
 | AWS_SECRET_ACCESS_KEY | Secret Access Key for AWS services
 | AWS_SESSION_NAME | Name for AWS session
+| AWS_SESSION_TOKEN | Session token for temporary AWS credentials
 | AWS_WEB_IDENTITY_TOKEN | Web identity token for AWS
 | AWS_WEB_IDENTITY_TOKEN_FILE | Path to file containing web identity token for AWS
 | AZURE_API_VERSION | Version of the Azure API being used
