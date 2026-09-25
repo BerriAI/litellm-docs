@@ -2554,6 +2554,7 @@ export SENTRY_DSN="your-sentry-dsn"
 export SENTRY_API_SAMPLE_RATE="1.0"  # Controls what percentage of errors are sent (default: 1.0 = 100%)
 export SENTRY_API_TRACE_RATE="1.0"   # Controls what percentage of transactions are sampled for performance monitoring (default: 1.0 = 100%)
 export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (default: production)
+export SENTRY_SEND_DEFAULT_PII="true" # Sends user ids, emails, and key hashes to Sentry; secrets stay filtered (default: false, see /observability/sentry)
 ```
 
 ```yaml 
