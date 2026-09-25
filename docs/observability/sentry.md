@@ -67,6 +67,20 @@ These options are useful for high-volume applications where sampling a subset of
   - Example: `os.environ["SENTRY_ENVIRONMENT"] = "staging"`
   - If not set, Sentry will use 'production' as the default environment
 
+## PII and secret scrubbing
+
+By default LiteLLM sends Sentry events with `send_default_pii` off and scrubs them before they leave the proxy, so the frame locals Sentry attaches to an exception never carry credentials or user identity
+
+Secrets are always removed. API keys, the master key, the database URL, tokens, and passwords read `[Filtered]` whether they sit in a top-level variable, in a nested dict such as `general_settings`, or inside the repr of an object such as `UserAPIKeyAuth(token='...')`
+
+User identity is removed unless you opt in. `user_id`, `user_email`, `end_user_id`, the hashed virtual key (`user_api_key_hash`), and the `user_api_key_*` metadata fields read `[Filtered]` in the same three places, and any email-shaped value or 64-character hex key hash left elsewhere in the event is replaced too
+
+Set `SENTRY_SEND_DEFAULT_PII=true` when you want Sentry to show which user or key an error belongs to. The identity fields then pass through while secrets stay filtered
+
+```shell
+export SENTRY_SEND_DEFAULT_PII=true
+```
+
 ## Redacting Messages, Response Content from Sentry Logging 
 
 Set `litellm.turn_off_message_logging=True` This will prevent the messages and responses from being logged to sentry, but request metadata will still be logged.
