@@ -1,0 +1,87 @@
+{
+  "files": {
+    "blog/litellm_rust_launch/index.md": {
+      "chunks": 71,
+      "sourceHash": "536fef2a1a37c9cfbfb670ef2f58eb86d477e281868dc1f8dd4b9d6932703c17",
+      "status": "complete",
+      "translated": 71,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    },
+    "docs/providers/anthropic.md": {
+      "chunks": 194,
+      "sourceHash": "ce9a28d94fc2c900c33197b38cff5b3ea16363837791b17f4b0b33c2dca69ffe",
+      "status": "complete",
+      "translated": 194,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    },
+    "docs/proxy/quick_start.md": {
+      "chunks": 41,
+      "sourceHash": "2a3f54653735f33a3475f5a84e1371b19cee9d7c16546ae819c7979a7d86d2f1",
+      "status": "complete",
+      "translated": 41,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    },
+    "release_notes/v1.103.0rc1/index.md": {
+      "chunks": 472,
+      "sourceHash": "b6761b545ea65d7663cd04649af732ec8fbef99df0cfcd0e283ce0490e588964",
+      "status": "complete",
+      "translated": 472,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    },
+    "src/pages/completion/input.md": {
+      "chunks": 29,
+      "sourceHash": "3d062462468647f1cf66623a82f56f5cfdc8389f5e3f982bc4ce13878c34e5a5",
+      "status": "complete",
+      "translated": 29,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    }
+  },
+  "glossaryHash": "2ffbfaaec7f0e6e01b72893a9fb16b672560163c21113fdfee1138625262a494",
+  "locale": "zh-Hans",
+  "model": "vertex_ai/gemini-2.5-flash",
+  "promptVersion": "2026-09-24.1",
+  "ui": {
+    "code.json": {
+      "chunks": 114,
+      "sourceHash": "7b24e6c7714f256042e0dd8fab74fcae053a4abdeea189caedd4b62482408020",
+      "status": "complete",
+      "translated": 114,
+      "updatedAt": "2026-09-25T00:25:44.032Z"
+    },
+    "docusaurus-plugin-content-blog-blog/options.json": {
+      "chunks": 3,
+      "sourceHash": "ef740a4b515f375f9f9469f63db34c447acf8a9379a84a8f876d0354cd6f7b8b",
+      "status": "complete",
+      "translated": 3,
+      "updatedAt": "2026-09-24T22:39:26.713Z"
+    },
+    "docusaurus-plugin-content-docs-release-notes/current.json": {
+      "chunks": 47,
+      "sourceHash": "831198cf142a1c33e30ba4679d4056517ce937a7f1e0a0afe4c5ec745b68547b",
+      "status": "complete",
+      "translated": 47,
+      "updatedAt": "2026-09-24T22:39:26.713Z"
+    },
+    "docusaurus-plugin-content-docs/current.json": {
+      "chunks": 194,
+      "sourceHash": "54a7ce0996377d90e7215d5831bc4dbd51c71e5fbc689e3a3d140f86b1ad8270",
+      "status": "complete",
+      "translated": 194,
+      "updatedAt": "2026-09-24T22:39:26.713Z"
+    },
+    "docusaurus-theme-classic/footer.json": {
+      "chunks": 14,
+      "sourceHash": "26aaae32100cac8b037196ba68d855b37ff3cf095265c91b5cade77a56ffec64",
+      "status": "complete",
+      "translated": 14,
+      "updatedAt": "2026-09-24T22:39:26.713Z"
+    },
+    "docusaurus-theme-classic/navbar.json": {
+      "chunks": 10,
+      "sourceHash": "f0cebf90a07d8ae4e893c4ea5020220f744fe0113ec5433755321493950b58e6",
+      "status": "complete",
+      "translated": 10,
+      "updatedAt": "2026-09-24T22:39:26.713Z"
+    }
+  }
+}

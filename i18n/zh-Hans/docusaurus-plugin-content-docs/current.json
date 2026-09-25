@@ -1,0 +1,778 @@
+{
+  "version.label": {
+    "message": "下一步",
+    "description": "The label for version current"
+  },
+  "sidebar.integrationsSidebar.category.Observability": {
+    "message": "可观测性",
+    "description": "The label for category Observability in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Contributing to Integrations": {
+    "message": "贡献集成",
+    "description": "The label for category Contributing to Integrations in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.OpenTelemetry": {
+    "message": "OpenTelemetry",
+    "description": "The label for category OpenTelemetry in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.LLM observability platforms": {
+    "message": "LLM 可观测性平台",
+    "description": "The label for category LLM observability platforms in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Infrastructure backends": {
+    "message": "基础设施后端",
+    "description": "The label for category Infrastructure backends in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Cost, billing, and usage": {
+    "message": "成本、计费和使用",
+    "description": "The label for category Cost, billing, and usage in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Callbacks and customization": {
+    "message": "回调和自定义",
+    "description": "The label for category Callbacks and customization in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Guardrail Providers": {
+    "message": "护栏提供商",
+    "description": "The label for category Guardrail Providers in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Guardrail Providers.link.generated-index.title": {
+    "message": "护栏提供商",
+    "description": "The generated-index page title for category Guardrail Providers in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Guardrail Providers.link.generated-index.description": {
+    "message": "为 LLM 调用添加安全和内容过滤",
+    "description": "The generated-index page description for category Guardrail Providers in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Contributing to Guardrails": {
+    "message": "贡献护栏",
+    "description": "The label for category Contributing to Guardrails in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Alerting & Monitoring": {
+    "message": "告警与监控",
+    "description": "The label for category Alerting & Monitoring in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Cost Optimization": {
+    "message": "成本优化",
+    "description": "The label for category Cost Optimization in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.[Beta] Prompt Management": {
+    "message": "[Beta] 提示词管理",
+    "description": "The label for category [Beta] Prompt Management in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Contributing to Prompt Management": {
+    "message": "贡献提示词管理",
+    "description": "The label for category Contributing to Prompt Management in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.AI Tools": {
+    "message": "AI 工具",
+    "description": "The label for category AI Tools in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.AI Tools.link.generated-index.title": {
+    "message": "AI 工具",
+    "description": "The generated-index page title for category AI Tools in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.AI Tools.link.generated-index.description": {
+    "message": "将 LiteLLM 与 OpenWebUI、Claude Code 等 AI 工具集成",
+    "description": "The generated-index page description for category AI Tools in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Claude Code": {
+    "message": "Claude Code",
+    "description": "The label for category Claude Code in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Agent SDKs": {
+    "message": "代理 SDK",
+    "description": "The label for category Agent SDKs in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Agent SDKs.link.generated-index.title": {
+    "message": "代理 SDK",
+    "description": "The generated-index page title for category Agent SDKs in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Agent SDKs.link.generated-index.description": {
+    "message": "将 LiteLLM 与代理框架和 SDK 结合使用",
+    "description": "The generated-index page description for category Agent SDKs in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Manage with AI Agents": {
+    "message": "使用 AI 代理管理",
+    "description": "The label for category Manage with AI Agents in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Manage with AI Agents.link.generated-index.title": {
+    "message": "使用 AI 代理管理",
+    "description": "The generated-index page title for category Manage with AI Agents in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.category.Manage with AI Agents.link.generated-index.description": {
+    "message": "使用 AI 代理管理您的 LiteLLM 部署——通过自然语言创建用户、团队、密钥、模型等。",
+    "description": "The generated-index page description for category Manage with AI Agents in sidebar integrationsSidebar"
+  },
+  "sidebar.integrationsSidebar.link.Prompt Compression": {
+    "message": "提示词压缩",
+    "description": "The label for link Prompt Compression in sidebar integrationsSidebar, linking to /docs/completion/prompt_compression#server-side-callback-loop-v1messages"
+  },
+  "sidebar.integrationsSidebar.doc.Team Bring-Your-Own Guardrails": {
+    "message": "团队自带护栏",
+    "description": "The label for the doc item Team Bring-Your-Own Guardrails in sidebar integrationsSidebar, linking to the doc proxy/guardrails/team_based_guardrails"
+  },
+  "sidebar.integrationsSidebar.doc.Scalekit with LiteLLM": {
+    "message": "Scalekit 与 LiteLLM",
+    "description": "The label for the doc item Scalekit with LiteLLM in sidebar integrationsSidebar, linking to the doc tutorials/scalekit_agentkit"
+  },
+  "sidebar.integrationsSidebar.doc.Instructor with LiteLLM": {
+    "message": "Instructor 与 LiteLLM",
+    "description": "The label for the doc item Instructor with LiteLLM in sidebar integrationsSidebar, linking to the doc tutorials/instructor"
+  },
+  "sidebar.integrationsSidebar.doc.LangChain with LiteLLM": {
+    "message": "LangChain 与 LiteLLM",
+    "description": "The label for the doc item LangChain with LiteLLM in sidebar integrationsSidebar, linking to the doc langchain/langchain"
+  },
+  "sidebar.tutorialSidebar.category.Get Started": {
+    "message": "开始使用",
+    "description": "The label for category Get Started in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.LiteLLM Python SDK": {
+    "message": "LiteLLM Python SDK",
+    "description": "The label for category LiteLLM Python SDK in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.SDK Functions": {
+    "message": "SDK 函数",
+    "description": "The label for category SDK Functions in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Configuration": {
+    "message": "配置",
+    "description": "The label for category Configuration in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.LiteLLM AI Gateway (Proxy)": {
+    "message": "LiteLLM AI 网关 (代理)",
+    "description": "The label for category LiteLLM AI Gateway (Proxy) in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.LiteLLM AI Gateway (Proxy).link.generated-index.title": {
+    "message": "LiteLLM AI 网关 (LLM 代理)",
+    "description": "The generated-index page title for category LiteLLM AI Gateway (Proxy) in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.LiteLLM AI Gateway (Proxy).link.generated-index.description": {
+    "message": "OpenAI 代理服务器 (LLM 网关)，用于在统一界面中调用 100+ LLM 并跟踪花费、设置每个虚拟密钥/用户的预算",
+    "description": "The generated-index page description for category LiteLLM AI Gateway (Proxy) in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Client Setup": {
+    "message": "客户端设置",
+    "description": "The label for category Client Setup in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Deploy the Gateway": {
+    "message": "部署网关",
+    "description": "The label for category Deploy the Gateway in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Agent & MCP Gateway": {
+    "message": "代理与 MCP 网关",
+    "description": "The label for category Agent & MCP Gateway in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.A2A Agent Gateway": {
+    "message": "A2A 代理网关",
+    "description": "The label for category A2A Agent Gateway in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.MCP Gateway": {
+    "message": "MCP 网关",
+    "description": "The label for category MCP Gateway in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.MCP Server Usage": {
+    "message": "MCP 服务器使用情况",
+    "description": "The label for category MCP Server Usage in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Skills Gateway": {
+    "message": "技能网关",
+    "description": "The label for category Skills Gateway in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Config.yaml": {
+    "message": "Config.yaml",
+    "description": "The label for category Config.yaml in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.CLI": {
+    "message": "CLI",
+    "description": "The label for category CLI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Troubleshooting": {
+    "message": "故障排除",
+    "description": "The label for category Troubleshooting in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Admin UI": {
+    "message": "管理界面 (Admin UI)",
+    "description": "The label for category Admin UI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Setup & SSO": {
+    "message": "设置与 SSO",
+    "description": "The label for category Setup & SSO in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Models": {
+    "message": "模型",
+    "description": "The label for category Models in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Teams & Organizations": {
+    "message": "团队与组织",
+    "description": "The label for category Teams & Organizations in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Observability: Usage": {
+    "message": "可观测性：使用情况",
+    "description": "The label for category Observability: Usage in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Logs": {
+    "message": "日志",
+    "description": "The label for category Logs in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Architecture": {
+    "message": "架构",
+    "description": "The label for category Architecture in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Authentication": {
+    "message": "认证",
+    "description": "The label for category Authentication in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Budgets + Rate Limits": {
+    "message": "预算 + 速率限制",
+    "description": "The label for category Budgets + Rate Limits in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Caching": {
+    "message": "缓存",
+    "description": "The label for category Caching in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Guardrails": {
+    "message": "护栏 (Guardrails)",
+    "description": "The label for category Guardrails in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Contributing to Guardrails": {
+    "message": "贡献护栏 (Guardrails)",
+    "description": "The label for category Contributing to Guardrails in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Policies": {
+    "message": "策略",
+    "description": "The label for category Policies in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Create Custom Plugins": {
+    "message": "创建自定义插件",
+    "description": "The label for category Create Custom Plugins in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Logging, Alerting, Metrics": {
+    "message": "日志记录、告警、指标",
+    "description": "The label for category Logging, Alerting, Metrics in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Making LLM Requests": {
+    "message": "发出 LLM 请求",
+    "description": "The label for category Making LLM Requests in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Model Access": {
+    "message": "模型访问",
+    "description": "The label for category Model Access in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Secret Managers": {
+    "message": "密钥管理器",
+    "description": "The label for category Secret Managers in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Spend Tracking": {
+    "message": "花费跟踪",
+    "description": "The label for category Spend Tracking in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Cost Optimization": {
+    "message": "成本优化",
+    "description": "The label for category Cost Optimization in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Endpoints": {
+    "message": "支持的端点",
+    "description": "The label for category Supported Endpoints in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Endpoints.link.generated-index.title": {
+    "message": "支持的端点",
+    "description": "The generated-index page title for category Supported Endpoints in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Endpoints.link.generated-index.description": {
+    "message": "了解如何在 LiteLLM 上部署和调用来自不同提供商的模型",
+    "description": "The generated-index page description for category Supported Endpoints in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./batches": {
+    "message": "/batches",
+    "description": "The label for category /batches in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./chat/completions": {
+    "message": "/chat/completions",
+    "description": "The label for category /chat/completions in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./chat/completions.link.generated-index.title": {
+    "message": "聊天补全 (Chat Completions)",
+    "description": "The generated-index page title for category /chat/completions in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./chat/completions.link.generated-index.description": {
+    "message": "completion() 函数的详细信息",
+    "description": "The generated-index page description for category /chat/completions in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./files": {
+    "message": "/files",
+    "description": "The label for category /files in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./fine_tuning": {
+    "message": "/fine_tuning",
+    "description": "The label for category /fine_tuning in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./vector_stores - Vector Stores": {
+    "message": "/vector_stores - 向量存储",
+    "description": "The label for category /vector_stores - Vector Stores in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./mcp - Model Context Protocol": {
+    "message": "/mcp - 模型上下文协议",
+    "description": "The label for category /mcp - Model Context Protocol in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./v1/messages": {
+    "message": "/v1/messages",
+    "description": "The label for category /v1/messages in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Pass-through Endpoints (Anthropic SDK, etc.)": {
+    "message": "直通端点 (Anthropic SDK 等)",
+    "description": "The label for category Pass-through Endpoints (Anthropic SDK, etc.) in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Vertex AI": {
+    "message": "Vertex AI",
+    "description": "The label for category Vertex AI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category./search": {
+    "message": "/search",
+    "description": "The label for category /search in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Models & Providers": {
+    "message": "支持的模型与提供商",
+    "description": "The label for category Supported Models & Providers in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Models & Providers.link.generated-index.title": {
+    "message": "提供商",
+    "description": "The generated-index page title for category Supported Models & Providers in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Supported Models & Providers.link.generated-index.description": {
+    "message": "了解如何在 LiteLLM 上部署和调用来自不同提供商的模型",
+    "description": "The generated-index page description for category Supported Models & Providers in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.OpenAI": {
+    "message": "OpenAI",
+    "description": "The label for category OpenAI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Azure OpenAI": {
+    "message": "Azure OpenAI",
+    "description": "The label for category Azure OpenAI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Azure AI": {
+    "message": "Azure AI",
+    "description": "The label for category Azure AI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Google AI Studio": {
+    "message": "Google AI Studio",
+    "description": "The label for category Google AI Studio in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Bedrock": {
+    "message": "Bedrock",
+    "description": "The label for category Bedrock in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.HuggingFace": {
+    "message": "HuggingFace",
+    "description": "The label for category HuggingFace in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Mistral AI": {
+    "message": "Mistral AI",
+    "description": "The label for category Mistral AI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Nvidia NIM": {
+    "message": "Nvidia NIM",
+    "description": "The label for category Nvidia NIM in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Perplexity AI": {
+    "message": "Perplexity AI",
+    "description": "The label for category Perplexity AI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.RunwayML": {
+    "message": "RunwayML",
+    "description": "The label for category RunwayML in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.vLLM": {
+    "message": "vLLM",
+    "description": "The label for category vLLM in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.WatsonX": {
+    "message": "WatsonX",
+    "description": "The label for category WatsonX in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.xAI": {
+    "message": "xAI",
+    "description": "The label for category xAI in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Routing & Load Balancing": {
+    "message": "路由与负载均衡",
+    "description": "The label for category Routing & Load Balancing in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Routing & Load Balancing.link.generated-index.title": {
+    "message": "路由与负载均衡",
+    "description": "The generated-index page title for category Routing & Load Balancing in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Routing & Load Balancing.link.generated-index.description": {
+    "message": "了解如何为您的 LLM 请求进行负载均衡、路由和设置回退（提供商故障转移）",
+    "description": "The generated-index page description for category Routing & Load Balancing in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Contributing": {
+    "message": "贡献",
+    "description": "The label for category Contributing in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Adding Providers": {
+    "message": "添加提供商",
+    "description": "The label for category Adding Providers in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Extras": {
+    "message": "附加功能",
+    "description": "The label for category Extras in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.❤️ 🚅 Projects built on LiteLLM": {
+    "message": "❤️ 🚅 基于 LiteLLM 构建的项目",
+    "description": "The label for category ❤️ 🚅 Projects built on LiteLLM in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.❤️ 🚅 Projects built on LiteLLM.link.generated-index.title": {
+    "message": "基于 LiteLLM 构建的项目",
+    "description": "The generated-index page title for category ❤️ 🚅 Projects built on LiteLLM in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.❤️ 🚅 Projects built on LiteLLM.link.generated-index.description": {
+    "message": "了解如何在 LiteLLM 上部署和调用来自不同提供商的模型",
+    "description": "The generated-index page description for category ❤️ 🚅 Projects built on LiteLLM in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Performance / Latency": {
+    "message": "性能 / 延迟",
+    "description": "The label for category Performance / Latency in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.link.Models & Pricing": {
+    "message": "模型与定价",
+    "description": "The label for link Models & Pricing in sidebar tutorialSidebar, linking to https://models.litellm.ai"
+  },
+  "sidebar.tutorialSidebar.link.Changelog": {
+    "message": "更新日志",
+    "description": "The label for link Changelog in sidebar tutorialSidebar, linking to /release_notes"
+  },
+  "sidebar.tutorialSidebar.link.Quick Start": {
+    "message": "快速开始",
+    "description": "The label for link Quick Start in sidebar tutorialSidebar, linking to /docs/#litellm-python-sdk"
+  },
+  "sidebar.tutorialSidebar.link.All Supported Endpoints →": {
+    "message": "所有支持的端点 →",
+    "description": "The label for link All Supported Endpoints → in sidebar tutorialSidebar, linking to https://docs.litellm.ai/docs/supported_endpoints"
+  },
+  "sidebar.tutorialSidebar.link.MCP Troubleshooting Guide": {
+    "message": "MCP 故障排除指南",
+    "description": "The label for link MCP Troubleshooting Guide in sidebar tutorialSidebar, linking to /docs/mcp_troubleshoot"
+  },
+  "sidebar.tutorialSidebar.link.Role-based Access Controls (RBAC) →": {
+    "message": "基于角色的访问控制 (RBAC) →",
+    "description": "The label for link Role-based Access Controls (RBAC) → in sidebar tutorialSidebar, linking to /docs/proxy/access_control"
+  },
+  "sidebar.tutorialSidebar.link.All Endpoints (Swagger)": {
+    "message": "所有端点 (Swagger)",
+    "description": "The label for link All Endpoints (Swagger) in sidebar tutorialSidebar, linking to https://docs.litellm.ai/api-reference/"
+  },
+  "sidebar.tutorialSidebar.link.Providers →": {
+    "message": "提供商 →",
+    "description": "The label for link Providers → in sidebar tutorialSidebar, linking to /docs/guardrail_providers"
+  },
+  "sidebar.tutorialSidebar.link.Load Balancing, Routing, Fallbacks (Failover)": {
+    "message": "负载均衡、路由、回退（故障转移）",
+    "description": "The label for link Load Balancing, Routing, Fallbacks (Failover) in sidebar tutorialSidebar, linking to https://docs.litellm.ai/docs/routing-load-balancing"
+  },
+  "sidebar.tutorialSidebar.link.Prompt Compression": {
+    "message": "提示词压缩",
+    "description": "The label for link Prompt Compression in sidebar tutorialSidebar, linking to /docs/completion/prompt_compression#server-side-callback-loop-v1messages"
+  },
+  "sidebar.tutorialSidebar.link./a2a - A2A Agent Gateway": {
+    "message": "/a2a - A2A 代理网关",
+    "description": "The label for link /a2a - A2A Agent Gateway in sidebar tutorialSidebar, linking to /docs/a2a"
+  },
+  "sidebar.tutorialSidebar.doc.Quickstart": {
+    "message": "快速开始",
+    "description": "The label for the doc item Quickstart in sidebar tutorialSidebar, linking to the doc proxy/docker_quick_start"
+  },
+  "sidebar.tutorialSidebar.doc.Benchmarks": {
+    "message": "基准测试",
+    "description": "The label for the doc item Benchmarks in sidebar tutorialSidebar, linking to the doc benchmarks"
+  },
+  "sidebar.tutorialSidebar.doc.completion()": {
+    "message": "补全 (completion)()",
+    "description": "The label for the doc item completion() in sidebar tutorialSidebar, linking to the doc completion/input"
+  },
+  "sidebar.tutorialSidebar.doc.embedding()": {
+    "message": "嵌入 (embedding)()",
+    "description": "The label for the doc item embedding() in sidebar tutorialSidebar, linking to the doc embedding/supported_embedding"
+  },
+  "sidebar.tutorialSidebar.doc.responses()": {
+    "message": "响应()",
+    "description": "The label for the doc item responses() in sidebar tutorialSidebar, linking to the doc response_api"
+  },
+  "sidebar.tutorialSidebar.doc.text_completion()": {
+    "message": "文本补全()",
+    "description": "The label for the doc item text_completion() in sidebar tutorialSidebar, linking to the doc text_completion"
+  },
+  "sidebar.tutorialSidebar.doc.image_generation()": {
+    "message": "图像生成()",
+    "description": "The label for the doc item image_generation() in sidebar tutorialSidebar, linking to the doc image_generation"
+  },
+  "sidebar.tutorialSidebar.doc.compress()": {
+    "message": "压缩()",
+    "description": "The label for the doc item compress() in sidebar tutorialSidebar, linking to the doc completion/prompt_compression"
+  },
+  "sidebar.tutorialSidebar.doc.transcription()": {
+    "message": "转录()",
+    "description": "The label for the doc item transcription() in sidebar tutorialSidebar, linking to the doc audio_transcription"
+  },
+  "sidebar.tutorialSidebar.doc.speech()": {
+    "message": "语音()",
+    "description": "The label for the doc item speech() in sidebar tutorialSidebar, linking to the doc text_to_speech"
+  },
+  "sidebar.tutorialSidebar.doc.acode_interpreter_tool()": {
+    "message": "代码解释器工具()",
+    "description": "The label for the doc item acode_interpreter_tool() in sidebar tutorialSidebar, linking to the doc sandbox"
+  },
+  "sidebar.tutorialSidebar.doc.Gateway Auth Reference": {
+    "message": "网关认证参考",
+    "description": "The label for the doc item Gateway Auth Reference in sidebar tutorialSidebar, linking to the doc auth_overview"
+  },
+  "sidebar.tutorialSidebar.doc.Provisioning & Keys": {
+    "message": "配置与密钥",
+    "description": "The label for the doc item Provisioning & Keys in sidebar tutorialSidebar, linking to the doc proxy/identity_provisioning"
+  },
+  "sidebar.tutorialSidebar.doc.Integrate as a Model Provider": {
+    "message": "集成作为模型提供商",
+    "description": "The label for the doc item Integrate as a Model Provider in sidebar tutorialSidebar, linking to the doc provider_registration/index"
+  },
+  "sidebar.tutorialSidebar.doc.Add OpenAI-Compatible Provider (JSON)": {
+    "message": "添加 OpenAI 兼容提供商 (JSON)",
+    "description": "The label for the doc item Add OpenAI-Compatible Provider (JSON) in sidebar tutorialSidebar, linking to the doc contributing/adding_openai_compatible_providers"
+  },
+  "sidebar.tutorialSidebar.doc.Add Model Pricing & Context Window": {
+    "message": "添加模型定价与上下文窗口",
+    "description": "The label for the doc item Add Model Pricing & Context Window in sidebar tutorialSidebar, linking to the doc provider_registration/add_model_pricing"
+  },
+  "sidebar.tutorialSidebar.doc.Nscale (EU Sovereign)": {
+    "message": "Nscale (欧盟主权)",
+    "description": "The label for the doc item Nscale (EU Sovereign) in sidebar tutorialSidebar, linking to the doc providers/nscale"
+  },
+  "sidebar.learnSidebar.category.Start Here": {
+    "message": "从这里开始",
+    "description": "The label for category Start Here in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Guides": {
+    "message": "指南",
+    "description": "The label for category Guides in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Core Requests": {
+    "message": "核心请求",
+    "description": "The label for category Core Requests in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Core Requests.link.generated-index.title": {
+    "message": "核心请求",
+    "description": "The generated-index page title for category Core Requests in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Core Requests.link.generated-index.description": {
+    "message": "流式输出、批处理、结构化输出和推理行为",
+    "description": "The generated-index page description for category Core Requests in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Tool Calling": {
+    "message": "工具调用",
+    "description": "The label for category Tool Calling in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Tool Calling.link.generated-index.title": {
+    "message": "工具调用",
+    "description": "The generated-index page title for category Tool Calling in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Tool Calling.link.generated-index.description": {
+    "message": "函数调用、网络工具、拦截模式、计算机使用、代码解释器和工具调用规范",
+    "description": "The generated-index page description for category Tool Calling in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Multimodal I/O": {
+    "message": "多模态 I/O",
+    "description": "The label for category Multimodal I/O in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Multimodal I/O.link.generated-index.title": {
+    "message": "多模态 I/O",
+    "description": "The generated-index page title for category Multimodal I/O in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Multimodal I/O.link.generated-index.description": {
+    "message": "视觉、音频、PDF、图像生成和视频生成",
+    "description": "The generated-index page description for category Multimodal I/O in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Retrieval & Knowledge": {
+    "message": "检索与知识",
+    "description": "The label for category Retrieval & Knowledge in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Retrieval & Knowledge.link.generated-index.title": {
+    "message": "检索与知识",
+    "description": "The generated-index page title for category Retrieval & Knowledge in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Retrieval & Knowledge.link.generated-index.description": {
+    "message": "向量存储、文件搜索、引用和知识库路由",
+    "description": "The generated-index page description for category Retrieval & Knowledge in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Prompts & Context": {
+    "message": "提示词 (prompt)与上下文",
+    "description": "The label for category Prompts & Context in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Prompts & Context.link.generated-index.title": {
+    "message": "提示词 (prompt)与上下文",
+    "description": "The generated-index page title for category Prompts & Context in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Prompts & Context.link.generated-index.description": {
+    "message": "提示词 (prompt)缓存、截断、格式化、助手预填充和预测输出",
+    "description": "The generated-index page description for category Prompts & Context in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Compatibility & Extensibility": {
+    "message": "兼容性与可扩展性",
+    "description": "The label for category Compatibility & Extensibility in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Compatibility & Extensibility.link.generated-index.title": {
+    "message": "兼容性与可扩展性",
+    "description": "The generated-index page title for category Compatibility & Extensibility in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Compatibility & Extensibility.link.generated-index.description": {
+    "message": "提供商特定参数、模型别名、微调模型和适配器",
+    "description": "The generated-index page description for category Compatibility & Extensibility in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Reliability, Testing & Spend": {
+    "message": "可靠性、测试与花费",
+    "description": "The label for category Reliability, Testing & Spend in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Reliability, Testing & Spend.link.generated-index.title": {
+    "message": "可靠性、测试与花费",
+    "description": "The generated-index page title for category Reliability, Testing & Spend in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Reliability, Testing & Spend.link.generated-index.description": {
+    "message": "重试、回退 (fallback)（故障转移）、模拟响应和预算控制",
+    "description": "The generated-index page description for category Reliability, Testing & Spend in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Security & Network": {
+    "message": "安全与网络",
+    "description": "The label for category Security & Network in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Security & Network.link.generated-index.title": {
+    "message": "安全与网络",
+    "description": "The generated-index page title for category Security & Network in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Security & Network.link.generated-index.description": {
+    "message": "SSL、自定义 CA 捆绑包、HTTP 代理设置和每服务验证",
+    "description": "The generated-index page description for category Security & Network in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Tutorials": {
+    "message": "教程",
+    "description": "The label for category Tutorials in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Getting Started": {
+    "message": "快速开始",
+    "description": "The label for category Getting Started in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Getting Started.link.generated-index.title": {
+    "message": "快速开始",
+    "description": "The generated-index page title for category Getting Started in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Getting Started.link.generated-index.description": {
+    "message": "安装、游乐场、文本补全和模拟补全",
+    "description": "The generated-index page description for category Getting Started in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Python SDK": {
+    "message": "Python SDK",
+    "description": "The label for category Python SDK in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Python SDK.link.generated-index.title": {
+    "message": "Python SDK",
+    "description": "The generated-index page title for category Python SDK in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Python SDK.link.generated-index.description": {
+    "message": "仅使用 Python SDK 的教程 — 无需代理服务器",
+    "description": "The generated-index page description for category Python SDK in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Provider Setup": {
+    "message": "提供商设置",
+    "description": "The label for category Provider Setup in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Provider Setup.link.generated-index.title": {
+    "message": "提供商设置",
+    "description": "The generated-index page title for category Provider Setup in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Provider Setup.link.generated-index.description": {
+    "message": "将 LiteLLM 连接到 Azure OpenAI、HuggingFace、TogetherAI、本地模型等",
+    "description": "The generated-index page description for category Provider Setup in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Admin & Access": {
+    "message": "代理: 管理与访问",
+    "description": "The label for category Proxy: Admin & Access in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Admin & Access.link.generated-index.title": {
+    "message": "代理: 管理与访问",
+    "description": "The generated-index page title for category Proxy: Admin & Access in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Admin & Access.link.generated-index.description": {
+    "message": "用户和团队管理、SSO、SCIM 和路由规则",
+    "description": "The generated-index page description for category Proxy: Admin & Access in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Features & Safety": {
+    "message": "代理: 功能与安全",
+    "description": "The label for category Proxy: Features & Safety in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Features & Safety.link.generated-index.title": {
+    "message": "代理: 功能与安全",
+    "description": "The generated-index page title for category Proxy: Features & Safety in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Proxy: Features & Safety.link.generated-index.description": {
+    "message": "提示词缓存、直通 API、实时、护栏和 PII 掩码",
+    "description": "The generated-index page description for category Proxy: Features & Safety in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Observability & Evaluation": {
+    "message": "可观测性与评估",
+    "description": "The label for category Observability & Evaluation in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Observability & Evaluation.link.generated-index.title": {
+    "message": "可观测性与评估",
+    "description": "The generated-index page title for category Observability & Evaluation in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.category.Observability & Evaluation.link.generated-index.description": {
+    "message": "日志记录、监控、基准测试和评估套件",
+    "description": "The generated-index page description for category Observability & Evaluation in sidebar learnSidebar"
+  },
+  "sidebar.learnSidebar.link.Agent SDKs & Frameworks": {
+    "message": "Agent SDK 和框架",
+    "description": "The label for link Agent SDKs & Frameworks in sidebar learnSidebar, linking to /docs/agent_sdks"
+  },
+  "sidebar.learnSidebar.link.AI Coding Tools": {
+    "message": "AI 编码工具",
+    "description": "The label for link AI Coding Tools in sidebar learnSidebar, linking to /docs/ai_tools"
+  },
+  "sidebar.learnSidebar.doc.Learn": {
+    "message": "学习",
+    "description": "The label for the doc item Learn in sidebar learnSidebar, linking to the doc learn/index"
+  },
+  "sidebar.learnSidebar.doc.lite autoroute": {
+    "message": "lite autoroute",
+    "description": "The label for the doc item lite autoroute in sidebar learnSidebar, linking to the doc learn/autorouter_cli"
+  },
+  "sidebar.learnSidebar.doc.Web Search Interception": {
+    "message": "网络搜索拦截",
+    "description": "The label for the doc item Web Search Interception in sidebar learnSidebar, linking to the doc integrations/websearch_interception"
+  },
+  "sidebar.learnSidebar.doc.Code Interpreter Sandbox Interception": {
+    "message": "代码解释器沙盒拦截",
+    "description": "The label for the doc item Code Interpreter Sandbox Interception in sidebar learnSidebar, linking to the doc sandbox"
+  },
+  "sidebar.autoRouterSidebar.category.Reference": {
+    "message": "参考",
+    "description": "The label for category Reference in sidebar autoRouterSidebar"
+  },
+  "sidebar.autoRouterSidebar.link.Configuration Reference": {
+    "message": "配置参考",
+    "description": "The label for link Configuration Reference in sidebar autoRouterSidebar, linking to /docs/proxy/auto_routing"
+  },
+  "sidebar.autoRouterSidebar.link.Claude Code and Claude Desktop": {
+    "message": "Claude Code 和 Claude Desktop",
+    "description": "The label for link Claude Code and Claude Desktop in sidebar autoRouterSidebar, linking to /docs/tutorials/claude_code_autorouter"
+  },
+  "sidebar.autoRouterSidebar.link.lite autoroute": {
+    "message": "lite autoroute",
+    "description": "The label for link lite autoroute in sidebar autoRouterSidebar, linking to /docs/learn/autorouter_cli"
+  },
+  "sidebar.autoRouterSidebar.link.Prompt Cache Routing (Load Balancing)": {
+    "message": "提示词缓存路由 (负载均衡)",
+    "description": "The label for link Prompt Cache Routing (Load Balancing) in sidebar autoRouterSidebar, linking to /docs/tutorials/claude_code_prompt_cache_routing"
+  },
+  "sidebar.autoRouterSidebar.doc.Overview": {
+    "message": "概述",
+    "description": "The label for the doc item Overview in sidebar autoRouterSidebar, linking to the doc auto_router/index"
+  }
+}

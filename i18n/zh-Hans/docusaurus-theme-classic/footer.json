@@ -1,0 +1,58 @@
+{
+  "link.title.Docs": {
+    "message": "文档",
+    "description": "The title of the footer links column with title=Docs in the footer"
+  },
+  "link.title.Community": {
+    "message": "社区",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.title.More": {
+    "message": "更多",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.Quickstart": {
+    "message": "快速开始",
+    "description": "The label of footer link with label=Quickstart linking to /docs/proxy/docker_quick_start"
+  },
+  "link.item.label.Production Deployment": {
+    "message": "生产部署",
+    "description": "The label of footer link with label=Production Deployment linking to /docs/proxy/deploy"
+  },
+  "link.item.label.[Beta] Rust AI Gateway": {
+    "message": "[Beta] Rust AI 网关",
+    "description": "The label of footer link with label=[Beta] Rust AI Gateway linking to /docs/proxy/rust_gateway"
+  },
+  "link.item.label.MCP Gateway": {
+    "message": "MCP 网关",
+    "description": "The label of footer link with label=MCP Gateway linking to /docs/mcp"
+  },
+  "link.item.label.Agent Gateway": {
+    "message": "Agent 网关",
+    "description": "The label of footer link with label=Agent Gateway linking to /docs/a2a"
+  },
+  "link.item.label.Discord": {
+    "message": "Discord",
+    "description": "The label of footer link with label=Discord linking to https://discord.com/invite/wuPM9dRgDw"
+  },
+  "link.item.label.Slack": {
+    "message": "Slack",
+    "description": "The label of footer link with label=Slack linking to https://litellmossslack.slack.com/"
+  },
+  "link.item.label.YouTube": {
+    "message": "YouTube",
+    "description": "The label of footer link with label=YouTube linking to https://www.youtube.com/@LiteLLMAIGateway"
+  },
+  "link.item.label.Twitter": {
+    "message": "Twitter",
+    "description": "The label of footer link with label=Twitter linking to https://twitter.com/LiteLLM"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/BerriAI/litellm/"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 liteLLM",
+    "description": "The footer copyright"
+  }
+}
