@@ -9,7 +9,9 @@ import {
   MAIN_VERSION,
   RELEASES,
   STAGES,
+  changesIn,
   progressAt,
+  stageAt,
 } from '@site/src/data/rustMigration';
 import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
 import picker from '@site/src/components/RustMigration/Picker.module.css';
@@ -74,6 +76,7 @@ function pickLabeledPoints(points, x, goalX) {
 function MigrationTimeline({goal}) {
   const points = GOAL_TIMELINES.get(goal.id);
   const [chartRef, width] = useElementWidth(920);
+  const [hovered, setHovered] = useState(null);
   const compact = width < 560;
   const height = compact ? 240 : 336;
   const plot = compact
@@ -140,10 +143,16 @@ function MigrationTimeline({goal}) {
           const cy = y(point.percent);
           const date = formatDate(SHORT_DATE, point.date);
           return (
-            <g key={point.version}>
-              <title>
-                {point.version}: {point.percent}%, {point.isMain ? 'planned for' : 'released'} {date}
-              </title>
+            <g
+              key={point.version}
+              tabIndex={0}
+              onMouseEnter={() => setHovered(index)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(index)}
+              onBlur={() => setHovered(null)}
+              onClick={() => setHovered(index)}
+            >
+              <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
               <circle
                 className={point.isMain ? styles.mainPoint : styles.progressPoint}
                 cx={cx}
@@ -185,6 +194,76 @@ function MigrationTimeline({goal}) {
           </text>
         </g>
       </svg>
+      {hovered !== null && (
+        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} left={x(hovered)} top={y(points[hovered].percent)} width={width} />
+      )}
+    </div>
+  );
+}
+
+const TOOLTIP_LINES = 3;
+const TOOLTIP_PROVIDERS = 4;
+
+// One line per area and stage, so six providers moving together read as one
+// change. Foundation work is left out, since it isn't an API and provider pair.
+// `from` is where the providers stood before, when they all stood in one place.
+function summarizeChanges(goal, point, previous) {
+  const apiFeatures = goal.features.filter(feature => !feature.area.groundwork);
+  return changesIn(point.version, apiFeatures).map(({key, area, stage, features}) => {
+    const before = new Set(features.map(feature => stageAt(feature, previous.version)));
+    const names = features.map(feature => feature.path.slice(1).join(' / '));
+    return {
+      key,
+      area: area.text,
+      providers: features.length === area.features.length && names.length > 1
+        ? 'All providers'
+        : names.length > TOOLTIP_PROVIDERS
+          ? `${names.slice(0, TOOLTIP_PROVIDERS).join(', ')} +${names.length - TOOLTIP_PROVIDERS} more`
+          : names.join(', '),
+      from: before.size === 1 ? STAGES[[...before][0]].label : null,
+      to: STAGES[stage].label,
+    };
+  });
+}
+
+function PointTooltip({goal, point, previous, left, top, width}) {
+  const lines = summarizeChanges(goal, point, previous);
+  const shown = lines.slice(0, TOOLTIP_LINES);
+  const flipped = left > width / 2;
+  return (
+    <div
+      className={`${styles.tooltip} ${flipped ? styles.tooltipLeft : styles.tooltipRight}`}
+      style={{left, top}}
+      role="tooltip"
+    >
+      <div className={styles.tooltipHead}>
+        <strong>{compactVersion(point.version)}</strong>
+        <span>{point.percent}%</span>
+      </div>
+      <div className={styles.tooltipDate}>
+        {point.isMain ? 'Planned for' : 'Released'} {formatDate(FULL_DATE, point.date)}
+      </div>
+      {lines.length === 0 ? (
+        <div className={styles.tooltipEmpty}>Nothing moved for {goal.text} in this release.</div>
+      ) : (
+        <ul className={styles.tooltipList}>
+          {shown.map(line => (
+            <li key={line.key}>
+              <span className={styles.tooltipArea}>
+                {line.area}
+                <em> · {line.providers}</em>
+              </span>
+              <span className={styles.tooltipStage}>
+                {line.from && <em>{line.from} → </em>}
+                {line.to}
+              </span>
+            </li>
+          ))}
+          {lines.length > shown.length && (
+            <li className={styles.tooltipMore}>+{lines.length - shown.length} more</li>
+          )}
+        </ul>
+      )}
     </div>
   );
 }
@@ -378,16 +457,6 @@ function RolloutStages() {
 }
 
 const FAQ = [
-  {
-    id: 'faq-my-version',
-    question: 'I am on a specific version. What is the impact for me?',
-    answer: (
-      <p className={styles.sectionLead}>
-        Pick your version on the <Link to="/rust-migration/version">version impact page</Link> to see what already
-        runs on Rust for you and what changes when you upgrade.
-      </p>
-    ),
-  },
   {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
 ];
 
@@ -474,10 +543,6 @@ function MigrationUpdates() {
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
       <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
-      <p className={styles.sectionLead}>
-        For what each release moved to Rust, pick your version on
-        the <Link to="/rust-migration/version">version impact page</Link>.
-      </p>
       <ol className={styles.events}>
         {events.map(event => (
           <li className={styles.event} key={event.href}>
