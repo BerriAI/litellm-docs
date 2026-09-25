@@ -377,6 +377,78 @@ curl -X POST "http://localhost:4000/v1/rag/ingest" \
     }'
 ```
 
+## Upload Controls and Malware Scanning
+
+Every file that lands in a vector store through the proxy runs the same upload controls before any provider sees it. The controls inspect the actual bytes and never trust the client-supplied filename or content type. An empty file is rejected, a file over 512 MiB is rejected, archives (zip, gzip, xz, 7z, rar, tar, bzip2, lz4, zstd) and executables (ELF, Mach-O, PE, WebAssembly, dex, shebang scripts) are rejected, and only PDF and UTF-8 text documents are accepted. Accepted content is then handed to the configured malware scanner, and a clean file is stored under a server-generated name (`<uuid>.pdf` or `<uuid>.txt`) with a content type derived from the detected format
+
+| Route | What is checked |
+|-------|-----------------|
+| `POST /v1/rag/ingest` with `file` | The decoded bytes |
+| `POST /v1/rag/ingest` with `file_url` | The proxy downloads the file itself (non-public addresses are blocked, the 512 MiB cap is enforced on `Content-Length` and again while streaming) and checks the downloaded bytes. The ingestion layer never sees the URL |
+| `POST /v1/files` with purpose `assistants` or `user_data` | The uploaded bytes. The caller's filename is kept |
+
+`file_id` on `/v1/rag/ingest` and `POST /v1/vector_stores/{vector_store_id}/files` reference bytes that already live at the provider, so they rely on the `/v1/files` control above and nothing is downloaded again. A file uploaded to the provider outside the proxy is not covered, and neither is one sent through the provider passthrough routes (`/openai/v1/files`, `/azure/...`, `/anthropic/...`), which forward the request body as-is
+
+A rejected upload returns HTTP 400. On `/v1/rag/ingest` the body is `{"detail": {"error": "...", "reason": "<code>"}}`. On `/v1/files` it is the OpenAI error shape with `type` set to `invalid_request_error`, `param` set to `file`, and the reason code at the end of the message. The reason codes are `empty_file`, `file_too_large`, `archive_not_allowed`, `executable_not_allowed`, `unsupported_format`, `malware_detected`, and `malware_scan_error`
+
+### Choosing a malware scanner
+
+By default the proxy runs `EicarTestMalwareScanner`, a test scanner that only flags the [EICAR test file](https://www.eicar.org/download-anti-malware-testfile/) and provides no real protection. It exists so you can prove the scan hook is wired end to end:
+
+```bash showLineNumbers title="Prove the hook with the EICAR test file"
+printf '%s' 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > eicar.txt
+
+curl -X POST "http://localhost:4000/v1/rag/ingest" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{
+        \"file\": {\"filename\": \"eicar.txt\", \"content\": \"$(base64 -i eicar.txt)\"},
+        \"ingest_options\": {\"vector_store\": {\"custom_llm_provider\": \"openai\"}}
+    }"
+```
+
+```json title="Response"
+{"detail": {"error": "Uploaded file was flagged by malware scanning (EICAR-STANDARD-ANTIVIRUS-TEST-FILE).", "reason": "malware_detected"}}
+```
+
+To screen production uploads, point `general_settings.rag_ingest.malware_scanner` at an instance of your own scanner. Any object with a `scan(content: bytes) -> ScanResult` method works. Put the module next to your `config.yaml` (the same lookup `custom_auth` uses) or anywhere on the Python path, and name the instance as `<module>.<instance>`:
+
+```python showLineNumbers title="custom_scanner.py"
+import subprocess
+
+from litellm.proxy.rag_endpoints.upload_security import ScanResult, ScanVerdict
+
+
+class ClamdScanner:
+    def scan(self, content: bytes) -> ScanResult:
+        try:
+            result = subprocess.run(
+                ["clamdscan", "--no-summary", "-"],
+                input=content,
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return ScanResult(verdict=ScanVerdict.ERROR)
+        if result.returncode == 0:
+            return ScanResult(verdict=ScanVerdict.CLEAN)
+        if result.returncode == 1:
+            return ScanResult(verdict=ScanVerdict.INFECTED, signature=result.stdout.decode(errors="replace").strip())
+        return ScanResult(verdict=ScanVerdict.ERROR)
+
+
+scanner = ClamdScanner()
+```
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  rag_ingest:
+    malware_scanner: custom_scanner.scanner
+```
+
+The proxy resolves the scanner once at boot and refuses to start, naming the option, when the module or attribute cannot be imported, when the value names a class instead of an instance, or when the object has no `scan` method. `scan` runs in a worker thread so a slow engine never blocks the event loop; the one instance serves every request, so keep it thread-safe. Return `ScanVerdict.INFECTED` with the signature to reject the upload as `malware_detected`, and `ScanVerdict.ERROR` when the engine is unavailable to reject it as `malware_scan_error`. The proxy fails closed on both
+
 ## Chunking Strategy
 
 Control how documents are split into chunks before embedding. Specify `chunking_strategy` in `ingest_options`.
