@@ -102,13 +102,18 @@ underlying model per request.
 ## Cost tracking
 
 The `model` field on the response reports the model Nadir actually routed to.
-That is a vendor model name, so it has no `nadir/*` pricing entry for the shared
-cost calculator to look up. Nadir returns the cost it computed for the call
-instead, and LiteLLM uses that as the provider-reported cost:
+Nadir returns the cost it computed for a non-streaming call, and LiteLLM records
+that as the response cost, so the SDK's `response_cost`, the proxy's
+`x-litellm-response-cost` header, and the spend logs all carry Nadir's number:
 
 ```python
-print(f"Request cost: ${response._hidden_params['additional_headers']['llm_provider-x-litellm-response-cost']}")
+print(f"Request cost: ${response._hidden_params['response_cost']}")
 ```
+
+Streaming responses carry no cost from Nadir. LiteLLM prices them from the
+routed model's own entry in the LiteLLM model cost map, for example
+`openrouter/anthropic/claude-haiku-4.5`, so a routed model with no cost map
+entry logs a streamed call at $0.
 
 ## Supported OpenAI Parameters
 
@@ -119,7 +124,8 @@ so LiteLLM advertises only the parameters the endpoint honors:
 `stream`, `temperature`, `top_p`
 
 `extra_headers` and `max_retries` are handled by the LiteLLM transport rather
-than sent in the request body.
+than sent in the request body. Passing any other parameter raises
+`litellm.UnsupportedParamsError` unless `drop_params=True` is set.
 
 :::info
 
