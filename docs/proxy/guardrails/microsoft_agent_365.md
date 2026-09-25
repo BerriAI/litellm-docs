@@ -171,6 +171,7 @@ LiteLLM decides which keys, users and teams reach which servers and tools ([MCP 
 | `client_secret` | Yes | Client secret of that app. Also accepted as `api_key`. Falls back to `AGENT365_CLIENT_SECRET` |
 | `api_base` | No | Agent 365 endpoint. Defaults to `https://agent365.svc.cloud.microsoft`. Falls back to `AGENT365_API_BASE` |
 | `resource_app_id` | No | App id of the Agent 365 resource the OBO token is minted for. Defaults to the production resource. Falls back to `AGENT365_RESOURCE_APP_ID` |
+| `authority_host` | No | Entra authority host for the OBO exchange, for sovereign clouds such as `https://login.microsoftonline.us`. Defaults to `https://login.microsoftonline.com`. Falls back to `AGENT365_AUTHORITY_HOST`, then `AZURE_AUTHORITY_HOST` |
 | `agent_id` | No | Agent identity reported with every evaluation. Defaults to the caller's key alias |
 | `timeout` | No | Seconds per token exchange and evaluation request. Defaults to 10 |
 | `unreachable_fallback` | No | What happens when Agent 365 or Entra is unreachable, when Entra rejects the gateway's own credentials, or when Defender did not evaluate. `fail_open` (default) lets the call through unscanned and counts it. `fail_closed` blocks with HTTP 503. Blocks, rejections, throttling and caller-side failures always block |

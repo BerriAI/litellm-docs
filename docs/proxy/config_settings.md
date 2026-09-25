@@ -556,6 +556,7 @@ router_settings:
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
 | AGENT365_API_BASE | Base URL of the Microsoft Agent 365 tool evaluation endpoint for the `agent_365` guardrail. Default is https://agent365.svc.cloud.microsoft
+| AGENT365_AUTHORITY_HOST | Microsoft Entra authority host the `agent_365` guardrail uses for the On-Behalf-Of token exchange, e.g. "https://login.microsoftonline.us" for Azure Government; falls back to AZURE_AUTHORITY_HOST, then to https://login.microsoftonline.com
 | AGENT365_CLIENT_ID | Client id of the gateway's Entra app registration for the `agent_365` guardrail On-Behalf-Of exchange
 | AGENT365_CLIENT_SECRET | Client secret of the gateway's Entra app registration for the `agent_365` guardrail
 | AGENT365_RESOURCE_APP_ID | Application id of the Agent 365 resource the `agent_365` guardrail mints delegated tokens for. Defaults to the production resource
