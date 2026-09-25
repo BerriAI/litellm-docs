@@ -204,6 +204,7 @@ router_settings:
   }
   content_policy_fallbacks: [{"{{anthropic}}": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for content policy violations
   fallbacks: [{"{{anthropic}}": ["my-fallback-model"]}] # List[Dict[str, List[str]]]: Fallback model for all errors
+  order_fallback_status_codes: [408, 409, 429, "5xx"] # Optional list of HTTP status codes that allow fallback to a higher deployment order
 
 ```
 
@@ -507,6 +508,7 @@ router_settings:
 | default_priority | (Optional[int]) | `null` | The default priority for a request. Only for '.scheduler_acompletion()'. Default is None. |
 | polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
+| order_fallback_status_codes | Optional[List[Union[int, Literal["5xx"]]]] | `null` | HTTP status codes that allow fallback to a higher deployment `order` within the same model group. Omit or set to `null` to preserve the existing behavior for all provider errors; use `[]` to disable order fallback; or provide exact status codes and/or `"5xx"` (500-599). This does not change cross-model-group `fallbacks`. |
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
 | timeout | Optional[float] | `null` (uses `litellm_settings.request_timeout`) | The default timeout for a request. Default is 10 minutes. |
 | stream_timeout | Optional[float] | `null` (uses `timeout`) | The default timeout for a streaming request. If not set, the 'timeout' value is used. |
