@@ -1373,6 +1373,7 @@ const sidebars = {
           items: [
             "providers/xai",
             "providers/xai_realtime",
+            "providers/xai_batches",
           ]
         },
         "providers/xiaomi_mimo",
