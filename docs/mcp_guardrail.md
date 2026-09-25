@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # MCP Guardrails
 
-LiteLLM supports applying guardrails to MCP tool calls to ensure security and compliance. You can configure guardrails to run before or during MCP calls to validate inputs and block or mask sensitive information.
+LiteLLM supports applying guardrails to MCP tool calls to ensure security and compliance. You can configure guardrails to run before, during, or after MCP calls to validate tool inputs and tool results and block or mask sensitive information.
 
 ### Supported MCP Guardrail Modes
 
@@ -12,6 +12,7 @@ MCP guardrails support the following modes:
 
 - `pre_mcp_call`: Run **before** MCP call, on **input**. Use this mode when you want to apply validation/masking/blocking for MCP requests
 - `during_mcp_call`: Run **during** MCP call execution. Use this mode for real-time monitoring and intervention
+- `post_mcp_call`: Run **after** the MCP server returns, on the **tool result**, before the model sees it. Use this mode to block or mask PII, prompt injections, or other unsafe content coming back from a tool
 
 ### Configuration Examples
 
@@ -30,6 +31,25 @@ guardrails:
       default_on: true
 ```
 
+#### Scanning MCP tool results
+
+A `post_mcp_call` guardrail receives the `CallToolResult` the MCP server returned. Every text content block and every string value inside `structuredContent` is scanned as response-side output. A block verdict rejects the tool call; a mask verdict rewrites the matching text in place. A masking hit on a `structuredContent` key or a non-string value cannot be rewritten and is treated as a block. This runs for tool calls on the MCP gateway (`/mcp`) and for MCP tools the Responses API executes on the model's behalf.
+
+MCP sub-calls do not inherit the parent request's `guardrails` selection, so set `default_on: true` on the guardrail.
+
+```yaml title="config.yaml" showLineNumbers
+guardrails:
+  - guardrail_name: "mcp-output-scan"
+    litellm_params:
+      guardrail: panw_prisma_airs  # or presidio, or any guardrail that implements apply_guardrail
+      mode: "post_mcp_call"
+      api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
+      profile_name: os.environ/PANW_PRISMA_AIRS_PROFILE_NAME
+      mask_response_content: true
+      default_on: true
+```
+
+Custom guardrails get this for free: implement `apply_guardrail` on your `CustomGuardrail` subclass and LiteLLM calls it with `input_type="response"` and the tool result's text values. If you override `get_supported_event_hooks`, include `post_mcp_call` in the list or the proxy rejects `mode: post_mcp_call` at startup.
 
 ### Usage Examples
 
