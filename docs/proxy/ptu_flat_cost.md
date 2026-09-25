@@ -129,7 +129,7 @@ model_list:
         <team b id>: 20
 ```
 
-`ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike
+`ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike. Through the API every team in the split has to exist already: `POST /model/new` and `PATCH /model/{model_id}/update` refuse a split naming an unknown team with a 400 that names it, the same way they refuse an unknown `team_id`
 
 A shared deployment keeps its public model name and stays visible in model lists, but the proxy serves it only to the teams named in `ptu_shares`. A key from any other team, a key with no team, and the master key all get a 400 on it, whether or not `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` is set, because a declared split is an access rule; the ceiling, the cost split, and PTU-hours below need the flag:
 
