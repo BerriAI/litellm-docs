@@ -103,6 +103,8 @@ liteagents is a beta SDK that lets you swap between agent harnesses without rewr
 
 ![liteagents SDK code sample: a LiteAgentClient is configured with a ProfileOptions block selecting the deepagents harness and a model, then queried for a response](./liteagents-sdk.png)
 
+Read more about the [liteagents SDK](https://www.litellm.ai/liteagents).
+
 ### Also shipped
 
 - **Self-hosting.** A PgBouncer inside the container shares database connections across workers, spend writes can move to a sidecar off the request path, and Helm and Terraform can [autoscale on requests and tokens per second](https://docs.litellm.ai/docs/proxy/deploy#scale-on-requests-and-tokens-per-pod) per pod rather than only CPU.
