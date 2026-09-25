@@ -1,5 +1,6 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import ZerobusArchitecture from '@site/src/components/ZerobusArchitecture';
 
 # Databricks Zerobus
 
@@ -7,7 +8,7 @@ Send LiteLLM Gateway request logs to a Unity Catalog Delta table with Databricks
 
 This quickstart connects an existing LiteLLM Gateway deployment to Databricks. Create a destination table, configure service principal authentication, enable the integration, and verify a request made with a LiteLLM virtual key. You can configure the integration through your deployment's YAML configuration or the LiteLLM Admin UI.
 
-![An application calls LiteLLM Gateway, which routes requests to a model provider and asynchronously sends buffered logs through Databricks Zerobus Ingest to a Unity Catalog Delta table.](/img/zerobus/architecture.svg)
+<ZerobusArchitecture />
 
 LiteLLM buffers logs and sends JSON batches to the Zerobus REST API using OAuth client credentials. The default flush interval is 10 seconds, with an earlier flush when the queue reaches 100 rows.
 
@@ -334,6 +335,10 @@ ORDER BY start_time DESC;
 ```
 
 The result should include your response ID, `status = 'success'`, `end_user = 'zerobus-quickstart'`, and usage for the model call. Cost depends on the model's configured pricing. If no row appears, rerun the query after another flush interval and check the gateway logs using the troubleshooting table below.
+
+![Databricks SQL Editor returning the verified LiteLLM response ID with success status, token counts, and cost.](/img/zerobus/databricks-verification.png)
+
+*The query returns one successful row with the same token counts shown in LiteLLM.*
 
 To locate all quickstart requests:
 
