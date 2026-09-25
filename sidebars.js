@@ -59,6 +59,7 @@ const sidebars = {
             "observability/langfuse_integration",
             "observability/langsmith_integration",
             "observability/langtrace_integration",
+            "observability/langwatch_integration",
             "observability/levo_integration",
             "observability/literalai_integration",
             "observability/logfire_integration",
