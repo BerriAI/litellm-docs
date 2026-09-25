@@ -1302,8 +1302,8 @@ router_settings:
 | MICROSOFT_USERINFO_ENDPOINT | Custom userinfo endpoint URL for Microsoft SSO (overrides default Microsoft Graph userinfo endpoint)
 | MODEL_COST_MAP_MAX_SHRINK_RATIO | Maximum allowed shrinkage ratio when validating a fetched model cost map against the local backup. Rejects the fetched map if it is smaller than this fraction of the backup. Default is 0.5
 | MODEL_COST_MAP_MIN_MODEL_COUNT | Minimum number of models a fetched cost map must contain to be considered valid. Default is 50
-| NADIR_API_BASE | Base URL for the Nadir decision API, read by the bundled Nadir complexity classifier. Default is https://api.getnadir.com. Point it at your own host to self-host the classifier
-| NADIR_API_KEY | API key for the Nadir decision API, read by the bundled Nadir complexity classifier. Optional: without it the endpoint still answers, rate limited per IP
+| NADIR_API_BASE | Base URL for Nadir, read by the `nadir/` provider (default https://api.getnadir.com/v1) and by the bundled Nadir complexity classifier, which accepts it with or without /v1. Point it at your own host to self-host
+| NADIR_API_KEY | API key for Nadir, read by the `nadir/` provider and by the bundled Nadir complexity classifier. Only sent to NADIR_API_BASE, or to the hosted API when that is unset. Optional for the classifier: without it the endpoint still answers, rate limited per IP
 | NEW_RELIC_APP_NAME | Application name for New Relic AI Monitoring integration |
 | NEW_RELIC_LICENSE_KEY | License key for New Relic authentication |
 | NO_DOCS | Flag to disable Swagger UI documentation
