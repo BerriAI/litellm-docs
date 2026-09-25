@@ -314,7 +314,7 @@ curl -X POST "http://localhost:4000/key/generate" \
 
 ### Seeing Which Requests Were Billed to a Seat
 
-Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the Max seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. Rows written by a LiteLLM version before this field existed have no value
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the Max seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. Rows written by a LiteLLM version before this field existed have no value. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it
 
 `spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
 
