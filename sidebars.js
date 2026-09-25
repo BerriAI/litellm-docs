@@ -1236,6 +1236,7 @@ const sidebars = {
         "providers/mongodb_vector_stores",
         "providers/moonshot",
         "providers/morph",
+        "providers/nadir",
         "providers/nebius",
         "providers/nlp_cloud",
         "providers/nano-gpt",
