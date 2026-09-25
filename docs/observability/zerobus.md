@@ -74,7 +74,7 @@ from litellm.integrations.zerobus.row import create_table_sql
 print(create_table_sql("my_catalog.my_schema.litellm_traces"))
 ```
 
-The Zerobus endpoint is separate from the workspace URL and is specific to your workspace ID and cloud region, for example `https://<workspace-id>.zerobus.<region>.cloud.databricks.com` on AWS or `https://<workspace-id>.zerobus.<region>.azuredatabricks.net` on Azure. Find it in the Zerobus section of your workspace settings.
+The Zerobus endpoint is separate from the workspace URL and is specific to your workspace ID and cloud region, for example `https://<workspace-id>.zerobus.<region>.cloud.databricks.com` on AWS or `https://<workspace-id>.zerobus.<region>.azuredatabricks.net` on Azure. Find it in the Zerobus section of your workspace settings. The workspace ID is the numeric `o=` value in the workspace URL after you log in, also returned as the `x-databricks-org-id` response header on any request to the workspace URL; the region is the one the workspace was deployed in, not the region of another workspace in the same account.
 
 ## Setup
 
@@ -196,7 +196,7 @@ ORDER BY start_time DESC
 LIMIT 10;
 ```
 
-Failures are logged on the `zerobus:` prefix, including whether the batch was kept for a later flush or dropped. A `token request returned 401: invalid_authorization_details` error means the service principal is missing one of the grants in [Prerequisites](#prerequisites).
+Failures are logged on the `zerobus:` prefix, including whether the batch was kept for a later flush or dropped. A `token request returned 401: invalid_authorization_details` error means the service principal is missing one of the grants in [Prerequisites](#prerequisites), or holds it only through a group. An `insert returned 400` with no message body means the Zerobus endpoint does not belong to the workspace that minted the token; check the workspace ID and region in `ZEROBUS_SERVER_ENDPOINT`. An `insert returned 400` with a `Record decoder/encoder error` means a row value does not match the column type, which happens when the table was created with a different DDL than `create_table_sql(...)` prints.
 
 ## Related links
 
