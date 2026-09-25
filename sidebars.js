@@ -544,6 +544,14 @@ const sidebars = {
         },
         {
           type: "category",
+          label: "LiteAdmin",
+          items: [
+            "proxy/liteadmin_mcp",
+            "proxy/liteadmin_slack",
+          ],
+        },
+        {
+          type: "category",
           label: "Admin UI",
           items: [
             "proxy/ui",
