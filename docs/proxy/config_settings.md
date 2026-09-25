@@ -1184,6 +1184,8 @@ router_settings:
 | LANGSMITH_MOCK | Enable mock mode for Langsmith integration testing. When set to true, intercepts Langsmith API calls and returns mock responses without making actual network calls. Default is false
 | LANGSMITH_MOCK_LATENCY_MS | Mock latency in milliseconds for Langsmith API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGTRACE_API_KEY | API key for Langtrace service
+| LANGWATCH_API_KEY | API key for LangWatch, used by the `langwatch` OpenTelemetry v2 preset
+| LANGWATCH_ENDPOINT | Base URL of a self-hosted LangWatch for the `langwatch` preset. Default is `https://app.langwatch.ai`
 | LASSO_API_BASE | Base URL for Lasso API
 | LASSO_API_KEY | API key for Lasso service
 | LASSO_USER_ID | User ID for Lasso service
