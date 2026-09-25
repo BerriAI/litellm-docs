@@ -21,7 +21,7 @@ We have shown the Auto-Router [saving 51% in production](/blog/auto-router-produ
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::
 
@@ -101,7 +101,7 @@ The judge defaults to `anthropic/claude-sonnet-5`; a mid-tier judge is the sweet
 
 :::info
 
-Start a shadow eval against a key you already run in production and let it judge a week of real traffic. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+Start a shadow eval against a key you already run in production and let it judge a week of real traffic. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner).
 
 :::
 
