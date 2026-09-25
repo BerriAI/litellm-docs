@@ -179,7 +179,7 @@ general_settings:
   pass_through_endpoints:
     - path: string                    # Route on LiteLLM Proxy Server
       target: string                  # Target URL for forwarding
-      auth: boolean                   # Enable LiteLLM authentication (Enterprise)
+      auth: boolean                   # Who may call it, see Authentication below
       forward_headers: boolean        # Forward all incoming headers
       include_subpath: boolean        # If true, forwards requests to sub-paths (default: false)
       timeout: float                  # Optional: per-endpoint upstream timeout (seconds). Overrides pass_through_request_timeout
@@ -194,6 +194,41 @@ general_settings:
         LANGFUSE_SECRET_KEY: string  # For Langfuse endpoints
         <custom-header>: string      # Any custom header
 ```
+
+### Authentication
+
+`auth` decides who may call the endpoint. `auth: true` restricts it to keys and teams granted the route through `allowed_passthrough_routes`, `auth: false` serves it to anyone with no key at all, and leaving `auth` out lets any valid LiteLLM key through. Every request on an `auth: true` or an omitted entry goes through the same policy checks as a chat request, so the key's, team's, organization's, user's, and end user's budgets, guardrails, blocked teams, and model access all apply. An `auth: false` entry skips all of them, so put nothing behind it that you would not put on the public internet
+
+The proxy logs a warning at startup for every entry that leaves `auth` out, because a future release will treat a missing `auth` as `auth: true`. Set it explicitly on each entry to keep the behavior you chose
+
+```yaml
+general_settings:
+  pass_through_endpoints:
+    - path: "/internal-search"
+      target: "https://search.internal.example.com/v1"
+      auth: true                     # granted keys and teams only
+    - path: "/status"
+      target: "https://status.example.com/api"
+      auth: false                    # no key needed
+```
+
+Grant a key or a team an `auth: true` route on creation, exact paths or a prefix with a trailing `*`:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"allowed_passthrough_routes": ["/internal-search", "/internal-tools/*"]}'
+```
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"team_alias": "search", "allowed_passthrough_routes": ["/internal-search"]}'
+```
+
+A key without a grant gets `403 Key/team not allowed to access passthrough route`. Keys restricted to `allowed_routes: ["llm_api_routes"]` can call omitted-`auth` entries, since those count as LLM API routes
 
 ### Request timeouts
 
