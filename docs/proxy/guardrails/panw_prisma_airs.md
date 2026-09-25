@@ -303,7 +303,7 @@ guardrails:
       default_on: true
 ```
 
-A guardrail configured with `mode: post_call` and `default_on: true` also runs on MCP tool results, the same way `pre_call` and `during_call` run on `pre_mcp_call` and `during_mcp_call`.
+Unlike `pre_call` and `during_call`, which also run on `pre_mcp_call` and `during_mcp_call`, a `post_call` guardrail does not scan MCP tool results. Set `mode: post_mcp_call` explicitly.
 
 ### Current Limitations
 
