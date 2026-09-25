@@ -1,20 +1,12 @@
 # Be an Integration Partner
 
-Welcome, integration partners! 👋
+Welcome, integration partners.
 
-We're excited to have you contribute to LiteLLM. To get started and connect with the LiteLLM community:
+Join [Slack](https://litellmossslack.slack.com/) or [Discord](https://discord.com/invite/wuPM9dRgDw) to connect with the LiteLLM community. The same links are in the site footer.
 
-## Get Support & Connect
+## Get Support & Connect {#get-support--connect}
 
-**Fill out our support form to join the community:**
-
-👉 [**https://www.litellm.ai/support**](https://www.litellm.ai/support)
-
-By filling out this form, you'll be able to:
-- Join our **OSS Slack community** for real-time discussions
-- Get help and feedback on your integration
-- Connect with other developers and contributors
-- Stay updated on the latest LiteLLM developments
+On Slack or Discord you can talk with other developers, get help and feedback on your integration, and stay updated on LiteLLM developments.
 
 ## What We Offer Integration Partners
 
@@ -27,4 +19,4 @@ By filling out this form, you'll be able to:
 
 Once you've joined our Slack community, head over to the **`#integration-partners`** channel to introduce yourself and ask questions. Our team and community members are happy to help you build great integrations with LiteLLM.
 
-We look forward to working with you! 🚀
+We look forward to working with you.

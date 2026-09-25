@@ -487,6 +487,10 @@ const config = {
                 label: 'Twitter',
                 href: 'https://twitter.com/LiteLLM',
               },
+              {
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/berri-ai/',
+              },
             ],
           },
           {
