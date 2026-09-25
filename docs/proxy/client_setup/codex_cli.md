@@ -75,6 +75,8 @@ Codex shows the model in its startup header and routes the task through the gate
 
 Ask Codex to make a small change, then check the Admin UI under **Logs** or **Usage**; the request appears under `/v1/responses`, attributed to your virtual key and the model you selected.
 
+The row carries no end user yet, since Codex has no setting that puts one in the request body. To attribute each request to a developer, customer, or project instead, add a LiteLLM tracking header to the provider block with `http_headers` or `env_http_headers`; see [Codex CLI granular cost tracking](../../tutorials/codex_customer_tracking.md).
+
 ## MCP setup
 
 Register the LiteLLM MCP gateway as a streamable HTTP server in the same `~/.codex/config.toml`. Codex reads the bearer token from an environment variable rather than from the file, so reuse the one you already exported for the model provider:

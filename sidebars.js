@@ -261,6 +261,7 @@ const sidebars = {
             "claude_code_context_management",
           ]
         },
+        "tutorials/codex_customer_tracking",
         "tutorials/claude_desktop_cowork",
         "tutorials/opencode_integration",
         "tutorials/openclaw_integration",
