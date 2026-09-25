@@ -197,7 +197,9 @@ general_settings:
 
 ### Request timeouts
 
-Pass-through routes default to a **600 second** upstream timeout. Set `general_settings.pass_through_request_timeout` for a global override, or `timeout` on a custom endpoint (per-endpoint wins). Applies to custom pass-through endpoints and native provider passthrough routes (e.g. Bedrock `/converse`).
+Pass-through routes default to a **600 second** upstream timeout. Set `general_settings.pass_through_request_timeout` for a global override, or `timeout` on a custom endpoint (per-endpoint wins)
+
+Native provider passthrough routes (Bedrock `/converse`, `/v1/messages`, and the native `/v1/responses` stream) resolve their timeout through the router, and the first value set wins: the request's `timeout`, the deployment's `timeout` under `litellm_params`, `router_settings.timeout`, `litellm_settings.request_timeout` when you set it (or the `REQUEST_TIMEOUT` env var), `general_settings.pass_through_request_timeout`, then 600 seconds. A streaming request checks `stream_timeout` at each of those levels before `timeout`. So a `litellm_settings.request_timeout` you set outranks `pass_through_request_timeout` on these routes, and on a stream it bounds each wait for the next chunk, so a stalled upstream ends the stream with an error instead of hanging
 
 ### Header Options
 - **Authorization**: Authentication for the target API
