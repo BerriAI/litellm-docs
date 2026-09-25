@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
+import Translate, {translate} from '@docusaurus/Translate';
 import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import {Select} from '@base-ui/react/select';
 import {
@@ -278,6 +279,11 @@ function GoalSelect({goal, onChange}) {
 }
 
 // Icons mirror the views they open: a stepped progress line and a dependency tree.
+const VIEW_LABELS = {
+  timeline: translate({id: 'rustMigration.tracker.view.timeline', message: 'timeline'}),
+  breakdown: translate({id: 'rustMigration.tracker.view.breakdown', message: 'breakdown'}),
+};
+
 const VIEW_ICONS = {
   timeline: <path d="M2 13h3V9h4V6h5" />,
   breakdown: (
@@ -297,26 +303,39 @@ function MigrationTracker() {
 
   return (
     <section className={styles.section} aria-labelledby="migration-tracker-title">
-      <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
+      <SectionHeading
+        id="migration-tracker-title"
+        kicker={translate({id: 'rustMigration.tracker.kicker', message: 'Migration tracker'})}
+        title={translate({id: 'rustMigration.tracker.title', message: 'Where we are today'})}
+      />
       <div className={styles.chartCard}>
         <p className={styles.goalSentence}>
-          <strong className={styles.progressSummary} title={`Across ${goal.features.length} features`}>
+          <strong
+            className={styles.progressSummary}
+            title={translate(
+              {id: 'rustMigration.tracker.acrossFeatures', message: 'Across {count} features'},
+              {count: goal.features.length},
+            )}
+          >
             {progressAt(goal, MAIN_VERSION)}%
           </strong>
-          {' of '}
+          <Translate id="rustMigration.tracker.of">{' of '}</Translate>
           <GoalSelect goal={goal} onChange={setGoal} />
-          {' migrated to Rust, '}
+          <Translate id="rustMigration.tracker.migratedShownAs">{' migrated to Rust, '}</Translate>
           <span className={styles.keepTogether}>
-            {'shown as a '}
+            <Translate id="rustMigration.tracker.shownAsA">{'shown as a '}</Translate>
             <button
               className={picker.sentenceControl}
               type="button"
-              title={`Show the ${otherView}`}
+              title={translate(
+                {id: 'rustMigration.tracker.showView', message: 'Show the {view}'},
+                {view: VIEW_LABELS[otherView]},
+              )}
               onClick={() => setView(otherView)}
             >
               {/* Keyed so the word pops each time it flips. */}
               <span className={styles.viewWord} key={view}>
-                {view}
+                {VIEW_LABELS[view]}
                 <svg viewBox="0 0 16 16" aria-hidden="true">{VIEW_ICONS[view]}</svg>
               </span>
             </button>
@@ -343,8 +362,11 @@ function RolloutStages() {
     ...STAGES.slice(1).map(stage => ({kind: stage.id, ...stage})),
     {
       kind: 'done',
-      label: 'Done',
-      description: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
+      label: translate({id: 'rustMigration.stages.done.label', message: 'Done'}),
+      description: translate({
+        id: 'rustMigration.stages.done.description',
+        message: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
+      }),
     },
   ];
   // Other pages link to these cards, so the build's anchor check must know them.
@@ -353,8 +375,9 @@ function RolloutStages() {
   return (
     <>
       <p className={styles.sectionLead}>
-        Each feature starts on Python and moves through these stages one release at a time. For the two middle stages,
-        the <code>LITELLM_RUST</code> environment variable flips the default for the whole process.
+        <Translate id="rustMigration.stages.lead" values={{envVar: <code>LITELLM_RUST</code>}}>
+          {'Each feature starts on Python and moves through these stages one release at a time. For the two middle stages, the {envVar} environment variable flips the default for the whole process.'}
+        </Translate>
       </p>
       <ul className={styles.stages}>
         {stages.map(stage => (
@@ -380,15 +403,28 @@ function RolloutStages() {
 const FAQ = [
   {
     id: 'faq-my-version',
-    question: 'I am on a specific version. What is the impact for me?',
+    question: translate({id: 'rustMigration.faq.version.question', message: 'I am on a specific version. What is the impact for me?'}),
     answer: (
       <p className={styles.sectionLead}>
-        Pick your version on the <Link to="/rust-migration/version">version impact page</Link> to see what already
-        runs on Rust for you and what changes when you upgrade.
+        <Translate
+          id="rustMigration.faq.version.answer"
+          values={{
+            link: (
+              <Link to="/rust-migration/version">
+                <Translate id="rustMigration.versionPage.linkText">version impact page</Translate>
+              </Link>
+            ),
+          }}>
+          {'Pick your version on the {link} to see what already runs on Rust for you and what changes when you upgrade.'}
+        </Translate>
       </p>
     ),
   },
-  {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
+  {
+    id: 'faq-rollout-stages',
+    question: translate({id: 'rustMigration.faq.stages.question', message: 'How does a feature move to Rust?'}),
+    answer: <RolloutStages />,
+  },
 ];
 
 // A malformed escape like `#%` reads as no hash rather than breaking the FAQ.
@@ -437,7 +473,11 @@ function Faq() {
 
   return (
     <section className={styles.section} id="faq" aria-labelledby="faq-title">
-      <SectionHeading id="faq-title" kicker="FAQ" title="Frequently asked questions" />
+      <SectionHeading
+        id="faq-title"
+        kicker={translate({id: 'rustMigration.faq.kicker', message: 'FAQ'})}
+        title={translate({id: 'rustMigration.faq.title', message: 'Frequently asked questions'})}
+      />
       <ul className={styles.faq} ref={listRef}>
         {FAQ.map(item => (
           <li key={item.id}>
@@ -468,15 +508,33 @@ function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
   const events = posts
-    .map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date}))
+    .map(post => ({
+      kind: translate({id: 'rustMigration.updates.kind.blogPost', message: 'Blog post'}),
+      title: post.title,
+      href: post.permalink,
+      date: post.date,
+    }))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
-      <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
+      <SectionHeading
+        id="migration-updates-title"
+        kicker={translate({id: 'rustMigration.updates.kicker', message: 'Engineering updates'})}
+        title={translate({id: 'rustMigration.updates.title', message: 'How we are getting there'})}
+      />
       <p className={styles.sectionLead}>
-        For what each release moved to Rust, pick your version on
-        the <Link to="/rust-migration/version">version impact page</Link>.
+        <Translate
+          id="rustMigration.updates.lead"
+          values={{
+            link: (
+              <Link to="/rust-migration/version">
+                <Translate id="rustMigration.versionPage.linkText">version impact page</Translate>
+              </Link>
+            ),
+          }}>
+          {'For what each release moved to Rust, pick your version on the {link}.'}
+        </Translate>
       </p>
       <ol className={styles.events}>
         {events.map(event => (
@@ -496,12 +554,20 @@ function MigrationUpdates() {
 
 export default function RustMigrationPage() {
   return (
-    <Layout title="LiteLLM Rust Migration" description="Updates from LiteLLM's migration to Rust.">
+    <Layout
+      title={translate({id: 'rustMigration.page.title', message: 'LiteLLM Rust Migration'})}
+      description={translate({id: 'rustMigration.page.description', message: "Updates from LiteLLM's migration to Rust."})}>
       <main className={styles.page}>
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>Rust Migration</p>
-          <h1 className={styles.title}>LiteLLM is moving to Rust</h1>
-          <p className={styles.description}>See what already runs on Rust and what is next.</p>
+          <p className={styles.eyebrow}>
+            <Translate id="rustMigration.hero.eyebrow">Rust Migration</Translate>
+          </p>
+          <h1 className={styles.title}>
+            <Translate id="rustMigration.hero.title">LiteLLM is moving to Rust</Translate>
+          </h1>
+          <p className={styles.description}>
+            <Translate id="rustMigration.hero.description">See what already runs on Rust and what is next.</Translate>
+          </p>
         </header>
         <MigrationTracker />
         <MigrationUpdates />

@@ -1,0 +1,42 @@
+{
+  "title": {
+    "message": "🚅 LiteLLM",
+    "description": "The title in the navbar"
+  },
+  "item.label.Docs": {
+    "message": "文档",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Learn": {
+    "message": "学习",
+    "description": "Navbar item with label Learn"
+  },
+  "item.label.Integrations": {
+    "message": "集成",
+    "description": "Navbar item with label Integrations"
+  },
+  "item.label.Enterprise": {
+    "message": "企业版",
+    "description": "Navbar item with label Enterprise"
+  },
+  "item.label.Changelog": {
+    "message": "更新日志",
+    "description": "Navbar item with label Changelog"
+  },
+  "item.label.Blog": {
+    "message": "博客",
+    "description": "Navbar item with label Blog"
+  },
+  "item.label.Auto Router": {
+    "message": "Auto Router",
+    "description": "Navbar item with label Auto Router"
+  },
+  "item.label.Rust": {
+    "message": "Rust",
+    "description": "Navbar item with label Rust"
+  },
+  "item.label.Trust Center": {
+    "message": "信任中心",
+    "description": "Navbar item with label Trust Center"
+  }
+}

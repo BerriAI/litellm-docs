@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
+    "prestart": "node scripts/i18n/stage.mjs",
     "start": "docusaurus start",
+    "prebuild": "node scripts/i18n/stage.mjs",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -16,7 +18,10 @@
     "update:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs",
     "check:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs --check",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
-    "lint:docs": "python3 scripts/check-docs.py docs"
+    "lint:docs": "python3 scripts/check-docs.py docs",
+    "i18n:stage": "node scripts/i18n/stage.mjs",
+    "i18n:translate": "node scripts/i18n/translate.mjs --locale zh-Hans",
+    "test:i18n": "node --test scripts/i18n/__tests__/*.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

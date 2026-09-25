@@ -1,11 +1,19 @@
 import React, {useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import Translate, {translate} from '@docusaurus/Translate';
 import {ThemeClassNames} from '@docusaurus/theme-common';
 import {useActivePlugin, useDoc} from '@docusaurus/plugin-content-docs/client';
 import Heading from '@theme/Heading';
 import MDXContent from '@theme/MDXContent';
+import EnglishFallbackNotice from '@site/src/components/EnglishFallbackNotice';
 import styles from './styles.module.css';
+
+// atob yields one char per byte, so multi-byte UTF-8 (Chinese) must be decoded.
+function decodeBase64Utf8(b64) {
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
 
 const CopyIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -26,7 +34,7 @@ function CopyMarkdownButton({rawMarkdownB64}) {
   async function handleClick() {
     if (copied) return;
     try {
-      await navigator.clipboard.writeText(atob(rawMarkdownB64));
+      await navigator.clipboard.writeText(decodeBase64Utf8(rawMarkdownB64));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -38,11 +46,17 @@ function CopyMarkdownButton({rawMarkdownB64}) {
     <button
       className={clsx(styles.copyBtn, copied && styles.success)}
       onClick={handleClick}
-      title="Copy page as Markdown"
+      title={translate({id: 'theme.docItem.copyMarkdown.title', message: 'Copy page as Markdown'})}
     >
       <span className={styles.copyBtnInner}>
         {copied ? <CheckIcon /> : <CopyIcon />}
-        <span>{copied ? 'Copied' : 'Copy as Markdown'}</span>
+        <span>
+          {copied ? (
+            <Translate id="theme.docItem.copyMarkdown.copied">Copied</Translate>
+          ) : (
+            <Translate id="theme.docItem.copyMarkdown.label">Copy as Markdown</Translate>
+          )}
+        </span>
       </span>
     </button>
   );
@@ -56,7 +70,7 @@ function useSyntheticTitle() {
 
 export default function DocItemContent({children}) {
   const syntheticTitle = useSyntheticTitle();
-  const {frontMatter} = useDoc();
+  const {frontMatter, metadata} = useDoc();
   const activePlugin = useActivePlugin();
   const rawMarkdownB64 = frontMatter.rawMarkdownB64;
   const showRustMigrationBanner = activePlugin?.pluginId === 'release-notes';
@@ -66,12 +80,18 @@ export default function DocItemContent({children}) {
       {showRustMigrationBanner && (
         <Link className={styles.rustMigrationBanner} to="/rust-migration">
           <span className={styles.rustMigrationContent}>
-            <strong>LiteLLM is moving to Rust <span aria-hidden="true">🦀</span></strong>
-            <small>Read the latest updates.</small>
+            <strong>
+              <Translate id="theme.docItem.rustBanner.title">LiteLLM is moving to Rust</Translate>{' '}
+              <span aria-hidden="true">🦀</span>
+            </strong>
+            <small>
+              <Translate id="theme.docItem.rustBanner.subtitle">Read the latest updates.</Translate>
+            </small>
           </span>
           <span className={styles.rustMigrationChevron} aria-hidden="true">›</span>
         </Link>
       )}
+      <EnglishFallbackNotice source={metadata.source} />
       {syntheticTitle ? (
         <header className={styles.titleRow}>
           <Heading as="h1" className={styles.title}>{syntheticTitle}</Heading>

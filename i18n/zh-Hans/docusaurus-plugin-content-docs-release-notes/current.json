@@ -1,0 +1,202 @@
+{
+  "version.label": {
+    "message": "下一版本",
+    "description": "The label for version current"
+  },
+  "sidebar.releaseNotesSidebar.category.2026": {
+    "message": "2026",
+    "description": "The label for category 2026 in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.103.x": {
+    "message": "v1.103.x",
+    "description": "The label for category v1.103.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.102.x": {
+    "message": "v1.102.x",
+    "description": "The label for category v1.102.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.101.x": {
+    "message": "v1.101.x",
+    "description": "The label for category v1.101.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.100.x": {
+    "message": "v1.100.x",
+    "description": "The label for category v1.100.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.99.x": {
+    "message": "v1.99.x",
+    "description": "The label for category v1.99.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.98.x": {
+    "message": "v1.98.x",
+    "description": "The label for category v1.98.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.97.x": {
+    "message": "v1.97.x",
+    "description": "The label for category v1.97.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.96.x": {
+    "message": "v1.96.x",
+    "description": "The label for category v1.96.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.95.x": {
+    "message": "v1.95.x",
+    "description": "The label for category v1.95.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.94.x": {
+    "message": "v1.94.x",
+    "description": "The label for category v1.94.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.93.x": {
+    "message": "v1.93.x",
+    "description": "The label for category v1.93.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.92.x": {
+    "message": "v1.92.x",
+    "description": "The label for category v1.92.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.91.x": {
+    "message": "v1.91.x",
+    "description": "The label for category v1.91.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.90.x": {
+    "message": "v1.90.x",
+    "description": "The label for category v1.90.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.89.x": {
+    "message": "v1.89.x",
+    "description": "The label for category v1.89.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.88.x": {
+    "message": "v1.88.x",
+    "description": "The label for category v1.88.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.87.x": {
+    "message": "v1.87.x",
+    "description": "The label for category v1.87.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.86.x": {
+    "message": "v1.86.x",
+    "description": "The label for category v1.86.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.85.x": {
+    "message": "v1.85.x",
+    "description": "The label for category v1.85.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.84.x": {
+    "message": "v1.84.x",
+    "description": "The label for category v1.84.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.83.x": {
+    "message": "v1.83.x",
+    "description": "The label for category v1.83.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.82.x": {
+    "message": "v1.82.x",
+    "description": "The label for category v1.82.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.81.x": {
+    "message": "v1.81.x",
+    "description": "The label for category v1.81.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.80.x": {
+    "message": "v1.80.x",
+    "description": "The label for category v1.80.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.2025": {
+    "message": "2025",
+    "description": "The label for category 2025 in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.79.x": {
+    "message": "v1.79.x",
+    "description": "The label for category v1.79.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.78.x": {
+    "message": "v1.78.x",
+    "description": "The label for category v1.78.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.77.x": {
+    "message": "v1.77.x",
+    "description": "The label for category v1.77.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.76.x": {
+    "message": "v1.76.x",
+    "description": "The label for category v1.76.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.75.x": {
+    "message": "v1.75.x",
+    "description": "The label for category v1.75.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.74.x": {
+    "message": "v1.74.x",
+    "description": "The label for category v1.74.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.73.x": {
+    "message": "v1.73.x",
+    "description": "The label for category v1.73.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.72.x": {
+    "message": "v1.72.x",
+    "description": "The label for category v1.72.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.71.x": {
+    "message": "v1.71.x",
+    "description": "The label for category v1.71.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.70.x": {
+    "message": "v1.70.x",
+    "description": "The label for category v1.70.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.69.x": {
+    "message": "v1.69.x",
+    "description": "The label for category v1.69.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.68.x": {
+    "message": "v1.68.x",
+    "description": "The label for category v1.68.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.67.x": {
+    "message": "v1.67.x",
+    "description": "The label for category v1.67.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.66.x": {
+    "message": "v1.66.x",
+    "description": "The label for category v1.66.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.65.x": {
+    "message": "v1.65.x",
+    "description": "The label for category v1.65.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.63.x": {
+    "message": "v1.63.x",
+    "description": "The label for category v1.63.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.61.x": {
+    "message": "v1.61.x",
+    "description": "The label for category v1.61.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.59.x": {
+    "message": "v1.59.x",
+    "description": "The label for category v1.59.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.57.x": {
+    "message": "v1.57.x",
+    "description": "The label for category v1.57.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.2024": {
+    "message": "2024",
+    "description": "The label for category 2024 in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.56.x": {
+    "message": "v1.56.x",
+    "description": "The label for category v1.56.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.category.v1.55.x": {
+    "message": "v1.55.x",
+    "description": "The label for category v1.55.x in sidebar releaseNotesSidebar"
+  },
+  "sidebar.releaseNotesSidebar.doc.Release Notes": {
+    "message": "发布说明",
+    "description": "The label for the doc item Release Notes in sidebar releaseNotesSidebar, linking to the doc index"
+  }
+}

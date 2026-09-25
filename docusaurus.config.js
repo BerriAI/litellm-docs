@@ -81,9 +81,17 @@ const config = {
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
   // to replace "en" with "zh-Hans".
+  // Translations are committed under i18n/<locale>/. `npm run i18n:stage` copies
+  // only the fresh ones into .i18n-staging before each build so that stale or
+  // missing pages fall back to English.
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'zh-Hans'],
+    path: '.i18n-staging',
+    localeConfigs: {
+      en: {label: 'English', htmlLang: 'en'},
+      'zh-Hans': {label: '简体中文', htmlLang: 'zh-Hans'},
+    },
   },
   plugins: [
     // vega-canvas tries to load the optional node `canvas` package during SSR.
@@ -418,6 +426,7 @@ const config = {
             label: 'Auto Router',
           },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
+          {type: 'localeDropdown', position: 'right'},
           {
             href: 'https://trust.litellm.ai/',
             label: 'Trust Center',
