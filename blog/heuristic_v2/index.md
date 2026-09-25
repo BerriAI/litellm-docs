@@ -21,7 +21,7 @@ hide_table_of_contents: false
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -121,7 +121,7 @@ model_list:
 
 :::note[Free trial scope]
 
-The free trial covers Heuristic v2 on one auto router. If you want it on more than one, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) and we'll sort it out with you directly.
+The free trial covers Heuristic v2 on one auto router. If you want it on more than one, [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner) and we'll sort it out with you directly.
 
 :::
 
@@ -141,6 +141,6 @@ Heuristic v2 makes no LLM classifier call on the request path, and reuses the sa
 
 :::info
 
-Point Heuristic v2 at your own workload and compare it against your current classifier. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+Point Heuristic v2 at your own workload and compare it against your current classifier. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner).
 
 :::
