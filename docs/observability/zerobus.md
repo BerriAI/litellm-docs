@@ -1,3 +1,6 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Databricks Zerobus
 
 Send LiteLLM Gateway request logs to a Unity Catalog Delta table with Databricks Zerobus Ingest. Query model usage, latency, cost, and request metadata in Databricks, alongside your existing enterprise data.
@@ -195,7 +198,89 @@ Select **Add Callback**. Confirm that **Databricks Zerobus** appears in the logg
 
 ## 6. Send a request through LiteLLM
 
-From a client that can reach your deployed gateway, send a chat completion using the base URL and virtual key from step 1. Replace `your-model-alias` with an existing model alias authorized for that key:
+From a client that can reach your deployed gateway, send a chat completion using the base URL and virtual key from step 1. Choose Python, JavaScript, or cURL below, and replace `your-model-alias` with an existing model alias authorized for that key. Each example sends the same request and prints its response ID.
+
+<Tabs>
+<TabItem value="python" label="Python" default>
+
+Install the [OpenAI Python SDK](https://github.com/openai/openai-python) in your client environment:
+
+```bash
+python3 -m pip install openai
+```
+
+Save the following as `zerobus_request.py`:
+
+```python title="zerobus_request.py"
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url=f'{os.environ["LITELLM_BASE_URL"]}/v1',
+)
+
+response = client.chat.completions.create(
+    model="your-model-alias",
+    messages=[
+        {"role": "user", "content": "Reply with: Zerobus integration verified."}
+    ],
+    user="zerobus-quickstart",
+    extra_body={"metadata": {"tags": ["zerobus-quickstart"]}},
+)
+
+print("Response ID:", response.id)
+print("Assistant:", response.choices[0].message.content)
+```
+
+Run it from the environment where you set `LITELLM_BASE_URL` and `LITELLM_API_KEY`:
+
+```bash
+python3 zerobus_request.py
+```
+
+</TabItem>
+<TabItem value="javascript" label="JavaScript">
+
+Install the [OpenAI JavaScript SDK](https://github.com/openai/openai-node) in your Node.js project:
+
+```bash
+npm install openai
+```
+
+Save the following as `zerobus-request.mjs`:
+
+```javascript title="zerobus-request.mjs"
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.LITELLM_API_KEY,
+  baseURL: `${process.env.LITELLM_BASE_URL}/v1`,
+});
+
+const response = await client.chat.completions.create({
+  model: "your-model-alias",
+  messages: [
+    { role: "user", content: "Reply with: Zerobus integration verified." },
+  ],
+  user: "zerobus-quickstart",
+  metadata: { tags: ["zerobus-quickstart"] },
+});
+
+console.log("Response ID:", response.id);
+console.log("Assistant:", response.choices[0].message.content);
+```
+
+Run it from the environment where you set `LITELLM_BASE_URL` and `LITELLM_API_KEY`:
+
+```bash
+node zerobus-request.mjs
+```
+
+</TabItem>
+<TabItem value="curl" label="cURL">
+
+This example uses cURL to send the request and `jq` to print the response ID and assistant message. Run it from the environment where you set `LITELLM_BASE_URL` and `LITELLM_API_KEY`:
 
 ```bash
 curl --fail-with-body --silent --show-error \
@@ -211,15 +296,12 @@ curl --fail-with-body --silent --show-error \
     "metadata": {"tags": ["zerobus-quickstart"]}
   }' > zerobus-response.json
 
-python3 - <<'PY'
-import json
-
-with open("zerobus-response.json") as response_file:
-    response = json.load(response_file)
-print("Response ID:", response["id"])
-print("Assistant:", response["choices"][0]["message"]["content"])
-PY
+jq -r '"Response ID: \(.id)", "Assistant: \(.choices[0].message.content)"' \
+  zerobus-response.json
 ```
+
+</TabItem>
+</Tabs>
 
 Save the printed response ID. The `user` value makes this request easy to find in the table's `end_user` column; `metadata.tags` labels the request for later analysis.
 
