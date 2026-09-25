@@ -824,8 +824,7 @@ router_settings:
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
-| PASSTHROUGH_UPSTREAM_ERROR_REPORT_CONCURRENCY | Maximum number of pass-through upstream error reports (failure hooks and spend logging) running at once. Default is 64
-| PASSTHROUGH_UPSTREAM_ERROR_REPORT_DRAIN_SECONDS | Seconds the proxy waits at shutdown for in-flight pass-through upstream error reports to finish. Default is 10
+| PASSTHROUGH_UPSTREAM_ERROR_REPORT_DRAIN_SECONDS | Seconds the proxy waits at shutdown for in-flight pass-through upstream error reports to finish. Unset waits until every report finishes
 | PERPLEXITY_API_BASE | Base URL for Perplexity. Default is https://api.perplexity.ai
 | PG_VECTOR_API_BASE | Base URL for a pgvector vector store
 | PG_VECTOR_API_KEY | API key for a pgvector vector store
