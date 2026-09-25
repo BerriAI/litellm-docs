@@ -71,7 +71,7 @@ These options are useful for high-volume applications where sampling a subset of
 
 By default LiteLLM sends Sentry events with `send_default_pii` off and scrubs them before they leave the proxy, so the frame locals Sentry attaches to an exception never carry credentials or user identity
 
-Secrets are always removed. API keys, the master key, the database URL, tokens, and passwords read `[Filtered]` whether they sit in a top-level variable, in a nested dict such as `general_settings`, or inside the repr of an object such as `UserAPIKeyAuth(token='...')`
+Secrets are always removed. API keys (any `sk-` value, wherever it appears), the request headers a virtual key arrives in (`Authorization`, `x-api-key`, `api-key`, `x-goog-api-key`, `x-litellm-api-key`), the master key, the database URL, tokens, cookies, and passwords read `[Filtered]` whether they sit in a top-level variable, in a nested dict such as `general_settings`, or inside the repr of an object such as `UserAPIKeyAuth(token='...')`
 
 User identity is removed unless you opt in. `user_id`, `user_email`, `end_user_id`, the hashed virtual key (`user_api_key_hash`), and the `user_api_key_*` metadata fields read `[Filtered]` in the same three places, and any email-shaped value or 64-character hex key hash left elsewhere in the event is replaced too
 
