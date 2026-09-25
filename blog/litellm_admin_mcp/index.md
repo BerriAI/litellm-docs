@@ -55,7 +55,7 @@ To add a model deployment, provide its public name, provider/model ID, and crede
 
 > Add a model named support-chat using openai/gpt-4.1 and the existing gateway credential openai-production.
 
-Use a stored credential name and keep provider API keys out of chat. Your gateway needs provider access and a database configured to store models. Follow the [model setup requirements](https://github.com/BerriAI/litellm-admin-agent/blob/main/docs/compatibility.md#model-creation), then test inference after adding the deployment.
+Use a stored credential name and keep provider API keys out of chat. Your gateway needs provider access and a database configured to store models. Follow the [model setup requirements](/docs/proxy/liteadmin_mcp#add-a-model-deployment), then test inference after adding the deployment.
 
 ## Choose the tools your agent can use
 
@@ -83,7 +83,7 @@ You can follow up about the team's keys or usage in the same DM, from your lapto
 
 Both projects are open source. Choose where you want to work:
 
-- **LiteAdmin MCP:** Follow the [setup guide](https://github.com/BerriAI/litellm-admin-mcp#readme) to connect your agent through a local or hosted MCP server.
-- **LiteAdmin for Slack:** Follow the [Admin Agent setup guide](https://github.com/BerriAI/litellm-admin-agent#readme) to deploy with Docker Compose or Render.
+- **LiteAdmin MCP:** Follow the [MCP setup guide](/docs/proxy/liteadmin_mcp) to connect Claude, Codex, or another MCP client.
+- **LiteAdmin for Slack:** Follow the [Slack app setup guide](/docs/proxy/liteadmin_slack) to deploy with Docker Compose or Render.
 
 Once connected, try **“List my teams and their current budgets.”**
