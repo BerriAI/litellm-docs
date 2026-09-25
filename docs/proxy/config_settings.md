@@ -852,6 +852,7 @@ router_settings:
 | SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
 | SONIOX_API_KEY | API key for Soniox
 | SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
+| STAAN_API_BASE | Base URL for the Staan search API. Defaults to `https://api.staan.ai/v2/search/web`
 | STABILITY_API_BASE | Base URL for Stability AI image generation and editing
 | TAVILY_API_BASE | Base URL for the Tavily search provider
 | TINYFISH_AGENT_API_BASE | Base URL for the TinyFish Agent pass-through. Default is https://agent.tinyfish.ai
