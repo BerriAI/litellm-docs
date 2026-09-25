@@ -5,6 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
+    "typecheck": "tsc -p .",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -41,7 +42,9 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.8.1",
-    "dotenv": "16.6.1"
+    "@types/semver": "7.8.0",
+    "dotenv": "16.6.1",
+    "typescript": "7.0.2"
   },
   "browserslist": {
     "production": [
