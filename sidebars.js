@@ -84,6 +84,7 @@ const sidebars = {
             "observability/splunk_observability_cloud",
             "observability/sumologic_integration",
             "observability/supabase_integration",
+            "observability/zerobus",
           ],
         },
         {
