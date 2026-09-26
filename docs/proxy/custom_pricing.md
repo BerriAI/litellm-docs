@@ -44,7 +44,7 @@ model_list:
 **Step 2: Start proxy**
 
 ```bash
-litellm /path/to/config.yaml
+litellm --config /path/to/config.yaml
 ```
 
 **Step 3: View Spend Logs**
@@ -96,7 +96,7 @@ There are other keys you can use to specify costs for different scenarios and mo
 - `input_cost_per_token_above_200k_tokens` - Cost for input tokens when context exceeds 200k tokens
 - `output_cost_per_token_above_200k_tokens` - Cost for output tokens when context exceeds 200k tokens  
 - `cache_creation_input_token_cost_above_200k_tokens` - Cache creation cost for large contexts
-- `cache_read_input_token_cost_above_200k_token` - Cache read cost for large contexts
+- `cache_read_input_token_cost_above_200k_tokens` - Cache read cost for large contexts
 - `input_cost_per_image` - Cost per image in multimodal requests
 - `output_cost_per_reasoning_token` - Cost for reasoning tokens (e.g., OpenAI o1 models)
 - `input_cost_per_audio_token` - Cost for audio input tokens
