@@ -37,7 +37,7 @@ model_list:
 2. **Create a batch job**:
 
 ```bash
-curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
+curl -X POST "http://localhost:4000/vertex_ai/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -61,7 +61,7 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
 3. **Monitor job status**:
 
 ```bash
-curl -X GET "http://localhost:4000/v1/projects/your-project/locations/us-central1/batchPredictionJobs/job-id" \
+curl -X GET "http://localhost:4000/vertex_ai/v1/projects/your-project/locations/us-central1/batchPredictionJobs/job-id" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -82,7 +82,7 @@ When configuring models for batch operations, use these naming conventions:
 ### Batch Job with Custom Parameters
 
 ```bash
-curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
+curl -X POST "http://localhost:4000/vertex_ai/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -110,14 +110,14 @@ curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-centra
 ### List All Batch Jobs
 
 ```bash
-curl -X GET "http://localhost:4000/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
+curl -X GET "http://localhost:4000/vertex_ai/v1/projects/your-project/locations/us-central1/batchPredictionJobs" \
   -H "Authorization: Bearer your-api-key"
 ```
 
 ### Cancel a Batch Job
 
 ```bash
-curl -X POST "http://localhost:4000/v1/projects/your-project/locations/us-central1/batchPredictionJobs/job-id:cancel" \
+curl -X POST "http://localhost:4000/vertex_ai/v1/projects/your-project/locations/us-central1/batchPredictionJobs/job-id:cancel" \
   -H "Authorization: Bearer your-api-key"
 ```
 
