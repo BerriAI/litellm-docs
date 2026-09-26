@@ -245,7 +245,7 @@ litellm_settings:
 
 ### Execution timeout
 
-Each run of `apply_guardrail` is bounded by `timeout` (default 30 seconds), and so is the module-level code that runs when the guardrail loads. A sync function runs on a worker thread and is interrupted when the budget is spent, so a busy loop cannot stall the proxy's event loop; an async function is cancelled at its next `await`. A run that exceeds the budget fails the request with a `Custom code guardrail '<name>' exceeded its 30s execution timeout` error, and compile-time code that exceeds it fails the guardrail's load.
+Each run of `apply_guardrail` is bounded by `timeout` (default 30 seconds), and so is the module-level code that runs when the guardrail loads. A sync function runs on a worker thread, so a busy loop never stalls the proxy's event loop, and every `while` test, `for` iteration, and comprehension in guardrail code checks the budget, so a loop that never yields or awaits still stops at the deadline. An async function is checked the same way, with no `await` point needed. A run that exceeds the budget fails the request with a `Custom code guardrail '<name>' exceeded its 30s execution timeout` error, and compile-time code that exceeds it fails the guardrail's load.
 
 ```yaml
 guardrails:
