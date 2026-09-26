@@ -7,7 +7,7 @@ ALL Bedrock models (Anthropic, Meta, Deepseek, Mistral, Amazon, etc.) are Suppor
 | Property | Details |
 |-------|-------|
 | Description | Amazon Bedrock is a fully managed service that offers a choice of high-performing foundation models (FMs). |
-| Provider Route on LiteLLM | `bedrock/`, [`bedrock/converse/`](#set-converse--invoke-route), [`bedrock/invoke/`](/docs/providers/bedrock#set-converse--invoke-route), [`bedrock/converse_like/`](/docs/providers/bedrock#calling-via-internal-proxy-not-bedrock-url-compatible), `bedrock/llama/`, `bedrock/deepseek_r1/`, `bedrock/qwen3/`, [`bedrock/qwen2/`](./bedrock_imported.md#qwen2-imported-models), [`bedrock/openai/`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc), [`bedrock/moonshot`](./bedrock_imported.md#moonshot-kimi-k2-thinking) |
+| Provider Route on LiteLLM | `bedrock/` ([native Chat Completions](#native-chat-completions-route) for the OpenAI and Grok models), [`bedrock/converse/`](#set-converse--invoke-route), [`bedrock/invoke/`](/docs/providers/bedrock#set-converse--invoke-route), [`bedrock/converse_like/`](/docs/providers/bedrock#calling-via-internal-proxy-not-bedrock-url-compatible), `bedrock/llama/`, `bedrock/deepseek_r1/`, `bedrock/qwen3/`, [`bedrock/qwen2/`](./bedrock_imported.md#qwen2-imported-models), [`bedrock/openai/`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc), [`bedrock/moonshot`](./bedrock_imported.md#moonshot-kimi-k2-thinking) |
 | Provider Doc | [Amazon Bedrock ↗](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) |
 | Supported OpenAI Endpoints | `/chat/completions`, `/completions`, `/embeddings`, `/images/generations`, `/v1/realtime`|
 | Rerank Endpoint | `/rerank` |
@@ -1644,6 +1644,8 @@ LiteLLM defaults to the `invoke` route. LiteLLM uses the `converse` route for Be
 
 To explicitly set the route, do `bedrock/converse/<model>` or `bedrock/invoke/<model>`.
 
+The models AWS serves in the OpenAI format are the exception. See [Native Chat Completions route](#native-chat-completions-route).
+
 
 E.g. 
 
@@ -1664,6 +1666,62 @@ model_list:
   - model_name: bedrock-model
     litellm_params:
       model: bedrock/converse/us.amazon.nova-pro-v1:0
+```
+
+</TabItem>
+</Tabs>
+
+## Native Chat Completions route
+
+AWS serves some Bedrock models on an OpenAI-compatible endpoint, `https://bedrock-runtime.{region}.amazonaws.com/openai/v1/chat/completions`. For those models LiteLLM sends your `/chat/completions` request to that endpoint in the shape it arrived in, instead of translating it to Converse and back. Fewer translations means less latency and fewer places for a parameter to get lost.
+
+| Model | LiteLLM model name | Default route |
+|-------|--------------------|---------------|
+| GPT-OSS 20B | `bedrock/openai.gpt-oss-20b-1:0`, `bedrock/us-gov.openai.gpt-oss-20b-1:0` | Native Chat Completions |
+| GPT-OSS 120B | `bedrock/openai.gpt-oss-120b-1:0`, `bedrock/us-gov.openai.gpt-oss-120b-1:0` | Native Chat Completions |
+| GPT-5.6 Sol, Terra, Luna | `bedrock/us.openai.gpt-5.6-sol`, `bedrock/global.openai.gpt-5.6-sol`, and the `terra` / `luna` variants | Native Chat Completions |
+| Grok 4.6 | `bedrock/us.xai.grok-4.6`, `bedrock/global.xai.grok-4.6`, `bedrock/us-gov.xai.grok-4.6` | Native Chat Completions |
+| Everything else (Claude, Nova, Llama, Mistral, ...) | `bedrock/<model-id>` | Converse or Invoke, as before |
+
+A model opts in through `/v1/chat/completions` in the `supported_endpoints` of its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), the same key that opts a model into the native `/v1/responses` route, so a model AWS lists without Chat Completions support keeps using Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. A region path in the model name (`bedrock/us-gov-west-1/openai.gpt-oss-20b-1:0`) works the same too: the region picks the endpoint and the id after it is what AWS receives, and an explicit `aws_region_name` still wins over the path. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
+
+The trade-off is that the OpenAI-compatible endpoint has no equivalent for a few Converse features, so LiteLLM falls back to Converse per request when you use one of them:
+
+| Request | Route used | Why |
+|---------|------------|-----|
+| `guardrailConfig` in the request body | Converse | AWS takes guardrails on the OpenAI-compatible endpoint as `X-Amzn-Bedrock-Guardrail*` headers and rejects a `guardrailConfig` body field, so LiteLLM keeps those requests on Converse and your guardrail behavior does not change |
+| `requestMetadata`, `performanceConfig`, `serviceTier`, or `outputConfig` in the request body | Converse | These Converse body fields are rejected as malformed input on the OpenAI-compatible endpoint |
+| `bedrock_request_metadata_fields` set in `litellm_settings` | Converse, for every request | LiteLLM only writes the operator's request metadata onto the Converse body |
+| Application inference profile ARN as the model | Converse | LiteLLM cannot tell from the ARN which model it fronts |
+| Function `tools` with `reasoning_effort` other than `"none"` (or unset), on a model without `"supports_bedrock_runtime_chat_completions_tools_with_reasoning": true` in the cost map (the GPT-5.6 family today) | Converse | AWS only accepts function tools on Chat Completions for GPT-5.6 when `reasoning_effort` is `"none"`; GPT-OSS and Grok carry the flag and take tools with any effort |
+| `response_format` with `"type": "json_object"`, with or without LiteLLM's `response_schema` key, on any model | Converse | AWS's OpenAI-compatible endpoint answers 400 for `json_object` unless a message contains the word "json", so LiteLLM keeps Converse's handling: a `response_schema` becomes a forced `json_tool_call` tool that returns the JSON you asked for, and a schema-less `json_object` behaves as it did on Converse before |
+| A JSON schema `response_format` (`{"type": "json_schema", ...}` or a Pydantic model), on a model without `"supports_bedrock_runtime_chat_completions_response_format": true` in the cost map (GPT-OSS today) | Converse | AWS accepts `response_format` for GPT-OSS on Chat Completions but answers with free text anyway, so LiteLLM keeps the Converse emulation (a forced `json_tool_call` tool) that returns the JSON you asked for; GPT-5.6 and Grok carry the flag and enforce the schema natively |
+| `stop` sequences | Converse | Converse forwards `stop` as `stopSequences`, which AWS answers with a 400 for these models, the same as before this route existed; sent natively, GPT-OSS and Grok apply `stop` to their hidden reasoning too and answer with empty content, which is worse than the error |
+| `top_k` or `additionalModelRequestFields` | Converse | Only Converse forwards these model-specific fields |
+| A `thinking` block on `/chat/completions` | Converse | The OpenAI-compatible endpoint has no `thinking` field; on `/v1/messages` LiteLLM maps `thinking` to `reasoning_effort` and the request stays native |
+| `bedrock/converse/<model>` | Converse | You asked for it explicitly |
+
+What you will notice on the native route: the response carries AWS's own `id` and `service_tier` fields, tool call ids are AWS's own (`call_0` for GPT-5.6 and Grok, `chatcmpl-tool-...` for GPT-OSS) instead of `tooluse_...`, `max_tokens` is sent as `max_completion_tokens`, a JSON schema `response_format` and `service_tier` are sent through as you wrote them, `n` greater than 1 is unsupported (as on Converse), GPT-OSS reasoning comes back in `reasoning_content` (LiteLLM splits it out of the inline `<reasoning>...</reasoning>` prefix AWS returns) without the Converse-only `thinking_blocks` field, an `http(s)://` image URL in a message is downloaded by LiteLLM and sent inline as a `data:` URL because the endpoint does not fetch remote images itself, and Grok drops `reasoning_effort: "none"` (it always reasons) while `low`, `medium`, `high`, and `xhigh` are sent through.
+
+To keep a model on Converse for every request, set the route explicitly:
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+completion(model="bedrock/converse/openai.gpt-oss-20b-1:0", messages=[{"role": "user", "content": "Hello"}])
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: gpt-oss-20b-converse
+    litellm_params:
+      model: bedrock/converse/openai.gpt-oss-20b-1:0
 ```
 
 </TabItem>
@@ -1900,7 +1958,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 | Property | Details |
 |----------|---------|
-| Provider Route | `bedrock/converse/openai.gpt-oss-20b-1:0`, `bedrock/converse/openai.gpt-oss-120b-1:0` |
+| Provider Route | `bedrock/openai.gpt-oss-20b-1:0`, `bedrock/openai.gpt-oss-120b-1:0` ([native Chat Completions](#native-chat-completions-route)); prefix with `bedrock/converse/` to force Converse |
 | Provider Documentation | [Amazon Bedrock ↗](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) |
 
 <Tabs>
@@ -1917,14 +1975,14 @@ os.environ["AWS_REGION_NAME"] = "us-east-1"
 
 # GPT OSS 20B model
 response = completion(
-    model="bedrock/converse/openai.gpt-oss-20b-1:0",
+    model="bedrock/openai.gpt-oss-20b-1:0",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 print(response.choices[0].message.content)
 
 # GPT OSS 120B model  
 response = completion(
-    model="bedrock/converse/openai.gpt-oss-120b-1:0",
+    model="bedrock/openai.gpt-oss-120b-1:0",
     messages=[{"role": "user", "content": "Explain machine learning in simple terms"}],
 )
 print(response.choices[0].message.content)
@@ -1940,14 +1998,14 @@ print(response.choices[0].message.content)
 model_list:
   - model_name: gpt-oss-20b
     litellm_params:
-      model: bedrock/converse/openai.gpt-oss-20b-1:0
+      model: bedrock/openai.gpt-oss-20b-1:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
       
   - model_name: gpt-oss-120b
     litellm_params:
-      model: bedrock/converse/openai.gpt-oss-120b-1:0
+      model: bedrock/openai.gpt-oss-120b-1:0
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -2205,8 +2263,8 @@ Here's an example of using a bedrock model with LiteLLM. For a complete list, re
 
 | Model Name                 | Command                                                          |
 |----------------------------|------------------------------------------------------------------|
-| GPT-OSS 20B | `completion(model='bedrock/converse/openai.gpt-oss-20b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
-| GPT-OSS 120B | `completion(model='bedrock/converse/openai.gpt-oss-120b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| GPT-OSS 20B | `completion(model='bedrock/openai.gpt-oss-20b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| GPT-OSS 120B | `completion(model='bedrock/openai.gpt-oss-120b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Deepseek R1    | `completion(model='bedrock/us.deepseek.r1-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude Sonnet 4.5    | `completion(model='bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude-V3.5 Sonnet    | `completion(model='bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
