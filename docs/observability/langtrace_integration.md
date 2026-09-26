@@ -16,9 +16,9 @@ join our [discord](https://discord.gg/wuPM9dRgDw)
 uv add litellm
 ```
 
-Langtrace ingests JSON-encoded OTLP at a custom path (`/api/trace`) with an `x-api-key` header, whereas litellm sends protobuf to `/v1/traces`. It therefore cannot receive litellm's spans directly. Run an OpenTelemetry Collector between them: litellm exports to the collector, and the collector re-encodes the spans to JSON and forwards them to Langtrace.
+Langtrace ingests OTLP at a custom path (`/api/trace`) with an `x-api-key` header, whereas OpenTelemetry v2 exports to `/v1/traces` with no Langtrace credentials. With `LITELLM_OTEL_V2=true`, run an OpenTelemetry Collector between them: litellm exports to the collector, and the collector forwards the spans to Langtrace with your key. The `langtrace` preset applies Langtrace's attribute schema; the collector only handles delivery, which is why `LANGTRACE_API_KEY` lives in the collector's environment rather than the proxy's
 
-The `langtrace` callback applies Langtrace's attribute schema; the collector only handles delivery. That is why the preset reads no credentials of its own, and `LANGTRACE_API_KEY` lives in the collector's environment rather than the proxy's.
+Without `LITELLM_OTEL_V2`, the `langtrace` callback posts directly to `https://app.langtrace.ai/api/trace` with `LANGTRACE_API_KEY` set on the proxy as the `x-api-key` header, no collector needed. Set `LANGTRACE_API_HOST` to the base URL of a self-hosted Langtrace (for example `https://langtrace.example.com`) and the callback posts to `<host>/api/trace`. See the [proxy logging guide](../proxy/logging#langtrace) for that setup
 
 ## Quick Start
 
