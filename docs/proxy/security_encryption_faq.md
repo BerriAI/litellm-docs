@@ -142,7 +142,7 @@ export SSL_CERTIFICATE="/path/to/client_certificate.pem"
 Every value below is encrypted with the salt key before it reaches the database, so a raw `SELECT` on the table shows ciphertext. Where a column holds a JSON document, **every string value inside it is encrypted, however deeply it is nested** (a dict inside a dict, a string inside a list). Numbers, booleans and nulls are stored as they are. A document nested deeper than `DEFAULT_MAX_RECURSE_DEPTH` levels (100 by default) is refused on write instead of being stored with plaintext leaves below the cap.
 
 #### Encrypted:
-1. **Model deployments** - `LiteLLM_ProxyModelTable.litellm_params`: `api_key`, `api_base`, `aws_secret_access_key`, `vertex_credentials`, every string value under `extra_headers`, and every other string in the document
+1. **Model deployments** - `LiteLLM_ProxyModelTable.litellm_params`: `api_key`, `api_base`, `aws_secret_access_key`, `vertex_credentials`, every string value under `extra_headers` and `aws_session_tags`, and every other string in the document, except that inside `complexity_router_config` only `jev_classifier_config.api_key` and `jev_classifier_config.api_base` are encrypted
 2. **Guardrails** - `LiteLLM_GuardrailsTable.litellm_params`: the vendor `api_key`, `api_base`, and every other string in the document, including the `guardrail` and `mode` fields
 3. **Provider credentials** - `LiteLLM_CredentialsTable.credential_values`: every value
 4. **Config secrets** - the `environment_variables` and `router_settings` rows of `LiteLLM_Config`: every string value, so a `redis_password` or a `redis_url` in `router_settings` is ciphertext the same way an environment variable is
@@ -152,17 +152,17 @@ Every value below is encrypted with the salt key before it reaches the database,
 
 #### NOT Encrypted:
 1. **Other config rows** - `general_settings` and `litellm_settings` in `LiteLLM_Config`, and the callback settings stored from the UI (callback values that are marked as secrets are the one exception: they are stored encrypted with a `litellm_enc::` prefix)
-2. **Non-secret model fields** - `model_name`, `model_info`, and the deployment's rate limits and budgets, which live outside `litellm_params`
+2. **Non-secret model fields** - `model_name`, `model_info`, the deployment's rate limits and budgets, which live outside `litellm_params`, and the classifier fields of `complexity_router_config` such as `classifier_type` and `instructions`, which stay plaintext because the proxy reads them in SQL
 3. **Guardrail metadata** - `guardrail_name` and `guardrail_info`
 4. **Spend logs** - request/response data in `LiteLLM_SpendLogs`
 5. **Error logs** - `LiteLLM_ErrorLogs`
-6. **Audit logs** - change history in `LiteLLM_AuditLog` (the before and after values of a model or guardrail write are copied from the stored row, so the secrets inside them are ciphertext, but the row itself is not encrypted)
+6. **Audit logs** - change history in `LiteLLM_AuditLog` (the before and after values of a model write are copied from the stored row, so the secrets inside them are ciphertext, but the row itself is not encrypted)
 7. **User/Team/Organization Data** - metadata and configuration
 8. **Cached prompts and completions** - cache data is stored in plaintext
 
 ### Rows written before encryption covered them
 
-Older LiteLLM versions stored guardrail params, the nested values of a model's `litellm_params` (an `extra_headers` dict, for example) and `router_settings` in plaintext. A row written by such a version stays plaintext until it is written again: editing the model, guardrail or router settings from the UI or the management API, a `POST /config/update`, or a master key rotation (`POST /key/regenerate` with `new_master_key`) re-encrypts the whole row. The proxy reads both shapes, so nothing has to be migrated before upgrading. `lite encryption migrate --check` is a read-only scan that reports a `plaintext` count per table, which is how you find the rows that still need a write (see the [management CLI](./management_cli#encryption-migration)).
+Older LiteLLM versions stored guardrail params, the nested values of a model's `litellm_params` (an `extra_headers` dict, for example) and `router_settings` in plaintext. A row written by such a version stays plaintext until it is written again: editing the model, guardrail or router settings from the UI or the management API, a `POST /config/update`, or a master key rotation (`POST /key/regenerate` with `new_master_key`) re-encrypts the whole row. The proxy reads both shapes, so nothing has to be migrated before upgrading. The boot-time `LITELLM_MIGRATE_FROM_MASTER_KEY` migration only re-keys values that are already encrypted, so it leaves such a row in plaintext. `lite encryption migrate --check` is a read-only scan that reports a `plaintext` count per table, which is how you find the rows that still need a write (see the [management CLI](./management_cli#encryption-migration)).
 
 ### Rolling upgrades and rollbacks
 
