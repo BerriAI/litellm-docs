@@ -5,6 +5,7 @@ import Image from '@theme/IdealImage';
 - Modify data before making llm api calls on proxy
 - Reject data before making llm api calls / before returning the response 
 - Enforce 'user' param for all openai endpoint calls
+- Hide models from the model listing per caller
 
 :::tip
 **Understanding Callback Hooks?** Check out our [Callback Guide](../observability/callbacks.md) to understand the differences between proxy-specific hooks like `async_pre_call_hook` and general logging hooks like `async_log_success_event`.
@@ -20,6 +21,7 @@ import Image from '@theme/IdealImage';
 | `async_post_call_failure_hook` | Transform error responses sent to clients | After failed LLM API call |
 | `async_post_call_streaming_hook` | Modify outgoing response (streaming) | After successful LLM API call, for streaming responses |
 | `async_post_call_response_headers_hook` | Inject custom HTTP response headers | After LLM API call (both success and failure) |
+| `async_filter_listed_models` | Hide models from the model listing per caller | On the model listing routes, before the response is built |
 
 See a complete example with our [parallel request rate limiter](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/hooks/parallel_request_limiter.py)
 
@@ -413,4 +415,114 @@ class CustomHeaderLogger(CustomLogger):
         return {"x-custom-header": "custom-value"}
 
 proxy_handler_instance = CustomHeaderLogger()
+```
+
+## Advanced - Hide models from the model listing
+
+`async_pre_call_hook` can reject a model at request time, but the model still shows up in `GET /v1/models`, so a client's model picker lists entries that only fail later with a 403. `async_filter_listed_models` closes that gap. It runs on the model listing routes with the model names the caller would otherwise see and returns the subset to keep. Ships with [PR #43027](https://github.com/BerriAI/litellm/pull/43027)
+
+```python
+async def async_filter_listed_models(
+    self,
+    user_api_key_dict: UserAPIKeyAuth,
+    model_names: Sequence[str],
+) -> Sequence[str]:
+    return model_names
+```
+
+A name left out of the return value disappears from every listing, and the routes that look one model up answer as if it did not exist
+
+| Route | Hidden model |
+|-------|--------------|
+| `GET /v1/models`, `GET /models` | Left out |
+| `GET /v1/models/{model_id}`, `GET /models/{model_id}` | 404, as for an unknown model |
+| `GET /model/info`, `GET /v1/model/info` | Left out |
+| `GET /model/info?litellm_model_id=<id>` | 400, as for an unknown deployment id |
+| `GET /model_group/info` | Left out, `a2a/<agent>` groups included |
+
+The `/v1/models` filter applies to the OpenAI and the Anthropic response shape alike, and to `?scope=expand`. `/v2/model/info` and the auto-router routes are untouched, and so is inference. A caller who knows a hidden name can still call it unless `async_pre_call_hook` rejects it, so pair the two hooks as in the example below
+
+The hook is offered the public model names the caller would see, so a team model arrives under its public name rather than its internal routing name. Key and team aliases are never offered; they are added after the filter and only resolve to a target the filter kept. A router `model_group_alias` whose target is hidden is hidden too. Names in the return value that were not offered are ignored and the offered order is kept, so a callback can only narrow the listing, never widen it
+
+The hook runs for every caller, proxy admins included. `user_api_key_dict` tells the callback who is asking (`user_role`, `team_id`, `user_id` and so on), so exempt admins in the callback when they should keep seeing everything. When several registered callbacks override the hook they run in registration order, each one seeing what the previous one kept, so a name has to survive all of them. A callback that does not override the hook is never called, and with no such callback the listing routes behave exactly as before
+
+The return value must be a sequence of strings. A bare string, `None` or anything else makes the proxy raise a `TypeError` naming the callback class rather than silently emptying the listing (a bare string would otherwise be walked character by character). An exception raised inside the hook propagates to the caller, so a broken entitlement service fails loud instead of leaking the full list. Each callback is awaited once per listing request, so a slow entitlement lookup slows the listing by that much; cache the answer inside the callback if the lookup is expensive
+
+### 1. Create Custom Handler
+
+`gate.py` pairs the request-time rejection with the listing filter, so the hidden model is neither listed nor callable
+
+```python
+from collections.abc import Sequence
+
+from fastapi import HTTPException
+from litellm.integrations.custom_logger import CustomLogger
+from litellm.proxy._types import UserAPIKeyAuth
+
+RESTRICTED = {"restricted-model"}
+
+
+class Gate(CustomLogger):
+    async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+        if data.get("model") in RESTRICTED:
+            raise HTTPException(status_code=403, detail="not entitled to this model")
+        return data
+
+    async def async_filter_listed_models(
+        self, user_api_key_dict: UserAPIKeyAuth, model_names: Sequence[str]
+    ) -> Sequence[str]:
+        return [name for name in model_names if name not in RESTRICTED]
+
+
+gate = Gate()
+```
+
+### 2. Update config.yaml
+
+```yaml
+model_list:
+  - model_name: open-model
+    litellm_params:
+      model: {{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: restricted-model
+    litellm_params:
+      model: {{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  callbacks: gate.gate # sets litellm.callbacks = [gate]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+### 3. Test it!
+
+```shell
+$ litellm /path/to/config.yaml
+```
+
+The master key is the proxy admin, and the example hides `restricted-model` from it too, since the hook runs for every caller
+
+```shell
+curl -s http://0.0.0.0:4000/v1/models \
+    -H "Authorization: Bearer $LITELLM_MASTER_KEY" | jq "[.data[].id]"
+```
+
+**Expected Response**
+
+```
+["open-model"]
+```
+
+Fetching the hidden model by id answers 404, the same as a model that does not exist
+
+```shell
+curl -s http://0.0.0.0:4000/v1/models/restricted-model \
+    -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```
+{"detail":"The model `restricted-model` does not exist or is not accessible"}
 ```

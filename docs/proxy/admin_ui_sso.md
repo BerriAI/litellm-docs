@@ -186,9 +186,10 @@ For certain Microsoft Entra ID configurations, you may need to override the defa
 
 First, inspect the JWT fields returned by your Microsoft SSO provider using the [SSO Debug Route](#debugging-sso-jwt-fields).
 
-1. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
-2. Navigate to `https://<proxy_base_url>/sso/debug/login`
-3. Complete the SSO flow to see the returned user attributes
+1. Set `ENABLE_SSO_DEBUG="true"` on the proxy and restart it (the debug routes return 404 otherwise)
+2. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
+3. Navigate to `https://<proxy_base_url>/sso/debug/login`
+4. Complete the SSO flow to see the returned user attributes
 
 **Step 2: Identify Field Attribute Names**
 
@@ -326,7 +327,7 @@ PROXY_LOGOUT_URL="https://www.google.com"
 
 Set this in your .env (so the proxy can set the correct redirect url)
 ```shell
-PROXY_BASE_URL=https://litellm-api.up.railway.app
+PROXY_BASE_URL=https://your-proxy-domain.com
 ```
 
 #### Step 4. Test flow
@@ -565,7 +566,15 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
 <Image img={require('../../img/debug_sso.png')}  style={{ width: '500px', height: 'auto' }} />
 <br />
 
-1. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
+1. Enable the debug routes on the proxy
+
+  The debug routes are disabled by default and return 404. Set the following environment variable and restart the proxy (unset it again once you are done debugging):
+
+  ```bash showLineNumbers title="Environment variable"
+  ENABLE_SSO_DEBUG="true"
+  ```
+
+2. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
 
   In your SSO provider's settings, add the following URL as a new redirect (callback) URL:
 
@@ -574,7 +583,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
   ```
 
 
-2. Navigate to the debug login page on your browser 
+3. Navigate to the debug login page on your browser 
 
     Navigate to the following URL on your browser:
 
@@ -585,7 +594,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
     This will initiate the standard SSO flow. You will be redirected to your SSO provider's login screen, and after successful authentication, you will be redirected back to LiteLLM's debug callback route.
 
 
-3. View the JWT fields 
+4. View the JWT fields 
 
 Once redirected, you should see a page called "SSO Debug Information". This page displays the JWT fields received from your SSO provider (as shown in the image above)
 

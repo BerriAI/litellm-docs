@@ -89,7 +89,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -292,7 +292,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -1035,7 +1035,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -1101,7 +1101,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -1116,7 +1116,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Expected Response**
 
@@ -1372,6 +1372,21 @@ Changes:
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
 - The in-memory cache is synced with redis every 0.01s, to avoid calling redis for every request. 
 - In testing, this was found to be 2x faster than the previous implementation, and reduced drift between expected and actual fails to at most 10 requests at high-traffic (100 RPS across 3 instances). 
+
+### Hard rate limit enforcement (fail closed)
+
+Across several instances, the tpm, rpm, and max_parallel_requests counters live in Redis (`general_settings.coordination_redis` or the `REDIS_*` environment variables) so every instance enforces the same limit. While Redis is unreachable, each instance falls back to counters in its own memory and keeps serving, so a key with `rpm_limit: 2` is admitted up to 2 requests per instance, N times the limit across N instances, until Redis is back
+
+For deployments where a configured rate limit must be a hard ceiling even while Redis is down, set `fail_closed_rate_limit_enforcement`:
+
+```yaml
+general_settings:
+  fail_closed_rate_limit_enforcement: true
+```
+
+With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
+
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 

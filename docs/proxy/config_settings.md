@@ -156,6 +156,7 @@ general_settings:
   database_disable_prepared_statements: boolean  # if true, appends pgbouncer=true to the Prisma connection URL, disabling server-side prepared statements. For PgBouncer transaction pooling and avoiding "cached plan must not change result type" errors during rolling migrations.
   allow_requests_on_db_unavailable: boolean  # if true, will allow requests that can not connect to the DB to verify Virtual Key to still work 
   fail_closed_budget_enforcement: boolean  # if true, validates spend against the DB for every budgeted request and rejects with 503 when spend cannot be verified against Redis or the DB
+  fail_closed_rate_limit_enforcement: boolean  # if true, rejects requests with 503 while the tpm/rpm/max_parallel_requests counters in Redis are unreachable, instead of enforcing the limits per instance from memory
 
   custom_auth: string
   max_parallel_requests: 0 # the max parallel requests allowed per deployment
@@ -228,7 +229,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | json_logs | boolean | `false` | If true, logs will be in json format. If you need to store the logs as JSON, just set the `litellm.json_logs = True`. We currently just log the raw POST request from litellm as a JSON [Further docs](./debugging) |
 | request_correlation_in_logs | boolean | `false` | If true, stamps every log line (plaintext or JSON) with the request's `trace_id` and `session_id`, and adds a `session_id` field to `StandardLoggingPayload`. [Further docs](./debugging#request-correlation-ids) |
 | default_fallbacks | array of strings | `[]` | List of fallback models to use if a specific model group is misconfigured / bad. [Further docs](./reliability#default-fallbacks) |
-| request_timeout | integer | `6000` (seconds) | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) |
+| request_timeout | integer | `6000` (seconds) | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) When set, it also applies to native provider passthrough routes (`/v1/responses`, `/v1/messages`, Bedrock `/converse`), where it outranks `general_settings.pass_through_request_timeout` and sits below any deployment or router timeout. [Docs](./pass_through#request-timeouts) |
 | force_ipv4 | boolean | `false` | If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API. `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` are still honored on both the aiohttp and httpx transports; on the httpx transport only direct connections are pinned to IPv4, the hop to the proxy itself is not |
 | disable_aiohttp_transport | boolean | `false` | If true, LLM requests go through plain httpx instead of the default aiohttp transport. Set this (or the `DISABLE_AIOHTTP_TRANSPORT` env var) if you see aiohttp connector errors such as a `CancelledError` surfacing as `No response returned` on `/v1/responses`, `/v1/chat/completions` or `/v1/messages`. **Default is False** |
 | http2 | boolean | `false` | If true, LiteLLM negotiates HTTP/2 with LLM providers over TLS (falls back to HTTP/1.1 when the provider does not support it). Routes traffic through httpx instead of the default aiohttp transport. Can also be set with the `LITELLM_HTTP2` env var. Available from v1.103.0. [Further docs](./server_tuning#outbound-http2-to-providers). **Default is False** |
@@ -253,7 +254,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | key_alias_pattern | string | `None` | Regex every `key_alias` must fully match on `/key/generate`, `/key/update`, and `/key/{key}/regenerate`. Replaces the built-in rule `enable_key_alias_format_validation` turns on. Aliases are capped at 255 characters. A non-matching alias is rejected with a `400` that names the pattern. [Further docs](./virtual_keys#enforce-a-key_alias-naming-pattern) |
 | require_managed_files | boolean | `false` | When `true`, `POST /v1/files` requires `target_model_names` and rejects classic provider file uploads with `400`. Use to enforce LiteLLM managed files for file ownership and access control. [Further docs](./litellm_managed_files#optional-enforce-managed-files-on-upload) |
 | user_url_validation | boolean | `true` | When `true`, the proxy validates user-controlled URLs (e.g. OpenAPI `spec_path` when it is an `http(s)` URL, image URLs, and similar) before fetching: DNS is resolved and connections to non–globally-routable addresses (RFC1918, loopback, link-local, etc.) are blocked unless the **hostname in the URL** is listed in `user_url_allowed_hosts`. Set to `false` to skip validation (only if you trust who can supply URLs). **Must be set under `litellm_settings`**, not `general_settings`. |
-| user_url_allowed_hosts | array of strings | `[]` | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf). |
+| user_url_allowed_hosts | array of strings | `[]` | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf) and the [custom code guardrail](guardrails/custom_code_guardrail#blocked-destinations). |
 | disable_copilot_system_to_assistant | boolean | `false` | **DEPRECATED** - GitHub Copilot API supports system prompts. |
 | default_team_params | object | `null` | Default parameters applied to every new team created via `/team/new` (including SSO auto-created teams). Fills in fields that are omitted or `null` in the request, except `budget_duration`: an explicit `"budget_duration": null` skips the default and creates a never-resetting budget. Sub-fields: `max_budget` (float), `budget_duration` (string, e.g. `"30d"`), `tpm_limit` (integer), `rpm_limit` (integer), `team_member_permissions` (array of strings, e.g. `["/team/daily/activity", "/key/generate"]`), `models` (array of strings — only applied to SSO auto-created teams). |
 | budget_reset_time | string | `null` (midnight) | Available in the next release (after `v1.94.0`). Wall-clock time of day (in the configured `timezone`) that day/week/month budgets reset at, as a quoted 24-hour `"HH:MM"` or `"HH:MM:SS"` string, e.g. `"09:00"`. Defaults to midnight when unset; sub-day durations ignore it. A malformed value fails config load at startup. [Further docs](./budget_reset_and_tz#configuring-the-reset-time-of-day) |
@@ -314,6 +315,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | database_disable_prepared_statements | boolean | `false` | Appends `pgbouncer=true` to the Prisma connection URL, disabling reuse of server-side prepared statements. Use behind PgBouncer transaction pooling, or to avoid `cached plan must not change result type` errors during rolling schema migrations. An explicit `pgbouncer` key in `database_extra_connection_params` takes precedence. [Disable Server-Side Prepared Statements](configs#disable-server-side-prepared-statements) |
 | allow_requests_on_db_unavailable | boolean | `false` | If true, allows requests to succeed even if DB is unreachable. **Only use this if running LiteLLM in your VPC** This will allow requests to work even when LiteLLM cannot connect to the DB to verify a Virtual Key [Doc on graceful db unavailability](prod#gracefully-handle-db-unavailability) |
 | fail_closed_budget_enforcement | boolean | `false` | When `true`, budget checks validate spend against the authoritative database for every budgeted request (key, team, user, organization, end-user, tag, and per-window budgets) instead of trusting only the cross-pod Redis counter, and a request is rejected with a `503` when current spend can be verified against neither Redis nor the database. Use this when a configured budget must be a hard ceiling even while Redis is degraded or restarting; leave it off to keep healthy under-budget traffic off the database. [Doc on budget enforcement](./users#hard-budget-enforcement-fail-closed) |
+| fail_closed_rate_limit_enforcement | boolean | `false` | When `true`, a request whose tpm, rpm, or max_parallel_requests counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance in-memory counter, which admits up to N times the limit across N instances. Use this when a configured rate limit must be a hard ceiling even while Redis is down; leave it off to keep serving through a Redis outage. Has no effect without Redis configured. [Doc on rate limit enforcement](./users#hard-rate-limit-enforcement-fail-closed) |
 | custom_auth | string | `null` | Write your own custom authentication logic [Doc Custom Auth](./custom_auth) |
 | max_parallel_requests | integer | `null` (no limit) | The max parallel requests allowed per deployment |
 | global_max_parallel_requests | integer | `null` (no limit) | The max parallel requests allowed on the proxy overall |
@@ -375,6 +377,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | use_azure_key_vault | boolean | `false` | If true, load keys from azure key vault |
 | use_google_kms | boolean | `false` | If true, load keys from google kms |
 | spend_report_frequency | str | `7d` | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md) |
+| spend_capture_rate_check | object | `null` (off) | Daily check of LiteLLM captured spend against the provider bill, alerting when the rate is under `threshold` (default 0.9). Keys: `providers`, `threshold`, `lookback_days`, `openai_project_ids`. Needs `OPENAI_ADMIN_KEY`. [Doc on spend capture rate](./spend_capture_rate.md) |
 | ui_access_mode | Literal["admin_only"] | `all` | If set, restricts access to the UI to admin users only. [Docs](./ui.md#disable-admin-ui) |
 | max_failed_login_attempts_per_source | integer | `10` | Failed Admin UI sign-in attempts allowed from one source address, across all usernames, within `failed_login_window_seconds`; exceeding it blocks the address for `failed_login_block_seconds`. Half this value (rounded down, at least 1) is the allowance for a single username from that address, which blocks only that address and username pair. The per-address limit only applies when `trusted_proxy_ranges` is set (`[]` when clients connect directly); left unset, only the per-username half applies. IPv6 addresses are grouped by /64. [Docs](./ui#limit-failed-sign-in-attempts) |
 | max_failed_login_attempts_per_source_overrides | dict | `null` | Per-address overrides of `max_failed_login_attempts_per_source`, keyed by IP address or CIDR range, e.g. `{"203.0.113.7": 50, "10.0.0.0/8": 100}`. The most specific match wins, the per-username allowance follows as half the override, and `0` exempts the address from both limits |
@@ -384,7 +387,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise.md#how-do-i-set-up-and-verify-an-enterprise-license) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
-| pass_through_request_timeout | float | `null` | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this. [Docs](./pass_through#request-timeouts) |
+| pass_through_request_timeout | float | `null` | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this on custom endpoints. On native provider passthrough routes a deployment or router timeout and an explicitly set `litellm_settings.request_timeout` override it. [Docs](./pass_through#request-timeouts) |
 | enable_oauth2_proxy_auth | boolean | `false` | (Enterprise Feature) If true, enables oauth2.0 authentication |
 | forward_openai_org_id | boolean | `false` | If true, forwards the OpenAI Organization ID to the backend LLM call (if it's OpenAI). |
 | forward_client_headers_to_llm_api | boolean | `false` | If true, forwards the client headers (any `x-` headers and `anthropic-beta` headers) to the backend LLM call |
@@ -981,6 +984,7 @@ router_settings:
 | DEFAULT_SQS_FLUSH_INTERVAL_SECONDS | Default flush interval for SQS logging. Default is 10
 | DEFAULT_S3_BATCH_SIZE | Default batch size for S3 logging. Default is 512
 | DEFAULT_S3_FLUSH_INTERVAL_SECONDS | Default flush interval for S3 logging. Default is 10
+| DEFAULT_S3_MAX_CONCURRENT_UPLOADS | Maximum simultaneous S3 PUT uploads per flush for s3_v2 logging. Default is 16
 | DEFAULT_SLACK_ALERTING_THRESHOLD | Default threshold for Slack alerting. Default is 300
 | DEFAULT_SOFT_BUDGET | Default soft budget for LiteLLM proxy keys. Default is 50.0
 | DEFAULT_TRIM_RATIO | Default ratio of tokens to trim from prompt end. Default is 0.75
@@ -1007,6 +1011,7 @@ router_settings:
 | EMAIL_SUBJECT_KEY_CREATED | Custom subject template for key creation emails. 
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%). Default is 0.8
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
+| ENABLE_SSO_DEBUG | Flag to enable the [SSO debug routes](./admin_ui_sso.md#debugging-sso-jwt-fields) (`/sso/debug/login` and `/sso/debug/callback`). These routes return 404 unless this is set. Enable it while debugging an SSO setup and unset it afterwards. **Default is false**
 | ENFORCE_PRISMA_MIGRATION_CHECK | When a database migration fails, exit nonzero instead of continuing. The standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) enforces this by default, so a failed migration fails the Job rather than letting a deploy proceed against a stale schema; set it to `false` there to get the old log-and-continue behavior. Proxy startup itself still defaults to log-and-continue and only exits when this is set to `true` or `--enforce_prisma_migration_check` is passed
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
@@ -1155,16 +1160,22 @@ router_settings:
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
 | LAGO_API_EVENT_CODE | Event code for Lago API events
 | LAGO_API_KEY | API key for accessing Lago services
-| LANGFUSE_BASE_URL | Base URL for Langfuse service |
-| LANGFUSE_DEBUG | Toggle debug mode for Langfuse
-| LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
+| LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
+| LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
+| LANGFUSE_FLUSH_AT | Number of spans the Langfuse callback batches per OTLP export request; defaults to `512`. Values that are not a whole number between `1` and `100000` log a warning and use the default
+| LANGFUSE_FLUSH_INTERVAL | Seconds the Langfuse callback waits between OTLP export batches; defaults to `1`. Values that are not a whole number above `0` log a warning and use the default
+| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt. Must be a whole number of seconds: the Langfuse SDK reads it as an integer when it is imported, so any other value (for example `abc` or `2.5`) fails the callback with an error naming this variable; a negative value logs a warning and uses the default
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
-| LANGFUSE_HOST | Deprecated host URL for Langfuse service |
+| LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
 | LANGFUSE_MOCK_LATENCY_MS | Mock latency in milliseconds for Langfuse API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGFUSE_PUBLIC_KEY | Public key for Langfuse authentication
-| LANGFUSE_RELEASE | Release version of Langfuse integration
+| LANGFUSE_MAX_RETRIES | How many times the Langfuse callback retries an OTLP export request that times out, fails to connect or gets a retryable status before the batch is dropped; defaults to `3`, with waits of 1, 2 and 4 seconds between attempts that keep doubling up to 64 seconds. Values that are not a whole number log a warning and use the default, and values above `1000` log a warning and use `1000`
+| LANGFUSE_RELEASE | Release recorded on every Langfuse trace. When unset, the callback falls back to the first of `RENDER_GIT_COMMIT`, `CI_COMMIT_SHA`, `CIRCLE_SHA1`, `SOURCE_VERSION`, `TRAVIS_COMMIT`, `GIT_COMMIT`, `GITHUB_SHA`, `BITBUCKET_COMMIT`, `BUILD_SOURCEVERSION` and `DRONE_COMMIT_SHA` that is set, the same list the Langfuse SDK reads
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
+| LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request and each REST request (prompts, credential check, project lookup) the Langfuse callback sends; defaults to `20` and accepts decimals such as `2.5`. An export request that times out or fails to connect is retried `LANGFUSE_MAX_RETRIES` times before the batch is dropped
+| LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
+| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`. Values outside that range or not numeric log a warning and export every trace
 | LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
 | LANGSMITH_API_KEY | API key for Langsmith platform
 | LANGSMITH_BASE_URL | Base URL for Langsmith service
@@ -1529,11 +1540,11 @@ router_settings:
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for the built-in Admin UI login. If unset, the master key is accepted as the password. This is a shared cleartext admin credential meant for bootstrapping only; create per-user admin accounts and set `general_settings.disable_env_credential_login: true` to turn this login path off. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login)
 | UI_USERNAME | Username for the built-in Admin UI login. Default `admin`. Ignored when `disable_env_credential_login` is enabled
-| UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse
-| UPSTREAM_LANGFUSE_HOST | Host URL for upstream Langfuse service
-| UPSTREAM_LANGFUSE_PUBLIC_KEY | Public key for upstream Langfuse authentication
-| UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
-| UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
+| UPSTREAM_LANGFUSE_DEBUG | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_HOST | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_RELEASE | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | USAGE_TOP_API_KEYS_LIMIT | Max number of API keys (ranked by spend) listed in the Admin Usage aggregated activity response. Totals and the model, provider, MCP and endpoint rollups always cover every key. **Default is 100**
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**

@@ -16,8 +16,8 @@ export default function NavigationCards({ items, columns = 2 }) {
             key={i}
             to={item.to}
             className={styles.card}
-            target={isExternal ? '_blank' : undefined}
-            rel={isExternal ? 'noopener noreferrer' : undefined}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
           >
             {item.icon && (
               <div className={styles.icon}>{item.icon}</div>

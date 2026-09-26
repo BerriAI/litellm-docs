@@ -83,9 +83,9 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 ## Spend Tracking 
 
 Get spend per:
-- key - via `/key/info` [Swagger](https://litellm-api.up.railway.app/#/key%20management/info_key_fn_key_info_get)
-- user - via `/user/info` [Swagger](https://litellm-api.up.railway.app/#/user%20management/user_info_user_info_get)
-- team - via `/team/info` [Swagger](https://litellm-api.up.railway.app/#/team%20management/team_info_team_info_get)  
+- key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
+- user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
+- team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
 - ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
@@ -723,7 +723,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -827,7 +827,7 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 -d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
 ```
 
-[API Reference](https://litellm-api.up.railway.app/#/key%20management/update_key_fn_key_update_post)
+[API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
 
 ### Restricting Key Generation
@@ -915,16 +915,16 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/user%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/team%20management)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 
 

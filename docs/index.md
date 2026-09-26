@@ -385,7 +385,7 @@ print(response.choices[0].message.content)
 Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
-🔗 [Interactive API explorer (Swagger) →](https://litellm-api.up.railway.app/)
+🔗 [Interactive API explorer (Swagger) →](https://docs.litellm.ai/api-reference/)
 
 ---
 

@@ -2,17 +2,19 @@ import React, {useEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
-import * as semver from 'semver';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import {Select} from '@base-ui/react/select';
 import {
   GOALS,
   MAIN_VERSION,
   RELEASES,
-  RELEASE_NOTES,
   STAGES,
+  changesIn,
   progressAt,
   stageAt,
 } from '@site/src/data/rustMigration';
+import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
+import picker from '@site/src/components/RustMigration/Picker.module.css';
 import styles from './rust-migration.module.css';
 
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
@@ -25,12 +27,6 @@ const GOAL_TIMELINES = new Map(GOALS.map(goal => [
   goal.id,
   RELEASES.map(release => ({...release, percent: progressAt(goal, release.version)})),
 ]));
-
-function compactVersion(version) {
-  const {major, minor, patch, prerelease} = semver.parse(version);
-  const release = patch === 0 ? `${major}.${minor}` : `${major}.${minor}.${patch}`;
-  return `${release} rc${prerelease[1]}`;
-}
 
 function useElementWidth(fallback) {
   const ref = useRef(null);
@@ -80,6 +76,7 @@ function pickLabeledPoints(points, x, goalX) {
 function MigrationTimeline({goal}) {
   const points = GOAL_TIMELINES.get(goal.id);
   const [chartRef, width] = useElementWidth(920);
+  const [hovered, setHovered] = useState(null);
   const compact = width < 560;
   const height = compact ? 240 : 336;
   const plot = compact
@@ -146,10 +143,16 @@ function MigrationTimeline({goal}) {
           const cy = y(point.percent);
           const date = formatDate(SHORT_DATE, point.date);
           return (
-            <g key={point.version}>
-              <title>
-                {point.version}: {point.percent}%, {point.isMain ? 'planned for' : 'released'} {date}
-              </title>
+            <g
+              key={point.version}
+              tabIndex={0}
+              onMouseEnter={() => setHovered(index)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(index)}
+              onBlur={() => setHovered(null)}
+              onClick={() => setHovered(index)}
+            >
+              <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
               <circle
                 className={point.isMain ? styles.mainPoint : styles.progressPoint}
                 cx={cx}
@@ -191,47 +194,128 @@ function MigrationTimeline({goal}) {
           </text>
         </g>
       </svg>
+      {hovered !== null && (
+        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} left={x(hovered)} top={y(points[hovered].percent)} width={width} />
+      )}
     </div>
   );
 }
 
+const TOOLTIP_LINES = 3;
+const TOOLTIP_PROVIDERS = 4;
+
+// One line per area and stage, so six providers moving together read as one
+// change. Foundation work is left out, since it isn't an API and provider pair.
+// `from` is where the providers stood before, when they all stood in one place.
+function summarizeChanges(goal, point, previous) {
+  const apiFeatures = goal.features.filter(feature => !feature.area.groundwork);
+  return changesIn(point.version, apiFeatures).map(({key, area, stage, features}) => {
+    const before = new Set(features.map(feature => stageAt(feature, previous.version)));
+    const names = features.map(feature => feature.path.slice(1).join(' / '));
+    return {
+      key,
+      area: area.text,
+      providers: features.length === area.features.length && names.length > 1
+        ? 'All providers'
+        : names.length > TOOLTIP_PROVIDERS
+          ? `${names.slice(0, TOOLTIP_PROVIDERS).join(', ')} +${names.length - TOOLTIP_PROVIDERS} more`
+          : names.join(', '),
+      from: before.size === 1 ? STAGES[[...before][0]].label : null,
+      to: STAGES[stage].label,
+    };
+  });
+}
+
+function PointTooltip({goal, point, previous, left, top, width}) {
+  const lines = summarizeChanges(goal, point, previous);
+  const shown = lines.slice(0, TOOLTIP_LINES);
+  const flipped = left > width / 2;
+  return (
+    <div
+      className={`${styles.tooltip} ${flipped ? styles.tooltipLeft : styles.tooltipRight}`}
+      style={{left, top}}
+      role="tooltip"
+    >
+      <div className={styles.tooltipHead}>
+        <strong>{compactVersion(point.version)}</strong>
+        <span>{point.percent}%</span>
+      </div>
+      <div className={styles.tooltipDate}>
+        {point.isMain ? 'Planned for' : 'Released'} {formatDate(FULL_DATE, point.date)}
+      </div>
+      {lines.length === 0 ? (
+        <div className={styles.tooltipEmpty}>Nothing moved for {goal.text} in this release.</div>
+      ) : (
+        <ul className={styles.tooltipList}>
+          {shown.map(line => (
+            <li key={line.key}>
+              <span className={styles.tooltipArea}>
+                {line.area}
+                <em> · {line.providers}</em>
+              </span>
+              <span className={styles.tooltipStage}>
+                {line.from && <em>{line.from} → </em>}
+                {line.to}
+              </span>
+            </li>
+          ))}
+          {lines.length > shown.length && (
+            <li className={styles.tooltipMore}>+{lines.length - shown.length} more</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Every row leads with the same ring. Its arc is the node's progress, a group
+// draws its chevron inside, and once a node is complete the ring fills solid
+// with the glyph cut out of it: the chevron for a group, a check otherwise.
+function ProgressMarker({percent, expandable}) {
+  const complete = percent === 100;
+  return (
+    <svg className={`${styles.marker} ${complete ? styles.markerComplete : ''}`} viewBox="0 0 16 16" aria-hidden="true">
+      <circle className={styles.markerTrack} cx="8" cy="8" r="6.5" />
+      {percent > 0 && !complete && (
+        <circle className={styles.markerArc} cx="8" cy="8" r="6.5" pathLength="100" strokeDasharray={`${percent} 100`} />
+      )}
+      {expandable && <path className={styles.markerGlyph} d="M7 5.5 9.5 8 7 10.5" />}
+      {!expandable && complete && <path className={styles.markerGlyph} d="M5.3 8.2 7.2 10 10.7 6.2" />}
+    </svg>
+  );
+}
+
 function GraphNode({node}) {
+  if (!node.rollout) {
+    return <GroupNode group={node} />;
+  }
   return (
     <li>
       <div className={styles.node}>
+        <ProgressMarker percent={progressAt(node, MAIN_VERSION)} />
         <span className={styles.nodeText}>{node.text}</span>
-        {node.rollout ? (
-          <FeatureStage feature={node} />
-        ) : (
-          <span className={styles.nodeMeta}>{progressAt(node, MAIN_VERSION)}%</span>
-        )}
+        <span className={styles.nodeMeta}><StageBadge feature={node} /></span>
       </div>
-      {node.children.length > 0 && (
-        <ul>
-          {node.children.map(child => <GraphNode node={child} key={child.id} />)}
-        </ul>
-      )}
     </li>
   );
 }
 
-// The current stage and when it landed, with one pip per stage past Python.
-function FeatureStage({feature}) {
-  const stage = stageAt(feature, MAIN_VERSION);
-  const lastStep = feature.rollout.at(-1);
-  const history = feature.rollout
-    .map(step => `${STAGES[step.stage].label} in ${step.version}`)
-    .join(', then ');
+// Groups start collapsed so the list stays scannable; opening one shows what it holds.
+function GroupNode({group}) {
+  const percent = progressAt(group, MAIN_VERSION);
   return (
-    <span className={`${styles.nodeMeta} ${stage > 0 ? styles.onRust : ''}`} title={history || 'Python only'}>
-      {/* Python only is the default, so empty pips say enough. */}
-      {stage > 0 && `${STAGES[stage].label} · ${lastStep.version === MAIN_VERSION ? 'next release' : compactVersion(lastStep.version)}`}
-      <span className={styles.pips} aria-hidden="true">
-        {STAGES.slice(1).map((item, index) => (
-          <i className={index < stage ? styles.pipOn : undefined} key={item.id} />
-        ))}
-      </span>
-    </span>
+    <li>
+      <details className={styles.group}>
+        <summary className={styles.node}>
+          <ProgressMarker percent={percent} expandable />
+          <span className={styles.nodeText}>{group.text}</span>
+          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>{percent}%</span>
+        </summary>
+        <ul>
+          {group.children.map(child => <GraphNode node={child} key={child.id} />)}
+        </ul>
+      </details>
+    </li>
   );
 }
 
@@ -244,22 +328,22 @@ function GoalSelect({goal, onChange}) {
       value={goal.id}
       onValueChange={id => onChange(GOALS.find(item => item.id === id))}
     >
-      <Select.Trigger className={styles.sentenceControl} aria-label="Migration goal">
+      <Select.Trigger className={picker.sentenceControl} aria-label="Migration goal">
         <Select.Value />
-        <Select.Icon className={styles.selectIcon}>
+        <Select.Icon className={picker.selectIcon}>
           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Positioner className={styles.selectPositioner} sideOffset={8} align="start" alignItemWithTrigger={false}>
-          <Select.Popup className={styles.selectPopup}>
+        <Select.Positioner className={picker.selectPositioner} sideOffset={8} align="start" alignItemWithTrigger={false}>
+          <Select.Popup className={picker.selectPopup}>
             <Select.List>
               {GOALS.map(item => (
-                <Select.Item className={styles.selectItem} value={item.id} key={item.id}>
-                  <Select.ItemText className={styles.selectLabel}>{item.text}</Select.ItemText>
-                  <span className={styles.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
+                <Select.Item className={picker.selectItem} value={item.id} key={item.id}>
+                  <Select.ItemText className={picker.selectLabel}>{item.text}</Select.ItemText>
+                  <span className={picker.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
                   {/* Answers "what is in this goal" right where it is picked. */}
-                  <span className={styles.selectScope}>
+                  <span className={picker.selectScope}>
                     {item.summary ?? item.children.map(child => child.text).join(', ')}
                   </span>
                 </Select.Item>
@@ -304,7 +388,7 @@ function MigrationTracker() {
           <span className={styles.keepTogether}>
             {'shown as a '}
             <button
-              className={styles.sentenceControl}
+              className={picker.sentenceControl}
               type="button"
               title={`Show the ${otherView}`}
               onClick={() => setView(otherView)}
@@ -324,9 +408,118 @@ function MigrationTracker() {
         </div>
         {/* The sentence above already names the goal, so the tree starts at its children. */}
         <ul className={styles.tree} hidden={view !== 'breakdown'}>
-          {goal.children.map(node => <GraphNode node={node} key={node.id} />)}
+          {goal.children.map(area => <GroupNode group={area} key={area.id} />)}
         </ul>
       </div>
+    </section>
+  );
+}
+
+// Explains each rollout stage once, so the tracker's badges can stay terse and
+// link here instead.
+function RolloutStages() {
+  const stages = [
+    ...STAGES.slice(1).map(stage => ({kind: stage.id, ...stage})),
+    {
+      kind: 'done',
+      label: 'Done',
+      description: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
+    },
+  ];
+  // Other pages link to these cards, so the build's anchor check must know them.
+  const brokenLinks = useBrokenLinks();
+  stages.forEach(stage => brokenLinks.collectAnchor(stageAnchor(stage.kind)));
+  return (
+    <>
+      <p className={styles.sectionLead}>
+        Each feature starts on Python and moves through these stages one release at a time. For the two middle stages,
+        the <code>LITELLM_RUST</code> environment variable flips the default for the whole process.
+      </p>
+      <ul className={styles.stages}>
+        {stages.map(stage => (
+          <li className={styles.stage} id={stageAnchor(stage.kind)} key={stage.kind}>
+            <p className={styles.stageName}>
+              <StageIcon kind={stage.kind} className={styles.stageIcon} />
+              {stage.label}
+            </p>
+            <p className={styles.stageDescription}>{stage.description}</p>
+            {stage.switch && (
+              <p className={styles.stageSwitch}>
+                <code>LITELLM_RUST={stage.switch.value}</code>
+                <span>{stage.switch.effect}</span>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+const FAQ = [
+  {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
+];
+
+// A malformed escape like `#%` reads as no hash rather than breaking the FAQ.
+function hashId() {
+  try {
+    return decodeURIComponent(window.location.hash.slice(1));
+  } catch {
+    return '';
+  }
+}
+
+// Point the URL at an open answer so it can be shared, without adding a history
+// entry per toggle. A deeper link already inside the answer, like a stage, is
+// kept while it is open and cleared when it closes, so following the same link
+// again fires `hashchange` and reopens it.
+function syncHash(details) {
+  const current = hashId();
+  const pointsInside = Boolean(current) && details.contains(document.getElementById(current));
+  const {pathname, search} = window.location;
+  if (details.open && !pointsInside) {
+    window.history.replaceState(window.history.state, '', `${pathname}${search}#${details.id}`);
+  } else if (!details.open && pointsInside) {
+    window.history.replaceState(window.history.state, '', `${pathname}${search}`);
+  }
+}
+
+// Answers start collapsed, and each one is addressable as `#<id>`. A link to an
+// answer, or to something inside one like a stage badge's "What this means",
+// opens it first so the target is visible.
+function Faq() {
+  const listRef = useRef(null);
+  useEffect(() => {
+    const openHashTarget = () => {
+      const id = hashId();
+      const target = id && document.getElementById(id);
+      const details = target && listRef.current?.contains(target) && target.closest('details');
+      if (details && !details.open) {
+        details.open = true;
+        target.scrollIntoView();
+      }
+    };
+    openHashTarget();
+    window.addEventListener('hashchange', openHashTarget);
+    return () => window.removeEventListener('hashchange', openHashTarget);
+  }, []);
+
+  return (
+    <section className={styles.section} id="faq" aria-labelledby="faq-title">
+      <SectionHeading id="faq-title" kicker="FAQ" title="Frequently asked questions" />
+      <ul className={styles.faq} ref={listRef}>
+        {FAQ.map(item => (
+          <li key={item.id}>
+            <details className={styles.faqItem} id={item.id} onToggle={event => syncHash(event.currentTarget)}>
+              <summary className={styles.faqQuestion}>
+                {item.question}
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+              </summary>
+              <div className={styles.faqAnswer}>{item.answer}</div>
+            </details>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -340,39 +533,25 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
-const RELEASE_EVENTS = RELEASE_NOTES.map(note => ({
-  kind: 'Release',
-  title: `Released ${note.version}`,
-  href: `https://github.com/BerriAI/litellm/releases/tag/${note.version}`,
-  date: note.releasedOn,
-  changes: note.changes,
-}));
-
 function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
-  const events = [
-    ...posts.map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date})),
-    ...RELEASE_EVENTS,
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const events = posts
+    .map(post => ({kind: 'Blog post', title: post.title, href: post.permalink, date: post.date}))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
       <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
       <ol className={styles.events}>
         {events.map(event => (
-          <li className={`${styles.event} ${event.changes ? styles.releaseEvent : ''}`} key={event.href}>
+          <li className={styles.event} key={event.href}>
             <p className={styles.eventMeta}>
               <time dateTime={event.date}>{formatDate(FULL_DATE, event.date)}</time>
               {' · '}
               {event.kind}
             </p>
             <Link className={styles.eventTitle} to={event.href}>{event.title}</Link>
-            {event.changes && (
-              <ul className={styles.eventChanges}>
-                {event.changes.map(change => <li key={change}>{change}</li>)}
-              </ul>
-            )}
           </li>
         ))}
       </ol>
@@ -391,6 +570,7 @@ export default function RustMigrationPage() {
         </header>
         <MigrationTracker />
         <MigrationUpdates />
+        <Faq />
       </main>
     </Layout>
   );

@@ -65,9 +65,15 @@
    the dead space below the search bar. */
 .sidebarScroll > div {
   padding-top: 0 !important;
-  height: 100%;
+  height: auto;
 }
 
 .sidebarScroll :global(.menu) {
   padding-top: 0.25rem;
+}
+
+/* Collapse chevron sits under the scroll area, like the docusaurus.io sidebar. */
+.sidebarContainer > button {
+  flex-shrink: 0;
+  width: 100%;
 }

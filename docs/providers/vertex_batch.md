@@ -164,7 +164,7 @@ curl --request POST \
     "finalizing_at": null,
     "in_progress_at": null,
     "metadata": null,
-    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}",
+    "output_file_id": null,
     "request_counts": null,
     "usage": null
 }
@@ -172,7 +172,7 @@ curl --request POST \
 
 #### 4. Retrieve batch status
 
-Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`.
+Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`. The `output_file_id` is `null` until the batch reaches `completed`.
 
 <Tabs>
 <TabItem value="python" label="Python">
@@ -280,3 +280,85 @@ The response contains JSONL format with one result per line:
 {"status":"","processed_time":"2025-09-19T21:29:47.352+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are a helpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.48079710006713866,"content":{"parts":[{"text":"Hello there! It's nice to meet you"}],"role":"model"},"finishReason":"MAX_TOKENS"}],"createTime":"2025-09-19T21:29:47.484619Z","modelVersion":"{{gemini_flash}}","responseId":"S8vNaIvKHdvshMIP_aOtuAg","usageMetadata":{"candidatesTokenCount":10,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":10}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":19,"trafficType":"ON_DEMAND"}}}
 {"status":"","processed_time":"2025-09-19T21:29:47.358+00:00","request":{"contents":[{"parts":[{"text":"Hello world!"}],"role":"user"}],"generationConfig":{"max_output_tokens":10},"system_instruction":{"parts":[{"text":"You are an unhelpful assistant."}]}},"response":{"candidates":[{"avgLogprobs":-0.6168075137668185,"content":{"parts":[{"text":"I am unable to assist with this request."}],"role":"model"},"finishReason":"STOP"}],"createTime":"2025-09-19T21:29:47.470889Z","modelVersion":"{{gemini_flash}}","responseId":"S8vNaOneHISShMIP28nA8QQ","usageMetadata":{"candidatesTokenCount":9,"candidatesTokensDetails":[{"modality":"TEXT","tokenCount":9}],"promptTokenCount":9,"promptTokensDetails":[{"modality":"TEXT","tokenCount":9}],"totalTokenCount":18,"trafficType":"ON_DEMAND"}}}
 ```
+
+
+### Native Vertex JSONL passthrough
+
+By default LiteLLM translates each OpenAI-format line into a Vertex `GenerateContent` request when you upload the file, and converts the batch output back into OpenAI chat completion shape when you download it. Set `passthrough=true` on the upload to skip both: the file is stored in your GCS bucket byte for byte, and the batch output comes back in Vertex's native format, `groundingMetadata` included. Use it for Vertex features the translation does not cover, such as `googleSearch` grounding with `excludeDomains`, without handing your callers GCP credentials. Cost tracking is unchanged: LiteLLM reads `usageMetadata` from each native output row and bills it the way an online Gemini call is billed.
+
+#### 1. Create a native JSONL file
+
+Each line is a Vertex batch prediction request, a JSON object with a `request` key:
+
+```jsonl title="native_batch_requests.jsonl"
+{"request": {"contents": [{"role": "user", "parts": [{"text": "What is the tallest building in the world?"}]}], "tools": [{"googleSearch": {"excludeDomains": ["example.com"]}}]}}
+{"request": {"contents": [{"role": "user", "parts": [{"text": "Who won the last FIFA World Cup?"}]}], "tools": [{"googleSearch": {"excludeDomains": ["example.com"]}}]}}
+```
+
+#### 2. Upload it with `passthrough=true`
+
+Native rows carry no model, so name the Vertex deployment that will run the batch: `target_model_names` (managed files, needs a database) or the `model` query parameter (no database). LiteLLM stores the object under `litellm-vertex-files/passthrough/` in that model's path, and the batch output lands beside it, which is how the download step knows to return it untouched.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: {{gemini_flash}}
+    litellm_params:
+      model: vertex_ai/{{gemini_flash}}
+      vertex_project: my-project
+      vertex_location: us-central1
+      gcs_bucket_name: my-batch-bucket
+```
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python showLineNumbers title="upload_native_file.py"
+file_obj = oai_client.files.create(
+    file=open("native_batch_requests.jsonl", "rb"),
+    purpose="batch",
+    extra_body={"target_model_names": "{{gemini_flash}}", "passthrough": True},
+)
+
+print(f"File uploaded with ID: {file_obj.id}")
+```
+
+</TabItem>
+<TabItem value="curl" label="Curl">
+
+```bash showLineNumbers title="Upload Native File"
+curl --request POST \
+  --url http://localhost:4000/v1/files \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
+  --form purpose=batch \
+  --form target_model_names={{gemini_flash}} \
+  --form passthrough=true \
+  --form file=@native_batch_requests.jsonl
+```
+
+</TabItem>
+<TabItem value="sdk" label="LiteLLM SDK">
+
+```python showLineNumbers title="upload_native_file_sdk.py"
+import litellm
+
+file_obj = litellm.create_file(
+    file=open("native_batch_requests.jsonl", "rb"),
+    purpose="batch",
+    custom_llm_provider="vertex_ai",
+    model="vertex_ai/{{gemini_flash}}",
+    passthrough=True,
+)
+```
+
+</TabItem>
+</Tabs>
+
+Create the batch, poll it, and download the output exactly as in steps 3 to 5 above. The output is the raw Vertex `predictions.jsonl`, so each line carries `request`, `status`, and `response`, with `candidates[].groundingMetadata` on every row where grounding ran.
+
+#### What passthrough checks
+
+- `purpose` must be `batch` and the named model must be a `vertex_ai` deployment the key can use, otherwise the upload is a 400 naming the field.
+- Every line must be a JSON object with a `request` key. OpenAI-format lines are rejected with a 400 naming the line, and nothing is uploaded.
+- Batch guardrails only understand OpenAI-format rows, so a passthrough upload is refused with a 400 when the key, team, or request has pre-call guardrails configured.
+
+Passthrough is per upload. The SDK-wide `litellm.disable_vertex_batch_output_transformation` flag still applies to every Vertex batch output but never touches the input side; `passthrough` covers both for the one file you set it on.

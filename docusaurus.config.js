@@ -3,10 +3,9 @@
 
 require('dotenv').config();
 
-// @ts-ignore
-const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
-// @ts-ignore
-const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
+// Same code-block palettes as docusaurus.io (github + vsDark, with their token overrides).
+const lightCodeTheme = require('./src/utils/prismLight');
+const darkCodeTheme = require('./src/utils/prismDark');
 
 const inkeepApiKey = process.env.INKEEP_API_KEY;
 // Conditional check: docs should work if this key is missing.
@@ -302,6 +301,48 @@ const config = {
         };
       },
     }),
+    // PostHog product analytics. Same project as the Webflow marketing site
+    // (www.litellm.ai), so a visitor moving between the two domains is one
+    // person and one journey: persistence keeps a first-party cookie on
+    // .litellm.ai, which every litellm.ai subdomain can read.
+    // Uses the official posthog-docusaurus plugin, which is production-only
+    // by default (mirroring the gtag setup below) and forwards every extra
+    // option below to posthog.init via JSON.stringify.
+    //
+    // capture_pageview is true rather than 'history_change' because the plugin
+    // ships a client module that captures $pageview on every Docusaurus route
+    // change; leaving the SDK's SPA tracking on as well would double count.
+    //
+    // Kept off the docs on purpose, so this stays analytics and nothing else:
+    // no session replay (no rrweb bundle downloaded, no DOM observation;
+    // replay is scoped to litellm.ai/enterprise and /pricing by URL trigger in
+    // the project settings), no heatmap capture despite the project-level
+    // opt-in (skips the mousemove listener and its periodic requests; link and
+    // button clicks are already captured with their hrefs by autocapture), and
+    // no $pageleave, which halves event volume at the cost of bounce rate and
+    // session-duration precision in Web Analytics. Surveys are off too, which
+    // drops the surveys.js request the SDK otherwise makes on every page; docs
+    // feedback already goes through Feedback Rocket below.
+    [
+      'posthog-docusaurus',
+      {
+        apiKey: 'phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',
+        appUrl: 'https://us.i.posthog.com',
+        enableInDevelopment: false,
+        defaults: '2026-05-30',
+        person_profiles: 'identified_only',
+        cross_subdomain_cookie: true,
+        capture_pageview: true,
+        capture_pageleave: false,
+        disable_session_recording: true,
+        capture_heatmaps: false,
+        disable_surveys: true,
+        autocapture: {
+          dom_event_allowlist: ['click'],
+          element_allowlist: ['a', 'button'],
+        },
+      },
+    ],
     // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
@@ -379,6 +420,11 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
+      docs: {
+        sidebar: {
+          hideable: true,
+        },
+      },
       navbar: {
         title: '🚅 LiteLLM',
         items: [
@@ -443,8 +489,24 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
+                label: 'Quickstart',
+                to: '/docs/proxy/docker_quick_start',
+              },
+              {
+                label: 'Production Deployment',
+                to: '/docs/proxy/deploy',
+              },
+              {
+                label: '[Beta] Rust AI Gateway',
+                to: '/docs/proxy/rust_gateway',
+              },
+              {
+                label: 'MCP Gateway',
+                to: '/docs/mcp',
+              },
+              {
+                label: 'Agent Gateway',
+                to: '/docs/a2a',
               },
             ],
           },
@@ -456,8 +518,20 @@ const config = {
                 href: 'https://discord.com/invite/wuPM9dRgDw',
               },
               {
+                label: 'Slack',
+                href: 'https://litellmossslack.slack.com/',
+              },
+              {
+                label: 'YouTube',
+                href: 'https://www.youtube.com/@LiteLLMAIGateway',
+              },
+              {
                 label: 'Twitter',
                 href: 'https://twitter.com/LiteLLM',
+              },
+              {
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/berri-ai/',
               },
             ],
           },
