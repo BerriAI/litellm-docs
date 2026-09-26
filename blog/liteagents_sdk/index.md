@@ -9,11 +9,11 @@ hide_table_of_contents: true
 image: ./hero.png
 ---
 
-![Introducing liteagents: switch agent harnesses without rewriting your agent. A code example changes the harness from Deep Agents to Claude Agent SDK while keeping the model and tools.](./hero.png)
+![liteagents: switch harnesses, keep your agent. A ProfileOptions example changes deepagents to claude-sdk while keeping the model, tools, and MCP connections.](./hero.png)
 
 You've built an agent with your own tools, prompts, and model configuration. Now you want to try a different harness on the same task.
 
-**liteagents lets you switch agent harnesses without rewriting your application.** Choose Deep Agents, Pydantic AI, Claude Agent SDK, Codex, or OpenCode through one Python SDK. Keep your tools, MCP connections, model configuration, and client code.
+**liteagents lets you switch agent harnesses without rewriting your application.** Its interface is modeled after the Claude Agent SDK, including the `query()` pattern and typed messages. Choose Deep Agents, Pydantic AI, Claude Agent SDK, Codex, or OpenCode while keeping your tools, MCP connections, model configuration, and client code. Each selected harness runs its own agent loop.
 
 LiteLLM gives you a common interface to models. liteagents brings that approach to agent harnesses, with native controls and optional durability through Temporal.
 
@@ -43,7 +43,7 @@ This excerpt uses your existing `lookup_order` tool and gateway alias. `gateway_
 
 Install only the harness integrations you plan to use. Extras such as `[deepagents]` supply that adapter's dependencies and reuse compatible packages in your Python environment. `[all]` is a convenience for trying every integration; OpenCode also needs its executable. Changing the profile selects which harness runs.
 
-liteagents adapts your tools, MCP configuration, and events to each harness. LiteLLM handles model translation internally, so switching harnesses keeps the same model connection. You can use a provider directly or connect through a LiteLLM gateway. Profiles also load from JSON or YAML.
+liteagents adapts your tools, MCP configuration, and events to each harness. Your application receives the same `AssistantMessage`, `UserMessage`, and optional streaming `TextDelta` types whichever harness you choose. LiteLLM handles model translation internally, so switching harnesses keeps the same model connection. You can use a provider directly or connect through a LiteLLM gateway. Profiles also load from JSON or YAML.
 
 ## Keep the harness's native controls
 
