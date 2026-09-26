@@ -553,6 +553,13 @@ Database Alerts
 |------------|-------------|---------|
 | `db_exceptions` | Notifications for database-related exceptions | ✅ |
 
+MCP Gateway Alerts
+
+| Alert Type | Description | Default On |
+|------------|-------------|---------|
+| `mcp_tool_description_blocked` | A `pre_mcp_call` guardrail blocked an upstream MCP tool's description, so the tool was hidden from `tools/list`. See [MCP Guardrails](../mcp_guardrail#scanning-tool-descriptions-on-discovery) | ✅ |
+| `mcp_pinned_tools_changed` | A pinned MCP server's upstream tool list or descriptions drifted from the pin. See [Pin a Server's Tool List](../mcp_control#pin-a-servers-tool-list) | ✅ |
+
 Management Endpoint Alerts - Virtual Key, Team, Internal User
 
 | Alert Type | Description | Default On |

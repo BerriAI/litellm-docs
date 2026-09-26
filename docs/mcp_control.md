@@ -181,6 +181,74 @@ mcp_servers:
 - If you specify both `allowed_tools` and `disallowed_tools`, the allowed list takes priority
 - Tool names are case-sensitive
 
+## Pin a Server's Tool List
+
+`allowed_tools` trusts whatever the upstream says each tool does. Pinning freezes the tool list and the descriptions too: the gateway serves only the pinned tools with the pinned descriptions, refuses calls to any other name, and alerts when the upstream drifts from the pin. That closes tool poisoning (OWASP LLM01): a server that quietly rewrites a description to carry instructions for the model, or adds a tool your clients never approved, changes nothing your clients see
+
+<Tabs>
+<TabItem value="api" label="Pin from the API">
+
+Pin the catalog the gateway sees right now (admin only, needs a database). Find `server_id` with `GET /v1/mcp/server`. The response is the stored snapshot, tool name to description:
+
+```bash title="Pin" showLineNumbers
+curl -s -X POST http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{"get_note": "Return the saved note with the given id"}
+```
+
+The snapshot is taken after the [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery), so a description a guardrail blocks never gets pinned; a server with no tool left to pin returns `400`
+
+Unpin to serve the live upstream catalog again:
+
+```bash title="Unpin" showLineNumbers
+curl -s -X DELETE http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{"server_id": "<server_id>", "status": "unpinned"}
+```
+
+</TabItem>
+<TabItem value="config" label="Pin in config.yaml">
+
+`pinned_tools` maps each tool name to the description your clients should see:
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  notes:
+    url: http://notes.internal/mcp
+    transport: http
+    pinned_tools:
+      get_note: "Return the saved note with the given id"
+      list_notes: "List the ids and titles of the saved notes"
+```
+
+</TabItem>
+</Tabs>
+
+What clients see once a server is pinned:
+
+- `tools/list` (over `/mcp`, `/mcp-rest/tools/list`, and LLM-driven discovery) returns the pinned tools only, each with its pinned description and the input schema the upstream currently reports
+- A tool the upstream added after the pin is not listed, and a call to it returns `403`
+- A tool the upstream removed after the pin is not listed either, since the gateway has nothing to call
+- A description the upstream changed after the pin is served as pinned
+
+Whenever a listing finds the upstream differs from the pin, the gateway logs a warning and sends an `mcp_pinned_tools_changed` [alert](./proxy/alerting#all-possible-alert-types) naming the added, removed, and changed tools, once per distinct diff per server; the same diff on the next listing stays quiet, a different one alerts again, and the alert clears on its own once the upstream matches the pin. Re-pin to accept a change you reviewed
+
+```text
+MCP server `notes`: upstream tool catalog drifted from the pinned snapshot; added: `delete_all_notes`; changed: `get_note`
+```
+
+### Important Notes
+
+- A pin covers tool names and descriptions, not input schemas: a schema change is served live and does not alert
+- `allowed_tools`, `disallowed_tools`, and per-key tool permissions still apply on top of the pin
+- Pinned servers skip the discovery guardrail scan; call-time guardrails still run on every call's arguments
+
 ## Public MCP Servers (allow_all_keys)
 
 Some MCP servers are meant to be shared broadly: internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
