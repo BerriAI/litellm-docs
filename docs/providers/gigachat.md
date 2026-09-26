@@ -52,7 +52,7 @@ Get your credentials at: https://developers.sber.ru/studio/
 |----------|----------|---------|-------------|
 | `GIGACHAT_CREDENTIALS` | Yes | - | Base64-encoded `client_id:client_secret` |
 | `GIGACHAT_SCOPE` | No | `GIGACHAT_API_PERS` | OAuth scope: `GIGACHAT_API_PERS`, `GIGACHAT_API_B2B`, or `GIGACHAT_API_CORP` |
-| `GIGACHAT_API_BASE` | No | `https://gigachat.devices.sberbank.ru/api/v1` | Chat API base URL. Point it at the endpoint your key can reach, for example `https://api.giga.chat/v1` |
+| `GIGACHAT_API_BASE` | No | `https://gigachat.devices.sberbank.ru/api/v1` | Chat API base URL. The official address since July 2026 is `https://api.giga.chat` (`https://api.giga.chat/v1` in these examples); the default legacy address is scheduled for decommission |
 | `GIGACHAT_AUTH_URL` | No | `https://ngw.devices.sberbank.ru:9443/api/v2/oauth` | OAuth token endpoint |
 | `GIGACHAT_ACCESS_TOKEN` | No | - | Pre-issued access token. When set, LiteLLM skips the OAuth exchange |
 
@@ -285,7 +285,7 @@ print(response)
 
 The models your key can use depend on the scope and access level. Query the live list with a `GET /models` request against your `GIGACHAT_API_BASE` endpoint.
 
-The chat models below were returned by `GET https://api.giga.chat/v1/models` with a `GIGACHAT_API_CORP` key in September 2026:
+The chat models below were returned by `GET https://api.giga.chat/v1/models` with a `GIGACHAT_API_CORP` key in September 2026. Per the official documentation, `https://api.giga.chat` is the current connection address (since July 2026) and the legacy `https://gigachat.devices.sberbank.ru` is scheduled for decommission:
 
 ### Chat Models
 
