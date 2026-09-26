@@ -144,7 +144,9 @@ curl -L -X POST 'https://my-vllm-server.com/chat/completions' \
 Pre-requisites
 - [Setup proxy with DB](../proxy/virtual_keys.md#setup)
 
-Use this, to avoid giving developers the raw Cohere API key, but still letting them use Cohere endpoints.
+Use this, to avoid giving developers direct access to your VLLM server, but still letting them use VLLM endpoints.
+
+Requests whose `model` is not in your `model_list` are forwarded to the server set in `VLLM_API_BASE`. If that variable is missing, the proxy raises `VLLM_API_BASE is not set`. `HOSTED_VLLM_API_BASE` is only read by the `hosted_vllm/...` provider on the translated routes (for example `/chat/completions`), so it has no effect on `/vllm` pass-through calls.
 
 ### Usage
 
@@ -153,7 +155,7 @@ Use this, to avoid giving developers the raw Cohere API key, but still letting t
 ```bash
 export DATABASE_URL=""
 export LITELLM_MASTER_KEY=""
-export HOSTED_VLLM_API_BASE=""
+export VLLM_API_BASE=""
 ```
 
 ```bash

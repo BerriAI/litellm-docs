@@ -21,7 +21,7 @@ hide_table_of_contents: false
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -113,6 +113,6 @@ Every response carries `x-litellm-model-name` and `x-litellm-response-cost`, and
 
 :::info
 
-Point an agent at an auto router and compare it against your current single model on your own workload. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA).
+Point an agent at an auto router and compare it against your current single model on your own workload. Share numbers or questions in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168). To work on this with us directly, [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner).
 
 :::

@@ -21,7 +21,7 @@ The Auto-Router picks a model by asking how hard the request is. This release ad
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -119,6 +119,6 @@ Context-window escalation is already on; long sessions just stop failing. Modali
 
 Point a shadow-eval job at your busiest team, compare your current config against one with the new gates on, and tell us what you see in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::
