@@ -67,7 +67,7 @@ Add a `model_config` key to the team's metadata referencing the credential by na
 
 ```bash showLineNumbers
 # Hotel team — default Azure endpoint for all models
-curl -X PATCH 'http://0.0.0.0:4000/team/update' \
+curl -X POST 'http://0.0.0.0:4000/team/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
@@ -86,7 +86,7 @@ curl -X PATCH 'http://0.0.0.0:4000/team/update' \
 
 ```bash showLineNumbers
 # Flight team — default Azure endpoint for all models
-curl -X PATCH 'http://0.0.0.0:4000/team/update' \
+curl -X POST 'http://0.0.0.0:4000/team/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
@@ -126,7 +126,7 @@ curl http://localhost:4000/v1/chat/completions \
 You can set different credentials for specific models while keeping a default for everything else:
 
 ```bash showLineNumbers
-curl -X PATCH 'http://0.0.0.0:4000/team/update' \
+curl -X POST 'http://0.0.0.0:4000/team/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
@@ -158,7 +158,7 @@ Projects inherit their team's `model_config` but can override at the project lev
 
 ```bash showLineNumbers
 # Project overrides the team default for all models
-curl -X PATCH 'http://0.0.0.0:4000/project/update' \
+curl -X POST 'http://0.0.0.0:4000/project/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
