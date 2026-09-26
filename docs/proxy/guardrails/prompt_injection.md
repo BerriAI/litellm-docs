@@ -8,7 +8,7 @@ LiteLLM Supports the following methods for detecting prompt injection attacks
 - [Similarity Checks](#similarity-checking)
 - [LLM API Call to check](#llm-api-checks)
 
-Both checks run on every unified endpoint: `/v1/chat/completions`, `/v1/messages`, `/v1/responses`, `/v1/completions` and `/v1/embeddings`. They scan the request text together with any text attachment it carries (a `text/*` data URL in a `file` or `input_file` part, or a text `document` block on `/v1/messages`). Audio, video and non-text files such as a PDF or a `file_id` reference cannot be scanned, so a request carrying one is rejected with a 400 unless you set `skip_unscannable_attachments` (see [Settings](#settings))
+Both checks run on every unified endpoint: `/v1/chat/completions`, `/v1/messages`, `/v1/responses`, `/v1/completions`, `/v1/embeddings` and `/v1/moderations`. They scan the request text, tool outputs included (a `tool` message, a `tool_result` block or a `function_call_output` item), together with any text attachment it carries (a `text/*` data URL in a `file` or `input_file` part, or a text `document` block on `/v1/messages`). Audio, video and non-text files such as a PDF or a `file_id` reference cannot be scanned, so a request carrying one is rejected with a 400 unless you set `skip_unscannable_attachments` (see [Settings](#settings))
 
 ## Similarity Checking
 
@@ -49,7 +49,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 }
 ```
 
-The same request is rejected on `/v1/messages`, `/v1/responses`, `/v1/completions` and `/v1/embeddings`, and so is a request whose injection sits inside a text attachment rather than the message text
+The same request is rejected on `/v1/messages`, `/v1/responses`, `/v1/completions`, `/v1/embeddings` and `/v1/moderations`, and so is a request whose injection sits inside a tool output or a text attachment rather than the message text
 
 ## Settings
 
