@@ -868,6 +868,8 @@ router_settings:
 | VERTEXAI_API_BASE | Base URL for Vertex AI, read before `VERTEX_API_BASE`
 | VERTEX_API_BASE | Alias for `VERTEXAI_API_BASE`
 | VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
+| VIKTOR_API_BASE | Base URL for Viktor. Default is https://api.viktor.com/api/compat/v1
+| VIKTOR_API_KEY | API key for Viktor
 | VLLM_API_BASE | Base URL for a self-hosted vLLM server
 | VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
 | VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
