@@ -260,6 +260,10 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
 
 ## Managing Tags
 
+### Filter the Tag Table
+
+On the Admin UI, open **Tag Management** in the left nav. Two inputs above the tags table, **Filter by tag name** and **Filter by description**, narrow the list as you type. Both are case-insensitive "contains" matches, so `billing` matches `Prod-Billing` and `dev-billing`. When both are filled in, a tag must match both. Clearing the inputs restores the full list. If nothing matches, the table shows "No matching tags" instead of "No tags yet".
+
 ### View Tag Information
 
 Get information about specific tags:
