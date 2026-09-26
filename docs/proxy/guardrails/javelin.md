@@ -25,7 +25,7 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/JAVELIN_API_KEY
       api_base: os.environ/JAVELIN_API_BASE
-      guardrail_name: "promptinjectiondetection"
+      guard_name: "promptinjectiondetection"
       api_version: "v1"
       metadata:
         request_source: "litellm-proxy"
@@ -36,7 +36,7 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/JAVELIN_API_KEY
       api_base: os.environ/JAVELIN_API_BASE
-      guardrail_name: "trustsafety"
+      guard_name: "trustsafety"
       api_version: "v1"
   - guardrail_name: "javelin-language-detection"
     litellm_params:
@@ -44,15 +44,13 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/JAVELIN_API_KEY
       api_base: os.environ/JAVELIN_API_BASE
-      guardrail_name: "lang_detector"
+      guard_name: "lang_detector"
       api_version: "v1"
 ```
 
 #### Supported values for `mode`
 
-- `pre_call` Run **before** LLM call, on **input**
-- `post_call` Run **after** LLM call, on **input & output**
-- `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call. Response not returned until guardrail check completes
+Javelin only supports `pre_call`, which runs **before** the LLM call, on **input**. `post_call` and `during_call` are not supported for this guardrail.
 
 ### 2. Start LiteLLM Gateway 
 
@@ -311,23 +309,23 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/JAVELIN_API_KEY
       api_base: os.environ/JAVELIN_API_BASE
-      guardrail_name: "promptinjectiondetection"  # or "trustsafety", "lang_detector"
+      guard_name: "promptinjectiondetection"  # or "trustsafety", "lang_detector"
       api_version: "v1"
       ### OPTIONAL ### 
       # metadata: Optional[Dict] = None,
       # config: Optional[Dict] = None,
       # application: Optional[str] = None,
-      # default_on: bool = True
+      # default_on: bool = False
 ```
 
 - `api_base`: (Optional[str]) The base URL of the Javelin API. Defaults to `https://api-dev.javelin.live`
 - `api_key`: (str) The API Key for the Javelin integration.
-- `guardrail_name`: (str) The type of guardrail to use. Supported values: `promptinjectiondetection`, `trustsafety`, `lang_detector`
+- `guard_name`: (str) The Javelin guard to call. Required. Supported values: `promptinjectiondetection`, `trustsafety`, `lang_detector`
 - `api_version`: (Optional[str]) The API version to use. Defaults to `v1`
 - `metadata`: (Optional[Dict]) Metadata tags can be attached to screening requests as an object that can contain any arbitrary key-value pairs.
 - `config`: (Optional[Dict]) Configuration parameters for the guardrail.
 - `application`: (Optional[str]) Application name for policy-specific guardrails.
-- `default_on`: (Optional[bool]) Whether the guardrail is enabled by default. Defaults to `True`
+- `default_on`: (Optional[bool]) Whether the guardrail runs on every request. Defaults to `False`; set to `true` to run it without listing it in the request `guardrails` field
 
 ## Environment Variables
 
