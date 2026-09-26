@@ -505,7 +505,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 2. Pass parameters in your API requests:
 
-LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter).
+LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter). To attach `extra_body` to a guardrail, send `guardrails` as a list and make the guardrail an object keyed by its `guardrail_name`.
 
 <Tabs>
 <TabItem value="openai" label="OpenAI Python">
@@ -521,13 +521,15 @@ response = client.chat.completions.create(
     model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a short poem"}],
     extra_body={
-        "guardrails": {
-            "custom-pre-guard": {
-                "extra_body": {
-                    "success_threshold": 0.9
+        "guardrails": [
+            {
+                "custom-pre-guard": {
+                    "extra_body": {
+                        "success_threshold": 0.9
+                    }
                 }
             }
-        }
+        ]
     }
 )
 ```
@@ -547,9 +549,11 @@ curl 'http://0.0.0.0:4000/chat/completions' \
         }
     ],
     "guardrails": [
-        "custom-pre-guard": {
-            "extra_body": {
-                "success_threshold": 0.9
+        {
+            "custom-pre-guard": {
+                "extra_body": {
+                    "success_threshold": 0.9
+                }
             }
         }
     ]
