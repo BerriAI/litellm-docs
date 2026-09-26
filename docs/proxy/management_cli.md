@@ -300,7 +300,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite encryption migrate            # perform the migration
   ```
 
-  `--check` reports how many legacy values remain; a residual of `0` means everything is on the new format.
+  `--check` prints a JSON report with one entry per location under `locations` (`model_table`, `credentials`, `guardrails`, `mcp_server`, `mcp_user_credentials`, `mcp_user_env_vars`, `config_environment_variables`, `config_router_settings`, `team.callback_vars`, `verification_token.callback_vars`, `vantage_settings`, `cloudzero_settings` and `sso_config`), each with `scanned`, `migrated`, `already_v2`, `plaintext`, `undecryptable` and `legacy` counts, and a `residual_legacy` total. A residual of `0` means everything is on the new format. The `plaintext` count is also how you find guardrail, `router_settings` and model rows that an older version stored in plaintext, which are encrypted the next time they are written (see the [encryption FAQ](./security_encryption_faq#rows-written-before-encryption-covered-them)).
 
 ## Environment Variables
 

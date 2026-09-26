@@ -1,6 +1,6 @@
 # Rotating the Master Key
 
-The master key is the proxy's admin credential; it authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database: the proxy signs stored data (model `litellm_params`, credentials, MCP server credentials, DB-stored environment variables) with `LITELLM_SALT_KEY` when it is set, and falls back to the master key only when no salt key is configured. How you rotate the master key depends on which of those roles it plays, and getting this wrong can leave your stored credentials unreadable, so read the case that matches your setup before running anything.
+The master key is the proxy's admin credential; it authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database: the proxy signs stored data (model and guardrail `litellm_params`, credentials, MCP server credentials, DB-stored environment variables and `router_settings`) with `LITELLM_SALT_KEY` when it is set, and falls back to the master key only when no salt key is configured. How you rotate the master key depends on which of those roles it plays, and getting this wrong can leave your stored credentials unreadable, so read the case that matches your setup before running anything.
 
 :::warning
 
@@ -42,7 +42,7 @@ curl -L -X POST 'http://localhost:4000/key/regenerate' \
 }'
 ```
 
-This re-encrypts stored models, the `environment_variables` saved in the config table, the credentials table, and the MCP server, user, and per-user environment credential tables under the new master key. It returns the new key:
+This re-encrypts stored models (every string in `litellm_params`, nested values included), the `environment_variables` and `router_settings` saved in the config table, the guardrails table (`litellm_params`), the credentials table, and the MCP server, user, and per-user environment credential tables under the new master key. Guardrail params, nested model params and `router_settings` that an older version stored in plaintext are encrypted by the same pass. A guardrail or `router_settings` row whose stored value is not a JSON object, or is nested deeper than 100 levels, is skipped and logged. It returns the new key:
 
 ```json
 {
@@ -162,7 +162,7 @@ Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy 
 
 The migration works for any previous master key, not only the unsafe ones, so it is also an offline alternative to `POST /key/regenerate` with `new_master_key`: set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. It reads and writes through the primary database even when a read replica is configured. Tables or columns that do not exist on an older schema are skipped, so it works both before and after a schema upgrade. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
 
-It re-encrypts more than the regenerate call does: models stored in the database (`litellm_params`), credentials, `LiteLLM_Config` values (environment variables, CloudZero and Vantage settings and so on), SSO settings, cache settings, config overrides, MCP server credentials, static headers and environment variables, MCP OAuth client credentials, per-user MCP credentials and environment variables, SSO identity assertions, and the encrypted callback variables in team, key, and user metadata, including the deleted-team and deleted-key tables.
+It re-encrypts more than the regenerate call does: models stored in the database (`litellm_params`, nested values included), guardrails (`litellm_params`), credentials, `LiteLLM_Config` values (environment variables, `router_settings`, CloudZero and Vantage settings and so on), SSO settings, cache settings, config overrides, MCP server credentials, static headers and environment variables, MCP OAuth client credentials, per-user MCP credentials and environment variables, SSO identity assertions, and the encrypted callback variables in team, key, and user metadata, including the deleted-team and deleted-key tables. It only re-keys values that decrypt under the old key, so guardrail params, nested model params or `router_settings` that an older version stored in plaintext stay plaintext until they are written again (see [rows written before encryption covered them](./security_encryption_faq#rows-written-before-encryption-covered-them)).
 
 ### Where to set the new key
 

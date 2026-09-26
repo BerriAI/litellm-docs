@@ -135,21 +135,38 @@ export SSL_CERTIFICATE="/path/to/client_certificate.pem"
 
 ### Does the product encrypt data at rest?
 
-**Partially**. Only specific sensitive data is encrypted at rest.
+**Partially**. LiteLLM encrypts the credentials and secrets it stores in its own tables. Everything else it writes to Postgres, Redis, S3 or disk is plaintext. The two lists below are the exact scope.
 
 ### What data is stored in encrypted form?
 
-#### Encrypted Data:
-1. **LLM API Keys** - Model credentials in `LiteLLM_ProxyModelTable.litellm_params`
-2. **Provider Credentials** - Stored in `LiteLLM_CredentialsTable.credential_values`
-3. **Configuration Secrets** - Sensitive config values in `LiteLLM_Config` table
-4. **Virtual Keys** - When using secret managers (optional feature)
+Every value below is encrypted with the salt key before it reaches the database, so a raw `SELECT` on the table shows ciphertext. Where a column holds a JSON document, **every string value inside it is encrypted, however deeply it is nested** (a dict inside a dict, a string inside a list). Numbers, booleans and nulls are stored as they are. A document nested deeper than `DEFAULT_MAX_RECURSE_DEPTH` levels (100 by default) is refused on write instead of being stored with plaintext leaves below the cap.
+
+#### Encrypted:
+1. **Model deployments** - `LiteLLM_ProxyModelTable.litellm_params`: `api_key`, `api_base`, `aws_secret_access_key`, `vertex_credentials`, every string value under `extra_headers` and `aws_session_tags`, and every other string in the document, except that inside `complexity_router_config` only `jev_classifier_config.api_key` and `jev_classifier_config.api_base` are encrypted
+2. **Guardrails** - `LiteLLM_GuardrailsTable.litellm_params`: the vendor `api_key`, `api_base`, and every other string in the document, including the `guardrail` and `mode` fields
+3. **Provider credentials** - `LiteLLM_CredentialsTable.credential_values`: every value
+4. **Config secrets** - the `environment_variables` and `router_settings` rows of `LiteLLM_Config`: every string value, so a `redis_password` or a `redis_url` in `router_settings` is ciphertext the same way an environment variable is
+5. **MCP server credentials** - `LiteLLM_MCPServerTable.credentials`: `auth_value`, `client_id`, `client_secret`, `client_private_key`, the AWS key pair and session token; per-user BYOK credentials and per-user env vars are encrypted the same way
+6. **Billing integration keys** - the `cloudzero_settings` row of `LiteLLM_Config` and the Vantage API key and integration token
+7. **Virtual keys** - only when a secret manager is configured (optional feature, see below)
 
 #### NOT Encrypted:
-1. **Spend Logs** - Request/response data in `LiteLLM_SpendLogs`
-2. **Audit Logs** - Change history in `LiteLLM_AuditLog`
-3. **User/Team/Organization Data** - Metadata and configuration
-4. **Cached Prompts and Completions** - Cache data is stored in plaintext
+1. **Other config rows** - `general_settings` and `litellm_settings` in `LiteLLM_Config`, and the callback settings stored from the UI (callback values that are marked as secrets are the one exception: they are stored encrypted with a `litellm_enc::` prefix)
+2. **Non-secret model fields** - `model_name`, `model_info`, the deployment's rate limits and budgets, which live outside `litellm_params`, and the classifier fields of `complexity_router_config` such as `classifier_type` and `instructions`, which stay plaintext because the proxy reads them in SQL
+3. **Guardrail metadata** - `guardrail_name` and `guardrail_info`
+4. **Spend logs** - request/response data in `LiteLLM_SpendLogs`
+5. **Error logs** - `LiteLLM_ErrorLogs`
+6. **Audit logs** - change history in `LiteLLM_AuditLog` (the before and after values of a model write are copied from the stored row, so the secrets inside them are ciphertext, but the row itself is not encrypted)
+7. **User/Team/Organization Data** - metadata and configuration
+8. **Cached prompts and completions** - cache data is stored in plaintext
+
+### Rows written before encryption covered them
+
+Older LiteLLM versions stored guardrail params, the nested values of a model's `litellm_params` (an `extra_headers` dict, for example) and `router_settings` in plaintext. A row written by such a version stays plaintext until it is written again: editing the model, guardrail or router settings from the UI or the management API, a `POST /config/update`, or a master key rotation (`POST /key/regenerate` with `new_master_key`) re-encrypts the whole row. The proxy reads both shapes, so nothing has to be migrated before upgrading. The boot-time `LITELLM_MIGRATE_FROM_MASTER_KEY` migration only re-keys values that are already encrypted, so it leaves such a row in plaintext. `lite encryption migrate --check` is a read-only scan that reports a `plaintext` count per table, which is how you find the rows that still need a write (see the [management CLI](./management_cli#encryption-migration)).
+
+### Rolling upgrades and rollbacks
+
+A worker running a version older than this encryption does not decrypt guardrail params, the nested values of a model's `litellm_params` or `router_settings`, so a row saved by an upgraded worker reads as ciphertext on it: that guardrail's vendor call fails and the router settings are applied as written. During a rolling upgrade this only affects rows saved while an old worker is still running, and they read correctly once the rollout finishes. After a rollback to such a version, save the affected rows again from the UI or the management API so they are stored in the shape that version reads. No flag keeps the old plaintext format, the same rule every other encrypted column above follows.
 
 ### Cached prompts and completions?
 
@@ -164,20 +181,9 @@ Cache backends (Redis, S3, local disk) store data as plaintext JSON.
 
 ### Configuration data?
 
-**Partially encrypted**.
+**Partially encrypted**, as listed above: the `environment_variables` and `router_settings` rows of `LiteLLM_Config` and the `litellm_params` of every model and guardrail are encrypted; `general_settings`, `litellm_settings`, model names, `model_info`, rate limits and budgets are not.
 
-#### What IS Encrypted:
-- LLM API keys and credentials in model configurations
-- Sensitive values in `LiteLLM_Config` table
-- Credential values in `LiteLLM_CredentialsTable`
-
-#### What is NOT Encrypted:
-- Model names and aliases
-- Rate limits and budget settings
-- User/team/organization metadata
-- Non-sensitive configuration parameters
-
-**Code Reference:** `litellm/proxy/management_endpoints/model_management_endpoints.py` (lines 275-308)
+**Code Reference:** `litellm/proxy/common_utils/encrypt_decrypt_utils.py` (`encrypt_json_strings` and `encrypt_config_section`)
 
 ### Log data?
 
@@ -205,9 +211,11 @@ general_settings:
 **Yes**, encrypted data is stored in PostgreSQL database.
 
 **Key Tables with Encrypted Data:**
-- `LiteLLM_ProxyModelTable` - Model configurations with encrypted API keys
+- `LiteLLM_ProxyModelTable` - Model configurations with encrypted `litellm_params`
+- `LiteLLM_GuardrailsTable` - Guardrail configurations with encrypted `litellm_params`
 - `LiteLLM_CredentialsTable` - Credential values
-- `LiteLLM_Config` - Configuration secrets
+- `LiteLLM_Config` - `environment_variables` and `router_settings`
+- `LiteLLM_MCPServerTable` - MCP server credentials
 
 **Schema Reference:** `schema.prisma`
 
@@ -231,21 +239,18 @@ general_settings:
 
 ### How is it encrypted?
 
-**Algorithm:** NaCl SecretBox (XSalsa20-Poly1305 AEAD)
+**Default algorithm:** NaCl SecretBox (XSalsa20-Poly1305 AEAD)
 
-**NOT AES-256** - LiteLLM uses NaCl (Networking and Cryptography Library) which provides:
-- XSalsa20 stream cipher
-- Poly1305 MAC for authentication
-- Equivalent security to AES-256
+**Optional algorithm:** AES-256-GCM, enabled with `general_settings.encryption_algorithm: aes-256-gcm`. New writes then carry a `v2:gcm:` prefix; reads detect the format, so existing XSalsa20 values keep working and `lite encryption migrate` re-encrypts them (see the [management CLI](./management_cli#encryption-migration)).
 
 **Key Derivation:**
 1. Takes `LITELLM_SALT_KEY` (or `LITELLM_MASTER_KEY` if salt key not set)
 2. Hashes with SHA-256 to derive 256-bit encryption key
-3. Uses NaCl SecretBox for authenticated encryption
+3. Uses NaCl SecretBox (or AES-256-GCM when opted in) for authenticated encryption
 
-**Code Reference:** `litellm/proxy/common_utils/encrypt_decrypt_utils.py` (lines 69-112)
+**Code Reference:** `litellm/proxy/common_utils/encrypt_decrypt_utils.py`
 
-**Implementation:**
+**Implementation (default algorithm):**
 ```python
 import hashlib
 import nacl.secret
@@ -271,6 +276,7 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 - ⚠️ **Never change this key** - encrypted data becomes unrecoverable
 - ⚠️ Use a strong random key (recommended: https://1password.com/password-generator/)
 - If not set, falls back to `LITELLM_MASTER_KEY`
+- If neither is set, nothing is encrypted and every value above is stored in plaintext
 
 **Documentation:** `docs/my-website/docs/proxy/prod.md` (section 8, lines 184-196)
 
@@ -294,7 +300,7 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 
 1. **TLS/SSL encryption** for client-to-proxy connections
 2. **TLS encryption** for proxy-to-LLM provider connections (with connection pooling)
-3. **Encrypted storage** of LLM API keys and credentials
+3. **Encrypted storage** of LLM API keys, guardrail params, router settings and credentials
 4. **Support for TLS 1.2 and TLS 1.3**
 5. **Connection pooling** to reduce TLS handshake overhead
 
@@ -303,7 +309,7 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 1. **Cached data is NOT encrypted** (Redis, S3, disk cache)
 2. **Log data is NOT encrypted** (spend logs, audit logs)
 3. **Request/response payloads in logs are NOT encrypted**
-4. **Uses NaCl SecretBox, NOT AES-256** (equivalent security)
+4. **Uses NaCl SecretBox by default** (equivalent security to AES-256; AES-256-GCM is opt-in)
 5. **TLS version not explicitly configured** - uses Python/system defaults
 
 ### 🔧 Configuration Requirements
