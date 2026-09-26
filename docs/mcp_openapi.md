@@ -93,7 +93,7 @@ Each tool card has a pencil icon. Click it to open the inline editor:
 <br/>
 
 - **Display Name** — overrides the name MCP clients see
-- **Description** — overrides the description MCP clients see
+- **Description** — overrides the description MCP clients see. It goes through the same [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) as the spec's text, so a guardrail can mask or hide it too
 - Leave a field blank to keep the original from the spec
 
 After setting overrides, a purple **Custom name** badge appears on the tool card:
