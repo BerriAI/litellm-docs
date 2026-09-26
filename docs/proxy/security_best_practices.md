@@ -1,6 +1,6 @@
 # Security Best Practices
 
-Security is a top priority at LiteLLM. Use the following practices for production and enterprise deployments.
+Security is a top priority at LiteLLM. Use the following practices for production and enterprise deployments. For a control-by-control view against the OWASP Top 10 for LLM Applications 2026, including the limits of each control, see the [OWASP LLM Top 10 mapping](./security_owasp_llm_top10).
 
 ## 1. Monitor security emails and upgrade promptly
 
