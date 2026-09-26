@@ -6,6 +6,8 @@ Azure provisioned throughput is billed by the hour for reserved capacity, not pe
 
 A PTU deployment is billed by its reserved capacity alone. LiteLLM stores zero per-token pricing on it, so the traffic the capacity serves is never charged on top of the flat cost.
 
+One deployment can also be split across several teams in PTUs. Each team's share becomes a per-minute ceiling the proxy enforces, the flat cost is attributed by share, and usage reports the PTU-hours each team consumed next to its tokens. See [Share a deployment across teams](#share-a-deployment-across-teams)
+
 ## Enable it
 
 The feature is off by default and inert until you opt in:
@@ -70,15 +72,92 @@ Upgrading an existing reservation that has already accrued cost, set `id` to the
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `id` | in `config.yaml` | The deployment's stable identity. Not needed through the API or the UI, where one is stored for you |
-| `team_id` | yes | The team the capacity belongs to. One deployment maps to one team |
-| `ptu_count` | yes | Provisioned throughput units reserved |
+| `team_id` | one of the two | The team the capacity belongs to, when one team owns the whole deployment |
+| `ptu_shares` | one of the two | Team id to whole PTUs, adding up to `ptu_count`, when several teams share it |
+| `ptu_count` | yes | Provisioned throughput units reserved, a whole number |
 | `cost_per_ptu_per_hour` | yes | Your contracted hourly rate per unit |
 | `ptu_effective_from` | yes | When the reservation starts accruing |
 | `ptu_effective_to` | no | When it stops. Leave unset for an open reservation |
+| `base_model` | for the ceiling | The Azure model name when the deployment name is not one, e.g. `gpt-4.1` |
 
 `ptu_count` and `cost_per_ptu_per_hour` must be set together, and `ptu_effective_from` is required because flat cost accrues from that instant. Without it a deployment configured today would bill for days it did not exist.
 
 Take `cost_per_ptu_per_hour` from your Azure agreement rather than a list price; PTU rates are negotiated and vary by region and commitment term.
+
+## Share a deployment across teams
+
+A department that reserves 50 PTUs and lets two teams use them declares the split once, in PTUs, with `model_info.ptu_shares` in place of `team_id`:
+
+```bash
+curl -X POST http://localhost:4000/model/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model_name": "gpt-4.1-ptu",
+    "litellm_params": {
+      "model": "azure/<your-deployment-name>",
+      "api_key": "os.environ/AZURE_API_KEY",
+      "api_base": "os.environ/AZURE_API_BASE"
+    },
+    "model_info": {
+      "base_model": "gpt-4.1",
+      "ptu_count": 50,
+      "cost_per_ptu_per_hour": 1.0,
+      "ptu_effective_from": "2026-01-01T00:00:00Z",
+      "ptu_shares": {"<team a id>": 30, "<team b id>": 20}
+    }
+  }'
+```
+
+Or in `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: gpt-4.1-ptu
+    litellm_params:
+      model: azure/<your-deployment-name>
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+    model_info:
+      id: gpt-4.1-ptu-shared
+      base_model: gpt-4.1
+      ptu_count: 50
+      cost_per_ptu_per_hour: 1.0
+      ptu_effective_from: "2026-01-01T00:00:00Z"
+      ptu_shares:
+        <team a id>: 30
+        <team b id>: 20
+```
+
+`ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike. Through the API every team in the split has to exist already: `POST /model/new` and `PATCH /model/{model_id}/update` refuse a split naming an unknown team with a 400 that names it, the same way they refuse an unknown `team_id`
+
+A deployment one team already owns through `team_id` is not switched to `ptu_shares` by a `PATCH`: a `team_id` row is team-scoped, with an internal routing name and an entry in that team's model list, and a shared row is proxy-wide, so the patch is refused with the same 400. To split it, delete the deployment and register it again with `ptu_shares` and the same `model_info.id`, which keeps the flat-cost rows already written under that id
+
+A shared deployment keeps its public model name and stays visible in model lists, but the proxy serves it only to the teams named in `ptu_shares`. A key from any other team, a key with no team, and the master key all get a 400 on it, whether or not `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` is set, because a declared split is an access rule; the ceiling, the cost split, and PTU-hours below need the flag:
+
+```
+Deployment gpt-4.1-ptu is reserved for the teams holding a PTU share of it
+```
+
+### Each share is a per-minute ceiling
+
+Azure sizes a provisioned deployment in normalized tokens per minute: uncached input tokens in full, cached input at the model's cached ratio (a tenth for the GPT-6 family, nothing for the rest), and output tokens weighted by the model's output-to-input ratio, divided by the model's input TPM per PTU. LiteLLM ships that table, read from [Azure's provisioned throughput sizing page](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/provisioned-throughput-sizing#deployment-parameters-and-throughput-values-by-model), and turns each share into a per-minute ceiling in the same units:
+
+```
+team ceiling per minute = share x input TPM per PTU for the model
+tokens charged per request = uncached input + cached input x cached ratio + output x output ratio
+```
+
+Team A's 30 PTUs of gpt-4.1 (3,000 input TPM per PTU, output counted at 4x) are 90,000 normalized tokens a minute. Each request reserves its input plus its output budget (`max_tokens`, or without one the proxy's output floor, sized so it never takes more than a quarter of the share) in those units before the call and settles at the usage the response reports, so a burst of concurrent requests cannot together pass the share. The first request past it gets a 429 with a `retry-after` header, and team B's 20 PTUs are untouched:
+
+```
+Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type: tokens. Current limit: 90000, Remaining: 0. Limit resets at: ...
+```
+
+The ceiling lives on the same per-minute window as a team's `model_tpm_limit`, so it reads and resets the way the limits you already set do, and it needs nothing beyond `LITELLM_ENABLE_PTU_COST_ATTRIBUTION`. The sizing row is looked up by `model_info.base_model` first, then by the model in `litellm_params`, because an Azure deployment name is arbitrary. A shared deployment, or an Azure deployment reserved for one team, whose model has no row logs a warning at startup, sets no ceiling, and reports no PTU-hours; set `base_model` to the Azure model name to fix it. A single-team reservation on another provider only feeds the flat-cost rollup, which needs no sizing, so it is not warned about
+
+A deployment owned by one team through `team_id` gets no ceiling, since that team already owns all of it, but its usage does report PTU-hours
+
 
 ## How the cost is calculated
 
@@ -88,7 +167,7 @@ A job runs at 00:15 UTC and writes one row per team and model for the previous d
 flat cost = ptu_count x cost_per_ptu_per_hour x hours active that day
 ```
 
-Active hours are the overlap between the day and the reservation window, so a reservation starting at noon accrues 12 hours on its first day and 24 thereafter. The rows are written into `LiteLLM_DailyTeamSpend` under the reserved key `__ptu_flat_cost__`, which keeps flat cost separate from the per-request spend recorded against real API keys.
+A deployment split with `ptu_shares` writes one row per team instead, each carrying that team's share in place of `ptu_count`: 30 and 20 of the 50 PTUs at $1 per PTU-hour are $720 and $480 for a full day, and the deployment's $1,200 lands on nobody else. Active hours are the overlap between the day and the reservation window, so a reservation starting at noon accrues 12 hours on its first day and 24 thereafter. The rows are written into `LiteLLM_DailyTeamSpend` under the reserved key `__ptu_flat_cost__`, which keeps flat cost separate from the per-request spend recorded against real API keys.
 
 A reservation that starts before the job first sees it is filled in as well: the catch-up pass prices each elapsed day back to `ptu_effective_from`, up to 91 days. A deployment configured today with a backdated start therefore accrues its whole window on the first run
 
@@ -108,17 +187,19 @@ This needs `LITELLM_ENABLE_PTU_COST_ATTRIBUTION` set and a pricing map entry for
 
 ## Read the cost back
 
-`/team/daily/activity` reports `flat_cost` per day and `total_flat_cost` for the range, alongside the usual per-token `spend`:
+`/team/daily/activity` reports `flat_cost` per day and `total_flat_cost` for the range, alongside the usual per-token `spend`, and `ptu_hours` next to the tokens: on each day, on each PTU model group and the API keys under it, and as `total_ptu_hours` for the range. PTU-hours are the team's prompt, cached, and completion tokens converted through the model's sizing row, so a team can compare what it consumed with what it reserved:
 
 ```bash
 curl -s "http://localhost:4000/team/daily/activity?team_ids=<team-id>&start_date=2026-01-01&end_date=2026-01-31" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" | jq '{
     total_spend: .metadata.total_spend,
-    total_flat_cost: .metadata.total_flat_cost
+    total_flat_cost: .metadata.total_flat_cost,
+    total_ptu_hours: .metadata.total_ptu_hours,
+    gpt41_ptu_hours: [.results[].breakdown.model_groups["gpt-4.1-ptu"].metrics.ptu_hours]
   }'
 ```
 
-The Usage page in the Admin UI shows the same figures under Team Usage, charting flat cost separately from request cost, and CSV export carries them:
+The Usage page in the Admin UI shows the same figures under Team Usage, charting flat cost separately from request cost, with a PTU Hours tile for a team whose window consumed any, and CSV export carries them:
 
 <Image img={require('../../img/ptu_usage_flat_cost.png')} />
 
@@ -140,3 +221,9 @@ Web search rates are handled the same way. Note that xAI models bill their list 
 The legacy `POST /model/update` does not run the rules above, so a PTU deployment configured through it keeps billing per token and never accrues flat cost. Use `POST /model/new`, `PATCH /model/{model_id}/update`, the Admin UI, or `config.yaml`
 
 The Python `Router` used on its own zeroes per-token pricing at registration, but nothing schedules the daily job outside the proxy, so flat cost is not accrued there
+
+PTU-hours are reported on team activity only. The per-key, per-user, and per-tag activity routes carry no model group in their rows today, so they report none
+
+An unshared deployment in the same model group as a shared one counts toward the teams' ceilings and PTU-hours on that group, and a group mixing models is sized by its first reserved deployment's row. Keep a shared deployment in a model group of its own
+
+`ptu_shares` is edited through `POST /model/new`, `PATCH /model/{model_id}/update`, or `config.yaml`; the model form in the Admin UI has no shares editor yet
