@@ -13,6 +13,8 @@ import TabItem from '@theme/TabItem';
 | Default Base URL | `https://api.sailresearch.com/v1` |
 | Supported Operations | `/chat/completions`, `/responses`, `/v1/messages` |
 
+Sail is its own provider on LiteLLM rather than a generic OpenAI-compatible route, so LiteLLM can translate the OpenAI `service_tier` parameter into Sail's completion window, price each request at that window's rate, and report spend under `sail`
+
 ## API Key
 
 ```python showLineNumbers title="Environment Variables"
@@ -24,7 +26,7 @@ os.environ["SAIL_API_BASE"] = "https://api.sailresearch.com/v1"  # optional over
 
 ## Models
 
-Model names keep Sail's `org/model` id after the `sail/` prefix. Prices are dollars per 1M tokens as input / output / cache read, one column per Sail completion window, taken from the [Sail model list](https://docs.sailresearch.com/models) and [pricing page](https://docs.sailresearch.com/pricing). LiteLLM bills whichever window a request ran in (see [Completion windows](#completion-windows))
+Model names keep Sail's `org/model` id after the `sail/` prefix. Prices are dollars per 1M tokens as input / output / cache read, one column per Sail completion window, taken from the [Sail model list](https://docs.sailresearch.com/models) and [pricing page](https://docs.sailresearch.com/pricing). LiteLLM bills the window a request was sent with (see [Completion windows](#completion-windows)). Every model supports tool calling, `response_format` and reasoning; `moonshotai/Kimi-K2.6`, `google/gemma-4-31B-it`, `nvidia/Gemma-4-31B-IT-NVFP4` and `Qwen/Qwen3.6-35B-A3B` also accept images
 
 | Model | Context | `asap` | `balanced` | `flex` |
 |-------|---------|--------|------------|--------|
@@ -38,10 +40,10 @@ Model names keep Sail's `org/model` id after the `sail/` prefix. Prices are doll
 | `sail/google/gemma-4-31B-it` | 256,000 | 0.40 / 0.60 / 0.20 | 0.12 / 0.60 / 0.08 | 0.06 / 0.30 / 0.02 |
 | `sail/nvidia/Gemma-4-31B-IT-NVFP4` | 262,144 | 0.14 / 0.40 / 0.07 | 0.11 / 0.32 / 0.06 | 0.07 / 0.20 / 0.04 |
 | `sail/google/gemma-4-12B-it` | 16,384 | 0.30 / 2.00 / 0.15 | 0.10 / 2.00 / 0.07 | 0.05 / 1.00 / 0.02 |
-| `sail/openai/gpt-oss-120b` | 131,072 | 0.06 / 0.40 / 0.03 | `asap` price | `asap` price |
-| `sail/Qwen/Qwen3.6-35B-A3B` | 262,144 | 0.05 / 0.40 / 0.02 | `asap` price | 0.05 / 0.40 / 0.02 |
+| `sail/openai/gpt-oss-120b` | 131,072 | 0.06 / 0.40 / 0.03 | not offered | not offered |
+| `sail/Qwen/Qwen3.6-35B-A3B` | 262,144 | not offered | not offered | 0.05 / 0.40 / 0.02 |
 
-`Qwen/Qwen3.6-35B-A3B` is served in the `flex` window only and needs a background Responses request (see below). Where a model has no published price for a window, LiteLLM bills that window at the `asap` price. Any Sail model that is not in the table still works through the `sail/` route; it just has no automatic pricing until you set `input_cost_per_token` and `output_cost_per_token` on the deployment
+Not every model offers every window. Sail returns a 400 (`completion_window "balanced" is not available for model ...`) when a request names a window the model does not offer, and LiteLLM does not pre-check this, so `openai/gpt-oss-120b` only works without a `service_tier` (or with `auto`, `default` or `priority`) and `Qwen/Qwen3.6-35B-A3B`, a flex-only model, only works with no `service_tier` or `service_tier="flex"`, ideally as a background Responses request (see below). The cost map row for Qwen carries the `flex` price in the `asap` columns too, so a Qwen request that omits `service_tier` is still billed correctly. Any Sail model that is not in the table still works through the `sail/` route; it just has no automatic pricing until you set `input_cost_per_token` and `output_cost_per_token` on the deployment
 
 ## Usage - LiteLLM Python SDK
 
@@ -62,7 +64,40 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-`max_tokens` and `max_completion_tokens` are both forwarded as sent; Sail accepts and enforces either
+`max_tokens` and `max_completion_tokens` are both forwarded as sent; Sail accepts and enforces either. `reasoning_effort` and `user` are forwarded too
+
+### Tool Calling
+
+```python showLineNumbers title="Sail Tool Calling"
+import os
+from litellm import completion
+
+os.environ["SAIL_API_KEY"] = "your-api-key"
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather for a city",
+            "parameters": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="sail/zai-org/GLM-5.3-Flash",
+    messages=[{"role": "user", "content": "What is the weather in Boston?"}],
+    tools=tools,
+    tool_choice="auto",
+)
+
+print(response.choices[0].message.tool_calls)
+```
 
 ### Streaming
 
@@ -138,11 +173,11 @@ print(response._hidden_params["response_cost"])  # billed at the balanced price
 
 On chat completions `service_tier` is the only way to pick a window. A `completion_window` written into `metadata` or `extra_body.metadata` is rejected the same way as an unknown tier, because chat billing reads `service_tier` and the request would otherwise run at one price and be billed at another. Other keys in `extra_body.metadata` are kept and merged with the window LiteLLM adds
 
-On the Responses API `service_tier` works the same way, and you may instead set `metadata.completion_window` directly. Sail's `standard` alias for `balanced` is accepted there and billed as `balanced`. Sending both a `service_tier` and a `metadata.completion_window` that disagree is a 400
+On the Responses API `service_tier` works the same way, and you may instead set `metadata.completion_window` directly. `standard`, the name Sail uses for the `balanced` window on the wire and echoes back in response metadata, is accepted there and billed as `balanced`. Sending both a `service_tier` and a `metadata.completion_window` that disagree is a 400; sending both when they agree is fine
 
 On `/v1/messages` LiteLLM forwards the Anthropic body as is and ignores `service_tier`, like every other provider on that path, so Messages requests run and bill at `asap`
 
-Sail may hold a `flex` chat completion open for minutes and time it out, so for `flex` it recommends a background Responses request and polling the returned id. Background mode accepts `balanced` and `flex` only; `asap` with `background: true` is a 400. LiteLLM forwards `background` as is:
+Sail may hold a `flex` chat completion open for minutes and time it out, so for `flex` it recommends a background Responses request and polling the returned id. Background mode accepts `balanced` and `flex` only; `asap` with `background: true` is a 400. When a background request names no window, Sail picks a non-`asap` window itself but LiteLLM has no `service_tier` to bill from and prices it at `asap`, so always pass `service_tier` on background requests. LiteLLM forwards `background` as is:
 
 ```python showLineNumbers title="Flex window as a background Responses request"
 response = responses(
@@ -268,13 +303,15 @@ You can also add Sail from the Admin UI. Go to Models, then Add Model, pick Sail
 
 The `sail/` models are registered in LiteLLM's model cost map with a price for each completion window: the `asap` price in the usual `input_cost_per_token`, `output_cost_per_token` and `cache_read_input_token_cost` fields, plus `_balanced` and `_flex` variants of each. A request is billed from the fields of the window it was sent with, so spend is computed automatically per request, returned in the `x-litellm-response-cost` response header, and recorded in spend logs under provider `sail`. Cached input tokens reported by Sail are billed at that window's cache read rate. `/model/info` shows all three price sets; the `_balanced` and `_flex` fields are null for models of other providers
 
-A deployment-level `input_cost_per_token` or `output_cost_per_token` override still takes precedence over the cost map, so only set one for a Sail model the cost map does not know
+A deployment-level `input_cost_per_token` or `output_cost_per_token` override still takes precedence over the cost map and applies to every window, so only set one for a Sail model the cost map does not know
+
+The per-window price is applied where LiteLLM computes spend for the request: the `response_cost` in `_hidden_params`, the response header and the spend logs. Calling `litellm.completion_cost(response)` yourself afterwards prices the response at `asap`, because the response object does not carry the window it ran in
 
 A background Responses request returns before Sail has generated anything, so there is no usage to price at request time. The proxy records that spend later through its [background cost poller](../response_api#cost-tracking-for-background-responses), which needs a Postgres database and the enterprise package; the minimal config above submits the request but does not log its spend
 
 ## Unsupported OpenAI parameters
 
-Sail rejects a number of OpenAI chat parameters with a 400 instead of ignoring them: `frequency_penalty`, `presence_penalty`, `logit_bias`, `stop`, `seed`, `logprobs`, `top_logprobs`, `n` other than 1, `verbosity`, `prediction`, `audio`, `modalities`, `web_search_options`, `functions` and `function_call`. LiteLLM knows the first seven are unsupported on `sail/`, so with `litellm.drop_params = True` or `drop_params: true` on the deployment they are removed before the request leaves LiteLLM, and without it LiteLLM raises `UnsupportedParamsError` client-side. `service_tier` values outside `auto`, `default`, `priority`, `flex` and `balanced` are handled the same way (see [Completion windows](#completion-windows)). On the Responses API, `previous_response_id`, `conversation` and `prompt` are not supported, `truncation` only accepts `"disabled"`, `parallel_tool_calls` is accepted but has no effect, and server-side tools such as web search are stripped. Chat completions accept `response_format` of type `text`, `json_object` and `json_schema`; the Responses API accepts `text.format` of type `text` and `json_schema` only. `tool_choice: "required"` fails the request when the model does not call a tool, which Sail does not guarantee for `openai/gpt-oss-*`
+Sail rejects a number of OpenAI chat parameters with a 400 instead of ignoring them: `frequency_penalty`, `presence_penalty`, `logit_bias`, `stop`, `seed`, `logprobs`, `top_logprobs`, `n` other than 1, `verbosity`, `prediction`, `audio`, `modalities`, `web_search_options`, `functions` and `function_call`. LiteLLM knows the first seven are unsupported on `sail/`, so with `litellm.drop_params = True` or `drop_params: true` on the deployment they are removed before the request leaves LiteLLM, and without it LiteLLM raises `UnsupportedParamsError` client-side. The rest are forwarded and fail at Sail. `service_tier` values outside `auto`, `default`, `priority`, `flex` and `balanced` are handled the same way as the first seven (see [Completion windows](#completion-windows)). On the Responses API, `previous_response_id`, `conversation` and `prompt` are not supported, `truncation` only accepts `"disabled"`, `parallel_tool_calls` is accepted but has no effect, and server-side tools such as web search are stripped. Chat completions accept `response_format` of type `text`, `json_object` and `json_schema`; the Responses API accepts `text.format` of type `text` and `json_schema` only. `tool_choice: "required"` fails the request when the model does not call a tool, which Sail does not guarantee for `openai/gpt-oss-*`
 
 ## Other Sail request options
 
