@@ -372,7 +372,7 @@ flowchart TD
 
 ```yaml
 mcp_servers:
-  - server_name: deepwiki
+  deepwiki:
     url: https://mcp.deepwiki.com/mcp
     transport: http
     available_on_public_internet: true
