@@ -301,6 +301,41 @@ const config = {
         };
       },
     }),
+    // PostHog product analytics. Same project as the Webflow marketing site
+    // (www.litellm.ai), so a visitor moving between the two domains is one
+    // person and one journey: persistence keeps a first-party cookie on
+    // .litellm.ai, which every litellm.ai subdomain can read.
+    // Production builds only, mirroring the gtag setup below.
+    //
+    // capture_pageview is 'history_change' because Docusaurus is a SPA after
+    // the first load. Without it only hard loads emit $pageview and every
+    // sidebar or in-page link is invisible, which is exactly the docs-to-docs
+    // navigation the funnel and path analyses are built on.
+    //
+    // Kept off the docs on purpose, so this stays analytics and nothing else:
+    // no session replay (no rrweb bundle downloaded, no DOM observation;
+    // replay is scoped to litellm.ai/enterprise and /pricing by URL trigger in
+    // the project settings), no heatmap capture despite the project-level
+    // opt-in (skips the mousemove listener and its periodic requests; link and
+    // button clicks are already captured with their hrefs by autocapture), and
+    // no $pageleave, which halves event volume at the cost of bounce rate and
+    // session-duration precision in Web Analytics. Surveys are off too, which
+    // drops the surveys.js request the SDK otherwise makes on every page; docs
+    // feedback already goes through Feedback Rocket below.
+    () => ({
+      name: 'posthog',
+      injectHtmlTags() {
+        if (process.env.NODE_ENV !== 'production') return {};
+        return {
+          headTags: [
+            {
+              tagName: 'script',
+              innerHTML: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags onFeatureFlags onSessionId identify setPersonProperties group resetGroups reset get_distinct_id get_session_id alias set_config startSessionRecording stopSessionRecording captureException opt_in_capturing opt_out_capturing has_opted_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',{api_host:'https://us.i.posthog.com',defaults:'2026-05-30',person_profiles:'identified_only',cross_subdomain_cookie:true,capture_pageview:'history_change',capture_pageleave:false,disable_session_recording:true,capture_heatmaps:false,disable_surveys:true,autocapture:{dom_event_allowlist:['click'],element_allowlist:['a','button']}});`,
+            },
+          ],
+        };
+      },
+    }),
     // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
