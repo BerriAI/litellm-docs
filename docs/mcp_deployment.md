@@ -62,16 +62,18 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:
-  internal-db:
+  internal_db:
     url: http://db-mcp.internal:8000/mcp
     transport: http
     available_on_public_internet: false  # internal callers only
 
-  web-search:
+  web_search:
     url: https://mcp.exa.ai/mcp
     transport: http
     available_on_public_internet: true   # visible to ChatGPT / Claude Desktop (the default)
 ```
+
+Server names may not contain a hyphen; the proxy rejects `mcp_servers` keys like `internal-db` at startup. Use underscores instead.
 
 ---
 
