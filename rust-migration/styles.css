@@ -1,0 +1,1241 @@
+/* Styles for the Rust migration pages. Every class is prefixed rm- so the file
+   works as plain global CSS on any docs host. The colors below read the host's
+   theme; point them at the new theme's variables when the host changes. */
+
+:root {
+  --rm-emphasis-200: var(--ifm-color-emphasis-200);
+  --rm-emphasis-300: var(--ifm-color-emphasis-300);
+  --rm-emphasis-400: var(--ifm-color-emphasis-400);
+  --rm-emphasis-500: var(--ifm-color-emphasis-500);
+  --rm-emphasis-600: var(--ifm-color-emphasis-600);
+  --rm-emphasis-700: var(--ifm-color-emphasis-700);
+  --rm-emphasis-800: var(--ifm-color-emphasis-800);
+  --rm-text: var(--ifm-font-color-base);
+  --rm-bg: var(--ifm-background-color);
+  --rm-surface: var(--ifm-background-surface-color);
+  --rm-primary: var(--ifm-color-primary);
+  --rm-navbar-height: var(--ifm-navbar-height);
+  --rm-font: var(--ifm-font-family-base);
+}
+
+/* Inline pickers that sit inside a sentence, like "On v1.102.1 ▾". */
+
+/* The larger control text needs a touch more room than a plain space gives. */
+.rm-picker-sentenceControl {
+  position: relative;
+  margin-left: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-bottom: 1.5px dashed var(--rm-emphasis-400);
+  background: none;
+  color: var(--rm-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15em;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 140ms, border-color 140ms;
+}
+
+.rm-picker-sentenceControl:hover,
+.rm-picker-sentenceControl:focus-within {
+  border-bottom-color: var(--rm-primary);
+  color: var(--rm-primary);
+}
+
+.rm-picker-sentenceControl:focus-within {
+  border-bottom-style: solid;
+  outline: none;
+}
+
+.rm-picker-sentenceControl svg {
+  width: 0.8em;
+  height: 0.8em;
+  margin-left: 0.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.rm-picker-selectIcon {
+  display: inline-flex;
+}
+
+.rm-picker-selectIcon svg {
+  transition: transform 160ms;
+}
+
+.rm-picker-sentenceControl[data-popup-open] .rm-picker-selectIcon svg {
+  transform: rotate(180deg);
+}
+
+.rm-picker-selectPositioner {
+  z-index: 100;
+}
+
+.rm-picker-selectPopup {
+  min-width: var(--anchor-width);
+  padding: 0.3rem;
+  border: 1px solid var(--rm-emphasis-200);
+  border-radius: 10px;
+  background: var(--rm-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  transform-origin: var(--transform-origin);
+  transition: opacity 140ms, transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rm-picker-selectPopup[data-starting-style],
+.rm-picker-selectPopup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96) translateY(-4px);
+}
+
+.rm-picker-selectItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.75rem;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 0.65rem 0.9rem 0.7rem;
+  border-radius: 8px;
+  color: var(--rm-text);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.rm-picker-selectItem + .rm-picker-selectItem {
+  border-top: 1px solid var(--rm-emphasis-200);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.rm-picker-selectItem[data-highlighted] {
+  background: var(--rm-emphasis-100);
+}
+
+.rm-picker-selectItem[data-selected] .rm-picker-selectLabel {
+  color: var(--rm-primary);
+}
+
+.rm-picker-selectLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rm-picker-selectMeta {
+  color: var(--rm-emphasis-600);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rm-picker-selectScope {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  color: var(--rm-emphasis-600);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+/* Dashed like the page's other controls, so it reads as something to open. */
+.rm-badge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dashed currentColor;
+  background: none;
+  color: var(--rm-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.rm-badge-badge:hover,
+.rm-badge-wrap:focus-within .rm-badge-badge {
+  border-bottom-style: solid;
+}
+
+.rm-badge-badge:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--rm-primary);
+  outline-offset: 2px;
+}
+
+.rm-badge-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.rm-badge-iconFill {
+  fill: currentColor;
+}
+
+/* The knob of a switch that is on sits cut out of its filled track. */
+.rm-badge-iconKnob {
+  fill: var(--rm-surface);
+  stroke: none;
+}
+
+.rm-badge-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* Opens on hover or focus. The top padding bridges the gap so the pointer can
+   travel from the badge into the popup. */
+.rm-badge-popup {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  right: 0;
+  visibility: hidden;
+  width: 240px;
+  max-width: calc(100vw - 32px);
+  margin-top: 6px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--rm-emphasis-200);
+  border-radius: 10px;
+  background: var(--rm-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  color: var(--rm-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  opacity: 0;
+  text-align: left;
+  transition: opacity 120ms, visibility 120ms;
+}
+
+.rm-badge-popup::before {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  height: 8px;
+  content: '';
+}
+
+.rm-badge-wrap:hover .rm-badge-popup,
+.rm-badge-wrap:focus-within .rm-badge-popup {
+  visibility: visible;
+  opacity: 1;
+}
+
+.rm-badge-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Icon, stage and version on one line, with the date under the stage. */
+.rm-badge-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rm-badge-history li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 0.45rem;
+  color: var(--rm-primary);
+}
+
+.rm-badge-history li + li {
+  margin-top: 0.45rem;
+}
+
+.rm-badge-stage {
+  font-weight: 600;
+}
+
+.rm-badge-version {
+  color: var(--rm-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-badge-date {
+  grid-column: 2 / 4;
+  color: var(--rm-emphasis-600);
+  font-size: 0.7rem;
+}
+
+.rm-badge-explain {
+  display: block;
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--rm-emphasis-200);
+  color: var(--rm-emphasis-700);
+  font-size: 0.72rem;
+}
+
+.rm-badge-explain:hover {
+  color: var(--rm-primary);
+  text-decoration: none;
+}
+
+.rm-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.rm-hero {
+  padding: 3.5rem 0 1.25rem;
+  border-bottom: 1px solid var(--rm-emphasis-200);
+}
+
+.rm-eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--rm-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rm-title {
+  margin: 0 0 0.75rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.rm-description {
+  max-width: 620px;
+  margin: 0;
+  color: var(--rm-emphasis-700);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.rm-section {
+  padding: 3rem 0;
+  border-bottom: 1px solid var(--rm-emphasis-200);
+}
+
+.rm-section:last-child {
+  border-bottom: 0;
+}
+
+/* flow-root keeps the heading's bottom margin from collapsing into the gap below. */
+.rm-sectionHeading {
+  display: flow-root;
+  margin-bottom: 1.5rem;
+}
+
+.rm-sectionHeading h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.rm-kicker {
+  margin: 0 0 0.45rem;
+  color: var(--rm-primary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rm-chartCard {
+  overflow: hidden;
+  border: 1px solid var(--rm-emphasis-200);
+  border-radius: 12px;
+  background: var(--rm-surface);
+}
+
+.rm-goalSentence {
+  margin: 0;
+  padding: 1.25rem 1.5rem 0;
+  color: var(--rm-emphasis-700);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.rm-progressSummary {
+  margin-right: 0.05em;
+  color: var(--rm-text);
+  font-size: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  vertical-align: -0.1em;
+}
+
+.rm-keepTogether {
+  white-space: nowrap;
+}
+
+.rm-viewWord {
+  display: inline-flex;
+  align-items: center;
+  animation: rm-view-flip 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rm-viewWord svg {
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.3rem;
+}
+
+@keyframes rm-view-flip {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) scale(0.9);
+  }
+}
+
+.rm-chartBody {
+  padding: 0 0.5rem 0.5rem;
+  position: relative;
+}
+
+.rm-pointHit {
+  fill: transparent;
+  outline: none;
+}
+
+.rm-tooltip {
+  position: absolute;
+  z-index: 2;
+  width: max-content;
+  max-width: min(440px, 92%);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--rm-text);
+  background: var(--rm-surface);
+  border: 1px solid var(--rm-emphasis-300);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 14%);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.rm-tooltipRight {
+  margin-left: 14px;
+}
+
+.rm-tooltipLeft {
+  margin-left: -14px;
+  transform: translate(-100%, -50%);
+}
+
+.rm-tooltipHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+.rm-tooltipDate {
+  color: var(--rm-emphasis-600);
+  font-size: 0.75rem;
+}
+
+.rm-tooltipPercent {
+  margin-left: auto;
+  padding-left: 0.6rem;
+  font-weight: 600;
+}
+
+.rm-tooltipEmpty {
+  margin-top: 0.4rem;
+  color: var(--rm-emphasis-700);
+}
+
+.rm-tooltipList {
+  margin: 0.55rem 0 0;
+  padding: 0.55rem 0 0;
+  border-top: 1px solid var(--rm-emphasis-200);
+  list-style: none;
+}
+
+.rm-tooltipList li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1rem;
+}
+
+.rm-tooltipList li + li {
+  margin-top: 0.55rem;
+}
+
+.rm-tooltipArea {
+  font-weight: 600;
+}
+
+.rm-tooltipStage {
+  color: var(--rm-primary);
+  white-space: nowrap;
+}
+
+.rm-tooltipStage em {
+  color: var(--rm-emphasis-600);
+  font-style: normal;
+}
+
+.rm-tooltipProviders {
+  grid-column: 1 / -1;
+  color: var(--rm-emphasis-600);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.rm-tooltipList .rm-tooltipMore {
+  display: block;
+  color: var(--rm-emphasis-600);
+  font-size: 0.75rem;
+}
+
+.rm-timeline {
+  display: block;
+  overflow: visible;
+  font-family: var(--rm-font);
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-gridLine {
+  stroke: var(--rm-emphasis-200);
+  stroke-dasharray: 2 4;
+}
+
+.rm-baseline {
+  stroke: var(--rm-emphasis-300);
+}
+
+.rm-axisLabel {
+  fill: var(--rm-emphasis-500);
+  font-size: 11px;
+}
+
+.rm-versionLabel {
+  fill: var(--rm-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.rm-versionDate {
+  fill: var(--rm-emphasis-500);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.rm-mainVersionLabel {
+  fill: var(--rm-primary);
+  font-weight: 600;
+}
+
+.rm-goalAxisLabel {
+  fill: var(--rm-emphasis-700);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.rm-pointValue {
+  fill: var(--rm-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rm-areaStart {
+  stop-color: var(--rm-primary);
+  stop-opacity: 0.22;
+}
+
+.rm-areaEnd {
+  stop-color: var(--rm-primary);
+  stop-opacity: 0;
+}
+
+.rm-progressLine {
+  fill: none;
+  stroke: var(--rm-primary);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.rm-goalLine {
+  stroke: var(--rm-emphasis-400);
+  stroke-dasharray: 4 5;
+  stroke-width: 1.5;
+}
+
+.rm-progressPoint {
+  fill: var(--rm-surface);
+  stroke: var(--rm-primary);
+  stroke-width: 1.5;
+}
+
+.rm-mainPoint {
+  fill: var(--rm-primary);
+  stroke: var(--rm-surface);
+  stroke-width: 2;
+}
+
+.rm-goal circle {
+  fill: var(--rm-surface);
+  stroke: var(--rm-emphasis-500);
+  stroke-dasharray: 2 2;
+  stroke-width: 1.5;
+}
+
+.rm-goalLabel {
+  fill: var(--rm-emphasis-600);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Top-level work flows into up to two columns and never splits across them. */
+.rm-tree {
+  margin: 0;
+  padding: 1rem 1.5rem 1.25rem;
+  list-style: none;
+}
+
+/* Guide lines run from each parent's marker down past its children. */
+.rm-tree ul {
+  margin: 0 0 0 7.5px;
+  padding: 0 0 0 1rem;
+  border-left: 1px solid var(--rm-emphasis-200);
+  list-style: none;
+}
+
+.rm-node {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.rm-tree > li + li {
+  border-top: 1px solid var(--rm-emphasis-200);
+}
+
+/* Undo the site-wide boxed styling for `details` in docs content. */
+.rm-tree .rm-group,
+.rm-tree .rm-group > .rm-node {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font-weight: 400 !important;
+}
+
+.rm-group > .rm-node {
+  cursor: pointer;
+  list-style: none;
+}
+
+.rm-group > .rm-node::-webkit-details-marker {
+  display: none;
+}
+
+/* Top-level groups are the APIs and Foundation, so they read as section rows. */
+.rm-tree > li > .rm-group > .rm-node {
+  min-height: 40px;
+  font-weight: 600 !important;
+}
+
+.rm-group > .rm-node:hover .rm-nodeText {
+  color: var(--rm-primary);
+}
+
+.rm-group > ul {
+  margin-bottom: 0.4rem;
+}
+
+.rm-marker {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.rm-markerTrack {
+  fill: var(--rm-surface);
+  stroke: var(--rm-emphasis-400);
+}
+
+/* A complete node fills solid, and its glyph is cut out of the fill. */
+.rm-markerComplete .rm-markerTrack {
+  fill: var(--rm-primary);
+  stroke: var(--rm-primary);
+}
+
+.rm-markerComplete .rm-markerGlyph {
+  stroke: var(--rm-surface);
+  stroke-width: 1.75;
+}
+
+/* The arc starts at twelve o'clock and runs clockwise. */
+.rm-markerArc {
+  stroke: var(--rm-primary);
+  stroke-width: 2.5;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.rm-markerGlyph {
+  stroke: var(--rm-emphasis-700);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 8px 8px;
+  transition: transform 150ms ease;
+}
+
+.rm-group[open] > .rm-node .rm-markerGlyph {
+  transform: rotate(90deg);
+}
+
+.rm-nodeText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rm-nodeMeta {
+  margin-left: auto;
+  padding-left: 0.75rem;
+  color: var(--rm-emphasis-600);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.rm-nodeMeta.onRust {
+  color: var(--rm-primary);
+  font-weight: 600;
+}
+
+.rm-sectionLead {
+  max-width: 640px;
+  margin: 0 0 1.25rem;
+  color: var(--rm-emphasis-700);
+  font-size: 0.9rem;
+}
+
+.rm-stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Linked from the tracker's badges, so leave room under the sticky navbar. */
+.rm-stage {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--rm-emphasis-200);
+  border-radius: 10px;
+  scroll-margin-top: calc(var(--rm-navbar-height) + 1rem);
+}
+
+.rm-stage:target {
+  border-color: var(--rm-primary);
+}
+
+.rm-stageName {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.4rem;
+  color: var(--rm-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rm-stageIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.rm-stageDescription {
+  margin: 0;
+  color: var(--rm-emphasis-800);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.rm-stageSwitch {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: auto 0 0;
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.rm-stageSwitch code {
+  font-weight: 600;
+}
+
+.rm-stageSwitch span {
+  color: var(--rm-emphasis-600);
+}
+
+.rm-faq {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rm-emphasis-200);
+  list-style: none;
+}
+
+.rm-faq > li {
+  border-bottom: 1px solid var(--rm-emphasis-200);
+}
+
+/* Undo the site-wide boxed styling for `details` in docs content. */
+.rm-faq .rm-faqItem,
+.rm-faq .rm-faqItem > .rm-faqQuestion {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.rm-faqItem {
+  scroll-margin-top: calc(var(--rm-navbar-height) + 1rem);
+}
+
+.rm-faqQuestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 52px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600 !important;
+  list-style: none;
+}
+
+.rm-faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.rm-faq .rm-faqQuestion:hover {
+  color: var(--rm-primary) !important;
+}
+
+.rm-faqQuestion svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--rm-emphasis-600);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  transition: transform 150ms ease;
+}
+
+.rm-faqItem[open] > .rm-faqQuestion svg {
+  transform: rotate(180deg);
+}
+
+.rm-faqAnswer {
+  padding-bottom: 1.25rem;
+}
+
+/* A vertical rail with one dot per event; releases get a filled dot. */
+.rm-events {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 1px solid var(--rm-emphasis-200);
+  list-style: none;
+}
+
+.rm-event {
+  position: relative;
+  padding-bottom: 1.75rem;
+}
+
+.rm-event:last-child {
+  padding-bottom: 0;
+}
+
+.rm-event::before {
+  position: absolute;
+  top: 0.3rem;
+  left: calc(-1.5rem - 5px);
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--rm-emphasis-400);
+  border-radius: 50%;
+  background: var(--rm-bg);
+  content: '';
+}
+
+.rm-eventMeta {
+  margin: 0 0 0.2rem;
+  color: var(--rm-emphasis-600);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-eventTitle {
+  color: var(--rm-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rm-eventTitle:hover {
+  color: var(--rm-primary);
+}
+
+@media (max-width: 640px) {
+  .rm-page {
+    padding: 0 1.25rem 3rem;
+  }
+
+  .rm-hero {
+    padding-top: 2rem;
+  }
+
+  .rm-title {
+    font-size: 2rem;
+  }
+
+  .rm-section {
+    padding: 2.25rem 0;
+  }
+
+  .rm-goalSentence {
+    padding: 1rem 1rem 0;
+    font-size: 0.9rem;
+  }
+
+
+  .rm-progressSummary {
+    font-size: 1.75rem;
+  }
+
+  .rm-tree {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+}
+
+.rm-impact-versionPopup {
+  width: min(340px, calc(100vw - 32px));
+}
+
+.rm-impact-versionSearch {
+  box-sizing: border-box;
+  width: 100%;
+  height: 2.1rem;
+  margin-bottom: 0.3rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--rm-emphasis-300);
+  border-radius: 7px;
+  background: var(--rm-bg);
+  color: var(--rm-text);
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.rm-impact-versionSearch:focus {
+  border-color: var(--rm-primary);
+}
+
+.rm-impact-versionList {
+  max-height: min(18rem, calc(var(--available-height) - 3rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rm-impact-versionList:empty {
+  display: none;
+}
+
+.rm-impact-versionItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.rm-impact-versionItem[data-highlighted] {
+  background: var(--rm-emphasis-100);
+}
+
+.rm-impact-versionItem[data-selected] .rm-impact-versionName {
+  color: var(--rm-primary);
+}
+
+.rm-impact-versionEmpty:not(:empty) {
+  padding: 0.6rem 0.7rem;
+  color: var(--rm-emphasis-600);
+  font-size: 0.8rem;
+}
+
+/* The picker is the subject of the page title, so it takes the title's size
+   and stands out in the brand color. `button` outranks the shared picker rule. */
+button.rm-impact-titlePicker {
+  margin-left: 0.1em;
+  border-bottom-width: 3px;
+  border-bottom-color: color-mix(in srgb, var(--rm-primary) 55%, transparent);
+  color: var(--rm-primary);
+  font-size: 1em;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+button.rm-impact-titlePicker svg {
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: 0.15em;
+  stroke-width: 2;
+}
+
+/* Same rail as the updates list. Releases past the marker are dimmed until
+   the reader upgrades. */
+/* Direction labels at each end of the rail. */
+.rm-impact-impactEnd {
+  margin: 0 0 0.6rem;
+  color: var(--rm-emphasis-500);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.rm-impact-impactEndNewer {
+  margin: 0.9rem 0 0;
+}
+
+.rm-impact-impactTimeline {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0.9rem 1.5rem;
+  border-left: 1px solid var(--rm-emphasis-200);
+  list-style: none;
+}
+
+.rm-impact-impactTimeline > li {
+  position: relative;
+  padding-bottom: 1.1rem;
+}
+
+.rm-impact-impactTimeline > li:last-child {
+  padding-bottom: 0;
+}
+
+/* An arrowhead where the rail ends points toward newer releases. */
+.rm-impact-impactTimeline::after {
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-right: 1px solid var(--rm-emphasis-400);
+  border-bottom: 1px solid var(--rm-emphasis-400);
+  content: '';
+  transform: rotate(45deg);
+}
+
+.rm-impact-impactHave::before,
+.rm-impact-impactLater::before {
+  position: absolute;
+  top: 0.4rem;
+  left: calc(-1.5rem - 4.5px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  content: '';
+}
+
+.rm-impact-impactHave::before {
+  background: var(--rm-primary);
+}
+
+.rm-impact-impactLater::before {
+  border: 1.5px solid var(--rm-emphasis-500);
+  background: var(--rm-bg);
+}
+
+.rm-impact-impactLater {
+  opacity: 0.6;
+}
+
+.rm-impact-impactHere {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--rm-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rm-impact-impactHere::before {
+  position: absolute;
+  top: 50%;
+  left: calc(-1.5rem - 1px);
+  width: 1.1rem;
+  border-top: 2px solid var(--rm-primary);
+  content: '';
+}
+
+.rm-impact-impactHere span {
+  color: var(--rm-emphasis-700);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.rm-impact-impactTimeline > .rm-impact-impactHere {
+  margin: 0 0 1.1rem;
+  padding: 0.35rem 0;
+}
+
+.rm-impact-impactRelease {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.rm-impact-impactRelease span {
+  color: var(--rm-emphasis-600);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.rm-impact-impactChanges {
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  list-style: none;
+}
+
+.rm-impact-impactChanges li + li {
+  margin-top: 0.45rem;
+}
+
+/* Lines up under the API name, past the stage icon. */
+.rm-impact-impactProviders {
+  margin: 0.05rem 0 0 calc(14px + 0.4rem);
+  color: var(--rm-emphasis-700);
+  font-size: 0.78rem;
+}
+
+.rm-impact-impactMore {
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--rm-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.rm-impact-impactMore:hover {
+  text-decoration: underline;
+}
+
+.rm-impact-impactChanges strong {
+  font-weight: 600;
+}
+
+.rm-impact-impactIcon {
+  width: 14px;
+  height: 14px;
+  margin-right: 0.4rem;
+  color: var(--rm-primary);
+  vertical-align: -2px;
+}
+
+/* Projected releases are grey: a dashed step line, grey dots and a light wash,
+   so the eye reads them as expectation, not history. */
+.rm-planLine {
+  fill: none;
+  stroke: var(--rm-emphasis-500);
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.rm-planArea {
+  fill: var(--rm-emphasis-500);
+  fill-opacity: 0.08;
+  stroke: none;
+}
+
+.rm-planPoint {
+  fill: var(--rm-emphasis-500);
+  stroke: var(--rm-surface);
+  stroke-width: 1.5;
+}
+
+.rm-plannedVersionLabel {
+  fill: var(--rm-emphasis-600);
+}
+
+/* A unit the plan will move: the badge takes a dashed, quieter look. */
+.rm-badge-planned {
+  color: var(--rm-emphasis-600);
+}
+
+.rm-badge-planRow {
+  color: var(--rm-emphasis-600);
+  font-style: italic;
+}
+
+.rm-plannedPercent {
+  margin-right: 0.5rem;
+  color: var(--rm-emphasis-500);
+  font-size: 0.72rem;
+  font-weight: 500;
+}

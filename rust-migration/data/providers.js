@@ -41,6 +41,4 @@ export const PROVIDERS = {
   'voyage': 'Voyage AI',
   'watsonx': 'watsonx',
   'xai': 'xAI',
-} as const;
-
-export type ProviderId = keyof typeof PROVIDERS;
+};
