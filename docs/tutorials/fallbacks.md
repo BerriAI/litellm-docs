@@ -5,7 +5,7 @@ keywords: [fallbacks, failover, provider failover, model failover, reliability, 
 
 # Using completion() with Fallbacks (Failover) for Reliability
 
-This tutorial demonstrates how to employ the `completion()` function with model fallbacks (also called failover) to ensure reliability. LLM APIs can be unstable, completion() with fallbacks ensures you'll always get a response from your calls
+This tutorial demonstrates how to employ the `completion()` function with model fallbacks (also called failover) to improve reliability. LLM APIs can be unstable; `completion()` with fallbacks tries backup models in order when the primary model fails, and only raises once every model has been tried
 
 ## Set Up Fallbacks for a Virtual Key
 
@@ -14,15 +14,17 @@ This tutorial demonstrates how to employ the `completion()` function with model 
 ## Usage 
 To use fallback models with `completion()`, specify a list of models in the `fallbacks` parameter. 
 
-The `fallbacks` list should include the primary model you want to use, followed by additional models that can be used as backups in case the primary model fails to provide a response.
+The `fallbacks` list holds the backup models to try, in order, if the primary model passed as `model` fails to provide a response. The primary model is tried first automatically, so it does not need to be repeated in the list.
 
 ```python
-response = completion(model="bad-model", fallbacks=["{{openai_small}}" "command-nightly"], messages=messages)
+response = completion(model="bad-model", fallbacks=["{{openai_small}}", "command-nightly"], messages=messages)
 ```
+
+An entry in `fallbacks` can also be a dict that overrides litellm params for that attempt, for example `{"model": "{{openai_small}}", "api_key": "sk-..."}`.
 
 ## How does `completion_with_fallbacks()` work
 
-The `completion_with_fallbacks()` function attempts a completion call using the primary model specified as `model` in `completion(model=model)`. If the primary model fails or encounters an error, it automatically tries the `fallbacks` models in the specified order. This ensures a response even if the primary model is unavailable.
+When `fallbacks` is set (or `litellm.model_fallbacks` is configured), `completion()` hands the call to `completion_with_fallbacks()`, which runs `async_completion_with_fallbacks()`. It makes a single ordered pass over `[model] + fallbacks`, calling each model once. The first non-`None` response is returned, with an `x-litellm-attempted-fallbacks` header set to the number of fallbacks tried before the successful model (0 when the primary model succeeded). If every attempt fails, an exception is raised containing the most recent error and the message `All fallback attempts failed`. There is no time window, no retry loop and no per-model cooldown; each model is attempted exactly once.
 
 ### Output from calls
 ```
@@ -55,92 +57,30 @@ completion call {{openai_small}}
 
 ```
 
-### Key components of Model Fallbacks implementation:
-* Looping through `fallbacks`
-* Cool-Downs for rate-limited models
-
-#### Looping through `fallbacks`
-Allow `45seconds` for each request. In the 45s this function tries calling the primary model set as `model`. If model fails it loops through the backup `fallbacks` models and attempts to get a response in the allocated `45s` time set here: 
+### Core of the implementation
 ```python
-while response == None and time.time() - start_time < 45:
-        for model in fallbacks:
-            ...
+fallbacks = [original_model] + nested_kwargs.pop("fallbacks", [])
+
+for attempted_fallbacks, fallback in enumerate(fallbacks):
+    try:
+        completion_kwargs = safe_deep_copy(base_kwargs)
+        if isinstance(fallback, dict):
+            fallback_config = safe_deep_copy(dict(fallback))
+            model = fallback_config.pop("model", original_model)
+            completion_kwargs.update(fallback_config)
+        else:
+            model = fallback
+
+        response = await litellm.acompletion(**completion_kwargs, model=model, ...)
+        if response is not None:
+            return add_fallback_headers_to_response(
+                response=response, attempted_fallbacks=attempted_fallbacks
+            )
+    except Exception as e:
+        most_recent_exception_str = str(e)
+        continue
+
+raise Exception(f"{most_recent_exception_str}. All fallback attempts failed. ...")
 ```
 
-#### Cool-Downs for rate-limited models
-If a model API call leads to an error - allow it to cooldown for `60s`
-```python
-try:
-  ...
-except Exception as e:
-  print(f"got exception {e} for model {model}")
-  rate_limited_models.add(model)
-  model_expiration_times[model] = (
-      time.time() + 60
-  )  # cool down this selected model
-  pass
-```
-
-Before making an LLM API call we check if the selected model is in `rate_limited_models`, if so skip making the API call
-```python
-if (
-  model in rate_limited_models
-):  # check if model is currently cooling down
-  if (
-      model_expiration_times.get(model)
-      and time.time() >= model_expiration_times[model]
-  ):
-      rate_limited_models.remove(
-          model
-      )  # check if it's been 60s of cool down and remove model
-  else:
-      continue  # skip model
-
-```
-
-#### Full code of completion with fallbacks()
-```python
-
-    response = None
-    rate_limited_models = set()
-    model_expiration_times = {}
-    start_time = time.time()
-    fallbacks = [kwargs["model"]] + kwargs["fallbacks"]
-    del kwargs["fallbacks"]  # remove fallbacks so it's not recursive
-
-    while response == None and time.time() - start_time < 45:
-        for model in fallbacks:
-            # loop thru all models
-            try:
-                if (
-                    model in rate_limited_models
-                ):  # check if model is currently cooling down
-                    if (
-                        model_expiration_times.get(model)
-                        and time.time() >= model_expiration_times[model]
-                    ):
-                        rate_limited_models.remove(
-                            model
-                        )  # check if it's been 60s of cool down and remove model
-                    else:
-                        continue  # skip model
-
-                # delete model from kwargs if it exists
-                if kwargs.get("model"):
-                    del kwargs["model"]
-
-                print("making completion call", model)
-                response = litellm.completion(**kwargs, model=model)
-
-                if response != None:
-                    return response
-
-            except Exception as e:
-                print(f"got exception {e} for model {model}")
-                rate_limited_models.add(model)
-                model_expiration_times[model] = (
-                    time.time() + 60
-                )  # cool down this selected model
-                pass
-    return response
-```
+See `litellm/litellm_core_utils/fallback_utils.py` for the full implementation.
