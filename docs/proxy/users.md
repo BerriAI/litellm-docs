@@ -441,7 +441,7 @@ Each window is tracked independently and resets on its own schedule:
 |---|---|
 | `1h`  | Every hour |
 | `24h` | Daily at midnight UTC |
-| `7d`  | Every Sunday at midnight UTC |
+| `7d`  | Every Monday at midnight UTC (or the configured reset time) |
 | `30d` | 1st of every month at midnight UTC |
 
 **Via Dashboard**
@@ -1163,7 +1163,7 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}": 1000}}' 
 ```
 
 **Expected Response**
@@ -1365,8 +1365,8 @@ Expected Response:
 
 
 **Important Notes:**
-- **Rate limits do not apply to proxy admin users.** 
-- When testing rate limits, use internal user roles (non-admin) to ensure limits are enforced as expected.
+- Rate limits apply to any key, user or team that has `tpm_limit`, `rpm_limit` or `max_parallel_requests` set, regardless of role. The master key has no limits unless you configure them.
+- When testing rate limits, use a virtual key with explicit limits so the limiter has something to enforce.
 
 Changes: 
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
