@@ -192,7 +192,7 @@ The guardrail sits in the request path, so by default it fails open: when Agent 
 
 ### Watching fail-open calls
 
-Every call let through unscanned is logged at error level with the reason, shows a `Unscanned` verdict with `guardrail_failed_to_respond` on its Logs row and OpenTelemetry span, and increments the Prometheus counter `litellm_guardrail_errors_total{guardrail_name="<name>", error_type="fail_open", hook_type="pre_call"}` ([Prometheus](/docs/proxy/prometheus)). Alert on that counter; a steady rate means Agent 365 is not evaluating your tool calls
+Every call let through unscanned is logged at error level with the reason and shows a `Unscanned` verdict with `guardrail_failed_to_respond` on its Logs row and OpenTelemetry span. Filter the Logs page on that status; a steady stream of rows means Agent 365 is not evaluating your tool calls
 
 ## Conversation grouping
 
