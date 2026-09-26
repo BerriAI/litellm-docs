@@ -72,7 +72,7 @@ MCP server `notes`: 1 tool description(s) blocked by a guardrail and hidden from
 - `get_note`: Content blocked: prompt_injection_jailbreak conditional match 'enable + no restrictions' detected (severity: high)
 ```
 
-Hiding happens at listing time. A client that cached the tool name earlier can still attempt the call, and the same guardrail then runs on the call's arguments. To refuse calls to any tool the admin has not approved, [pin the server's tool list](./mcp_control#pin-a-servers-tool-list); pinned servers skip the scan, since their descriptions are the ones the admin approved
+Hiding happens at listing time. A client that cached the tool name earlier can still attempt the call, and the same guardrail then runs on the call's arguments. To refuse calls to any tool the admin has not approved, [pin the server's tool list](./mcp_control#pin-a-servers-tool-list); the scan still runs on a pinned server and the pin is applied on top of what it lets through
 
 Custom guardrails: on a discovery scan the hook's `call_type` is `list_mcp_tools` instead of `call_mcp_tool`, `mcp_tool_description` and `mcp_input_schema` are set in the request data, and a guardrail built on `apply_guardrail` receives the description and the schema descriptions as extra `texts` entries ahead of the argument texts. Raising blocks the tool; returning rewritten texts masks it
 
