@@ -225,7 +225,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "zephyr-beta"",
+    "model": "zephyr-beta",
     "messages": [
         {
         "role": "user",
@@ -968,7 +968,7 @@ response = client.chat.completions.with_raw_response.create(
 
 print(response)
 
-print(f"response.headers.get('x-litellm-model-api-base')")
+print(response.headers.get('x-litellm-model-api-base'))
 ```
 
 ### Setting Fallbacks for Wildcard Models
@@ -1141,7 +1141,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         }
     ],
     "model": "{{openai_small}}",
-    "disable_fallbacks": true # 👈 DISABLE FALLBACKS
+    "disable_fallbacks": true
 }'
 ```
 
