@@ -1386,7 +1386,7 @@ general_settings:
 
 With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
 
-Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 
