@@ -142,6 +142,7 @@ general_settings:
   dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or with sk-1234
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
+  maximum_daily_tag_spend_retention_period: 90d # Optional. Prune LiteLLM_DailyTagSpend rows for days older than this.
   user_mcp_management_mode: restricted  # or "view_all"
 
   # Database Settings
@@ -389,6 +390,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | forward_openai_org_id | boolean | `false` | If true, forwards the OpenAI Organization ID to the backend LLM call (if it's OpenAI). |
 | forward_client_headers_to_llm_api | boolean | `false` | If true, forwards the client headers (any `x-` headers and `anthropic-beta` headers) to the backend LLM call |
 | maximum_spend_logs_retention_period | str                   | `null` (cleanup disabled) | Used to set the max retention time for spend logs in the db, after which they will be auto-purged                                                                                                                                                                                                                             |
+| maximum_daily_tag_spend_retention_period | str                   | `null` (table never pruned) | Deletes `LiteLLM_DailyTagSpend` rows whose day is strictly older than the retention horizon, on the same cleanup job. See [spend logs deletion](./spend_logs_deletion) |
 | maximum_spend_logs_retention_interval | str                   | `1d` | Used to set the interval in which the spend log cleanup task should run in.                                                                                                                                                                                                                                                   |
 | alert_type_config | dict | `null` | Configuration mapping alert types to their handler settings |
 | always_include_stream_usage | boolean | `false` | If true, includes usage metrics in every streaming response chunk |
