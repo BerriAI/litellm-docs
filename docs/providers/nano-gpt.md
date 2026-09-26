@@ -3,168 +3,152 @@
 ## Overview
 
 | Property | Details |
-|-------|-------|
-| Description | NanoGPT is a pay-per-prompt and subscription based AI service providing instant access to over 200+ powerful AI models with no subscriptions or registration required. |
-| Provider Route on LiteLLM | `nano-gpt/` |
-| Link to Provider Doc | [NanoGPT Website ↗](https://nano-gpt.com) |
-| Base URL | `https://nano-gpt.com/api/v1` |
-| Supported Operations | [`/chat/completions`](/docs/providers/nano-gpt#usage---litellm-python-sdk), `/completions`, `/embeddings` |
+|----------|---------|
+| Description | NanoGPT provides an OpenAI-compatible API for models from multiple providers, with pay-per-use and subscription options |
+| Provider route on LiteLLM | `nano-gpt/` |
+| Website | [nano-gpt.com](https://nano-gpt.com) |
+| Default base URL | `https://nano-gpt.com/api/v1` |
+| Supported operations | Chat completions, text completions, embeddings |
 
-<br />
+Streaming, tool calling, structured output, and other parameters depend on the selected model. A model appearing in the catalog does not guarantee that it supports every operation
 
-## What is NanoGPT?
+## API key and model names
 
-NanoGPT is a flexible AI API service that offers:
-- **Pay-Per-Prompt Pricing**: No subscriptions, pay only for what you use
-- **200+ AI Models**: Access to text, image, and video generation models
-- **No Registration Required**: Get started instantly
-- **OpenAI-Compatible API**: Easy integration with existing code
-- **Streaming Support**: Real-time response streaming
-- **Tool Calling**: Support for function calling
+Create an API key at [nano-gpt.com](https://nano-gpt.com) and make it available to the process running LiteLLM
 
-## Required Variables
-
-```python showLineNumbers title="Environment Variables"
-os.environ["NANOGPT_API_KEY"] = ""  # your NanoGPT API key
+```bash
+export NANOGPT_API_KEY="your-nanogpt-api-key"
 ```
 
-Get your NanoGPT API key from [nano-gpt.com](https://nano-gpt.com).
+Prefix the exact model ID returned by NanoGPT with `nano-gpt/`. Keep any publisher prefix: an ID such as `publisher/model-name` becomes `nano-gpt/publisher/model-name`
 
-## Usage - LiteLLM Python SDK
+To inspect the current catalog directly:
+
+```bash
+curl https://nano-gpt.com/api/v1/models \
+  -H "Authorization: Bearer $NANOGPT_API_KEY"
+```
+
+Use the same base URL and credentials for discovery and requests. A custom or subscription endpoint can expose a different catalog
+
+## LiteLLM Python SDK {#usage---litellm-python-sdk}
 
 ### Non-streaming
 
-```python showLineNumbers title="NanoGPT Non-streaming Completion"
-import os
-import litellm
+```python
 from litellm import completion
 
-os.environ["NANOGPT_API_KEY"] = ""  # your NanoGPT API key
-
-messages = [{"content": "What is the capital of France?", "role": "user"}]
-
-# NanoGPT call
 response = completion(
-    model="nano-gpt/model-name",  # Replace with actual model name
-    messages=messages
+    model="nano-gpt/publisher/model-name",  # Replace with an ID from the catalog
+    messages=[{"role": "user", "content": "What is the capital of France?"}],
 )
-
-print(response)
+print(response.choices[0].message.content)
 ```
 
 ### Streaming
 
-```python showLineNumbers title="NanoGPT Streaming Completion"
-import os
-import litellm
+```python
 from litellm import completion
 
-os.environ["NANOGPT_API_KEY"] = ""  # your NanoGPT API key
-
-messages = [{"content": "Write a short poem about AI", "role": "user"}]
-
-# NanoGPT call with streaming
 response = completion(
-    model="nano-gpt/model-name",  # Replace with actual model name
-    messages=messages,
-    stream=True
+    model="nano-gpt/publisher/model-name",  # Replace with an ID from the catalog
+    messages=[{"role": "user", "content": "Write a short poem."}],
+    stream=True,
 )
-
 for chunk in response:
-    print(chunk)
+    print(chunk.choices[0].delta.content or "", end="")
 ```
 
-### Tool Calling
+For a custom NanoGPT endpoint, pass `api_base` explicitly. The default is `https://nano-gpt.com/api/v1`
 
-```python showLineNumbers title="NanoGPT Tool Calling"
-import os
-import litellm
+## LiteLLM Proxy: all models with one deployment {#usage---litellm-proxy-server}
 
-os.environ["NANOGPT_API_KEY"] = ""
+A wildcard routes requests for NanoGPT models without adding each model individually
 
-tools = [
-    {
+```yaml title="config.yaml"
+model_list:
+  - model_name: nano-gpt/*
+    litellm_params:
+      model: nano-gpt/*
+      api_key: os.environ/NANOGPT_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+```bash
+export LITELLM_MASTER_KEY="your-proxy-master-key"
+litellm --config config.yaml
+```
+
+Call a model using its full LiteLLM ID. Replace the example ID with one from NanoGPT's catalog
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-gpt/publisher/model-name",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+To expose only one model, replace both wildcards with the desired name and ID. For example, use `model_name: my-nanogpt-model` and `model: nano-gpt/publisher/model-name`
+
+### Automatic model discovery and Admin UI
+
+:::info Availability
+
+The UI provider entry, automatic catalog discovery, and `NANOGPT_API_BASE` environment variable require the changes proposed in the [NanoGPT integration pull request](https://github.com/BerriAI/litellm/pull/42800). Until those changes are included in your installed version, use the YAML configuration above and send the model ID explicitly. Existing SDK support alone does not mean NanoGPT appears in the UI provider dropdown
+
+:::
+
+With catalog discovery available, `GET /v1/models` expands the configured `nano-gpt/*` deployment into the models returned by NanoGPT. Newly available models appear after the catalog cache expires, normally five minutes
+
+```bash
+curl http://localhost:4000/v1/models \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+Discovery uses the deployment's API key and base URL, falling back to `NANOGPT_API_KEY` and `NANOGPT_API_BASE`. If no base URL is set, it uses `https://nano-gpt.com/api/v1`. A catalog request failure returns no discovered models for that deployment; explicit wildcard requests can still route
+
+To configure the wildcard through the Admin UI:
+
+1. Open **Models + Endpoints**, then **Add Model**
+2. Select **NanoGPT** from **Provider**
+3. Select **All NanoGPT Models (Wildcard)** under **LiteLLM Model Name(s)**
+4. Enter your NanoGPT API key, or leave it blank to use the proxy's `NANOGPT_API_KEY`. Set **API Base** only when using a custom endpoint
+5. Click **Add Model**. LiteLLM creates the `nano-gpt/*` public model mapping automatically
+
+The proxy must be configured to store models in its database to save deployments from the UI
+
+Catalog discovery returns model IDs. It does not populate LiteLLM's static pricing, context limits, or capability metadata. Configure model costs separately if you need LiteLLM spend tracking for models without pricing entries
+
+## Tool calling
+
+Choose a model that supports tools
+
+```python
+from litellm import completion
+
+response = completion(
+    model="nano-gpt/publisher/model-name",
+    messages=[{"role": "user", "content": "What's the weather in Paris?"}],
+    tools=[{
         "type": "function",
         "function": {
             "name": "get_weather",
             "description": "Get current weather",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "location": {"type": "string"}
-                }
-            }
-        }
-    }
-]
-
-response = litellm.completion(
-    model="nano-gpt/model-name",
-    messages=[{"role": "user", "content": "What's the weather in Paris?"}],
-    tools=tools
+                "properties": {"location": {"type": "string"}},
+                "required": ["location"],
+            },
+        },
+    }],
 )
 ```
 
-## Usage - LiteLLM Proxy Server
+## Further information
 
-### 1. Save key in your environment
-
-```bash
-export NANOGPT_API_KEY=""
-```
-
-### 2. Start the proxy
-
-```yaml
-model_list:
-  - model_name: nano-gpt-model
-    litellm_params:
-      model: nano-gpt/model-name  # Replace with actual model name
-      api_key: os.environ/NANOGPT_API_KEY
-```
-
-## Supported OpenAI Parameters
-
-NanoGPT supports all standard OpenAI-compatible parameters:
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `messages` | array | **Required**. Array of message objects with 'role' and 'content' |
-| `model` | string | **Required**. Model ID from 200+ available models |
-| `stream` | boolean | Optional. Enable streaming responses |
-| `temperature` | float | Optional. Sampling temperature |
-| `top_p` | float | Optional. Nucleus sampling parameter |
-| `max_tokens` | integer | Optional. Maximum tokens to generate |
-| `frequency_penalty` | float | Optional. Penalize frequent tokens |
-| `presence_penalty` | float | Optional. Penalize tokens based on presence |
-| `stop` | string/array | Optional. Stop sequences |
-| `n` | integer | Optional. Number of completions to generate |
-| `tools` | array | Optional. List of available tools/functions |
-| `tool_choice` | string/object | Optional. Control tool/function calling |
-| `response_format` | object | Optional. Response format specification |
-| `user` | string | Optional. User identifier |
-
-## Model Categories
-
-NanoGPT provides access to multiple model categories:
-- **Text Generation**: 200+ LLMs for chat, completion, and analysis
-- **Image Generation**: AI models for creating images
-- **Video Generation**: AI models for video creation
-- **Embedding Models**: Text embedding models for vector search
-
-## Pricing Model
-
-NanoGPT offers a flexible pricing structure:
-- **Pay-Per-Prompt**: No subscription required
-- **No Registration**: Get started immediately
-- **Transparent Pricing**: Pay only for what you use
-
-## API Documentation
-
-For detailed API documentation, visit [docs.nano-gpt.com](https://docs.nano-gpt.com).
-
-## Additional Resources
-
-- [NanoGPT Website](https://nano-gpt.com)
-- [NanoGPT API Documentation](https://nano-gpt.com/api)
-- [NanoGPT Model List](https://docs.nano-gpt.com/api-reference/endpoint/models)
+See [NanoGPT's API documentation](https://docs.nano-gpt.com) for model-specific features, endpoint availability, and current pricing
