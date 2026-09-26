@@ -164,6 +164,10 @@ Every value below is encrypted with the salt key before it reaches the database,
 
 Older LiteLLM versions stored guardrail params, the nested values of a model's `litellm_params` (an `extra_headers` dict, for example) and `router_settings` in plaintext. A row written by such a version stays plaintext until it is written again: editing the model, guardrail or router settings from the UI or the management API, a `POST /config/update`, or a master key rotation (`POST /key/regenerate` with `new_master_key`) re-encrypts the whole row. The proxy reads both shapes, so nothing has to be migrated before upgrading. `lite encryption migrate --check` is a read-only scan that reports a `plaintext` count per table, which is how you find the rows that still need a write (see the [management CLI](./management_cli#encryption-migration)).
 
+### Rolling upgrades and rollbacks
+
+A worker running a version older than this encryption does not decrypt guardrail params, the nested values of a model's `litellm_params` or `router_settings`, so a row saved by an upgraded worker reads as ciphertext on it: that guardrail's vendor call fails and the router settings are applied as written. During a rolling upgrade this only affects rows saved while an old worker is still running, and they read correctly once the rollout finishes. After a rollback to such a version, save the affected rows again from the UI or the management API so they are stored in the shape that version reads. No flag keeps the old plaintext format, the same rule every other encrypted column above follows.
+
 ### Cached prompts and completions?
 
 **No**, cached prompts and completions are **NOT encrypted**.
