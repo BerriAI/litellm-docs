@@ -241,6 +241,9 @@ When connecting Litellm to Langfuse, you can see the guardrail information on th
     - `output`: Catch PII the model might generate or leak back to users.
     - `both`: End-to-end protection in both directions.
 
+    **Streaming with `output` or `both`:**
+    A streamed response is scanned as a whole, since a name or an email can be split across chunks. The proxy reads the upstream stream to the end, masks it, and sends the result as a single chunk, so the first token reaches the client once the model has finished. This covers Chat Completions, Anthropic Messages, and Gemini `streamGenerateContent` streams; Responses API streams are not scanned yet. A streamed response in a raw shape the guardrail cannot read is refused with a 500 error instead of being passed through unmasked.
+
 ### Configure Entity Types, Detection Confidence Score Threshold, and Scope in `config.yaml`
 
 Define your guardrails with specific entity type configuration:
