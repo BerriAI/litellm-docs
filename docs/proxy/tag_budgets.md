@@ -315,6 +315,22 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
          }'
 ```
 
+### Reset Tag Spend
+
+Reset a tag's accumulated spend on demand, without waiting for the scheduled `budget_duration` reset:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/update' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+           "name": "engineering",
+           "spend": 0
+         }'
+```
+
+This zeroes the tag's spend immediately and unblocks any request currently rejected with `budget_exceeded`. It does **not** change `budget_reset_at` — the current budget window's boundary is left as-is.
+
 ### Delete Tag
 
 ```shell
