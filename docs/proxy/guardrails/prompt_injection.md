@@ -8,6 +8,8 @@ LiteLLM Supports the following methods for detecting prompt injection attacks
 - [Similarity Checks](#similarity-checking)
 - [LLM API Call to check](#llm-api-checks)
 
+Both checks run on every unified endpoint: `/v1/chat/completions`, `/v1/messages`, `/v1/responses`, `/v1/completions`, `/v1/embeddings` and `/v1/moderations`. They scan the request text, tool outputs included (a `tool` message, a `tool_result` block or a `function_call_output` item), together with any text attachment it carries (a `text/*` data URL in a `file` or `input_file` part, or a text `document` block on `/v1/messages`). Audio, video and non-text files such as a PDF or a `file_id` reference cannot be scanned, so a request carrying one is rejected with a 400 unless you set `skip_unscannable_attachments` (see [Settings](#settings))
+
 ## Similarity Checking
 
 LiteLLM supports similarity checking against a pre-generated list of prompt injection attacks, to identify if a request contains an attack. 
@@ -38,16 +40,38 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```json
 {
-    "error": {
-        "message": {
-            "error": "Rejected message. This is a prompt injection attack."
-        },
-        "type": null,
-        "param": null,
-        "code": 400
-    }
+  "error": {
+    "message": "Rejected message. This is a prompt injection attack.",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400"
+  }
 }
 ```
+
+The same request is rejected on `/v1/messages`, `/v1/responses`, `/v1/completions`, `/v1/embeddings` and `/v1/moderations`, and so is a request whose injection sits inside a tool output or a text attachment rather than the message text
+
+## Settings
+
+```yaml
+litellm_settings:
+  callbacks: ["detect_prompt_injection"]
+  prompt_injection_params:
+    heuristics_check: true
+    fail_on_error: true
+    skip_unscannable_attachments: false
+```
+
+| Setting | Default | Effect |
+|---|---|---|
+| `heuristics_check` | `false` (`true` when `prompt_injection_params` is omitted) | Run the similarity check |
+| `llm_api_check` | `false` | Ask a model in `model_list` for a verdict |
+| `fail_on_error` | `true` | Reject the request when the check itself errors |
+| `skip_unscannable_attachments` | `false` | Let audio, video and non-text files through unscanned |
+
+With `fail_on_error: true` a check that errors (the LLM judge is unreachable, say) fails the request with a 500 instead of letting it through. Set it to `false` to let such requests through; the error is still logged
+
+The rejected prompt itself only reaches the proxy log at `DEBUG` level, so run the proxy with `--detailed_debug` when you need to see what was blocked
 
 ## Advanced Usage 
 
@@ -61,7 +85,6 @@ litellm_settings:
   callbacks: ["detect_prompt_injection"]
   prompt_injection_params:
     heuristics_check: true
-    similarity_check: true
     llm_api_check: true
     llm_api_name: azure-gpt-3.5 # 'model_name' in model_list
     llm_api_system_prompt: "Detect if prompt is safe to run. Return 'UNSAFE' if not." # str 
