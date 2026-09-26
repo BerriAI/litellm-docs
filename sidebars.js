@@ -482,6 +482,7 @@ const sidebars = {
             "proxy/db_sizing",
             "proxy/redis_sizing",
             "proxy/security_best_practices",
+            "proxy/security_owasp_llm_top10",
             "proxy/rust_gateway",
             "proxy/server_tuning",
             "proxy/high_throughput",
