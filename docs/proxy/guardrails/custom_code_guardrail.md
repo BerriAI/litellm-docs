@@ -56,6 +56,7 @@ curl -X POST http://localhost:4000/chat/completions \
 | `mode` | string | ✅ | When to run: `pre_call`, `post_call`, `during_call` |
 | `custom_code` | string | ✅ | Python-like code with `apply_guardrail` function |
 | `default_on` | bool | ❌ | Run on all requests (default: `false`) |
+| `timeout` | float | ❌ | Wall-clock limit in seconds for one run of `apply_guardrail`, module-level code included (default: `30`). A run that exceeds it fails the request instead of stalling the proxy. See [Execution timeout](#execution-timeout) |
 
 ## Writing Custom Code
 
@@ -217,6 +218,52 @@ Make async HTTP requests to external APIs for additional validation or content m
 
 **Note:** When using HTTP primitives, define your function as `async def apply_guardrail(...)` for non-blocking execution.
 
+#### Blocked destinations
+
+Every URL, redirect hops included, goes through the proxy's SSRF validation before a connection is opened. Private (RFC 1918), loopback, link-local and cloud metadata addresses are refused, and the primitive returns an error response instead of raising:
+
+```python
+{
+    "status_code": 0,
+    "body": None,
+    "headers": {},
+    "success": False,
+    "error": "Blocked URL: URL targets a blocked address (169.254.169.254). If this is a legitimate internal service, add the host to `user_url_allowed_hosts` in litellm_settings."
+}
+```
+
+To let a guardrail call an internal service, list its host (as written in the URL, with the port when the URL carries one) under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  user_url_allowed_hosts:
+    - moderation.corp.internal
+    - 10.0.0.12:8080
+```
+
+`user_url_validation: false` turns the check off for the whole proxy. Both settings are documented in [config settings](../config_settings#litellm_settings---reference). GET requests follow redirects, validating each hop; POST, PUT, PATCH and DELETE never follow redirects, so a 3xx comes back as the response.
+
+### Execution timeout
+
+Each run of `apply_guardrail` is bounded by `timeout` (default 30 seconds), and so is the module-level code that runs when the guardrail loads. A sync function runs on a worker thread and is interrupted when the budget is spent, so a busy loop cannot stall the proxy's event loop; an async function is cancelled at its next `await`. A run that exceeds the budget fails the request with a `Custom code guardrail '<name>' exceeded its 30s execution timeout` error, and compile-time code that exceeds it fails the guardrail's load.
+
+```yaml
+guardrails:
+  - guardrail_name: "slow-moderation"
+    litellm_params:
+      guardrail: custom_code
+      mode: "pre_call"
+      timeout: 10
+      custom_code: |
+        async def apply_guardrail(inputs, request_data, input_type):
+            result = await http_post("https://moderation.example.com/check", body={"texts": inputs["texts"]})
+            if result["success"] and result["body"].get("flagged"):
+                return block("Flagged by moderation service")
+            return allow()
+```
+
+The `timeout` argument of `http_request` bounds a single HTTP call (default 30 seconds, at most 60) and counts against the run's budget.
+
 ## Examples
 
 ### Block PII (SSN)
@@ -337,8 +384,9 @@ Custom code runs in a restricted environment:
 - ❌ No `import` statements
 - ❌ No file I/O
 - ❌ No `exec()` or `eval()`
-- ✅ HTTP requests via built-in `http_request`, `http_get`, `http_post` primitives
+- ✅ HTTP requests via built-in `http_request`, `http_get`, `http_post` primitives, to public addresses or hosts listed in `user_url_allowed_hosts` (see [Blocked destinations](#blocked-destinations))
 - ✅ Only LiteLLM-provided primitives available
+- ⏱ Each run is bounded by the guardrail's `timeout` (see [Execution timeout](#execution-timeout))
 
 ## Per-Request Usage
 
