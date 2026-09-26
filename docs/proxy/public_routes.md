@@ -44,10 +44,10 @@ Only expose specific routes on the proxy:
 ```yaml
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  allowed_routes: ["/chat/completions", "/embeddings", "/health/liveliness", "/health/readiness"]
+  allowed_routes: ["/chat/completions", "/embeddings"]
 ```
 
-`allowed_routes` is an exact-match list checked before the public route check, so route group names like `LiteLLMRoutes.public_routes` and wildcards are not expanded here. Any route not listed, including the default public health routes, returns `403 Route ... not allowed`. List every route that must stay reachable.
+`allowed_routes` is an exact-match list checked before the public route check, so route group names like `LiteLLMRoutes.public_routes` and wildcards are not expanded here. Any route not listed that goes through authentication, for example `/routes` or `/models`, returns `403 Route ... not allowed`. Unauthenticated endpoints such as `/health/liveliness` and `/health/readiness` are unaffected by `allowed_routes` and stay reachable. List every authenticated route that must stay reachable.
 
 ## Usage Examples
 
@@ -58,7 +58,7 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   public_routes: ["LiteLLMRoutes.public_routes", "/spend/calculate"]
   admin_only_routes: ["/key/generate"]
-  allowed_routes: ["/chat/completions", "/spend/calculate", "/health/liveliness", "/health/readiness"]
+  allowed_routes: ["/chat/completions", "/spend/calculate"]
 ```
 
 `LiteLLMRoutes.public_routes` in `public_routes` refers to the default public routes on LiteLLM, which stay public without being listed. [View the source](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/_types.py). It is not expanded in `allowed_routes`.
