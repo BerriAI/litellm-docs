@@ -154,7 +154,7 @@ Point `callbacks` at the class (`custom_callbacks.MyCustomHandler`) rather than 
 3. Start the server + test the request
 
 ```shell
-$ litellm /path/to/config.yaml
+$ litellm --config /path/to/config.yaml
 ```
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -228,7 +228,7 @@ guardrails:
 3. Start the server + test the request
 
 ```shell
-$ litellm /path/to/config.yaml
+$ litellm --config /path/to/config.yaml
 ```
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -316,7 +316,7 @@ litellm_settings:
 ### 3. Test it!
 
 ```shell
-$ litellm /path/to/config.yaml
+$ litellm --config /path/to/config.yaml
 ```
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -500,7 +500,7 @@ general_settings:
 ### 3. Test it!
 
 ```shell
-$ litellm /path/to/config.yaml
+$ litellm --config /path/to/config.yaml
 ```
 
 The master key is the proxy admin, and the example hides `restricted-model` from it too, since the hook runs for every caller
