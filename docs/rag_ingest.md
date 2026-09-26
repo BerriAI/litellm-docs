@@ -449,6 +449,17 @@ general_settings:
 
 The proxy resolves the scanner once at boot and refuses to start, naming the option, when the module or attribute cannot be imported, when the value names a class instead of an instance, or when the object has no `scan` method. `scan` runs in a worker thread so a slow engine never blocks the event loop; the one instance serves every request, so keep it thread-safe. Return `ScanVerdict.INFECTED` with the signature to reject the upload as `malware_detected`, and `ScanVerdict.ERROR` when the engine is unavailable to reject it as `malware_scan_error`. The proxy fails closed on both
 
+### Letting `/v1/files` uploads through unchecked
+
+The controls accept only PDF and UTF-8 text, so a deployment that sends other formats to `/v1/files` with purpose `assistants` or `user_data` (DOCX, PPTX, images) would see those uploads rejected as `unsupported_format`. Set `files_api_controls: false` to send `/v1/files` uploads straight to the provider, skipping the format, size, and malware checks on that route. `/v1/rag/ingest` keeps running every control whatever this is set to:
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  rag_ingest:
+    malware_scanner: custom_scanner.scanner
+    files_api_controls: false
+```
+
 ## Chunking Strategy
 
 Control how documents are split into chunks before embedding. Specify `chunking_strategy` in `ingest_options`.
