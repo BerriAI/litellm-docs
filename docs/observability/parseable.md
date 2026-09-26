@@ -93,25 +93,9 @@ pip install litellm \
 **Step 2:** Configure the LiteLLM OpenTelemetry callback.
 
 ```python
-import os
-
 import litellm
-from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
 
-os.environ["USE_OTEL_LITELLM_REQUEST_SPAN"] = "true"
-
-litellm.callbacks = [
-    OpenTelemetry(
-        config=OpenTelemetryConfig(
-            exporter="otlp_http",
-            endpoint="http://localhost:4318",
-            enable_metrics=True,
-            enable_events=True,
-            capture_message_content="NO_CONTENT",
-            semconv_stability="gen_ai_latest_experimental",
-        )
-    )
-]
+litellm.callbacks = ["otel"]
 ```
 
 **Step 3:** Make a LiteLLM request.
@@ -128,7 +112,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-`USE_OTEL_LITELLM_REQUEST_SPAN=true` creates a model-call span for each SDK request. `capture_message_content="NO_CONTENT"` and request-level masking keep raw prompts and responses out of exported telemetry.
+`USE_OTEL_LITELLM_REQUEST_SPAN=true` creates a model-call span for each SDK request. `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT="no_content"` and request-level masking keep raw prompts and responses out of exported telemetry.
 
 </TabItem>
 </Tabs>
