@@ -1068,6 +1068,7 @@ const sidebars = {
             "search/index",
             "search/perplexity",
             "search/tavily",
+            "search/webiq",
             "search/exa_ai",
             "search/brave",
             "search/parallel_ai",
