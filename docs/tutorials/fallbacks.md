@@ -71,7 +71,7 @@ for attempted_fallbacks, fallback in enumerate(fallbacks):
         else:
             model = fallback
 
-        response = await litellm.acompletion(**completion_kwargs, model=model, ...)
+        response = await litellm.acompletion(**completion_kwargs, model=model)
         if response is not None:
             return add_fallback_headers_to_response(
                 response=response, attempted_fallbacks=attempted_fallbacks
