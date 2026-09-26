@@ -405,17 +405,16 @@ curl -X POST http://localhost:4000/chat/completions \
 
 ## Default On
 
-Run guardrail on all requests:
+Run guardrail on all requests by setting `default_on: true` on the top-level `guardrails` entry:
 
 ```yaml
-litellm_settings:
-  guardrails:
-    - guardrail_name: block-ssn
-      litellm_params:
-        guardrail: custom_code
-        mode: pre_call
-        default_on: true
-        custom_code: |
-          def apply_guardrail(inputs, request_data, input_type):
-              ...
+guardrails:
+  - guardrail_name: block-ssn
+    litellm_params:
+      guardrail: custom_code
+      mode: pre_call
+      default_on: true
+      custom_code: |
+        def apply_guardrail(inputs, request_data, input_type):
+            ...
 ```
