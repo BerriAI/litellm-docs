@@ -1179,7 +1179,8 @@ router_settings:
 | LANGSMITH_TENANT_ID | Tenant ID for Langsmith multi-tenant deployments
 | LANGSMITH_MOCK | Enable mock mode for Langsmith integration testing. When set to true, intercepts Langsmith API calls and returns mock responses without making actual network calls. Default is false
 | LANGSMITH_MOCK_LATENCY_MS | Mock latency in milliseconds for Langsmith API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
-| LANGTRACE_API_KEY | API key for Langtrace service
+| LANGTRACE_API_HOST | Base URL of a self-hosted Langtrace server for the `langtrace` callback, e.g. `https://langtrace.example.com`; the callback posts to `<host>/api/trace`. Default is `https://app.langtrace.ai`
+| LANGTRACE_API_KEY | API key for Langtrace service, sent as the `x-api-key` header by the `langtrace` callback
 | LASSO_API_BASE | Base URL for Lasso API
 | LASSO_API_KEY | API key for Lasso service
 | LASSO_USER_ID | User ID for Lasso service
