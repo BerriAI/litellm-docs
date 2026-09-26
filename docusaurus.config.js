@@ -305,12 +305,13 @@ const config = {
     // (www.litellm.ai), so a visitor moving between the two domains is one
     // person and one journey: persistence keeps a first-party cookie on
     // .litellm.ai, which every litellm.ai subdomain can read.
-    // Production builds only, mirroring the gtag setup below.
+    // Uses the official posthog-docusaurus plugin, which is production-only
+    // by default (mirroring the gtag setup below) and forwards every extra
+    // option below to posthog.init via JSON.stringify.
     //
-    // capture_pageview is 'history_change' because Docusaurus is a SPA after
-    // the first load. Without it only hard loads emit $pageview and every
-    // sidebar or in-page link is invisible, which is exactly the docs-to-docs
-    // navigation the funnel and path analyses are built on.
+    // capture_pageview is true rather than 'history_change' because the plugin
+    // ships a client module that captures $pageview on every Docusaurus route
+    // change; leaving the SDK's SPA tracking on as well would double count.
     //
     // Kept off the docs on purpose, so this stays analytics and nothing else:
     // no session replay (no rrweb bundle downloaded, no DOM observation;
@@ -322,20 +323,26 @@ const config = {
     // session-duration precision in Web Analytics. Surveys are off too, which
     // drops the surveys.js request the SDK otherwise makes on every page; docs
     // feedback already goes through Feedback Rocket below.
-    () => ({
-      name: 'posthog',
-      injectHtmlTags() {
-        if (process.env.NODE_ENV !== 'production') return {};
-        return {
-          headTags: [
-            {
-              tagName: 'script',
-              innerHTML: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags onFeatureFlags onSessionId identify setPersonProperties group resetGroups reset get_distinct_id get_session_id alias set_config startSessionRecording stopSessionRecording captureException opt_in_capturing opt_out_capturing has_opted_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',{api_host:'https://us.i.posthog.com',defaults:'2026-05-30',person_profiles:'identified_only',cross_subdomain_cookie:true,capture_pageview:'history_change',capture_pageleave:false,disable_session_recording:true,capture_heatmaps:false,disable_surveys:true,autocapture:{dom_event_allowlist:['click'],element_allowlist:['a','button']}});`,
-            },
-          ],
-        };
+    [
+      'posthog-docusaurus',
+      {
+        apiKey: 'phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',
+        appUrl: 'https://us.i.posthog.com',
+        enableInDevelopment: false,
+        defaults: '2026-05-30',
+        person_profiles: 'identified_only',
+        cross_subdomain_cookie: true,
+        capture_pageview: true,
+        capture_pageleave: false,
+        disable_session_recording: true,
+        capture_heatmaps: false,
+        disable_surveys: true,
+        autocapture: {
+          dom_event_allowlist: ['click'],
+          element_allowlist: ['a', 'button'],
+        },
       },
-    }),
+    ],
     // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
