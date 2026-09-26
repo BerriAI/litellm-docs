@@ -6,6 +6,8 @@ import TabItem from '@theme/TabItem';
 
 Setup Prompt Injection Detection, PII Masking on LiteLLM Proxy (AI Gateway)
 
+To see where guardrails and the rest of the gateway stand against the OWASP Top 10 for LLM Applications 2026, read the [OWASP LLM Top 10 mapping](../security_owasp_llm_top10).
+
 ## 1. Define guardrails on your LiteLLM config.yaml
 
 Set your guardrails under the `guardrails` section

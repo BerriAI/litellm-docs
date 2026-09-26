@@ -1793,6 +1793,7 @@ Human: How do I boil water?
 Assistant:
 ```
 
+Mid-conversation `system` messages, and how LiteLLM places them on each provider so preserved thinking blocks keep their binding, are covered in [Preserved Thinking Prefix Stability](./anthropic_preserved_thinking)
 
 ## Usage - PDF
 

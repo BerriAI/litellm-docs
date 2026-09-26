@@ -19,16 +19,14 @@
   --ifm-color-primary-light: #33925d;
   --ifm-color-primary-lighter: #359962;
   --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 85%;
+  --ifm-code-font-size: 90%;
   --ifm-menu-color: #6b7280;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+  --docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 10%);
   --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --ifm-heading-font-weight: 600;
   --ifm-font-size-base: 15px;
   --ifm-line-height-base: 1.65;
   --ifm-border-radius: 6px;
-  /* Code fences: slightly more inset than Infima default (1rem), esp. next to bash left accent */
-  --ifm-pre-padding: 1.25rem;
   /* Wider reading column — reduces excessive whitespace on large monitors */
   --ifm-container-width: 1380px;
   --ifm-container-width-xl: 1560px;
@@ -62,7 +60,7 @@ body,
   --ifm-color-primary-lightest: #4fddbf;
   --ifm-background-color: #0d1117;
   --ifm-background-surface-color: #161b22;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.07);
+  --docusaurus-highlighted-code-line-bg: rgb(66 66 66 / 35%);
 }
 
 /* =========================================
@@ -116,13 +114,12 @@ body,
 .navbar__link {
   font-weight: 400 !important;
   font-size: 14px !important;
-  border-bottom: 2px solid transparent !important;
-  padding-bottom: 2px;
 }
 
-.navbar__link--active {
-  font-weight: 500 !important;
-  border-bottom: 2px solid var(--ifm-color-primary) !important;
+.navbar__link--active,
+.navbar__link:hover,
+.navbar__link--active:hover {
+  text-decoration: none;
 }
 
 @media (max-width: 1330px) {
@@ -185,6 +182,101 @@ body,
 .alert--info {
   --ifm-alert-background-color: #f0f7ff !important;
   --ifm-alert-border-color: #2264ab !important;
+}
+
+/* Enterprise comparison: one card per capability, OSS then Enterprise */
+.enterprise-compare {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1.75rem;
+}
+
+.enterprise-compare > div,
+.enterprise-compare-head {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 1fr;
+  gap: 0.75rem 1.25rem;
+  align-items: start;
+}
+
+.enterprise-compare > div {
+  padding: 0.9rem 1rem;
+  border: 1px solid #e9eef2;
+  border-radius: var(--ifm-border-radius);
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+}
+
+.enterprise-compare-head {
+  padding: 0 1rem;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.enterprise-compare-head span:last-child {
+  color: var(--ifm-color-primary-dark);
+}
+
+.enterprise-compare strong {
+  font-size: 14px;
+}
+
+.enterprise-compare span {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #3d4754;
+}
+
+.enterprise-compare span:last-child {
+  color: var(--ifm-color-primary-darkest);
+  font-weight: 500;
+}
+
+[data-theme='dark'] .enterprise-compare > div {
+  background: #1c2130;
+  border-color: #2d3748;
+}
+
+[data-theme='dark'] .enterprise-compare-head {
+  color: #9aa4b2;
+}
+
+[data-theme='dark'] .enterprise-compare-head span:last-child {
+  color: #4fddbf;
+}
+
+[data-theme='dark'] .enterprise-compare span {
+  color: #c9d1d9;
+}
+
+[data-theme='dark'] .enterprise-compare span:last-child {
+  color: #b7f0d8;
+}
+
+@media (max-width: 700px) {
+  .enterprise-compare-head {
+    display: none;
+  }
+
+  .enterprise-compare > div {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .enterprise-compare > div span:first-of-type::before {
+    content: 'OSS. ';
+    font-weight: 650;
+    color: #64748b;
+  }
+
+  .enterprise-compare > div span:last-child::before {
+    content: 'Enterprise. ';
+    font-weight: 650;
+  }
 }
 
 .alert--success {
@@ -319,74 +411,10 @@ li.tabs__item--active {
 
 /* =========================================
    CODE BLOCKS
+   Container chrome matches docusaurus.io: the Prism theme paints the
+   background, Infima supplies the shadow and radius, and we do not
+   restyle the fence ourselves.
    ========================================= */
-.prism-code {
-  border-radius: var(--ifm-border-radius);
-  font-size: 12.5px !important;
-  line-height: 1.6;
-}
-
-/* Docusaurus line-number mode uses vertical-only padding on the inner wrapper; restore horizontal inset */
-.theme-code-block span[class*='codeLineContent'] {
-  padding-left: var(--ifm-pre-padding);
-}
-
-/* Doc + blog: both render under `article > .markdown`. Blog prose `.markdown code` and
-   `pre:not(.prism-code) code` were zeroing inner padding on fenced blocks — match Infima/CodeBlock. */
-article .markdown pre:not(.prism-code) code {
-  background: transparent;
-  border: none;
-  padding: 0;
-  color: inherit;
-}
-
-article .markdown pre.prism-code code[class*='codeBlockLinesWithNumbering'] {
-  padding: var(--ifm-pre-padding) 0 !important;
-  font-size: var(--ifm-code-font-size) !important;
-  line-height: var(--ifm-pre-line-height) !important;
-  background: transparent !important;
-  border: none !important;
-  color: inherit !important;
-}
-
-article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='codeBlockLinesWithNumbering']) {
-  padding: var(--ifm-pre-padding) !important;
-  font-size: var(--ifm-code-font-size) !important;
-  line-height: var(--ifm-pre-line-height) !important;
-  background: transparent !important;
-  border: none !important;
-  color: inherit !important;
-}
-
-[data-theme='dark'] .prism-code {
-  border: 1px solid #21262d;
-}
-
-[class*='codeLineNumber']::before {
-  font-size: 12px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-[class*='codeBlockTitle'] {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  padding: 0.5rem 1rem !important;
-  border-bottom: 1px solid #334155 !important;
-}
-
-.theme-code-block-highlighted-line {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-[data-theme='dark'] .theme-code-block-highlighted-line {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-.theme-code-block-highlighted-line > span {
-  background-color: transparent !important;
-}
 
 /* =========================================
    SIDEBAR / MENU
@@ -639,7 +667,49 @@ video {
 }
 
 .footer__bottom {
-  margin: 40px auto 10px auto;
+  margin: 48px auto 10px auto;
+}
+
+/* Centered brand lockup above the copyright, same mark and name as the navbar */
+.footer__brand-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: #c9d1d9;
+  text-decoration: none;
+}
+
+.footer__brand:hover {
+  color: #f0f6fc;
+  text-decoration: none;
+}
+
+.footer__brand-mark {
+  font-size: 4.5rem;
+  line-height: 1;
+}
+
+.footer__brand-name {
+  font-size: 4rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+@media (max-width: 576px) {
+  .footer__brand-mark {
+    font-size: 3rem;
+  }
+
+  .footer__brand-name {
+    font-size: 2.6rem;
+  }
 }
 
 /* =========================================
@@ -766,33 +836,8 @@ video {
    BASH / SHELL CODE BLOCKS
    ========================================= */
 
-/* Subtle grey bash/shell blocks — light mode */
-[data-theme='light'] [class*='language-bash'] .prism-code,
-[data-theme='light'] [class*='language-sh'] .prism-code,
-[data-theme='light'] [class*='language-shell'] .prism-code,
-[data-theme='light'] [class*='language-zsh'] .prism-code {
-  background-color: #f3f4f6 !important;
-  border: 1px solid #d1d5db !important;
-  border-left: 3px solid #6b7280 !important;
-  color: #1f2937 !important;
-}
-
-[data-theme='light'] [class*='language-bash'] .prism-code span,
-[data-theme='light'] [class*='language-sh'] .prism-code span,
-[data-theme='light'] [class*='language-shell'] .prism-code span,
-[data-theme='light'] [class*='language-zsh'] .prism-code span {
-  color: #1f2937 !important;
-}
-
-/* Dark mode — slightly lighter than the default near-black */
-[data-theme='dark'] [class*='language-bash'] .prism-code,
-[data-theme='dark'] [class*='language-sh'] .prism-code,
-[data-theme='dark'] [class*='language-shell'] .prism-code,
-[data-theme='dark'] [class*='language-zsh'] .prism-code {
-  background-color: #1c2130 !important;
-  border: 1px solid #2d3748 !important;
-  border-left: 3px solid #4b5563 !important;
-}
+/* Bash/shell blocks use the same Prism theme background as every other language
+   (a per-language background made the base and line-number gutter colors diverge). */
 
 /* "$ " terminal prompt prefix on bash title bar */
 [class*='language-bash'] [class*='codeBlockTitle']::before,
@@ -934,12 +979,7 @@ video {
   color: #111827;
 }
 
-.blog-wrapper article .markdown pre {
-  background: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
+
 
 .blog-wrapper article .markdown pre code {
   background: transparent;
@@ -969,11 +1009,7 @@ video {
   color: #f9fafb;
 }
 
-[data-theme='dark'].blog-wrapper article .markdown pre {
-  background: #161b22 !important;
-  border-color: #30363d !important;
-  box-shadow: none;
-}
+
 
 [data-theme='dark'].blog-wrapper article .markdown a {
   color: #38bdf8;

@@ -215,10 +215,10 @@ Every entry registered under that `callback_name` is removed, across callback ty
 
 ### Team Logging Endpoints
 
-- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
-- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://litellm-api.up.railway.app/#/team%20management/get_team_callbacks_team__team_id__callback_get)
-- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://litellm-api.up.railway.app/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
-- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://litellm-api.up.railway.app/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
+- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://docs.litellm.ai/api-reference/#/team%20management/add_team_callbacks_team__team_id__callback_post)
+- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://docs.litellm.ai/api-reference/#/team%20management/get_team_callbacks_team__team_id__callback_get)
+- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
+- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
 
 
 

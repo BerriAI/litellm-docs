@@ -83,9 +83,9 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 ## Spend Tracking 
 
 Get spend per:
-- key - via `/key/info` [Swagger](https://litellm-api.up.railway.app/#/key%20management/info_key_fn_key_info_get)
-- user - via `/user/info` [Swagger](https://litellm-api.up.railway.app/#/user%20management/user_info_user_info_get)
-- team - via `/team/info` [Swagger](https://litellm-api.up.railway.app/#/team%20management/team_info_team_info_get)  
+- key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
+- user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
+- team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
 - ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
@@ -288,7 +288,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 **Step 3: Test the key**
 
 ```bash
-curl -X POST "https://0.0.0.0:4000/key/generate" \
+curl -X POST "http://0.0.0.0:4000/chat/completions" \
 -H "Authorization: Bearer <user-key>" \
 -H "Content-Type: application/json" \
 -d '{
@@ -723,7 +723,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -818,16 +818,16 @@ litellm --config config.yaml
 
 ### Temporary Budget Increase
 
-Use the `/key/update` endpoint to increase the budget of an existing key. 
+Use the `/key/update` endpoint to increase the budget of an existing key. `temp_budget_expiry` is a datetime, not a duration string, so pass an ISO date such as `2026-10-15`. See [Temporary Budget Increase](./temporary_budget_increase.md) for details.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
--d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
+-d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "2026-10-15"}'
 ```
 
-[API Reference](https://litellm-api.up.railway.app/#/key%20management/update_key_fn_key_update_post)
+[API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
 
 ### Restricting Key Generation
@@ -915,16 +915,16 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/user%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/team%20management)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 
 

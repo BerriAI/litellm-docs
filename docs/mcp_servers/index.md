@@ -13,12 +13,13 @@ For shared endpoint, transport, and authentication rules, see the [MCP Configura
 | [Slack](./slack.md) | `https://mcp.slack.com/mcp` | OAuth 2.1, your own Slack app | Search, channel and thread reads, messaging, canvases |
 | [Atlassian](./atlassian.md) | `https://mcp.atlassian.com/v1/mcp/authv2` | OAuth 2.1, dynamic registration | Jira, Confluence, Compass, Jira Service Management, Bitbucket |
 | [Linear](./linear.md) | `https://mcp.linear.app/mcp` | OAuth 2.1, dynamic registration | Issues, projects, cycles, documents, comments |
+| [Microsoft 365](./microsoft_365.md) | self-hosted `http://localhost:3000/mcp` ([ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server)) | OAuth 2.0, your own Entra ID app | Outlook mail and calendar, OneDrive, SharePoint, Teams, Planner, To Do, OneNote, Excel |
 
 Any other remote MCP server follows the same shape: point `url` at its endpoint and pick the matching `auth_type` from the auth table in [MCP Overview](../mcp.md).
 
 ## What these guides assume
 
-All three servers are hosted by their vendor and speak Streamable HTTP, so there is nothing to install or run yourself. All three authenticate per user with interactive OAuth, meaning each caller signs in once through their browser and tool calls carry that person's own permissions rather than a shared service identity. Storing MCP servers requires `store_model_in_db: true` on the proxy, covered in [Prerequisites](../mcp.md#prerequisites).
+Slack, Atlassian, and Linear are hosted by their vendor and speak Streamable HTTP, so there is nothing to install or run yourself. Microsoft 365 is an open source server you run next to the proxy, and its guide covers that. All four authenticate per user with interactive OAuth, meaning each caller signs in once through their browser and tool calls carry that person's own permissions rather than a shared service identity. Storing MCP servers requires `store_model_in_db: true` on the proxy, covered in [Prerequisites](../mcp.md#prerequisites).
 
 ```yaml title="config.yaml" showLineNumbers
 general_settings:
@@ -26,7 +27,7 @@ general_settings:
 ```
 
 :::warning[Put the LiteLLM key in `x-litellm-api-key`]
-Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and the proxy forwards your LiteLLM key to Slack, Atlassian, or Linear, which rejects it. This is the most common failure on all three servers. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth).
+Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and the proxy forwards your LiteLLM key to the upstream server, which rejects it. This is the most common failure on all four servers. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth).
 :::
 
 ## Related pages

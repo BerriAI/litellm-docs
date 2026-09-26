@@ -225,7 +225,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "zephyr-beta"",
+    "model": "zephyr-beta",
     "messages": [
         {
         "role": "user",
@@ -968,7 +968,7 @@ response = client.chat.completions.with_raw_response.create(
 
 print(response)
 
-print(f"response.headers.get('x-litellm-model-api-base')")
+print(response.headers.get('x-litellm-model-api-base'))
 ```
 
 ### Setting Fallbacks for Wildcard Models
@@ -1019,6 +1019,33 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     "max_tokens": 300
 }'
 ```
+
+#### Provider-prefixed fallback keys for bare model names
+
+A request for a bare model name such as `{{anthropic}}`, the form Claude Code sends, is served by the `anthropic/*` deployment, and the fallback lookup matches it against a key written the way that wildcard is, `anthropic/{{anthropic}}`. LiteLLM infers the provider the same way routing does and only tries this when some fallback key ends in `/<model name>`, so an alias that resolves to no provider still falls through to `*`. Precedence is the exact key first, then the sibling key (the `<provider>/<model>` spelling of a bare name, or the bare spelling of a prefixed name), then `*`, and the same lookup serves `fallbacks`, `context_window_fallbacks`, and `content_policy_fallbacks`. A matched chain is terminal: once the `anthropic/{{anthropic}}` chain is chosen, `*` is not tried after its targets fail, so list the `*` targets at the end of that chain when they should run too. Added in [PR #43062](https://github.com/BerriAI/litellm/pull/43062), coming to the next release candidate
+
+```yaml
+model_list:
+  - model_name: "anthropic/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: "openai/{{openai_large}}"
+    litellm_params:
+      model: "openai/{{openai_large}}"
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: "{{openai_small}}"
+    litellm_params:
+      model: "openai/{{openai_small}}"
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  fallbacks:
+    - {"anthropic/{{anthropic}}": ["openai/{{openai_large}}", "{{openai_small}}"]}
+    - {"*": ["{{openai_small}}"]}
+```
+
+A request for `{{anthropic}}` that fails on `anthropic/*` is retried on `openai/{{openai_large}}` and then on `{{openai_small}}`, while a request for any other bare name without a key of its own goes straight to `*`
 
 ### Enforce Key Model Access on Fallbacks
 
@@ -1100,7 +1127,7 @@ A team key does not inherit the key owner's personal `max_budget` unless `genera
 
 <TabItem value="request" label="Per Request">
 
-You can disable fallbacks per key by setting `disable_fallbacks: true` in your request body.
+You can disable fallbacks per request by setting `disable_fallbacks: true` in your request body.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
@@ -1114,7 +1141,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         }
     ],
     "model": "{{openai_small}}",
-    "disable_fallbacks": true # 👈 DISABLE FALLBACKS
+    "disable_fallbacks": true
 }'
 ```
 
@@ -1137,3 +1164,5 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 </TabItem>
 </Tabs>
+
+Both forms cover every fallback the proxy would otherwise make for that request, the mid-stream one included: when the chosen deployment's stream fails before its first chunk on `/chat/completions`, `/v1/messages`, or `/v1/responses`, the request returns that deployment's own error instead of a fallback deployment's response
