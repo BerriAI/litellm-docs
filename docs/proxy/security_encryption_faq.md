@@ -139,7 +139,7 @@ export SSL_CERTIFICATE="/path/to/client_certificate.pem"
 
 ### What data is stored in encrypted form?
 
-Every value below is encrypted with the salt key before it reaches the database, so a raw `SELECT` on the table shows ciphertext. Where a column holds a JSON document, **every string value inside it is encrypted, however deeply it is nested** (a dict inside a dict, a string inside a list). Numbers, booleans and nulls are stored as they are.
+Every value below is encrypted with the salt key before it reaches the database, so a raw `SELECT` on the table shows ciphertext. Where a column holds a JSON document, **every string value inside it is encrypted, however deeply it is nested** (a dict inside a dict, a string inside a list). Numbers, booleans and nulls are stored as they are. A document nested deeper than `DEFAULT_MAX_RECURSE_DEPTH` levels (100 by default) is refused on write instead of being stored with plaintext leaves below the cap.
 
 #### Encrypted:
 1. **Model deployments** - `LiteLLM_ProxyModelTable.litellm_params`: `api_key`, `api_base`, `aws_secret_access_key`, `vertex_credentials`, every string value under `extra_headers`, and every other string in the document
