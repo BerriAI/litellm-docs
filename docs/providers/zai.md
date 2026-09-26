@@ -75,6 +75,21 @@ We support ALL Z.AI GLM models, just set `zai/` as a prefix when sending complet
 | glm-4-32b-0414-128k | $0.10 | $0.10 | - | 128K |
 | glm-4.5-flash | **FREE** | **FREE** | - | 128K |
 
+## Z.AI Coding Plan
+
+The Coding Plan uses a dedicated endpoint, `https://api.z.ai/api/coding/paas/v4`. Point LiteLLM at it with `api_base`:
+
+```yaml
+model_list:
+  - model_name: glm-5.2
+    litellm_params:
+        model: zai/glm-5.2
+        api_key: os.environ/ZAI_API_KEY
+        api_base: https://api.z.ai/api/coding/paas/v4
+```
+
+Z.AI's own docs name the 1M-context variant of a model with a `[1m]` suffix, e.g. `glm-5.2[1m]`. That suffix is a client-side convention (tools like Claude Code strip it before calling the API), and the endpoint rejects it as a model name. Send the plain name instead: `zai/glm-5.2`, not `zai/glm-5.2[1m]`. Sending the suffixed name returns `Unknown Model`.
+
 ## Using with LiteLLM Proxy
 
 <Tabs>
