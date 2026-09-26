@@ -229,5 +229,7 @@ Expect a tool result containing the repository's wiki structure. Omitting `serve
 - [MCP Overview](./mcp): adding servers via UI or config.yaml, full field reference
 - [Using your MCP](./mcp_usage): Responses API, Cursor, and SDK walkthroughs
 - [MCP REST API](./mcp_rest_api): `/mcp-rest/*` request/response details and error shapes
+- [MCP Permission Management](./mcp_control): `allowed_tools` / `disallowed_tools`, per-key tool permissions, and pinning a server's tool list, descriptions, and input schemas (`pinned_tools`, `POST` / `DELETE /v1/mcp/server/{server_id}/pin`)
+- [MCP Guardrails](./mcp_guardrail): `pre_mcp_call` guardrails on tool arguments and on upstream tool descriptions at discovery
 - [MCP OAuth](./mcp_oauth), [MCP OBO Auth](./mcp_obo_auth), [MCP OAuth Passthrough](./mcp_oauth_passthrough), [MCP AWS SigV4](./mcp_aws_sigv4)
 - [MCP Troubleshooting](./mcp_troubleshoot): debug headers and hop-by-hop isolation
