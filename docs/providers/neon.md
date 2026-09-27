@@ -13,7 +13,7 @@ LiteLLM has no dedicated `neon/` provider. Neon serves an OpenAI-compatible `/v1
 
 :::note
 
-Neon AI Gateway is in beta. It requires a paid Neon plan and a project in the AWS US East (Ohio) region (`aws-us-east-2`).
+Neon AI Gateway is generally available. It requires a paid Neon plan and is not available in every region; see [Regions](https://neon.com/docs/introduction/regions) for current coverage.
 
 :::
 
