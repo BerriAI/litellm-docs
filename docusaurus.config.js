@@ -309,20 +309,25 @@ const config = {
     // by default (mirroring the gtag setup below) and forwards every extra
     // option below to posthog.init via JSON.stringify.
     //
-    // capture_pageview is true rather than 'history_change' because the plugin
-    // ships a client module that captures $pageview on every Docusaurus route
-    // change; leaving the SDK's SPA tracking on as well would double count.
+    // capture_pageview is false because the plugin ships a client module whose
+    // onRouteUpdate captures $pageview on the initial load and on every
+    // Docusaurus route change. Leaving the SDK's own pageview on as well logs
+    // every landing page twice.
+    //
+    // $pageleave and dead clicks are on for docs UX analysis: time on page,
+    // bounce rate and scroll depth, plus clicks on things readers expect to be
+    // links. capture_pageleave must be an explicit true, since the SDK default
+    // only captures it when capture_pageview is on.
     //
     // Kept off the docs on purpose, so this stays analytics and nothing else:
     // no session replay (no rrweb bundle downloaded, no DOM observation;
     // replay is scoped to litellm.ai/enterprise and /pricing by URL trigger in
     // the project settings), no heatmap capture despite the project-level
     // opt-in (skips the mousemove listener and its periodic requests; link and
-    // button clicks are already captured with their hrefs by autocapture), and
-    // no $pageleave, which halves event volume at the cost of bounce rate and
-    // session-duration precision in Web Analytics. Surveys are off too, which
-    // drops the surveys.js request the SDK otherwise makes on every page; docs
-    // feedback already goes through Feedback Rocket below.
+    // button clicks are already captured with their hrefs by autocapture).
+    // Surveys are off too, which drops the surveys.js request the SDK
+    // otherwise makes on every page; docs feedback already goes through
+    // Feedback Rocket below.
     [
       'posthog-docusaurus',
       {
@@ -332,8 +337,9 @@ const config = {
         defaults: '2026-05-30',
         person_profiles: 'identified_only',
         cross_subdomain_cookie: true,
-        capture_pageview: true,
-        capture_pageleave: false,
+        capture_pageview: false,
+        capture_pageleave: true,
+        capture_dead_clicks: true,
         disable_session_recording: true,
         capture_heatmaps: false,
         disable_surveys: true,
