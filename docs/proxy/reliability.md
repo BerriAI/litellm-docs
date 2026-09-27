@@ -225,7 +225,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "zephyr-beta"",
+    "model": "zephyr-beta",
     "messages": [
         {
         "role": "user",
@@ -968,7 +968,7 @@ response = client.chat.completions.with_raw_response.create(
 
 print(response)
 
-print(f"response.headers.get('x-litellm-model-api-base')")
+print(response.headers.get('x-litellm-model-api-base'))
 ```
 
 ### Setting Fallbacks for Wildcard Models
@@ -1127,7 +1127,7 @@ A team key does not inherit the key owner's personal `max_budget` unless `genera
 
 <TabItem value="request" label="Per Request">
 
-You can disable fallbacks per key by setting `disable_fallbacks: true` in your request body.
+You can disable fallbacks per request by setting `disable_fallbacks: true` in your request body.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
@@ -1141,7 +1141,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         }
     ],
     "model": "{{openai_small}}",
-    "disable_fallbacks": true # 👈 DISABLE FALLBACKS
+    "disable_fallbacks": true
 }'
 ```
 
@@ -1164,3 +1164,5 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 </TabItem>
 </Tabs>
+
+Both forms cover every fallback the proxy would otherwise make for that request, the mid-stream one included: when the chosen deployment's stream fails before its first chunk on `/chat/completions`, `/v1/messages`, or `/v1/responses`, the request returns that deployment's own error instead of a fallback deployment's response

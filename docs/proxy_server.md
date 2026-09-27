@@ -673,13 +673,7 @@ print(result)
 
 ### Logs
 
-```shell
-$ litellm --logs
-```
-
-This will return the most recent log (the call that went to the LLM API + the received response).
-
-All logs are saved to a file called `api_logs.json` in the current directory. 
+The proxy prints request and response logs to stdout. Start it with `--debug` for request-level logs or `--detailed_debug` for verbose logs. To persist logs, send them to a logging integration via `litellm_settings.success_callback` in your config; see [Logging](./proxy/logging).
 
 ### Configure Proxy
 
@@ -691,96 +685,27 @@ If you need to:
 You can do set these just for that session (via cli), or persist these across restarts (via config file).
 
 #### Save API Keys 
+
+The CLI does not store API keys. Set them as environment variables before starting the proxy, or reference them from a config file with `os.environ/`:
+
 ```shell 
-$ litellm --api_key OPENAI_API_KEY=sk-...
+$ export OPENAI_API_KEY=sk-...
+$ litellm --model {{openai_large}}
 ```
-LiteLLM will save this to a locally stored config file, and persist this across sessions. 
 
-LiteLLM Proxy supports all litellm supported api keys. To add keys for a specific provider, check this list:
-
-<Tabs>
-<TabItem value="huggingface" label="Huggingface">
+```yaml
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+```
 
 ```shell
-$ litellm --add_key HUGGINGFACE_API_KEY=my-api-key #[OPTIONAL]
+$ litellm --config config.yaml
 ```
 
-</TabItem>
-<TabItem value="anthropic" label="Anthropic">
-
-```shell
-$ litellm --add_key ANTHROPIC_API_KEY=my-api-key
-```
-
-</TabItem>
-<TabItem value="perplexity" label="PerplexityAI">
-
-```shell
-$ litellm --add_key PERPLEXITYAI_API_KEY=my-api-key
-```
-
-</TabItem>
-
-<TabItem value="together_ai" label="TogetherAI">
-
-```shell
-$ litellm --add_key TOGETHERAI_API_KEY=my-api-key
-```
-
-</TabItem>
-
-<TabItem value="replicate" label="Replicate">
-
-```shell
-$ litellm --add_key REPLICATE_API_KEY=my-api-key
-```
-
-</TabItem>
-
-<TabItem value="bedrock" label="Bedrock">
-
-```shell
-$ litellm --add_key AWS_ACCESS_KEY_ID=my-key-id
-$ litellm --add_key AWS_SECRET_ACCESS_KEY=my-secret-access-key
-```
-
-</TabItem>
-
-<TabItem value="palm" label="Palm">
-
-```shell
-$ litellm --add_key PALM_API_KEY=my-palm-key
-```
-
-</TabItem>
-
-<TabItem value="azure" label="Azure OpenAI">
-
-```shell
-$ litellm --add_key AZURE_API_KEY=my-api-key
-$ litellm --add_key AZURE_API_BASE=my-api-base
-
-```
-
-</TabItem>
-
-<TabItem value="ai21" label="AI21">
-
-```shell
-$ litellm --add_key AI21_API_KEY=my-api-key
-```
-
-</TabItem>
-
-<TabItem value="cohere" label="Cohere">
-
-```shell
-$ litellm --add_key COHERE_API_KEY=my-api-key
-```
-
-</TabItem>
-
-</Tabs>
+LiteLLM Proxy supports all litellm supported api keys. See [Providers](./providers/) for the environment variables each provider expects, and [Proxy Config](./proxy/configs) for the full config file reference.
 
 E.g.: Set api base, max tokens and temperature. 
 

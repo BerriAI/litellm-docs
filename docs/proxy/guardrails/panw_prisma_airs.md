@@ -303,7 +303,9 @@ guardrails:
       default_on: true
 ```
 
-Unlike `pre_call` and `during_call`, which also run on `pre_mcp_call` and `during_mcp_call`, a `post_call` guardrail does not scan MCP tool results. Set `mode: post_mcp_call` explicitly.
+Set `mode: post_mcp_call` explicitly and `default_on: true` so the MCP child call selects the guardrail. Ordinary `post_call` configuration continues to scan LLM responses only. This requires a LiteLLM version containing [the integration fix](https://github.com/BerriAI/litellm/pull/43109).
+
+A blocked `/mcp` call returns an MCP tool error (`result.isError: true`), which can arrive with HTTP 200. During `/v1/responses` MCP auto-execution, the model receives a tool error instead of the blocked content and can continue generating a response. The block does not by itself make the overall Responses request return HTTP 400.
 
 ### Current Limitations
 

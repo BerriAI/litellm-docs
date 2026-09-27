@@ -20,7 +20,7 @@ Predict cache costs, set speed by tier, let teams manage routers, and see the ch
 
 Test Auto Router on your production traffic with the LiteLLM team.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::
 
@@ -130,6 +130,6 @@ general_settings:
 
 Test Auto Router on your workload and help us decide what to build next.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::

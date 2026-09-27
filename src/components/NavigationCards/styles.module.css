@@ -44,6 +44,29 @@
   font-size: 1.4rem;
   margin-bottom: 0.5rem;
   line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+:global([data-theme='dark']) .icon img[src$="cursor.svg"],
+:global([data-theme='dark']) .icon img[src$="github-copilot.svg"],
+:global([data-theme='dark']) .icon img[src$="openai.svg"],
+:global([data-theme='dark']) .icon img[src$="anthropic.svg"],
+:global([data-theme='dark']) .icon img[src$="letta.svg"],
+:global([data-theme='dark']) .icon img[src$="posthog.svg"],
+:global([data-theme='dark']) .icon img[src$="splunk.svg"],
+:global([data-theme='dark']) .icon img[src$="opencode.svg"],
+:global([data-theme='dark']) .icon img[src$="opentelemetry.svg"] {
+  filter: invert(1);
 }
 
 .title {

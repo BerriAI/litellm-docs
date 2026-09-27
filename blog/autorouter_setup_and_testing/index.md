@@ -27,7 +27,7 @@ Everything below ships in **v1.97.x**.
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -93,7 +93,7 @@ complexity_router_config:
 
 :::info
 
-Start with the one-line agent command, or go to **Models + Endpoints → Auto Router** in the dashboard to add or enable an Auto Router model. Questions and results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) to work on this with us directly.
+Start with the one-line agent command, or go to **Models + Endpoints → Auto Router** in the dashboard to add or enable an Auto Router model. Questions and results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner) to work on this with us directly.
 
 :::
 

@@ -397,7 +397,7 @@ model_list:
     - model_name: {{openai_small}} 
       litellm_params: # params for litellm completion/embedding call 
         model: {{openai_small}} 
-        api_key: os.getenv(OPENAI_API_KEY)
+        api_key: os.environ/OPENAI_API_KEY
       tpm: 100000
       rpm: 1000
 
@@ -406,7 +406,7 @@ router_settings:
   redis_host: <your-redis-host>
   redis_password: <your-redis-password>
   redis_port: <your-redis-port>
-  enable_pre_call_check: true
+  enable_pre_call_checks: true
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -453,7 +453,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# 👈 set routing strategy
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 ## CALL 1+2
@@ -576,7 +576,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 

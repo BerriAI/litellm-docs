@@ -7,8 +7,10 @@ import {
   LATEST_STABLE_VERSION,
   MAIN_VERSION,
   RC_RELEASES,
+  ROLLOUT_VERSIONS,
   STABLE_RELEASES,
   STAGES,
+  changesIn,
 } from '@site/src/data/rustMigration';
 import {StageIcon, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
 import picker from './Picker.module.css';
@@ -44,19 +46,9 @@ const API_FEATURES = FEATURES.filter(feature => !feature.area.groundwork);
 // Every release that moved an API and provider pair, oldest first. Within a
 // release, providers that moved the same API to the same stage share one
 // change, like OCR → Rust default for six providers.
-const ROLLOUT_RELEASES = (() => {
-  const byVersion = new Map();
-  API_FEATURES.forEach(feature => feature.rollout.forEach(step => {
-    const changes = byVersion.get(step.version) ?? new Map();
-    const key = `${feature.area.id}:${step.stage}`;
-    const change = changes.get(key) ?? {key, area: feature.area, stage: step.stage, features: []};
-    change.features.push(feature);
-    byVersion.set(step.version, changes.set(key, change));
-  }));
-  return [...byVersion]
-    .sort(([left], [right]) => semver.compare(left, right))
-    .map(([version, changes]) => ({version, changes: [...changes.values()]}));
-})();
+const ROLLOUT_RELEASES = ROLLOUT_VERSIONS
+  .map(version => ({version, changes: changesIn(version, API_FEATURES)}))
+  .filter(release => release.changes.length > 0);
 
 const PROVIDER_PREVIEW = 3;
 

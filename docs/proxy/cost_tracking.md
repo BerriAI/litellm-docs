@@ -319,31 +319,9 @@ curl -X GET 'http://localhost:4000/spend/keys' \
   -H 'Authorization: Bearer <internal-user-key>'
 ```
 
-### Legacy unscoped behavior (upgrade path)
+### Scoping cannot be disabled
 
-Before this scoping change, any authenticated key could list the **full** key/user tables. If you rely on that behavior (for example automation using an `internal_user` key), opt out explicitly:
-
-```yaml title="config.yaml" showLineNumbers
-general_settings:
-  legacy_unscoped_spend_list_endpoints: true
-```
-
-Or set the environment variable:
-
-```shell
-export LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS=true
-```
-
-When legacy mode is enabled, `/spend/keys` and `/spend/users` behave as they did previously for non-admin callers.
-
-To disable scoping without the legacy flag name:
-
-```yaml
-general_settings:
-  scope_spend_list_endpoints_to_caller: false
-```
-
-See [general_settings reference](./config_settings.md#general_settings---reference) for `scope_spend_list_endpoints_to_caller` and `legacy_unscoped_spend_list_endpoints`.
+Caller scoping on `/spend/keys` and `/spend/users` is unconditional. There is no `general_settings` key or environment variable that restores the pre-scoping behavior where any authenticated key could list the full key and user tables. Automation that needs the full tables must use a `proxy_admin` or `proxy_admin_viewer` key.
 
 :::info
 Prefer `/user/info?user_id=...` or `/global/spend/report` for per-user spend analytics. The list endpoints are intended for admin dashboards and scoped self-service views.
