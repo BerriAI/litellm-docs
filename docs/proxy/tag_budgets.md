@@ -36,13 +36,15 @@ Create a new tag and set `max_budget` and `budget_duration`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/new' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "name": "engineering", 
             "description": "Engineering department cost center",
             "max_budget": 500.0, 
-            "budget_duration": "30d"
+            "budget_duration": "30d",
+            "rpm_limit": 100,
+            "tpm_limit": 100000
         }' 
 ```
 
@@ -56,6 +58,8 @@ curl -X POST 'http://0.0.0.0:4000/tag/new' \
 | `max_budget` | float | No | Maximum budget in USD |
 | `budget_duration` | string | No | How often budget resets (e.g., "30d", "1d") |
 | `soft_budget` | float | No | Soft budget limit for warnings |
+| `rpm_limit` | int | No | Max requests per minute allowed for the tag across all keys and teams |
+| `tpm_limit` | int | No | Max tokens per minute allowed for the tag across all keys and teams |
 
 **Response:**
 
@@ -103,7 +107,7 @@ Use the top-level `tags` field on `/key/generate` or `/key/update`:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "tags": ["engineering"]
@@ -114,7 +118,7 @@ You can also set tags under key `metadata`:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
             "metadata": {
@@ -134,7 +138,7 @@ Navigate to **Virtual Keys** → **Create Key** (or edit an existing key) and se
 
 ### 3. Use the tag in your requests (optional)
 
-If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header — see [Request Tags](request_tags.md)):
+If you did not attach tags to the API key, add tags to each request in the `metadata` field (or via the `x-litellm-tags` header, see [Request Tags](request_tags.md)):
 
 <Tabs>
 
@@ -144,12 +148,12 @@ If you did not attach tags to the API key, add tags to each request in the `meta
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -165,10 +169,10 @@ response = client.chat.completions.create(
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -189,7 +193,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-your-key-with-engineering-tag' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```
@@ -198,10 +202,10 @@ If you skipped step 2, include the tag in the request body instead:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering"]
@@ -222,6 +226,38 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 }
 ```
 
+## Setting Tag Rate Limits
+
+Set `rpm_limit` and `tpm_limit` on a tag to cap requests and tokens per minute for that tag. The limit applies to the tag itself, so usage is shared across every key and team that sends the tag, whether the tag arrives in request `metadata.tags`, the `x-litellm-tags` header, or a key's attached tags. This is separate from the per key `tag_rpm_limit` map in key metadata, which meters each key's requests under a tag independently.
+
+Rate limits on tags are enforced by the v3 parallel request limiter. Once a tag crosses its limit, any request carrying it is rejected with HTTP 429 and a message like `Rate limit exceeded for tag: engineering. Limit type: requests. Current limit: 100`. `rpm_limit` counts each request at admission, and `tpm_limit` is charged with the request's actual token usage after the call completes, so a request can be admitted and the next one rejected once usage lands.
+
+Create a tag with rate limits:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/new' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+            "name": "engineering",
+            "rpm_limit": 100,
+            "tpm_limit": 100000
+        }'
+```
+
+Update rate limits on an existing tag:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/update' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+            "name": "engineering",
+            "rpm_limit": 200,
+            "tpm_limit": 200000
+        }'
+```
+
 ## Managing Tags
 
 ### View Tag Information
@@ -230,7 +266,7 @@ Get information about specific tags:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/info' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "names": ["engineering", "marketing"]
@@ -270,7 +306,7 @@ Update an existing tag's budget:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/update' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "name": "engineering",
@@ -283,7 +319,7 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/tag/delete' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "name": "engineering"
@@ -296,7 +332,7 @@ You can apply multiple tags to a single request to track costs across different 
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     extra_body={
         "metadata": {
@@ -308,10 +344,10 @@ response = client.chat.completions.create(
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "gpt-4",
+           "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}],
            "metadata": {
                "tags": ["engineering", "project-alpha", "customer-acme"]

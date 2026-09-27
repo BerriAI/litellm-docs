@@ -152,7 +152,7 @@ import TabItem from '@theme/TabItem';
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -170,7 +170,7 @@ print(f"Path: {file.path}")
 
 ```bash showLineNumbers title="upload_file.sh"
 curl "http://localhost:4000/v1/containers/cntr_123.../files" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F file="@data.csv"
 ```
 
@@ -186,7 +186,7 @@ curl "http://localhost:4000/v1/containers/cntr_123.../files" \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -203,7 +203,7 @@ for file in files.data:
 
 ```bash showLineNumbers title="list_files.sh"
 curl "http://localhost:4000/v1/containers/cntr_123.../files" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -218,7 +218,7 @@ curl "http://localhost:4000/v1/containers/cntr_123.../files" \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -236,7 +236,7 @@ print(f"Size: {file.bytes} bytes")
 
 ```bash showLineNumbers title="retrieve_file.sh"
 curl "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -251,7 +251,7 @@ curl "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456..." \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -269,7 +269,7 @@ with open("output.png", "wb") as f:
 
 ```bash showLineNumbers title="download_content.sh"
 curl "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456.../content" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     --output downloaded_file.png
 ```
 
@@ -285,7 +285,7 @@ curl "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456.../content
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -302,7 +302,7 @@ print(f"Deleted: {result.deleted}")
 
 ```bash showLineNumbers title="delete_file.sh"
 curl -X DELETE "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>

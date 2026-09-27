@@ -35,10 +35,10 @@ If you're on **AWS ALB**, correlate `litellm_in_flight_requests` spikes with ALB
 
 ## Quick Checklist
 
-1. **Check `in_flight_requests` on each pod** via `/health/backlog` or the `litellm_in_flight_requests` Prometheus gauge — this tells you if requests are queuing before LiteLLM starts processing. Start here for unexplained latency.
+1. **Check `in_flight_requests` on each pod** via `/health/backlog` or the `litellm_in_flight_requests` Prometheus gauge. This tells you if requests are queuing before LiteLLM starts processing. Start here for unexplained latency.
 2. **Collect the `x-litellm-overhead-duration-ms` response header** — this tells you LiteLLM's total overhead on every request.
 2. **Is DEBUG logging enabled?** This is the #1 cause of latency with large payloads.
-3. **Are you sending large base64 payloads?** (images, PDFs) — see [Large Payload Overhead](#large-payload-overhead).
+3. **Are you sending large base64 payloads?** (images, PDFs). See [Large Payload Overhead](#large-payload-overhead).
 4. **Enable detailed timing headers** to pinpoint where time is spent.
 
 ## Diagnostic Headers
@@ -50,7 +50,7 @@ Every response from LiteLLM includes this header. It shows the total latency ove
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm-overhead-duration-ms
 ```
 
@@ -61,7 +61,7 @@ Shows time spent building callback/logging payloads (ms). If this is high (>100m
 ```bash
 curl -s -D - http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "hi"}]}' \
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}' \
   2>&1 | grep x-litellm
 ```
 
@@ -113,6 +113,19 @@ You can control the truncation threshold:
 export MAX_BASE64_LENGTH_FOR_LOGGING=64
 ```
 
+### 3. Base64 and Oversized Lines in stdout Logs
+
+A provider error can echo the whole request, and at DEBUG level the request payload itself is printed, so one multi-megabyte upload can turn into log lines that take seconds to format and scrub, inline on the event loop. Two caps bound what reaches stdout. Neither changes what logging callbacks receive.
+
+`MAX_BASE64_LENGTH_STDOUT_LOG` (default `4096`) collapses any base64 run longer than that, at every log level and in tracebacks too, to a placeholder like `[base64_data truncated: 2.86MB]`, leaving the text around it in place. `MAX_STRING_LENGTH_STDOUT_LOG` (default `4096`) caps whole lines at INFO and above, keeping the head and tail around a `litellm_truncated skipped N chars` marker; DEBUG lines are left at full length so `--detailed_debug` still shows everything. Set either to `0` to turn it off.
+
+```bash
+# Collapse base64 runs longer than this in stdout log lines (default: 4096, 0 disables)
+export MAX_BASE64_LENGTH_STDOUT_LOG=4096
+# Cap INFO and higher stdout log lines at this many chars (default: 4096, 0 disables)
+export MAX_STRING_LENGTH_STDOUT_LOG=4096
+```
+
 ## Environment Variables Reference
 
 | Variable | Default | Description |
@@ -120,3 +133,5 @@ export MAX_BASE64_LENGTH_FOR_LOGGING=64
 | `LITELLM_DETAILED_TIMING` | `false` | Enable per-phase timing headers |
 | `MAX_PAYLOAD_SIZE_FOR_DEBUG_LOG` | `102400` | Max payload bytes for full DEBUG serialization |
 | `MAX_BASE64_LENGTH_FOR_LOGGING` | `64` | Max base64 chars before truncation in logging |
+| `MAX_BASE64_LENGTH_STDOUT_LOG` | `4096` | Max base64 chars in a stdout log line before the run collapses to a size placeholder |
+| `MAX_STRING_LENGTH_STDOUT_LOG` | `4096` | Max chars per INFO-or-higher stdout log line before the middle is cut |

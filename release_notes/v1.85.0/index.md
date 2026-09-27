@@ -175,7 +175,7 @@ Pricing/metadata also updated for existing entries: Gemini multimodal-embedding 
     - Grafana Cloud Pyroscope authentication - [PR #26902](https://github.com/BerriAI/litellm/pull/26902)
     - Show full IdP claims in `/sso/debug/callback` - [PR #27498](https://github.com/BerriAI/litellm/pull/27498)
 
-#### Bugs — access scoping & correctness
+#### Bugs: access scoping & correctness
 
 - **Multi-tenancy isolation**
     - Scope project, key-org, team, and agent-activity lookups per entity; reject `user_id=None` on non-admin analytics; re-validate `user_id` after `/user/info` re-parses query - [PR #27011](https://github.com/BerriAI/litellm/pull/27011), [PR #27014](https://github.com/BerriAI/litellm/pull/27014), [PR #26929](https://github.com/BerriAI/litellm/pull/26929), [PR #27009](https://github.com/BerriAI/litellm/pull/27009)

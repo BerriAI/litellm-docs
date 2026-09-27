@@ -97,9 +97,9 @@ This is great to central AI Platform teams looking to track how they are helping
 
 - **[Google AI Studio](../../docs/providers/gemini)**
     - Added Google AI Studio Imagen4 model family support - [PR #13065](https://github.com/BerriAI/litellm/pull/13065), [Get Started](../../docs/providers/google_ai_studio/image_gen)
-- **[Azure OpenAI](../../docs/providers/azure/azure)**
-    - Azure `api_version="preview"` support - [PR #13072](https://github.com/BerriAI/litellm/pull/13072), [Get Started](../../docs/providers/azure/azure#setting-api-version)
-    - Password protected certificate files support - [PR #12995](https://github.com/BerriAI/litellm/pull/12995), [Get Started](../../docs/providers/azure/azure#authentication)
+- **[Azure OpenAI](/docs/providers/azure)**
+    - Azure `api_version="preview"` support - [PR #13072](https://github.com/BerriAI/litellm/pull/13072), [Get Started](/docs/providers/azure#setting-api-version)
+    - Password protected certificate files support - [PR #12995](https://github.com/BerriAI/litellm/pull/12995), [Get Started](/docs/providers/azure#authentication)
 - **[AWS Bedrock](../../docs/providers/bedrock)**
     - Cost tracking via Anthropic `/v1/messages` - [PR #13072](https://github.com/BerriAI/litellm/pull/13072)
     - Computer use support - [PR #13150](https://github.com/BerriAI/litellm/pull/13150)
@@ -204,7 +204,7 @@ This is great to central AI Platform teams looking to track how they are helping
 - **[MLFlow](../../docs/proxy/logging#mlflow)**
     - Allow adding tags for MLFlow logging requests - [PR #13108](https://github.com/BerriAI/litellm/pull/13108)
 - **[Langfuse OTEL](../../docs/proxy/logging#langfuse)**
-    - Add comprehensive metadata support to Langfuse OpenTelemetry integration - [PR #12956](https://github.com/BerriAI/litellm/pull/12956)
+    - Add full metadata support to Langfuse OpenTelemetry integration - [PR #12956](https://github.com/BerriAI/litellm/pull/12956)
 - **[Datadog LLM Observability](../../docs/proxy/logging#datadog)**
     - Allow redacting message/response content for specific logging integrations - [PR #13158](https://github.com/BerriAI/litellm/pull/13158)
 

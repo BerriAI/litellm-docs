@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 | Description | The fastest and most efficient inference engine to build production-ready, compound AI systems. |
 | Provider Route on LiteLLM | `fireworks_ai/` |
 | Provider Doc | [Fireworks AI ↗](https://docs.fireworks.ai/getting-started/introduction) |
-| Supported OpenAI Endpoints | `/chat/completions`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank` |
+| Supported OpenAI Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank` |
 
 
 ## Overview
@@ -120,6 +120,69 @@ print(response)
 
 The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
 
+## FireRouter (auto router)
+
+[FireRouter](https://docs.fireworks.ai/ecosystem/firerouter/litellm) is Fireworks' managed router. Instead of pointing at one model, the `accounts/fireworks/routers/firerouter` resource picks a model per request, and the response `model` field reports which one served it.
+
+LiteLLM accepts three equivalent spellings:
+
+```python
+model="fireworks_ai/firerouter"                                        # default router
+model="fireworks_ai/firerouter/kimi-k3/glm-5p2"                        # custom slug: restrict the pool
+model="fireworks_ai/accounts/fireworks/routers/firerouter"             # full resource id
+```
+
+### Bring your own key for pass-through legs
+
+Fireworks does not resell closed models. When FireRouter picks a Claude or GPT leg, it forwards the request to that provider under your own credentials, so the caller must supply `x-anthropic-api-key` or `x-openai-api-key`. Without it Fireworks fails closed with a 401.
+
+Attach the header server-side on the deployment with `litellm_params.extra_headers`, or let each client send its own by enabling `forward_client_headers_to_llm_api` globally or per model group.
+
+```yaml
+model_list:
+  - model_name: firerouter
+    litellm_params:
+      model: fireworks_ai/firerouter
+      api_key: os.environ/FIREWORKS_AI_API_KEY
+      extra_headers:
+        x-anthropic-api-key: os.environ/ANTHROPIC_API_KEY
+```
+
+```yaml
+general_settings:
+  forward_client_headers_to_llm_api: true
+# or per model group:
+# model_group_settings:
+#   forward_client_headers_to_llm_api: [firerouter]
+```
+
+```bash
+curl -X POST http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "firerouter", "messages": [{"role": "user", "content": "hello"}]}'
+```
+
+The same headers go through the SDK on `completion()`:
+
+```python
+from litellm import completion
+
+response = completion(
+    model="fireworks_ai/firerouter",
+    messages=[{"role": "user", "content": "hello"}],
+    extra_headers={"x-anthropic-api-key": "sk-ant-..."},
+)
+```
+
+### Routing preference
+
+`x-routing-preference` steers the router on a 1–5 scale, where 1 is cheapest and 5 is highest quality. It travels the same way as the BYOK headers: `litellm_params.extra_headers` server-side, client-supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`.
+
+### Cost tracking
+
+LiteLLM prices each request off the model Fireworks reports it routed to. Fireworks-hosted legs are billed at Fireworks rates; pass-through legs (for example a Claude leg) are billed at that provider's own list price. Your invoice is split across two vendor bills, the Fireworks key covering open models and your Anthropic or OpenAI key covering pass-through, but LiteLLM spend logs and budgets sum both under the one model group.
+
 ## Usage with LiteLLM Proxy 
 
 ### 1. Set Fireworks AI Models on config.yaml
@@ -211,6 +274,80 @@ print(response)
 ```
 </TabItem>
 </Tabs>
+
+## Responses API
+
+`fireworks_ai/` models on `/v1/responses` go straight to Fireworks' native `https://api.fireworks.ai/inference/v1/responses` endpoint, so server-side features such as MCP tools (`"type": "mcp"`), `previous_response_id`, and reasoning output items work the same as they do against Fireworks directly
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import os
+from litellm import responses
+
+os.environ["FIREWORKS_AI_API_KEY"] = "YOUR_API_KEY"
+
+response = responses(
+    model="fireworks_ai/accounts/fireworks/models/kimi-k3",
+    input="Use the deepwiki MCP server to tell me in one sentence what the BerriAI/litellm repository is.",
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": "deepwiki",
+            "server_url": "https://mcp.deepwiki.com/mcp",
+            "require_approval": "never",
+        }
+    ],
+)
+print(response.output)
+```
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+1. Setup config.yaml
+
+```yaml
+model_list:
+  - model_name: fireworks-kimi-k3
+    litellm_params:
+      model: fireworks_ai/accounts/fireworks/models/kimi-k3
+      api_key: "os.environ/FIREWORKS_AI_API_KEY"
+```
+
+2. Start proxy
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+3. Test it!
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "fireworks-kimi-k3",
+    "input": "Use the deepwiki MCP server to tell me in one sentence what the BerriAI/litellm repository is.",
+    "tools": [
+      {
+        "type": "mcp",
+        "server_label": "deepwiki",
+        "server_url": "https://mcp.deepwiki.com/mcp",
+        "require_approval": "never"
+      }
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Multi-turn tool calling works the same way it does against Fireworks directly: send back the `function_call_output` items together with the `previous_response_id` Fireworks returned, and Fireworks continues the conversation server-side
+
+`developer` input items are sent to Fireworks as `system` messages, since Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. A model whose chat template needs the system message first (qwen3.8) still rejects a developer item placed after the first input item, the same way it does when called directly
 
 ## Document Inlining 
 
@@ -419,7 +556,7 @@ response = transcription(
 )
 ```
 
-[Pass API Key/API Base in `.transcription`](../set_keys.md#passing-args-to-completion)
+[Pass API Key/API Base in `.transcription`](../set_keys.md#passing-args-to-completion-or-any-litellm-endpoint---transcription-embedding-text_completion-etc)
 
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -447,7 +584,7 @@ litellm --config config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/audio/transcriptions' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
 -F 'model="whisper-v3"' \
 -F 'response_format="verbose_json"' \
@@ -487,7 +624,7 @@ response = rerank(
 print(response)
 ```
 
-[Pass API Key/API Base in `.rerank`](../set_keys.md#passing-args-to-completion)
+[Pass API Key/API Base in `.rerank`](../set_keys.md#passing-args-to-completion-or-any-litellm-endpoint---transcription-embedding-text_completion-etc)
 
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -514,7 +651,7 @@ litellm --config config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen3-reranker-8b",

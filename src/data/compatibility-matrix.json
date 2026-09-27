@@ -1,14 +1,18 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-08-19T06:16:40Z",
-  "litellm_version": "v1.97.0",
-  "claude_code_version": "2.1.228",
+  "generated_at": "2026-09-27T06:10:46Z",
+  "litellm_version": "v1.102.1",
+  "claude_code_version": "2.1.281",
   "providers": [
     "anthropic",
     "bedrock_invoke",
     "bedrock_converse",
     "vertex_ai",
-    "azure"
+    "azure",
+    "openai",
+    "azure_openai",
+    "bedrock_mantle",
+    "vertex_ai_gpt"
   ],
   "features": [
     {
@@ -29,6 +33,19 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "pass"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_applicable",
+          "reason": "GCP Vertex AI does not offer OpenAI's closed-weight GPT-5.6 family (Sol / Terra / Luna); Model Garden carries only the open-weight gpt-oss MaaS models. Convert this column's cells to live tests if Google adds the GPT-5.6 models."
         }
       }
     },
@@ -50,6 +67,19 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "pass"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_applicable",
+          "reason": "GCP Vertex AI does not offer OpenAI's closed-weight GPT-5.6 family (Sol / Terra / Luna); Model Garden carries only the open-weight gpt-oss MaaS models. Convert this column's cells to live tests if Google adds the GPT-5.6 models."
         }
       }
     },
@@ -71,6 +101,19 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "pass"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_applicable",
+          "reason": "GCP Vertex AI does not offer OpenAI's closed-weight GPT-5.6 family (Sol / Terra / Luna); Model Garden carries only the open-weight gpt-oss MaaS models. Convert this column's cells to live tests if Google adds the GPT-5.6 models."
         }
       }
     },
@@ -92,6 +135,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -113,6 +168,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -127,14 +194,25 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-opus-4-7-bedrock-converse] no `thinking` content block observed in stream-json events"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -156,6 +234,19 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "pass"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_applicable",
+          "reason": "GCP Vertex AI does not offer OpenAI's closed-weight GPT-5.6 family (Sol / Terra / Luna); Model Garden carries only the open-weight gpt-oss MaaS models. Convert this column's cells to live tests if Google adds the GPT-5.6 models."
         }
       }
     },
@@ -177,6 +268,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -191,14 +294,25 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-converse] claude CLI failed: exit=1; api_status=400; text=API Error: 400 litellm.BadRequestError: BedrockException - {\"message\":\"A text block must be included when using documents. Add a text block and retry your request.\"}. Received Model Group=claude-haiku-4-5-bedrock-converse\nAvailable Model Group Fallbacks=None; stderr=\u26a0 claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login \u00b7 Unset it to load your organization's connectors"
+          "status": "pass"
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -220,6 +334,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -241,6 +367,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -262,6 +400,18 @@
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -279,10 +429,22 @@
           "status": "pass"
         },
         "vertex_ai": {
-          "status": "pass"
+          "status": "not_tested"
         },
         "azure": {
           "status": "pass"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
@@ -294,23 +456,34 @@
           "status": "pass"
         },
         "bedrock_invoke": {
-          "status": "fail",
-          "error": "[claude-haiku-4-5-bedrock-invoke] tool_search probe failed: status 400: {\"error\":{\"message\":\"{\\\"message\\\":\\\"tools.0: Input tag 'tool_search_tool_regex_20251119' found using 'type' does not match any of the expected tags: 'bash_20250124', 'custom', 'memory_20250818', 'text_editor_20250124', 'text_editor_20250429', 'text_editor_20250728', 'web_search_20250305'\\\"}. Received Model Group=claude-haiku-4-5-bedrock-invoke\\nAvailable Model Group Fallbacks=None\",\"type\":\"None\",\""
+          "status": "pass"
         },
         "bedrock_converse": {
           "status": "pass"
         },
         "vertex_ai": {
-          "status": "pass"
+          "status": "not_tested"
         },
         "azure": {
-          "status": "pass"
+          "status": "not_tested"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     },
     {
-      "id": "long_context_1m",
-      "name": "Long context (1M)",
+      "id": "passthrough",
+      "name": "Native API passthrough",
       "providers": {
         "anthropic": {
           "status": "pass"
@@ -319,13 +492,59 @@
           "status": "pass"
         },
         "bedrock_converse": {
-          "status": "pass"
+          "status": "not_applicable",
+          "reason": "Claude Code's bedrock mode speaks only the InvokeModel wire (/model/{id}/invoke-with-response-stream); it has no Converse-wire client, so there is no Claude Code surface for Converse passthrough."
         },
         "vertex_ai": {
           "status": "pass"
         },
         "azure": {
-          "status": "pass"
+          "status": "not_tested"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
+        }
+      }
+    },
+    {
+      "id": "long_context_1m",
+      "name": "Long context (1M)",
+      "providers": {
+        "anthropic": {
+          "status": "not_tested"
+        },
+        "bedrock_invoke": {
+          "status": "not_tested"
+        },
+        "bedrock_converse": {
+          "status": "not_tested"
+        },
+        "vertex_ai": {
+          "status": "not_tested"
+        },
+        "azure": {
+          "status": "not_tested"
+        },
+        "openai": {
+          "status": "not_tested"
+        },
+        "azure_openai": {
+          "status": "not_tested"
+        },
+        "bedrock_mantle": {
+          "status": "not_tested"
+        },
+        "vertex_ai_gpt": {
+          "status": "not_tested"
         }
       }
     }

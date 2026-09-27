@@ -148,7 +148,7 @@ LiteLLM tracks changes to the following entities and actions:
     - Fixed embeddings using non-default `input_type` - [PR](https://github.com/BerriAI/litellm/pull/11452)
 - **[DataRobot](../../docs/providers/datarobot)**
     - New provider integration for enterprise AI workflows - [PR](https://github.com/BerriAI/litellm/pull/10385)
-- **[DeepSeek](../../docs/providers/together_ai)**
+- **[DeepSeek](/docs/providers/togetherai)**
     - DeepSeek R1 family model configuration via Together AI - [PR](https://github.com/BerriAI/litellm/pull/11394)
     - DeepSeek R1 pricing and context window configuration - [PR](https://github.com/BerriAI/litellm/pull/11339)
 
@@ -158,14 +158,14 @@ LiteLLM tracks changes to the following entities and actions:
 
 - **[Images API](../../docs/image_generation)**
     - Azure endpoint support for image endpoints - [PR](https://github.com/BerriAI/litellm/pull/11482)
-- **[Anthropic Messages API](../../docs/completion/chat)**
+- **[Anthropic Messages API](/docs/completion)**
     - Support for ALL LiteLLM Providers (OpenAI, Azure, Bedrock, Vertex, DeepSeek, etc.) on /v1/messages API Spec - [PR](https://github.com/BerriAI/litellm/pull/11502)
     - Performance improvements for /v1/messages route - [PR](https://github.com/BerriAI/litellm/pull/11421)
     - Return streaming usage statistics when using LiteLLM with Bedrock models - [PR](https://github.com/BerriAI/litellm/pull/11469)
 - **[Embeddings API](../../docs/embedding/supported_embedding)**
     - Provider-specific optional params handling for embedding calls - [PR](https://github.com/BerriAI/litellm/pull/11346)
     - Proper Sagemaker request attribute usage for embeddings - [PR](https://github.com/BerriAI/litellm/pull/11362)
-- **[Rerank API](../../docs/rerank/supported_rerank)**
+- **[Rerank API](/docs/rerank)**
     - New HuggingFace rerank provider support - [PR](https://github.com/BerriAI/litellm/pull/11438), [Guide](../../docs/providers/huggingface_rerank)
 
 ---
@@ -197,19 +197,19 @@ LiteLLM tracks changes to the following entities and actions:
 ## Logging / Guardrails Integrations
 
 #### Logging
-- **[S3](../../docs/proxy/logging#s3)**
+- **[S3](/docs/proxy/logging#s3-buckets)**
     - Async + Batched S3 Logging for improved performance - [PR](https://github.com/BerriAI/litellm/pull/11340)
-- **[DataDog](../../docs/observability/datadog_integration)**
+- **[DataDog](/docs/observability/datadog)**
     - Add instrumentation for streaming chunks - [PR](https://github.com/BerriAI/litellm/pull/11338)
     - Add DD profiler to monitor Python profile of LiteLLM CPU% - [PR](https://github.com/BerriAI/litellm/pull/11375)
     - Bump DD trace version - [PR](https://github.com/BerriAI/litellm/pull/11426)
 - **[Prometheus](../../docs/proxy/prometheus)**
     - Pass custom metadata labels in litellm_total_token metrics - [PR](https://github.com/BerriAI/litellm/pull/11414)
-- **[GCS](../../docs/proxy/logging#google-cloud-storage)**
+- **[GCS](/docs/proxy/logging#google-cloud-storage-buckets)**
     - Update GCSBucketBase to handle GSM project ID if passed - [PR](https://github.com/BerriAI/litellm/pull/11409)
 
 #### Guardrails
-- **[Presidio](../../docs/proxy/guardrails/presidio)**
+- **[Presidio](/docs/proxy/guardrails/pii_masking_v2)**
     - Add presidio_language yaml configuration support for guardrails - [PR](https://github.com/BerriAI/litellm/pull/11331)
 
 ---

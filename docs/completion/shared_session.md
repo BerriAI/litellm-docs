@@ -2,7 +2,7 @@
 
 ## Overview
 
-LiteLLM now supports sharing `aiohttp.ClientSession` instances across multiple API calls to avoid creating unnecessary new sessions. This improves performance and resource utilization.
+LiteLLM now supports sharing `aiohttp.ClientSession` instances across multiple API calls to avoid creating unnecessary new sessions. This improves performance and resource use.
 
 ## Usage
 
@@ -18,13 +18,13 @@ async def main():
     async with ClientSession() as shared_session:
         # Use the same session for multiple calls
         response1 = await acompletion(
-            model="gpt-4o",
+            model="{{openai_large}}",
             messages=[{"role": "user", "content": "Hello"}],
             shared_session=shared_session
         )
         
         response2 = await acompletion(
-            model="gpt-4o", 
+            model="{{openai_large}}", 
             messages=[{"role": "user", "content": "How are you?"}],
             shared_session=shared_session
         )
@@ -43,12 +43,12 @@ from litellm import acompletion
 async def main():
     # Each call creates a new session
     response1 = await acompletion(
-        model="gpt-4o",
+        model="{{openai_large}}",
         messages=[{"role": "user", "content": "Hello"}]
     )
     
     response2 = await acompletion(
-        model="gpt-4o",
+        model="{{openai_large}}",
         messages=[{"role": "user", "content": "How are you?"}]
     )
     # Two separate sessions created
@@ -95,7 +95,7 @@ async def chat(messages: list[dict]):
     # Create session per request
     async with aiohttp.ClientSession() as session:
         return await litellm.acompletion(
-            model="gpt-4o",
+            model="{{openai_large}}",
             messages=messages,
             shared_session=session
         )
@@ -113,7 +113,7 @@ async def process_batch(messages_list):
         tasks = []
         for messages in messages_list:
             task = acompletion(
-                model="gpt-4o",
+                model="{{openai_large}}",
                 messages=messages,
                 shared_session=shared_session
             )
@@ -137,7 +137,7 @@ async with aiohttp.ClientSession(
 ) as shared_session:
     
     response = await litellm.acompletion(
-        model="gpt-4o",
+        model="{{openai_large}}",
         messages=[{"role": "user", "content": "Hello"}],
         shared_session=shared_session
     )
@@ -173,7 +173,7 @@ async def test_shared_session():
         
         try:
             response = await acompletion(
-                model="gpt-4o",
+                model="{{openai_large}}",
                 messages=[{"role": "user", "content": "Hello"}],
                 shared_session=session,
                 api_key="your-api-key"

@@ -45,7 +45,7 @@ public class User
 """
 
 completion = litellm.completion(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -66,9 +66,9 @@ print(completion)
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-mini # OpenAI gpt-4o-mini
+  - model_name: {{openai_small}} # OpenAI {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY 
 
 ```
@@ -86,12 +86,12 @@ litellm --config config.yaml
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 
 completion = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",

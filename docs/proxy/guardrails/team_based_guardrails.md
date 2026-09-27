@@ -103,7 +103,7 @@ The table shows:
 
 Summary cards show counts for **Total**, **Pending Review**, **Active**, and **Rejected**.
 
-<!-- Optional: screenshot of the Team Guardrails table and summary -->
+{/* Optional: screenshot of the Team Guardrails table and summary */}
 
 ### 4. Approve or reject
 
@@ -112,7 +112,7 @@ Summary cards show counts for **Total**, **Pending Review**, **Active**, and **R
 
 Approval triggers the same initialization as adding a guardrail via config or the admin guardrail API; rejection only updates the status and does not load the guardrail.
 
-<!-- Optional: screenshot of Approve/Reject actions or confirmation dialog -->
+{/* Optional: screenshot of Approve/Reject actions or confirmation dialog */}
 
 ### API equivalent (admin only)
 

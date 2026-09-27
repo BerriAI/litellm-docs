@@ -8,13 +8,13 @@
 | Provider Route on LiteLLM | `poe/` |
 | Link to Provider Doc | [Poe Website ↗](https://poe.com) |
 | Base URL | `https://api.poe.com/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage) |
+| Supported Operations | [`/chat/completions`](/docs/providers/poe#usage---litellm-python-sdk) |
 
 <br />
 
 ## What is Poe?
 
-Poe is Quora's comprehensive AI platform that offers:
+Poe is Quora's AI platform that offers:
 - **100+ Models**: Access to a wide variety of AI models
 - **Multiple Modalities**: Text, image, video, and voice AI
 - **Popular Models**: Including OpenAI's GPT series and Anthropic's Claude

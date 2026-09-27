@@ -70,7 +70,7 @@ LiteLLM provides an openai-compatible `/audio/speech` endpoint for Text-to-speec
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tts-1",
@@ -99,13 +99,13 @@ litellm --config /path/to/config.yaml
 | Provider    | Link to Usage      |
 |-------------|--------------------|
 | OpenAI      |   [Usage](#quick-start)                 |
-| Azure OpenAI|   [Usage](../docs/providers/azure#azure-text-to-speech-tts)                 |
+| Azure OpenAI|   [Usage](/docs/providers/azure/azure_speech)                 |
 | Azure AI Speech Service (AVA)|   [Usage](../docs/providers/azure_ai_speech)                 |
 | AWS Polly   |   [Usage](#aws-polly-text-to-speech)                 |
-| Vertex AI   |   [Usage](../docs/providers/vertex#text-to-speech-apis)                 |
+| Vertex AI   |   [Usage](/docs/providers/vertex_speech)                 |
 | Gemini      |   [Usage](#gemini-text-to-speech)                 |
 | ElevenLabs  |   [Usage](../docs/providers/elevenlabs#text-to-speech-tts)                 |
-| MiniMax     |   [Usage](../docs/providers/minimax#minimax---text-to-speech)                 |
+| MiniMax     |   [Usage](/docs/providers/minimax)                 |
 
 ## `/audio/speech` to `/chat/completions` Bridge
 
@@ -185,7 +185,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Gemini TTS Request"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-tts",
@@ -238,7 +238,7 @@ model_list:
 
 ```bash showLineNumbers title="Vertex AI TTS Request"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -271,7 +271,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
 Make a test Request with a valid file
 ```shell
 curl --location 'http://localhost:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/ishaanjaffer/Github/litellm/tests/gettysburg.wav"' \
 --form 'model="whisper"'
 ```

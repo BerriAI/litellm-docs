@@ -3,11 +3,11 @@ import TabItem from '@theme/TabItem';
 
 # Realtime API Guardrails
 
-Guard voice conversations in the [Realtime API](/docs/realtime) — intercept speech transcriptions **before** the LLM responds.
+Guard voice conversations in the [Realtime API](/docs/realtime) by intercepting speech transcriptions **before** the LLM responds.
 
 ## How it works
 
-The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns — each one needs to be checked individually.
+The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns, and each one needs to be checked individually.
 
 LiteLLM intercepts each turn at the transcription event, after Whisper converts speech to text but before the LLM generates a response:
 
@@ -83,7 +83,7 @@ guardrails:
           description: "Prompt injection attempt"
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Step 2: Start proxy
@@ -103,7 +103,7 @@ Connect your client to the proxy instead of directly to OpenAI:
 const ws = new WebSocket(
   "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
   [],
-  { headers: { Authorization: "Bearer sk-1234" } }
+  { headers: { Authorization: "Bearer sk-<your-litellm-api-key>" } }
 )
 
 ws.onopen = () => {
@@ -136,7 +136,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         await ws.recv()  # session.created
 
@@ -165,23 +165,15 @@ When the guardrail fires, the proxy:
 
 1. Sends `response.cancel` to kill any in-flight LLM response
 2. Sends `response.create` with the block message as forced instructions
-3. OpenAI's TTS **speaks the warning** back to the user — e.g. *"Content blocked: keyword 'system update' detected (Prompt injection attempt)"*
+3. OpenAI's TTS **speaks the warning** back to the user, e.g. *"Content blocked: keyword 'system update' detected (Prompt injection attempt)"*
 
 The LLM never processes the injected instruction.
 
-## Using with any guardrail provider
+## Using with other guardrail providers
 
-`realtime_input_transcription` mode works with any guardrail that implements `apply_guardrail`. Just swap `litellm_content_filter` for your provider:
+The proxy runs realtime guardrails through the provider's `apply_guardrail` method, but a guardrail can only be configured with `mode: realtime_input_transcription` if that hook is listed in its `get_supported_event_hooks()`. Currently only `litellm_content_filter` declares it. Setting the mode on another provider (for example `lakera_v2`, which supports only `pre_call`, `during_call`, and `post_call`) fails validation at proxy startup: the proxy logs an error (`Skipping guardrail ... proxy is starting WITHOUT this guardrail`) and starts without that guardrail, so realtime sessions run unprotected. Setting `LITELLM_STRICT_GUARDRAIL_MODES=false` downgrades the log to a warning, but the guardrail is still not supported for this mode.
 
-```yaml
-guardrails:
-  - guardrail_name: "voice-lakera"
-    litellm_params:
-      guardrail: lakera_ai
-      mode: realtime_input_transcription
-      default_on: true
-      api_key: os.environ/LAKERA_API_KEY
-```
+To add realtime support to a custom guardrail, include `GuardrailEventHooks.realtime_input_transcription` in its `get_supported_event_hooks()` and implement `apply_guardrail`.
 
 ## Per-key guardrail control
 

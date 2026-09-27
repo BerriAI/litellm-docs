@@ -8,8 +8,8 @@ keywords: [fallbacks, failover, provider failover, model failover, OpenAI, Anthr
 Here's how you can implement model fallbacks (provider failover) across 3 LLM providers (OpenAI, Anthropic, Azure) using LiteLLM. 
 
 ## 1. Install LiteLLM
-```python 
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 ## 2. Basic Fallbacks Code 
@@ -24,7 +24,7 @@ os.environ["AZURE_API_KEY"] = ""
 os.environ["AZURE_API_BASE"] = ""
 os.environ["AZURE_API_VERSION"] = ""
 
-model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "chatgpt-test"]
+model_fallback_list = ["{{anthropic}}", "{{openai_small}}", "chatgpt-test"]
 
 user_message = "Hello, how are you?"
 messages = [{ "content": user_message,"role": "user"}]
@@ -43,7 +43,9 @@ Implement model fallbacks based on context window exceptions.
 
 LiteLLM also exposes a `get_max_tokens()` function, which you can use to identify the context window limit that's been exceeded. 
 
-```python 
+The model ids in the fallback list below are illustrative and kept for their context window sizes.
+
+```python keep-model-ids
 import litellm
 from litellm import completion, ContextWindowExceededError, get_max_tokens
 
@@ -66,13 +68,13 @@ try:
 except ContextWindowExceededError as e:
     model_max_tokens = get_max_tokens(model)
     for model in context_window_fallback_list:
-        if model_max_tokens < model["max_tokens"]
-        try:
-            response = completion(model=model["model"], messages=messages)
-            return response
-        except ContextWindowExceededError as e:
-            model_max_tokens = get_max_tokens(model["model"])
-            continue
+        if model_max_tokens < model["max_tokens"]:
+            try:
+                response = completion(model=model["model"], messages=messages)
+                return response
+            except ContextWindowExceededError as e:
+                model_max_tokens = get_max_tokens(model["model"])
+                continue
 
 print(response)
 ```

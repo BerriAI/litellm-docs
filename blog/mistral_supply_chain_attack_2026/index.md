@@ -25,11 +25,11 @@ On May 11, 2026, security researchers at [Aikido Security](https://www.aikido.de
 
 ## What happened
 
-TeamPCP published `mistralai==2.4.6` to PyPI — a version Mistral AI never released. The package contained a backdoor injected into `src/mistralai/client/__init__.py` that fires at import time on Linux hosts. When triggered, it downloads a file named `transformers.pyz` from a hardcoded attacker-controlled IP address (`83.142.209.194`) and executes it as a detached background process.
+TeamPCP published `mistralai==2.4.6` to PyPI, a version Mistral AI never released. The package contained a backdoor injected into `src/mistralai/client/__init__.py` that fires at import time on Linux hosts. When triggered, it downloads a file named `transformers.pyz` from a hardcoded attacker-controlled IP address (`83.142.209.194`) and executes it as a detached background process.
 
 The filename was deliberately chosen to resemble Hugging Face's widely used `transformers` library, giving it cover in ML environments.
 
-The payload functions as a **credential stealer**, targeting secrets stored on the host — cloud credentials, CI/CD tokens, GitHub access tokens, and API keys. Researchers also found a geofenced destructive branch with a 1-in-6 probability of running `rm -rf /` on systems detected to be in certain regions.
+The payload functions as a **credential stealer**, targeting secrets stored on the host: cloud credentials, CI/CD tokens, GitHub access tokens, and API keys. Researchers also found a geofenced destructive branch with a 1-in-6 probability of running `rm -rf /` on systems detected to be in certain regions.
 
 PyPI has since quarantined the entire `mistralai` project. The attack was part of a broader campaign that hit TanStack (42 packages), UiPath (65 packages), Guardrails AI, OpenSearch, and others across both npm and PyPI.
 
@@ -61,9 +61,9 @@ If you discover a security issue in LiteLLM, please report it through our [bug b
 
 **References**
 
-- [Aikido Security — Mini Shai-Hulud Is Back](https://www.aikido.dev/blog/mini-shai-hulud-is-back-tanstack-compromised)
-- [The Hacker News — Mini Shai-Hulud Worm Compromises TanStack, Mistral AI, Guardrails AI & More](https://thehackernews.com/2026/05/mini-shai-hulud-worm-compromises.html)
-- [Wiz Blog — Mini Shai-Hulud Strikes Again](https://www.wiz.io/blog/mini-shai-hulud-strikes-again-tanstack-more-npm-packages-compromised)
+- [Aikido Security: Mini Shai-Hulud Is Back](https://www.aikido.dev/blog/mini-shai-hulud-is-back-tanstack-compromised)
+- [The Hacker News: Mini Shai-Hulud Worm Compromises TanStack, Mistral AI, Guardrails AI & More](https://thehackernews.com/2026/05/mini-shai-hulud-worm-compromises.html)
+- [Wiz Blog: Mini Shai-Hulud Strikes Again](https://www.wiz.io/blog/mini-shai-hulud-strikes-again-tanstack-more-npm-packages-compromised)
 - [Mistral AI Security Advisories](https://docs.mistral.ai/resources/security-advisories)
-- [GitHub Issue #523 — mistralai/client-python](https://github.com/mistralai/client-python/issues/523)
-- [SafeDep — Mass Supply Chain Attack Hits TanStack, Mistral AI](https://safedep.io/mass-npm-supply-chain-attack-tanstack-mistral/)
+- [GitHub Issue #523: mistralai/client-python](https://github.com/mistralai/client-python/issues/523)
+- [SafeDep: Mass Supply Chain Attack Hits TanStack, Mistral AI](https://safedep.io/mass-npm-supply-chain-attack-tanstack-mistral/)

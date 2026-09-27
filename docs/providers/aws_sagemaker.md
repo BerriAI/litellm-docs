@@ -293,7 +293,7 @@ print(response)
 
 ## Pass provider-specific params 
 
-If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#provider-specific-params)
+If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#litellm-specific-params)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
 }
 )
 

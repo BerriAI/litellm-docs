@@ -148,7 +148,7 @@ Starting with this release, you can run health endpoints on an isolated process 
     - New provider integration for v0.dev - [PR #12751](https://github.com/BerriAI/litellm/pull/12751), [Get Started](../../docs/providers/v0)
 - **[OpenAI](../../docs/providers/openai)**
     - Use OpenAI DeepResearch models with `litellm.completion` (`/chat/completions`) - [PR #12627](https://github.com/BerriAI/litellm/pull/12627) **DOC NEEDED**
-- **[Azure OpenAI](../../docs/providers/azure_openai)**
+- **[Azure OpenAI](/docs/providers/azure)**
     - Use Azure OpenAI DeepResearch models with `litellm.completion` (`/chat/completions`) - [PR #12627](https://github.com/BerriAI/litellm/pull/12627) **DOC NEEDED**
     - Added `response_format` support for openai gpt-4.1 models - [PR #12745](https://github.com/BerriAI/litellm/pull/12745)
 - **[Anthropic](../../docs/providers/anthropic)**
@@ -165,8 +165,8 @@ Starting with this release, you can run health endpoints on an isolated process 
     - Added support for using Rerank endpoints with vLLM - [PR #12738](https://github.com/BerriAI/litellm/pull/12738), [Get Started](../../docs/providers/vllm#rerank)
 - **[AI21](../../docs/providers/ai21)**
     - Added ai21/jamba-1.7 model family pricing - [PR #12593](https://github.com/BerriAI/litellm/pull/12593), [Get Started](../../docs/providers/ai21)
-- **[Together.ai](../../docs/providers/together_ai)**
-    - [New Model] add together_ai/moonshotai/Kimi-K2-Instruct - [PR #12645](https://github.com/BerriAI/litellm/pull/12645), [Get Started](../../docs/providers/together_ai)
+- **[Together.ai](/docs/providers/togetherai)**
+    - [New Model] add together_ai/moonshotai/Kimi-K2-Instruct - [PR #12645](https://github.com/BerriAI/litellm/pull/12645), [Get Started](/docs/providers/togetherai)
 - **[Groq](../../docs/providers/groq)**
     - Add groq/moonshotai-kimi-k2-instruct model configuration - [PR #12648](https://github.com/BerriAI/litellm/pull/12648), [Get Started](../../docs/providers/groq)
 - **[Github Copilot](../../docs/providers/github_copilot)**
@@ -208,13 +208,13 @@ Starting with this release, you can run health endpoints on an isolated process 
 ## [MCP Gateway](../../docs/mcp)
 
 #### Features
-- **[Access Groups](../../docs/mcp#grouping-mcps-access-groups)**
+- **[Access Groups](/docs/mcp#control-mcp-access-for-end-users)**
     - Allow MCP access groups to be added via litellm proxy config.yaml - [PR #12654](https://github.com/BerriAI/litellm/pull/12654)
     - List tools from access list for keys - [PR #12657](https://github.com/BerriAI/litellm/pull/12657)
-- **[Namespacing](../../docs/mcp#mcp-namespacing)**
+- **[Namespacing](/docs/mcp#mcp-aliases)**
     - URL-based namespacing for better segregation - [PR #12658](https://github.com/BerriAI/litellm/pull/12658)
     - Make MCP_TOOL_PREFIX_SEPARATOR configurable from env - [PR #12603](https://github.com/BerriAI/litellm/pull/12603)
-- **[Gateway Features](../../docs/mcp#mcp-gateway-features)**
+- **[Gateway Features](/docs/mcp)**
     - Allow using MCPs with all LLM APIs (VertexAI, Gemini, Groq, etc.) when using /responses - [PR #12546](https://github.com/BerriAI/litellm/pull/12546)
 
 #### Bugs
@@ -247,7 +247,7 @@ Starting with this release, you can run health endpoints on an isolated process 
     - Allow adding Vertex RAG Engine, OpenAI, Azure through UI - [PR #12752](https://github.com/BerriAI/litellm/pull/12752)
 - **General**
     - Add Copy-on-Click for all IDs (Key, Team, Organization, MCP Server) - [PR #12615](https://github.com/BerriAI/litellm/pull/12615)
-- **[SCIM](../../docs/proxy/scim)**
+- **[SCIM](/docs/tutorials/scim_litellm)**
     - Add GET /ServiceProviderConfig endpoint - [PR #12664](https://github.com/BerriAI/litellm/pull/12664)
 
 #### Bugs
@@ -260,7 +260,7 @@ Starting with this release, you can run health endpoints on an isolated process 
 ## Logging / Guardrail Integrations
 
 #### Features
-- **[Google Cloud Model Armor](../../docs/proxy/guardrails/google_cloud_model_armor)**
+- **[Google Cloud Model Armor](/docs/proxy/guardrails/model_armor)**
     - New guardrails integration - [PR #12492](https://github.com/BerriAI/litellm/pull/12492)
 - **[Bedrock Guardrails](../../docs/proxy/guardrails/bedrock)**
     - Allow disabling exception on 'BLOCKED' action - [PR #12693](https://github.com/BerriAI/litellm/pull/12693)

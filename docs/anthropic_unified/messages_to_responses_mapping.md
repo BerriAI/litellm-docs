@@ -21,12 +21,15 @@ The transformation lives in `litellm/llms/anthropic/experimental_pass_through/re
 | `tools` | `tools` | Format-translated — see the tools section below |
 | `tool_choice` | `tool_choice` | Type-remapped — see the tool_choice section below |
 | `thinking` | `reasoning` | Budget tokens mapped to effort level — see the thinking section below |
-| `output_format` or `output_config.format` | `text` | Wrapped as `{"format": {"type": "json_schema", "name": "structured_output", "schema": ..., "strict": true}}` |
+| `output_format` or `output_config.format` | `text` | Wrapped as `{"format": {"type": "json_schema", "name": "structured_output", "schema": ..., "strict": ...}}`. `strict` is copied from the request's `strict` flag and defaults to `false`, so schemas with optional properties pass through; set `strict: true` to opt into OpenAI strict mode, which requires every property in `required` |
 | `context_management` | `context_management` | Converted from Anthropic dict to OpenAI array format — see the context_management section below |
 | `metadata.user_id` | `user` | Extracted from the metadata object and truncated to 64 characters |
+| `metadata.user_id` | `prompt_cache_key` | Same value, truncated to 64 characters (OpenAI's key limit), so one user's requests keep hitting the same prompt cache. Not set when `user_id` is empty or null. A `prompt_cache_key` sent in the request body wins over the derived one |
 | `stop_sequences` | ❌ Not mapped | Dropped silently |
 | `top_k` | ❌ Not mapped | Dropped silently |
 | `speed` | ❌ Not mapped | Only used to set Anthropic beta headers on the native path |
+
+The chat-completions path (`litellm_settings.use_chat_completions_url_for_anthropic_messages: true`, and every non-OpenAI provider) derives the same two parameters from `metadata.user_id`, with two differences: `user` is passed through untruncated, and `prompt_cache_key` is only set when the target provider's supported params include it. OpenAI, Azure OpenAI and other OpenAI-compatible providers do; Gemini, Vertex AI, Bedrock and Anthropic do not. `litellm_proxy/` deployments (one LiteLLM proxy in front of another) never get the derived key, because the downstream proxy's real provider is unknown and would reject it unless `drop_params` is set there.
 
 
 ### How messages get converted

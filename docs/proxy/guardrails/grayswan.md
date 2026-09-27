@@ -33,9 +33,9 @@ Add a guardrail entry that references the Gray Swan integration. Below is our re
 
 ```yaml
 model_list:                                 # this part is a standard litellm configuration for reference
-  - model_name: openai/gpt-4.1-mini
+  - model_name: openai/{{openai_small}}
     litellm_params:
-      model: openai/gpt-4.1-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -114,7 +114,7 @@ curl -X POST "http://0.0.0.0:4000/v1/messages?beta=true" \
   -H "Authorization: Bearer token" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "openrouter/anthropic/claude-sonnet-4.5",
+    "model": "openrouter/anthropic/{{anthropic}}",
     "messages": [{"role": "user", "content": "hello"}],
     "litellm_metadata": {
       "guardrails": [
@@ -141,7 +141,7 @@ from openai import OpenAI
 client = OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
 
 resp = client.responses.create(
-    model="openrouter/anthropic/claude-sonnet-4.5",
+    model="openrouter/anthropic/{{anthropic}}",
     input="hello",
     extra_body={
         "litellm_metadata": {
@@ -168,7 +168,7 @@ from anthropic import Anthropic
 client = Anthropic(api_key="anything", base_url="http://0.0.0.0:4000")
 
 resp = client.messages.create(
-    model="openrouter/anthropic/claude-sonnet-4.5",
+    model="openrouter/anthropic/{{anthropic}}",
     max_tokens=256,
     messages=[{"role": "user", "content": "hello"}],
     extra_body={

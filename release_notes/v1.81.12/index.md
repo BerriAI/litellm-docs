@@ -60,13 +60,13 @@ This release fixes out-of-memory (OOM) risks from unbounded `asyncio.Queue()` us
 
 ## Guardrail Action Builder
 
-This release adds a visual action builder for guardrail policies with conditional execution support. You can now chain guardrails into multi-step pipelines — if a simple guardrail fails, route to an advanced one instead of immediately blocking. Each step has configurable ON PASS and ON FAIL actions (Next Step, Block, or Allow), and you can test the full pipeline with a sample message before saving.
+This release adds a visual action builder for guardrail policies with conditional execution support. You can now chain guardrails into multi-step pipelines: if a simple guardrail fails, route to an advanced one instead of immediately blocking. Each step has configurable ON PASS and ON FAIL actions (Next Step, Block, or Allow), and you can test the full pipeline with a sample message before saving.
 
 ![Guardrail Action Builder](../../img/release_notes/guard_actions.png)
 
 ### Access Groups
 
-Access Groups simplify defining resource access across your organization. One group can grant access to models, MCP servers, and agents—simply attach it to a key or team. Create groups in the Admin UI, define which resources each group includes, then assign the group when creating keys or teams. Updates to a group apply automatically to all attached keys and teams.
+Access Groups simplify defining resource access across your organization. One group can grant access to models, MCP servers, and agents; simply attach it to a key or team. Create groups in the Admin UI, define which resources each group includes, then assign the group when creating keys or teams. Updates to a group apply automatically to all attached keys and teams.
 
 <Image img={require('../../img/ui_access_groups.png')} />
 
@@ -179,7 +179,7 @@ Access Groups simplify defining resource access across your organization. One gr
     - Fix `get_supported_anthropic_messages_params` - [PR #20752](https://github.com/BerriAI/litellm/pull/20752)
     - Fix `base_model` name for body and deployment name in URL - [PR #20747](https://github.com/BerriAI/litellm/pull/20747)
 
-- **[Azure](../../docs/providers/azure/azure)**
+- **[Azure](/docs/providers/azure)**
     - Preserve `content_policy_violation` error details from Azure OpenAI - [PR #20883](https://github.com/BerriAI/litellm/pull/20883)
 
 - **[Vertex AI](../../docs/providers/vertex)**
@@ -289,13 +289,13 @@ Access Groups simplify defining resource access across your organization. One gr
 - **[PostHog](../../docs/observability/posthog_integration)**
     - Fix JSON serialization error for non-serializable objects - [PR #20668](https://github.com/BerriAI/litellm/pull/20668)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Sanitize label values to prevent metric scrape failures - [PR #20600](https://github.com/BerriAI/litellm/pull/20600)
 
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Prevent empty proxy request spans from being sent to Langfuse - [PR #19935](https://github.com/BerriAI/litellm/pull/19935)
 
-- **[OpenTelemetry](../../docs/proxy/logging#otel)**
+- **[OpenTelemetry](/docs/observability/opentelemetry_v2)**
     - Auto-infer `otlp_http` exporter when endpoint is configured - [PR #20438](https://github.com/BerriAI/litellm/pull/20438)
 
 - **[CloudZero](../../docs/proxy/logging)**

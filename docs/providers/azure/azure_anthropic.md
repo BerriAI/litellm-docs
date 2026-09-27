@@ -9,9 +9,9 @@ LiteLLM supports Claude models deployed via Microsoft Azure Foundry, including C
 
 Azure Foundry supports the following Claude models:
 
-- `claude-sonnet-4-5` - Anthropic's most capable model for building real-world agents and handling complex, long-horizon tasks
+- `{{anthropic}}` - Anthropic's most capable model for building real-world agents and handling complex, long-horizon tasks
 - `claude-haiku-4-5` - Near-frontier performance with the right speed and cost for high-volume use cases
-- `claude-opus-4-1` - Industry leader for coding, delivering sustained performance on long-running tasks
+- `{{anthropic_large}}` - Industry leader for coding, delivering sustained performance on long-running tasks
 
 | Property | Details |
 |-------|-------|
@@ -37,16 +37,18 @@ Azure Anthropic supports two authentication methods:
 
 ## API Keys and Configuration
 
+The `azure_ai/` completion route reads `AZURE_AI_API_KEY` and `AZURE_AI_API_BASE`, the same env vars as the other Azure AI Foundry models. `AZURE_API_BASE` is only read by the native `/v1/messages` route described below, so setting it alone fails `completion()` with `Azure Anthropic requests require an api_base`.
+
 ```python
 import os
 
 # Option 1: API Key authentication
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Option 2: Azure AD Token authentication
 os.environ["AZURE_AD_TOKEN"] = "your-azure-ad-token"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Optional: Azure AD Token Provider (for automatic token refresh)
 os.environ["AZURE_TENANT_ID"] = "your-tenant-id"
@@ -63,12 +65,12 @@ os.environ["AZURE_SCOPE"] = "https://cognitiveservices.azure.com/.default"
 from litellm import completion
 
 # Set environment variables
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 
 # Make a completion request
 response = completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What are 3 things to visit in Seattle?"}
     ],
@@ -85,7 +87,7 @@ print(response)
 import litellm
 
 response = litellm.completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[
@@ -101,7 +103,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     azure_ad_token="your-azure-ad-token",
     messages=[
@@ -117,7 +119,7 @@ response = litellm.completion(
 from litellm import completion
 
 response = completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     messages=[
         {"role": "user", "content": "Write a short story"}
     ],
@@ -136,7 +138,7 @@ for chunk in response:
 from litellm import completion
 
 response = completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What's the weather in Seattle?"}
     ],
@@ -171,19 +173,19 @@ print(response)
 ### 1. Save key in your environment
 
 ```bash
-export AZURE_API_KEY="your-azure-api-key"
-export AZURE_API_BASE="https://<resource-name>.services.ai.azure.com/anthropic"
+export AZURE_AI_API_KEY="your-azure-api-key"
+export AZURE_AI_API_BASE="https://<resource-name>.services.ai.azure.com/anthropic"
 ```
 
 ### 2. Configure the proxy
 
 ```yaml
 model_list:
-  - model_name: claude-sonnet-4-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: azure_ai/claude-sonnet-4-5
-      api_base: https://<resource-name>.services.ai.azure.com/anthropic
-      api_key: os.environ/AZURE_API_KEY
+      model: azure_ai/{{anthropic}}
+      api_base: os.environ/AZURE_AI_API_BASE
+      api_key: os.environ/AZURE_AI_API_KEY
 ```
 
 ### 3. Test it
@@ -195,7 +197,7 @@ model_list:
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "claude-sonnet-4-5",
+    "model": "{{anthropic}}",
     "messages": [
         {
             "role": "user",
@@ -218,7 +220,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-5",
+    model="{{anthropic}}",
     messages=[
         {"role": "user", "content": "Hello!"}
     ],
@@ -246,7 +248,7 @@ client = Anthropic(
 )
 
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="{{anthropic}}",
     max_tokens=1000,
     messages=[
         {"role": "user", "content": "Hello, world"}
@@ -265,7 +267,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-anything" \
   --data '{
-    "model": "claude-sonnet-4-5",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [
         {"role": "user", "content": "Hello, world"}
@@ -326,12 +328,12 @@ import os
 from litellm import completion
 
 # Configure Azure Anthropic
-os.environ["AZURE_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_KEY"] = "your-azure-api-key"
+os.environ["AZURE_AI_API_BASE"] = "https://my-resource.services.ai.azure.com/anthropic"
 
 # Make a request
 response = completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Explain quantum computing in simple terms."}
@@ -348,17 +350,17 @@ print(response.choices[0].message.content)
 
 ### Missing API Base Error
 
-If you see an error about missing API base, ensure you've set:
+If you see `Azure Anthropic requests require an api_base`, ensure you've set `AZURE_AI_API_BASE` (not `AZURE_API_BASE`, which only the `/v1/messages` route reads):
 
 ```python
-os.environ["AZURE_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
+os.environ["AZURE_AI_API_BASE"] = "https://<resource-name>.services.ai.azure.com/anthropic"
 ```
 
 Or pass it directly:
 
 ```python
 response = completion(
-    model="azure_ai/claude-sonnet-4-5",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     # ...
 )
@@ -366,7 +368,7 @@ response = completion(
 
 ### Authentication Errors
 
-- **API Key**: Ensure `AZURE_API_KEY` is set or passed as `api_key` parameter
+- **API Key**: Ensure `AZURE_AI_API_KEY` is set or passed as `api_key` parameter
 - **Azure AD Token**: Ensure `AZURE_AD_TOKEN` is set or passed as `azure_ad_token` parameter
 - **Token Provider**: For automatic token refresh, configure `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`
 

@@ -11,7 +11,7 @@ hide_table_of_contents: true
 
 *Last Updated: May 2026*
 
-The LiteLLM proxy container does 2 very different things. It's an **LLM data plane**, `/chat/completions`, `/v1/messages`, embeddings, passthroughs, where latency is measured in single-digit milliseconds of overhead and traffic is high-volume and bursty. It's also a **management control plane** — keys, teams, SSO, audit logs, and the spend/usage analytics that power the dashboard, where a single request can scan millions of rows.
+The LiteLLM proxy container does 2 very different things. It's an **LLM data plane**, `/chat/completions`, `/v1/messages`, embeddings, passthroughs, where latency is measured in single-digit milliseconds of overhead and traffic is high-volume and bursty. It's also a **management control plane** for keys, teams, SSO, audit logs, and the spend/usage analytics that power the dashboard, where a single request can scan millions of rows.
 
 Run both on the same event loop, and the slowest thing the control plane does sets the reliability floor for the fastest thing the data plane does. This post is about how we've improved LiteLLM's reliability at scale by offering a componentized deployment model.
 
@@ -34,7 +34,7 @@ That aggregation runs on the same asyncio event loop that serves everything else
 Code optimizations were necessary to address the example incident. But, as long as a single container serves both the control plane and the data plane, *any* sufficiently expensive control plane operation is a latent liveness failure for the data plane:
 
 - **Shared event loop.** One CPU-bound aggregation pass blocks every coroutine, including the data plane.
-- **Shared health check.** Kubernetes can only see one process. It can't tell "the analytics endpoint is slow" from "this pod is dead," so it kills the pod — and the inference traffic with it.
+- **Shared health check.** Kubernetes can only see one process. It can't tell "the analytics endpoint is slow" from "this pod is dead," so it kills the pod, and the inference traffic with it.
 - **Shared scaling unit.** You can only scale the whole thing. Provisioning replicas for a bursty analytics dashboard means over-provisioning the data plane, and vice versa.
 - **Shared database connection pressure.** Heavy analytical reads contend with the spend-tracking writes on the same connections.
 
@@ -82,7 +82,7 @@ This isolates expensive read queries from the connection pool that the spend-tra
 
 The componentized deployment ships as an OCI Helm chart published to GitHub Container Registry: [`ghcr.io/berriai/litellm/chart/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm%2Fchart%2Flitellm).
 
-Sensitive values are passed by Secret reference only — create them first:
+Sensitive values are passed by Secret reference only. Create them first:
 
 ```bash
 kubectl create namespace litellm
@@ -109,7 +109,7 @@ helm upgrade --install litellm \
 
 The chart runs `prisma migrate deploy` as a pre-install/pre-upgrade hook Job, then brings up the gateway, backend, and ui Deployments. Set `ingress.enabled=true` to front all three behind one host (data-plane prefixes → gateway, UI assets → ui, catch-all → backend).
 
-![Reference architecture: LiteLLM on Amazon EKS — gateway, backend, and ui behind one ALB Ingress, with Aurora Postgres, ElastiCache Redis, S3/CloudWatch, and Secrets Manager](/img/blog/componentized_deployment/eks_topline.png)
+![Reference architecture: LiteLLM on Amazon EKS, with gateway, backend, and ui behind one ALB Ingress, plus Aurora Postgres, ElastiCache Redis, S3/CloudWatch, and Secrets Manager](/img/blog/componentized_deployment/eks_topline.png)
 
 ### Separate read and write databases
 

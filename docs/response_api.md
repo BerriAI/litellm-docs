@@ -36,7 +36,7 @@ import litellm
 
 # Non-streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -52,7 +52,7 @@ print(response)
     "object": "response",
     "created_at": 1734366691,
     "status": "completed",
-    "model": "o1-pro-2025-01-30",
+    "model": "{{openai_large}}",
     "output": [
         {
             "type": "message",
@@ -82,7 +82,7 @@ import litellm
 
 # Streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -98,7 +98,7 @@ import base64
 
 # Streaming image generation with partial images
 stream = litellm.responses(
-    model="gpt-4.1",  # Use an actual image generation model
+    model="{{openai_large}}",  # Use an actual image generation model
     input="Generate a gorgeous image of a river made of white owl feathers",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -149,7 +149,7 @@ import base64
 
 # OpenAI models require tools parameter for image generation
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Generate a futuristic city at sunset",
     tools=[{"type": "image_generation"}]
 )
@@ -199,7 +199,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -226,7 +226,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -249,7 +249,7 @@ print(cancel_response)
 **REST API:**
 ```bash
 curl -X POST http://localhost:4000/v1/responses/response_id/cancel \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 This will attempt to cancel the in-progress response with the given ID.
@@ -261,7 +261,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -294,7 +294,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"
 
 # Non-streaming response
 response = litellm.responses(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -312,7 +312,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"
 
 # Streaming response
 response = litellm.responses(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -337,7 +337,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 # Non-streaming response
 response = litellm.responses(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/{{gemini_pro}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -357,7 +357,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 
 # Streaming response
 response = litellm.responses(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/{{gemini_pro}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -382,7 +382,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 # Non-streaming response
 response = litellm.responses(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -402,7 +402,7 @@ os.environ["AWS_REGION_NAME"] = "us-west-2"  # or your AWS region
 
 # Streaming response
 response = litellm.responses(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -425,7 +425,7 @@ os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 # Non-streaming response
 response = litellm.responses(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -443,7 +443,7 @@ os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 # Streaming response
 response = litellm.responses(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -471,9 +471,9 @@ litellm --config /path/to/config.yaml
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/o1-pro
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/o1-pro
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -489,7 +489,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -508,7 +508,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -522,10 +522,10 @@ for event in response:
 from openai import OpenAI
 import base64
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     input="Draw a gorgeous image of a river made of white owl feathers, snaking its way through a serene winter landscape",
     stream=True,
     tools=[{"type": "image_generation", "partial_images": 2}],
@@ -555,7 +555,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -580,7 +580,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -600,9 +600,9 @@ print(delete_response)
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="Anthropic Proxy Configuration"
 model_list:
-  - model_name: anthropic/claude-3-5-sonnet-20240620
+  - model_name: anthropic/{{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20240620
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -618,7 +618,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -637,7 +637,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -653,9 +653,9 @@ for event in response:
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="Vertex AI Proxy Configuration"
 model_list:
-  - model_name: vertex_ai/gemini-1.5-pro
+  - model_name: vertex_ai/{{gemini_pro}}
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/{{gemini_pro}}
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
 ```
@@ -672,7 +672,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/{{gemini_pro}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -691,7 +691,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="vertex_ai/gemini-1.5-pro",
+    model="vertex_ai/{{gemini_pro}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -707,9 +707,9 @@ for event in response:
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="AWS Bedrock Proxy Configuration"
 model_list:
-  - model_name: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+  - model_name: bedrock/us.anthropic.{{anthropic}}
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-west-2
@@ -727,7 +727,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -746,7 +746,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -762,9 +762,9 @@ for event in response:
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="Google AI Studio Proxy Configuration"
 model_list:
-  - model_name: gemini/gemini-1.5-flash
+  - model_name: gemini/{{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-1.5-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -780,7 +780,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -799,7 +799,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="gemini/gemini-1.5-flash",
+    model="gemini/{{gemini_flash}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -835,15 +835,15 @@ from websocket import create_connection  # uv add websocket-client
 
 # Connect to LiteLLM proxy WebSocket endpoint
 ws = create_connection(
-    "ws://localhost:4000/v1/responses?model=gemini-2.5-flash",
-    header=["Authorization: Bearer sk-1234"]
+    "ws://localhost:4000/v1/responses?model={{gemini_flash}}",
+    header=["Authorization: Bearer sk-<your-litellm-api-key>"]
 )
 
 try:
     # Send initial message
     ws.send(json.dumps({
         "type": "response.create",
-        "model": "gemini-2.5-flash",
+        "model": "{{gemini_flash}}",
         "store": True,
         "input": [{
             "type": "message",
@@ -869,7 +869,7 @@ try:
     # Send follow-up with previous_response_id for multi-turn
     ws.send(json.dumps({
         "type": "response.create",
-        "model": "gemini-2.5-flash",
+        "model": "{{gemini_flash}}",
         "previous_response_id": response_id,
         "input": [{
             "type": "message",
@@ -897,10 +897,10 @@ finally:
 const WebSocket = require('ws'); // npm install ws
 
 const ws = new WebSocket(
-    'ws://localhost:4000/v1/responses?model=gemini-2.5-flash',
+    'ws://localhost:4000/v1/responses?model={{gemini_flash}}',
     {
         headers: {
-            'Authorization': 'Bearer sk-1234'
+            'Authorization': 'Bearer sk-<your-litellm-api-key>'
         }
     }
 );
@@ -909,7 +909,7 @@ ws.on('open', () => {
     // Send initial message
     ws.send(JSON.stringify({
         type: 'response.create',
-        model: 'gemini-2.5-flash',
+        model: '{{gemini_flash}}',
         store: true,
         input: [{
             type: 'message',
@@ -932,7 +932,7 @@ ws.on('message', (data) => {
         // Send follow-up
         ws.send(JSON.stringify({
             type: 'response.create',
-            model: 'gemini-2.5-flash',
+            model: '{{gemini_flash}}',
             previous_response_id: responseId,
             input: [{
                 type: 'message',
@@ -957,11 +957,11 @@ ws.on('error', (error) => {
 # Install websocat: brew install websocat (macOS) or cargo install websocat
 
 # Connect to WebSocket endpoint
-websocat "ws://localhost:4000/v1/responses?model=gemini-2.5-flash" \
-  -H="Authorization: Bearer sk-1234"
+websocat "ws://localhost:4000/v1/responses?model={{gemini_flash}}" \
+  -H="Authorization: Bearer $LITELLM_API_KEY"
 
 # Then send JSON events (paste and press Enter):
-{"type":"response.create","model":"gemini-2.5-flash","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"Hello!"}]}]}
+{"type":"response.create","model":"{{gemini_flash}}","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"Hello!"}]}]}
 
 # You'll receive streaming events back:
 # {"type":"response.created",...}
@@ -999,7 +999,7 @@ Use `previous_response_id` to maintain conversation context across multiple WebS
 # Turn 1
 ws.send(json.dumps({
     "type": "response.create",
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "store": True,  # Required for multi-turn
     "input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Hello"}]}]
 }))
@@ -1009,7 +1009,7 @@ ws.send(json.dumps({
 # Turn 2 - reference previous response
 ws.send(json.dumps({
     "type": "response.create",
-    "model": "gemini-2.5-flash",
+    "model": "{{gemini_flash}}",
     "previous_response_id": response_id,  # Links to previous turn
     "input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Continue"}]}]
 }))
@@ -1037,14 +1037,14 @@ For LiteLLM Proxy, ensure your models are configured normally:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gemini-2.5-flash
+  - model_name: {{gemini_flash}}
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: gemini/{{gemini_flash}}
       api_key: os.environ/GEMINI_API_KEY
   
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -1076,17 +1076,68 @@ general_settings:
 
 This allows any user to access any response ID.
 
+### Response IDs this proxy did not issue
+
+The proxy can only tell who owns a response when it issued that response's ID itself. An ID in any other shape, a raw provider ID or one handed out before response ID encryption was on, carries no owner, so the proxy refuses it with 403 on retrieve, cancel, delete, input items, and on `previous_response_id`:
+
+```json
+{
+  "error": {
+    "message": "Forbidden. This response id was not issued by this proxy, so the proxy cannot tell who owns it.",
+    "code": 403
+  }
+}
+```
+
+Deployments that pass provider response IDs straight through on purpose, or that still have clients holding older IDs, turn the refusal off with `allow_unmanaged_response_ids`:
+
+```yaml
+general_settings:
+  allow_unmanaged_response_ids: true
+```
+
+IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
+
+## Background Mode
+
+LiteLLM passes OpenAI's `background: true` parameter through to the provider. The provider returns immediately with a response in `queued` or `in_progress` status, and you fetch the result later with `GET /v1/responses/{response_id}`:
+
+```bash showLineNumbers title="Create a background response"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6",
+    "input": "Write a detailed comparison of the Responses API and the Chat Completions API",
+    "background": true
+  }'
+```
+
+```bash showLineNumbers title="Poll for the result"
+curl http://localhost:4000/v1/responses/{response_id} \
+  -H "Authorization: Bearer sk-1234"
+```
+
+### Cost tracking for background responses
+
+The create call returns before the model has produced any tokens, so there is no usage to record at request time. To close that gap, the proxy stores every queued background response and prices it with a background polling job, the same machinery the [managed batches cost poller](./proxy/managed_batches#observability) uses for completed batches. It requires a Postgres database and ships with the enterprise package
+
+Every `proxy_batch_polling_interval` seconds (a `general_settings` key, also settable via the `PROXY_BATCH_POLLING_INTERVAL` env var; default `3600`, plus up to 30s of jitter) the job reads pending background responses from the database, oldest first and up to `MAX_OBJECTS_PER_POLL_CYCLE` (default `50`) per cycle, and retrieves each one from the provider with the deployment credentials in your config. Once a response reaches a terminal status (`completed`, `failed`, `cancelled`, or `incomplete`), that retrieval writes a spend log with the final usage, attributed to the user who created the response, and the row stops being polled. Your own `GET /v1/responses/{response_id}` reads are never billed; only the poller's retrieval prices the response
+
+Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7`) days are marked stale and dropped from polling. Set the polling interval to something small like `30` while testing, and set `PROXY_BATCH_POLLING_ENABLED=false` to disable this job and the batch cost poller entirely
+
 ## Supported Responses API Parameters
 
 | Provider | Supported Parameters |
 |----------|---------------------|
 | `openai` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
 | `azure` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
+| `azure_ai` on `.services.ai.azure.com` and `.openai.azure.com` hosts | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/913ef6ed49250f28680a1a50850183b5d80f6bbb/litellm/llms/azure_ai/responses/transformation.py#L25) |
+| `azure_ai` on other hosts | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `anthropic` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `bedrock` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `gemini` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `vertex_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
-| `azure_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | All other llm api providers | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 
 ## Load Balancing with Session Continuity.
@@ -1108,7 +1159,7 @@ router = litellm.Router(
         {
             "model_name": "azure-gpt4-turbo",
             "litellm_params": {
-                "model": "azure/gpt-4-turbo",
+                "model": "azure/{{openai_large}}",
                 "api_key": "your-api-key-1",
                 "api_version": "2024-06-01",
                 "api_base": "https://endpoint1.openai.azure.com",
@@ -1117,7 +1168,7 @@ router = litellm.Router(
         {
             "model_name": "azure-gpt4-turbo",
             "litellm_params": {
-                "model": "azure/gpt-4-turbo",
+                "model": "azure/{{openai_large}}",
                 "api_key": "your-api-key-2",
                 "api_version": "2024-06-01",
                 "api_base": "https://endpoint2.openai.azure.com",
@@ -1164,7 +1215,7 @@ To enable session continuity for Responses API in your LiteLLM proxy, set `optio
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
-:::tip Recommended: Use `encrypted_content_affinity`
+:::tip[Recommended: Use `encrypted_content_affinity`]
 For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
 :::
 
@@ -1179,13 +1230,13 @@ Notes:
 model_list:
   - model_name: azure-gpt4-turbo
     litellm_params:
-      model: azure/gpt-4-turbo
+      model: azure/{{openai_large}}
       api_key: your-api-key-1
       api_version: 2024-06-01
       api_base: https://endpoint1.openai.azure.com
   - model_name: azure-gpt4-turbo
     litellm_params:
-      model: azure/gpt-4-turbo
+      model: azure/{{openai_large}}
       api_key: your-api-key-2
       api_version: 2024-06-01
       api_base: https://endpoint2.openai.azure.com
@@ -1257,7 +1308,7 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
 - ✅ **No quota reduction**: Unlike `deployment_affinity`, only pins requests that contain encrypted items
 - ✅ **Bypasses rate limits**: When encrypted content requires a specific deployment, RPM/TPM limits are bypassed (the request would fail on any other deployment anyway)
 - ✅ **No `previous_response_id` required**: Works by encoding `model_id` directly into item IDs
-- ✅ **No cache required**: `model_id` is decoded on-the-fly — no Redis dependency, no TTL to manage
+- ✅ **No cache required**: `model_id` is decoded on-the-fly, so there is no Redis dependency and no TTL to manage
 - ✅ **Globally safe**: Can be enabled for all models; non-Responses-API calls (chat, embeddings) are unaffected
 
 ### How It Works
@@ -1271,6 +1322,20 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
    - If found → decodes `model_id`, pins to originating deployment, bypasses rate limits
    - If no encoded items → normal load balancing
 
+### When the originating deployment cannot serve the turn
+
+The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys never count as peers, whatever the provider would accept, so a multi-region group has none. An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
+
+Without a peer the turn is served in degraded form rather than failed. On the Responses API each reasoning item keeps its summary text and loses only its encrypted payload and id (an item with no readable text is dropped whole), and on a `/v1/messages` follow-up the thinking block is dropped whole. The rest of the conversation is untouched, the request goes to the healthy deployments through the normal routing strategy, and the model reasons fresh on that turn. The reasoning items it returns carry the id of the deployment that served it, so later turns pin there. Every degraded turn logs one router warning, so watch for it when reasoning continuity across turns matters to you:
+
+```
+EncryptedContentAffinityCheck: model_id=<id> cannot serve group <model> and no deployment on the same encryption boundary is configured; forwarding without its encrypted reasoning
+```
+
+Only a peer keeps the reasoning across such a turn. On an auto-router, `complexity_router_config.session_affinity: true` keeps a session that carries a `session_id` on the tier that produced the items (see [auto routing](./proxy/auto_routing.md)), so the turn usually stays with its origin, though escalation and routing plugins can still move it. Releases through v1.103.x failed a cooled-down origin with no peer with a 429 or 503 instead of serving the turn, and releases before v1.102.0 failed a removed origin or a group change the same way
+
+The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
+
 ### Configuration
 
 <Tabs>
@@ -1282,17 +1347,17 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "gpt-5.1-codex",
+            "model_name": "{{openai_large}}",
             "litellm_params": {
-                "model": "openai/gpt-5.1-codex",
+                "model": "openai/{{openai_large}}",
                 "api_key": "org-1-api-key",  # Different API key
             },
             "model_info": {"id": "deployment-us-east"},
         },
         {
-            "model_name": "gpt-5.1-codex",
+            "model_name": "{{openai_large}}",
             "litellm_params": {
-                "model": "openai/gpt-5.1-codex",
+                "model": "openai/{{openai_large}}",
                 "api_key": "org-2-api-key",  # Different API key
             },
             "model_info": {"id": "deployment-eu-west"},
@@ -1303,13 +1368,13 @@ router = Router(
 
 # Initial request - routes to any deployment
 response1 = await router.aresponses(
-    model="gpt-5.1-codex",
+    model="{{openai_large}}",
     input="Explain quantum computing",
 )
 
 # Follow-up with encrypted items - automatically routes to same deployment
 response2 = await router.aresponses(
-    model="gpt-5.1-codex",
+    model="{{openai_large}}",
     input=response1.output,  # Contains encrypted items from response1
 )
 ```
@@ -1319,25 +1384,25 @@ response2 = await router.aresponses(
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://eastus.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_EASTUS
       rpm: 600
       tpm: 100000
     model_info:
-      id: "gpt-5.1-codex-eastus"
+      id: "gpt-5.6-terra-eastus"
 
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://westeurope.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_WESTEUROPE
       rpm: 600
       tpm: 100000
     model_info:
-      id: "gpt-5.1-codex-westeurope"
+      id: "gpt-5.6-terra-westeurope"
 
 router_settings:
   routing_strategy: usage-based-routing-v2
@@ -1366,7 +1431,7 @@ litellm --config config.yaml
 
 ## Per-Model-Group Affinity Configuration
 
-By default, `optional_pre_call_checks` applies globally to all model groups. Use `model_group_affinity_config` when you want different affinity behavior per model group — for example, enabling stickiness only for models spread across providers (Azure + Bedrock) while leaving single-provider groups free to load-balance.
+By default, `optional_pre_call_checks` applies globally to all model groups. Use `model_group_affinity_config` when you want different affinity behavior per model group, for example enabling stickiness only for models spread across providers (Azure + Bedrock) while leaving single-provider groups free to load-balance.
 
 Groups not listed fall back to the global `optional_pre_call_checks` settings.
 
@@ -1377,12 +1442,12 @@ Groups not listed fall back to the global `optional_pre_call_checks` settings.
 router = litellm.Router(
     model_list=[
         {
-            "model_name": "gpt-4",
-            "litellm_params": {"model": "azure/gpt-4", "api_key": "...", "api_base": "https://endpoint1.openai.azure.com"},
+            "model_name": "{{openai_large}}",
+            "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://endpoint1.openai.azure.com"},
         },
         {
-            "model_name": "gpt-4",
-            "litellm_params": {"model": "bedrock/anthropic.claude-v2", "aws_region_name": "us-east-1"},
+            "model_name": "{{openai_large}}",
+            "litellm_params": {"model": "bedrock/us.anthropic.{{anthropic}}", "aws_region_name": "us-east-1"},
         },
         {
             "model_name": "text-embedding-ada-002",
@@ -1393,10 +1458,10 @@ router = litellm.Router(
             "litellm_params": {"model": "azure/text-embedding-ada-002", "api_key": "...", "api_base": "https://endpoint2.openai.azure.com"},
         },
     ],
-    # gpt-4: cross-provider (Azure + Bedrock) — enable deployment affinity
+    # {{openai_large}}: cross-provider (Azure + Bedrock) — enable deployment affinity
     # text-embedding-ada-002: same provider — no affinity, let it load balance freely
     model_group_affinity_config={
-        "gpt-4": ["deployment_affinity", "responses_api_deployment_check"],
+        "{{openai_large}}": ["deployment_affinity", "responses_api_deployment_check"],
     },
 )
 ```
@@ -1406,15 +1471,15 @@ router = litellm.Router(
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_key: os.environ/AZURE_API_KEY_1
       api_base: https://endpoint1.openai.azure.com
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: bedrock/anthropic.claude-v2
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-east-1
 
   - model_name: text-embedding-ada-002
@@ -1430,10 +1495,10 @@ model_list:
       api_base: https://endpoint2.openai.azure.com
 
 router_settings:
-  # gpt-4: cross-provider — enable stickiness
+  # {{openai_large}}: cross-provider — enable stickiness
   # text-embedding-ada-002: not listed — load balances freely
   model_group_affinity_config:
-    "gpt-4":
+    "{{openai_large}}":
       - deployment_affinity
       - responses_api_deployment_check
 ```
@@ -1459,7 +1524,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-api-key"
 
 # Non-streaming response
 response = litellm.responses(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -1475,7 +1540,7 @@ print(response)
 model_list:
 - model_name: anthropic-model
   litellm_params:
-    model: anthropic/claude-3-5-sonnet-20240620
+    model: anthropic/{{anthropic}}
     api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1492,7 +1557,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="non-Responses API Model Request"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic-model",
     "input": "who is Michael Jordan"
@@ -1574,7 +1639,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="Request via bridge"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "my-local-model",
     "input": "Hello!"
@@ -1585,7 +1650,7 @@ This is particularly useful when connecting clients that hardcode the `/response
 
 ## Server-side compaction
 
-For long-running conversations, you can enable **server-side compaction** so that when the rendered context size crosses a threshold, the server automatically runs compaction in-stream and emits a compaction item—no separate `POST /v1/responses/compact` call is required.
+For long-running conversations, you can enable **server-side compaction** so that when the rendered context size crosses a threshold, the server automatically runs compaction in-stream and emits a compaction item. No separate `POST /v1/responses/compact` call is required.
 
 Supported on the OpenAI Responses API when using the `openai` or `azure` provider. Pass `context_management` with a compaction entry and `compact_threshold` (token count; minimum 1000). When the context crosses the threshold, the server compacts in-stream and continues. Chain turns with `previous_response_id` or by appending output items to your next input array. See [OpenAI Compaction guide](https://developers.openai.com/api/docs/guides/compaction) for details.
 
@@ -1600,7 +1665,7 @@ import litellm
 
 # Non-streaming: enable compaction when context exceeds 200k tokens
 response = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Your conversation input...",
     context_management=[{"type": "compaction", "compact_threshold": 200000}],
     max_output_tokens=1024,
@@ -1609,7 +1674,7 @@ print(response)
 
 # Streaming: same context_management, compaction runs in-stream if threshold is crossed
 stream = litellm.responses(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Your conversation input...",
     context_management=[{"type": "compaction", "compact_threshold": 200000}],
     stream=True,
@@ -1633,7 +1698,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     input="Your conversation input...",
     context_management=[{"type": "compaction", "compact_threshold": 200000}],
     max_output_tokens=1024,
@@ -1648,7 +1713,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "openai/gpt-4o",
+    "model": "openai/{{openai_large}}",
     "input": "Your conversation input...",
     "context_management": [{"type": "compaction", "compact_threshold": 200000}],
     "max_output_tokens": 1024
@@ -1667,7 +1732,7 @@ Supported when using the `openai` or `azure` provider with a model that supports
 import litellm
 
 response = litellm.responses(
-    model="openai/gpt-5.2",
+    model="openai/{{openai_large}}",
     input="List files in /mnt/data and run python --version.",
     tools=[{"type": "shell", "environment": {"type": "container_auto"}}],
     tool_choice="auto",
@@ -1690,7 +1755,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="openai/gpt-5.2",
+    model="openai/{{openai_large}}",
     input="List files in /mnt/data.",
     tools=[{"type": "shell", "environment": {"type": "container_auto"}}],
     tool_choice="auto",
@@ -1705,7 +1770,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "openai/gpt-5.2",
+    "model": "openai/{{openai_large}}",
     "input": "List files in /mnt/data.",
     "tools": [{"type": "shell", "environment": {"type": "container_auto"}}],
     "tool_choice": "auto",
@@ -1717,7 +1782,7 @@ curl -X POST "http://localhost:4000/v1/responses" \
 
 For full `file_search` usage (native + emulated fallback), SDK/Proxy examples, architecture diagram, and Q&A, see:
 
-- [`File Search in the Responses API — E2E Testing Guide`](/docs/tutorials/file_search_responses_api)
+- [`File Search in the Responses API: E2E Testing Guide`](/docs/tutorials/file_search_responses_api)
 
 ## Session Management
 
@@ -1727,7 +1792,7 @@ LiteLLM Proxy supports session management for all supported models. This allows 
 
 1. Enable storing request / response content in the database
 
-Set `store_prompts_in_cold_storage: true` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
+Set `store_prompts_in_spend_logs: true` under `general_settings` and `cold_storage_custom_logger: s3_v2` under `litellm_settings` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
 
 ```yaml showLineNumbers title="config.yaml with Session Continuity"
 litellm_settings:
@@ -1738,7 +1803,6 @@ litellm_settings:
     s3_region_name: us-west-2      
 
 general_settings:
-  store_prompts_in_cold_storage: true
   store_prompts_in_spend_logs: true
 ```
 
@@ -1752,9 +1816,9 @@ Start a new conversation by making a request without specifying a previous respo
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "anthropic/claude-3-5-sonnet-latest",
+    "model": "anthropic/{{anthropic}}",
     "input": "who is Michael Jordan"
   }'
 ```
@@ -1768,12 +1832,12 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make initial request to start a new conversation
 response = client.responses.create(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     input="who is Michael Jordan"
 )
 
@@ -1789,7 +1853,7 @@ Response:
 ```json
 {
   "id":"resp_123abc",
-  "model":"claude-3-5-sonnet-20241022",
+  "model":"{{anthropic}}",
   "output":[{
     "type":"message",
     "content":[{
@@ -1810,9 +1874,9 @@ Continue the conversation by referencing the previous response ID to maintain co
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "anthropic/claude-3-5-sonnet-latest",
+    "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him",
     "previous_response_id": "resp_123abc"
   }'
@@ -1827,12 +1891,12 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make follow-up request in the same conversation session
 follow_up_response = client.responses.create(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     input="can you tell me more about him",
     previous_response_id="resp_123abc"  # ID from the previous response
 )
@@ -1848,7 +1912,7 @@ Response:
 ```json
 {
   "id":"resp_456def",
-  "model":"claude-3-5-sonnet-20241022",
+  "model":"{{anthropic}}",
   "output":[{
     "type":"message",
     "content":[{
@@ -1869,9 +1933,9 @@ Start a brand new conversation without referencing previous context to demonstra
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "anthropic/claude-3-5-sonnet-latest",
+    "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him"
   }'
 ```
@@ -1885,12 +1949,12 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make a new request without previous context
 new_session_response = client.responses.create(
-    model="anthropic/claude-3-5-sonnet-latest",
+    model="anthropic/{{anthropic}}",
     input="can you tell me more about him"
     # No previous_response_id means this starts a new conversation
 )
@@ -1906,7 +1970,7 @@ Response:
 ```json
 {
   "id":"resp_789ghi",
-  "model":"claude-3-5-sonnet-20241022",
+  "model":"{{anthropic}}",
   "output":[{
     "type":"message",
     "content":[{

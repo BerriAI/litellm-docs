@@ -46,7 +46,7 @@ litellm.callbacks = ["langsmith"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
@@ -58,9 +58,9 @@ response = litellm.completion(
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -78,7 +78,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-eWkpOhYaHiuIZV-29JDeTQ' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -117,7 +117,7 @@ litellm.callbacks = ["langsmith"]
 litellm.langsmith_batch_size = 1 # 👈 KEY CHANGE
  
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
      messages=[
         {"role": "user", "content": "Hi 👋 - i'm openai"}
     ]
@@ -130,9 +130,9 @@ print(response)
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -151,7 +151,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-eWkpOhYaHiuIZV-29JDeTQ' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -184,7 +184,7 @@ os.environ['OPENAI_API_KEY']=""
 litellm.success_callback = ["langsmith"] 
  
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
      messages=[
         {"role": "user", "content": "Hi 👋 - i'm openai"}
     ],
@@ -193,8 +193,8 @@ response = litellm.completion(
         "project_name": "litellm-completion",                       # langsmith project name
         "run_id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",           # langsmith run id
         "parent_run_id": "f8faf8c1-9778-49a4-9004-628cdb0047e5",    # langsmith run parent run id
-        "trace_id": "df570c03-5a03-4cea-8df0-c162d05127ac",         # langsmith run trace id
-        "session_id": "1ffd059c-17ea-40a8-8aef-70fd0307db82",       # langsmith run session id
+        "trace_id": "df570c03-5a03-4cea-8df0-c162d05127ac",         # langsmith run trace id (root runs override this, see note below)
+        "session_id": "1ffd059c-17ea-40a8-8aef-70fd0307db82",       # langsmith run session id (must be an existing tracer session)
         "tags": ["model1", "prod-2"],                               # langsmith run tags
         "metadata": {                                               # langsmith run metadata
             "key1": "value1"
@@ -204,6 +204,8 @@ response = litellm.completion(
 )
 print(response)
 ```
+
+A run that posts as a root, meaning it carries neither `parent_run_id` nor `dotted_order`, gets its `trace_id` set to the run id so the batch passes LangSmith's dotted_order validation. Supply `parent_run_id` or `dotted_order` to keep your own `trace_id`. `session_id` must reference a tracer session that already exists in LangSmith and is ignored when it equals `trace_id`, because that shape is produced by the proxy's request-header fan-out rather than a deliberate session
 
 ### Make LiteLLM Proxy use Custom `LANGSMITH_BASE_URL`
 

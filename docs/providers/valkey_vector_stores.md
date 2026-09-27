@@ -118,7 +118,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Register the index"
 curl -X POST 'http://localhost:4000/vector_store/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "vector_store_id": "my-search-index",
@@ -147,7 +147,7 @@ The same search over HTTP:
 
 ```bash showLineNumbers title="Search the index"
 curl -X POST 'http://localhost:4000/v1/vector_stores/my-search-index/search' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"query": "how long does a refund take?", "max_num_results": 3}'
 ```
@@ -236,4 +236,4 @@ Defaults cover most of this table. What decides whether a search finds anything 
 
 Valkey vector stores are search-only. LiteLLM cannot create an index (`POST /v1/vector_stores`), upload files, or run `/rag/ingest` against Valkey, which is why Valkey is absent from the Create Vector Store tab in the Admin UI; build and populate the index with `FT.CREATE` and `HSET` yourself. The `filters` parameter on search is not implemented either, and passing it raises an error rather than being silently ignored.
 
-A Valkey server with the same module can also back LiteLLM's [semantic cache](../proxy/caching.md), which is a separate feature with its own index that LiteLLM does create and write to.
+A Valkey server with the same module can also back LiteLLM's [semantic cache](../proxy/caching_semantic.md), which is a separate feature with its own index that LiteLLM does create and write to.

@@ -9,7 +9,7 @@ description: "LiteLLM now integrates with Microsoft ASSERT for policy-driven age
 hide_table_of_contents: false
 ---
 
-Today we're excited to officially launch **LiteLLM x Microsoft ASSERT** — bringing policy-driven agent evaluation to every model running through the LiteLLM AI Gateway.
+Today we're excited to officially launch **LiteLLM x Microsoft ASSERT**, bringing policy-driven agent evaluation to every model running through the LiteLLM AI Gateway.
 
 {/* truncate */}
 
@@ -19,7 +19,7 @@ ASSERT is Microsoft's open-source framework for policy-driven agent evaluation, 
 
 ## Why this matters
 
-As teams ship agents into production, the gap between "it works in a demo" and "it behaves under our policies" is where real risk lives. ASSERT closes that gap by turning your written policies into concrete, testable evaluation scenarios — and now those evaluations run against any of the 100+ LLM providers LiteLLM supports, through a single unified interface.
+As teams ship agents into production, the gap between "it works in a demo" and "it behaves under our policies" is where real risk lives. ASSERT closes that gap by turning your written policies into concrete, testable evaluation scenarios, and now those evaluations run against any of the 100+ LLM providers LiteLLM supports, through a single unified interface.
 
 ## How it works with LiteLLM
 

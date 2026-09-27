@@ -17,8 +17,9 @@ LiteLLM provides fine-grained permission management for MCP servers, allowing yo
 
 This ensures that only authorized entities can discover and use MCP tools, providing an additional security layer for your MCP infrastructure.
 
-:::info Related Documentation
+:::info[Related Documentation]
 - [MCP Overview](./mcp.md) - Learn about MCP in LiteLLM
+- [Grant MCP Server Access to Keys and Teams](./mcp_grant_access.md) - Step-by-step Admin UI and API procedure for key and team grants
 - [MCP Cost Tracking](./mcp_cost.md) - Track costs for MCP tool calls
 - [MCP Guardrails](./mcp_guardrail.md) - Apply security guardrails to MCP calls
 - [Using MCP](./mcp_usage.md) - How to use MCP with LiteLLM
@@ -44,11 +45,13 @@ Permissions can be set at six distinct levels. When more than one level applies 
 | **Key** | `object_permission.mcp_servers` / `object_permission.mcp_access_groups` on the virtual key | If the key has an explicit list, it's used. |
 | **Team** | Same fields on the team | If both key and team have lists, the result is the **intersection** (only servers in both). If only the team has a list, the key inherits it. |
 | **End user** | Same fields on the `LiteLLM_EndUserTable` row matching `x-litellm-end-user-id` | Intersected with the running result. Skipped if no end-user-id is present on the request. |
-| **Agent** | Same fields on the agent identified by `x-litellm-agent-id` | Intersected with the running result. Skipped if no agent-id is present. |
+| **Agent** | Same fields on the agent identified by `x-litellm-agent-id`, or the agent the key is bound to (`agent_id` set at key generation) | Intersected with the running result. Skipped if no agent applies. |
 | **Internal user** | Same fields on the internal user (the human) the request authenticated as | Intersected with the running result, so it can only narrow. Skipped if that user carries no entitlement. |
 | **Organization** | Same fields on the org owning the key/team | Acts as a **ceiling**; the final allowed-server set is intersected with the org's list. If the org has no list, no additional restriction. |
 
 If no level has a list, the request can access **every** MCP server (open by default).
+
+A key bound to an agent (`agent_id` passed to `/key/generate`) gets the same treatment as a request carrying `x-litellm-agent-id`: the agent's list is intersected with the key's on every request the key makes. Granting a server to the key alone is not enough; the agent must also hold the grant (via the Admin UI agent edit form or `PATCH /v1/agents/{agent_id}`), otherwise requests scoped to that server are denied with an error naming the agent.
 
 ```mermaid
 flowchart TD
@@ -68,7 +71,7 @@ flowchart TD
     J -->|No| L[Keep current]
     K --> M
     L --> M
-    M{agent-id present and agent has list?}
+    M{agent-id header or key-bound agent has list?}
     M -->|Yes| N[Intersect with agent list]
     M -->|No| O[Keep current]
     N --> S
@@ -178,9 +181,90 @@ mcp_servers:
 - If you specify both `allowed_tools` and `disallowed_tools`, the allowed list takes priority
 - Tool names are case-sensitive
 
+## Pin a Server's Tool List
+
+`allowed_tools` trusts whatever the upstream says each tool does. Pinning freezes the tool list, the descriptions, and the input schemas too: the gateway serves only the pinned tools with their pinned descriptions and schemas, refuses calls to any other name, and alerts when the upstream drifts from the pin. That closes tool poisoning (OWASP LLM01): a server that quietly rewrites a description to carry instructions for the model, or adds a tool your clients never approved, changes nothing your clients see
+
+<Tabs>
+<TabItem value="api" label="Pin from the API">
+
+Pin the catalog the gateway sees right now (admin only, needs a database). Find `server_id` with `GET /v1/mcp/server`. The response is the stored snapshot: each tool's name, description, and input schema:
+
+```bash title="Pin" showLineNumbers
+curl -s -X POST http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{
+  "get_note": {
+    "description": "Return the saved note with the given id",
+    "input_schema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}
+  }
+}
+```
+
+The snapshot is taken after the [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery), so a description a guardrail blocks never gets pinned and a description it masks is pinned in its masked form; a server with no tool left to pin returns `400`. A `tool_name_to_description` override in effect at pin time is what gets pinned
+
+Unpin to serve the live upstream catalog again:
+
+```bash title="Unpin" showLineNumbers
+curl -s -X DELETE http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{"server_id": "<server_id>", "status": "unpinned"}
+```
+
+</TabItem>
+<TabItem value="config" label="Pin in config.yaml">
+
+`pinned_tools` maps each tool name to the description and input schema your clients should see. The pin response above is the same shape, so pin once on a deployment with a database and paste the response here:
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  notes:
+    url: http://notes.internal/mcp
+    transport: http
+    pinned_tools:
+      get_note:
+        description: "Return the saved note with the given id"
+        input_schema:
+          type: object
+          properties:
+            id: {type: string}
+          required: [id]
+```
+
+</TabItem>
+</Tabs>
+
+What clients see once a server is pinned:
+
+- `tools/list` (over `/mcp`, `/mcp-rest/tools/list`, and LLM-driven discovery) returns the pinned tools only, each with its pinned description and input schema
+- A tool the upstream added after the pin is not listed, and a call to it returns `403`
+- A tool the upstream removed after the pin is not listed either, since the gateway has nothing to call
+- A description or input schema the upstream changed after the pin is served as pinned
+
+Whenever a listing finds the upstream differs from the pin, the gateway logs a warning and sends an `mcp_pinned_tools_changed` [alert](./proxy/alerting#all-possible-alert-types) naming the added, removed, and changed tools, once per distinct diff per server; the same diff on the next listing stays quiet, a different one alerts again, and the alert clears on its own once the upstream matches the pin. Re-pin to accept a change you reviewed
+
+```text
+MCP server `notes`: upstream tool list drifted from the pinned catalog; serving the pinned tools and descriptions until an admin re-pins the server
+added: `delete_all_notes`
+changed: `get_note`
+```
+
+### Important Notes
+
+- A pin covers tool names, descriptions, and input schemas; anything else the upstream reports about a tool (annotations, output schema) is served live
+- `allowed_tools`, `disallowed_tools`, and per-key tool permissions still apply on top of the pin
+- The [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) still runs on a pinned server, on the pinned text the proxy is about to serve: a pinned tool keeps serving its pinned description while the upstream's text is poisoned (reported as changed), and a pinned description the guardrails themselves block is hidden and reported as blocked until the admin re-pins the server
+- A `tool_name_to_description` override edited after the pin reads as a changed tool: the pinned text is served until the server is re-pinned
+
 ## Public MCP Servers (allow_all_keys)
 
-Some MCP servers are meant to be shared broadly—think internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
+Some MCP servers are meant to be shared broadly: internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
 
 <Tabs>
 <TabItem value="ui" label="UI">
@@ -218,7 +302,7 @@ mcp_servers:
 - You want a “default enabled” experience for internal users, while still being able to layer tool-level restrictions.
 - You’re onboarding new teams and want the safest MCPs available out of the box.
 
-Once enabled, LiteLLM automatically includes the server for every key during tool discovery/calls—no extra virtual-key or team configuration is required.
+Once enabled, LiteLLM automatically includes the server for every key during tool discovery/calls, with no extra virtual-key or team configuration required.
 
 ---
 
@@ -373,7 +457,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -401,7 +485,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -418,7 +502,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 }'
 ```
 
-This example uses the `x-mcp-servers` header to access all servers in the "dev_group" access group. Use `server_url: "litellm_proxy"` when calling the proxy's `/v1/responses` endpoint—do not use the full proxy URL.
+This example uses the `x-mcp-servers` header to access all servers in the "dev_group" access group. Use `server_url: "litellm_proxy"` when calling the proxy's `/v1/responses` endpoint; do not use the full proxy URL.
 
 </TabItem>
 
@@ -430,7 +514,7 @@ This example uses the `x-mcp-servers` header to access all servers in the "dev_g
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/github_mcp,zapier/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
       }
     }
   }
@@ -472,7 +556,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -501,7 +585,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -531,7 +615,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/mcp/",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "alias_1,Server2"
       }
     }
@@ -566,7 +650,7 @@ curl --location 'https://api.openai.com/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $OPENAI_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -595,7 +679,7 @@ curl --location '<your-litellm-proxy-base-url>/v1/responses' \
 --header 'Content-Type: application/json' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "tools": [
         {
             "type": "mcp",
@@ -625,7 +709,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "alias_1,Server2"
       }
     }
@@ -682,7 +766,7 @@ Include the access group name in the `x-mcp-servers` header:
     "LiteLLM": {
       "url": "litellm_proxy",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "dev_group"
       }
     }
@@ -714,7 +798,7 @@ Control which tools different teams can access from the same MCP server. For exa
 
 This video shows how to set allowed tools for a Key, Team, or Organization.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/7464d444c3324078892367272fe50745" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/7464d444c3324078892367272fe50745" frameBorder="0" allowFullScreen></iframe>
 
 ### `mcp_tool_permissions` API
 
@@ -854,11 +938,11 @@ The same grant is editable from the Admin UI on the internal user's detail page 
   alt="MCP entitlements section on the internal user detail page"
 />
 
-:::info Only a proxy admin can set this
+:::info[Only a proxy admin can set this]
 `/user/new` and `/user/update` accept `object_permission` from a proxy admin only. A non-admin editing their own record is rejected, since an empty grant list means "no restriction" and a self-write would otherwise lift a ceiling an admin placed on them.
 :::
 
-:::note An admin role is not a waiver
+:::note[An admin role is not a waiver]
 A caller with an admin role and no explicit key-level `mcp_servers` list normally sees the whole MCP server registry. Once that human carries an entitlement of their own, that shortcut no longer applies and the entitlement binds them; the admin role widens what the credential reaches, and leaves the scope attached to the person in place.
 :::
 
@@ -919,12 +1003,12 @@ This is useful when you want discoverability for MCP offerings without granting 
 
 ## Publish MCP Registry
 
-If you want other systems—for example external agent frameworks such as MCP-capable IDEs running outside your network—to automatically discover the MCP servers hosted on LiteLLM, you can expose a Model Context Protocol Registry endpoint. This registry lists the built-in LiteLLM MCP server and every server you have configured, using the [official MCP Registry spec](https://github.com/modelcontextprotocol/registry).
+If you want other systems (for example external agent frameworks such as MCP-capable IDEs running outside your network) to automatically discover the MCP servers hosted on LiteLLM, you can expose a Model Context Protocol Registry endpoint. This registry lists the built-in LiteLLM MCP server and every server you have configured, using the [official MCP Registry spec](https://github.com/modelcontextprotocol/registry).
 
 1. Set `enable_mcp_registry: true` under `general_settings` in your proxy config (or DB settings) and restart the proxy.
 2. LiteLLM will serve the registry at `GET /v1/mcp/registry.json`.
 3. Each entry points to either `/mcp` (built-in server) or `/{mcp_server_name}/mcp` for your custom servers, so clients can connect directly using the advertised Streamable HTTP URL.
 
-:::note Permissions still apply
+:::note[Permissions still apply]
 The registry only advertises server URLs. Actual access control is still enforced by LiteLLM when the client connects to `/mcp` or `/{server}/mcp`, so publishing the registry does not bypass per-key permissions.
 :::

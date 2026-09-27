@@ -15,7 +15,7 @@ The current version of LiteLLM you're running. Check via `litellm --version` or 
 Distributed environments are a known source of UI issues. Please describe:
 
 - **Number of LiteLLM instances/replicas** and how they are deployed (e.g., Kubernetes, Docker Compose, ECS)
-- **Load balancer** type and configuration (e.g., ALB, Nginx, Cloudflare Tunnel) — include whether sticky sessions are enabled
+- **Load balancer** type and configuration (e.g., ALB, Nginx, Cloudflare Tunnel), including whether sticky sessions are enabled
 - **How the UI is accessed** — directly via LiteLLM, through a reverse proxy, or behind an ingress controller
 - **Any CDN or caching layers** between the user and the LiteLLM server
 
@@ -23,7 +23,7 @@ Distributed environments are a known source of UI issues. Please describe:
 
 Open your browser's Developer Tools (F12 → Network tab), reproduce the issue, and share:
 
-- The **failing request(s)** — URL, method, status code, and response body
+- The **failing request(s)**: URL, method, status code, and response body
 - **Screenshots or HAR export** of the relevant network activity
 - Any **CORS or mixed-content errors** shown in the Console tab
 

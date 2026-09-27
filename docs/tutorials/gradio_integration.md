@@ -2,8 +2,11 @@
 Simple tutorial for integrating LiteLLM completion calls with streaming Gradio chatbot demos
 
 ### Install & Import Dependencies
+```bash
+uv add gradio litellm
+```
+
 ```python
-!uv add gradio litellm
 import gradio
 import litellm
 ```

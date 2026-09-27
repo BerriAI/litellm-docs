@@ -1,6 +1,6 @@
 # Cursor Cloud Agents
 
-Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api) — launch and manage cloud agents that work on your repositories, in native format (no translation).
+Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api). Launch and manage cloud agents that work on your repositories, in native format (no translation).
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -10,6 +10,8 @@ Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com
 | Streaming | ❌ | Cursor API does not use streaming |
 
 Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
+
+This route fronts the Cloud Agents REST API only. Cursor CLI agent sessions log in to `api2.cursor.sh` by default (`agent --endpoint` only moves that login), not to `api.cursor.com`, so they cannot use this route, see [Cursor CLI](../tutorials/cursor_integration.md#cursor-cli-cursor-agent).
 
 **Supported endpoints:**
 

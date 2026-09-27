@@ -50,7 +50,7 @@ pip install litellm==1.80.10
 - **New Provider: SAP Gen AI Hub** - [Full support for SAP Generative AI Hub with chat completions](../../docs/providers/sap)
 - **New Bedrock Writer Models** - Add Palmyra-X4 and Palmyra-X5 models on Bedrock
 - **OpenAI GPT-5.2 Models** - Full support for GPT-5.2, GPT-5.2-pro, and Azure GPT-5.2 models with reasoning support
-- **227 New Fireworks AI Models** - Comprehensive model coverage for Fireworks AI platform
+- **227 New Fireworks AI Models** - Full model coverage for Fireworks AI platform
 - **MCP Support on /chat/completions** - [Use MCP servers directly via chat completions endpoint](../../docs/mcp)
 - **Performance Improvements** - Reduced memory leaks by 50%
 
@@ -310,7 +310,7 @@ Users can now filter usage statistics by agents, providing the same granular fil
 
 | Integration | Type | Description |
 | ----------- | ---- | ----------- |
-| [SumoLogic](../../docs/proxy/logging#sumologic) | Logging | Native webhook integration for SumoLogic - [PR #17630](https://github.com/BerriAI/litellm/pull/17630) |
+| [SumoLogic](/docs/observability/sumologic_integration) | Logging | Native webhook integration for SumoLogic - [PR #17630](https://github.com/BerriAI/litellm/pull/17630) |
 | [Arize Phoenix](../../docs/proxy/arize_phoenix_prompts) | Prompt Management | Arize Phoenix OSS prompt management integration - [PR #17750](https://github.com/BerriAI/litellm/pull/17750) |
 | [Sendgrid](../../docs/proxy/email) | Email | Sendgrid email notifications integration - [PR #17775](https://github.com/BerriAI/litellm/pull/17775) |
 | [Onyx](../../docs/proxy/guardrails/onyx_security) | Guardrails | Onyx guardrail hooks integration - [PR #16591](https://github.com/BerriAI/litellm/pull/16591) |
@@ -322,9 +322,9 @@ Users can now filter usage statistics by agents, providing the same granular fil
     - Prefer standard trace id for Langfuse logging - [PR #17791](https://github.com/BerriAI/litellm/pull/17791)
     - Move query params to create_pass_through_route call in Langfuse passthrough - [PR #17660](https://github.com/BerriAI/litellm/pull/17660)
     - Add support for custom masking function - [PR #17826](https://github.com/BerriAI/litellm/pull/17826)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add 'exception_status' to prometheus logger - [PR #17847](https://github.com/BerriAI/litellm/pull/17847)
-- **[OpenTelemetry](../../docs/proxy/logging#otel)**
+- **[OpenTelemetry](/docs/observability/opentelemetry_v2)**
     - Add latency metrics (TTFT, TPOT, Total Generation Time) to OTEL payload - [PR #17888](https://github.com/BerriAI/litellm/pull/17888)
 - **General**
     - Add polling via cache feature for async logging - [PR #16862](https://github.com/BerriAI/litellm/pull/16862)

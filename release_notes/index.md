@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.97.0 — Tool-Result Guardrails, Deployment Affinity & Viewer Parity](/release_notes/v1.97.0/v1-97-0)
+### [v1.102.0: Auto Router Controls, Native OCR & Gateway Reliability](/release_notes/v1.102.0/v1-102-0)
 
-_August 15, 2026_
+_September 19, 2026_
 
-A per-guardrail `scan_only_tool_results` flag that scans and masks tool output while system, user, and assistant content passes through untouched, so an agent platform can keep injection detection on untrusted tool results without its own harness prompts tripping the filter; auto-router `deployment_affinity` on by default, pinning a session to the deployment it used before so the provider prompt cache stays warm while every turn is still classified on its own merits; a new `LiteLLM_DailyGatewayRequests` table written by the ASGI request-metrics middleware, so successful and failed request counts survive spend logging being off and come with a by-endpoint breakdown; read parity for `proxy_admin_viewer` across roughly fifteen endpoints that previously compared against `PROXY_ADMIN` exactly; four caller-scoped `spend/report` endpoints for keys, users, teams, and organizations; a correctness sweep over managed files and batches covering deterministic unified output file ids and unparseable rows; and an admin-published, dismissible markdown banner rendered on every dashboard page. Note that request-parameter checks now apply to path and form inputs as well as the body.
+Auto Router gains custom heuristic dimensions, editable scoring weights, an optional NON_REASONING tier, per-tier output limits, healthier tier fallbacks, and routed-model and session-savings feedback in coding agents; OCR runs natively by default across supported providers, alongside Meta Muse Voice realtime transcription, Mistral text-to-speech, Vertex Lyria music, and native Fireworks Responses. Gateway reliability adds optional shared PgBouncer connections and a spend collector, fewer database and Redis calls, stable behavior through Redis outages, and request and token-based autoscaling controls. The MCP gateway, logging, and guardrails pick up schema-discovery proxy mode, better OAuth compatibility and permission enforcement, configurable OTel trace URLs with HTTP/JSON export, PointFive logging, and Conduct Guard, alongside 99 new model catalog entries. This stable also folds in request-body hygiene, spend-tracking, routing, and license fixes backported after the rc.1 cut. Review the release's Breaking Changes section before upgrading.
 
 ---
 
@@ -22,6 +22,11 @@ A per-guardrail `scan_only_tool_results` flag that scans and masks tool output w
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
 | [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |

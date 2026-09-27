@@ -11,9 +11,9 @@ Setup Prompt Injection Detection, Secret Detection on LiteLLM Proxy
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: sk-xxxxxxx
 
 litellm_settings:
@@ -27,7 +27,7 @@ litellm_settings:
     - hide_secrets_guard:
         callbacks: [hide_secrets]
         default_on: false
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```
@@ -53,10 +53,10 @@ Test it with this request -> expect it to get rejected by LiteLLM Proxy
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -90,7 +90,7 @@ This will
 ```js
 const model = new ChatOpenAI({
   modelName: "llama3",
-  openAIApiKey: "sk-1234",
+  openAIApiKey: "sk-<your-litellm-api-key>",
   modelKwargs: {"metadata": "guardrails": {"prompt_injection": False, "hide_secrets_guard": true}}}
 }, {
   basePath: "http://0.0.0.0:4000",
@@ -105,7 +105,7 @@ console.log(message);
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -139,7 +139,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -159,13 +159,13 @@ from langchain.prompts.chat import (
 from langchain.schema import HumanMessage, SystemMessage
 import os 
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "llama3",
     extra_body={
-        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}}
+        "metadata": {"guardrails": {"prompt_injection": False, "hide_secrets_guard": True}}
     }
 )
 
@@ -210,7 +210,7 @@ If you need to switch `pii_masking` off for an API Key set `"permissions": {"pii
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
         "permissions": {"pii_masking": true}
@@ -226,7 +226,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",
@@ -265,7 +265,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -D '{
     "team_id": "4198d93c-d375-4c83-8d5a-71e7c5473e50",
@@ -280,7 +280,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer $LITELLM_VIRTUAL_KEY' \
 --data '{
-"model": "gpt-3.5-turbo",
+"model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -348,7 +348,7 @@ litellm_settings:
         callback: ["presidio"]
         default_on: true
         logging_only: true
-    - your-custom-guardrail
+    - your-custom-guardrail:
         callbacks: [hide_secrets]
         default_on: false
 ```

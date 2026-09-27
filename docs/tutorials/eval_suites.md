@@ -22,7 +22,7 @@ LiteLLM allows you to create an OpenAI compatible server for all supported LLMs.
 ```shell
 $ litellm --model huggingface/bigcode/starcoder
 
-#INFO: Proxy running on http://0.0.0.0:8000
+#INFO: Proxy running on http://0.0.0.0:4000
 ```
 
 **Here's how you can create the proxy for other supported llms**
@@ -36,7 +36,7 @@ $ export AWS_SECRET_ACCESS_KEY=""
 ```
 
 ```shell
-$ litellm --model bedrock/anthropic.claude-v2
+$ litellm --model bedrock/us.anthropic.{{anthropic}}
 ```
 </TabItem>
 <TabItem value="huggingface" label="Huggingface (TGI)">
@@ -55,7 +55,7 @@ $ litellm --model huggingface/<your model name> --api_base https://k58ory32yinf1
 $ export ANTHROPIC_API_KEY=my-api-key
 ```
 ```shell
-$ litellm --model claude-instant-1
+$ litellm --model {{anthropic}}
 ```
 
 </TabItem>
@@ -157,14 +157,14 @@ $ litellm --model command-nightly
 Before running the eval we will set `openai.api_base` to the litellm proxy from Step 1
 
 ```python
-openai.api_base = "http://0.0.0.0:8000"
+openai.api_base = "http://0.0.0.0:4000"
 ```
 
 ```python
 import openai
 import pandas as pd
 openai.api_key = "anything"             # this can be anything, we set the key on the proxy
-openai.api_base = "http://0.0.0.0:8000" # set api base to the proxy from step 1
+openai.api_base = "http://0.0.0.0:4000" # set api base to the proxy from step 1
 
 
 import mlflow
@@ -184,7 +184,7 @@ eval_data = pd.DataFrame(
 with mlflow.start_run() as run:
     system_prompt = "Answer the following question in two sentences"
     logged_model_info = mlflow.openai.log_model(
-        model="gpt-3.5",
+        model="{{openai_small}}",
         task=openai.ChatCompletion,
         artifact_path="model",
         messages=[
@@ -248,7 +248,7 @@ import litellm
 # litellm completion call
 question = "which country has the highest population"
 response = litellm.completion(
-    model = "gpt-3.5-turbo",
+    model = "{{openai_small}}",
     messages = [
         {
             "role": "user",

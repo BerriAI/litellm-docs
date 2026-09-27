@@ -3,10 +3,10 @@ import TabItem from '@theme/TabItem';
 
 # Budgets, Rate Limits
 
-:::info **Budget Setup Options**
+:::info[**Budget Setup Options**]
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
-**Team budgets**: Add team_id to virtual keys to utilize a team's shared budget
+**Team budgets**: Add team_id to virtual keys to draw on a team's shared budget
 
 **Team member budgets**: Set individual spending limits within the team's shared budget
 
@@ -19,6 +19,12 @@ Requirements:
 
 - Need to a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc) [**See Setup**](./virtual_keys.md#setup)
 
+:::warning[Budgets require a database]
+
+Every budget on this page is enforced against spend read from the database, so none of them cap anything on a [DB-less deployment](./docker_quick_start.md#running-without-a-database). `litellm_settings.max_budget` fails open there rather than erroring: the proxy's global spend is only loaded when a database client exists, and with no total to compare against, the global budget check is skipped and requests keep being served past the limit. A warning is logged once at startup when a budget is set with no database connected, but nothing blocks at request time. Key, team, and user budgets are unavailable for the same reason, since virtual keys cannot be resolved without a database (`No connected db.`). Run with a database if a budget is part of how you bound spend
+
+:::
+
 
 ## Set Budgets
 
@@ -30,7 +36,7 @@ Apply a budget across all calls on the proxy
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   # other litellm settings
@@ -48,10 +54,10 @@ litellm /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Autherization: Bearer sk-1234' \
+    --header "Autherization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -83,7 +89,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -137,7 +143,7 @@ Create a user with `user_id=ishaan`
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan"
@@ -150,7 +156,7 @@ Set `max_budget_in_team` when adding a User to a team. We use the same `user_id`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "max_budget_in_team": 0.000000000001, "member": {"role": "user", "user_id": "ishaan"}}'
 ```
@@ -161,7 +167,7 @@ Set `user_id=ishaan` from step 1
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan",
@@ -195,6 +201,68 @@ curl --location 'http://localhost:4000/chat/completions' \
 }'
 ```
 
+#### Update a team member's budget
+
+Update `max_budget_in_team` for an existing team member with `/team/member_update`. The new budget takes effect on the member's next request
+
+This gives the member their own budget. It no longer follows the team's `team_member_budget` default, and later `/team/update` changes to that default leave this member untouched. To change the budget for every member still on the default, update `team_member_budget` on `/team/update` instead
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
+```
+
+Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
+
+#### Reset a team member's spend
+
+Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
+
+<Tabs>
+<TabItem value="ui" label="UI">
+
+1. Go to **Teams** and open the team
+2. Open the **Members** tab
+3. In the **Actions** column of the member's row, click the **Reset spend** icon (the refresh icon between the edit and delete icons)
+4. The **Reset Team Member Spend** dialog shows the member and their current cycle spend. Click **Reset** to set it to $0
+
+The icon is shown only to users who can edit the team, and only on rows where **Current Cycle Spend (USD)** is above $0. A team admin does not see it on their own row, but a proxy admin does
+
+</TabItem>
+<TabItem value="api" label="API">
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"reset_to": 0}'
+```
+
+`reset_to` must be a number of at least 0 that is no greater than the member's current spend or their budget
+
+Response:
+
+```shell
+{"team_id":"e8d1460f-846c-45d7-9b43-55f3cc52ac32","user_id":"ishaan","spend":0.0,"previous_spend":3.495e-05,"max_budget":10.0}
+```
+
+The endpoint returns a 403 (`Cannot reset your own spend. Ask a proxy admin.`) when a team admin targets their own user, and a 404 when the user has no membership row in that team
+
+</TabItem>
+</Tabs>
+
+The reset takes effect on the member's next request, on every proxy instance. It applies to one member at a time and there is no bulk version, so repeat it for each member you want to reset
+
+#### Existing spend counts against a budget added later
+
+Spend is tracked for every team member, including members with no budget. On the team's **Members** tab, **Current Cycle Spend (USD)** is the value checked against the member's budget and it goes back to $0 when the member's `budget_duration` window rolls over, while **Total Spend (USD)** is cumulative and never resets. A member with no budget has no budget window, so their current cycle spend is never reset automatically and keeps growing. Older versions only tracked spend for members that had a budget, and a member added on one of those versions starts being tracked on their next request after the upgrade
+
+If you give that member a budget later, the spend they already accrued counts against it right away. This applies both to setting `team_member_budget` on the team with `/team/update`, which links the team's member budget to every member that has no budget yet, and to setting `max_budget_in_team` for one member with `/team/member_update`. For example, a member spends $500 with no budget, an admin then sets a $100 member budget, and the member's next request is rejected with a budget exceeded error
+
+There are two ways out. If the new budget has a `budget_duration`, the member's current cycle spend goes back to $0 at the next reset and they are unblocked without any action. If it has no `budget_duration`, the member stays blocked until someone [resets their spend](#reset-a-team-members-spend) in the UI or through the API
+
 
 ### Internal User
 
@@ -224,7 +292,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -335,7 +403,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 #### **Set multiple budget windows on a key**
 
-Apply multiple concurrent budget limits at different time scales on the same key — for example, cap a key at **$10/day** AND **$100/month**.
+Apply multiple concurrent budget limits at different time scales on the same key, for example capping a key at **$10/day** AND **$100/month**.
 
 **When is this useful?**
 
@@ -373,7 +441,7 @@ Each window is tracked independently and resets on its own schedule:
 |---|---|
 | `1h`  | Every hour |
 | `24h` | Daily at midnight UTC |
-| `7d`  | Every Sunday at midnight UTC |
+| `7d`  | Every Monday at midnight UTC (or the configured reset time) |
 | `30d` | 1st of every month at midnight UTC |
 
 **Via Dashboard**
@@ -397,44 +465,82 @@ Each window shows the reset schedule below the input so it's always clear when s
 
 ### ✨ Virtual Key (Model Specific)
 
-Apply model specific budgets on a key. Example: 
-- Budget for `gpt-4o` is $0.0000001, for time period `1d` for `key = "sk-12345"`
-- Budget for `gpt-4o-mini` is $10, for time period `30d` for `key = "sk-12345"`
+Set a separate budget for each model available to a virtual key. For example, one key can have:
 
-:::info
+- A $0.0000001 daily budget for `{{openai_large}}`
+- A $10 budget every 30 days for `{{openai_small}}`
 
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://www.litellm.ai/#pricing)
+<EnterpriseFeature />
 
-:::
-
-
-The spec for `model_max_budget` is **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)**
+`model_max_budget` uses the **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema.
 
 ```bash
 curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Authorization: Bearer <your-master-key>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "model_max_budget": {"gpt-4o": {"budget_limit": "0.0000001", "time_period": "1d"}}
+  "model_max_budget": {"{{openai_large}}": {"budget_limit": "0.0000001", "time_period": "1d"}}
 }'
 ```
 
+**Via Dashboard**
 
-#### Make a test request
+To add a per-model budget to a new key, go to **Virtual Keys → Create Key → Optional Settings → Per-Model Budgets**. To update an existing key, open the key's edit page and use the same section.
 
-We expect the first request to succeed, and the second request to fail since we cross the budget for `gpt-4o` on the Virtual Key
+![Per-Model Budgets on the key form](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-empty.png)
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+Select **+ Add Model Budget**, choose a model, set the spending limit, and select the budget period. Each model has its own tracking and reset schedule. For example, a daily limit on one model does not affect a monthly limit on another. Limits can be less than $0.01.
+
+![A per-model budget filled in](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/key-per-model-budget-filled.png)
+
+#### How LiteLLM matches model names
+
+LiteLLM matches a budget against the model name in the request and its provider-prefixed form. For example, a budget for `claude-opus-4-8` applies to requests that use any of these names:
+
+- `claude-opus-4-8`
+- `anthropic/claude-opus-4-8`
+- `bedrock/anthropic.claude-opus-4-8`
+- `us.anthropic.claude-opus-4-8`
+
+Set the budget using the name configured in `model_list`. If you route the same model under multiple names, use the unprefixed model family name so that one budget applies to all supported variants.
+
+#### View current usage
+
+`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement.
+
+```bash
+curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
+--header 'Authorization: Bearer <your-master-key>'
+```
+
+```json
+{
+  "info": {
+    "model_max_budget": {"{{openai_large}}": {"budget_limit": 0.0001, "time_period": "30d"}},
+    "model_max_budget_usage": {
+      "{{openai_large}}": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+    }
+  }
+}
+```
+
+If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
+
+#### Test the budget
+
+With the small `{{openai_large}}` budget shown above, the first request should succeed. The second request should be rejected after the key exceeds the limit.
+
+**[LangChain and OpenAI SDK usage examples](../proxy/user_keys#request-format)**
 
 <Tabs>
-<TabItem label="Successful Call " value = "allowed">
+<TabItem label="Successful call" value="allowed">
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "messages": [
         {
           "role": "user",
@@ -446,16 +552,16 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 </TabItem>
-<TabItem label="Unsuccessful call" value = "not-allowed">
+<TabItem label="Rejected call" value="not-allowed">
 
-Expect this to fail since since we cross the budget `model=gpt-4o` on the Virtual Key
+Send the same request again. LiteLLM rejects it after the key exceeds its `{{openai_large}}` budget.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <sk-generated-key>' \
 --data ' {
-      "model": "gpt-4o",
+      "model": "{{openai_large}}",
       "messages": [
         {
           "role": "user",
@@ -466,12 +572,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-Expected response on failure
+Expected response:
 
 ```json
 {
     "error": {
-        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model=gpt-4o",
+        "message": "LiteLLM Virtual Key: 9769f3f6768a199f76cc29xxxx, key_alias: None, exceeded budget for model={{openai_large}}",
         "type": "budget_exceeded",
         "param": null,
         "code": "400"
@@ -482,7 +588,48 @@ Expected response on failure
 </TabItem>
 </Tabs>
 
-To reroute requests to another model once a per-model budget is exceeded instead of returning `budget_exceeded`, see [Budget Fallbacks](./budget_fallbacks).
+By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is exceeded. To route the request to another model instead, see [Budget Fallbacks](./budget_fallbacks).
+
+### ✨ Internal User (Model Specific)
+
+Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
+
+<EnterpriseFeature />
+
+`model_max_budget` uses the same **[`Dict[str, GenericBudgetInfo]`](#genericbudgetinfo)** schema as the key-level setting. You can configure it with either `/user/new` or `/user/update`.
+
+```bash
+curl 'http://0.0.0.0:4000/user/new' \
+--header 'Authorization: Bearer <your-master-key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "user_id": "engineer-1",
+  "model_max_budget": {"{{anthropic_large}}": {"budget_limit": 200, "time_period": "1mo"}}
+}'
+```
+
+Use `1mo` for a calendar-month budget that resets on the first day of each month. After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
+
+```json
+{
+    "error": {
+        "message": "LiteLLM User: engineer-1, exceeded budget for model={{anthropic_large}}",
+        "type": "budget_exceeded",
+        "param": null,
+        "code": "429"
+    }
+}
+```
+
+`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`.
+
+**Via Dashboard**
+
+Go to **Internal Users**, select the user, and then open **Details → Edit → Per-Model Budgets**. For each existing budget, the dashboard shows the amount spent during the current period.
+
+![Per-Model Budgets on an internal user](https://raw.githubusercontent.com/yassin-berriai/litellm-pr-media/main/lit-5894/user-per-model-budget.png)
+
+User-level and key-level budgets are tracked independently. If a key has its own per-model budget, each request counts toward both the key budget and the owner's user budget. LiteLLM rejects the request when either limit is exceeded.
 
 
 ### Agents
@@ -500,7 +647,7 @@ Set `tpm_limit` and `rpm_limit` on the agent to cap total throughput across all 
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -522,7 +669,7 @@ Set `session_tpm_limit` and `session_rpm_limit` to cap throughput per individual
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -544,7 +691,7 @@ Set `max_iterations` and `max_budget_per_session` in agent `litellm_params` to c
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -575,7 +722,7 @@ You can also update rate limits on existing agents using `PATCH /v1/agents/{agen
 
 ```bash
 curl -X PATCH 'http://localhost:4000/v1/agents/<agent_id>' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "tpm_limit": 200000,
@@ -596,7 +743,7 @@ Use this to budget `user` passed to `/chat/completions`, **without needing to cr
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
         "budget_id": "default-customer-budget",
@@ -608,7 +755,7 @@ curl --location 'http://0.0.0.0:4000/budget/new' \
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   max_end_user_budget_id: "default-customer-budget" # applied to any 'user' without their own budget
@@ -732,6 +879,45 @@ model_list:
 ```
 
 **Note:** The cost fields must be explicitly set to `0`. If they are unset (`null`/missing), the model is not treated as free and budget checks still apply.
+
+## Budget reservation
+
+Budget reservation is enabled by default. It helps enforce budgets during concurrent traffic by accounting for a request before the provider processes it.
+
+### How it works
+
+1. LiteLLM estimates the request's maximum cost from the request body and the model's pricing.
+2. It temporarily reserves that amount against the applicable budget.
+3. If the reservation would exceed the budget, LiteLLM rejects the request before sending it to the provider.
+4. After the response is priced, LiteLLM replaces the reservation with the actual cost.
+
+When `max_tokens` or `max_completion_tokens` is present, LiteLLM uses that value in the estimate. Otherwise, it uses the model's configured limits. For routes without token pricing, such as some image and audio routes, LiteLLM cannot reserve a cost and instead enforces the budget using recorded spend.
+
+### Disable budget reservation
+
+Disable reservation only as a temporary mitigation if unreconciled reservations cause unexpected `BudgetExceededError` responses after the affected requests have completed:
+
+```yaml
+general_settings:
+  disable_budget_reservation: true
+```
+
+:::warning
+
+Disabling reservation can allow concurrent requests to exceed a configured budget because each request is evaluated only against spend already recorded.
+
+:::
+
+Requests are still rejected when the budget is already exhausted. LiteLLM also logs a warning for each request while reservation is disabled.
+
+If a budget must remain a hard ceiling when Redis is unavailable or contains stale data, keep reservation enabled and also configure [`fail_closed_budget_enforcement`](#hard-budget-enforcement-fail-closed).
+
+### Batch requests
+
+Budget reservation cannot estimate the full cost of a batch job. A `POST /batches` request contains an `input_file_id` rather than the prompts in the file, so LiteLLM cannot price the complete workload at submission. The submission reservation is released after the submission response, and LiteLLM records the final cost when the batch completes.
+
+Use [batch rate limiting](../batches#how-rate-limiting-for-batches-api-works) to control batch throughput, and monitor completed batch costs for budget reporting.
+
 ## Hard budget enforcement (fail closed)
 
 Budget checks read current spend from a cross-pod counter in Redis, which keeps enforcement fast and consistent across workers and replicas. The counter is the source of truth on the hot path, and the database is reconciled in the background. If Redis restarts and reloads an older snapshot, the counter can come back lower than the spend already recorded in the database; on the hot path that stale value is trusted, which can let a key keep spending past its `max_budget` until the counter is corrected.
@@ -763,7 +949,7 @@ Set `token_rate_limit_type` in your `config.yaml`:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   token_rate_limit_type: "output"  # Options: "input", "output", "total" (default)
 ```
 
@@ -785,15 +971,15 @@ Declare what your models actually emit with `default_estimated_output_tokens` (o
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
   "tpm_limit": 1000000,
   "default_estimated_output_tokens": 2048,
   "default_estimated_output_tokens_per_model": {
-    "gpt-4": 4096,
-    "gpt-3.5-turbo": 1024
+    "{{openai_large}}": 4096,
+    "{{openai_small}}": 1024
   }
 }'
 ```
@@ -802,12 +988,12 @@ The same two fields work on `/team/new` and `/team/update`, and both are editabl
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
   "default_estimated_output_tokens": 4096,
-  "default_estimated_output_tokens_per_model": {"gpt-4": 8192}
+  "default_estimated_output_tokens_per_model": {"{{openai_large}}": 8192}
 }'
 ```
 
@@ -844,12 +1030,12 @@ Use `/team/new` or `/team/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -857,7 +1043,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 {
     "key": "sk-sA7VDkyhlQ7m8Gt77Mbt3Q",
     "expires": "2024-01-19T01:21:12.816168",
-    "team_id": "my-prod-team",
+    "team_id": "my-prod-team"
 }
 ```
 
@@ -872,12 +1058,12 @@ Use `/team/new` or `/team/update` with `model_rpm_limit` and `model_tpm_limit` a
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+  "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
 }'
 ```
 
@@ -885,12 +1071,12 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
-  "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-  "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+  "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+  "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
 }'
 ```
 
@@ -900,13 +1086,13 @@ You can also pass per-model limits via the `metadata` field:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
   "metadata": {
-    "model_rpm_limit": {"gpt-4": 100, "gpt-3.5-turbo": 200},
-    "model_tpm_limit": {"gpt-4": 10000, "gpt-3.5-turbo": 20000}
+    "model_rpm_limit": {"{{openai_large}}": 100, "{{openai_small}}": 200},
+    "model_tpm_limit": {"{{openai_large}}": 10000, "{{openai_small}}": 20000}
   }
 }'
 ```
@@ -915,7 +1101,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -925,12 +1111,12 @@ Use `/user/new` or `/user/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Expected Response**
 
@@ -938,7 +1124,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 {
     "key": "sk-sA7VDkyhlQ7m8Gt77Mbt3Q",
     "expires": "2024-01-19T01:21:12.816168",
-    "user_id": "krrish@berri.ai",
+    "user_id": "krrish@berri.ai"
 }
 ```
 
@@ -949,7 +1135,7 @@ Use `/key/generate`, if you want them for just that key.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -971,13 +1157,13 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 Set `model_rpm_limit` and `model_tpm_limit` to set rate limits per model per api key
 
-Here `gpt-4` is the `model_name` set on the [litellm config.yaml](configs.md)
+Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](configs.md)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"gpt-4": 2}, "model_tpm_limit": {"gpt-4":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}": 1000}}' 
 ```
 
 **Expected Response**
@@ -985,20 +1171,20 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 ```json
 {
     "key": "sk-ulGNRXWtv7M0lFnnsQk0wQ",
-    "expires": "2024-01-18T20:48:44.297973",
+    "expires": "2024-01-18T20:48:44.297973"
 }
 ```
 
 **Verify Model Rate Limits set correctly for this key**
 
-**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-4` returned**
+**Make /chat/completions request check if `x-litellm-key-remaining-requests-gpt-5.6-terra` returned**
 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-ulGNRXWtv7M0lFnnsQk0wQ" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude!ss eho ares"}
     ]
@@ -1009,14 +1195,14 @@ curl -i http://localhost:4000/v1/chat/completions \
 **Expected headers**
 
 ```shell
-x-litellm-key-remaining-requests-gpt-4: 1
-x-litellm-key-remaining-tokens-gpt-4: 179
+x-litellm-key-remaining-requests-gpt-5.6-terra: 1
+x-litellm-key-remaining-tokens-gpt-5.6-terra: 179
 ```
 
 These headers indicate:
 
-- 1 request remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
-- 179 tokens remaining for the GPT-4 model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 1 request remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
+- 179 tokens remaining for the gpt-5.6-terra model for key=`sk-ulGNRXWtv7M0lFnnsQk0wQ`
 
 </TabItem>
 <TabItem value="per-agent" label="Per Agent">
@@ -1027,7 +1213,7 @@ Set rate limits on agents registered with the [Agent Gateway](../a2a.md).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "tpm_limit": 100000, "rpm_limit": 100}'
 ```
@@ -1036,7 +1222,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/agents' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "session_tpm_limit": 50000, "session_rpm_limit": 50}'
 ```
@@ -1058,9 +1244,11 @@ Use this to set rate limits for `user` passed to `/chat/completions`, without ne
 
 Set a `tpm_limit` on the budget (You can also pass `rpm_limit` if needed)
 
+Both are optional; a budget with neither set applies no LiteLLM TPM or RPM limit to its customers, and only provider rate limits apply
+
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "budget_id" : "free-tier",
@@ -1075,7 +1263,7 @@ We use `budget_id="free-tier"` from Step 1 when creating this new customers
 
 ```shell
 curl --location 'http://0.0.0.0:4000/customer/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id" : "palantir",
@@ -1090,7 +1278,7 @@ Pass the `user_id` from Step 2 as `user="palantir"`
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -1120,9 +1308,9 @@ This will NOT apply if a key has a team_id (team budgets will apply then). [Tell
 
 ```yaml
 model_list: 
-  - model_name: "gpt-3.5-turbo"
+  - model_name: "{{openai_small}}"
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -1134,7 +1322,7 @@ litellm_settings:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -1155,7 +1343,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-X53RdxnDhzamRwjKXR4IHg' \
 -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
 }'
 ```
@@ -1177,13 +1365,28 @@ Expected Response:
 
 
 **Important Notes:**
-- **Rate limits do not apply to proxy admin users.** 
-- When testing rate limits, use internal user roles (non-admin) to ensure limits are enforced as expected.
+- Rate limits apply to any key, user or team that has `tpm_limit`, `rpm_limit` or `max_parallel_requests` set, regardless of role. The master key has no limits unless you configure them.
+- When testing rate limits, use a virtual key with explicit limits so the limiter has something to enforce.
 
 Changes: 
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
 - The in-memory cache is synced with redis every 0.01s, to avoid calling redis for every request. 
 - In testing, this was found to be 2x faster than the previous implementation, and reduced drift between expected and actual fails to at most 10 requests at high-traffic (100 RPS across 3 instances). 
+
+### Hard rate limit enforcement (fail closed)
+
+Across several instances, the tpm, rpm, and max_parallel_requests counters live in Redis (`general_settings.coordination_redis` or the `REDIS_*` environment variables) so every instance enforces the same limit. While Redis is unreachable, each instance falls back to counters in its own memory and keeps serving, so a key with `rpm_limit: 2` is admitted up to 2 requests per instance, N times the limit across N instances, until Redis is back
+
+For deployments where a configured rate limit must be a hard ceiling even while Redis is down, set `fail_closed_rate_limit_enforcement`:
+
+```yaml
+general_settings:
+  fail_closed_rate_limit_enforcement: true
+```
+
+With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
+
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 

@@ -34,7 +34,7 @@ Codex, OpenCode) with their LLM traffic routed through the proxy.
    uv tool install 'litellm[cli]'
    ```
 
-   Any of these gives you the `lite` command; if you already run a proxy server from `litellm[proxy]`, it ships there too. Start by typing it in your terminal:
+   Any of these gives you the `lite` command. A proxy server installed from `litellm[proxy]` ships it too, but that extra leaves out `keyring`, so its credential stays in a file instead of your OS keychain. Start by typing it in your terminal:
 
    ```shell
    lite
@@ -108,6 +108,8 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you can login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
 
+   To sign in through your system browser with OAuth authorization code and PKCE instead, run `lite login --pkce`. That credential renews itself with a refresh token, and `lite auth print-token` hands it to Claude Code, OpenCode, or any OpenAI-compatible client. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 3. **Test your authentication**
 
    ```bash
@@ -151,12 +153,21 @@ The token minted by `lite login` is a short-lived, per-session agent credential,
 
 The credential is short-lived by design (default 24h, configurable via `LITELLM_CLI_JWT_EXPIRATION_HOURS`); run `lite login` again to refresh it, which also re-reads your latest team and user settings. It does not appear in the Keys UI and cannot be rotated or revoked mid-session, and `lite claude`, `lite codex`, and `lite opencode` work with it on a default deployment. If you need a long-lived, rotatable key that shows up in the Keys UI, create a dedicated virtual key in the dashboard and pass it via `--api-key` or `LITELLM_PROXY_API_KEY` instead.
 
+`lite login` keeps the credential in your OS keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service) under the service `litellm-cli` and the account `credential`. Only the non-secret half lands in `~/.litellm/token.json`: the gateway URL, your user id, email, and role, the auth header name, and the sign-in timestamp. That file is created `0600` inside a `0700` directory. Reaching the keychain needs the `keyring` package, which ships with the `cli` extra, so install with `pip install 'litellm[cli]'` rather than a bare `pip install litellm` or `pip install 'litellm[proxy]'` if you want keychain storage. Code that reads the credential back through `litellm.get_litellm_gateway_api_key()` needs `keyring` for the same reason: without it the call cannot see a keychain entry and returns `None`, even though `lite login` stored one
+
+A machine with no keychain, a headless Linux box for example, keeps the credential in that same owner-only file instead, and so do installs missing `keyring` and shells that set `LITELLM_CLI_DISABLE_KEYRING` to `1`, `true`, `yes`, or `on`, which turns keychain storage off entirely. `lite login` prints where the credential ended up either way. A credential written into `token.json` in plaintext by an older `lite` still authenticates: the next command that reads it moves it into the keychain and takes it out of the file
+
+A credential from `lite login --pkce` also comes with a refresh token: the CLI renews the key on its next use, `lite auth print-token` hands the current key to other tools, and `lite logout` revokes the refresh token on the proxy. Each renewed key goes to the keychain like the one before it, and so does the refresh token that bought it. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
 
 ```bash
-lite whoami   # show the authenticated user and the token age
-lite logout   # clear the stored token
+lite whoami             # show the authenticated user and the token age
+lite auth print-token   # print the current key, renewing a --pkce credential first when needed
+lite logout             # clear the keychain entry and the token file, and revoke a --pkce refresh token
 ```
+
+`lite logout` clears both stores. When the keychain refuses to release the entry, or cannot be reached to check, it warns you and tells you what to do rather than reporting a clean logout
 
 ## Main Commands
 
@@ -167,14 +178,14 @@ lite logout   # clear the stored token
 
   ```bash
   lite models list
-  lite models add gpt-4 \
+  lite models add {{openai_large}} \
     --param api_key=sk-123 \
     --param max_tokens=2048
   lite models update <model-id> -p temperature=0.7
   lite models delete <model-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/model%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/model%20management)
 
 ### Credentials Management
 
@@ -190,7 +201,7 @@ lite logout   # clear the stored token
   lite credentials delete azure-cred
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/credential%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/credential%20management)
 
 ### Keys Management
 
@@ -200,7 +211,7 @@ lite logout   # clear the stored token
   ```bash
   lite keys list
   lite keys generate \
-    --models=gpt-4 \
+    --models={{openai_large}} \
     --spend=100 \
     --duration=24h \
     --key-alias=my-key
@@ -217,7 +228,7 @@ lite logout   # clear the stored token
     --created-since 2026-01-01
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/key%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/key%20management)
 
 ### User Management
 
@@ -236,7 +247,7 @@ lite logout   # clear the stored token
   lite users delete <user-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/Internal%20User%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
 
 ### Teams Management
 
@@ -251,18 +262,19 @@ lite logout   # clear the stored token
 
   Running `lite teams assign-key` without `--team-id` prompts you to pick a team interactively.
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/team%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/team%20management)
 
 ### Chat Completions
 
-- Ask for chat completions from the proxy server.
+- Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
 - Example:
 
   ```bash
-  lite chat completions gpt-4 -m "user:Hello, how are you?"
+  lite chat {{openai_large}}
+  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
 
 ### General HTTP Requests
 
@@ -272,10 +284,10 @@ lite logout   # clear the stored token
   ```bash
   lite http request \
     POST /chat/completions \
-    --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+    --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
-  [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
+  [All APIs (OpenAPI)](https://docs.litellm.ai/api-reference/#/)
 
 ### Encryption Migration
 
@@ -306,7 +318,7 @@ lite logout   # clear the stored token
 2. **Add a new model:**
 
    ```bash
-   lite models add gpt-4 \
+   lite models add {{openai_large}} \
      --param api_key=sk-123 \
      --param max_tokens=2048
    ```
@@ -323,17 +335,17 @@ lite logout   # clear the stored token
 
    ```bash
    lite keys generate \
-     --models=gpt-4 \
+     --models={{openai_large}} \
      --spend=100 \
      --duration=24h \
      --key-alias=my-key
    ```
 
-5. **Chat completion:**
+5. **Interactive chat:**
 
    ```bash
-   lite chat completions gpt-4 \
-     -m "user:Write a story"
+   lite chat {{openai_large}} \
+     --system "You are a helpful coding assistant"
    ```
 
 6. **Custom HTTP request:**
@@ -341,7 +353,7 @@ lite logout   # clear the stored token
    ```bash
    lite http request \
      POST /chat/completions \
-     --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+     --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
    ```
 
 ## Error Handling

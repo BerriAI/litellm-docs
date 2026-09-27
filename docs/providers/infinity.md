@@ -56,7 +56,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -100,7 +100,7 @@ response = rerank(
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -166,7 +166,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -206,7 +206,7 @@ model_list:
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-embedding",
@@ -248,7 +248,7 @@ print(response.data[0]['embedding'])
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-embedding",
@@ -287,7 +287,7 @@ print(response.data[0].embedding)
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "bge-small",

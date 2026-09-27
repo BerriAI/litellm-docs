@@ -89,7 +89,7 @@ class myCustomGuardrail(CustomGuardrail):
 | `input_type` | `"request"` on the way in, `"response"` on the way out. Lets one class handle both directions. |
 | `logging_obj` | LiteLLM's logging object for the call, if you want to attach your own metadata. |
 
-Every key in `inputs` is optional — you only get the ones this call actually had:
+Every key in `inputs` is optional, so you only get the ones this call actually had:
 
 | Key | What's in it |
 |-----|--------------|
@@ -100,13 +100,13 @@ Every key in `inputs` is optional — you only get the ones this call actually h
 | `structured_messages` | The full messages in OpenAI format, so you can tell a system message from a user message. |
 | `model` | The model this call is routed to. |
 
-**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place — LiteLLM maps them back onto the original request or response.
+**To allow the call, return `inputs`.** To mask, edit `texts` or `tool_calls` in place; LiteLLM maps them back onto the original request or response.
 
 `structured_messages` is the exception: **replace the list with a new one.** LiteLLM only uses it if you hand back a different object, so edits made in place are ignored.
 
-While streaming, you can also set `stream_holdback_chars` — a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
+While streaming, you can also set `stream_holdback_chars`, a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
-:::tip Advanced: Using Individual Event Hooks
+:::tip[Advanced: Using Individual Event Hooks]
 
 If you need more fine-grained control, you can implement individual event hooks instead of (or in addition to) `apply_guardrail`:
 
@@ -130,9 +130,9 @@ In the config below, we point the guardrail to our custom guardrail by setting `
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -144,7 +144,7 @@ guardrails:
       api_base: https://api.myguardrail.com
 ```
 
-:::info Mode Options
+:::info[Mode Options]
 
 `apply_guardrail` runs in all three modes. The mode decides *when* it runs and whether it sees the request or the response.
 
@@ -160,11 +160,13 @@ If you implement the individual event hooks instead, the same three modes call `
 
 :::
 
-:::note Streaming and post_call guardrails
+:::note[Streaming and post_call guardrails]
 
-For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This means `post_call` guardrails on streaming are **audit-only** — they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
+For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This makes `post_call` guardrails on streaming **audit-only**: they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
 
 To filter or block streaming content in real-time, use `async_post_call_streaming_iterator_hook` instead, which processes chunks as they arrive.
+
+Built-in guardrails that implement `apply_guardrail` (for example [Bedrock](./bedrock#streaming)) take the opposite default on streams: LiteLLM buffers every chunk until the assembled response passes moderation, so a block lands before any content reaches the client. Set `streaming_buffer_until_moderated: false` together with `streaming_end_of_stream_only: true` on such a guardrail to get the audit-only behavior described above, with no added time-to-first-token.
 
 :::
 
@@ -229,7 +231,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test it 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Blocked Request" value = "blocked">
@@ -239,9 +241,9 @@ This request will be blocked if it violates your guardrail policy:
 ```shell
 curl -i -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -274,9 +276,9 @@ This request passes the guardrail:
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the weather like today?"}
     ],
@@ -303,9 +305,9 @@ Expect this to mask the word `litellm` before sending the request to the LLM API
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -323,9 +325,9 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -347,9 +349,9 @@ Expect this to fail since `litellm` is in the message content. [This runs the `a
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -380,9 +382,9 @@ Expected response:
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -404,9 +406,9 @@ Expect this to fail since `coffee` will be in the response content. [This runs t
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -437,9 +439,9 @@ Expected response:
 ```shell
 curl -i  -X POST http://localhost:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -458,12 +460,7 @@ curl -i  -X POST http://localhost:4000/v1/chat/completions \
 
 ## ✨ Pass additional parameters to guardrail
 
-:::info
-
-✨ This is an Enterprise only feature [Contact us to get a free trial](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 Use this to pass additional parameters to the guardrail API call. e.g. things like success threshold
 
@@ -508,7 +505,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 2. Pass parameters in your API requests:
 
-LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](quick_start#spec-guardrails-parameter).
+LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter). To attach `extra_body` to a guardrail, send `guardrails` as a list and make the guardrail an object keyed by its `guardrail_name`.
 
 <Tabs>
 <TabItem value="openai" label="OpenAI Python">
@@ -521,13 +518,15 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a short poem"}],
     extra_body={
         "guardrails": [
-            "custom-pre-guard": {
-                "extra_body": {
-                    "success_threshold": 0.9
+            {
+                "custom-pre-guard": {
+                    "extra_body": {
+                        "success_threshold": 0.9
+                    }
                 }
             }
         ]
@@ -542,7 +541,7 @@ response = client.chat.completions.create(
 curl 'http://0.0.0.0:4000/chat/completions' \
     -H 'Content-Type: application/json' \
     -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_large}}",
     "messages": [
         {
             "role": "user",
@@ -550,9 +549,11 @@ curl 'http://0.0.0.0:4000/chat/completions' \
         }
     ],
     "guardrails": [
-        "custom-pre-guard": {
-            "extra_body": {
-                "success_threshold": 0.9
+        {
+            "custom-pre-guard": {
+                "extra_body": {
+                    "success_threshold": 0.9
+                }
             }
         }
     ]

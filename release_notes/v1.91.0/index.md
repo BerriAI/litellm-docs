@@ -88,14 +88,14 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
 
 - **[Fireworks AI](../../docs/providers/fireworks_ai)**
     - Sync chat completions endpoint with the full Fireworks API surface - [PR #30885](https://github.com/BerriAI/litellm/pull/30885)
-- **[Cloudflare](../../docs/providers/cloudflare)**
+- **[Cloudflare](/docs/providers/cloudflare_workers)**
     - Add current Workers AI text-generation models to the cost map - [PR #31051](https://github.com/BerriAI/litellm/pull/31051)
     - Route the native Workers AI provider through the OpenAI-compatible endpoint - [PR #31053](https://github.com/BerriAI/litellm/pull/31053)
 - **[Mistral](../../docs/providers/mistral)**
     - Support Mistral OCR 4 (`mistral-ocr-4-0`) - [PR #31353](https://github.com/BerriAI/litellm/pull/31353)
     - Add `mistral/mistral-ocr-2512` (OCR 3) to the cost map - [PR #31463](https://github.com/BerriAI/litellm/pull/31463)
     - Retarget `mistral-medium-latest` to Medium 3.5 and add date-pinned aliases - [PR #31373](https://github.com/BerriAI/litellm/pull/31373)
-- **[AI/ML](../../docs/providers/aiml_api)**
+- **[AI/ML](/docs/providers/aiml)**
     - Add the `openai/gpt-image-2` image model - [PR #31323](https://github.com/BerriAI/litellm/pull/31323)
 - **[Rerank](../../docs/rerank)**
     - Rerank transformation refresh across ~15 providers (Cohere v1/v2, Voyage, Jina, Vertex, Bedrock, Hugging Face, hosted vLLM, DashScope, DeepInfra, NVIDIA NIM, Fireworks, Watsonx) - [PR #31185](https://github.com/BerriAI/litellm/pull/31185)
@@ -134,7 +134,7 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
     - Thin Rust OCR Python bridge - [PR #31368](https://github.com/BerriAI/litellm/pull/31368)
 - **[Batches](../../docs/batches)**
     - Stream OpenAI to Vertex batch JSONL uploads - [PR #31036](https://github.com/BerriAI/litellm/pull/31036)
-- **[Pass-through](../../docs/pass_through)**
+- **[Pass-through](/docs/pass_through/intro)**
     - Forward all multipart files with repeated field names - [PR #31391](https://github.com/BerriAI/litellm/pull/31391)
     - Schedule spend logging via the durable logging worker - [PR #31485](https://github.com/BerriAI/litellm/pull/31485)
 - **Web Search**
@@ -210,7 +210,7 @@ Exact per-model context windows and prices are in `model_prices_and_context_wind
 
 ### Guardrails
 
-- **[Bedrock Guardrails](../../docs/proxy/guardrails)**
+- **[Bedrock Guardrails](/docs/proxy/guardrails/quick_start)**
     - Select the latest user message by original role in `apply_guardrail` - [PR #30482](https://github.com/BerriAI/litellm/pull/30482)
 - **General**
     - Add a headroom guardrail for message compression - [PR #31407](https://github.com/BerriAI/litellm/pull/31407)

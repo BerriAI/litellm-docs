@@ -2,9 +2,9 @@ import Image from '@theme/IdealImage';
 
 # Manage Routing Groups
 
-Routing groups let you apply different routing strategies to different models in the same router — for example, latency-based routing for `gpt-4o` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
+Routing groups let you apply different routing strategies to different models in the same router, for example latency-based routing for `{{openai_large}}` while cheaper models use simple-shuffle. You can manage them from the LiteLLM dashboard without editing your `proxy_config.yaml`.
 
-For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies).
+For the conceptual overview and full strategy reference, see [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-and-callable-virtual-models).
 
 > Click any screenshot below to open the full Scribe walkthrough.
 
@@ -23,7 +23,7 @@ Click **Add Routing Group**, then fill in:
 - **Group name** — a unique identifier (e.g. `anthropic-latency`). The name `default` is reserved.
 - **Models** — one or more `model_name`s from your model list. Each model may belong to at most one group.
 - **Routing strategy** — the strategy to apply to this group (e.g. `latency-based-routing`, `usage-based-routing-v2`, `simple-shuffle`).
-- **Routing strategy args** *(optional)* — strategy-specific overrides such as `ttl`, `rpm`, or `tpm`.
+- **Routing strategy args** *(optional)*: strategy-specific overrides such as `ttl`, `rpm`, or `tpm`.
 
 Click **Save** to create the group.
 
@@ -31,7 +31,7 @@ Click **Save** to create the group.
 
 ### Edit a Routing Group
 
-Click the group row in the table to open it, then update any field — for example, change the `ttl` under **Routing strategy args** to tune how quickly the strategy reacts to latency changes. Click **Save** to apply.
+Click the group row in the table to open it, then update any field. For example, change the `ttl` under **Routing strategy args** to tune how quickly the strategy reacts to latency changes. Click **Save** to apply.
 
 [![Edit a routing group](../../../static/img/routing-groups/update-rg.png)](https://scribehow.com/viewer/How_To_Configure_Strategy_Arguments_In_Router_Settings__u98H3SRAQKK-qHOa1Tbx9g)
 
@@ -58,7 +58,7 @@ router_settings:
         ttl: 3600
 ```
 
-See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies) for the full schema, multi-group examples, and runtime update behavior.
+See [Routing Groups - Per-Model Strategies](../../routing.md#routing-groups---per-model-strategies-and-callable-virtual-models) for the full schema, multi-group examples, and runtime update behavior.
 
 ## Test a Request
 
@@ -96,13 +96,13 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
 
 Each request emits a log line containing `routing_group=<name> model=<model> strategy=<strategy>`.
 
-**Plain logs** — grep the proxy stdout directly:
+**Plain logs.** Grep the proxy stdout directly:
 
 ```bash
 kubectl logs -n litellm -l app=litellm --tail=200 | grep routing_group=
 ```
 
-**Loki (LogQL)** — extract and reformat the fields for a clean readout:
+**Loki (LogQL).** Extract and reformat the fields for a clean readout:
 
 ```logql
 {namespace="litellm", pod=~"<your-litellm-pod-regex>"} |= "routing_group="
@@ -112,10 +112,10 @@ kubectl logs -n litellm -l app=litellm --tail=200 | grep routing_group=
 
 ![Verify the routing group in logs](../../../static/img/routing-groups/verify-rg.png)
 
-A row like `anthropic-latency claude-sonnet latency-based-routing` confirms the request hit the expected group. If you instead see `default <strategy>`, the model isn't claimed by the group — check the group's **Models** list.
+A row like `anthropic-latency claude-sonnet latency-based-routing` confirms the request hit the expected group. If you instead see `default <strategy>`, the model isn't claimed by the group, so check the group's **Models** list.
 
 ## Notes
 
 - Each `model_name` may belong to **at most one** routing group. Overlap is rejected.
 - The group name `default` is reserved for the implicit fallback group.
-- Updates take effect immediately — per-group state is rebuilt on save.
+- Updates take effect immediately, since per-group state is rebuilt on save.

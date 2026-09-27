@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Gateway Auth Reference
 
-LiteLLM exposes two gateway surfaces that share most authentication and authorization primitives but diverge in a few important places. This page is the side-by-side reference: which header does what, where the two surfaces are symmetric, and where they're not. Each section links out to the dedicated page for the deep dive.
+LiteLLM exposes two gateway surfaces that share most authentication and authorization primitives but diverge in a few important places. This page is the side-by-side reference: which header does what, where the two surfaces are symmetric, and where they're not. Each section links out to the dedicated page for full detail.
 
 | Surface | Endpoints | Dedicated docs |
 |---|---|---|
@@ -32,11 +32,11 @@ Both surfaces accept the same LiteLLM Virtual Key headers and the same identific
 
 ## 2. LiteLLM → Backend (authenticating the gateway to the agent or MCP server)
 
-This is the section where MCP and A2A diverge most. MCP has a first-class `auth_type` field on each server registration. **A2A has no `auth_type` field at all** — the outbound auth mode is inferred from what's present in `litellm_params`.
+This is the section where MCP and A2A diverge most. MCP has a first-class `auth_type` field on each server registration. **A2A has no `auth_type` field at all**; the outbound auth mode is inferred from what's present in `litellm_params`.
 
-### MCP — `auth_type` enum
+### MCP: `auth_type` enum
 
-Nine values. The MCP server's outbound `Authorization` header (or per-request SigV4 signature) is determined by `auth_type`. See [MCP Overview — Add HTTP MCP Server](./mcp#add-http-mcp-server) for the full table.
+Nine values. The MCP server's outbound `Authorization` header (or per-request SigV4 signature) is determined by `auth_type`. See [MCP Overview: Add HTTP MCP Server](./mcp#add-http-mcp-server) for the full table.
 
 | `auth_type` | Mechanism | Dedicated docs |
 |---|---|---|
@@ -44,9 +44,10 @@ Nine values. The MCP server's outbound `Authorization` header (or per-request Si
 | `api_key` / `bearer_token` / `basic` / `authorization` / `token` | Static header, sent verbatim per call | [MCP Overview](./mcp) |
 | `oauth2` | PKCE (interactive) or M2M `client_credentials`. Discriminated by `oauth2_flow`. | [MCP OAuth](./mcp_oauth) |
 | `oauth2_token_exchange` | RFC 8693 On-Behalf-Of (OBO) — exchange the caller's bearer token for a scoped MCP token | [MCP OBO Auth](./mcp_obo_auth) |
+| `oauth2_id_jag` | Identity Assertion Authorization Grant: two-leg exchange of the user's identity token (inbound or captured at SSO login) for an MCP access token | [MCP ID-JAG Auth](./mcp_id_jag) |
 | `aws_sigv4` | Per-request SigV4 signature using a dedicated MCP-side credential chain | [MCP AWS SigV4](./mcp_aws_sigv4) |
 
-### A2A — auth mode inferred from `litellm_params`
+### A2A: auth mode inferred from `litellm_params`
 
 There is no `auth_type` field on an agent. The provider handler picks the auth mechanism from the contents of `litellm_params`:
 
@@ -56,17 +57,17 @@ There is no `auth_type` field on an agent. The provider handler picks the auth m
 | **SigV4** (AgentCore only) | `litellm_params.api_key` is unset | Per-request SigV4 via the full AWS credential chain. See [Bedrock AgentCore — A2A Gateway Authentication](./providers/bedrock_agentcore#a2a-gateway-authentication). |
 | **Provider-native** | `litellm_params.custom_llm_provider` matches a non-Bedrock provider (Vertex AI Agent Engine, LangGraph, Azure AI Foundry, Pydantic AI) | The provider's normal auth path |
 
-The dual JWT-vs-SigV4 mode is specific to AgentCore. Other A2A providers (Vertex, LangGraph, Azure Foundry) use the provider's own credential conventions — see the relevant provider page under [Providers](./providers).
+The dual JWT-vs-SigV4 mode is specific to AgentCore. Other A2A providers (Vertex, LangGraph, Azure Foundry) use the provider's own credential conventions. See the relevant provider page under [Providers](./providers).
 
 ### Zero-trust add-on (MCP only)
 
-If the MCP server needs to **cryptographically verify** the request came through LiteLLM, layer the [MCP JWT Signer](./mcp_zero_trust) guardrail on top. It signs every outbound tool call with a short-lived RS256 JWT and publishes a JWKS endpoint the MCP server can verify against. This is a guardrail (`guardrail: mcp_jwt_signer`, `mode: pre_mcp_call`), not an `auth_type` — it composes with any `auth_type`.
+If the MCP server needs to **cryptographically verify** the request came through LiteLLM, layer the [MCP JWT Signer](./mcp_zero_trust) guardrail on top. It signs every outbound tool call with a short-lived RS256 JWT and publishes a JWKS endpoint the MCP server can verify against. This is a guardrail (`guardrail: mcp_jwt_signer`, `mode: pre_mcp_call`) rather than an `auth_type`, and it composes with any `auth_type`.
 
 ---
 
 ## 3. Per-user header passthrough
 
-Both surfaces let clients forward credentials destined for a specific backend server/agent without admin pre-configuration. The conventions look symmetric but parse differently — be precise when copy-pasting.
+Both surfaces let clients forward credentials destined for a specific backend server/agent without admin pre-configuration. The conventions look symmetric but parse differently, so be precise when copy-pasting.
 
 | Surface | Prefix | Parse rule | Match against | Example |
 |---|---|---|---|---|
@@ -81,16 +82,16 @@ Both surfaces also support admin-controlled alternatives that compose with the u
 | `extra_headers: [name, name, ...]` | ✓ | ✓ | Admin-allowlist of client header names to forward verbatim. |
 | `x-<surface>-<id>-<header>` convention | ✓ (`x-mcp-`) | ✓ (`x-a2a-`) | Client-driven, no admin config needed. |
 
-See [MCP Overview — Forwarding Custom Headers](./mcp#forwarding-custom-headers-to-mcp-servers) and [A2A Agent Authentication Headers](./a2a_agent_headers) for the full mechanics.
+See [MCP Overview: Forwarding Custom Headers](./mcp#forwarding-custom-headers-to-mcp-servers) and [A2A Agent Authentication Headers](./a2a_agent_headers) for the full mechanics.
 
 ---
 
-## 4. Authorization — RBAC and access groups
+## 4. Authorization: RBAC and access groups
 
 Both surfaces use the `object_permission` model with intersection-style resolution, but at different depths today. MCP resolves across six levels; A2A across two. The detailed flowcharts and tables live on the dedicated pages:
 
 - [MCP Permission Hierarchy](./mcp_control#permission-hierarchy)
-- [A2A Agent Permission Management — How It Works](./a2a_agent_permissions#how-it-works)
+- [A2A Agent Permission Management: How It Works](./a2a_agent_permissions#how-it-works)
 
 | Level | MCP field | A2A field |
 |---|---|---|
@@ -121,7 +122,7 @@ Both surfaces use the `object_permission` model with intersection-style resoluti
 | `require_trace_id_on_calls_to_agent: true` | Per-agent, on the agent's `litellm_params` | Reject inbound `/a2a/{agent_id}` calls missing `x-litellm-trace-id` (or `x-litellm-session-id` fallback) with **HTTP 400**. See [A2A Overview — Trace ID enforcement](./a2a#trace-id-enforcement-optional-per-agent). |
 | `require_trace_id_on_calls_by_agent: true` | Per-agent, on the agent's `litellm_params` | Reverse direction — when a key **owned by** that agent makes outbound calls, require a trace ID on those. |
 
-**Sub-agent identity propagation** — when LiteLLM dispatches a downstream call as part of an A2A invocation, it forwards `X-LiteLLM-Trace-Id` and `X-LiteLLM-Agent-Id` to maintain trace continuity and spend attribution. The original virtual key and end-user identity are **not** auto-forwarded. Use `extra_headers` or the `x-a2a-{agent_name_or_id}-{header}` convention to thread identity explicitly. See [A2A Overview — Sub-agent identity propagation](./a2a#sub-agent-identity-propagation).
+**Sub-agent identity propagation.** When LiteLLM dispatches a downstream call as part of an A2A invocation, it forwards `X-LiteLLM-Trace-Id` and `X-LiteLLM-Agent-Id` to maintain trace continuity and spend attribution. The original virtual key and end-user identity are **not** auto-forwarded. Use `extra_headers` or the `x-a2a-{agent_name_or_id}-{header}` convention to thread identity explicitly. See [A2A Overview: Sub-agent identity propagation](./a2a#sub-agent-identity-propagation).
 
 ---
 
@@ -132,11 +133,11 @@ Both surfaces use the `object_permission` model with intersection-style resoluti
 | Pre-call input guardrails (Presidio, Bedrock, Lakera, Aporia, etc.) | `mode: pre_mcp_call` | Standard chat-completion guardrails apply to the underlying LLM calls the agent makes |
 | During-call intervention | `mode: during_mcp_call` | — |
 | Zero-trust JWT signing | [`mcp_jwt_signer` guardrail](./mcp_zero_trust) | — (not applicable to A2A today) |
-| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](./proxy/guardrails) apply via the agent's underlying model calls |
+| Documentation | [MCP Guardrails](./mcp_guardrail), [MCP Zero Trust](./mcp_zero_trust) | Standard [guardrails docs](/docs/proxy/guardrails/quick_start) apply via the agent's underlying model calls |
 
 ---
 
-## 7. Cheatsheet — what header does what
+## 7. Cheatsheet: what header does what
 
 For copy-paste, the high-frequency request headers across both surfaces:
 

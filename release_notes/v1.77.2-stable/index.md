@@ -83,7 +83,7 @@ pip install litellm==1.77.2.post1
 
 - **[Azure OpenAI](../../docs/providers/azure)**
     - Fixed extra_body injection causing payload rejection in image generation - [PR #14475](https://github.com/BerriAI/litellm/pull/14475)
-- **[LM Studio](../../docs/providers/lm-studio)**
+- **[LM Studio](/docs/providers/lm_studio)**
     - Resolved illegal Bearer header value issue - [PR #14512](https://github.com/BerriAI/litellm/pull/14512)
 
 ---
@@ -103,7 +103,7 @@ pip install litellm==1.77.2.post1
 
 #### Features
 
-- **[Qwen API Tiered Pricing](../../docs/providers/dashscope)** - Added comprehensive tiered cost tracking for Dashscope/Qwen models - [PR #14471](https://github.com/BerriAI/litellm/pull/14471), [PR #14479](https://github.com/BerriAI/litellm/pull/14479)
+- **[Qwen API Tiered Pricing](../../docs/providers/dashscope)** - Added full tiered cost tracking for Dashscope/Qwen models - [PR #14471](https://github.com/BerriAI/litellm/pull/14471), [PR #14479](https://github.com/BerriAI/litellm/pull/14479)
 
 #### Bug Fixes
 

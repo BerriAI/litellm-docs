@@ -5,7 +5,7 @@
 | Cost Tracking | ✅ |
 | Logging | ✅ (Basic Logging not supported) |
 | Load Balancing | ✅ |
-| Supported Providers | `mistral`, `azure_ai`, `vertex_ai` |
+| Supported Providers | `mistral`, `azure_ai`, `vertex_ai`, `cohere` |
 
 :::tip
 
@@ -63,7 +63,7 @@ asyncio.run(test_async_ocr())
 
 ### Using Local Files
 
-LiteLLM can read local files directly — no manual base64 encoding needed:
+LiteLLM can read local files directly, with no manual base64 encoding:
 
 ```python
 from litellm import ocr
@@ -101,11 +101,11 @@ response = ocr(
 ```
 
 The `file` field accepts:
-- **File path** (`str` or `pathlib.Path`) — LiteLLM reads the file and detects the MIME type from the extension
-- **File object** (binary file-like object) — e.g. `open("doc.pdf", "rb")`
-- **Raw bytes** (`bytes`) — use `mime_type` to specify the content type
+- **File path** (`str` or `pathlib.Path`): LiteLLM reads the file and detects the MIME type from the extension
+- **File object** (binary file-like object): e.g. `open("doc.pdf", "rb")`
+- **Raw bytes** (`bytes`): use `mime_type` to specify the content type
 
-LiteLLM automatically converts file inputs to base64 data URIs internally, so all providers work seamlessly.
+LiteLLM automatically converts file inputs to base64 data URIs internally, so all providers work without extra handling.
 
 ### Using Base64 Encoded Documents
 
@@ -167,11 +167,11 @@ litellm --config /path/to/config.yaml
 # RUNNING on http://0.0.0.0:4000
 ```
 
-**Test request — JSON body**
+**Test request: JSON body**
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "mistral-ocr",
@@ -182,13 +182,13 @@ curl http://0.0.0.0:4000/v1/ocr \
   }'
 ```
 
-**Test request — multipart file upload**
+**Test request: multipart file upload**
 
 Upload a file directly using multipart form data. No need to base64-encode the file yourself.
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@/path/to/document.pdf"
 ```
@@ -197,7 +197,7 @@ You can also pass optional parameters as additional form fields:
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@screenshot.png" \
   -F 'pages=[0,1,2]' \
@@ -279,10 +279,10 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 {"type": "file", "file": pdf_bytes, "mime_type": "application/pdf"}
 ```
 
-**For file uploads (Proxy — multipart form):**
+**For file uploads (Proxy, multipart form):**
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@document.pdf"
 ```
@@ -340,11 +340,16 @@ The response follows Mistral's OCR format with the following structure:
 | `object` | string | Always `"ocr"` for OCR responses |
 
 
+## **Batch OCR**
+
+Mistral OCR also runs through the [Batches API](./batches): upload a JSONL file whose lines target `/v1/ocr`, create a batch with `"endpoint": "/v1/ocr"`, and download the output file once it completes. Pages processed in a batch are billed at the model's `ocr_cost_per_page_batches` rate. See [Mistral AI Batch API](./providers/mistral_batches) for the full flow and the cost keys.
+
 ## **Supported Providers**
 
 | Provider    | Link to Usage      |
 |-------------|--------------------|
-| Mistral AI  |   [Usage](#quick-start)                 |
-| Azure AI    |   [Usage](../docs/providers/azure_ocr)                 |
+| Mistral AI  |   [Usage](#quick-start), [Batch OCR](./providers/mistral_batches)                 |
+| Azure AI (Mistral, Cohere Parse) |   [Usage](../docs/providers/azure_ocr)                 |
 | Vertex AI   |   [Usage](../docs/providers/vertex_ocr)                 |
+| Cohere Parse |   [Usage](../docs/providers/cohere#parse-ocr)                 |
 

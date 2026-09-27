@@ -13,9 +13,9 @@ Define your guardrails under the `guardrails` section:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -48,7 +48,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 4. Test Request
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Successful Call" value="allowed">
@@ -56,9 +56,9 @@ litellm --config config.yaml --detailed_debug
 ```shell showLineNumbers title="Successful Request"
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the capital of France?"}
     ],
@@ -77,9 +77,9 @@ Content passes all policy checks and is allowed through.
 ```shell showLineNumbers title="Blocked Request"
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Content that violates policy"}
     ],

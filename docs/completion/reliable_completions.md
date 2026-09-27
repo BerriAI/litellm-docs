@@ -25,7 +25,7 @@ messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
 response = completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=messages,
             num_retries=2
         )
@@ -40,7 +40,10 @@ response = completion(
 :::
 
 ### Context Window Fallbacks (SDK)
-```python 
+
+The ids below are illustrative and kept for their context window sizes: a 4k model falling back to its 16k variant.
+
+```python keep-model-ids
 from litellm import completion
 
 fallback_dict = {"gpt-3.5-turbo": "gpt-3.5-turbo-16k"}
@@ -56,12 +59,12 @@ LLM APIs can be unstable, completion() with fallbacks ensures you'll always get 
 #### Usage 
 To use fallback models with `completion()`, specify a list of models in the `fallbacks` parameter. 
 
-The `fallbacks` list should include the primary model you want to use, followed by additional models that can be used as backups in case the primary model fails to provide a response.
+The `fallbacks` list holds the backup models. LiteLLM tries the primary model passed as `model` first and prepends it to the list itself, so you do not need to repeat it in `fallbacks`.
 
 #### switch models 
 ```python
 response = completion(model="bad-model", messages=messages, 
-    fallbacks=["gpt-3.5-turbo" "command-nightly"])
+    fallbacks=["{{openai_small}}", "command-nightly"])
 ```
 
 #### switch api keys/bases (E.g. azure deployment)
@@ -69,11 +72,11 @@ Switch between different keys for the same azure deployment, or use another depl
 
 ```python
 api_key="bad-key"
-response = completion(model="azure/gpt-4", messages=messages, api_key=api_key,
+response = completion(model="azure/{{openai_large}}", messages=messages, api_key=api_key,
     fallbacks=[{"api_key": "good-key-1"}, {"api_key": "good-key-2", "api_base": "good-api-base-2"}])
 ```
 
-[Check out this section for implementation details](#fallbacks-1)
+[Check out this section for implementation details](/docs/completion/reliable_completions#fallbacks)
 
 ## Implementation Details (SDK)
 
@@ -84,12 +87,12 @@ Completion with 'bad-model': got exception Unable to map your input to a model. 
 
 
 
-completion call gpt-3.5-turbo
+completion call {{openai_small}}
 {
   "id": "chatcmpl-7qTmVRuO3m3gIBg4aTmAumV1TmQhB",
   "object": "chat.completion",
   "created": 1692741891,
-  "model": "gpt-3.5-turbo-0613",
+  "model": "{{openai_small}}",
   "choices": [
     {
       "index": 0,
@@ -111,92 +114,10 @@ completion call gpt-3.5-turbo
 
 #### How does fallbacks work
 
-When you pass `fallbacks` to `completion`, it makes the first `completion` call using the primary model specified as `model` in `completion(model=model)`. If the primary model fails or encounters an error, it automatically tries the `fallbacks` models in the specified order. This ensures a response even if the primary model is unavailable.
+When you pass `fallbacks` to `completion`, LiteLLM builds the attempt list `[model] + fallbacks` and calls each entry once, in order. The first response that comes back is returned; a failing entry is logged and the next one is tried. There is no time budget, no repeated loop over the list and no cooldown: once every entry has failed, `completion` raises an exception carrying the last error, suffixed with `All fallback attempts failed`.
 
+A fallback entry can be a model name string or a dict of completion kwargs. A dict entry is merged into the call (for example a different `api_key` or `api_base`) and uses the primary `model` unless the dict sets its own `model` key.
 
-#### Key components of Model Fallbacks implementation:
-* Looping through `fallbacks`
-* Cool-Downs for rate-limited models
+The successful response carries the `x-litellm-attempted-fallbacks` header with the number of fallbacks that were attempted before it.
 
-#### Looping through `fallbacks`
-Allow `45seconds` for each request. In the 45s this function tries calling the primary model set as `model`. If model fails it loops through the backup `fallbacks` models and attempts to get a response in the allocated `45s` time set here: 
-```python
-while response == None and time.time() - start_time < 45:
-        for model in fallbacks:
-```
-
-#### Cool-Downs for rate-limited models
-If a model API call leads to an error - allow it to cooldown for `60s`
-```python
-except Exception as e:
-  print(f"got exception {e} for model {model}")
-  rate_limited_models.add(model)
-  model_expiration_times[model] = (
-      time.time() + 60
-  )  # cool down this selected model
-  pass
-```
-
-Before making an LLM API call we check if the selected model is in `rate_limited_models`, if so skip making the API call
-```python
-if (
-  model in rate_limited_models
-):  # check if model is currently cooling down
-  if (
-      model_expiration_times.get(model)
-      and time.time() >= model_expiration_times[model]
-  ):
-      rate_limited_models.remove(
-          model
-      )  # check if it's been 60s of cool down and remove model
-  else:
-      continue  # skip model
-
-```
-
-#### Full code of completion with fallbacks()
-```python
-
-    response = None
-    rate_limited_models = set()
-    model_expiration_times = {}
-    start_time = time.time()
-    fallbacks = [kwargs["model"]] + kwargs["fallbacks"]
-    del kwargs["fallbacks"]  # remove fallbacks so it's not recursive
-
-    while response == None and time.time() - start_time < 45:
-        for model in fallbacks:
-            # loop thru all models
-            try:
-                if (
-                    model in rate_limited_models
-                ):  # check if model is currently cooling down
-                    if (
-                        model_expiration_times.get(model)
-                        and time.time() >= model_expiration_times[model]
-                    ):
-                        rate_limited_models.remove(
-                            model
-                        )  # check if it's been 60s of cool down and remove model
-                    else:
-                        continue  # skip model
-
-                # delete model from kwargs if it exists
-                if kwargs.get("model"):
-                    del kwargs["model"]
-
-                print("making completion call", model)
-                response = litellm.completion(**kwargs, model=model)
-
-                if response != None:
-                    return response
-
-            except Exception as e:
-                print(f"got exception {e} for model {model}")
-                rate_limited_models.add(model)
-                model_expiration_times[model] = (
-                    time.time() + 60
-                )  # cool down this selected model
-                pass
-    return response
-```
+If you need cooldowns for failing deployments or retries with backoff, use the [Router](../routing.md), which tracks deployment health and cooldown periods; see the [proxy reliability docs](../proxy/reliability.md).

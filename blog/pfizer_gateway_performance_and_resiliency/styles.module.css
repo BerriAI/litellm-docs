@@ -1,0 +1,321 @@
+/* The accent the source document used for the deck line and the primary
+   button. The site's --ifm-color-primary is still the stock Docusaurus green,
+   so it is not the right token here; this is the blue the approved page used,
+   lightened for the dark theme where the original had none. */
+:global(:root) {
+  --pfizer-accent: #0000c9;
+  --pfizer-btn-bg: #0000c9;
+  /* The numbered step circle. Infima's --ifm-background-color is not set on
+     this site in light mode, so both halves are pinned per theme. */
+  --pfizer-step-bg: #1c1e21;
+  --pfizer-step-fg: #fff;
+}
+
+:global(html[data-theme='dark']) {
+  /* Lighter for the deck, where it is text on the dark ground. The button
+     keeps a saturated fill so white label text stays legible on it; #443afd
+     is the brand violet the source document defined. */
+  --pfizer-accent: #7a70ff;
+  --pfizer-btn-bg: #443afd;
+  --pfizer-step-bg: #e3e3e3;
+  --pfizer-step-fg: #1b1b1d;
+}
+
+.deck {
+  color: var(--pfizer-accent);
+  font-size: clamp(20px, 2.8vw, 28px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+}
+
+/* Stat and before/after cards, carried over from the co-published HTML.
+   Colours come from Infima tokens so the cards follow the site's light and
+   dark themes instead of the fixed light palette the standalone page used. */
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 24px 0;
+  padding: 0;
+}
+
+.card {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.num {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ifm-font-color-base);
+}
+
+.label {
+  font-size: 13px;
+  color: var(--ifm-color-emphasis-700);
+  margin-top: 8px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.beforeafter {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 4px;
+}
+
+.baLabel {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 6px;
+}
+
+.baNum {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ifm-font-color-base);
+  line-height: 1.1;
+}
+
+.baSub {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.4;
+}
+
+.baArrow {
+  font-size: 20px;
+  color: var(--ifm-color-emphasis-700);
+  text-align: center;
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats,
+  .beforeafter {
+    grid-template-columns: 1fr;
+  }
+  .baArrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* The two-column card grids the HTML used for the additional issues, the CI
+   gates, the instrumentation pair and the roadmap. All four shared one rule
+   set in the original, so they share one here. */
+
+.cardGrid {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cardGrid > li {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
+  margin: 0;
+}
+
+.cardGrid > li:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cardLabel {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--ifm-font-color-base);
+}
+
+.cardBody {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The remaining type and layout treatments from the co-published HTML:
+   the numbered steps, the section eyebrow, the lede, the pull quotes, the
+   signature line, and the closing card. */
+
+.steps {
+  list-style: none;
+  counter-reset: s;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding: 0 0 16px 34px;
+  margin: 0;
+}
+
+.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pfizer-step-bg);
+  color: var(--pfizer-step-fg);
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The section eyebrow sits tight above its own heading and well clear of the
+   section before it, so it reads as belonging to what follows. custom.css sets
+   blog paragraph and h2 margins at `.blog-wrapper article .markdown p` and
+   `... h2`, which no selector available here outranks, so the two margins that
+   close the gap are forced. */
+:global(.markdown) .kicker {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+  margin: 48px 0 8px !important;
+}
+
+:global(.markdown) .kicker + h2 {
+  margin-top: 0 !important;
+}
+
+/* The rule the source document drew under the standfirst, where the byline
+   used to sit. It marks the end of the opening and the start of the story. */
+.introRule {
+  border: 0;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+  margin: 24px 0 0;
+  background: none;
+  height: 0;
+}
+
+.lede {
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.pullquote {
+  border-left: 3px solid var(--ifm-color-emphasis-300);
+  padding: 2px 0 2px 18px;
+  margin: 24px 0;
+}
+
+.pullquote p {
+  font-size: 18px;
+  line-height: 1.55;
+  font-style: italic;
+  margin: 0;
+  color: var(--ifm-font-color-base);
+}
+
+.pullquote cite {
+  display: block;
+  margin-top: 10px;
+  font-style: normal;
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.signature {
+  font-size: 19px;
+  line-height: 1.5;
+  font-weight: 700;
+  margin: 16px 0 0;
+  color: var(--ifm-font-color-base);
+}
+
+.closecard {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding-top: 24px;
+  margin-top: 8px;
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.btn {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+/* The blog theme colours every link inside .markdown, and its dark-mode rule
+   sits at a specificity no practical selector here beats. These are buttons,
+   not links, so the label colour is forced rather than chased. */
+.btnRow a.btn.btnPrimary,
+.btnRow a.btn.btnPrimary:hover,
+.btnRow a.btn.btnPrimary:visited {
+  background: var(--pfizer-btn-bg);
+  color: #fff !important;
+  border-color: var(--pfizer-btn-bg);
+}
+
+.btnRow a.btn.btnSecondary,
+.btnRow a.btn.btnSecondary:hover,
+.btnRow a.btn.btnSecondary:visited {
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base) !important;
+}

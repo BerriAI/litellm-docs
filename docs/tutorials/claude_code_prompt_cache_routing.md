@@ -13,21 +13,21 @@ router_settings:
 
 model_list:
 - litellm_params:
-    model: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    model: us.anthropic.{{anthropic}}
     aws_profile_name: account-1
     aws_region_name: us-west-2
   model_info:
     litellm_provider: bedrock
-  model_name: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+  model_name: us.anthropic.{{anthropic}}
 - litellm_params:
-    model: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    model: us.anthropic.{{anthropic}}
     aws_profile_name: account-2
     aws_region_name: us-west-2
   model_info:
     litellm_provider: bedrock
-  model_name: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+  model_name: us.anthropic.{{anthropic}}
 ```
-2. Utilize Claude Code:
+2. Run Claude Code:
    1. Launch Claude Code, which will do a warm-up API call that tries to cache its warm-up prompt and its system prompt.
    2. Wait a few seconds, then quit Claude Code and re-open it.
    3. You'll notice that the warm-up API call successfully gets a cache hit (if using Claude Code in an IDE like VS Code, ensure that you don't do anything between step 2.1 and 2.2 here, otherwise there may not be a cache hit): 

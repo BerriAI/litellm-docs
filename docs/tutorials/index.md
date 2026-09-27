@@ -5,25 +5,9 @@ sidebar_label: Overview
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
-**Tutorials** are step-by-step walkthroughs for integrating LiteLLM with external tools, frameworks, and services — or building complete end-to-end workflows.
+**Tutorials** are step-by-step walkthroughs for integrating LiteLLM with external tools, frameworks, and services, or for building complete end-to-end workflows.
 
 > Need help choosing the right path before you start? See [Learn →](/docs/learn)
-
----
-
-## Getting Started
-
-<NavigationCards
-columns={2}
-items={[
-  {
-    icon: "⚡",
-    title: "Getting Started",
-    description: "Installation, playground, text completion, and mock completions.",
-    to: "/docs/tutorials/getting_started",
-  },
-]}
-/>
 
 ---
 
@@ -47,7 +31,7 @@ items={[
   {
     icon: "🐍",
     title: "Python SDK",
-    description: "Gradio, fallbacks, provider-specific params — no proxy required.",
+    description: "Gradio, fallbacks, provider-specific params. No proxy required.",
     to: "/docs/tutorials/python_sdk",
   },
   {

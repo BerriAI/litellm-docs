@@ -29,7 +29,7 @@ In v1 a guardrail span is a child of the `litellm_request` span. In v2 it is a s
 
 ### The inference span name and kind
 
-v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat gpt-4o`, with span kind `CLIENT`.
+v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat {{openai_large}}`, with span kind `CLIENT`.
 
 ### Vendor selection
 
@@ -37,7 +37,7 @@ v1 picks a vendor attribute flavor from the callback name through a branch in it
 
 ### Identity stamping
 
-v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](./opentelemetry_v2#identity-baggage).
+v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](/docs/observability/opentelemetry_v2).
 
 ### Success status
 

@@ -62,7 +62,7 @@ import base64
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 
@@ -160,7 +160,7 @@ import base64
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 
@@ -216,8 +216,8 @@ Use `litellm.supports_audio_input(model="")` -> returns `True` if model can acce
 assert litellm.supports_audio_output(model="gpt-4o-audio-preview") == True
 assert litellm.supports_audio_input(model="gpt-4o-audio-preview") == True
 
-assert litellm.supports_audio_output(model="gpt-3.5-turbo") == False
-assert litellm.supports_audio_input(model="gpt-3.5-turbo") == False
+assert litellm.supports_audio_output(model="{{openai_small}}") == False
+assert litellm.supports_audio_input(model="{{openai_small}}") == False
 ```
 </TabItem>
 
@@ -254,7 +254,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -269,7 +269,7 @@ Expected Response
       "max_output_tokens": 16384,
       "mode": "chat",
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     },
     {
       "model_group": "llava-hf",
@@ -278,7 +278,7 @@ Expected Response
       "max_output_tokens": null,
       "mode": null,
       "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true, # 👈 supports_audio_input is true
+      "supports_audio_input": true # 👈 supports_audio_input is true
     }
   ]
 }

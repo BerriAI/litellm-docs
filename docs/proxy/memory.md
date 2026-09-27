@@ -14,7 +14,7 @@ Store user preferences and feedback so your LLM remembers them across sessions. 
 
 ```shell
 curl -X POST "http://localhost:4000/v1/memory" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "key": "user:preferences",
@@ -31,7 +31,7 @@ import httpx
 
 client = httpx.Client(
     base_url="http://localhost:4000",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
 )
 
 client.post("/v1/memory", json={
@@ -48,14 +48,14 @@ client.post("/v1/memory", json={
 
 ```shell
 curl "http://localhost:4000/v1/memory/user:preferences" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Update
 
 ```shell
 curl -X PUT "http://localhost:4000/v1/memory/user:preferences" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"value": "Prefers concise responses. Timezone: EST."}'
 ```
@@ -65,18 +65,18 @@ curl -X PUT "http://localhost:4000/v1/memory/user:preferences" \
 ```shell
 # All entries
 curl "http://localhost:4000/v1/memory" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 
 # By prefix
 curl "http://localhost:4000/v1/memory?key_prefix=user:" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Delete
 
 ```shell
 curl -X DELETE "http://localhost:4000/v1/memory/user:preferences" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## Access Control
@@ -109,7 +109,7 @@ Partition memory by Slack workspace and user so each person's preferences are is
 import httpx
 
 LITELLM_BASE = "http://localhost:4000"
-LITELLM_KEY = "sk-1234"
+LITELLM_KEY = "sk-<your-litellm-api-key>"
 
 def memory_key(team_id: str, user_id: str) -> str:
     return f"slack:{team_id}:{user_id}"
@@ -163,7 +163,7 @@ Follow these unless the current message contradicts them."""},
 
 ```shell
 curl "http://localhost:4000/v1/memory?key_prefix=slack:T024BE7LD:" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## Metadata
