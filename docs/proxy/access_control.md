@@ -6,7 +6,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 
 ### Video Walkthrough
 
-<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameBorder="0" allowFullScreen></iframe>
 
 <TenancyDiagram />
 
@@ -134,7 +134,7 @@ An internal user can create API keys (when allowed by team-specific permissions)
 
 ### Internal User Viewer - Read-Only Access
 
-:::warning DEPRECATED
+:::warning[DEPRECATED]
 This role is deprecated in favor of team/org specific roles. Use `org_admin` or `team_admin` roles for better granular control over user permissions within organizations and teams.
 :::
 
@@ -200,13 +200,13 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 - Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`); only a proxy admin can do this
 - Add/remove global proxy models to their team
 
-:::info Team budget raises
+:::info[Team budget raises]
 On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or clearing the cap) is reserved for proxy admins so a team admin cannot grow spend authority on their own. Org-scoped teams must also stay within the organization budget.
 :::
 
 **Who should be a team admin:** Team leads who need to manage their team's API access without bothering IT.
 
-:::info How to create a team admin
+:::info[How to create a team admin]
 
 You need to be a LiteLLM Enterprise user to assign team admins. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 
@@ -364,7 +364,7 @@ Any user with role=`proxy_admin` can create a new organization
 
 **Usage**
 
-[**API Reference for /organization/new**](https://litellm-api.up.railway.app/#/organization%20management/new_organization_organization_new_post)
+[**API Reference for /organization/new**](https://docs.litellm.ai/api-reference/#/organization%20management/new_organization_organization_new_post)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/organization/new' \

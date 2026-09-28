@@ -47,7 +47,7 @@ UI_PASSWORD=langchain        # password to sign in on UI
 
 On accessing the LiteLLM UI, you will be prompted to enter your username, password
 
-:::warning Environment credentials are for bootstrapping only
+:::warning[Environment credentials are for bootstrapping only]
 This login path stores a permanent, shared, cleartext admin credential in your environment, cannot be rotated per person, and leaves no way to tell which admin did what. Once you are signed in, follow the steps below to move to per-user accounts and disable it. Until you do, the dashboard shows a warning banner to every admin.
 :::
 
@@ -124,7 +124,7 @@ For detailed information on model management, see [Model Management](./model_man
 
 For information on sharing models and agents, see [AI Hub](./ai_hub.md).
 
-:::tip Sync Model Pricing Data
+:::tip[Sync Model Pricing Data]
 [Sync model pricing data from GitHub](./sync_models_github.md) to keep your model cost information current.
 :::
 

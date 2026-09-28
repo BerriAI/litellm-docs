@@ -27,7 +27,7 @@ Use this when you already know which tool to run. For LLM-driven tool use, see [
 | `GET` | `/mcp-rest/tools/list` | List tools (all servers, or one server) |
 | `POST` | `/mcp-rest/tools/call` | Execute a tool |
 
-These routes are separate from the JSON-RPC MCP transport at `/mcp` or `/{server_name}/mcp` used by Claude Desktop and Cursor.
+These routes are separate from the JSON-RPC MCP transport at `/mcp` or `/{server_name}/mcp` used by Claude Desktop and Cursor. For a full endpoint decision matrix, see the [MCP Configuration Reference](./mcp_config_reference).
 
 ---
 

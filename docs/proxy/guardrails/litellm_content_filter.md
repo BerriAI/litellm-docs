@@ -567,7 +567,7 @@ Reference any category below by name; no `category_file:` is required
 | `claims_prior_auth_gaming` | Prior authorization gaming attempts |
 | `claims_system_override` | Claims system override / role impersonation attempts |
 
-:::info Bias Detection Considerations
+:::info[Bias Detection Considerations]
 
 Bias detection is **complex and context-dependent**. Rule-based systems catch explicit discriminatory language but may generate false positives on legitimate discussions. Start with **high severity thresholds** and test thoroughly. For mission-critical bias detection, consider combining with AI-based guardrails (e.g., HiddenLayer, Lakera).
 

@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use Bedrock's Rerank API in the Cohere `/rerank` format.
 
-:::info Cost Tracking
+:::info[Cost Tracking]
 
 ✅ **Cost tracking is supported** for Bedrock Rerank API calls.
 

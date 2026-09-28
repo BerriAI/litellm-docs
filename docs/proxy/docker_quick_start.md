@@ -41,7 +41,7 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 </TabItem>
 </Tabs>
 
-:::warning What the two keys do
+:::warning[What the two keys do]
 Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
 
 `LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. It must start with `sk-`.
@@ -65,7 +65,7 @@ Click **Test Connect** to verify the key against the provider, then **Add Model*
 
 <Image img={require('../../img/ui_quickstart_models_list.png')} alt="All Models list showing the newly added model with cost data" />
 
-:::tip Keep provider keys out of the UI
+:::tip[Keep provider keys out of the UI]
 If you prefer to manage provider keys as environment variables, download the compose file, add them to the `litellm` service (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`), and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
 :::
 
@@ -197,7 +197,7 @@ docker run \
 
 Requests authenticate with the master key. See the [full config reference](./configs.md) for everything the file supports.
 
-:::warning Budgets are not enforced without a database
+:::warning[Budgets are not enforced without a database]
 
 `litellm_settings.max_budget` is not a spend cap on this path. Loading the proxy's global spend requires a database client, so without one the running total stays unknown and the global budget check never fires; a proxy configured with `max_budget: 100` keeps serving requests past $100 with no per-request error and no budget alert. The proxy does log a one-time warning at startup when a budget is configured with no database connected, and that startup line is the only signal you get
 

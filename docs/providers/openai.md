@@ -29,7 +29,7 @@ response = completion(
 )
 ```
 
-:::info Metadata passthrough (preview)
+:::info[Metadata passthrough (preview)]
 When `litellm.enable_preview_features = True`, LiteLLM forwards only the values inside `metadata` to OpenAI.
 
 ```python
@@ -824,7 +824,7 @@ LiteLLM offers a chat completion to Responses API bridge. This lets you use the 
 
 This is useful when you want to use [Responses API](https://platform.openai.com/docs/api-reference/responses) specific features (like built-in tools, web search preview, or code interpreter).
 
-:::tip gpt-5.4+ + reasoning_effort + function tools
+:::tip[gpt-5.4+ + reasoning_effort + function tools]
 
 LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API.
 

@@ -15,7 +15,7 @@ The OpenAI Agents SDK provides a high-level interface for building AI agents. By
 - Switch easily between models from different providers
 - Connect to a LiteLLM proxy for centralized model management
 
-:::tip Built-in LiteLLM Extension
+:::tip[Built-in LiteLLM Extension]
 
 The OpenAI Agents SDK includes an official LiteLLM extension (`LitellmModel`) that works without a proxy. If you don't need centralized proxy features (cost tracking, rate limiting, load balancing), you can use it directly:
 

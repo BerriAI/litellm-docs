@@ -44,7 +44,7 @@ Linear also exposes `https://mcp.linear.app/sse` as a deprecated fallback for cl
 
 ## Connect via LiteLLM MCP Gateway
 
-:::warning Leave the client credentials out
+:::warning[Leave the client credentials out]
 Do not set `client_id`, `client_secret`, or `token_url` on the OAuth server. Those switch it to a machine-to-machine identity shared by every caller, so issues get filed by one service account instead of the person who asked. Linear's dynamic registration makes them unnecessary. If you actually want a shared identity, use the API key tab below, which is explicit about it.
 :::
 
@@ -180,11 +180,11 @@ mcp_servers:
 
 ***
 
-:::info Restrict who can use it
+:::info[Restrict who can use it]
 Grant the server per key or per team with `object_permission`, and cap call volume per server with `mcp_rpm_limit`, both covered in [MCP Permission Management](../mcp_control.md).
 :::
 
-:::warning Put the LiteLLM key in `x-litellm-api-key`
+:::warning[Put the LiteLLM key in `x-litellm-api-key`]
 Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and LiteLLM forwards your LiteLLM key to Linear, which rejects it. To diagnose, add `x-litellm-mcp-debug: true` and read the response headers: `SAME_AS_LITELLM_KEY` confirms this case, and `m2m-client-credentials` means client credentials are set and every caller shares one identity. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
 :::
 

@@ -29,7 +29,7 @@ LiteLLM automatically distributes requests across multiple deployments of the sa
 | **latency-based-routing** | Routes to fastest responding deployment | Latency-critical applications |
 | **cost-based-routing** | Routes to deployment with lowest cost | Cost-sensitive applications |
 
-:::tip Deployment Priority
+:::tip[Deployment Priority]
 Use the `order` parameter to prioritize specific deployments. [See Deployment Ordering](#deployment-ordering-priority) for details.
 :::
 
@@ -73,7 +73,7 @@ router_settings:
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
 
-:::tip Separate input/output limits
+:::tip[Separate input/output limits]
 Set `itpm` and `otpm` instead of `tpm`/`rpm` when a provider publishes distinct input and output throughput limits. See [Separate ITPM / OTPM Rate Limits](./io_token_rate_limits).
 :::
 
@@ -301,6 +301,8 @@ router_settings:
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
 
+To hide a `model_list` entry itself rather than an alias, set `model_info.discoverable: false` on it ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
+
 ### Complete Spec 
 
 ```python
@@ -423,5 +425,7 @@ router_settings:
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
+
+When that deployment is not in the healthy pool for a follow-up (it is cooled down, it was removed, or the turn was routed to another model group) and no deployment has the same `api_base` and `api_key`, LiteLLM drops the encrypted reasoning from the request, keeps the rest of the conversation, forwards it to a healthy deployment, and logs a router warning, so the turn succeeds with fresh reasoning instead of failing
 
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**

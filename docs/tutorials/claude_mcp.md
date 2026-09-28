@@ -3,13 +3,13 @@ import TabItem from '@theme/TabItem';
 
 # Use Claude Code with MCPs
 
-This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy.
+This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy. For endpoint, transport, and credential selection, see the [MCP Configuration Reference](../mcp_config_reference)
 
 Note: LiteLLM supports OAuth for MCP servers as well. [Learn more](https://docs.litellm.ai/docs/mcp#mcp-oauth)
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameBorder="0" allowFullScreen></iframe>
 
 ## Connecting MCP Servers
 

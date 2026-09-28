@@ -13,7 +13,7 @@ LiteLLM supports NVIDIA Riva for speech-to-text via `/audio/transcriptions`. Wor
 | Transport | gRPC (not HTTP) |
 | Supported OpenAI Endpoints | `/audio/transcriptions` |
 
-:::info Optional install
+:::info[Optional install]
 
 `nvidia_riva` requires the gRPC client and audio decoding libraries. Install them with:
 

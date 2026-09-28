@@ -23,7 +23,7 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 | 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
 | 8 | `safety_identifier` field | Request body | Responses API |
 
-:::info JWT auth takes precedence
+:::info[JWT auth takes precedence]
 
 If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
 
@@ -231,7 +231,7 @@ litellm_settings:
 
 ### Bucketing internal traffic under one customer
 
-If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md).
+If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change, while Codex CLI does the same through `http_headers` in its `config.toml`. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md) and [Codex CLI granular cost tracking](../tutorials/codex_customer_tracking.md).
 
 Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
 
@@ -503,7 +503,7 @@ Create and assign customers to pricing tiers.
 </TabItem>
 <TabItem value="api" label="API">
 
-Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://litellm-api.up.railway.app/#/budget%20management/new_budget_budget_new_post)
+Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management/new_budget_budget_new_post)
 
 ```bash showLineNumbers title="Create budget via API"
 curl -X POST 'http://localhost:4000/budget/new' \

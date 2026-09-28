@@ -17,14 +17,14 @@ Use this to:
 
 ## (Proxy Admin) Usage
 
-Here's how to give developers access to your Batch models.
+Grant developers access to Batch models.
 
 ### 1. Setup config.yaml
 
 - Specify `mode: batch` for each model so developers can tell this is a batch model.
 - Optionally skip the pre-read of batch input files for specific batch providers or models (useful for large files on custom vLLM batch deployments).
 
-```yaml showLineNumbers title="litellm_config.yaml"
+```yaml showLineNumbers title="litellm-config.yaml"
 model_list:
   - model_name: "gpt-4o-batch"
     litellm_params:
@@ -32,14 +32,25 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
     model_info:
-      mode: batch # tells developers this is a batch model
+      mode: batch # metadata, tells developers this is a batch model
+
   - model_name: "gpt-4o-batch"
     litellm_params:
-      model: azure/gpt-4o-mini-special-deployment
-      api_base: os.environ/AZURE_API_BASE_2
-      api_key: os.environ/AZURE_API_KEY_2
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
     model_info:
-      mode: batch # tells developers this is a batch model
+      mode: batch # metadata, tells developers this is a batch model
+
+  - model_name: vertex-batch
+    litellm_params:
+      model: vertex_ai/gemini-3.5-flash
+      vertex_project: <vertex-project>
+      vertex_location: global
+      vertex_credentials: /path/to/credentials
+      gcs_bucket_name: litellm-batch-api-bucket # required param for vertexai to store files
+    model_info:
+      mode: batch
+
 
 general_settings:
   # Optional: do not charge batch input files against TPM/RPM
@@ -58,24 +69,22 @@ By default, LiteLLM reads each batch input file before submission and charges it
 
 ### 2. Create Virtual Key
 
-```bash showLineNumbers title="create_virtual_key.sh"
+```bash
 curl -L -X POST 'https://${PROXY_BASE_URL}/key/generate' \
 -H 'Authorization: Bearer ${PROXY_API_KEY}' \
 -H 'Content-Type: application/json' \
 -d '{"models": ["gpt-4o-batch"]}'
 ```
 
-You can now use the virtual key to access the batch models (see [Developer Usage](#developer-usage)).
+The returned virtual key grants access to the batch models (see [Developer Usage](#developer-usage)).
 
 ## (Developer) Usage
 
-Here's how to create a LiteLLM managed file and execute Batch CRUD operations with the file.
+Create a LiteLLM managed file and run batch operations against it. The steps below show the raw HTTP calls with curl; for the same workflow with the OpenAI Python SDK, see [Batch Lifecycle](#batch-lifecycle).
 
 ### 1. Create request.jsonl
 
-- Check models available via `/model_group/info`
-- See all models with `mode: batch`
-- Set `model` in the .jsonl to the model from `/model_group/info`
+The `model` in each line must be a model name from `/model_group/info` with `mode: batch`.
 
 ```json showLineNumbers title="request.jsonl"
 {"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
@@ -86,151 +95,129 @@ LiteLLM translates the model name to the Azure deployment specific value (e.g. `
 
 ### 2. Upload File
 
-Specify `target_model_names: "<model-name>"` to enable LiteLLM managed files and request validation. The model name must match the `model` in request.jsonl.
+`target_model_names` enables LiteLLM managed files and request validation. It must match the `model` in request.jsonl. The upload returns a file object; its `id` is the `input_file_id` for Step 3.
 
-```python showLineNumbers title="create_batch.py"
-from openai import OpenAI
+```bash showLineNumbers
+export LITELLM_BASE_URL="http://0.0.0.0:4000"
+export LITELLM_API_KEY="sk-<your-litellm-api-key>"
 
-client = OpenAI(
-    base_url="http://0.0.0.0:4000",
-    api_key="sk-<your-litellm-api-key>",
-)
-
-# Upload file
-batch_input_file = client.files.create(
-    file=open("./request.jsonl", "rb"), # {"model": "gpt-4o-batch"} <-> {"model": "gpt-4o-mini-special-deployment"}
-    purpose="batch",
-    extra_body={"target_model_names": "gpt-4o-batch"}
-)
-print(batch_input_file)
+curl -s "${LITELLM_BASE_URL}/v1/files" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}" \
+  -F purpose="batch" \
+  -F file="@./request.jsonl" \
+  -F target_model_names="gpt-4o-batch"
 ```
 
 **Where is the file written?**
 
-All gpt-4o-batch deployments (gpt-4o-mini-general-deployment, gpt-4o-mini-special-deployment) will be written to. This enables load balancing across all gpt-4o-batch deployments in Step 3.
+The file is written to every deployment that matches `target_model_names` (here: `gpt-4o-mini-general-deployment` and `gpt-4o-mini-special-deployment`). This enables load balancing across those deployments in Step 3.
 
 ### 3. Create + Retrieve the batch
 
-```python showLineNumbers title="create_batch.py"
-...
-# Create batch
-batch = client.batches.create(
-    input_file_id=batch_input_file.id,
-    endpoint="/v1/chat/completions",
-    completion_window="24h",
-    metadata={"description": "Test batch job"},
-)
-print(batch)
-batch_id = batch.id
+`input_file_id` is the file `id` from Step 2. The create call returns a batch object; its `status` moves through the states described in [Batch Lifecycle](#batch-lifecycle).
 
-# Retrieve batch
-batch_response = client.batches.retrieve(batch_id)
-status = batch_response.status
+```bash showLineNumbers
+# Create the batch
+curl -s "${LITELLM_BASE_URL}/v1/batches" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_file_id": "file-abc123",
+    "endpoint": "/v1/chat/completions",
+    "completion_window": "24h",
+    "metadata": {"description": "Test batch job"}
+  }'
+
+# Retrieve the batch, using the id the create call returned
+export BATCH_ID="batch_abc123"
+
+curl -s "${LITELLM_BASE_URL}/v1/batches/${BATCH_ID}" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
 ### 4. Retrieve Batch Content
 
-```python showLineNumbers title="create_batch.py"
-...
+`output_file_id` is set on the batch once its `status` is `completed`. The content is one JSON result per line, keyed by the `custom_id` from request.jsonl.
 
-file_id = batch_response.output_file_id
+```bash showLineNumbers
+OUTPUT_FILE_ID=$(curl -s "${LITELLM_BASE_URL}/v1/batches/${BATCH_ID}" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}" | jq -r '.output_file_id')
 
-file_response = client.files.content(file_id)
-print(file_response.text)
+curl -s "${LITELLM_BASE_URL}/v1/files/${OUTPUT_FILE_ID}/content" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
 ### 5. List batches
 
-```python showLineNumbers title="create_batch.py"
-...
+Returns the managed batches owned by the calling key, user, or team, newest first. `limit` must be between 0 and 100 and defaults to 20; page with `after`. The `provider` and `target_model_names` filters are not supported for managed batches and return `400`.
 
-client.batches.list(limit=10, extra_query={"target_model_names": "gpt-4o-batch"})
+```bash showLineNumbers
+curl -s "${LITELLM_BASE_URL}/v1/batches?limit=10" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
 ### 6. Cancel a batch
 
-```python showLineNumbers title="create_batch.py"
-...
+The cancel call returns the batch with `status: "cancelling"`.
 
-client.batches.cancel(batch_id)
+```bash showLineNumbers
+curl -s -X POST "${LITELLM_BASE_URL}/v1/batches/${BATCH_ID}/cancel" \
+  -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
-## E2E Example
+## Batch Lifecycle
+
+A batch's `status` moves through `validating` → `in_progress` → `finalizing` → `completed`. The other terminal states are `failed` (validation failed), `expired` (the completion window elapsed), and `cancelled` (after a cancel call, which first reports `cancelling`).
+
+The script below runs the whole lifecycle with the OpenAI Python SDK: upload the input file, create the batch, poll until a terminal status, then download the output file (or the error file when there is no output).
 
 ```python showLineNumbers title="create_batch.py"
 import json
+import time
 from openai import OpenAI
 
-"""
-litellm yaml:
-
-model_list:
-    - model_name: gpt-4o-batch
-      litellm_params:
-        model: azure/gpt-4o-my-special-deployment
-        api_key: ..
-        api_base: ..
-
----
-request.jsonl:
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-batch", ...}}
-"""
-
 client = OpenAI(
-    base_url="http://0.0.0.0:4000",
-    api_key="sk-<your-litellm-api-key>",
+    base_url="http://0.0.0.0:4000",       # your LiteLLM proxy URL
+    api_key="sk-<your-litellm-api-key>",  # your LiteLLM virtual key
 )
 
-# Upload file
+# 1. Upload the input file (request.jsonl from Developer Usage Step 1)
 batch_input_file = client.files.create(
     file=open("./request.jsonl", "rb"),
     purpose="batch",
-    extra_body={"target_model_names": "gpt-4o-batch"}
+    extra_body={"target_model_names": "gpt-4o-batch"},
 )
-print(batch_input_file)
+print(f"file id: {batch_input_file.id}")
 
-# Create batch
+# 2. Create the batch
 batch = client.batches.create(
     input_file_id=batch_input_file.id,
     endpoint="/v1/chat/completions",
     completion_window="24h",
     metadata={"description": "Test batch job"},
 )
-print(batch)
-batch_id = batch.id
+print(f"batch id: {batch.id}, status: {batch.status}")
 
-# Retrieve batch
-batch_response = client.batches.retrieve(batch_id)
-status = batch_response.status
+# 3. Poll until the batch reaches a terminal status
+terminal_statuses = {"completed", "failed", "expired", "cancelled"}
+while batch.status not in terminal_statuses:
+    time.sleep(30)
+    batch = client.batches.retrieve(batch.id)
+    print(f"status: {batch.status}")
 
-print(f"status: {status}, output_file_id: {batch_response.output_file_id}")
+# 4. Download the results: output file, or error file when there is no output
+result_file_id = batch.output_file_id or batch.error_file_id
 
-# Download file
-output_file_id = batch_response.output_file_id
-print(f"output_file_id: {output_file_id}")
-if not output_file_id:
-    output_file_id = batch_response.error_file_id
-
-if output_file_id:
-    file_response = client.files.content(output_file_id)
-    raw_responses = file_response.text.strip().split("\n")
-
-    with open("unified_batch_output.jsonl", "w") as output_file:
-        for raw_response in raw_responses:
-            json.dump(json.loads(raw_response), output_file)
+if result_file_id:
+    file_response = client.files.content(result_file_id)
+    with open("batch_output.jsonl", "w") as output_file:
+        for line in file_response.text.strip().split("\n"):
+            json.dump(json.loads(line), output_file)
             output_file.write("\n")
-
-# List batches
-list_batch_response = client.batches.list(
-    extra_query={"target_model_names": "gpt-4o-batch"}
-)
-
-# Cancel batch
-batch_response = client.batches.cancel(batch_id)
-status = batch_response.status
-
-print(f"status: {status}")
+    print(f"results written to batch_output.jsonl")
 ```
+
+To cancel a batch before it completes, call `client.batches.cancel(batch.id)`: its status becomes `cancelling`, then `cancelled`.
 
 ## Observability
 
@@ -242,7 +229,7 @@ The poller runs on a timer, so the row appears some time after the batch finishe
 
 The batch's cost row has `call_type: "aretrieve_batch"` and a `request_id` of `<batch id>_batch_cost`, where `<batch id>` is the id `POST /v1/batches` returned:
 
-```bash showLineNumbers title="get_batch_spend_row.sh"
+```bash showLineNumbers
 curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
@@ -303,7 +290,7 @@ Click the row to open the drawer. A **Batch Results** card lists the batch id, t
 
 A batch reaches `completed` at the provider as soon as it finishes running, whether or not every one of its requests worked, so the status on its own tells you nothing about failures. The counts on the cost row are what tell you, and they line up with `request_counts` on the batch itself:
 
-```bash showLineNumbers title="compare_counts.sh"
+```bash showLineNumbers
 # what the provider reports
 curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
   -H "Authorization: Bearer $LITELLM_API_KEY" | jq '.status, .request_counts'
@@ -319,7 +306,7 @@ curl -s "http://0.0.0.0:4000/spend/logs?request_id=${BATCH_ID}_batch_cost" \
 
 To see why the failed requests failed, download the batch's error file. It holds one line per rejected request, keyed by the `custom_id` you set in the input file:
 
-```bash showLineNumbers title="read_error_file.sh"
+```bash showLineNumbers
 ERROR_FILE_ID=$(curl -s "http://0.0.0.0:4000/v1/batches/${BATCH_ID}" \
   -H "Authorization: Bearer $LITELLM_API_KEY" | jq -r '.error_file_id')
 

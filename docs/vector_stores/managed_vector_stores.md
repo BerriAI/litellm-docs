@@ -98,6 +98,29 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
 
 The request must reference the store explicitly (top-level `vector_store_ids` or inside `tools`); registering a store does not by itself change any chat completion. Details, citations, and streaming behavior: [Using Vector Stores with Chat Completions](../completion/knowledgebase.md).
 
+### Retrieved context goes through your pre-call guardrails
+
+A document in the store is untrusted input: it can carry an instruction aimed at the model (indirect prompt injection through RAG). So every guardrail that runs `pre_call` on the request (`default_on: true` in the config, or requested through `guardrails` on the request, key, or team) also scans each store's retrieved context before it is injected into the prompt, one scan per store. A guardrail that blocks returns the same 400 it would return for the user's own message, with `guardrail_name` and `guardrail_mode` in the error, and the model is never called. A guardrail that masks rewrites the injected context instead. Guardrails set to `during_call` or `post_call` keep seeing the request and the response as before and are not run on the retrieved context
+
+```json title="A blocked chunk, with the Azure Prompt Shield guardrail from the guardrails docs"
+{
+  "error": {
+    "message": "Violated Azure Prompt Shield guardrail policy",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400",
+    "provider_specific_fields": {
+      "error": "Violated Azure Prompt Shield guardrail policy",
+      "detection_message": "Attack detected: {'attackDetected': True}",
+      "guardrail_name": "azure-prompt-shield",
+      "guardrail_mode": "pre_call"
+    }
+  }
+}
+```
+
+A guardrail that fails while scanning the retrieved context fails the request too, rather than injecting the context unscanned
+
 ## Management API reference
 
 All endpoints require a LiteLLM key (`Authorization: Bearer ...`). Access can be restricted with `general_settings.disable_vector_stores_for_internal_users` and `allow_vector_stores_for_team_admins`; proxy admins always have access.

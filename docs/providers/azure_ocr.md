@@ -142,7 +142,7 @@ response = await litellm.aocr(
 
 ## Important Notes
 
-:::info URL Conversion
+:::info[URL Conversion]
 Azure AI OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Azure AI.
 :::
 

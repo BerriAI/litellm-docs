@@ -21,7 +21,7 @@ Heuristic v1 scores seven prompt signals, including reasoning language, code, te
 
 Test heuristic tuning on your production traffic with the LiteLLM team and influence the roadmap.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -95,7 +95,7 @@ Recent AutoRouter changes also cover long-running agent sessions:
 
 :::info
 
-Open **Add Model → Auto Router** and select **Configure automatically**. Review the generated tiers, then test them against your traffic. Share results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendar.app.google/i2e7qVEJphHi5S8UA) to work with the LiteLLM team.
+Open **Add Model → Auto Router** and select **Configure automatically**. Review the generated tiers, then test them against your traffic. Share results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168), or [apply to be a design partner](https://calendly.com/tin-berri/litellm-auto-router-design-partner) to work with the LiteLLM team.
 
 :::
 

@@ -11,7 +11,7 @@ This integration is supported from LiteLLM v1.73.3-nightly and above.
 
 <br />
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/d5dadd811ae64c70b29a16ecd558d4ba" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/d5dadd811ae64c70b29a16ecd558d4ba" frameBorder="0" allowFullScreen></iframe>
 
 ## Benefits of using gemini-cli with LiteLLM
 

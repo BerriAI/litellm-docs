@@ -106,7 +106,7 @@ Every key in `inputs` is optional, so you only get the ones this call actually h
 
 While streaming, you can also set `stream_holdback_chars`, a per-text count of trailing characters for LiteLLM to withhold, so a match never gets split across two chunks.
 
-:::tip Advanced: Using Individual Event Hooks
+:::tip[Advanced: Using Individual Event Hooks]
 
 If you need more fine-grained control, you can implement individual event hooks instead of (or in addition to) `apply_guardrail`:
 
@@ -144,7 +144,7 @@ guardrails:
       api_base: https://api.myguardrail.com
 ```
 
-:::info Mode Options
+:::info[Mode Options]
 
 `apply_guardrail` runs in all three modes. The mode decides *when* it runs and whether it sees the request or the response.
 
@@ -160,7 +160,7 @@ If you implement the individual event hooks instead, the same three modes call `
 
 :::
 
-:::note Streaming and post_call guardrails
+:::note[Streaming and post_call guardrails]
 
 For **streaming responses**, `post_call` guardrails run on the fully assembled response **after** all chunks have been delivered to the client. This makes `post_call` guardrails on streaming **audit-only**: they can inspect and log the complete response, but cannot block content delivery. Guardrail results are recorded in `guardrail_information` within the logging payload for compliance and auditing.
 
@@ -505,7 +505,7 @@ class myCustomGuardrail(CustomGuardrail):
 
 2. Pass parameters in your API requests:
 
-LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter).
+LiteLLM Proxy allows you to pass `guardrails` in the request body, following the [`guardrails` spec](/docs/proxy/guardrails/quick_start#guardrails-request-parameter). To attach `extra_body` to a guardrail, send `guardrails` as a list and make the guardrail an object keyed by its `guardrail_name`.
 
 <Tabs>
 <TabItem value="openai" label="OpenAI Python">
@@ -521,13 +521,15 @@ response = client.chat.completions.create(
     model="{{openai_large}}",
     messages=[{"role": "user", "content": "Write a short poem"}],
     extra_body={
-        "guardrails": {
-            "custom-pre-guard": {
-                "extra_body": {
-                    "success_threshold": 0.9
+        "guardrails": [
+            {
+                "custom-pre-guard": {
+                    "extra_body": {
+                        "success_threshold": 0.9
+                    }
                 }
             }
-        }
+        ]
     }
 )
 ```
@@ -547,9 +549,11 @@ curl 'http://0.0.0.0:4000/chat/completions' \
         }
     ],
     "guardrails": [
-        "custom-pre-guard": {
-            "extra_body": {
-                "success_threshold": 0.9
+        {
+            "custom-pre-guard": {
+                "extra_body": {
+                    "success_threshold": 0.9
+                }
             }
         }
     ]

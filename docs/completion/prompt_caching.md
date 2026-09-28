@@ -12,17 +12,18 @@ Supported Providers:
 - Deepseek API (`deepseek/`)
 - xAI (`xai/`)
 
-:::warning Minimum token requirements
+:::warning[Minimum token requirements]
 Prompt caching is silently skipped when the input is below the provider's minimum, and **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
 
 | Provider | Minimum input tokens |
 |---|---|
 | OpenAI | 1,024 |
-| Anthropic (Claude 3.x) | 1,024 |
-| Anthropic (Claude Sonnet/Opus 4.x) | 2,048 |
-| Anthropic (Claude Haiku 4.5+, Opus 4.5+) | 4,096 |
-| Bedrock (Claude 3.5, 3.7) | 1,024 |
-| Bedrock (Claude Sonnet 4.x) | 2,048 |
+| Anthropic (Claude Opus 5, Fable 5, Mythos 5) | 512 |
+| Anthropic (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Opus 4, 4.1, Claude 3.x) | 1,024 |
+| Anthropic (Claude Haiku 4.5, Opus 4.5, 4.6) | 4,096 |
+| Bedrock (Claude Opus 5) | 512 |
+| Bedrock (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Claude 3.5, 3.7) | 1,024 |
+| Bedrock (Claude Haiku 4.5, Opus 4.5, 4.6, 4.7) | 4,096 |
 | Google Gemini | 1,024 |
 :::
 
@@ -450,29 +451,38 @@ print(response.usage)
 </TabItem>
 </Tabs>
 
-:::tip Minimum tokens (Anthropic)
+:::tip[Minimum tokens (Anthropic)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model | Min tokens |
 |---|---|
-| Claude 3 Haiku, 3 Sonnet, 3 Opus | 1,024 |
-| Claude 3.5 Sonnet, 3.7 Sonnet | 1,024 |
+| Claude Opus 5, Fable 5, Mythos 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
+| Claude Opus 4.7 | 2,048 |
+| Claude Haiku 4.5, Opus 4.5, Opus 4.6 | 4,096 |
+| Claude Sonnet 4, Sonnet 4.5, Sonnet 4.6, Opus 4, Opus 4.1 | 1,024 |
 | Claude 3.5 Haiku | 2,048 |
-| Claude Sonnet 4.5, Sonnet 4.6, Opus 4 | 2,048 |
-| Claude Haiku 4.5, Opus 4.5+ | 4,096 |
+| Claude 3.x Haiku, Sonnet, Opus, 3.5 Sonnet, 3.7 Sonnet | 1,024 |
+
+See [Anthropic's prompt caching docs](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) for the full list; these minimums apply on every platform where each model is available.
 :::
 
 ### Bedrock Example
 
 LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format, so no changes are needed to your existing code if you're already using `cache_control`.
 
-:::tip Minimum tokens (Bedrock)
+:::tip[Minimum tokens (Bedrock)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model family | Min tokens per request |
 |---|---|
+| Claude Opus 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
+| Claude Haiku 4.5, Opus 4.5, Opus 4.6, Opus 4.7 | 4,096 |
+| Claude Sonnet 4.5, Sonnet 4.6 | 1,024 |
 | Claude 3.5 Sonnet v2, Claude 3.7 Sonnet | 1,024 |
-| Claude Sonnet 4.5, Sonnet 4.6 | 2,048 |
+
+See [the Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) for the full per-model table.
 :::
 
 <Tabs>
@@ -489,7 +499,7 @@ response = litellm.completion(
             "content": [
                 {
                     "type": "text",
-                    "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+                    "text": "<your large system prompt here, at least 1,024 tokens on Claude Sonnet 4.x, 4,096 on Haiku 4.5 and Opus 4.5+>",
                     "cache_control": {"type": "ephemeral"}
                 }
             ]
@@ -535,7 +545,7 @@ curl -X POST http://localhost:4000/chat/completions \
         "content": [
           {
             "type": "text",
-            "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+            "text": "<your large system prompt here, at least 1,024 tokens on Claude Sonnet 4.x, 4,096 on Haiku 4.5 and Opus 4.5+>",
             "cache_control": {"type": "ephemeral"}
           }
         ]
@@ -552,10 +562,15 @@ curl -X POST http://localhost:4000/chat/completions \
 
 | Model | Bedrock Model ID | Min Tokens | TTL Options |
 |---|---|---|---|
+| Claude Opus 5 | `anthropic.claude-opus-5` | 512 | 5 min, 1 hour |
+| Claude Sonnet 5 | `anthropic.claude-sonnet-5` | 1,024 | 5 min, 1 hour |
+| Claude Opus 4.8 | `anthropic.claude-opus-4-8` | 1,024 | 5 min, 1 hour |
 | Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
 | Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
 | Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
-| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 2,048 | 5 min, 1 hour |
+| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 1,024 | 5 min, 1 hour |
+| Claude Haiku 4.5 | `us.anthropic.claude-haiku-4-5-*` | 4,096 | 5 min, 1 hour |
+| Claude Opus 4.5, 4.6, 4.7 | `us.anthropic.claude-opus-4-5-*`, `us.anthropic.claude-opus-4-6-*`, `us.anthropic.claude-opus-4-7-*` | 4,096 | 5 min, 1 hour |
 
 Cross-region inference profiles are also supported for the models above.
 
@@ -984,7 +999,7 @@ This checks our maintained [model info/cost map](https://github.com/BerriAI/lite
 
 ## Read More
 
-:::tip Auto-Inject Prompt Caching
+:::tip[Auto-Inject Prompt Caching]
 Want LiteLLM to automatically add `cache_control` directives without modifying your code? 
 
 See [**Auto-Inject Prompt Caching Tutorial**](../tutorials/prompt_caching.md) to learn how to use `cache_control_injection_points` to automatically cache system messages, specific messages by index, or custom injection patterns.

@@ -553,7 +553,7 @@ $ litellm --config /path/to/config.yaml
 
 ### Set custom tokenizer 
 
-If you're using the [`/utils/token_counter` endpoint](https://litellm-api.up.railway.app/#/llm%20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
+If you're using the [`/utils/token_counter` endpoint](https://docs.litellm.ai/api-reference/#/llm%20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
 
 ```yaml
 model_list:

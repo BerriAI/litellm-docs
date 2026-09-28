@@ -43,7 +43,7 @@ pip install litellm==1.101.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **MongoDB Vector Search requires an optional sidecar.** Existing configurations must supply the sidecar URL and key; move MongoDB connection strings and TLS files into the sidecar. PyMongo is no longer installed in LiteLLM SDK extras or images. See the [setup guide](../../docs/providers/mongodb_vector_stores) and [PR #40316](https://github.com/BerriAI/litellm/pull/40316).
 

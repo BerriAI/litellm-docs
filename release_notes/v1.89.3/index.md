@@ -18,7 +18,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info Update: no performance regression found
+:::info[Update: no performance regression found]
 
 An earlier version of this note flagged a potential throughput regression. We investigated and could not confirm or reproduce any regression in the released version. The one report we received came from a deployment running custom code on top of what we shipped, and our testing points to those changes, not LiteLLM, as the likely cause.
 

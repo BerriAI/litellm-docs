@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 
 # Cursor Integration
 
-Route Cursor IDE requests through LiteLLM for unified logging, budget controls, and access to any model.
+Route Cursor IDE requests through LiteLLM for unified logging, budget controls, and access to any model. To connect Cursor to MCP tools, use the direct-client URL and headers in the [MCP Configuration Reference](../mcp_config_reference#common-client-configs)
 
 :::info
 **Supported modes:** Ask, Plan, Agent. With the base URL override, agent mode requires LiteLLM v1.97.0+, which translates the Responses API request shapes Cursor's agent sends to the chat completions path. Cursor gates custom API keys by mode and model on its side, so coverage follows what Cursor enables.
@@ -10,7 +10,7 @@ Route Cursor IDE requests through LiteLLM for unified logging, budget controls, 
 Cursor does not officially support AI Gateways, our work here is best effort from reverse engineering their APIs. The Cursor CLI (`agent` / `cursor-agent`) cannot target LiteLLM at all, see [Cursor CLI](#cursor-cli-cursor-agent).
 :::
 
-:::warning Override OpenAI Base URL missing?
+:::warning[Override OpenAI Base URL missing?]
 Newer Cursor builds no longer show the **Override OpenAI Base URL** setting on every plan. If your Cursor does not have it, use the [Azure OpenAI fallback](#fallback-azure-openai-settings) below instead of the setup in this section.
 :::
 
@@ -74,7 +74,7 @@ Paste the name in Cursor and enable the toggle.
 
 ![](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-13/5ab35f93-d417-423f-a359-9811ce18e2c3/ascreenshot.jpeg?tl_px=352,26&br_px=1728,795&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=786,277)
 
-:::warning Built-in model names
+:::warning[Built-in model names]
 Cursor rejects a custom model whose name matches one of its built-in models with `The model "X" is already available as "Y"`. Cursor runs this check locally, before any request reaches LiteLLM. Add a `model_list` entry with a distinct public model name for the same deployment and use that name in Cursor:
 
 ```yaml
@@ -85,7 +85,7 @@ model_list:
 ```
 :::
 
-:::tip Model variants
+:::tip[Model variants]
 Cursor's model picker can emit thinking and fast variants of a model name, e.g. `claude-opus-5-thinking`. LiteLLM v1.97.0+ resolves these suffixes to the underlying model automatically, so key scopes and per-model budgets apply to the resolved model and you don't need separate `model_list` entries for the variants.
 :::
 
@@ -127,7 +127,7 @@ While the Azure OpenAI toggle is on, only custom models work. Cursor refuses its
 
 To use Composer or another built-in model on your Cursor subscription, turn the Azure OpenAI toggle off; turn it back on to route through LiteLLM again.
 
-:::warning The Deployment Name decides the model
+:::warning[The Deployment Name decides the model]
 On this path, Cursor sends every request to `/openai/deployments/<Deployment Name>/chat/completions`, and LiteLLM serves the model the path names. The custom model you pick in Cursor is only a label: picking a different custom model does not change which model answers. To switch models, edit the **Deployment Name** in the Azure OpenAI settings. Keep a single enabled custom model so the picker cannot mislead you.
 :::
 
@@ -186,7 +186,7 @@ The API key was loaded from the CURSOR_API_KEY environment variable.
 Please check you have the right key, create a new one, or authenticate without it.
 ```
 
-The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](./openai_codex.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
+The CLI prints this warning for any answer below 500 that does not carry Cursor session tokens (a 5xx gets a fixed `Failed to reach the Cursor API` error instead), so a proxy without that route (LiteLLM answers 404 at the root and 401 under `/cursor`) looks exactly like a wrong Cursor key, and no text from the proxy ever reaches the screen. To route Cursor through LiteLLM use the Cursor IDE setup on this page; for a terminal agent that supports custom endpoints, see [Claude Code](./claude_responses_api.md), [Codex CLI](../proxy/client_setup/codex_cli.md), [Gemini CLI](./litellm_gemini_cli.md), or [OpenCode](./opencode_integration.md).
 
 ## Troubleshooting
 

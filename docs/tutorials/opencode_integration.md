@@ -16,7 +16,7 @@ This integration allows you to use any LiteLLM supported model through OpenCode 
 
 ### Video Walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/00791498f1d84e4ba6d7476bd2e1442f" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/00791498f1d84e4ba6d7476bd2e1442f" frameBorder="0" allowFullScreen></iframe>
 
 ## Prerequisites
 

@@ -6,7 +6,7 @@ The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consul
 
 This pattern is well-suited for long-horizon agentic workloads (coding agents, computer use, multi-step research) where most turns are mechanical but having an excellent plan is crucial. You get close to advisor-solo quality while the bulk of token generation happens at executor-model rates.
 
-:::info Beta
+:::info[Beta]
 
 The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests; LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
 
@@ -145,7 +145,7 @@ for chunk in response:
         print(chunk.choices[0].delta.content, end="")
 ```
 
-:::note Streaming behavior
+:::note[Streaming behavior]
 
 The advisor sub-inference does not stream. The executor's stream pauses while the advisor runs, then the full advisor result arrives in a single event. Executor output resumes streaming afterward.
 
@@ -189,7 +189,7 @@ response2 = litellm.completion(
 )
 ```
 
-:::tip Auto-strip on follow-up turns
+:::tip[Auto-strip on follow-up turns]
 
 LiteLLM automatically strips `advisor_tool_result` blocks from message history when the advisor tool is not present in the current request. This prevents the Anthropic 400 error that would otherwise occur.
 

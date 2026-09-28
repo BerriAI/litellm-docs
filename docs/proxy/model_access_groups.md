@@ -258,7 +258,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## Managing Access Groups via API
 
-:::warning Database Models Only
+:::warning[Database Models Only]
 Access group management APIs only work with models stored in the database (added via `/model/new`). 
 
 Models defined in `config.yaml` cannot be managed through these APIs and must be configured directly in the config file.
@@ -418,7 +418,7 @@ A group can also carry one shared budget that every key granted the group draws 
 
 ### API Reference - Access Group Management
 
-For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://litellm-api.up.railway.app/#/model%20management/create_model_group_access_group_new_post).
+For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://docs.litellm.ai/api-reference/#/model%20management/create_model_group_access_group_new_post).
 
 ## Managing Access Groups via UI
 

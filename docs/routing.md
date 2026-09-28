@@ -397,7 +397,7 @@ model_list:
     - model_name: {{openai_small}} 
       litellm_params: # params for litellm completion/embedding call 
         model: {{openai_small}} 
-        api_key: os.getenv(OPENAI_API_KEY)
+        api_key: os.environ/OPENAI_API_KEY
       tpm: 100000
       rpm: 1000
 
@@ -406,7 +406,7 @@ router_settings:
   redis_host: <your-redis-host>
   redis_password: <your-redis-password>
   redis_port: <your-redis-port>
-  enable_pre_call_check: true
+  enable_pre_call_checks: true
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -453,7 +453,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# 👈 set routing strategy
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 ## CALL 1+2
@@ -576,7 +576,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -1053,7 +1053,7 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
 | `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
-These settings are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy.
+`deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
 
 :::info
 The `session_affinity` option inside `complexity_router_config` on the [Auto Router](./proxy/auto_routing.md) page is a different setting. It pins the auto router's model choice for a session; the pre-call check on this page pins a deployment inside a model group.

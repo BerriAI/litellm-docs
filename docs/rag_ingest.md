@@ -243,7 +243,7 @@ Response:
 | `vector_store` | object | Yes | Vector store configuration |
 | `name` | string | No | Pipeline name for logging |
 
-:::info Registered stores
+:::info[Registered stores]
 When `vector_store.vector_store_id` names a store in the [vector store registry](./vector_stores/managed_vector_stores.md) or one saved by an earlier ingest, the provider, credentials, and destination settings come from that registration. The request keeps only its per-upload options (`data_source_id`, `wait_for_ingestion`, `ingestion_timeout`, `custom_metadata`, `file_description`, `max_embedding_requests_per_min`); any other `vector_store` key it sends is ignored. A `custom_llm_provider` with no ingestion implementation is rejected with a 400 naming the supported ones.
 :::
 
@@ -267,7 +267,7 @@ When `vector_store.vector_store_id` names a store in the [vector store registry]
 | `embedding_model` | string | `amazon.titan-embed-text-v2:0` | Bedrock embedding model |
 | `aws_region_name` | string | `us-west-2` | AWS region |
 
-:::info Bedrock Auto-Creation
+:::info[Bedrock Auto-Creation]
 When `vector_store_id` is omitted, LiteLLM automatically creates:
 - S3 bucket for document storage
 - OpenSearch Serverless collection
@@ -289,7 +289,7 @@ When `vector_store_id` is omitted, LiteLLM automatically creates:
 | `wait_for_import` | boolean | `true` | Wait for import to complete |
 | `import_timeout` | integer | `600` | Timeout in seconds (if waiting) |
 
-:::info Vertex AI Prerequisites
+:::info[Vertex AI Prerequisites]
 1. Create a RAG corpus in Vertex AI console or via API
 2. Create a GCS bucket for file uploads
 3. Authenticate via `gcloud auth application-default login`
@@ -311,7 +311,7 @@ When `vector_store_id` is omitted, LiteLLM automatically creates:
 | `aws_access_key_id` | string | env | AWS access key |
 | `aws_secret_access_key` | string | env | AWS secret key |
 
-:::info S3 Vectors Auto-Creation
+:::info[S3 Vectors Auto-Creation]
 When `index_name` is omitted, LiteLLM automatically creates:
 - S3 vector bucket (if it doesn't exist)
 - Vector index with auto-detected dimensions from your embedding model

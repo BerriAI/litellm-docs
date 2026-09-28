@@ -139,7 +139,7 @@ general_settings:
 
 The request's `x-mcp-client` value must match an allowed client's `value`. Header identity is also used when `mcp_client_id_jwt_field` is not configured. With that JWT setting configured, JWT callers cannot fall back to a header.
 
-:::warning Client-supplied identity
+:::warning[Client-supplied identity]
 
 Clients can change header values. Use JWT client claims for trusted application identity.
 

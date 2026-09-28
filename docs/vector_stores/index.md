@@ -8,7 +8,7 @@ LiteLLM has three distinct ways to work with vector stores. They are separate AP
 
 3. **Pass-through provider APIs**: call the provider's native API (native request and response shapes) through the proxy, for example `/vertex_ai/discovery/...` or `/bedrock/knowledgebases/...`. Use this when you need provider features the unified API does not expose.
 
-:::info Terminology
+:::info[Terminology]
 A **managed vector store** in LiteLLM is a *registration*, not a new store: LiteLLM saves which provider a store lives on and how to authenticate to it, so requests can reference it by id. Nothing is created on the provider. Older docs call this concept a "knowledge base"; it is the same thing.
 :::
 

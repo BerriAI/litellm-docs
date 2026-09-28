@@ -84,7 +84,7 @@ The response body is the same on either path, token counts included, so the head
 
 Mode 2 replaces the Python host with the Rust `litellm-ai-gateway` Axum server binary, so routing and network I/O run entirely in Rust. This is the higher-ceiling option for throughput, but it currently covers fewer routes than the Python host and does not yet have the full proxy feature set.
 
-:::note Pending
+:::note[Pending]
 
 A prebuilt Docker image for the Axum server is not published yet. This section will be filled in with the image reference and a deployment example once it ships. In the meantime you can build the server from the `litellm-rust` workspace with the `server` feature; reach out in the community channel if you want to trial it early.
 

@@ -24,7 +24,7 @@ Do not rotate `LITELLM_SALT_KEY` itself. It must not change after you have added
 
 When no salt key is set, the master key doubles as the at-rest encryption key, so rotating it requires re-encrypting stored data.
 
-:::tip Prefer a dedicated salt key
+:::tip[Prefer a dedicated salt key]
 Before you rotate, consider setting a permanent `LITELLM_SALT_KEY` so future master-key rotations become the no-migration flow above. Set the salt key to your current master key value first (so existing data still decrypts), then rotate the master key freely afterwards.
 :::
 

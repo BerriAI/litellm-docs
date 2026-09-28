@@ -29,7 +29,7 @@ LiteLLM provides an integration with CloudZero's AnyCost API, allowing you to ex
 ### End to End Video Walkthrough
 This video walks through the entire process of setting up LiteLLM with CloudZero integration and viewing LiteLLM exported usage data in CloudZero.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/59b57593183f4cc3b1c05a2dd3277f92" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/59b57593183f4cc3b1c05a2dd3277f92" frameBorder="0" allowFullScreen></iframe>
 
 ### Step 1: Configure Environment Variables
 

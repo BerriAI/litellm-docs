@@ -42,7 +42,9 @@ curl -X POST 'http://0.0.0.0:4000/tag/new' \
             "name": "engineering", 
             "description": "Engineering department cost center",
             "max_budget": 500.0, 
-            "budget_duration": "30d"
+            "budget_duration": "30d",
+            "rpm_limit": 100,
+            "tpm_limit": 100000
         }' 
 ```
 
@@ -56,6 +58,8 @@ curl -X POST 'http://0.0.0.0:4000/tag/new' \
 | `max_budget` | float | No | Maximum budget in USD |
 | `budget_duration` | string | No | How often budget resets (e.g., "30d", "1d") |
 | `soft_budget` | float | No | Soft budget limit for warnings |
+| `rpm_limit` | int | No | Max requests per minute allowed for the tag across all keys and teams |
+| `tpm_limit` | int | No | Max tokens per minute allowed for the tag across all keys and teams |
 
 **Response:**
 
@@ -220,6 +224,38 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
     "code": "400"
   }
 }
+```
+
+## Setting Tag Rate Limits
+
+Set `rpm_limit` and `tpm_limit` on a tag to cap requests and tokens per minute for that tag. The limit applies to the tag itself, so usage is shared across every key and team that sends the tag, whether the tag arrives in request `metadata.tags`, the `x-litellm-tags` header, or a key's attached tags. This is separate from the per key `tag_rpm_limit` map in key metadata, which meters each key's requests under a tag independently.
+
+Rate limits on tags are enforced by the v3 parallel request limiter. Once a tag crosses its limit, any request carrying it is rejected with HTTP 429 and a message like `Rate limit exceeded for tag: engineering. Limit type: requests. Current limit: 100`. `rpm_limit` counts each request at admission, and `tpm_limit` is charged with the request's actual token usage after the call completes, so a request can be admitted and the next one rejected once usage lands.
+
+Create a tag with rate limits:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/new' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+            "name": "engineering",
+            "rpm_limit": 100,
+            "tpm_limit": 100000
+        }'
+```
+
+Update rate limits on an existing tag:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/tag/update' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{
+            "name": "engineering",
+            "rpm_limit": 200,
+            "tpm_limit": 200000
+        }'
 ```
 
 ## Managing Tags

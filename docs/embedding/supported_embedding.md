@@ -519,7 +519,7 @@ All models listed [here](https://ai.google.dev/gemini-api/docs/models/gemini) ar
 
 `gemini-embedding-2-preview` supports **multimodal embeddings**: text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior, so swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
 
-:::info Response shape
+:::info[Response shape]
 
 For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`), the same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector; see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
 

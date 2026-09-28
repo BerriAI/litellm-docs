@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Bedrock Guardrails
 
-:::tip ⚡️
+:::tip[⚡️]
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 

@@ -13,6 +13,8 @@ hide_table_of_contents: true
 
 We are partnering with [Vanta](https://www.vanta.com/) to recertify LiteLLM's compliance for SOC 2 Type 2 and ISO 27001.
 
+{/* truncate */}
+
 As part of this process, we are also identifying independent auditors to validate and verify our compliance posture.
 
 This is part of our commitment to being the most secure and transparent AI Gateway possible.

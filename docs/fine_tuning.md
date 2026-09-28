@@ -258,4 +258,4 @@ curl -X GET 'http://localhost:4000/v1/fine_tuning/jobs' \
 
 
 
-## [👉 Proxy API Reference](https://litellm-api.up.railway.app/#/fine-tuning)
+## [👉 Proxy API Reference](https://docs.litellm.ai/api-reference/#/fine-tuning)

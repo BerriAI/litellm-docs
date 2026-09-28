@@ -438,7 +438,7 @@ The proxy provides:
 3. [Cost tracking](https://docs.litellm.ai/docs/proxy/virtual_keys#tracking-spend)
 4. [Rate Limiting](https://docs.litellm.ai/docs/proxy/users#set-rate-limits)
 
-### 📖 Proxy Endpoints - [Swagger Docs](https://litellm-api.up.railway.app/) [​](https://docs.litellm.ai/\#-proxy-endpoints---swagger-docs "Direct link to -proxy-endpoints---swagger-docs")
+### 📖 Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/) [​](https://docs.litellm.ai/\#-proxy-endpoints---swagger-docs "Direct link to -proxy-endpoints---swagger-docs")
 
 Go here for a complete tutorial with keys + rate limits - [**here**](https://docs.litellm.ai/proxy/docker_quick_start.md)
 
@@ -3434,7 +3434,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint [​](https://docs.litellm.ai/release_notes\#-guardrailslist-endpoint "Direct link to -guardrailslist-endpoint")
 
-Show available guardrails to users. [Start here](https://litellm-api.up.railway.app/#/Guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
 
 ## ✨ Allow teams to add models [​](https://docs.litellm.ai/release_notes\#-allow-teams-to-add-models "Direct link to ✨ Allow teams to add models")
 
@@ -4117,7 +4117,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint [​](https://docs.litellm.ai/release_notes/tags/batches\#-guardrailslist-endpoint "Direct link to -guardrailslist-endpoint")
 
-Show available guardrails to users. [Start here](https://litellm-api.up.railway.app/#/Guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
 
 ## ✨ Allow teams to add models [​](https://docs.litellm.ai/release_notes/tags/batches\#-allow-teams-to-add-models "Direct link to ✨ Allow teams to add models")
 
@@ -4976,7 +4976,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint [​](https://docs.litellm.ai/release_notes/tags/custom-auth\#-guardrailslist-endpoint "Direct link to -guardrailslist-endpoint")
 
-Show available guardrails to users. [Start here](https://litellm-api.up.railway.app/#/Guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
 
 ## ✨ Allow teams to add models [​](https://docs.litellm.ai/release_notes/tags/custom-auth\#-allow-teams-to-add-models "Direct link to ✨ Allow teams to add models")
 
@@ -5825,7 +5825,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint [​](https://docs.litellm.ai/release_notes/tags/guardrails\#-guardrailslist-endpoint "Direct link to -guardrailslist-endpoint")
 
-Show available guardrails to users. [Start here](https://litellm-api.up.railway.app/#/Guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
 
 ## ✨ Allow teams to add models [​](https://docs.litellm.ai/release_notes/tags/guardrails\#-allow-teams-to-add-models "Direct link to ✨ Allow teams to add models")
 

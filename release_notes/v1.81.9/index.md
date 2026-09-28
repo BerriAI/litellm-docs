@@ -14,7 +14,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info Stable Release Branch
+:::info[Stable Release Branch]
 
 For each stable release, we now maintain a dedicated branch with the format `litellm_stable_release_branch_x_xx_xx` for the version.
 

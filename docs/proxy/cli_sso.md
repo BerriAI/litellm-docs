@@ -5,7 +5,7 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/87c5d243cde642ff942783024ff037e3" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/87c5d243cde642ff942783024ff037e3" frameBorder="0" allowFullScreen></iframe>
 
 ## Usage 
 
