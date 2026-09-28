@@ -799,6 +799,8 @@ router_settings:
 | JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
+| LAYA_API_BASE | HTTP(S) base URL of a self-hosted Laya server, without `/v1/systemone`, for native gateway decisions and Laya classifiers that omit `api_base`. Required when no classifier endpoint is supplied. Added by [LiteLLM #43626](https://github.com/BerriAI/litellm/pull/43626) |
+| LAYA_API_KEY | Optional bearer key paired with `LAYA_API_BASE`. A classifier with an explicit `api_base` uses only its explicit `api_key`; omitting that key connects without authentication |
 | LEMONADE_API_KEY | API key for Lemonade
 | LINKUP_API_BASE | Base URL for the Linkup search provider
 | LLAMAFILE_API_KEY | API key for llamafile. llamafile does not require one, so a placeholder is used when this is unset
