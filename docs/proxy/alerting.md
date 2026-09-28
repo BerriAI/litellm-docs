@@ -50,13 +50,13 @@ general_settings:
     # [OPTIONAL ALERTING ARGS]
     alerting_args:
         daily_report_frequency: 43200  # 12 hours in seconds
-        report_check_interval: 3600    # 1 hour in seconds
+        report_check_interval: 300     # 5 minutes in seconds
         budget_alert_ttl: 86400        # 24 hours in seconds
         outage_alert_ttl: 60           # 1 minute in seconds
         region_outage_alert_ttl: 60    # 1 minute in seconds
         minor_outage_alert_threshold: 5 
         major_outage_alert_threshold: 10
-        max_outage_alert_list_size: 1000
+        max_outage_alert_list_size: 10
         log_to_console: false
     
 ```
@@ -406,9 +406,9 @@ curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
   "team_id": null,
   "user_email": null,
   "key_alias": null,
-  "projected_exceeded_data": null,
+  "projected_exceeded_date": null,
   "projected_spend": null,
-  "event": "budget_crossed", # Literal["budget_crossed", "threshold_crossed", "projected_limit_exceeded"]
+  "event": "budget_crossed", # see the `event` spec below for all values
   "event_group": "user",
   "event_message": "User Budget: Budget Crossed"
 }
@@ -418,17 +418,21 @@ curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
 
 - `spend` *float*: The current spend amount for the 'event_group'.
 - `max_budget` *float or null*: The maximum allowed budget for the 'event_group'. null if not set. 
+- `soft_budget` *float or null*: The soft budget set for the 'event_group'. null if not set.
 - `token` *str*: A hashed value of the key, used for authentication or identification purposes.
 - `customer_id` *str or null*: The ID of the customer associated with the event (optional).
-- `internal_user_id` *str or null*: The ID of the internal user associated with the event (optional).
+- `user_id` *str or null*: The ID of the internal user associated with the event (optional).
 - `team_id` *str or null*: The ID of the team associated with the event (optional).
+- `team_alias` *str or null*: The alias of the team associated with the event (optional).
+- `organization_id` *str or null*: The ID of the organization associated with the event (optional).
 - `user_email` *str or null*: The email of the internal user associated with the event (optional).
 - `key_alias` *str or null*: An alias for the key associated with the event (optional).
 - `projected_exceeded_date` *str or null*: The date when the budget is projected to be exceeded, returned when 'soft_budget' is set for key (optional).
 - `projected_spend` *float or null*: The projected spend amount, returned when 'soft_budget' is set for key (optional).
-- `event` *Literal["budget_crossed", "threshold_crossed", "projected_limit_exceeded"]*: The type of event that triggered the webhook. Possible values are:
+- `event` *Literal["budget_crossed", "max_budget_alert", "soft_budget_crossed", "threshold_crossed", "projected_limit_exceeded", "key_created", "key_rotated", "internal_user_created", "spend_tracked"]*: The type of event that triggered the webhook. `key_created`, `key_rotated`, `internal_user_created` and `max_budget_alert` are shared with email alerts. Budget webhook values are:
     * "spend_tracked": Emitted whenever spend is tracked for a customer id. 
     * "budget_crossed": Indicates that the spend has exceeded the max budget.
+    * "soft_budget_crossed": Indicates that the spend has exceeded the soft budget.
     * "threshold_crossed": Indicates that spend has crossed a threshold (currently sent when 85% and 95% of budget is reached).
     * "projected_limit_exceeded": For "key" only - Indicates that the projected spend is expected to exceed the soft budget threshold.
 - `event_group` *Literal["customer", "internal_user", "key", "team", "proxy"]*: The group associated with the event. Possible values are:
@@ -580,11 +584,11 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `daily_report_frequency` | 43200 (12 hours) | Frequency of receiving deployment latency/failure reports in seconds |
-| `report_check_interval` | 3600 (1 hour) | How often to check if a report should be sent (background process) in seconds |
+| `report_check_interval` | 300 (5 minutes) | How often to check if a report should be sent (background process) in seconds |
 | `budget_alert_ttl` | 86400 (24 hours) | Cache TTL for budget alerts to prevent spam when budget is crossed |
 | `outage_alert_ttl` | 60 (1 minute) | Time window for collecting model outage errors in seconds |
 | `region_outage_alert_ttl` | 60 (1 minute) | Time window for collecting region-based outage errors in seconds |
 | `minor_outage_alert_threshold` | 5 | Number of errors that trigger a minor outage alert (400 errors not counted) |
 | `major_outage_alert_threshold` | 10 | Number of errors that trigger a major outage alert (400 errors not counted) |
-| `max_outage_alert_list_size` | 1000 | Maximum number of errors to store in cache per model/region |
+| `max_outage_alert_list_size` | 10 | Maximum number of errors to store in cache per model/region |
 | `log_to_console` | false | If true, prints alerting payload to console as a `.warning` log. |
