@@ -167,12 +167,23 @@ litellm_settings:
 
 ### Disable Message Redaction
 
-If you have `litellm.turn_on_message_logging` turned on, you can override it for specific requests by
+If you have `litellm.turn_off_message_logging` turned on, you can override it for specific requests by
 setting a request header `LiteLLM-Disable-Message-Redaction: true`.
 
+The proxy only honors this header on keys or teams whose metadata has `allow_client_message_redaction_opt_out: true`. On any other key the header is dropped and messages stay redacted
+
+```shell
+curl --location 'http://0.0.0.0:4000/key/generate' \
+    --header 'Authorization: Bearer sk-1234' \
+    --header 'Content-Type: application/json' \
+    --data '{"metadata": {"allow_client_message_redaction_opt_out": true}}'
+```
+
+Then send the header with that key
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Authorization: Bearer <key-from-above>' \
     --header 'Content-Type: application/json' \
     --header 'LiteLLM-Disable-Message-Redaction: true' \
     --data '{
@@ -636,98 +647,13 @@ litellm_settings:
 
 Use this when you want to view the RAW curl request sent from LiteLLM to the LLM API 
 
-<Tabs>
+Set `log_raw_request_response: true` in `litellm_settings`. LiteLLM then attaches the curl command it sent to the provider as `raw_request` in the Langfuse metadata of every request. This is a global setting with no per-request toggle
 
-<TabItem value="Curl" label="Curl Request">
-
-Pass `metadata` as part of the request body
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "{{openai_small}}",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "metadata": {
-        "log_raw_request": true
-    }
-}'
+```yaml
+litellm_settings:
+  callbacks: ["langfuse"]
+  log_raw_request_response: true
 ```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI v1.0.0+">
-
-Set `extra_body={"metadata": {"log_raw_request": True }}` to `metadata` you want to pass
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-# request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(
-    model="{{openai_small}}",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-print(response)
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model = "{{openai_small}}",
-    temperature=0.1,
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-</Tabs>
 
 **Expected Output on Langfuse**
 
@@ -1472,10 +1398,6 @@ litellm_settings:
     sqs_strip_base64_files: false
     # If true, LiteLLM will remove or redact base64-encoded binary data (e.g., PDFs, images, audio)
     # from logged messages to avoid large payloads. SQS has a 1 MB payload size limit.
-    s3_use_team_prefix: false
-    # If true, Litellm will add the team alias prefix to s3 path
-    s3_use_key_prefix: false
-    # If true, Litellm will add the key alias prefix to s3 path
 
 ```
 
