@@ -349,7 +349,7 @@ Sensitive data in the response is automatically redacted.
 
 ## Streaming Support
 
-Prompt Security guardrail fully supports streaming responses with chunk-based validation:
+Streamed responses are scanned only by a guardrail with `mode: "post_call"`. A `pre_call` or `during_call` guardrail checks the request and lets the streamed output through unscanned
 
 ```shell
 curl -i http://0.0.0.0:4000/v1/chat/completions \
@@ -366,15 +366,32 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
 
 ### Streaming Behavior
 
-- **Window-based validation**: Chunks are buffered and validated in windows (default: 250 characters)
-- **Smart chunking**: Splits on word boundaries to avoid breaking mid-word
-- **Real-time blocking**: If harmful content is detected, streaming stops immediately
-- **Modification support**: Modified chunks are streamed in real-time
+The accumulated response text is sent to Prompt Security every 5 chunks and once more at the end of the stream. What happens with the verdict depends on `streaming_transform_mode`:
 
-If a violation is detected during streaming:
+```yaml
+guardrails:
+  - guardrail_name: "prompt-security-guard"
+    litellm_params:
+      guardrail: prompt_security
+      mode: "post_call"
+      api_key: os.environ/PROMPT_SECURITY_API_KEY
+      api_base: os.environ/PROMPT_SECURITY_API_BASE
+      streaming_transform_mode: "block_only"  # default; or "incremental_diff"
+```
+
+| Mode | Chunks | Block verdict | Modify verdict |
+| --- | --- | --- | --- |
+| `block_only` (default) | Forwarded to the client unmodified as they arrive | Stream ends at the next scan, text already sent stays with the client | Ignored, the original text is streamed |
+| `incremental_diff` | Response text is held back until the final verdict | Stream ends without releasing the held text | Modified text is emitted as one chunk at the end of the stream |
+
+Use `incremental_diff` when redactions must apply to streamed output. It only applies to `/v1/chat/completions`, other routes fall back to `block_only`
+
+A block verdict ends the stream with an error frame:
 
 ```
-data: {"error": "Blocked by Prompt Security, Violations: harmful_content"}
+data: {"error": {"message": "Blocked by Prompt Security, Violations: harmful_content", "type": "invalid_request_error", "param": null, "code": "400"}}
+
+data: [DONE]
 ```
 
 ## Advanced Configuration
