@@ -105,7 +105,7 @@ elif litellm.LlmProviders.YOUR_PROVIDER == provider:
 
 ## 3. Add Provider to `rerank_api/main.py`
 
-Add a code block to handle when your provider is called. Your provider should use the `base_llm_http_handler.rerank` method
+Providers without a dedicated branch fall through to the generic `else` branch, which already calls `base_llm_http_handler.rerank` with the config returned in step 2. Add a dedicated branch only when your provider needs custom `api_key` or `api_base` resolution, and pass it `provider_config`
 
 
 ```python nolint
@@ -114,6 +114,7 @@ elif _custom_llm_provider == "your_provider":
     response = base_llm_http_handler.rerank(
         model=model,
         custom_llm_provider=_custom_llm_provider,
+        provider_config=rerank_provider_config,
         optional_rerank_params=optional_rerank_params,
         logging_obj=litellm_logging_obj,
         timeout=optional_params.timeout,
@@ -123,6 +124,7 @@ elif _custom_llm_provider == "your_provider":
         headers=headers or litellm.headers or {},
         client=client,
         model_response=model_response,
+        litellm_params=rerank_litellm_params,
     )
     ...
 ```
