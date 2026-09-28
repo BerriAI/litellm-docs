@@ -44,8 +44,9 @@ search_tools:
   - search_tool_name: dataforseo-search
     litellm_params:
       search_provider: dataforseo
-      api_key: "os.environ/DATAFORSEO_LOGIN:os.environ/DATAFORSEO_PASSWORD"
 ```
+
+The proxy reads `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` from its environment, so no `api_key` is needed. To pass credentials explicitly, set `api_key` to a single `login:password` string, either literally or from one env var such as `api_key: os.environ/DATAFORSEO_API_KEY` where `DATAFORSEO_API_KEY=your-login:your-password`. Two `os.environ/` references joined by `:` are not resolved
 
 ### 2. Start the proxy
 
