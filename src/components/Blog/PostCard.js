@@ -63,8 +63,8 @@ export default function PostCard({item, variant = 'card'}) {
 
   if (variant === 'compact') {
     return (
-      <Link to={post.permalink} className={styles.compact}>
-        <Cover post={post} category={category} image={image} size="sm" />
+      <Link to={post.permalink} className={clsx(styles.compact, !image && styles.compactText)}>
+        <Cover image={image} size="sm" />
         <span className={styles.compactBody}>
           <span className={clsx(styles.catText, styles[`cat_${category.id}`])}>{category.label}</span>
           <span className={styles.compactTitle}>{post.title}</span>
@@ -78,8 +78,8 @@ export default function PostCard({item, variant = 'card'}) {
 
   const feature = variant === 'feature';
   return (
-    <Link to={post.permalink} className={clsx(styles.card, feature && styles.cardFeature)}>
-      <Cover post={post} category={category} image={image} size={feature ? 'lg' : 'md'} />
+    <Link to={post.permalink} className={clsx(styles.card, feature && styles.cardFeature, !image && styles.cardText)}>
+      <Cover image={image} size={feature ? 'lg' : 'md'} />
       <span className={styles.cardBody}>
         <span className={clsx(styles.catText, styles[`cat_${category.id}`])}>{category.label}</span>
         <span className={styles.cardTitle}>{post.title}</span>

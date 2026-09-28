@@ -65,28 +65,4 @@ function categoryOf(tags) {
   return CATEGORIES.find((c) => c.tags.some((t) => labels.includes(t))) || BY_ID.gateway;
 }
 
-const PROVIDER_NAMES = {
-  anthropic: 'Anthropic',
-  openai: 'OpenAI',
-  gemini: 'Google',
-  google: 'Google',
-  xai: 'xAI',
-  qwen: 'Qwen',
-  xiaomi: 'Xiaomi',
-  mistral: 'Mistral',
-  deepseek: 'DeepSeek',
-  meta: 'Meta',
-  moonshot: 'Moonshot',
-  zai: 'Z.ai',
-  minimax: 'MiniMax',
-};
-
-// "Day 0 Support: Claude Sonnet 5.5" -> {model: "Claude Sonnet 5.5", provider: "Anthropic"}
-function launchInfo(title, tags) {
-  const model = String(title || '').replace(/^day\s*0\s*support\s*:\s*/i, '').replace(/\s+on\s+litellm$/i, '').trim();
-  const first = tagLabels(tags).find((t) => t !== 'day 0 support');
-  const provider = first ? PROVIDER_NAMES[first] || first.charAt(0).toUpperCase() + first.slice(1) : '';
-  return {model, provider};
-}
-
-module.exports = {CATEGORIES, BY_ID, categoryOf, launchInfo};
+module.exports = {CATEGORIES, BY_ID, categoryOf};
