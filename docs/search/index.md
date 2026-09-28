@@ -150,7 +150,7 @@ curl http://0.0.0.0:4000/v1/search \
 
 ### Load Balancing
 
-Configure multiple search providers for automatic load balancing and fallbacks:
+Give multiple search tools the same `search_tool_name` to load balance across them. Each request picks one of the matching tools at random. `router_settings.routing_strategy` does not apply to search tools, so strategies like `least-busy` or `latency-based-routing` have no effect on which provider serves a search request
 
 ```yaml showLineNumbers title="config.yaml with load balancing"
 search_tools:
@@ -173,9 +173,6 @@ search_tools:
     litellm_params:
       search_provider: brave
       api_key: os.environ/BRAVE_API_KEY
-
-router_settings:
-  routing_strategy: simple-shuffle  # or 'least-busy', 'latency-based-routing'
 ```
 
 Test with load balancing:
