@@ -988,6 +988,18 @@ video {
   color: inherit;
 }
 
+/* The reset above zeroes padding on fenced blocks too, which left blog code
+   touching the block edges. Give Docusaurus's code lines their inset back,
+   matching docs pages; numbered blocks keep vertical-only padding because
+   their line content is inset separately. */
+.blog-wrapper article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='codeBlockLinesWithNumbering']) {
+  padding: var(--ifm-pre-padding);
+}
+
+.blog-wrapper article .markdown pre.prism-code code[class*='codeBlockLinesWithNumbering'] {
+  padding: var(--ifm-pre-padding) 0;
+}
+
 /* Nav buttons (prev/next) at bottom - keep clean */
 .blog-wrapper .pagination-nav__label {
   font-size: 0.85rem;
