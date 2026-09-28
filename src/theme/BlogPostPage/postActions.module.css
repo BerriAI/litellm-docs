@@ -1,0 +1,19 @@
+/* Copy post / View as Markdown / Open in Claude or ChatGPT, mirrored across
+   from the fixed back link on wide screens, inline above the post otherwise. */
+.outer {
+  position: fixed;
+  top: calc(var(--ifm-navbar-height, 60px) + 0.75rem);
+  right: 2rem;
+  z-index: 100;
+}
+
+@media (max-width: 1280px) {
+  .outer {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+    max-width: 860px;
+    margin: 1rem auto 0;
+    padding: 0 1rem;
+  }
+}

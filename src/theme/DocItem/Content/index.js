@@ -42,7 +42,7 @@ function trackPageAction(action) {
 // "Copy page" plus a menu to view the page as markdown or hand it to an
 // assistant. The .md files are written at build time by plugins/llms.js, so
 // the menu only offers them for pages of the main docs plugin.
-function PageActions({rawMarkdownB64, permalink, hasMarkdownUrl}) {
+export function PageActions({rawMarkdownB64, permalink, hasMarkdownUrl}) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);

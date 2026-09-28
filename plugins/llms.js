@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
+const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
 const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
@@ -222,7 +223,15 @@ function mdxToMarkdown(raw) {
     if (/^<[A-Z][A-Za-z]*\b[^>]*\/>$/.test(trimmed)) continue;
     out.push(line);
   }
-  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  return (
+    out
+      .join('\n')
+      // Relative images point at hashed build assets that a .md reader cannot
+      // resolve, so keep their description instead of a broken link.
+      .replace(/!\[([^\]]*)\]\((?!https?:|\/)[^)]*\)/g, (m, alt) => (alt ? `[Image: ${alt}]` : ''))
+      .replace(/\n{3,}/g, '\n\n')
+      .trim() + '\n'
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -306,6 +315,7 @@ module.exports = function llmsPlugin(context) {
   let docs = [];
   let sidebars = {};
   let releaseNotes = [];
+  let blogPosts = [];
 
   return {
     name: 'litellm-llms-txt',
@@ -318,6 +328,11 @@ module.exports = function llmsPlugin(context) {
       sidebars = version.sidebars || {};
       const notes = allContent['docusaurus-plugin-content-docs']?.['release-notes']?.loadedVersions?.[0];
       releaseNotes = (notes?.docs || []).filter((d) => !d.unlisted && !d.draft);
+      const blog = allContent['docusaurus-plugin-content-blog']?.blog;
+      blogPosts = (blog?.blogPosts || [])
+        .map((p) => p.metadata)
+        .filter((m) => !m.unlisted && !m.frontMatter?.draft)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
     async postBuild({outDir}) {
@@ -455,10 +470,48 @@ module.exports = function llmsPlugin(context) {
         }
       }
 
+      // Blog: one markdown file per post, a /blog.md index grouped by
+      // category, and the newest posts listed in llms.txt.
+      const day = (d) => new Date(d).toISOString().slice(0, 10);
+      const postLine = (m) =>
+        `- [${clean(m.title)}](${mdUrl(m.permalink)}) (${day(m.date)})${m.description ? `: ${oneLine(m.description, 160)}` : ''}`;
+      await Promise.all(
+        blogPosts.map(async (m) => {
+          let body;
+          try {
+            body = mdxToMarkdown(await fs.promises.readFile(path.join(context.siteDir, m.source.replace(/^@site\//, '')), 'utf8'));
+          } catch {
+            return;
+          }
+          body = body.replace(/<!--[\s\S]*?-->/g, '').replace(/\n{3,}/g, '\n\n');
+          const authors = (m.authors || []).map((a) => a.name).filter(Boolean).join(', ');
+          const header =
+            `# ${clean(m.title)}\n\n> ${day(m.date)}${authors ? `, by ${authors}` : ''}. ${categoryOf(m.tags).label}. ` +
+            `Source: ${SITE}${m.permalink}. All posts: ${SITE}/blog.md\n\n`;
+          const target = mdPath(outDir, m.permalink);
+          await fs.promises.mkdir(path.dirname(target), {recursive: true});
+          await fs.promises.writeFile(target, body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body);
+        }),
+      );
+      if (blogPosts.length) {
+        const index = [
+          '# LiteLLM blog',
+          '',
+          `> Every post on ${SITE}/blog, newest first within each category. Append \`.md\` to any post URL for its markdown. RSS: ${SITE}/blog/rss.xml`,
+        ];
+        for (const cat of BLOG_CATEGORIES) {
+          const posts = blogPosts.filter((m) => categoryOf(m.tags).id === cat.id);
+          if (!posts.length) continue;
+          index.push('', `## ${cat.label}`, '', cat.blurb, '', ...posts.map(postLine));
+        }
+        await fs.promises.writeFile(path.join(outDir, 'blog.md'), index.join('\n') + '\n');
+        lines.push('', '## Blog', '', `- [All blog posts by category](${SITE}/blog.md): Model launches, Auto Router, gateway features, engineering, and incident reports`);
+        lines.push(...blogPosts.slice(0, 15).map(postLine));
+      }
+
       const orphans = docs.filter((d) => !listed.has(d.id));
       lines.push('', '## Optional', '');
       lines.push(`- [Release notes](${SITE}/release_notes): Changelog for every LiteLLM release`);
-      lines.push(`- [Blog](${SITE}/blog): Launches, benchmarks, and engineering posts`);
       for (const doc of orphans) lines.push(link(doc));
 
       await fs.promises.writeFile(path.join(outDir, 'llms.txt'), lines.join('\n') + '\n');
