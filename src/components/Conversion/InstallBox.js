@@ -1,7 +1,7 @@
 import React, {useId, useRef, useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import {INSTALLS} from './content';
+import {INSTALLS, ONE_CLICK} from './content';
 import AgentPrompt from './AgentPrompt';
 import Command from './Command';
 import {track} from './shared';
@@ -79,6 +79,20 @@ export default function InstallBox({variant = 'gateway', title, initial}) {
           </>
         )}
       </div>
+      {variant === 'gateway' && (
+        <p className={styles.mobileHint}>
+          On a phone? Deploy the gateway in one click on{' '}
+          {ONE_CLICK.map(([name, url], i) => (
+            <React.Fragment key={name}>
+              {i > 0 && ' or '}
+              <a href={url} target="_blank" rel="nofollow noopener" onClick={() => track('docs_one_click_deploy', {provider: name})}>
+                {name}
+              </a>
+            </React.Fragment>
+          ))}
+          , or copy the coding agent prompt for later.
+        </p>
+      )}
     </div>
   );
 }

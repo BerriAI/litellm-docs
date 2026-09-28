@@ -453,12 +453,7 @@ const sidebars = {
     {
       type: "category",
       label: "LiteLLM AI Gateway (Proxy)",
-      link: {
-        type: "generated-index",
-        title: "LiteLLM AI Gateway (LLM Proxy)",
-        description: `OpenAI Proxy Server (LLM Gateway) to call 100+ LLMs in a unified interface & track spend, set budgets per virtual key/user`,
-        slug: "/simple_proxy",
-      },
+      link: { type: "doc", id: "simple_proxy" },
       items: [
         {
           type: "category",

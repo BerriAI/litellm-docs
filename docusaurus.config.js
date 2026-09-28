@@ -85,6 +85,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js')],
   plugins: [
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.

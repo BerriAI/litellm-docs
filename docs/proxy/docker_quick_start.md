@@ -195,10 +195,10 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
 ## Next steps
 
 <NextSteps items={[
+  {icon: 'regions', title: 'Go to production', text: 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure.', to: '/docs/proxy/deploy'},
   {icon: 'agent', title: 'Connect your tools', text: 'Claude Code, Codex, Cursor, or any OpenAI SDK, pointed at the gateway.', to: '/docs/proxy/client_setup/overview'},
   {icon: 'budget', title: 'Set budgets and limits', text: 'Per key, team, or tag, enforced on every request.', to: '/docs/proxy/users'},
   {icon: 'guardrails', title: 'Add guardrails', text: 'PII masking, prompt injection checks, and custom rules.', to: '/docs/proxy/guardrails/quick_start'},
-  {icon: 'regions', title: 'Go to production', text: 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure.', to: '/docs/proxy/deploy'},
 ]} />
 
 The [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).

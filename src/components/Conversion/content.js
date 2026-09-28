@@ -63,6 +63,12 @@ const GATEWAY_DOCKER_RUN = `docker run \\
   -p 4000:4000 \\
   docker.litellm.ai/berriai/litellm:main-stable`;
 
+// One-click hosted deploys, offered to phone visitors who cannot run Docker.
+const ONE_CLICK = [
+  ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic'],
+  ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm'],
+];
+
 const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
 
 const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`;
@@ -170,6 +176,7 @@ module.exports = {
   withUtm,
   PROMPTS,
   INSTALLS,
+  ONE_CLICK,
   GATEWAY_COMPOSE,
   INSTALLER,
 };

@@ -281,6 +281,16 @@
   margin: 0;
 }
 
+.mobileHint {
+  display: none;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--cv-hair);
+  background: var(--cv-tint);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .installFoot {
   margin-top: 0.6rem;
   font-size: 0.85rem;
@@ -868,6 +878,9 @@
   }
   .promptSub {
     display: none;
+  }
+  .mobileHint {
+    display: block;
   }
 }
 
