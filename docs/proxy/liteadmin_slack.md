@@ -159,13 +159,7 @@ An empty `ADMIN_TOOL_NAMES` allows all reviewed tools available on your gateway,
 
 Your gateway must have an SSO provider configured and support the hosted **proxy API** authorization-code flow: `/register`, `/authorize` with S256 PKCE, and `/token`. Support depends on the installed gateway release. Check the [agent's compatibility requirements](https://github.com/BerriAI/litellm-admin-agent/blob/main/docs/compatibility.md#optional-browser-sso) before enabling this mode.
 
-On the **gateway**, allow the app's exact callback URL:
-
-```dotenv
-LITELLM_PROXY_API_OAUTH_REDIRECT_URIS=https://admin.example.com/oauth/callback
-```
-
-Use your app's origin and the `/oauth/callback` path. This is a separate setting from MCP OAuth redirect configuration. The app uses your gateway's SSO provider and does not need a separate Google or Okta client secret.
+On the **gateway**, no setting currently allows the app's hosted callback. LiteLLM currently accepts only loopback `redirect_uri` values for proxy API grants, so `/authorize` rejects `https://admin.example.com/oauth/callback` with `400 invalid_request` and `a proxy-API grant may only redirect to a loopback address`. `MCP_TRUSTED_REDIRECT_ORIGINS` covers MCP OAuth only and does not change this. Until your gateway release accepts hosted proxy API callbacks, use `api_key` mode. The app uses your gateway's SSO provider and does not need a separate Google or Okta client secret.
 
 On the **agent**, set `CONNECTION_AUTH_MODE=sso` and redeploy. Verify the full flow: send `connect`, sign in, return to the browser page, then make a read request in Slack. If your gateway lacks this flow, configure `api_key` mode instead; the app does not switch modes on its own.
 
@@ -187,7 +181,7 @@ Use a connector you operate and trust, configured for the same gateway. The agen
 | `/readyz` returns 503 | Check the app token's `connections:write` scope, outbound WebSocket access, and persistent storage. |
 | Connection denied | Check the live `proxy_admin` role, personal key ownership, model access, and the email match with Slack. |
 | Connection page rejects the session | Use a fresh link in one browser. Check HTTPS and `AGENT_PUBLIC_URL`, which must have no subpath. |
-| SSO callback fails | Verify hosted proxy API OAuth support and the exact callback allowlist on the gateway. |
+| SSO callback fails | A `400` saying a proxy-API grant may only redirect to a loopback address means your gateway release does not accept hosted callbacks; use `api_key` mode. |
 | Missing tools | Run `doctor.py`; check gateway API compatibility and `ADMIN_TOOL_NAMES`. |
 | Changes are refused | Check `ADMIN_READ_ONLY` and, for a hosted connector, its read-only policy. |
 | A change times out | Inspect the gateway object before retrying. A timeout does not undo completed actions. |
