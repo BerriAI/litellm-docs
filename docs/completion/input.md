@@ -35,37 +35,37 @@ response = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_l
 print(response) # ["max_tokens", "tools", "tool_choice", "stream"]
 ```
 
-This is a list of openai params we translate across providers.
+This table is the output of `litellm.get_supported_openai_params()` for the model shown in each row. Support is model dependent within a provider (for example Bedrock Llama models do not list `tools` or `tool_choice`), so call the function for the exact model you use
 
-Use `litellm.get_supported_openai_params()` for an updated list of params for each model + provider 
+`stream_options`, `extra_headers` and `max_retries` are not checked against this list and are accepted for every provider, and `stream_options={"include_usage": True}` returns usage on the final chunk for every provider
 
-| Provider | temperature | max_completion_tokens | max_tokens | top_p | stream | stream_options | stop | n | presence_penalty | frequency_penalty | functions | function_call | logit_bias | user | response_format | seed| tools | tool_choice | logprobs | top_logprobs | extra_headers |
-|--------------|-------------|------------------------|------------|-------|--------|----------------|------|-----|------------------|-------------------|-----------|----------------|-------------|------|------------------|-------------------|--------|--------------|----------|---------------|----------------------|
-| Anthropic| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || | ✅ | ✅ | | ✅ | ✅ || | ✅|
-| OpenAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅| ✅ | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅|
-| Azure OpenAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅| ✅ | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅|
-| xAI| ✅|| ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| || ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅||
-| Replicate| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Anyscale | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Cohere | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅|| | || ||| |||| ||
-| Huggingface| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| Openrouter | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅|| ||| ✅| ✅ ||| ||
-| AI21 | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅|| | || ||| |||| ||
-| VertexAI | ✅| ✅ | ✅ | | ✅ | ✅ || || | || || ✅ | ✅|||| ||
-| Bedrock| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || || ✅ (model dependent) | |||| ||
-| Sagemaker| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| TogetherAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | ✅|| || ✅ | | ✅ | ✅ || ||
-| Sambanova| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || || ✅ | | ✅ | ✅ || ||
-| AlephAlpha | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| NLP Cloud| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Petals | ✅| ✅ || ✅| ✅ ||| || | || ||| |||| ||
-| Ollama | ✅| ✅ | ✅ | ✅| ✅ | ✅ || ✅|| | || ✅||| | ✅ ||| ||
-| Databricks | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| ClarifAI | ✅| ✅ | ✅ | | ✅ | ✅ || || | || ||| |||| ||
-| Github | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅|| || ✅ | ✅ (model dependent) | ✅ (model dependent) || ||
-| Novita AI| ✅| ✅ || ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| || ✅||| |||| ||
-| Bytez | ✅| ✅ || ✅| ✅ | | | ✅|| || || || || || ||
-| OVHCloud AI Endpoints | ✅ | | ✅ | ✅ | ✅ | ✅ | ✅ | | | | | | | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | |
+| Provider | Model checked | temperature | max_completion_tokens | max_tokens | top_p | stream | stop | n | presence_penalty | frequency_penalty | functions | function_call | logit_bias | user | response_format | seed | tools | tool_choice | logprobs | top_logprobs |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Anthropic | `claude-sonnet-4-5-20250929` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ | ✅ |  | ✅ | ✅ |  |  |
+| OpenAI | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Azure OpenAI | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| xAI | `grok-3` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Replicate | `meta/llama-2-70b-chat` | ✅ |  | ✅ | ✅ | ✅ | ✅ |  |  |  | ✅ | ✅ |  |  |  | ✅ | ✅ | ✅ |  |  |
+| Anyscale | `meta-llama/Llama-2-70b-chat-hf` | ✅ |  | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| Cohere | `command-r` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  | ✅ | ✅ | ✅ |  |  |
+| Huggingface | `meta-llama/Llama-3.1-8B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Openrouter | `openai/gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AI21 | `jamba-1.5-large` | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ | ✅ | ✅ | ✅ |  |  |
+| VertexAI | `gemini-2.5-flash` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bedrock | `anthropic.claude-3-5-sonnet-20240620-v1:0` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| Sagemaker | `jumpstart-dft-meta-textgeneration-llama-2-7b` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |
+| TogetherAI | `meta-llama/Llama-3-70b-chat-hf` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sambanova | `Meta-Llama-3.1-8B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  | ✅ |  |  |  |  |  |
+| AlephAlpha | `luminous-base` | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| NLP Cloud | `dolphin` | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| Petals | `petals-team/StableBeluga2` | ✅ |  | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Ollama | `llama3` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ |  |  |  |  | ✅ | ✅ |  |  |  |  |
+| Databricks | `databricks-dbrx-instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| ClarifAI | `openai.chat-completion.gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ | ✅ |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| Github | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Novita AI | `meta-llama/llama-3-8b-instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bytez | `google/gemma-3-1b-it` | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |
+| OVHCloud AI Endpoints | `Meta-Llama-3_3-70B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 :::note
 
