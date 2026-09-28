@@ -73,46 +73,53 @@ const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/
 
 const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`;
 
-// Each tab: what it is for (one line, shown as a shell comment), the command,
-// and where to read more. `prompt` tabs render an agent prompt instead.
+// Install options per path. The first entry is the recommended command and is
+// the only one shown up front; the rest sit under "Other ways to install",
+// each with a line on when to pick it. Agent prompts are never mixed in here;
+// they get their own <AgentPrompt> box.
 const INSTALLS = {
-  gateway: [
-    {
-      id: 'compose',
-      label: 'Docker Compose',
-      note: 'Gateway + Postgres on :4000, admin UI at /ui. Keys are generated into .env.',
-      code: GATEWAY_COMPOSE,
-      more: '/docs/proxy/docker_quick_start',
-    },
-    {id: 'agent', label: 'Coding agent', prompt: 'gateway'},
-    {
-      id: 'installer',
-      label: 'One-liner',
-      note: 'macOS and Linux. Installs uv and litellm[proxy], then runs the setup wizard. Config-file mode: no database, so no virtual keys or admin UI.',
-      code: INSTALLER,
-      more: 'https://github.com/BerriAI/litellm/blob/main/scripts/install.sh',
-      moreLabel: 'Read the script',
-    },
-    {
-      id: 'docker',
-      label: 'docker run',
-      note: 'Bring your own Postgres.',
-      code: GATEWAY_DOCKER_RUN,
-      more: '/docs/proxy/deploy',
-    },
-    {
-      id: 'helm',
-      label: 'Helm',
-      note: 'Kubernetes. See the deploy guide for values.yaml.',
-      code: HELM,
-      more: '/docs/proxy/deploy#deploy-with-helm',
-    },
-  ],
-  sdk: [
-    {id: 'uv', label: 'uv', note: 'Python 3.10+', code: 'uv add litellm', more: '/docs/'},
-    {id: 'pip', label: 'pip', note: 'Python 3.10+', code: 'pip install litellm', more: '/docs/'},
-    {id: 'agent', label: 'Coding agent', prompt: 'sdk'},
-  ],
+  gateway: {
+    title: 'Start the Gateway',
+    what: 'Runs the gateway and a Postgres database on port 4000, with the admin UI at /ui. The master key and salt key are generated into .env.',
+    options: [
+      {
+        id: 'compose',
+        label: 'Docker Compose',
+        code: GATEWAY_COMPOSE,
+        more: '/docs/proxy/docker_quick_start',
+      },
+      {
+        id: 'docker',
+        label: 'docker run',
+        when: 'You already have a Postgres database to point it at.',
+        code: GATEWAY_DOCKER_RUN,
+        more: '/docs/proxy/deploy',
+      },
+      {
+        id: 'helm',
+        label: 'Helm',
+        when: 'You deploy to Kubernetes. Pair it with a values.yaml from the deploy guide.',
+        code: HELM,
+        more: '/docs/proxy/deploy#deploy-with-helm',
+      },
+      {
+        id: 'installer',
+        label: 'One-line installer',
+        when: 'You want the gateway as a local CLI without Docker (macOS and Linux). It runs from a config file with no database, so there are no virtual keys or admin UI.',
+        code: INSTALLER,
+        more: 'https://github.com/BerriAI/litellm/blob/main/scripts/install.sh',
+        moreLabel: 'Read the script',
+      },
+    ],
+  },
+  sdk: {
+    title: 'Install the SDK',
+    what: 'Adds the litellm package to your Python project (Python 3.10 or newer).',
+    options: [
+      {id: 'uv', label: 'uv', code: 'uv add litellm', more: '/docs/#quick-start'},
+      {id: 'pip', label: 'pip', when: 'Your project uses pip and requirements.txt.', code: 'pip install litellm'},
+    ],
+  },
 };
 
 const ENTERPRISE_HERO = {

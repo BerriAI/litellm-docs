@@ -59,14 +59,16 @@ function expandComponent(tag) {
     return `**Agent prompt: ${p.title}**\n\n\`\`\`text\n${p.text}\n\`\`\`\n`;
   }
   if (/^<InstallBox\b.*\/>$/.test(tag)) {
-    const tabs = INSTALLS[JSX_ATTR(tag, 'variant') || 'gateway'] || [];
-    return tabs
-      .map((t) =>
-        t.prompt
-          ? `**${t.label}**: paste the "${PROMPTS[t.prompt].title}" prompt into your agent:\n\n\`\`\`text\n${PROMPTS[t.prompt].text}\n\`\`\`\n`
-          : `**${t.label}**${t.note ? `: ${t.note}` : ''}\n\n\`\`\`bash\n${t.code}\n\`\`\`\n`,
-      )
-      .join('\n');
+    const config = INSTALLS[JSX_ATTR(tag, 'variant') || 'gateway'];
+    if (!config) return null;
+    const [primary, ...others] = config.options;
+    const block = (code) => `\`\`\`bash\n${code}\n\`\`\`\n`;
+    return [
+      `**${config.title}** (recommended: ${primary.label}). ${config.what}`,
+      '',
+      block(primary.code),
+      ...others.flatMap((o) => [`Alternative, ${o.label}${o.when ? `: ${o.when}` : ''}`, '', block(o.code)]),
+    ].join('\n');
   }
   if (/^<PathFinder\b/.test(tag)) {
     return [

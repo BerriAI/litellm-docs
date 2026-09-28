@@ -7,7 +7,7 @@ sidebar_label: Quickstart
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
-import {InstallBox, PathFinder} from '@site/src/components/Conversion';
+import {AgentPrompt, InstallBox, PathFinder} from '@site/src/components/Conversion';
 
 **LiteLLM** gives you one OpenAI-format interface to 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more), as a Python SDK you import or a self-hosted AI Gateway every app and teammate can share.
 
@@ -16,6 +16,10 @@ import {InstallBox, PathFinder} from '@site/src/components/Conversion';
 ## Installation
 
 <InstallBox variant="sdk" title="Install the SDK" />
+
+Working in Claude Code, Codex, or Cursor? Paste this prompt instead and the agent runs the setup and verifies it for you.
+
+<AgentPrompt id="sdk" />
 
 To run the AI Gateway with the Admin UI instead, follow the [Gateway quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI, see the [Gateway CLI quickstart](./learn/gateway_quickstart.md).
 

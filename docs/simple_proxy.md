@@ -6,13 +6,17 @@ description: A self-hosted, OpenAI-compatible gateway for 100+ LLMs with virtual
 ---
 
 import DocCardList from '@theme/DocCardList';
-import {InstallBox, Tiles, SalesBand} from '@site/src/components/Conversion';
+import {AgentPrompt, InstallBox, Tiles, SalesBand} from '@site/src/components/Conversion';
 
 # LiteLLM AI Gateway
 
 One OpenAI-compatible endpoint for every model and every app. Point any OpenAI or Anthropic SDK, Claude Code, Codex, or curl at the gateway, and it handles provider keys, virtual keys with budgets, spend tracking, fallbacks, guardrails, and logging. It runs in Docker with Postgres and ships with an admin UI.
 
 <InstallBox variant="gateway" title="Run it locally" />
+
+Working in Claude Code, Codex, or Cursor? Paste this prompt instead and the agent runs the setup and verifies it for you.
+
+<AgentPrompt id="gateway" />
 
 ## What the gateway handles for you
 

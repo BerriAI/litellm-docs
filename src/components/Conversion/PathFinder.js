@@ -1,11 +1,8 @@
 import React, {useId, useRef, useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import AgentPrompt from './AgentPrompt';
-import Command from './Command';
 import SalesButton from './SalesButton';
-import {GATEWAY_COMPOSE} from './content';
-import {IconAudit, IconEnterprise, IconGateway, IconRegions, IconRoles, IconSdk, IconSso, IconSupport} from './icons';
+import {IconAudit, IconBudget, IconEnterprise, IconGateway, IconRegions, IconRoles, IconSdk, IconSpend, IconSso, IconSupport} from './icons';
 import {track, usePrefersReducedMotion} from './shared';
 import styles from './styles.module.css';
 
@@ -175,43 +172,68 @@ function Diagram({path, titleId}) {
 
 // ---------------------------------------------------------------------------
 
-// Each path has a short description beside the diagram (side) and the one
-// thing to do next across the full width below it (main).
-function actionFor(path, source) {
+function Benefits({items}) {
+  return (
+    <ul className={styles.pfList}>
+      {items.map(([Icon, text]) => (
+        <li key={text}>
+          <Icon size={20} />
+          <span>{text}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// The picker explains what each path gives you (side) and hands off with one
+// button (main). Commands and agent prompts live on the page it links to, so
+// a reader never sees two different install commands at once.
+function actionFor(path, source, links) {
   if (path === 'sdk') {
     return {
-      side: <p className={styles.pfLead}>Call any model from Python with one function. Responses come back in the OpenAI format whichever provider you use, with retries and fallbacks built in.</p>,
-      main: (
+      side: (
         <>
-          <Command code="uv add litellm" id="pathfinder:sdk" small />
-          <AgentPrompt id="sdk" compact />
-          <div className={styles.pfLinks}>
-            <Link className={styles.btnSecondary} to="/docs/#quick-start">
-              SDK quickstart
-            </Link>
-          </div>
+          <p className={styles.pfLead}>A Python library you import. Nothing to deploy; it runs inside your app.</p>
+          <Benefits
+            items={[
+              [IconSdk, 'One completion() call for 100+ providers, answers in the OpenAI format'],
+              [IconGateway, 'Retries and fallbacks across providers and deployments'],
+              [IconSpend, 'Cost per call, and logging to Langfuse, OpenTelemetry, and more'],
+            ]}
+          />
         </>
+      ),
+      main: (
+        <div className={styles.pfLinks}>
+          <Link className={styles.btnPrimary} to={links.sdk} onClick={() => track('docs_path_cta', {path, source})}>
+            Install the SDK
+          </Link>
+          <span className={styles.pfNote}>One command, then your first call.</span>
+        </div>
       ),
     };
   }
   if (path === 'gateway') {
     return {
       side: (
-        <p className={styles.pfLead}>
-          One OpenAI-compatible endpoint for every app and every model, with virtual keys, budgets, spend tracking, and an admin UI.
-          Runs on your machine in about five minutes.
-        </p>
+        <>
+          <p className={styles.pfLead}>A self-hosted service every app and teammate calls, in any language.</p>
+          <Benefits
+            items={[
+              [IconGateway, 'One OpenAI-compatible endpoint for every model; existing SDKs keep working'],
+              [IconBudget, 'Virtual keys with budgets and rate limits per team, user, or app'],
+              [IconSpend, 'Spend tracking, logs, and guardrails in one place, plus an admin UI'],
+            ]}
+          />
+        </>
       ),
       main: (
-        <>
-          <Command code={GATEWAY_COMPOSE} id="pathfinder:gateway" note="Gateway + Postgres on :4000, admin UI at /ui" small />
-          <AgentPrompt id="gateway" compact />
-          <div className={styles.pfLinks}>
-            <Link className={styles.btnSecondary} to="/docs/proxy/docker_quick_start">
-              Gateway quickstart
-            </Link>
-          </div>
-        </>
+        <div className={styles.pfLinks}>
+          <Link className={styles.btnPrimary} to={links.gateway} onClick={() => track('docs_path_cta', {path, source})}>
+            Start the Gateway
+          </Link>
+          <span className={styles.pfNote}>Runs on your machine with Docker in about five minutes.</span>
+        </div>
       ),
     };
   }
@@ -226,14 +248,7 @@ function actionFor(path, source) {
     side: (
       <>
         <p className={styles.pfLead}>The same Gateway, plus what a security review asks for. Self-hosted, so prompts never leave your environment.</p>
-        <ul className={styles.pfList}>
-          {items.map(([Icon, text]) => (
-            <li key={text}>
-              <Icon size={20} />
-              <span>{text}</span>
-            </li>
-          ))}
-        </ul>
+        <Benefits items={items} />
       </>
     ),
     main: (
@@ -248,9 +263,15 @@ function actionFor(path, source) {
   };
 }
 
-export default function PathFinder({initial = 'gateway', question = 'Who is calling the models?', source = 'docs'}) {
+export default function PathFinder({
+  initial = 'gateway',
+  question = 'Who is calling the models?',
+  source = 'docs',
+  sdkHref = '/docs/#installation',
+  gatewayHref = '/docs/proxy/docker_quick_start',
+}) {
   const [path, setPath] = useState(initial);
-  const action = actionFor(path, source);
+  const action = actionFor(path, source, {sdk: sdkHref, gateway: gatewayHref});
   const baseId = useId();
   const refs = useRef([]);
 

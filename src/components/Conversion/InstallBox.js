@@ -1,84 +1,73 @@
-import React, {useId, useRef, useState} from 'react';
-import clsx from 'clsx';
+import React, {useId, useState} from 'react';
 import Link from '@docusaurus/Link';
 import {INSTALLS, ONE_CLICK} from './content';
-import AgentPrompt from './AgentPrompt';
 import Command from './Command';
 import {track} from './shared';
 import styles from './styles.module.css';
 
-// Tabbed install panel: every tab is one way to get the same thing running.
-// The first tab is the recommended path; a coding-agent tab is always offered.
-export default function InstallBox({variant = 'gateway', title, initial}) {
-  const tabs = INSTALLS[variant] || [];
-  const [active, setActive] = useState(initial || tabs[0]?.id);
-  const baseId = useId();
-  const tabRefs = useRef([]);
-  const tab = tabs.find((t) => t.id === active) || tabs[0];
-  if (!tab) return null;
+function MoreLink({to, label}) {
+  if (!to) return null;
+  const external = /^https?:/.test(to);
+  return (
+    <Link to={to} className={styles.installMore} {...(external ? {target: '_blank', rel: 'noopener noreferrer'} : {})}>
+      {label || 'Full guide'}
+    </Link>
+  );
+}
 
-  const onKey = (e, i) => {
-    const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!dir) return;
-    e.preventDefault();
-    const next = (i + dir + tabs.length) % tabs.length;
-    setActive(tabs[next].id);
-    tabRefs.current[next]?.focus();
-  };
-
-  const isExternal = tab.more && /^https?:/.test(tab.more);
+// One recommended command, what it gives you, and the alternatives folded
+// away with a line on when each is the better pick. Agent prompts live in
+// their own <AgentPrompt> box, never in here.
+export default function InstallBox({variant = 'gateway', title}) {
+  const config = INSTALLS[variant];
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
+  if (!config) return null;
+  const [primary, ...others] = config.options;
 
   return (
     <div className={styles.install}>
-      <div className={styles.installBar}>
-        {title && <span className={styles.installTitle}>{title}</span>}
-        <div className={styles.installTabs} role="tablist" aria-label={title || 'Install options'}>
-          {tabs.map((t, i) => (
-            <button
-              key={t.id}
-              ref={(el) => (tabRefs.current[i] = el)}
-              role="tab"
-              type="button"
-              id={`${baseId}-tab-${t.id}`}
-              aria-selected={t.id === tab.id}
-              aria-controls={`${baseId}-panel`}
-              tabIndex={t.id === tab.id ? 0 : -1}
-              className={clsx(styles.installTab, t.id === tab.id && styles.installTabActive)}
-              onClick={() => {
-                setActive(t.id);
-                track('docs_install_tab', {variant, tab: t.id});
-              }}
-              onKeyDown={(e) => onKey(e, i)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <div className={styles.installHead}>
+        <span className={styles.installTitle}>{title || config.title}</span>
+        <span className={styles.installRec}>Recommended: {primary.label}</span>
+      </div>
+      <div className={styles.installPanel}>
+        <Command code={primary.code} id={`${variant}:${primary.id}`} />
+        <p className={styles.installWhat}>
+          {config.what} <MoreLink to={primary.more} label={primary.moreLabel} />
+        </p>
       </div>
 
-      <div
-        id={`${baseId}-panel`}
-        role="tabpanel"
-        aria-labelledby={`${baseId}-tab-${tab.id}`}
-        className={styles.installPanel}>
-        {tab.prompt ? (
-          <div className={styles.installPrompt}>
-            <AgentPrompt id={tab.prompt} compact />
-          </div>
-        ) : (
-          <>
-            <Command code={tab.code} note={tab.note} id={`${variant}:${tab.id}`} />
-            {tab.more && (
-              <div className={styles.installFoot}>
-                <Link
-                  to={tab.more}
-                  {...(isExternal ? {target: '_blank', rel: 'noopener noreferrer'} : {})}>
-                  {tab.moreLabel || 'Full guide'}
-                </Link>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {others.length > 0 && (
+        <div className={styles.installOthers}>
+          <button
+            type="button"
+            className={styles.installOthersToggle}
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => {
+              if (!open) track('docs_install_others_opened', {variant});
+              setOpen((v) => !v);
+            }}>
+            Other ways to install <span className={styles.installOthersList}>{others.map((o) => o.label).join(', ')}</span>
+          </button>
+          {open && (
+            <div id={bodyId} className={styles.installOthersBody}>
+              {others.map((o) => (
+                <div key={o.id} className={styles.installAlt}>
+                  <p className={styles.installAltHead}>
+                    <strong>{o.label}</strong>
+                    {o.when && <span>{o.when}</span>}
+                  </p>
+                  <Command code={o.code} id={`${variant}:${o.id}`} small />
+                  <MoreLink to={o.more} label={o.moreLabel} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {variant === 'gateway' && (
         <p className={styles.mobileHint}>
           On a phone? Deploy the gateway in one click on{' '}
@@ -90,7 +79,7 @@ export default function InstallBox({variant = 'gateway', title, initial}) {
               </a>
             </React.Fragment>
           ))}
-          , or copy the coding agent prompt for later.
+          .
         </p>
       )}
     </div>

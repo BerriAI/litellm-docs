@@ -6,13 +6,17 @@ description: Start LiteLLM with one command or one click and go from zero to you
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import {InstallBox, NextSteps, SalesBand} from '@site/src/components/Conversion';
+import {AgentPrompt, InstallBox, NextSteps, SalesBand} from '@site/src/components/Conversion';
 
 # Quickstart
 
 Run the LiteLLM Gateway on your machine, then do everything else in the browser: connect a provider, create a virtual key, and send your first request. About five minutes, no config files.
 
 <InstallBox variant="gateway" title="Start the Gateway" />
+
+Working in Claude Code, Codex, or Cursor? Paste this prompt instead and the agent runs the setup and verifies it for you.
+
+<AgentPrompt id="gateway" />
 
 ## 1. Start LiteLLM
 
