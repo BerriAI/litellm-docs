@@ -116,7 +116,7 @@ print(response)
 ```python showLineNumbers title="create_finetuning_job.py"
 ...
 
-client.fine_tuning.jobs.list(extra_body={"target_model_names": "gpt-4.1-openai"})
+client.fine_tuning.jobs.list(extra_query={"target_model_names": "gpt-4.1-openai"})
 ```
 
 ### 6. Cancel a Finetuning Job
