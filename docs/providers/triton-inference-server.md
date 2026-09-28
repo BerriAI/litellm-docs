@@ -192,7 +192,7 @@ response = completion(
 
 Use the `triton/` prefix to route to triton server
 ```python
-from litellm import embedding
+import litellm
 import os
 
 response = await litellm.aembedding(
