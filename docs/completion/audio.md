@@ -213,8 +213,8 @@ Use `litellm.supports_audio_output(model="")` -> returns `True` if model can gen
 Use `litellm.supports_audio_input(model="")` -> returns `True` if model can accept audio input
 
 ```python
-assert litellm.supports_audio_output(model="gpt-4o-audio-preview") == True
-assert litellm.supports_audio_input(model="gpt-4o-audio-preview") == True
+assert litellm.supports_audio_output(model="gpt-audio") == True
+assert litellm.supports_audio_input(model="gpt-audio") == True
 
 assert litellm.supports_audio_output(model="{{openai_small}}") == False
 assert litellm.supports_audio_input(model="{{openai_small}}") == False
@@ -224,13 +224,13 @@ assert litellm.supports_audio_input(model="{{openai_small}}") == False
 <TabItem label="LiteLLM Proxy Server" value="proxy">
 
 
-1. Define vision models on config.yaml
+1. Define audio models on config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-audio-preview # OpenAI gpt-4o-audio-preview
+  - model_name: gpt-audio # OpenAI gpt-audio
     litellm_params:
-      model: openai/gpt-4o-audio-preview
+      model: openai/gpt-audio
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -248,37 +248,39 @@ model_list:
 litellm --config config.yaml
 ```
 
-3. Call `/model_group/info` to check if your model supports `vision`
+3. Call `/model/info` to check if your model supports audio input and output. The flags are returned under each deployment's `model_info`, either from `litellm.model_cost` or from what you set in `config.yaml`. `/model_group/info` does not return `supports_audio_input` or `supports_audio_output`
 
 ```shell
 curl -X 'GET' \
-  'http://localhost:4000/model_group/info' \
+  'http://localhost:4000/model/info' \
   -H 'accept: application/json' \
   -H "x-api-key: $LITELLM_API_KEY"
 ```
 
-Expected Response 
+Expected Response (trimmed)
 
 ```json
 {
   "data": [
     {
-      "model_group": "gpt-4o-audio-preview",
-      "providers": ["openai"],
-      "max_input_tokens": 128000,
-      "max_output_tokens": 16384,
-      "mode": "chat",
-      "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true # 👈 supports_audio_input is true
+      "model_name": "gpt-audio",
+      "model_info": {
+        "max_input_tokens": 128000,
+        "max_output_tokens": 16384,
+        "mode": "chat",
+        "supports_audio_input": true,
+        "supports_audio_output": true
+      }
     },
     {
-      "model_group": "llava-hf",
-      "providers": ["openai"],
-      "max_input_tokens": null,
-      "max_output_tokens": null,
-      "mode": null,
-      "supports_audio_output": true, # 👈 supports_audio_output is true
-      "supports_audio_input": true # 👈 supports_audio_input is true
+      "model_name": "llava-hf",
+      "model_info": {
+        "max_input_tokens": null,
+        "max_output_tokens": null,
+        "mode": null,
+        "supports_audio_input": true,
+        "supports_audio_output": true
+      }
     }
   ]
 }
