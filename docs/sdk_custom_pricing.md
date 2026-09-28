@@ -1,8 +1,13 @@
 # Custom Pricing - SageMaker, Azure, etc
 
-Register custom pricing for sagemaker completion model. 
+Register custom pricing for sagemaker completion model
 
-For cost per second pricing, you **just** need to register `input_cost_per_second`. 
+For chat, completion, embedding and responses models, set `cost_per_second`. LiteLLM multiplies it by the full request
+duration, including streaming until the last chunk, and ignores it when per-token pricing is configured
+
+`input_cost_per_second` and `output_cost_per_second` remain accepted as legacy aliases for these modes and are charged
+once, not added. When both are set, `input_cost_per_second` wins. Transcription and video continue to use the
+input/output per-second fields
 
 ```python
 # !uv add boto3 
@@ -19,7 +24,7 @@ def test_completion_sagemaker():
         response = completion(
             model="sagemaker/berri-benchmarking-Llama-2-70b-chat-hf-4",
             messages=[{"role": "user", "content": "Hey, how's it going?"}],
-            input_cost_per_second=0.000420,
+            cost_per_second=0.000420,
         )
         # Add any assertions here to check the response
         print(response)
