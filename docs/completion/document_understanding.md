@@ -353,10 +353,12 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 <Tabs>
 <TabItem label="SDK" value="sdk">
 
-Use `litellm.supports_pdf_input(model="bedrock/us.anthropic.{{anthropic}}")` -> returns `True` if model can accept pdf input
+Use `supports_pdf_input(model="bedrock/us.anthropic.{{anthropic}}")` from `litellm.utils`, which returns `True` if the model can accept pdf input. It is not exported on the top-level `litellm` module
 
 ```python
-assert litellm.supports_pdf_input(model="bedrock/us.anthropic.{{anthropic}}") == True
+from litellm.utils import supports_pdf_input
+
+assert supports_pdf_input(model="bedrock/us.anthropic.{{anthropic}}") == True
 ```
 </TabItem>
 
@@ -382,28 +384,29 @@ model_list:
 litellm --config config.yaml
 ```
 
-3. Call `/model_group/info` to check if a model supports `pdf` input
+3. Call `/model/info` to check if a model supports `pdf` input. `/model_group/info` does not return `supports_pdf_input`
 
 ```shell
 curl -X 'GET' \
-  'http://localhost:4000/model_group/info' \
+  'http://localhost:4000/model/info' \
   -H 'accept: application/json' \
   -H "x-api-key: $LITELLM_API_KEY"
 ```
 
-Expected Response 
+Expected Response
 
 ```json
 {
   "data": [
     {
-      "model_group": "bedrock-model",
-      "providers": ["bedrock"],
-      "max_input_tokens": 128000,
-      "max_output_tokens": 16384,
-      "mode": "chat",
-      ...,
-      "supports_pdf_input": true # 👈 supports_pdf_input is true
+      "model_name": "bedrock-model",
+      "litellm_params": {...},
+      "model_info": {
+        "litellm_provider": "bedrock_converse",
+        "mode": "chat",
+        ...,
+        "supports_pdf_input": true
+      }
     }
   ]
 }
