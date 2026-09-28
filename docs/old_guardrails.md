@@ -345,7 +345,7 @@ litellm_settings:
         callbacks: [hide_secrets]
         default_on: true
     - pii_masking:
-        callback: ["presidio"]
+        callbacks: [presidio]
         default_on: true
         logging_only: true
     - your-custom-guardrail:
