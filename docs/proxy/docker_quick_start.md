@@ -6,48 +6,33 @@ description: Start LiteLLM with one command or one click and go from zero to you
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import {InstallBox, NextSteps, SalesBand} from '@site/src/components/Conversion';
 
 # Quickstart
 
-LiteLLM ships as a ready-to-run gateway. You start it with one command (or one click), then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
+Run the LiteLLM Gateway on your machine, then do everything else in the browser: connect a provider, create a virtual key, and send your first request. About five minutes, no config files.
 
-By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
+<InstallBox variant="gateway" title="Start the Gateway" />
 
 ## 1. Start LiteLLM
 
-<Tabs>
-<TabItem value="local" label="Run locally" default>
+The Docker Compose command above brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and lands in your working directory, so you can read it before starting it and pin a release tag afterwards.
 
-```bash
-curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
-printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
-docker compose -f docker-compose.quickstart.yml up -d
-```
+Prefer a hosted instance? Deploy the same stack in one click, then use your deployment's URL wherever this guide says `http://localhost:4000`.
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
-
-The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
-
-</TabItem>
-<TabItem value="cloud" label="1-click deploy">
-
-<div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
-  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
-  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
+<div style={{display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', margin: '0 0 1.25rem'}}>
+  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="36" /></a>
+  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="36" /></a>
 </div>
 
-For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
+<details>
+<summary>What the two generated keys do</summary>
 
-</TabItem>
-</Tabs>
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement.
 
-:::warning[What the two keys do]
-Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the `.env` file: changing the salt key later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate. On a 1-click deploy, set both in the provider's environment.
 
-`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement
-
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the generated value: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
-:::
+</details>
 
 ## 2. Log in to the Admin UI
 
@@ -209,4 +194,13 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
 
 ## Next steps
 
-Going to production: the [Production Deployment guide](./deploy.md) covers Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, and the [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are covered in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
+<NextSteps items={[
+  {icon: 'agent', title: 'Connect your tools', text: 'Claude Code, Codex, Cursor, or any OpenAI SDK, pointed at the gateway.', to: '/docs/proxy/client_setup/overview'},
+  {icon: 'budget', title: 'Set budgets and limits', text: 'Per key, team, or tag, enforced on every request.', to: '/docs/proxy/users'},
+  {icon: 'guardrails', title: 'Add guardrails', text: 'PII masking, prompt injection checks, and custom rules.', to: '/docs/proxy/guardrails/quick_start'},
+  {icon: 'regions', title: 'Go to production', text: 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure.', to: '/docs/proxy/deploy'},
+]} />
+
+The [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
+
+<SalesBand source="docker-quickstart" title="Rolling this out to more than one team?" />

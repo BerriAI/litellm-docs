@@ -16,11 +16,14 @@ If you need a Docker or database-first setup, use the [Quickstart](/docs/proxy/d
 uv tool install 'litellm[proxy]'
 ```
 
-## 2. Set One Provider Key
+## 2. Set One Provider Key and a Master Key
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
 ```
+
+The master key is the admin credential for the gateway; requests below authenticate with it.
 
 ## 3. Create `config.yaml`
 
@@ -33,8 +36,9 @@ model_list:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: postgresql://llmproxy:dbpassword9090@db:5432/litellm
 ```
+
+This path runs without a database, so virtual keys, budgets, and the Admin UI are off. Add them later with a `database_url` (see below) or use the [Docker quickstart](/docs/proxy/docker_quick_start), which includes Postgres.
 
 ## 4. Start The Gateway
 
@@ -49,7 +53,7 @@ You should see the proxy start on `http://0.0.0.0:4000`.
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [

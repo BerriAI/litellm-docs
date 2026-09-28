@@ -1,0 +1,64 @@
+.page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 4rem;
+}
+
+.hero {
+  max-width: 50rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero .title {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3.1rem);
+  line-height: 1.08;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.hero .lead {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.section {
+  margin-top: 3rem;
+}
+
+.h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+}
+
+.agent {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 2rem;
+  align-items: start;
+  margin-top: 2.5rem;
+}
+.agentCopy p {
+  margin: 0.5rem 0 0;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+}
+.agent > div:last-child {
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  .page {
+    padding-top: 2rem;
+  }
+  .agent {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}

@@ -1,0 +1,237 @@
+.hero,
+.stack {
+  --cv-accent: var(--ifm-color-primary);
+  --cv-ink: var(--ifm-font-color-base);
+  --cv-muted: var(--ifm-color-emphasis-700);
+  --cv-line: var(--ifm-color-emphasis-300);
+  --cv-page: var(--ifm-background-color);
+  --cv-surface: var(--ifm-background-surface-color, var(--ifm-background-color));
+  --cv-tint: color-mix(in srgb, var(--ifm-color-primary) 7%, var(--cv-page));
+  --cv-tint-strong: color-mix(in srgb, var(--ifm-color-primary) 13%, var(--cv-page));
+}
+
+/* ------------------------------------------------------------------- hero */
+
+.hero {
+  margin: 0.5rem 0 2.5rem;
+  max-width: 46rem;
+}
+
+.hero .heroEyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--cv-accent);
+}
+
+.hero .heroTitle {
+  margin: 0 0 1rem;
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.75rem);
+  line-height: 1.1;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  color: var(--cv-ink);
+  text-wrap: balance;
+}
+
+.hero .heroText {
+  margin: 0 0 1.5rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--cv-muted);
+  max-width: 40rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.heroActions a {
+  padding: 0.9rem 1.3rem;
+  font-size: 1rem;
+}
+
+.proof {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+.proof li {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--cv-line);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 550;
+  color: var(--cv-muted);
+}
+.proof a {
+  color: inherit;
+}
+.proof a:hover {
+  color: var(--cv-accent);
+}
+
+/* ------------------------------------------------------------------ stack */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.slab {
+  position: relative;
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--cv-line);
+  background: var(--cv-surface);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  transition-delay: calc(var(--i) * 140ms);
+}
+.slab + .slab {
+  margin-top: -1px;
+}
+.slab:first-child {
+  border-radius: 16px 16px 0 0;
+}
+.slab:last-child {
+  border-radius: 0 0 16px 16px;
+}
+.stackShown .slab {
+  opacity: 1;
+  transform: none;
+}
+
+/* Each tier sits a little further in, so the stack reads as layers. */
+.slab_enterprise {
+  margin-inline: 0;
+}
+.slab_gateway {
+  margin-inline: 0.9rem;
+}
+.slab_sdk {
+  margin-inline: 1.8rem;
+}
+
+.slabOn {
+  z-index: 1;
+  border-color: var(--cv-accent);
+  background:
+    radial-gradient(100% 160% at 0% 0%, var(--cv-tint-strong) 0%, transparent 65%),
+    var(--cv-surface);
+  box-shadow: 0 0 0 1px var(--cv-accent);
+}
+
+.slabHead {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.slabIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--cv-tint);
+  color: var(--cv-ink);
+}
+.slabOn .slabIcon {
+  background: var(--cv-page);
+}
+
+.slabName {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--cv-ink);
+  line-height: 1.2;
+}
+
+.slabHow {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--cv-muted);
+}
+
+.slabItems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.slabItems li {
+  margin: 0;
+}
+.slabItems a {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--cv-line);
+  background: var(--cv-page);
+  color: var(--cv-ink);
+  font-size: 0.86rem;
+  font-weight: 550;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.slabItems a:hover {
+  border-color: var(--cv-accent);
+  color: var(--cv-accent);
+}
+.slabOn .slabItems a {
+  border-color: color-mix(in srgb, var(--cv-accent) 45%, var(--cv-line));
+}
+
+.slabPlus {
+  position: absolute;
+  right: 1rem;
+  bottom: -0.7rem;
+  z-index: 2;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--cv-page);
+  border: 1px solid var(--cv-line);
+  font-size: 0.72rem;
+  color: var(--cv-muted);
+}
+
+@media (max-width: 800px) {
+  .slab {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+  .slab_gateway,
+  .slab_sdk {
+    margin-inline: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slab {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* The enterprise page has no sidebar, so give its column the breathing room
+   a sidebar would otherwise provide. Scoped to the page holding the hero. */
+:global(main .container):has(.hero) {
+  padding-inline: clamp(1rem, 4vw, 3.5rem);
+}

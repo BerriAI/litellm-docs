@@ -94,6 +94,7 @@ const config = {
     }),
     require('./plugins/optimize-images'),
     require('./plugins/rust-migration-posts'),
+    require('./plugins/llms'),
     [
       '@docusaurus/plugin-client-redirects',
       {

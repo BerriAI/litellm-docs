@@ -1,66 +1,40 @@
-# ✨ Enterprise
+---
+title: Enterprise
+hide_title: true
+description: LiteLLM Enterprise is the open-source AI Gateway plus SSO, audit logs, delegated admin roles, multi-region deployment, and support SLAs, self-hosted in your cloud.
+---
 
-:::info
+import {EnterpriseHero, TierStack} from '@site/src/components/Conversion/Enterprise';
+import {Tiles, SalesBand} from '@site/src/components/Conversion';
 
-New here? Start with the [Enterprise Quickstart](/docs/learn/enterprise_quickstart). You can also start a [30-day trial](https://www.litellm.ai/enterprise#trial) or [book a demo](https://enterprise.litellm.ai/demo).
+<EnterpriseHero />
 
-:::
+## What you get on top of open source
+
+Enterprise is a license key on the same Gateway image you may already run. Nothing to migrate: each layer includes everything below it.
+
+<TierStack />
+
+## What changes for your organization
+
+<Tiles size="lg" columns={3} items={[
+  {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
+  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
+  {icon: 'roles', title: 'Teams run themselves', text: 'Organizations with their own admins who manage keys, budgets, and models without the master key.', to: '/docs/proxy/access_control'},
+  {icon: 'budget', title: 'No surprise bills', text: 'Budgets per project, tag, and model, soft-limit alerts before teams hit a cap, and spend reports by team.', to: '/docs/proxy/project_management'},
+  {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
+  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '#professional-support'},
+]} />
+
+<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Start a 30-day trial with a full license, or talk to the team about your rollout, security review, and procurement through AWS or Azure Marketplace." />
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale (100+ users or 10+ production AI use-cases) that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. SSO is free for up to 5 users. Beyond that, an enterprise license is required. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
+For teams running LiteLLM at scale (100+ users or 10+ production AI use cases) that need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users; beyond that, an Enterprise license is required. Engineers evaluating a trial can follow the [Enterprise Quickstart](/docs/learn/enterprise_quickstart).
 
-## Why Enterprise?
+## Full feature list
 
-LiteLLM OSS already covers the fundamentals: an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
-
-<div className="enterprise-compare">
-
-<div className="enterprise-compare-head">
-<span></span>
-<span>OSS</span>
-<span>Enterprise</span>
-</div>
-
-<div>
-<strong>Auth</strong>
-<span>Master key, <a href="./proxy/ui#4-sign-in-for-the-first-time"><code>UI_USERNAME</code> and <code>UI_PASSWORD</code></a></span>
-<span>SSO + SCIM, OIDC/JWT</span>
-</div>
-
-<div>
-<strong>Key Management</strong>
-<span>Virtual keys, users, teams across LLM APIs, MCPs, and Agents</span>
-<span>Organizations, org/team admins, delegated admin roles</span>
-</div>
-
-<div>
-<strong>Security</strong>
-<span>Master key, virtual keys, and [master key rotation](./proxy/master_key_rotations)</span>
-<span>Virtual key rotations, read/write to secret manager, [IP allowlists](./proxy/ip_address), [public and private route controls](./proxy/public_routes)</span>
-</div>
-
-<div>
-<strong>Guardrails</strong>
-<span>Always-on / request-based. Custom guardrails and Presidio (PII masking) are included. Built-in moderation callbacks need a license; see the <a href="#guardrails-oss-vs-enterprise">note below</a>.</span>
-<span>Key and team scoped guardrails</span>
-</div>
-
-<div>
-<strong>Logging</strong>
-<span>Request/response logging, Prometheus metrics</span>
-<span>Per-key / per-team routing to Langfuse, Langsmith, Arize and more. Management-op logs</span>
-</div>
-
-<div>
-<strong>Deployment</strong>
-<span>Single-region proxy</span>
-<span><a href="./proxy/multi_region">Multi-region deployment</a> under one license, admin/worker split</span>
-</div>
-
-</div>
-
-## Features
+Everything below is enabled by the license key. Each item links to its setup guide.
 
 ### Security and access
 
@@ -195,3 +169,5 @@ Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for 
 Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule, with no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.
 
 </details>
+
+<SalesBand source="enterprise-page-bottom" />

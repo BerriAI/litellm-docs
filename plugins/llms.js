@@ -1,0 +1,345 @@
+// Emits the machine-readable layer of the docs at build time:
+//
+//   /llms.txt          index in the llmstxt.org format, built from the sidebars
+//   /llms-full.txt     every docs page as markdown, concatenated
+//   /docs/<page>.md    each docs page as plain markdown, next to its HTML
+//
+// Pages are read from their MDX source, with {{role}} model ids filled in,
+// imports dropped, and Tabs / TabItem / Image flattened into markdown, so an
+// agent fetching `<any docs url>.md` gets the same content a reader sees.
+
+const fs = require('fs');
+const path = require('path');
+const {substitute} = require('../src/remark/docs-models');
+const {PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS} = require('../src/components/Conversion/content');
+
+const SITE = 'https://docs.litellm.ai';
+
+// Hand-picked entry points listed first in llms.txt. Everything else comes
+// from the sidebars, so new pages show up without touching this file.
+const START_HERE = [
+  ['index', 'Python SDK quickstart', '`uv add litellm`, then call any provider with `completion()`'],
+  ['proxy/docker_quick_start', 'AI Gateway quickstart', 'Run the gateway with Docker and Postgres, add a model, create a virtual key'],
+  ['agent_resources', 'Agent resources', 'Copy-paste prompts, MCP, and skills for coding agents setting up LiteLLM'],
+  ['proxy/client_setup/overview', 'Connect clients to the gateway', 'Point Claude Code, Codex, Cursor, or any OpenAI or Anthropic SDK at the gateway'],
+  ['proxy/configs', 'Gateway config.yaml reference', 'Every setting the gateway config file supports'],
+  ['proxy/deploy', 'Production deployment', 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure'],
+  ['enterprise', 'LiteLLM Enterprise', 'What Enterprise adds on top of the open-source gateway: SSO, audit logs, admin roles, SLAs'],
+];
+
+// The main sidebar is split by its top-level categories; the others are small
+// enough to list under one heading each.
+const SIDEBAR_TITLES = {
+  learnSidebar: 'Learn: guides and tutorials',
+  integrationsSidebar: 'Integrations',
+  autoRouterSidebar: 'Auto Router',
+};
+
+const SUMMARY = `LiteLLM is an open-source Python SDK and a self-hosted AI Gateway (proxy) that give 100+ LLM providers one OpenAI-compatible API, with virtual keys, spend tracking, budgets, routing and fallbacks, guardrails, and an MCP gateway.`;
+
+const NOTES = `- Python SDK: \`uv add litellm\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
+- AI Gateway: Docker image \`docker.litellm.ai/berriai/litellm\`. Keys, the Admin UI (\`/ui\`), and spend tracking need Postgres (\`DATABASE_URL\`) and a \`LITELLM_MASTER_KEY\`. Any OpenAI or Anthropic SDK works against it by changing the base URL.
+- Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image. Contact: https://www.litellm.ai/enterprise#talk-to-sales
+- Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.`;
+
+// ---------------------------------------------------------------------------
+// MDX -> markdown
+
+const JSX_ATTR = (tag, name) => {
+  const m = new RegExp(`${name}=(?:"([^"]*)"|'([^']*)'|\\{['"\`]([^'"\`]*)['"\`]\\})`).exec(tag);
+  return m ? m[1] ?? m[2] ?? m[3] : null;
+};
+
+// The interactive conversion components hold real instructions (prompts,
+// install commands), so they are written out in full for agents.
+function expandComponent(tag) {
+  let m = /^<AgentPrompt\b[^>]*\bid="([^"]+)"[^>]*\/>$/.exec(tag);
+  if (m && PROMPTS[m[1]]) {
+    const p = PROMPTS[m[1]];
+    return `**Agent prompt: ${p.title}**\n\n\`\`\`text\n${p.text}\n\`\`\`\n`;
+  }
+  if (/^<InstallBox\b.*\/>$/.test(tag)) {
+    const tabs = INSTALLS[JSX_ATTR(tag, 'variant') || 'gateway'] || [];
+    return tabs
+      .map((t) =>
+        t.prompt
+          ? `**${t.label}**: paste the "${PROMPTS[t.prompt].title}" prompt into your agent:\n\n\`\`\`text\n${PROMPTS[t.prompt].text}\n\`\`\`\n`
+          : `**${t.label}**${t.note ? `: ${t.note}` : ''}\n\n\`\`\`bash\n${t.code}\n\`\`\`\n`,
+      )
+      .join('\n');
+  }
+  if (/^<PathFinder\b/.test(tag)) {
+    return [
+      'Pick the path that matches who is calling the models:',
+      '',
+      '- Just my code (one Python app): `uv add litellm`, then see https://docs.litellm.ai/docs/index.md',
+      `- My team or several apps (any language, keys, budgets, spend tracking): run the Gateway:\n\n\`\`\`bash\n${GATEWAY_COMPOSE}\n\`\`\`\n\n  Full guide: https://docs.litellm.ai/docs/proxy/docker_quick_start.md`,
+      `- My whole organization (SSO, audit logs, admin roles, support SLAs): LiteLLM Enterprise, ${SALES_URL}`,
+      '',
+    ].join('\n');
+  }
+  if (/^<Command\b/.test(tag)) return commandMarkdown(tag);
+  if (/^<EnterpriseFeature\b/.test(tag)) {
+    if (/\sfree\b/.test(tag)) {
+      return '> **Free Enterprise feature.** Available in the `litellm[proxy]` package and every `litellm` Docker image; no Enterprise license is required.\n';
+    }
+    const feature = JSX_ATTR(tag, 'feature');
+    return `> **LiteLLM Enterprise feature${feature ? `: ${feature}` : ''}.** Requires an Enterprise license (\`LITELLM_LICENSE\`). Talk to sales: ${SALES_URL}\n`;
+  }
+  if (/^<EnterpriseHero\b/.test(tag)) {
+    return `**${ENTERPRISE_HERO.title}**\n\n${ENTERPRISE_HERO.text}\n\nTalk to sales: ${SALES_URL}. Start a 30-day trial: ${TRIAL_URL}. SOC 2 Type II report: https://trust.litellm.ai/\n`;
+  }
+  if (/^<TierStack\b/.test(tag)) {
+    return TIERS.map((t) => {
+      const items = t.items.map(([label, to]) => `[${label}](${to.startsWith('/') ? SITE + to : to})`).join(', ');
+      return `- **${t.name}** (${t.how}): ${items}`;
+    }).join('\n') + '\n';
+  }
+  if (/^<(SalesBand|SalesButton)\b/.test(tag)) {
+    return `Talk to sales about LiteLLM Enterprise: ${SALES_URL}\n`;
+  }
+  return null;
+}
+
+// Card-style components written over several lines (NextSteps, Tiles,
+// NavigationCards): keep their titles, one-liners, and links as a list.
+function commandMarkdown(block) {
+  const code =
+    /\bcode=\{`([\s\S]*?)`\}/.exec(block)?.[1].replace(/\\\\/g, '\\') ??
+    /\bcode="([^"]*)"/.exec(block)?.[1];
+  if (code == null) return null;
+  const note = JSX_ATTR(block, 'note');
+  return `${note ? `${note}\n\n` : ''}\`\`\`bash\n${code}\n\`\`\`\n`;
+}
+
+function expandMultiline(block) {
+  if (/^\s*<Command\b/.test(block)) return commandMarkdown(block) || '';
+  const items = [];
+  const re = /\{([^{}]*\btitle:[^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(block))) {
+    const field = (name) => {
+      const f = new RegExp(`\\b${name}:\\s*(['"\`])((?:\\\\.|(?!\\1).)*)\\1`).exec(m[1]);
+      return f ? f[2] : null;
+    };
+    const title = field('title');
+    if (!title) continue;
+    const to = field('to');
+    const text = field('text') || field('description');
+    const href = to ? (to.startsWith('/') ? SITE + to : to) : null;
+    items.push(`- ${href ? `[${clean(title)}](${href})` : clean(title)}${text ? `: ${clean(text)}` : ''}`);
+  }
+  return items.length ? items.join('\n') + '\n' : '';
+}
+
+function mdxToMarkdown(raw) {
+  let text = raw.replace(/^---\n[\s\S]*?\n---\n/, '');
+  text = substitute(text);
+
+  const out = [];
+  let fence = null;
+  let jsx = null; // lines of a multi-line <Component ... /> being collected
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (jsx) {
+      jsx.push(line);
+      if (/\/>\s*$/.test(trimmed)) {
+        out.push(expandMultiline(jsx.join('\n')));
+        jsx = null;
+      }
+      continue;
+    }
+    if (!fence && /^<[A-Z][A-Za-z]*\b/.test(trimmed) && !/>\s*$/.test(trimmed)) {
+      jsx = [line];
+      continue;
+    }
+    const fenceMatch = /^(```+|~~~+)/.exec(trimmed);
+    if (fenceMatch) {
+      if (!fence) fence = fenceMatch[1];
+      else if (trimmed.startsWith(fence) && trimmed.replace(/[`~]/g, '') === '') fence = null;
+      out.push(line);
+      continue;
+    }
+    if (fence) {
+      out.push(line);
+      continue;
+    }
+    if (/^(import|export)\s/.test(trimmed)) continue;
+    if (/^\{\/\*.*\*\/\}$/.test(trimmed)) continue;
+    // Inline form: <EnterpriseFeature feature="SSO">note</EnterpriseFeature>
+    if (/^<EnterpriseFeature\b[^/]*>/.test(trimmed)) {
+      if (/\sfree\b/.test(trimmed.split('>')[0])) {
+        out.push('> **Free Enterprise feature.** No Enterprise license is required.', '');
+        continue;
+      }
+      const note = trimmed.replace(/^<EnterpriseFeature\b[^>]*>/, '').replace(/<\/EnterpriseFeature>$/, '').trim();
+      out.push(`> **LiteLLM Enterprise feature.** ${note || 'Requires an Enterprise license.'} Talk to sales: ${SALES_URL}`, '');
+      continue;
+    }
+    if (trimmed === '</EnterpriseFeature>') continue;
+    if (/^<\/?Tabs\b[^>]*>$/.test(trimmed) || trimmed === '</TabItem>') continue;
+    if (/^<TabItem\b/.test(trimmed)) {
+      const label = JSX_ATTR(trimmed, 'label') || JSX_ATTR(trimmed, 'value');
+      if (label) out.push(`**${label}**`, '');
+      continue;
+    }
+    if (/^<(Image|img)\b/.test(trimmed)) {
+      const alt = JSX_ATTR(trimmed, 'alt');
+      if (alt) out.push(`[Image: ${alt}]`);
+      continue;
+    }
+    const expanded = expandComponent(trimmed);
+    if (expanded) {
+      out.push(expanded);
+      continue;
+    }
+    // Self-closing site components (cards, diagrams, pickers) carry no prose.
+    if (/^<[A-Z][A-Za-z]*\b[^>]*\/>$/.test(trimmed)) continue;
+    out.push(line);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+// ---------------------------------------------------------------------------
+// helpers
+
+const clean = (s) =>
+  String(s || '')
+    .replace(/\p{Extended_Pictographic}️?/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// Docusaurus falls back to the first line of the page when a doc has no
+// description, which is often a heading ("Overview", "Quick Start"). Those
+// say nothing, so they are dropped.
+const usefulDescription = (d) => {
+  const t = clean(d);
+  return t.split(' ').length >= 5 ? t : '';
+};
+
+const oneLine = (s, max = 180) => {
+  const t = clean(s);
+  return t.length > max ? t.slice(0, max - 1).replace(/\s+\S*$/, '') + '...' : t;
+};
+
+const mdUrl = (permalink) =>
+  SITE + (permalink.endsWith('/') ? `${permalink}index.md` : `${permalink}.md`);
+
+function mdPath(outDir, permalink) {
+  const rel = permalink.endsWith('/') ? `${permalink}index.md` : `${permalink}.md`;
+  return path.join(outDir, rel);
+}
+
+// Depth-first list of doc ids under a sidebar item, in sidebar order.
+function collectDocIds(item, acc = []) {
+  if (!item) return acc;
+  if (item.type === 'doc' || item.type === 'ref') acc.push(item.id);
+  if (item.type === 'category') {
+    if (item.link && item.link.type === 'doc') acc.push(item.link.id);
+    for (const child of item.items || []) collectDocIds(child, acc);
+  }
+  return acc;
+}
+
+// ---------------------------------------------------------------------------
+
+module.exports = function llmsPlugin(context) {
+  let docs = [];
+  let sidebars = {};
+
+  return {
+    name: 'litellm-llms-txt',
+
+    async allContentLoaded({allContent}) {
+      const docsContent = allContent['docusaurus-plugin-content-docs']?.default;
+      const version = docsContent?.loadedVersions?.[0];
+      if (!version) return;
+      docs = version.docs.filter((d) => !d.unlisted && !d.draft);
+      sidebars = version.sidebars || {};
+    },
+
+    async postBuild({outDir}) {
+      if (!docs.length) return;
+      const byId = new Map(docs.map((d) => [d.id, d]));
+      const markdown = new Map();
+
+      // Per-page markdown.
+      await Promise.all(
+        docs.map(async (doc) => {
+          const sourcePath = path.join(context.siteDir, doc.source.replace(/^@site\//, ''));
+          let body;
+          try {
+            body = mdxToMarkdown(await fs.promises.readFile(sourcePath, 'utf8'));
+          } catch {
+            return;
+          }
+          const title = clean(doc.title);
+          const header = `# ${title}\n\n> Source: ${SITE}${doc.permalink}. Index of all LiteLLM docs: ${SITE}/llms.txt\n\n`;
+          const content = body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body;
+          markdown.set(doc.id, content);
+          const target = mdPath(outDir, doc.permalink);
+          await fs.promises.mkdir(path.dirname(target), {recursive: true});
+          await fs.promises.writeFile(target, content);
+        }),
+      );
+
+      // llms.txt
+      const link = (doc, note, label) => {
+        const desc = note || usefulDescription(doc.description);
+        return `- [${label || clean(doc.title)}](${mdUrl(doc.permalink)})${desc ? `: ${oneLine(desc)}` : ''}`;
+      };
+
+      const listed = new Set();
+      const lines = [`# LiteLLM`, '', `> ${SUMMARY}`, '', NOTES, '', '## Key pages', ''];
+      for (const [id, label, note] of START_HERE) {
+        const doc = byId.get(id);
+        if (!doc) continue;
+        lines.push(link(doc, note, label));
+        listed.add(id);
+      }
+
+      const order = ['tutorialSidebar', 'learnSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
+      const sidebarNames = [...order.filter((n) => sidebars[n]), ...Object.keys(sidebars).filter((n) => !order.includes(n))];
+      for (const name of sidebarNames) {
+        if (SIDEBAR_TITLES[name]) {
+          const ids = sidebars[name].flatMap((top) => collectDocIds(top)).filter((id) => byId.has(id) && !listed.has(id));
+          if (!ids.length) continue;
+          lines.push('', `## ${SIDEBAR_TITLES[name]}`, '');
+          for (const id of [...new Set(ids)]) {
+            lines.push(link(byId.get(id)));
+            listed.add(id);
+          }
+          continue;
+        }
+        for (const top of sidebars[name]) {
+          const ids = collectDocIds(top).filter((id) => byId.has(id) && !listed.has(id));
+          if (!ids.length) continue;
+          const heading = top.type === 'category' ? clean(top.label) : clean(byId.get(ids[0]).title);
+          lines.push('', `## ${heading}`, '');
+          for (const id of [...new Set(ids)]) {
+            lines.push(link(byId.get(id)));
+            listed.add(id);
+          }
+        }
+      }
+
+      const orphans = docs.filter((d) => !listed.has(d.id));
+      lines.push('', '## Optional', '');
+      lines.push(`- [Release notes](${SITE}/release_notes): Changelog for every LiteLLM release`);
+      lines.push(`- [Blog](${SITE}/blog): Launches, benchmarks, and engineering posts`);
+      for (const doc of orphans) lines.push(link(doc));
+
+      await fs.promises.writeFile(path.join(outDir, 'llms.txt'), lines.join('\n') + '\n');
+
+      // llms-full.txt, in the same order as llms.txt.
+      const orderedIds = [...listed, ...orphans.map((d) => d.id)];
+      const full = [`# LiteLLM documentation\n\n> ${SUMMARY}\n\n${NOTES}\n`];
+      for (const id of new Set(orderedIds)) {
+        if (markdown.has(id)) full.push(markdown.get(id));
+      }
+      await fs.promises.writeFile(path.join(outDir, 'llms-full.txt'), full.join('\n---\n\n'));
+    },
+  };
+};
+
+module.exports.mdxToMarkdown = mdxToMarkdown;

@@ -300,7 +300,7 @@ print(response)
 </Tabs>
 
 ## LiteLLM Proxy Server with Hugging Face models
-You can set up a [LiteLLM Proxy Server](https://docs.litellm.ai/#litellm-proxy-server-llm-gateway) to serve Hugging Face models through any of the supported Inference Providers. Here's how to do it:
+You can set up a [LiteLLM Proxy Server](/docs/proxy/docker_quick_start) to serve Hugging Face models through any of the supported Inference Providers. Here's how to do it:
 
 ### Step 1. Setup the config file
 
