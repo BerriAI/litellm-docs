@@ -153,8 +153,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
     -H 'Content-Type: application/json' \
     -d '{
             "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
-        }
-    }'
+        }'
 ```
 
 </TabItem>
@@ -167,8 +166,7 @@ curl --location 'http://0.0.0.0:4000/key/update' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",
         "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
-        }
-}'
+    }'
 ```
 
 </TabItem>
