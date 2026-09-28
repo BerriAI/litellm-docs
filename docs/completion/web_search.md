@@ -186,10 +186,12 @@ response = completion(
 ```
 
 **xAI (using web_search_options)**
+
+xAI no longer runs web search on its own `/chat/completions`, so when `web_search_options` is set LiteLLM sends the request to xAI's Responses API with a `web_search` tool and converts the result back to a chat completion. xAI does not support `search_context_size`, so it is dropped
+
 ```python showLineNumbers
 from litellm import completion
 
-# Customize search context size for xAI
 response = completion(
     model="xai/grok-3",
     messages=[
@@ -198,9 +200,7 @@ response = completion(
             "content": "What was a positive news story from today?",
         }
     ],
-    web_search_options={
-        "search_context_size": "high"  # Options: "low", "medium" (default), "high"
-    }
+    web_search_options={}  # search_context_size is ignored for xAI
 )
 ```
 
@@ -678,7 +678,7 @@ The number of web search requests is stored in `usage.prompt_tokens_details.web_
 - **Gemini**: Extracted from `groundingMetadata.webSearchQueries` in the response. For Gemini 2.x, clamped to 1 (per-prompt billing).
 - **OpenAI**: Reported directly in the usage metadata.
 - **Anthropic**: Reported via `server_tool_use.web_search_requests`.
-- **xAI**: Mapped from `num_sources_used` in the response.
+- **xAI**: Reported in `usage.server_side_tool_usage_details.web_search_calls` rather than `web_search_requests`. `num_sources_used` is not read. When xAI returns `usage.cost`, LiteLLM uses it as the response cost, which already includes the search charge
 
 ```python
 response = litellm.completion(
