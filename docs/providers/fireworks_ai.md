@@ -548,11 +548,13 @@ from litellm import transcription
 import os
 
 os.environ["FIREWORKS_AI_API_KEY"] = "YOUR_API_KEY"
-os.environ["FIREWORKS_AI_API_BASE"] = "https://audio-prod.api.fireworks.ai/v1"
+os.environ["FIREWORKS_API_BASE"] = "https://audio-prod.api.fireworks.ai/v1"
+
+audio_file = open("/path/to/audio.wav", "rb")
 
 response = transcription(
     model="fireworks_ai/whisper-v3",
-    audio=audio_file,
+    file=audio_file,
 )
 ```
 
