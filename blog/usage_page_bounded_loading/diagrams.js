@@ -7,9 +7,9 @@ const benchmark = {
   improvement: '120×',
   context: '30-day Usage view · 5,000 API keys · same database',
   metrics: [
-    {label: 'Usage requests', before: '315', after: '4'},
+    {label: 'Usage requests', before: '315', after: '6'},
     {label: 'Data transferred', before: '1.3 GB', after: '17 MB'},
-    {label: 'Peak browser heap', before: '2.0 GB', after: '65 MB'},
+    {label: 'Peak browser heap', before: '2.0 GB', after: '72 MB'},
   ],
 };
 

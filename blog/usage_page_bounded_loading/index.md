@@ -31,14 +31,14 @@ More keys and more history meant more requests, more data, and more work in the 
 
 <UsageDataFlow />
 
-Totals still include **all keys** in the selected range. You can still search for any virtual key and export complete usage data to CSV.
+Totals still include **all keys** in the selected range. The key list loads 50 keys at a time as you scroll, and a key's daily charts load when you expand it, so the browser never holds every key's history. Search and CSV export run in Postgres too, so you can still find any virtual key and export complete usage data.
 
 ## The results hold up over longer ranges
 
 For 90 days of usage, time to totals fell from **about 34 minutes to 10 seconds**. The same redesign covers the User, Agent, Team, Tag, Organization, and Customer usage views.
 
-We tested both designs against the same Postgres database: **5,000 API keys and 4.9 million daily rows across 91 days**. Both used production UI builds. New timings are medians of five runs with a cold browser cache; old timings come from runs allowed to finish beyond our 90-second cutoff. These measurements track time to visible totals.
+We tested both designs against the same Postgres database: **5,000 API keys and 4.9 million daily rows across 91 days**. Both used production UI builds. New timings are medians of five runs with a cold browser cache; old timings come from runs allowed to finish beyond our 90-second cutoff. These measurements track time to visible totals. We later reran the final code side by side with the version we first measured, on a separate machine, and time to totals matched within 2%.
 
-![LiteLLM Usage page showing 30 days of spend and usage totals after the redesign.](./after_usage_30d.png)
+![LiteLLM Usage page Key Activity tab showing complete 30-day totals for 5,000 keys, with the key list loading below.](./after_usage_30d.png)
 
 See the changes: [database queries](https://github.com/BerriAI/litellm/pull/43398), [API routes](https://github.com/BerriAI/litellm/pull/43408), and [Admin UI](https://github.com/BerriAI/litellm/pull/43409). We're making it faster to see where your LLM spend is going, even as your deployment grows.
