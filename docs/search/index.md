@@ -187,6 +187,38 @@ curl http://0.0.0.0:4000/v1/search/my-search \
   }'
 ```
 
+### Restrict Search Tool Access
+
+Set `search_tools` under `object_permission` on a key, team or user to limit which search tools it can call. The allowlist applies to `/search`, `/v1/search`, web search interception and `/search_tools/list`
+
+```bash showLineNumbers title="Grant a team one search tool"
+curl http://0.0.0.0:4000/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "team_alias": "research",
+    "object_permission": {"search_tools": ["tavily-search"]}
+  }'
+```
+
+By default an empty or missing `search_tools` list allows every search tool. Set `default_search_list_deny` to make search opt-in instead, so a key, team or user with no grant is denied every search tool
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  default_search_list_deny: true
+```
+
+You can also toggle it from the Admin UI under **Settings > Router Settings > General Settings**. With it on, access resolves as follows:
+
+| Caller | Must be granted by | Also narrowed by |
+|---|---|---|
+| Team key | the team's `search_tools` | the key's and the user's non-empty `search_tools` |
+| Personal key (no team) | the user's `search_tools` | the key's non-empty `search_tools` |
+| Key with no team or user | the key's `search_tools` | |
+| Proxy admin | not restricted | |
+
+A key can never widen what its team or user grants, and existing keys, teams and users with empty lists lose search access as soon as the setting is on. Denied requests return `403` before any search provider is called. Web search interception with no registered search tool also stops falling back to the default provider for anyone but a proxy admin
+
 ## **Request/Response Format**
 
 :::info
