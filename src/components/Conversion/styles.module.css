@@ -1002,3 +1002,8 @@
     transition: none;
   }
 }
+
+/* The TOC's Enterprise promo points at the page it would sit on. */
+:global(html.docs-doc-id-enterprise) :global([class*='promoCard_']) {
+  display: none;
+}

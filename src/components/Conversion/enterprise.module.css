@@ -114,16 +114,6 @@
   transform: none;
 }
 
-/* Each tier sits a little further in, so the stack reads as layers. */
-.slab_enterprise {
-  margin-inline: 0;
-}
-.slab_gateway {
-  margin-inline: 0.9rem;
-}
-.slab_sdk {
-  margin-inline: 1.8rem;
-}
 
 .slabOn {
   z-index: 1;
@@ -212,17 +202,11 @@
 }
 
 .slabPlus {
-  position: absolute;
-  right: 1rem;
-  bottom: -0.7rem;
-  z-index: 2;
-  padding: 0.1rem 0.55rem;
-  border-radius: var(--lite-radius-xs, 999px);
-  /* The slabs it straddles are --cv-surface; the page colour can be
-     transparent (Infima's light theme), which lets the border show through. */
-  background: var(--cv-surface);
-  border: 1px solid var(--cv-line);
-  font-size: 0.72rem;
+  display: block;
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--cv-muted);
 }
 

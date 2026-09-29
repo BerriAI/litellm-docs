@@ -132,7 +132,8 @@ const TIERS = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    how: 'License key on the same Gateway',
+    how: 'License key on the Gateway',
+    plus: 'Everything in AI Gateway, plus',
     items: [
       ['SSO and SCIM', '/docs/proxy/admin_ui_sso'],
       ['Audit logs', '/docs/proxy/multiple_admins'],
@@ -148,6 +149,7 @@ const TIERS = [
     id: 'gateway',
     name: 'AI Gateway',
     how: 'Open source, self-hosted',
+    plus: 'Everything in the SDK, plus',
     items: [
       ['Virtual keys', '/docs/proxy/virtual_keys'],
       ['Budgets and rate limits', '/docs/proxy/users'],
@@ -163,6 +165,7 @@ const TIERS = [
     id: 'sdk',
     name: 'Python SDK',
     how: 'Open source library',
+    plus: 'In your Python code',
     items: [
       ['100+ providers', '/docs/providers'],
       ['OpenAI format', '/docs/completion/output'],
