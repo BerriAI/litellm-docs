@@ -57,8 +57,22 @@ const HUB_CY = HUB.y + HUB.s / 2;
 const BOX_W = 146;
 const PROV_X = 560;
 
+// What the interchange does, under its name.
+const CHIPS = {
+  sdk: [
+    ['completion()', 82],
+    ['Fallbacks', 64],
+    ['Cost per call', 84],
+  ],
+  gateway: [
+    ['Virtual keys', 70],
+    ['Budgets', 54],
+    ['Spend logs', 70],
+  ],
+};
+
 const TITLES = {
-  sdk: 'Your Python app calls every provider directly through the LiteLLM SDK, inside your own process.',
+  sdk: 'Inside your Python process, the LiteLLM SDK calls every provider directly: one completion() call with fallbacks and cost per call.',
   gateway: 'Several apps reach every provider through one LiteLLM Gateway that issues virtual keys, enforces budgets, and logs spend.',
   enterprise:
     'Every team and employee reaches every provider through the LiteLLM Gateway inside your organization, with SSO, audit logs, roles, and regions on its edge.',
@@ -105,8 +119,11 @@ export function TransitDiagram({path}) {
   const reduced = usePrefersReducedMotion();
   const direct = path === 'sdk';
   const ent = path === 'enterprise';
-  const outbound = PY.map((py, j) => (direct ? route(262, HUB_CY + (j - 2) * 5, PROV_X - 6, py) : route(HUB.x + HUB.s, HUB_CY + (j - 2) * 12, PROV_X - 6, py)));
-  const inbound = direct ? [`M${BOX_W + 18} ${HUB_CY} H198`] : APPS_Y.map((y, i) => route(BOX_W + 18, y, HUB.x, HUB_CY + (i - 1) * 16));
+  const outbound = PY.map((py, j) => route(HUB.x + HUB.s, HUB_CY + (j - 2) * 12, PROV_X - 6, py));
+  const inbound = direct ? [`M${BOX_W + 18} ${HUB_CY} H${HUB.x}`] : APPS_Y.map((y, i) => route(BOX_W + 18, y, HUB.x, HUB_CY + (i - 1) * 16));
+  const chips = CHIPS[direct ? 'sdk' : 'gateway'];
+  const chipsW = chips.reduce((a, [, w]) => a + w, 0) + (chips.length - 1) * 6;
+  let chipX = HUB.x + HUB.s / 2 - chipsW / 2;
 
   return (
     <svg className={styles.svg} viewBox="0 0 720 330" role="img" aria-label={TITLES[path]}>
@@ -117,6 +134,14 @@ export function TransitDiagram({path}) {
       </defs>
       <rect width="720" height="330" fill="url(#tr-dots)" />
 
+      {direct && (
+        <g className={styles.fadeIn}>
+          <rect className={styles.zone} x="4.5" y="84.5" width="486" height="216" rx="18" />
+          <text className={styles.zoneText} x="18" y="104">
+            Your Python process
+          </text>
+        </g>
+      )}
       {ent && (
         <g className={styles.fadeIn}>
           <rect className={styles.zone} x="244.5" y="60.5" width="232" height="240" rx="18" />
@@ -146,45 +171,36 @@ export function TransitDiagram({path}) {
         )}
       </g>
 
-      {direct ? (
-        <g className={styles.fadeIn}>
-          <AppBox y={HUB_CY} label="Your Python app" />
-          <rect className={styles.tag} x="12.5" y={HUB_CY + 24} width="98" height="18" rx="4" />
-          <text className={clsx(styles.tagText, styles.mono)} x="61.5" y={HUB_CY + 37} textAnchor="middle">
-            import litellm
-          </text>
-          <rect className={styles.sdkStop} x="198.5" y={HUB_CY - 13.5} width="64" height="27" rx="7" />
-          <text className={styles.hubLabel} x="230.5" y={HUB_CY + 4.5} textAnchor="middle">
-            litellm
-          </text>
-          <text className={styles.note} x="230.5" y={HUB_CY + 34} textAnchor="middle">
-            runs in your process
-          </text>
-        </g>
-      ) : (
-        <g className={styles.fadeIn}>
-          {APPS[path].map((label, i) => (
-            <AppBox key={label} y={APPS_Y[i]} label={label} />
-          ))}
-          <rect className={styles.hub} x={HUB.x + 0.5} y={HUB.y + 0.5} width={HUB.s} height={HUB.s} rx="14" />
-          <Monogram x={HUB.x + 30} y={HUB.y + 30} size={60} />
-          <text className={styles.hubLabel} x={HUB.x + HUB.s / 2} y={HUB.y + HUB.s + 22} textAnchor="middle">
-            LiteLLM Gateway
-          </text>
-          {[
-            ['Virtual keys', 252, 70],
-            ['Budgets', 327, 54],
-            ['Spend logs', 386, 70],
-          ].map(([label, x, w]) => (
+      <g className={styles.fadeIn}>
+        {direct ? (
+          <>
+            <AppBox y={HUB_CY} label="Your Python app" />
+            <rect className={styles.tag} x="12.5" y={HUB_CY + 24} width="98" height="18" rx="4" />
+            <text className={clsx(styles.tagText, styles.mono)} x="61.5" y={HUB_CY + 37} textAnchor="middle">
+              import litellm
+            </text>
+          </>
+        ) : (
+          APPS[path].map((label, i) => <AppBox key={label} y={APPS_Y[i]} label={label} />)
+        )}
+        <rect className={styles.hub} x={HUB.x + 0.5} y={HUB.y + 0.5} width={HUB.s} height={HUB.s} rx="14" />
+        <Monogram x={HUB.x + 30} y={HUB.y + 30} size={60} />
+        <text className={styles.hubLabel} x={HUB.x + HUB.s / 2} y={HUB.y + HUB.s + 22} textAnchor="middle">
+          {direct ? 'LiteLLM SDK' : 'LiteLLM Gateway'}
+        </text>
+        {chips.map(([label, w]) => {
+          const x = chipX;
+          chipX += w + 6;
+          return (
             <g key={label}>
               <rect className={styles.chip} x={x + 0.5} y={HUB.y + HUB.s + 34.5} width={w} height="20" rx="4" />
               <text className={styles.chipText} x={x + w / 2} y={HUB.y + HUB.s + 48} textAnchor="middle">
                 {label}
               </text>
             </g>
-          ))}
-        </g>
-      )}
+          );
+        })}
+      </g>
 
       {ent && (
         <g className={styles.fadeIn}>

@@ -1,0 +1,110 @@
+/*
+ * Docs home: one section per product, problem first, then the product that
+ * solves it, with one small visual. Hairlines between sections; no cards, no
+ * gradients, so the path picker above stays the only large visual.
+ */
+
+.wrap {
+  margin: 3rem 0 2rem;
+}
+.title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+}
+.list {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.75rem 2.5rem;
+  align-items: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  scroll-margin-top: 5rem;
+}
+.product {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary);
+}
+.problem {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+.solution {
+  margin: 0 0 1rem;
+  color: var(--ifm-color-emphasis-800);
+  line-height: 1.6;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.visual {
+  min-width: 0;
+}
+.code {
+  margin: 0 !important;
+  font-size: 0.82rem;
+}
+
+/* Small tables and log lines share the code block's frame */
+.table,
+.lines {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-lg, 12px);
+  overflow: hidden;
+  font-size: 0.85rem;
+  background: var(--lite-page, var(--ifm-background-surface-color));
+}
+.tr {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(calc(var(--cols) - 1), 1fr);
+  gap: 1rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.th {
+  border-top: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+  background: color-mix(in srgb, var(--ifm-color-primary) 5%, transparent);
+}
+.lines {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+}
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  padding: 0.65rem 0.9rem;
+}
+.line + .line {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.lineEnd {
+  margin-left: auto;
+  color: var(--ifm-color-success-darker);
+}
+.muted,
+.lineEnd.muted {
+  color: var(--ifm-color-emphasis-600);
+}
+
+@media (max-width: 860px) {
+  .item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -187,6 +187,11 @@
   white-space: nowrap;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
+.promptBtnMd {
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.9rem;
+}
 .promptBtn:hover {
   border-color: var(--ifm-color-primary);
   color: var(--ifm-color-primary);

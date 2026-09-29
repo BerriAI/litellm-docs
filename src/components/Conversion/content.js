@@ -215,6 +215,141 @@ const TIERS = [
   },
 ];
 
+// The docs home, below the path picker: one section per product, each told
+// as the problem a reader has and the product that solves it, with one small
+// visual that is real text (code, a table, or log lines) so agents can read
+// it too. Model names come from docs-models.json like the rest of the docs.
+const M = require('../../../docs-models.json');
+const USE_CASES = [
+  {
+    id: 'sdk',
+    product: 'Python SDK',
+    problem: 'Your Python code calls more than one model provider.',
+    solution:
+      'Call every provider with one function. completion() takes the same arguments for OpenAI, Anthropic, Bedrock, and 100+ others, and always answers in the OpenAI format, so switching models is a string change. Streaming, retries, fallbacks, and cost per call come with it.',
+    to: '/docs/',
+    cta: 'Install the SDK',
+    prompt: 'sdk',
+    visual: {
+      type: 'code',
+      lang: 'python',
+      code: `from litellm import completion
+
+messages = [{"role": "user", "content": "Hello"}]
+
+completion(model="openai/${M.openai_large}", messages=messages)
+completion(model="anthropic/${M.anthropic}", messages=messages)`,
+    },
+  },
+  {
+    id: 'gateway',
+    product: 'AI Gateway',
+    problem: 'Several apps and teams share provider keys, and nobody can say who spent what.',
+    solution:
+      'Run one gateway that every app calls in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
+    to: '/docs/proxy/docker_quick_start',
+    cta: 'Start the Gateway',
+    prompt: 'gateway',
+    visual: {
+      type: 'code',
+      lang: 'bash',
+      code: `curl http://localhost:4000/v1/chat/completions \\
+  -H "Authorization: Bearer sk-<virtual-key>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"model": "${M.openai_large}", "messages": [{"role": "user", "content": "Hello"}]}'`,
+    },
+  },
+  {
+    id: 'tools',
+    product: 'Coding agents',
+    problem: 'Your team runs Claude Code, Codex, and Cursor on personal API keys.',
+    solution:
+      'Point the tools at the gateway instead. Each person gets a virtual key, so usage shows up per person and per team, budgets apply, and one admin can change which models are available.',
+    to: '/docs/proxy/client_setup/overview',
+    cta: 'Connect your tools',
+    prompt: 'clients',
+    visual: {
+      type: 'code',
+      lang: 'bash',
+      code: `# Claude Code, through your gateway
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_AUTH_TOKEN="sk-<virtual-key>"`,
+    },
+  },
+  {
+    id: 'mcp',
+    product: 'MCP Gateway',
+    problem: 'Every app wires up its own MCP servers, with credentials copied around.',
+    solution:
+      'Add MCP servers to the gateway once. Apps reach every tool through one endpoint, and you decide which keys and teams may use which server.',
+    to: '/docs/mcp',
+    cta: 'Set up the MCP Gateway',
+    prompt: 'mcp',
+    visual: {
+      type: 'table',
+      head: ['MCP server', 'Search team', 'Support team'],
+      rows: [
+        ['GitHub', 'allowed', 'no access'],
+        ['Jira', 'allowed', 'allowed'],
+        ['Zendesk', 'no access', 'allowed'],
+      ],
+    },
+  },
+  {
+    id: 'agents',
+    product: 'Agent Gateway',
+    problem: 'Your agents call other agents, with no record of who called what.',
+    solution:
+      'Register A2A agents on the gateway. Callers use a virtual key, each call is logged like any other request, and you choose which teams may invoke which agent.',
+    to: '/docs/a2a',
+    cta: 'Set up the Agent Gateway',
+    prompt: 'agents',
+    visual: {
+      type: 'lines',
+      lines: [
+        ['POST /a2a/support-agent', 'key: search-team', 'logged'],
+        ['POST /a2a/billing-agent', 'key: search-team', 'not allowed'],
+      ],
+    },
+  },
+  {
+    id: 'autorouter',
+    product: 'Auto Router (add-on)',
+    problem: 'Easy prompts go to your most expensive model.',
+    solution:
+      'The Auto Router sends each request to the cheapest model that can answer it well, so simple prompts cost less without changing your app.',
+    to: '/docs/auto_router/',
+    cta: 'See the Auto Router',
+    prompt: 'autorouter',
+    visual: {
+      type: 'table',
+      head: ['Request', 'Routed to'],
+      rows: [
+        ['Fix the typo in this sentence', 'a small, cheap model'],
+        ['Plan a zero-downtime database migration', 'a frontier model'],
+      ],
+    },
+  },
+  {
+    id: 'enterprise',
+    product: 'Enterprise',
+    problem: 'Security review wants single sign-on, audit logs, and admin roles before rollout.',
+    solution:
+      'Enterprise adds them to the same gateway with a license key: SSO and SCIM, audit logs of every admin action, delegated admins per team, multi-region deployment, and support from the engineers who build LiteLLM.',
+    to: '/docs/enterprise',
+    cta: 'Talk to sales',
+    sales: true,
+    prompt: 'enterprise',
+    visual: {
+      type: 'lines',
+      lines: [
+        ['jane@acme.com via Okta', 'created key', 'team: search'],
+        ['raj@acme.com via Okta', 'raised budget', 'team: support'],
+      ],
+    },
+  },
+];
+
 // Every product, as the system map on the docs home draws it. Each has a
 // guide and an agent prompt (PROMPTS above).
 const PRODUCTS = [
@@ -229,6 +364,7 @@ const PRODUCTS = [
 
 module.exports = {
   PRODUCTS,
+  USE_CASES,
   ENTERPRISE_HERO,
   TIERS,
   DOCS,

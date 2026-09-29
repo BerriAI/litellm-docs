@@ -19,7 +19,7 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
-const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, PRODUCTS} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, PRODUCTS, USE_CASES} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
@@ -73,18 +73,27 @@ const JSX_ATTR = (tag, name) => {
 
 // The interactive conversion components hold real instructions (prompts,
 // install commands), so they are written out in full for agents.
-// Every product with its guide and agent prompt, as the system map on the
-// docs home shows them.
-function productsMarkdown() {
+// The docs home's problem-to-solution sections, with their code and tables.
+function useCasesMarkdown() {
+  const docUrl = (to) => (to === '/docs/' ? `${SITE}/docs/index.md` : `${SITE}${to.replace(/\/$/, '/index')}.md`);
+  const visual = (v) => {
+    if (v.type === 'code') return ['```' + v.lang, v.code, '```'];
+    if (v.type === 'table') return [`| ${v.head.join(' | ')} |`, `| ${v.head.map(() => '---').join(' | ')} |`, ...v.rows.map((r) => `| ${r.join(' | ')} |`)];
+    return v.lines.map((l) => `- ${l.join(', ')}`);
+  };
   return [
-    '## Products',
+    '## What people use LiteLLM for',
     '',
-    ...PRODUCTS.map((p) => {
-      const url = p.to === '/docs/' ? `${SITE}/docs/index.md` : `${SITE}${p.to.replace(/\/$/, '/index')}.md`;
-      const prompt = PROMPTS[p.prompt];
-      return `- [${p.name}](${url}): ${p.text}${prompt ? ` Agent prompt: "${prompt.title}", in ${SITE}/docs/agent_resources.md` : ''}`;
-    }),
-    '',
+    ...USE_CASES.flatMap((u) => [
+      `### ${u.product}: ${u.problem}`,
+      '',
+      u.solution,
+      '',
+      ...visual(u.visual),
+      '',
+      `Guide: ${docUrl(u.to)}. Agent prompt: "${PROMPTS[u.prompt].title}", in ${SITE}/docs/agent_resources.md`,
+      '',
+    ]),
   ].join('\n');
 }
 
@@ -438,7 +447,7 @@ module.exports = function llmsPlugin(context) {
       await fs.promises.writeFile(
         path.join(outDir, 'index.md'),
         frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
-          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${productsMarkdown()}\n${NOTES}\n\n${FACTS}\n\n## Start here\n\n` +
+          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${FACTS}\n\n## Start here\n\n` +
           START_HERE.filter(([id]) => byId.has(id))
             .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
             .join('\n') +

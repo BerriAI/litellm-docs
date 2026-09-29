@@ -74,6 +74,7 @@ function actionFor(path, source, links) {
           <Link className={styles.btnPrimary} to={links.sdk} onClick={() => track('docs_path_cta', {path, source})}>
             Install the SDK
           </Link>
+          <PromptButton id={path} source={`${source}-pathfinder`} size="md" />
           <span className={styles.pfNote}>One command, then your first call.</span>
         </div>
       ),
@@ -98,6 +99,7 @@ function actionFor(path, source, links) {
           <Link className={styles.btnPrimary} to={links.gateway} onClick={() => track('docs_path_cta', {path, source})}>
             Start the Gateway
           </Link>
+          <PromptButton id={path} source={`${source}-pathfinder`} size="md" />
           <span className={styles.pfNote}>Runs on your machine with Docker in about five minutes.</span>
         </div>
       ),
@@ -120,6 +122,7 @@ function actionFor(path, source, links) {
     main: (
       <div className={styles.pfLinks}>
         <SalesButton source={`${source}-pathfinder`} />
+        <PromptButton id="enterprise" source={`${source}-pathfinder`} size="md" />
         <span className={styles.salesNote}>Includes a free 30-day trial</span>
         <Link className={styles.textLink} to="/docs/enterprise">
           Compare open source and Enterprise
@@ -183,7 +186,6 @@ export default function PathFinder({
         <div className={styles.pfDiagram}>
           <div className={styles.pfDiagramHead}>
             <span className={styles.pfDiagramCaption}>{CAPTIONS[path]}</span>
-            <PromptButton id={path} source={`${source}-pathfinder`} />
           </div>
           <div className={styles.pfDiagramScroll}>
             <TransitDiagram path={path} />
