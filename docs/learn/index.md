@@ -8,6 +8,17 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 LiteLLM gives you one OpenAI-compatible interface for 100+ LLM providers. Start with the path that matches your setup.
 
+<NavigationCards
+columns={1}
+items={[
+  {
+    title: "LiteLLM Academy",
+    description: "Get started with our interactive course. Learn the fundamentals every platform admin needs, from gateway setup and access control to routing and observability.",
+    to: "https://litellm.ai/course",
+  },
+]}
+/>
+
 ---
 
 ## Start Here
