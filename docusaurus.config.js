@@ -66,7 +66,7 @@ const inkeepConfig = {
 const config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/favicon.ico', 
+  favicon: '/img/brand/litellm-monogram-blue-192.png',
 
   // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
@@ -432,7 +432,16 @@ const config = {
         },
       },
       navbar: {
-        title: '🚅 LiteLLM',
+        // Primary logo (monogram + wordmark): blue on light, white on dark,
+        // per the logo guidelines. The wordmark-only secondary logo ships in
+        // white only, so it cannot sit on the light header.
+        logo: {
+          alt: 'LiteLLM',
+          src: '/img/brand/litellm-logo-blue.png',
+          srcDark: '/img/brand/litellm-logo-white.png',
+          width: 132,
+          height: 25,
+        },
         items: [
           {
             type: 'docSidebar',

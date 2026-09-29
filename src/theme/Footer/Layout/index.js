@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import {ThemeClassNames} from '@docusaurus/theme-common';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 export default function FooterLayout({style, links, logo, copyright}) {
   return (
@@ -17,10 +18,14 @@ export default function FooterLayout({style, links, logo, copyright}) {
               href="https://www.litellm.ai/"
               target="_blank"
               rel="noopener noreferrer">
-              <span className="footer__brand-mark" aria-hidden="true">
-                🚅
-              </span>
-              <span className="footer__brand-name">LiteLLM</span>
+              {/* The footer is always navy, so it uses the white primary logo. */}
+              <img
+                className="footer__brand-logo"
+                src={useBaseUrl('/img/brand/litellm-logo-white.png')}
+                alt="LiteLLM"
+                width="264"
+                height="50"
+              />
             </a>
           </div>
           {logo && <div className="margin-bottom--sm">{logo}</div>}

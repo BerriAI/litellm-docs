@@ -6,7 +6,9 @@
 /* =========================================
    FONTS
    ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Preview: Geist from Google Fonts, same loading path as the Inter import it
+   replaces. The PR self-hosts the woff2 files from static/fonts instead. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap');
 
 /* =========================================
    ROOT — Light Mode Variables
@@ -1120,4 +1122,946 @@ div[class*='announcementBar'] a:hover {
 .blog-wrapper .markdown table th,
 .blog-wrapper .markdown table td {
   text-align: left;
+}
+
+/* =========================================================================
+   SOFT AURORA RESTYLE
+   CSS only: same markup, same behavior, same layout as before. The logo
+   blue replaces green, Geist replaces Inter, a pale blue mesh sits
+   behind the top of every page (header included), and components pick up
+   Aurora's shapes at low volume. Everything below overrides earlier rules.
+   ========================================================================= */
+
+:root {
+  /* Accent is the logo blue (#0117be), used sparingly: links, active
+     states and a faint wash. Surfaces stay neutral. */
+  --ifm-color-primary: #0117be;
+  --ifm-color-primary-dark: #0114ab;
+  --ifm-color-primary-darker: #0112a1;
+  --ifm-color-primary-darkest: #010e85;
+  --ifm-color-primary-light: #1c31d1;
+  --ifm-color-primary-lighter: #2a3fd6;
+  --ifm-color-primary-lightest: #5566e0;
+  --ifm-font-family-base: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ifm-font-family-monospace: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ifm-font-size-base: 16px;
+  --ifm-line-height-base: 1.7;
+  --ifm-heading-font-weight: 560;
+  --ifm-font-color-base: #3a3e4b;
+  --ifm-heading-color: #272b37;
+  --ifm-toc-border-color: #ececf0;
+  --ifm-menu-color: #646875;
+  --ifm-menu-color-background-hover: rgba(1, 23, 190, 0.045);
+  --ifm-code-font-size: 88%;
+  --ifm-code-border-radius: 6px;
+  --ifm-navbar-background-color: #ffffff;
+  --docusaurus-highlighted-code-line-bg: rgba(1, 23, 190, 0.06);
+
+  --aurora-mesh:
+    radial-gradient(48% 540px at 4% -6%, rgba(1, 23, 190, 0.07) 0%, rgba(1, 23, 190, 0) 64%),
+    radial-gradient(42% 500px at 98% -4%, rgba(56, 170, 240, 0.12) 0%, rgba(56, 170, 240, 0) 66%),
+    radial-gradient(38% 400px at 52% -18%, rgba(110, 130, 255, 0.07) 0%, rgba(110, 130, 255, 0) 72%),
+    linear-gradient(180deg, rgba(246, 247, 253, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+  --aurora-nav-bg: rgba(255, 255, 255, 0.72);
+  --aurora-line: rgba(39, 43, 55, 0.08);
+  --aurora-line-strong: #e3e5ee;
+  --aurora-muted: #646875;
+  --aurora-soft: #6c707d;
+  --aurora-tint: #f2f4fd;
+  --aurora-accent-line: #d3d8f3;
+  --aurora-accent-ink: #0117be;
+  --aurora-active-bg: #ffffff;
+  --aurora-active-shadow: inset 0 0 0 1px var(--aurora-accent-line), 0 1px 2px rgba(1, 23, 190, 0.05);
+  --aurora-pill-shadow: 0 1px 2px rgba(39, 43, 55, 0.06), 0 4px 12px -6px rgba(1, 23, 190, 0.14);
+  --aurora-code-bg: #ffffff;
+  --aurora-surface: #ffffff;
+  --aurora-scroll: rgba(39, 43, 55, 0.18);
+  --aurora-inline-code-bg: #f2f4fd;
+  --aurora-grad-border: linear-gradient(135deg, rgba(1, 23, 190, 0.2), rgba(56, 170, 240, 0.22));
+  --aurora-shadow: 0 1px 2px rgba(39, 43, 55, 0.04), 0 10px 28px -14px rgba(1, 23, 190, 0.09);
+}
+
+/* html[...] to outrank Infima's own html[data-theme='dark'] variables */
+html[data-theme='dark'] {
+  /* #0117be is unreadable on dark (1.7:1), so dark mode uses a light blue
+     from the same hue for text and states, and keeps the logo blue for the
+     glow. The ground is a blue-black instead of violet navy. */
+  --ifm-color-primary: #9fabff;
+  --ifm-color-primary-dark: #8795ff;
+  --ifm-color-primary-darker: #7b8aff;
+  --ifm-color-primary-darkest: #5a6cff;
+  --ifm-color-primary-light: #b8c1ff;
+  --ifm-color-primary-lighter: #c6ceff;
+  --ifm-color-primary-lightest: #e3e7ff;
+  --ifm-background-color: #080b26;
+  --ifm-background-surface-color: #0f1335;
+  --ifm-font-color-base: #d6d4ea;
+  --ifm-heading-color: #ffffff;
+  --ifm-toc-border-color: #1a1f45;
+  --ifm-menu-color: #a6a4c6;
+  --ifm-menu-color-background-hover: rgba(159, 171, 255, 0.07);
+  --ifm-navbar-background-color: #080b26;
+  --docusaurus-highlighted-code-line-bg: rgba(159, 171, 255, 0.1);
+
+  --aurora-mesh:
+    radial-gradient(48% 560px at 2% -8%, rgba(20, 45, 220, 0.3) 0%, rgba(20, 45, 220, 0) 64%),
+    radial-gradient(42% 500px at 100% -6%, rgba(56, 170, 240, 0.12) 0%, rgba(56, 170, 240, 0) 66%),
+    radial-gradient(36% 380px at 52% -20%, rgba(110, 130, 255, 0.1) 0%, rgba(110, 130, 255, 0) 72%);
+  --aurora-nav-bg: rgba(8, 11, 38, 0.72);
+  --aurora-line: rgba(255, 255, 255, 0.08);
+  --aurora-line-strong: rgba(159, 171, 255, 0.16);
+  --aurora-muted: #a6a4c6;
+  --aurora-soft: #9a98ba;
+  --aurora-tint: rgba(159, 171, 255, 0.11);
+  --aurora-accent-line: rgba(159, 171, 255, 0.3);
+  --aurora-accent-ink: #c6ceff;
+  --aurora-active-bg: rgba(159, 171, 255, 0.11);
+  --aurora-active-shadow: inset 0 0 0 1px var(--aurora-accent-line);
+  --aurora-pill-shadow: inset 0 0 0 1px rgba(159, 171, 255, 0.2);
+  --aurora-code-bg: #0c1033;
+  --aurora-surface: #080b26;
+  --aurora-scroll: rgba(255, 255, 255, 0.18);
+  --aurora-inline-code-bg: rgba(159, 171, 255, 0.12);
+  --aurora-grad-border: linear-gradient(135deg, rgba(159, 171, 255, 0.32), rgba(56, 170, 240, 0.24));
+  --aurora-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 36px -18px rgba(20, 45, 220, 0.35);
+}
+
+/* ---------- Page background: the mesh scrolls away with the page ---------- */
+/* Infima leaves the light background transparent, so paint an opaque
+   surface under the mesh or the browser's own canvas shows through. */
+html {
+  background-color: var(--aurora-surface);
+}
+
+body {
+  background: var(--aurora-mesh) no-repeat 0 0 / 100% 620px, var(--aurora-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Navbar: translucent over the mesh, one hairline ---------- */
+.navbar,
+[data-theme='light'] .navbar,
+[data-theme='dark'] .navbar {
+  background-color: var(--aurora-nav-bg) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--aurora-line) !important;
+}
+
+/* backdrop-filter would trap the fixed mobile drawer inside the navbar */
+.navbar.navbar-sidebar--show {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.navbar__link {
+  font-weight: 500 !important;
+  color: var(--aurora-muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+@media (max-width: 1330px) {
+  .navbar__link {
+    padding: 5px 7px;
+  }
+}
+
+.navbar__link:hover {
+  color: var(--ifm-heading-color);
+}
+
+/* Current section: a 2px bar sitting on the header's bottom line, like a
+   tab, instead of a filled pill. */
+.navbar__center-col .navbar__link {
+  position: relative;
+}
+
+.navbar__center-col .navbar__link--active,
+.navbar__center-col .navbar__link--active:hover {
+  color: var(--ifm-heading-color);
+  background: none;
+  box-shadow: none;
+}
+
+.navbar__center-col .navbar__link--active::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: calc((var(--ifm-navbar-height) - 100%) / -2);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--ifm-color-primary);
+}
+
+@media (max-width: 1330px) {
+  .navbar__center-col .navbar__link--active::after {
+    left: 7px;
+    right: 7px;
+  }
+}
+
+/* Existing Rust link gets a live dot; no new element */
+.navbar__center-col .navbar__link[href='/rust-migration']::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: #2f9e5e;
+  box-shadow: 0 0 0 3px rgba(47, 158, 94, 0.14);
+  vertical-align: 2px;
+}
+
+[data-theme='dark'] .navbar__center-col .navbar__link[href='/rust-migration']::before {
+  background: #7ee2a8;
+  box-shadow: 0 0 0 3px rgba(126, 226, 168, 0.16);
+}
+
+.header-github-link,
+.header-discord-link {
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.header-github-link:hover,
+.header-discord-link:hover {
+  opacity: 1;
+}
+
+/* ---------- Type ---------- */
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) h1 {
+  font-size: 2.625rem;
+  font-weight: 560;
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) h2 {
+  font-size: 1.625rem;
+  font-weight: 560;
+  letter-spacing: -0.022em;
+  line-height: 1.28;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) p,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) ul,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) ol {
+  font-size: 1rem;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) table {
+  font-size: 0.9375rem;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) td {
+  font-size: 0.9rem;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) p a,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) li a,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) td a {
+  text-decoration: underline;
+  text-decoration-color: var(--aurora-accent-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) p a:hover,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) li a:hover,
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) td a:hover {
+  text-decoration-color: var(--ifm-color-primary);
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) :not(pre) > code,
+.blog-wrapper article .markdown :not(pre) > code {
+  background: var(--aurora-inline-code-bg);
+  border: 0;
+  border-radius: 6px;
+  padding: 0.12em 0.4em;
+  color: var(--aurora-accent-ink);
+  font-size: 0.86em;
+  vertical-align: baseline;
+}
+
+/* ---------- Breadcrumbs: quiet text ---------- */
+.breadcrumbs__link {
+  font-size: 13px;
+  color: var(--aurora-soft);
+  background: none !important;
+  padding: 0 2px;
+}
+
+.breadcrumbs__link:hover {
+  color: var(--ifm-heading-color);
+}
+
+.breadcrumbs__item--active .breadcrumbs__link {
+  color: var(--ifm-heading-color);
+  font-weight: 500;
+}
+
+/* ---------- Sidebar ---------- */
+.menu,
+[data-theme='dark'] .menu {
+  background-image: none;
+}
+
+.theme-doc-sidebar-container {
+  border-right-color: var(--aurora-line) !important;
+}
+
+.menu__link {
+  border-radius: 8px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.menu__link:hover,
+[data-theme='dark'] .menu__link:hover {
+  color: var(--ifm-heading-color);
+}
+
+.menu__link--active:not(.menu__link--sublist):not(:not([href])),
+[data-theme='dark'] .menu__link--active:not(.menu__link--sublist):not(:not([href])) {
+  color: var(--aurora-accent-ink) !important;
+  font-weight: 560 !important;
+  background-color: var(--aurora-active-bg) !important;
+  box-shadow: var(--aurora-active-shadow);
+}
+
+/* Categories on the active path, including non-collapsible ones (no href) */
+.menu__link--sublist.menu__link--active,
+.menu__link--active:not([href]),
+[data-theme='dark'] .menu__link--sublist.menu__link--active,
+[data-theme='dark'] .menu__link--active:not([href]) {
+  color: var(--ifm-heading-color);
+  font-weight: 560 !important;
+  background-color: transparent !important;
+}
+
+.menu__link--sublist.menu__link--active:hover {
+  background-color: var(--ifm-menu-color-background-hover) !important;
+}
+
+[class*='sidebar-item-'] ul:not(:first-child),
+[data-theme='dark'] [class*='sidebar-item-'] ul:not(:first-child) {
+  border-left-color: var(--aurora-line);
+}
+
+/* ---------- Table of contents ---------- */
+.table-of-contents {
+  font-size: 13.5px;
+}
+
+.table-of-contents__link,
+[data-theme='dark'] .table-of-contents__link {
+  display: block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  color: var(--aurora-soft);
+}
+
+.table-of-contents__link:hover {
+  color: var(--ifm-heading-color);
+}
+
+.table-of-contents__link--active,
+[data-theme='dark'] .table-of-contents__link--active {
+  color: var(--aurora-accent-ink);
+  font-weight: 500;
+  background: var(--aurora-tint);
+  box-shadow: inset 0 0 0 1px var(--aurora-accent-line);
+}
+
+/* ---------- Code blocks: thin gradient edge, soft shadow ---------- */
+.theme-code-block {
+  --prism-background-color: var(--aurora-code-bg) !important;
+  border: 1px solid transparent;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(var(--aurora-code-bg), var(--aurora-code-bg)) padding-box,
+    var(--aurora-grad-border) border-box !important;
+  box-shadow: var(--aurora-shadow) !important;
+  overflow: hidden;
+}
+
+.theme-code-block pre {
+  background-color: var(--aurora-code-bg) !important;
+}
+
+.theme-code-block [class*='codeBlockTitle'] {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--aurora-muted);
+  border-bottom: 1px solid var(--aurora-line) !important;
+}
+
+/* ---------- Tabs: outline joined to the active tab ---------- */
+.tabs-container > ul.tabs,
+[data-theme='dark'] .tabs-container > ul.tabs {
+  border-bottom: 0 !important;
+  column-gap: 2px !important;
+  margin-bottom: 0;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tabs-container > ul.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Long tab rows scroll sideways with no scrollbar; a soft edge fade shows
+   there is more. A scroll timeline is only active when the row overflows,
+   so short rows get no fade. */
+@supports (animation-timeline: scroll()) {
+  .tabs-container > ul.tabs {
+    animation: aurora-tab-edges linear both;
+    animation-timeline: scroll(self inline);
+  }
+
+  @keyframes aurora-tab-edges {
+    0%, 2% { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent); }
+    3%, 97% { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 64px), transparent); mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 64px), transparent); }
+    98%, 100% { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px); mask-image: linear-gradient(90deg, transparent, #000 48px); }
+  }
+}
+
+li.tabs__item {
+  position: relative;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0.5rem 0.9rem !important;
+  border: 1px solid transparent !important;
+  border-bottom: 0 !important;
+  border-radius: 12px 12px 0 0 !important;
+  color: var(--aurora-muted);
+  font-weight: 500 !important;
+}
+
+li.tabs__item:hover {
+  background: transparent;
+  color: var(--ifm-heading-color);
+}
+
+li.tabs__item--active {
+  z-index: 1;
+  border-color: var(--aurora-line-strong) !important;
+  background: var(--aurora-surface);
+  color: var(--aurora-accent-ink);
+  font-weight: 560 !important;
+}
+
+.tabs-container > div,
+[data-theme='dark'] .tabs-container > div {
+  position: relative;
+  z-index: 0;
+  margin-top: -1px !important;
+  padding: 1.125rem;
+  border: 1px solid var(--aurora-line-strong);
+  border-radius: 16px;
+  background: var(--aurora-surface);
+}
+
+.tabs-container:has(> ul.tabs > li.tabs__item--active:first-child) > div {
+  border-top-left-radius: 0;
+}
+
+.tabs-container > div > [role='tabpanel'] > :last-child {
+  margin-bottom: 0;
+}
+
+/* A tab that holds only a code block: the code block is the outline, so
+   there is one border instead of the panel's plus the code block's. */
+.tabs-container > div:has(> [role='tabpanel']:not([hidden]) > .theme-code-block:only-child),
+[data-theme='dark'] .tabs-container > div:has(> [role='tabpanel']:not([hidden]) > .theme-code-block:only-child) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tabs-container > div > [role='tabpanel'] > .theme-code-block:only-child {
+  border: 1px solid var(--aurora-line-strong);
+  background: var(--aurora-code-bg) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+.tabs-container:has(> ul.tabs > li.tabs__item--active:first-child) > div > [role='tabpanel'] > .theme-code-block:only-child {
+  border-top-left-radius: 0 !important;
+}
+
+/* Code blocks inside a tab outline drop their own shadow */
+.tabs-container > div > [role='tabpanel'] .theme-code-block {
+  box-shadow: none !important;
+}
+
+/* Nested tabs keep a plain underline inside the outer outline */
+.tabs-container .tabs-container > ul.tabs {
+  border-bottom: 1px solid var(--aurora-line) !important;
+}
+
+.tabs-container .tabs-container li.tabs__item {
+  margin-bottom: 0;
+  padding: 0.5rem !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent;
+}
+
+.tabs-container .tabs-container li.tabs__item--active {
+  border-bottom-color: var(--ifm-color-primary) !important;
+}
+
+.tabs-container .tabs-container > div,
+[data-theme='dark'] .tabs-container .tabs-container > div {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ---------- Admonitions: soft card, icon on a gradient tile ---------- */
+.theme-admonition.alert {
+  padding: 16px 18px;
+  font-size: 15px;
+  color: var(--ifm-font-color-base) !important;
+  background-color: var(--co-bg) !important;
+  border: 1px solid var(--co-border) !important;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.theme-admonition [class*='admonitionHeading'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--co-title);
+}
+
+.theme-admonition [class*='admonitionIcon'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  margin-right: 0;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--co-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--co-accent) 9%, transparent);
+  color: var(--co-accent);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Mono marks read like code annotations: // note, i info, >_ tip, ! warning, !! danger */
+.theme-admonition [class*='admonitionIcon'] svg {
+  display: none;
+}
+
+.theme-admonition [class*='admonitionIcon']::before { content: '//'; }
+.theme-admonition.alert--info [class*='admonitionIcon']::before { content: 'i'; }
+.theme-admonition.alert--success [class*='admonitionIcon']::before { content: '>_'; }
+.theme-admonition.alert--warning [class*='admonitionIcon']::before { content: '!'; }
+.theme-admonition.alert--danger [class*='admonitionIcon']::before { content: '!!'; }
+
+.theme-admonition.alert--secondary { --co-bg: #f8f8fa; --co-border: #ececf1; --co-title: #272b37; --co-accent: #6b6f7b; }
+.theme-admonition.alert--info { --co-bg: #f4f6fe; --co-border: #e1e5f8; --co-title: #0117be; --co-accent: #0117be; }
+.theme-admonition.alert--success { --co-bg: #f1faf5; --co-border: #d5eedf; --co-title: #1d6a3f; --co-accent: #238a50; }
+.theme-admonition.alert--warning { --co-bg: #fff8ee; --co-border: #f5e2bf; --co-title: #76490b; --co-accent: #b3690a; }
+.theme-admonition.alert--danger { --co-bg: #fef4f4; --co-border: #f6d7d7; --co-title: #992727; --co-accent: #c93a3a; }
+
+[data-theme='dark'] .theme-admonition.alert--secondary { --co-bg: rgba(255, 255, 255, 0.04); --co-border: rgba(255, 255, 255, 0.09); --co-title: #ffffff; --co-accent: #a2a5c0; }
+[data-theme='dark'] .theme-admonition.alert--info { --co-bg: rgba(159, 171, 255, 0.07); --co-border: rgba(159, 171, 255, 0.18); --co-title: #c6ceff; --co-accent: #9fabff; }
+[data-theme='dark'] .theme-admonition.alert--success { --co-bg: rgba(126, 226, 168, 0.07); --co-border: rgba(126, 226, 168, 0.18); --co-title: #c0f3d5; --co-accent: #7ee2a8; }
+[data-theme='dark'] .theme-admonition.alert--warning { --co-bg: rgba(245, 185, 90, 0.08); --co-border: rgba(245, 185, 90, 0.2); --co-title: #fbdda9; --co-accent: #f5b95a; }
+[data-theme='dark'] .theme-admonition.alert--danger { --co-bg: rgba(248, 113, 113, 0.08); --co-border: rgba(248, 113, 113, 0.21); --co-title: #fbc4c4; --co-accent: #f87171; }
+
+/* ---------- Details, cards, pagination ---------- */
+details {
+  border: 1px solid var(--aurora-line-strong) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] details {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] details [class*='collapsibleContent'] {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) a.card,
+article a.card {
+  border-radius: 16px;
+  border: 1px solid var(--aurora-line-strong);
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+:is(.theme-doc-markdown, [class*='mdxPageWrapper'] article) a.card:hover,
+article a.card:hover {
+  border-color: var(--aurora-accent-line);
+  box-shadow: var(--aurora-shadow);
+  transform: translateY(-1px);
+}
+
+.pagination-nav__link {
+  border-radius: 16px;
+  border-color: var(--aurora-line-strong);
+  transition: border-color 0.15s ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--aurora-accent-line);
+}
+
+[data-theme='dark'] .enterprise-compare > div {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+[data-theme='dark'] .enterprise-compare-head span:last-child,
+[data-theme='dark'] .enterprise-compare span:last-child {
+  color: #c6ceff;
+}
+
+/* ---------- Footer on brand navy ---------- */
+.footer {
+  background: #080b26;
+}
+
+/* ---------- Blog ---------- */
+.blog-wrapper article .markdown {
+  font-size: 1rem;
+}
+
+/* :not(.button) matches the button-contrast fix above, so button links keep
+   Infima's own colors. */
+.blog-wrapper article .markdown a:not(.button),
+[data-theme='dark'].blog-wrapper article .markdown a:not(.button) {
+  color: var(--ifm-color-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--aurora-accent-line);
+  text-underline-offset: 3px;
+}
+
+/* ---------- Scrollbars: hidden until hover on navigation, subtle on code ---------- */
+.menu,
+.thin-scrollbar,
+[class*='sidebarScroll'],
+[class*='tocItemsContainer'] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.menu:hover,
+.thin-scrollbar:hover,
+[class*='sidebarScroll']:hover,
+[class*='tocItemsContainer']:hover {
+  scrollbar-color: var(--aurora-scroll) transparent;
+}
+
+.theme-code-block pre {
+  scrollbar-width: thin;
+  scrollbar-color: var(--aurora-scroll) transparent;
+}
+
+/* Safari */
+.menu::-webkit-scrollbar,
+.thin-scrollbar::-webkit-scrollbar,
+[class*='sidebarScroll']::-webkit-scrollbar,
+[class*='tocItemsContainer']::-webkit-scrollbar,
+.theme-code-block pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.menu::-webkit-scrollbar-thumb,
+.thin-scrollbar::-webkit-scrollbar-thumb,
+[class*='sidebarScroll']::-webkit-scrollbar-thumb,
+[class*='tocItemsContainer']::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: transparent;
+}
+
+.menu:hover::-webkit-scrollbar-thumb,
+.thin-scrollbar:hover::-webkit-scrollbar-thumb,
+[class*='sidebarScroll']:hover::-webkit-scrollbar-thumb,
+[class*='tocItemsContainer']:hover::-webkit-scrollbar-thumb,
+.theme-code-block pre::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--aurora-scroll);
+}
+
+/* ---------- Sidebar search slot ---------- */
+/* No divider under the search box; the box separates itself from the tree. */
+[class*='searchBarSection'] {
+  border-bottom: 0 !important;
+}
+
+/* When search is not configured (no Inkeep key, e.g. local builds) the slot
+   renders empty; collapse it instead of leaving a gap under the header. */
+[class*='searchBarSection']:has([class*='searchBarInner']:empty) [class*='searchBarInner'] {
+  display: none;
+}
+
+/* ---------- Tables: rounded frame, mono header, clean rows ----------
+   Selectors also cover standalone Markdown pages (src/pages), which render
+   in an mdxPageWrapper without the .markdown class. */
+/* Docusaurus renders tables as display:block, so the columns only span their
+   content. Size the frame to the content too (wide tables still scroll),
+   otherwise narrow tables show an empty band inside the frame. */
+:is(.markdown, [class*='mdxPageWrapper'] article) table {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--aurora-line-strong);
+  border-radius: 14px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: auto;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table tr,
+:is(.markdown, [class*='mdxPageWrapper'] article) table tr:nth-child(2n) {
+  background: transparent;
+  border: 0;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table th,
+:is(.markdown, [class*='mdxPageWrapper'] article) table td {
+  border: 0;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table thead th {
+  padding: 10px 14px;
+  text-align: left;
+  background: var(--aurora-tint);
+  border-bottom: 1px solid var(--aurora-line-strong);
+  color: var(--aurora-soft);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table td {
+  padding: 11px 14px;
+  vertical-align: top;
+  border-top: 1px solid var(--aurora-line);
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table tbody tr:first-child td {
+  border-top: 0;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table tbody tr:hover td {
+  background: var(--ifm-menu-color-background-hover);
+}
+
+/* Key column: when the first cell is just a code span (a parameter, field or
+   model name), set it as plain mono text instead of a chip. */
+:is(.markdown, [class*='mdxPageWrapper'] article) table td:first-child:has(> code:only-child) {
+  white-space: nowrap;
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table td:first-child > code:only-child {
+  padding: 0;
+  background: none;
+  color: var(--ifm-heading-color);
+  font-size: 13px;
+}
+
+/* =========================================================================
+   LITELLM.AI GRID ACCENTS
+   Three small echoes of the website's grid: thin rules on real edges and a
+   logo-blue square where they cross.
+   ========================================================================= */
+
+/* 1. Header line meets the sidebar edge (docs pages with an open sidebar) */
+@media (min-width: 997px) {
+  html.docs-wrapper:has(.theme-doc-sidebar-container) .navbar::after {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    left: calc(var(--doc-sidebar-width, 300px) - 4px);
+    bottom: -4px;
+    width: 7px;
+    height: 7px;
+    background: var(--ifm-color-primary);
+    pointer-events: none;
+  }
+
+  html.docs-wrapper:has([class*='docSidebarContainerHidden']) .navbar::after {
+    display: none;
+  }
+}
+
+/* 2. Hairlines between table columns */
+:is(.markdown, [class*='mdxPageWrapper'] article) table th + th,
+:is(.markdown, [class*='mdxPageWrapper'] article) table td + td {
+  border-left: 1px solid var(--aurora-line);
+}
+
+:is(.markdown, [class*='mdxPageWrapper'] article) table thead th + th {
+  border-left-color: var(--aurora-line-strong);
+}
+
+/* 3. Card grids as the litellm.ai grid: one frame of shared hairlines, flat
+   cells, and a small logo-blue square at every line crossing. Two grids:
+   NavigationCards (Integrations, Learn) and Docusaurus DocCardList
+   (generated-index overview pages). */
+[class*='grid_']:has(> a[class*='card_']),
+section.row:has(> article > a.card) {
+  --cg-line: var(--aurora-line-strong);
+  --cg-sq: var(--ifm-color-primary);
+  position: relative;
+  gap: 0 !important;
+  border-top: 1px solid var(--cg-line);
+  border-left: 1px solid var(--cg-line);
+}
+
+section.row:has(> article > a.card) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1.25rem 0 2rem;
+}
+
+@media (max-width: 996px) {
+  section.row:has(> article > a.card) { grid-template-columns: 1fr; }
+}
+
+section.row:has(> article > a.card) > article {
+  max-width: 100%;
+  padding: 0;
+  margin: 0 !important;
+  display: flex;
+}
+
+/* cells */
+[class*='grid_'] > a[class*='card_'],
+section.row:has(> article > a.card) > article {
+  position: relative;
+  border: 0 !important;
+  border-right: 1px solid var(--cg-line) !important;
+  border-bottom: 1px solid var(--cg-line) !important;
+  border-radius: 0 !important;
+}
+
+[class*='grid_'] > a[class*='card_'],
+section.row > article > a.card {
+  box-shadow: none !important;
+  background: var(--aurora-surface) !important;
+  transition: background-color 0.15s ease;
+}
+
+section.row > article > a.card {
+  flex: 1;
+  border: 0 !important;
+  border-radius: 0 !important;
+  transform: none !important;
+}
+
+[class*='grid_'] > a[class*='card_']:hover,
+section.row > article > a.card:hover {
+  background: color-mix(in srgb, var(--aurora-tint) 75%, var(--aurora-surface)) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[class*='grid_'] > a[class*='card_']:hover [class*='title'],
+section.row > article > a.card:hover h2 {
+  color: var(--ifm-color-primary);
+}
+
+/* squares: each cell marks its top-left and bottom-right crossing; the
+   grid adds the two outer corners the cells cannot reach */
+[class*='grid_'] > a[class*='card_']::before,
+[class*='grid_'] > a[class*='card_']::after,
+section.row:has(> article > a.card) > article::before,
+section.row:has(> article > a.card) > article::after,
+[class*='grid_']:has(> a[class*='card_'])::before,
+[class*='grid_']:has(> a[class*='card_'])::after,
+section.row:has(> article > a.card)::before,
+section.row:has(> article > a.card)::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  width: 5px;
+  height: 5px;
+  background: var(--cg-sq);
+  pointer-events: none;
+}
+
+[class*='grid_'] > a[class*='card_']::before,
+section.row:has(> article > a.card) > article::before { left: -3px; top: -3px; }
+[class*='grid_'] > a[class*='card_']::after,
+section.row:has(> article > a.card) > article::after { right: -3px; bottom: -3px; }
+[class*='grid_']:has(> a[class*='card_'])::before,
+section.row:has(> article > a.card)::before { right: -3px; top: -3px; }
+[class*='grid_']:has(> a[class*='card_'])::after,
+section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
+
+/* =========================================================================
+   NEW LOGO (preview): official files, never recolored or distorted
+   ========================================================================= */
+.navbar__brand-col .navbar__logo,
+.navbar__logo {
+  height: 25px;
+  margin-right: 0;
+}
+
+.navbar__logo img {
+  height: 100%;
+  width: auto;
+}
+
+/* The global img { border-radius } rule above clips the monogram tile's own
+   corners. Brand files render exactly as exported. */
+img[src*='/img/brand/'] {
+  border-radius: 0 !important;
+}
+
+/* Clear space around the logo: at least half its height (guidelines) */
+.navbar__brand {
+  padding-right: 13px;
+}
+
+.footer__brand-logo {
+  display: block;
+  height: 50px;
+  width: auto;
+}
+
+@media (max-width: 576px) {
+  .footer__brand-logo {
+    height: 36px;
+  }
 }
