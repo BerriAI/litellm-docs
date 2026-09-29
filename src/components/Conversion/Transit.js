@@ -232,37 +232,43 @@ function vroute(x1, y1, x2, y2) {
   return `M${x1} ${y1} V${ya} L${x2} ${ya + a} V${y2}`;
 }
 
-const T_HUB = {x: 125, y: 190, s: 110};
+const T_HUB = {x: 125, y: 150, s: 110};
 const T_APPS_X = [62, 180, 298];
-const T_PROV_Y = [410, 450, 490, 530, 570];
-const T_TRUNK_X = 30;
+// Providers in two rows under the interchange. The second row sits under the
+// gaps in the first, so its lines pass between the first row's tiles.
+const T_PROV = [
+  {x: 60, y: 372, w: 100},
+  {x: 180, y: 372, w: 100},
+  {x: 300, y: 372, w: 100},
+  {x: 120, y: 428, w: 110},
+  {x: 240, y: 428, w: 110},
+];
+// Which hub exit (left to right) feeds which provider, so no lines cross
+const T_EXIT = [0, 2, 4, 1, 3];
 
 export function TransitTall({path}) {
   const reduced = usePrefersReducedMotion();
   const direct = path === 'sdk';
   const ent = path === 'enterprise';
   const hubCx = T_HUB.x + T_HUB.s / 2;
-  const exitY = T_HUB.y + T_HUB.s - 20;
+  const hubBottom = T_HUB.y + T_HUB.s;
   const inbound = direct ? [`M${hubCx} 64 V${T_HUB.y}`] : T_APPS_X.map((x, i) => vroute(x, 64, hubCx + (i - 1) * 15, T_HUB.y));
-  const trunk = `M${T_HUB.x} ${exitY} H${T_TRUNK_X + 10} Q${T_TRUNK_X} ${exitY} ${T_TRUNK_X} ${exitY + 10} V${T_PROV_Y[3]}`;
-  const trunkMore = `M${T_TRUNK_X} ${T_PROV_Y[3]} V${T_PROV_Y[4]}`;
+  const outbound = T_PROV.map((p, j) => vroute(hubCx - 30 + T_EXIT[j] * 15, hubBottom, p.x, p.y - 22));
   const chips = CHIPS[direct ? 'sdk' : 'gateway'];
-  const chipsW = chips.reduce((a, [, w]) => a + w, 0) + (chips.length - 1) * 6;
-  let chipX = hubCx - chipsW / 2;
   const labels = direct ? ['Your Python app'] : APPS[path];
 
   return (
-    <svg className={styles.svg} viewBox="0 0 360 590" role="img" aria-label={TITLES[path]}>
+    <svg className={styles.svg} viewBox="0 0 360 462" role="img" aria-label={TITLES[path]}>
       <defs>
         <pattern id="tr-dots-tall" width="18" height="18" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="1" className={styles.dot} />
         </pattern>
       </defs>
-      <rect width="360" height="590" fill="url(#tr-dots-tall)" />
+      <rect width="360" height="462" fill="url(#tr-dots-tall)" />
 
       {direct && (
         <g className={styles.fadeIn}>
-          <rect className={styles.zone} x="6.5" y="8.5" width="347" height="358" rx="18" />
+          <rect className={styles.zone} x="6.5" y="8.5" width="347" height="290" rx="18" />
           <text className={styles.zoneText} x="20" y="84">
             Your Python process
           </text>
@@ -270,8 +276,8 @@ export function TransitTall({path}) {
       )}
       {ent && (
         <g className={styles.fadeIn}>
-          <rect className={styles.zone} x="40.5" y="160.5" width="280" height="212" rx="18" />
-          <text className={styles.zoneText} x="52" y="180">
+          <rect className={styles.zone} x="8.5" y="120.5" width="343" height="176" rx="18" />
+          <text className={styles.zoneText} x="22" y="146">
             Your organization
           </text>
         </g>
@@ -281,14 +287,17 @@ export function TransitTall({path}) {
         {inbound.map((d, i) => (
           <path key={`in${i}`} d={d} className={clsx(styles.line, styles.draw)} pathLength="1" />
         ))}
-        <path d={trunk} className={clsx(styles.line, styles.draw)} pathLength="1" />
-        <path d={trunkMore} className={clsx(styles.line, styles.lineMore)} pathLength="1" />
+        {outbound.map((d, j) => (
+          <path key={`out${j}`} d={d} className={clsx(styles.line, j === 4 ? styles.lineMore : styles.draw)} pathLength="1" />
+        ))}
         {!reduced && (
           <g className={styles.cars}>
             {inbound.map((d, i) => (
-              <Car key={`c${i}`} d={d} dur="1.8s" begin={`${0.8 + i * 0.6}s`} />
+              <Car key={`ci${i}`} d={d} dur="1.8s" begin={`${0.8 + i * 0.6}s`} />
             ))}
-            <Car d={trunk} dur="3s" begin="1.6s" />
+            {outbound.slice(0, 4).map((d, j) => (
+              <Car key={`co${j}`} d={d} dur="2s" begin={`${1.4 + j * 0.5}s`} />
+            ))}
           </g>
         )}
       </g>
@@ -309,41 +318,46 @@ export function TransitTall({path}) {
         })}
         <rect className={styles.hub} x={T_HUB.x + 0.5} y={T_HUB.y + 0.5} width={T_HUB.s} height={T_HUB.s} rx="13" />
         <Monogram x={T_HUB.x + 27} y={T_HUB.y + 27} size={56} />
-        <text className={styles.hubLabel} x={hubCx} y={T_HUB.y + T_HUB.s + 22} textAnchor="middle">
-          {direct ? 'LiteLLM SDK' : 'LiteLLM Gateway'}
+        {/* the name sits left of the interchange and the chips right, so
+            the lines below leave the interchange unobstructed */}
+        <text className={styles.hubLabel} x={T_HUB.x - 12} y={T_HUB.y + 50} textAnchor="end">
+          LiteLLM
         </text>
-        {chips.map(([label, w]) => {
-          const x = chipX;
-          chipX += w + 6;
-          return (
-            <g key={label}>
-              <rect className={styles.chip} x={x + 0.5} y={T_HUB.y + T_HUB.s + 34.5} width={w} height="20" rx="4" />
-              <text className={styles.chipText} x={x + w / 2} y={T_HUB.y + T_HUB.s + 48} textAnchor="middle">
-                {label}
-              </text>
-            </g>
-          );
-        })}
+        <text className={styles.hubLabel} x={T_HUB.x - 12} y={T_HUB.y + 68} textAnchor="end">
+          {direct ? 'SDK' : 'Gateway'}
+        </text>
+        {chips.map(([label, w], i) => (
+          <g key={label}>
+            <rect className={styles.chip} x={T_HUB.x + T_HUB.s + 12.5} y={T_HUB.y + 20.5 + i * 26} width={w} height="20" rx="4" />
+            <text className={styles.chipText} x={T_HUB.x + T_HUB.s + 12 + w / 2} y={T_HUB.y + 34 + i * 26} textAnchor="middle">
+              {label}
+            </text>
+          </g>
+        ))}
       </g>
 
       {ent && (
         <g className={styles.fadeIn}>
-          <Tag x={92} y={160.5} label="SSO" />
-          <Tag x={268} y={160.5} label="Audit log" />
-          <Tag x={180} y={372.5} label="Roles" />
-          <Tag x={320.5} y={300} label="Regions" />
+          <Tag x={80} y={120.5} label="SSO" />
+          <Tag x={280} y={120.5} label="Audit log" />
+          <Tag x={80} y={296.5} label="Roles" />
+          <Tag x={280} y={296.5} label="Regions" />
         </g>
       )}
 
-      {PROVIDERS.map((p, j) => (
-        <g key={p}>
-          <rect className={clsx(styles.stn, j === 4 && styles.stnMore)} x={T_TRUNK_X - 5.5} y={T_PROV_Y[j] - 5.5} width="11" height="11" rx="3" />
-          <rect className={clsx(styles.box, j === 4 && styles.boxMore)} x="48.5" y={T_PROV_Y[j] - 15.5} width="300" height="31" rx="6" />
-          <text className={clsx(styles.boxTextSm, j === 4 && styles.boxTextMore)} x="62" y={T_PROV_Y[j] + 4.5}>
-            {p}
-          </text>
-        </g>
-      ))}
+      {PROVIDERS.map((name, j) => {
+        const p = T_PROV[j];
+        const more = j === 4;
+        return (
+          <g key={name}>
+            <rect className={clsx(styles.box, more && styles.boxMore)} x={p.x - p.w / 2 + 0.5} y={p.y - 15.5} width={p.w} height="31" rx="6" />
+            <text className={clsx(styles.boxTextSm, more && styles.boxTextMore)} x={p.x} y={p.y + 4.5} textAnchor="middle">
+              {name}
+            </text>
+            <rect className={clsx(styles.stn, more && styles.stnMore)} x={p.x - 5.5} y={p.y - 21.5} width="11" height="11" rx="3" />
+          </g>
+        );
+      })}
     </svg>
   );
 }

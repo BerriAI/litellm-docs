@@ -319,8 +319,8 @@ const PRODUCT_CARDS = [
   {
     id: 'agents',
     product: 'Agent Gateway',
-    problem: 'Agents call other agents with no record of who called what.',
-    text: 'Register A2A agents on the gateway. Every call uses a virtual key, is logged, and is limited to the teams you allow.',
+    problem: 'Route agent-to-agent calls through the gateway.',
+    text: 'Register your A2A agents on the gateway, so every call to them uses a virtual key, shows up in your logs with its cost, and is limited to the teams you allow.',
     hint: 'POST /a2a/{agent_id}',
     mono: true,
     to: '/docs/a2a',
@@ -328,7 +328,7 @@ const PRODUCT_CARDS = [
   },
   {
     id: 'tools',
-    product: 'Coding agents',
+    product: 'lite CLI',
     problem: 'Your team runs Claude Code and Codex on personal API keys.',
     text: 'The lite CLI signs in to your gateway and launches Claude Code or Codex through it, so budgets, logs, and guardrails apply per person.',
     hint: 'lite claude',
