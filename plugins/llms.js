@@ -2,7 +2,13 @@
 //
 //   /llms.txt          index in the llmstxt.org format, built from the sidebars
 //   /llms-full.txt     every docs page as markdown, concatenated
-//   /docs/<page>.md    each docs page as plain markdown, next to its HTML
+//   /docs/<page>.md    each docs page as plain markdown, next to its HTML, with
+//                      YAML front matter (title, url, summary, last_updated,
+//                      related) in the shape Vercel's docs use
+//   /index.md          the docs home, for agents that start at the root
+//   /release_notes/…md every release note
+//   /agent.txt         alias of llms.txt
+//   /sitemap.md        every page, one line each
 //
 // Pages are read from their MDX source, with {{role}} model ids filled in,
 // imports dropped, and Tabs / TabItem / Image flattened into markdown, so an
@@ -10,6 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS} = require('../src/components/Conversion/content');
 
@@ -74,9 +81,9 @@ function expandComponent(tag) {
     return [
       'Pick the path that matches who is calling the models:',
       '',
-      '- Just my code (one Python app): `uv add litellm`, then see https://docs.litellm.ai/docs/index.md',
-      `- My team or several apps (any language, keys, budgets, spend tracking): run the Gateway:\n\n\`\`\`bash\n${GATEWAY_COMPOSE}\n\`\`\`\n\n  Full guide: https://docs.litellm.ai/docs/proxy/docker_quick_start.md`,
-      `- My whole organization (SSO, audit logs, admin roles, support SLAs): LiteLLM Enterprise, ${SALES_URL}`,
+      `- **Just my code** (one Python app): the Python SDK. A library you import, nothing to deploy. One \`completion()\` call for 100+ providers with answers in the OpenAI format, retries and fallbacks, and cost per call. Install: ${SITE}/docs/index.md#installation`,
+      `- **My team or several apps** (any language): the AI Gateway. A self-hosted OpenAI-compatible endpoint with virtual keys, budgets and rate limits per team, spend tracking, logs, guardrails, and an admin UI. Start it: ${SITE}/docs/proxy/docker_quick_start.md`,
+      `- **My whole organization** (SSO, audit logs, security review): LiteLLM Enterprise, a license key on the same gateway. Details: ${SITE}/docs/enterprise.md. Talk to sales: ${SALES_URL}`,
       '',
     ].join('\n');
   }
@@ -243,11 +250,46 @@ function collectDocIds(item, acc = []) {
   return acc;
 }
 
+// Last commit date per file, from one `git log` pass. Missing in shallow or
+// non-git builds, in which case last_updated is simply left out.
+function lastUpdatedDates(siteDir) {
+  const dates = new Map();
+  try {
+    const out = execSync('git log --format=%x00%cs --name-only -- docs release_notes', {
+      cwd: siteDir,
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).toString();
+    let date = null;
+    for (const line of out.split('\n')) {
+      if (line.startsWith('\0')) date = line.slice(1).trim();
+      else if (line && date && !dates.has(line)) dates.set(line, date);
+    }
+  } catch {
+    // not a git checkout
+  }
+  return dates;
+}
+
+const yamlString = (v) => JSON.stringify(String(v));
+
+function frontMatter(fields) {
+  const lines = ['---'];
+  for (const [key, value] of Object.entries(fields)) {
+    if (value == null || value === '' || (Array.isArray(value) && !value.length)) continue;
+    if (Array.isArray(value)) lines.push(`${key}:`, ...value.map((v) => `  - ${yamlString(v)}`));
+    else lines.push(`${key}: ${yamlString(value)}`);
+  }
+  lines.push('---', '');
+  return lines.join('\n');
+}
+
 // ---------------------------------------------------------------------------
 
 module.exports = function llmsPlugin(context) {
   let docs = [];
   let sidebars = {};
+  let releaseNotes = [];
 
   return {
     name: 'litellm-llms-txt',
@@ -258,6 +300,8 @@ module.exports = function llmsPlugin(context) {
       if (!version) return;
       docs = version.docs.filter((d) => !d.unlisted && !d.draft);
       sidebars = version.sidebars || {};
+      const notes = allContent['docusaurus-plugin-content-docs']?.['release-notes']?.loadedVersions?.[0];
+      releaseNotes = (notes?.docs || []).filter((d) => !d.unlisted && !d.draft);
     },
 
     async postBuild({outDir}) {
@@ -265,24 +309,94 @@ module.exports = function llmsPlugin(context) {
       const byId = new Map(docs.map((d) => [d.id, d]));
       const markdown = new Map();
 
-      // Per-page markdown.
+      const updated = lastUpdatedDates(context.siteDir);
+      const writeMd = async (permalink, content) => {
+        const target = mdPath(outDir, permalink);
+        await fs.promises.mkdir(path.dirname(target), {recursive: true});
+        await fs.promises.writeFile(target, content);
+        // /docs/ is served as /docs/index.md; also answer /docs.md so a plain
+        // "append .md" works for index pages too.
+        if (permalink.endsWith('/') && permalink.length > 1) {
+          await fs.promises.writeFile(path.join(outDir, `${permalink.slice(0, -1)}.md`), content);
+        }
+      };
+
+      // Per-page markdown, for docs and release notes.
+      const writeDoc = async (doc, kind) => {
+        const relSource = doc.source.replace(/^@site\//, '');
+        let body;
+        try {
+          body = mdxToMarkdown(await fs.promises.readFile(path.join(context.siteDir, relSource), 'utf8'));
+        } catch {
+          return null;
+        }
+        const title = clean(doc.title);
+        const related = [doc.previous, doc.next].filter(Boolean);
+        const meta = frontMatter({
+          title,
+          url: doc.permalink,
+          canonical_url: `${SITE}${doc.permalink}`,
+          type: kind,
+          last_updated: updated.get(relSource),
+          summary: usefulDescription(doc.description) ? oneLine(doc.description, 240) : null,
+          related: related.map((r) => r.permalink),
+        });
+        const header = `# ${title}\n\n> Index of all LiteLLM docs: ${SITE}/llms.txt\n\n`;
+        let content = body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body;
+        if (related.length) {
+          content +=
+            '\n## Related pages\n\n' +
+            related.map((r) => `- [${clean(r.title)}](${mdUrl(r.permalink)})`).join('\n') +
+            '\n';
+        }
+        await writeMd(doc.permalink, meta + content);
+        return content;
+      };
+
       await Promise.all(
         docs.map(async (doc) => {
-          const sourcePath = path.join(context.siteDir, doc.source.replace(/^@site\//, ''));
-          let body;
-          try {
-            body = mdxToMarkdown(await fs.promises.readFile(sourcePath, 'utf8'));
-          } catch {
-            return;
-          }
-          const title = clean(doc.title);
-          const header = `# ${title}\n\n> Source: ${SITE}${doc.permalink}. Index of all LiteLLM docs: ${SITE}/llms.txt\n\n`;
-          const content = body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body;
-          markdown.set(doc.id, content);
-          const target = mdPath(outDir, doc.permalink);
-          await fs.promises.mkdir(path.dirname(target), {recursive: true});
-          await fs.promises.writeFile(target, content);
+          const content = await writeDoc(doc, 'docs');
+          if (content) markdown.set(doc.id, content);
         }),
+      );
+      await Promise.all(releaseNotes.map((doc) => writeDoc(doc, 'release-notes')));
+
+      // Category pages without a doc of their own (for example /docs/providers)
+      // become a markdown list of what they contain.
+      const indexWrites = [];
+      const walkCategories = (items) => {
+        for (const item of items || []) {
+          if (item.type !== 'category') continue;
+          const link = item.link;
+          if (link?.type === 'generated-index' && link.permalink) {
+            const ids = [...new Set(collectDocIds(item))].filter((id) => byId.has(id));
+            const list = ids.map((id) => {
+              const d = byId.get(id);
+              const desc = usefulDescription(d.description);
+              return `- [${clean(d.title)}](${mdUrl(d.permalink)})${desc ? `: ${oneLine(desc)}` : ''}`;
+            });
+            const title = clean(link.title || item.label);
+            indexWrites.push(writeMd(
+              link.permalink,
+              frontMatter({title, url: link.permalink, canonical_url: `${SITE}${link.permalink}`, type: 'index', summary: link.description}) +
+                `# ${title}\n\n${link.description ? `${clean(link.description)}\n\n` : ''}${list.join('\n')}\n`,
+            ));
+          }
+          walkCategories(item.items);
+        }
+      };
+      for (const name of Object.keys(sidebars)) walkCategories(sidebars[name]);
+      await Promise.all(indexWrites);
+
+      // The docs home.
+      await fs.promises.writeFile(
+        path.join(outDir, 'index.md'),
+        frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
+          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${NOTES}\n\n## Start here\n\n` +
+          START_HERE.filter(([id]) => byId.has(id))
+            .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
+            .join('\n') +
+          `\n\nEvery page: ${SITE}/sitemap.md. Agent prompts, MCP, and skills: ${SITE}/docs/agent_resources.md\n`,
       );
 
       // llms.txt
@@ -340,6 +454,19 @@ module.exports = function llmsPlugin(context) {
         if (markdown.has(id)) full.push(markdown.get(id));
       }
       await fs.promises.writeFile(path.join(outDir, 'llms-full.txt'), full.join('\n---\n\n'));
+
+      await fs.promises.copyFile(path.join(outDir, 'llms.txt'), path.join(outDir, 'agent.txt'));
+
+      const sitemap = ['# LiteLLM docs sitemap', '', `> Every page, as markdown. The curated index is ${SITE}/llms.txt.`, '', '## Docs', ''];
+      for (const id of new Set(orderedIds)) {
+        const d = byId.get(id);
+        if (d) sitemap.push(`- [${clean(d.title)}](${mdUrl(d.permalink)})`);
+      }
+      sitemap.push('', '## Release notes', '');
+      for (const d of [...releaseNotes].sort((a, b) => b.permalink.localeCompare(a.permalink, undefined, {numeric: true}))) {
+        sitemap.push(`- [${clean(d.title)}](${mdUrl(d.permalink)})`);
+      }
+      await fs.promises.writeFile(path.join(outDir, 'sitemap.md'), sitemap.join('\n') + '\n');
     },
   };
 };

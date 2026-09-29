@@ -10,11 +10,11 @@ import {AgentPrompt, InstallBox, NextSteps, SalesBand} from '@site/src/component
 
 # Quickstart
 
-Run the LiteLLM Gateway on your machine, then do everything else in the browser: connect a provider, create a virtual key, and send your first request. About five minutes, no config files.
+Run the LiteLLM Gateway on your machine, then do everything else in the browser: connect a provider, create a virtual key, and send your first request. It takes about five minutes and needs no config files.
 
 <InstallBox variant="gateway" title="Start the Gateway" />
 
-Working in Claude Code, Codex, or Cursor? Paste this prompt instead and the agent runs the setup and verifies it for you.
+If you use Claude Code, Codex, or Cursor, you can paste this prompt instead. The agent runs the setup and checks that it works.
 
 <AgentPrompt id="gateway" />
 

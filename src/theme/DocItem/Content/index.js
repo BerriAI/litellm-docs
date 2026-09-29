@@ -142,7 +142,8 @@ export default function DocItemContent({children}) {
   const syntheticTitle = useSyntheticTitle();
   const {frontMatter, metadata} = useDoc();
   const activePlugin = useActivePlugin();
-  const isMainDocs = activePlugin?.pluginId === 'default';
+  // plugins/llms.js writes a .md twin for docs and release notes.
+  const isMainDocs = ['default', 'release-notes'].includes(activePlugin?.pluginId);
   const actions = (
     <PageActions rawMarkdownB64={frontMatter.rawMarkdownB64} permalink={metadata.permalink} hasMarkdownUrl={isMainDocs} />
   );

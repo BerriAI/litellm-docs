@@ -20,8 +20,8 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 <Tiles size="lg" columns={3} items={[
   {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
   {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
-  {icon: 'roles', title: 'Teams run themselves', text: 'Organizations with their own admins who manage keys, budgets, and models without the master key.', to: '/docs/proxy/access_control'},
-  {icon: 'budget', title: 'No surprise bills', text: 'Budgets per project, tag, and model, soft-limit alerts before teams hit a cap, and spend reports by team.', to: '/docs/proxy/project_management'},
+  {icon: 'roles', title: 'Teams manage their own keys and budgets', text: 'Organizations with their own admins who manage keys, budgets, and models without the master key.', to: '/docs/proxy/access_control'},
+  {icon: 'budget', title: 'Spend stays inside each budget', text: 'Budgets per project, tag, and model, soft-limit alerts before teams hit a cap, and spend reports by team.', to: '/docs/proxy/project_management'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
   {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '#professional-support'},
 ]} />

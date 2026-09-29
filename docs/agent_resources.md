@@ -9,7 +9,7 @@ import {AgentPrompt, Command, Tiles} from '@site/src/components/Conversion';
 
 # Agent resources
 
-Most LiteLLM setups now start in a coding agent. This page collects what an agent needs to do the job well: prompts that say exactly what to install and how to verify it, the docs in a format agents read directly, and the MCP server and skills that let an agent operate a running gateway.
+Use this page to set up and run LiteLLM from a coding agent. It has prompts that tell the agent what to install and how to check the result, every docs page as markdown, and the MCP server and skills an agent uses to operate a running gateway.
 
 ## Set up with an agent
 
@@ -23,7 +23,7 @@ Paste one of these into Claude Code, Codex, Cursor, or any other coding agent. E
 
 ## Docs for agents
 
-Every page on this site is also published as plain markdown, and two index files give an agent the whole map in one request. Point an agent at `llms.txt` first; it lists every page with a one-line description and links to the markdown versions.
+Every page on this site is also published as plain markdown, and two index files list every page in one request. Point an agent at `llms.txt` first; it lists every page with a one-line description and links to the markdown versions.
 
 | Resource | URL | Use it for |
 |---|---|---|

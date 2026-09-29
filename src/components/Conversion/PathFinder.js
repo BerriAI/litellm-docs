@@ -325,7 +325,7 @@ export default function PathFinder({
         </div>
       </div>
       <p className={styles.pfFoot}>
-        Paths connect. The SDK can call a Gateway as just another provider, and Enterprise is a license key on the same Gateway image.
+        You can switch paths later: the SDK can call a Gateway as one more provider, and Enterprise is a license key on the same Gateway image.
       </p>
     </section>
   );

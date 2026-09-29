@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from '@theme/Layout';
+import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
 import {AgentPrompt, PathFinder, SalesBand, Tiles} from '@site/src/components/Conversion';
 import styles from './index.module.css';
@@ -18,6 +19,9 @@ export default function Home() {
     <Layout
       title="LiteLLM documentation"
       description="Docs for LiteLLM: a Python SDK and a self-hosted AI Gateway that give 100+ LLM providers one OpenAI-compatible API, with keys, budgets, spend tracking, and guardrails.">
+      <Head>
+        <link rel="alternate" type="text/markdown" href="/index.md" title="LiteLLM docs home (markdown)" />
+      </Head>
       <main className={styles.page}>
         <header className={styles.hero}>
           <h1 className={styles.title}>One API for every model, in your code or behind your own gateway.</h1>
