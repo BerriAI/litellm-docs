@@ -1,10 +1,10 @@
 ---
 slug: usage-page-bounded-loading
-title: "How we made the LiteLLM Usage page 100x faster"
+title: "How we made the LiteLLM Usage page 120x faster"
 date: 2026-09-30T09:00:00
 authors:
   - yassin
-description: "From six minutes to 3.2 seconds: how moving aggregation into Postgres made LiteLLM's Usage page over 100x faster in our benchmark."
+description: "From six minutes to 3.2 seconds: how moving aggregation into Postgres made LiteLLM's Usage page roughly 120x faster in our benchmark."
 tags: [performance, admin-ui, postgres, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
@@ -13,7 +13,7 @@ import { PerformanceResults, UsageDataFlow } from './diagrams';
 
 We're making LiteLLM faster, starting with the pages you use to track spend.
 
-With 5,000 API keys, our Usage page took **over six minutes** to show 30 days of totals. We redesigned how it loads data and brought that down to **3.2 seconds** in our benchmark. That's more than **100x faster**.
+With 5,000 API keys, our Usage page took **over six minutes** to show 30 days of totals. We redesigned how it loads data and brought that down to **3.2 seconds** in our benchmark. That's roughly **120x faster**.
 
 {/* truncate */}
 
