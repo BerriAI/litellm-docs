@@ -27,8 +27,10 @@ LiteLLM already has pricing for 100+ models in our [model cost map](https://gith
 For chat, completion, embedding and responses models, set `cost_per_second`. LiteLLM multiplies it by the full request
 duration, including streaming until the last chunk, and ignores it when per-token pricing is configured
 
-For these modes, `input_cost_per_second` remains accepted as a legacy alias and is charged once.
-`output_cost_per_second` is ignored and remains available for transcription, speech and video
+For chat, completion, embedding and responses, `input_cost_per_second` and `output_cost_per_second` remain accepted as
+legacy aliases. `cost_per_second` takes precedence, followed by `input_cost_per_second` and then
+`output_cost_per_second`; the resolved rate is charged once, not added. Transcription, speech and video continue to use
+`input_cost_per_second` and `output_cost_per_second`
 
 #### Usage with LiteLLM Proxy Server
 
