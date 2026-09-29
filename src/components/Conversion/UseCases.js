@@ -4,7 +4,7 @@ import Link from '@docusaurus/Link';
 import CodeBlock from '@theme/CodeBlock';
 import PromptButton from './PromptButton';
 import SalesButton from './SalesButton';
-import {USE_CASES} from './content';
+import {PRODUCT_CARDS, USE_CASES} from './content';
 import {track} from './shared';
 import cv from './styles.module.css';
 import styles from './usecases.module.css';
@@ -59,34 +59,68 @@ function Visual({v}) {
   );
 }
 
+function Row({u, source}) {
+  return (
+    <article className={styles.item} id={`use-${u.id}`}>
+      <div className={styles.copy}>
+        <p className={styles.product}>{u.product}</p>
+        <h3 className={styles.problem}>{u.problem}</h3>
+        <p className={styles.solution}>{u.solution}</p>
+        <div className={styles.actions}>
+          {u.sales ? (
+            <SalesButton source={`${source}-${u.id}`} variant="secondary" />
+          ) : (
+            <Link className={cv.btnSecondary} to={u.to} onClick={() => track('docs_use_case_cta', {id: u.id, source})}>
+              {u.cta}
+            </Link>
+          )}
+          {u.prompt && <PromptButton id={u.prompt} source={`${source}-${u.id}`} size="md" />}
+        </div>
+      </div>
+      <div className={styles.visual}>
+        <Visual v={u.visual} />
+      </div>
+    </article>
+  );
+}
+
+function Card({c, source}) {
+  return (
+    <article className={clsx('lite-cardgrid__cell', styles.card)} id={`use-${c.id}`}>
+      <p className={styles.product}>{c.product}</p>
+      <h3 className={styles.cardProblem}>{c.problem}</h3>
+      <p className={styles.cardText}>{c.text}</p>
+      <p className={clsx(styles.hint, c.mono && styles.hintMono)}>{c.hint}</p>
+      <div className={styles.cardActions}>
+        <Link className={styles.cardLink} to={c.to} onClick={() => track('docs_use_case_cta', {id: c.id, source})}>
+          Read the guide
+        </Link>
+        <PromptButton id={c.prompt} source={`${source}-${c.id}`} />
+      </div>
+    </article>
+  );
+}
+
 export default function UseCases({source = 'docs-home'}) {
+  const [sdk, gateway, ...rest] = USE_CASES;
   return (
     <section className={styles.wrap} aria-labelledby="use-cases-title">
       <h2 id="use-cases-title" className={styles.title}>
         What people use LiteLLM for
       </h2>
       <div className={styles.list}>
-        {USE_CASES.map((u) => (
-          <article key={u.id} className={styles.item} id={`use-${u.id}`}>
-            <div className={styles.copy}>
-              <p className={styles.product}>{u.product}</p>
-              <h3 className={styles.problem}>{u.problem}</h3>
-              <p className={styles.solution}>{u.solution}</p>
-              <div className={styles.actions}>
-                {u.sales ? (
-                  <SalesButton source={`${source}-${u.id}`} variant="secondary" />
-                ) : (
-                  <Link className={cv.btnSecondary} to={u.to} onClick={() => track('docs_use_case_cta', {id: u.id, source})}>
-                    {u.cta}
-                  </Link>
-                )}
-                <PromptButton id={u.prompt} source={`${source}-${u.id}`} size="md" />
-              </div>
-            </div>
-            <div className={styles.visual}>
-              <Visual v={u.visual} />
-            </div>
-          </article>
+        <Row u={sdk} source={source} />
+        <Row u={gateway} source={source} />
+      </div>
+      <h3 className={styles.moreTitle}>More from LiteLLM</h3>
+      <div className={clsx('lite-cardgrid', styles.cards)}>
+        {PRODUCT_CARDS.map((c) => (
+          <Card key={c.id} c={c} source={source} />
+        ))}
+      </div>
+      <div className={clsx(styles.list, styles.listEnd)}>
+        {rest.map((u) => (
+          <Row key={u.id} u={u} source={source} />
         ))}
       </div>
     </section>

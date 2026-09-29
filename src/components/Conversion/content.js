@@ -89,6 +89,21 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
 2. Restart the gateway if the change needs it.
 3. Verify: send one request through the gateway and show me where it appears in the tool.`,
   },
+  liteadmin: {
+    title: 'Manage my LiteLLM Gateway from this agent with LiteAdmin MCP',
+    text: `Help me connect LiteAdmin MCP so you can manage my LiteLLM Gateway. First read ${DOCS}/docs/proxy/liteadmin_mcp.md. Then:
+1. Ask me for the gateway URL and a personal virtual key that belongs to a user with the proxy_admin role. Do not use the master key, and never print the key.
+2. Add the LiteAdmin MCP server to this client the way the guide shows for it (Claude Code, Claude Desktop, or Codex). Show me the change before writing it.
+3. Verify: list the gateway's models and my teams through the MCP tools, then stop and ask me what to change.`,
+  },
+  liteagents: {
+    title: 'Try LiteAgents on one of my agents',
+    text: `Help me try LiteAgents, a preview SDK for switching agent harnesses without rewriting the agent. First read https://github.com/BerriAI/liteagents/blob/main/docs/getting-started.md and the harness-switching recipe at https://github.com/BerriAI/liteagents/blob/main/cookbook/recipes/10_harness_switch.py. Then:
+1. Install the preview release the getting-started guide names, in a separate virtual environment.
+2. Ask me which agent to port and which model to use. If I run a LiteLLM Gateway, point the model at it with a virtual key read from the environment.
+3. Port the agent to a LiteAgents profile, keeping its tools and MCP connections, and run one task.
+4. Change only the harness field to a second harness, run the same task, and show me both results side by side.`,
+  },
 };
 
 const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
@@ -261,77 +276,6 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
     },
   },
   {
-    id: 'tools',
-    product: 'Coding agents',
-    problem: 'Your team runs Claude Code, Codex, and Cursor on personal API keys.',
-    solution:
-      'Point the tools at the gateway instead. Each person gets a virtual key, so usage shows up per person and per team, budgets apply, and one admin can change which models are available.',
-    to: '/docs/proxy/client_setup/overview',
-    cta: 'Connect your tools',
-    prompt: 'clients',
-    visual: {
-      type: 'code',
-      lang: 'bash',
-      code: `# Claude Code, through your gateway
-export ANTHROPIC_BASE_URL="http://localhost:4000"
-export ANTHROPIC_AUTH_TOKEN="sk-<virtual-key>"`,
-    },
-  },
-  {
-    id: 'mcp',
-    product: 'MCP Gateway',
-    problem: 'Every app wires up its own MCP servers, with credentials copied around.',
-    solution:
-      'Add MCP servers to the gateway once. Apps reach every tool through one endpoint, and you decide which keys and teams may use which server.',
-    to: '/docs/mcp',
-    cta: 'Set up the MCP Gateway',
-    prompt: 'mcp',
-    visual: {
-      type: 'table',
-      head: ['MCP server', 'Search team', 'Support team'],
-      rows: [
-        ['GitHub', 'allowed', 'no access'],
-        ['Jira', 'allowed', 'allowed'],
-        ['Zendesk', 'no access', 'allowed'],
-      ],
-    },
-  },
-  {
-    id: 'agents',
-    product: 'Agent Gateway',
-    problem: 'Your agents call other agents, with no record of who called what.',
-    solution:
-      'Register A2A agents on the gateway. Callers use a virtual key, each call is logged like any other request, and you choose which teams may invoke which agent.',
-    to: '/docs/a2a',
-    cta: 'Set up the Agent Gateway',
-    prompt: 'agents',
-    visual: {
-      type: 'lines',
-      lines: [
-        ['POST /a2a/support-agent', 'key: search-team', 'logged'],
-        ['POST /a2a/billing-agent', 'key: search-team', 'not allowed'],
-      ],
-    },
-  },
-  {
-    id: 'autorouter',
-    product: 'Auto Router (add-on)',
-    problem: 'Easy prompts go to your most expensive model.',
-    solution:
-      'The Auto Router sends each request to the cheapest model that can answer it well, so simple prompts cost less without changing your app.',
-    to: '/docs/auto_router/',
-    cta: 'See the Auto Router',
-    prompt: 'autorouter',
-    visual: {
-      type: 'table',
-      head: ['Request', 'Routed to'],
-      rows: [
-        ['Fix the typo in this sentence', 'a small, cheap model'],
-        ['Plan a zero-downtime database migration', 'a frontier model'],
-      ],
-    },
-  },
-  {
     id: 'enterprise',
     product: 'Enterprise',
     problem: 'Security review wants single sign-on, audit logs, and admin roles before rollout.',
@@ -340,7 +284,6 @@ export ANTHROPIC_AUTH_TOKEN="sk-<virtual-key>"`,
     to: '/docs/enterprise',
     cta: 'Talk to sales',
     sales: true,
-    prompt: 'enterprise',
     visual: {
       type: 'lines',
       lines: [
@@ -348,6 +291,69 @@ export ANTHROPIC_AUTH_TOKEN="sk-<virtual-key>"`,
         ['raj@acme.com via Okta', 'raised budget', 'team: support'],
       ],
     },
+  },
+];
+
+// After the SDK and gateway rows, the rest of the products as a grid of
+// cards: the problem, one line on the fix, and one hint (a snippet or an
+// example) instead of a larger visual.
+const PRODUCT_CARDS = [
+  {
+    id: 'autorouter',
+    product: 'Auto Router (add-on)',
+    problem: 'Easy prompts go to your most expensive model.',
+    text: 'Routes each request to the cheapest model that can answer it well, with no change to your app.',
+    hint: 'Fix a typo: small model. Plan a migration: frontier model.',
+    to: '/docs/auto_router/',
+    prompt: 'autorouter',
+  },
+  {
+    id: 'mcp',
+    product: 'MCP Gateway',
+    problem: 'Every app wires up its own MCP servers and credentials.',
+    text: 'Add MCP servers to the gateway once, reach every tool through one endpoint, and choose which keys and teams can use each server.',
+    hint: 'GitHub: search team only. Jira: everyone.',
+    to: '/docs/mcp',
+    prompt: 'mcp',
+  },
+  {
+    id: 'agents',
+    product: 'Agent Gateway',
+    problem: 'Agents call other agents with no record of who called what.',
+    text: 'Register A2A agents on the gateway. Every call uses a virtual key, is logged, and is limited to the teams you allow.',
+    hint: 'POST /a2a/{agent_id}',
+    mono: true,
+    to: '/docs/a2a',
+    prompt: 'agents',
+  },
+  {
+    id: 'tools',
+    product: 'Coding agents',
+    problem: 'Your team runs Claude Code and Codex on personal API keys.',
+    text: 'The lite CLI signs in to your gateway and launches Claude Code or Codex through it, so budgets, logs, and guardrails apply per person.',
+    hint: 'lite claude',
+    mono: true,
+    to: '/docs/proxy/client_setup/overview',
+    prompt: 'clients',
+  },
+  {
+    id: 'liteagents',
+    product: 'LiteAgents (preview)',
+    problem: 'Trying another agent harness means rewriting your agent.',
+    text: 'Switch between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode by changing one field, keeping your tools and MCP connections.',
+    hint: 'harness="claude-sdk"',
+    mono: true,
+    to: '/blog/liteagents-sdk',
+    prompt: 'liteagents',
+  },
+  {
+    id: 'liteadmin',
+    product: 'LiteAdmin MCP',
+    problem: 'Managing the gateway means clicking through the admin UI.',
+    text: 'Connect Claude or Codex to your gateway and ask it to create keys, add models, manage teams and budgets, or look up a failing request.',
+    hint: '"Create a key for the search team with a $200 budget"',
+    to: '/docs/proxy/liteadmin_mcp',
+    prompt: 'liteadmin',
   },
 ];
 
@@ -366,6 +372,7 @@ const PRODUCTS = [
 module.exports = {
   PRODUCTS,
   USE_CASES,
+  PRODUCT_CARDS,
   ENTERPRISE_HERO,
   TIERS,
   DOCS,

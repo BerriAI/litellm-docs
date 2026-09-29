@@ -103,6 +103,76 @@
   color: var(--ifm-color-emphasis-600);
 }
 
+/* The rest of the products as a grid of cards */
+.moreTitle {
+  margin: 2.5rem 0 1rem;
+  font-size: 1.05rem;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.2rem 1.1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-md, 12px);
+}
+.card .product {
+  margin: 0;
+}
+.cardProblem {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.cardText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ifm-color-emphasis-800);
+}
+.hint {
+  margin: 0.2rem 0 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--lite-radius-xs, 6px);
+  background: color-mix(in srgb, var(--ifm-color-primary) 6%, transparent);
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-800);
+}
+.hintMono {
+  font-family: var(--ifm-font-family-monospace);
+}
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+}
+.cardLink {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.listEnd {
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 1100px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 860px) {
   .item {
     grid-template-columns: minmax(0, 1fr);

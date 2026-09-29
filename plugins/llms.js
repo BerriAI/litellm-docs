@@ -19,7 +19,7 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
-const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
@@ -81,19 +81,27 @@ function useCasesMarkdown() {
     if (v.type === 'table') return [`| ${v.head.join(' | ')} |`, `| ${v.head.map(() => '---').join(' | ')} |`, ...v.rows.map((r) => `| ${r.join(' | ')} |`)];
     return v.lines.map((l) => `- ${l.join(', ')}`);
   };
+  const row = (u) => [
+    `### ${u.product}: ${u.problem}`,
+    '',
+    u.solution,
+    '',
+    ...visual(u.visual),
+    '',
+    `Guide: ${docUrl(u.to)}.${u.prompt ? ` Agent prompt: "${PROMPTS[u.prompt].title}", in ${SITE}/docs/agent_resources.md` : ` Talk to sales: ${SALES_URL}`}`,
+    '',
+  ];
+  const [sdk, gateway, ...rest] = USE_CASES;
   return [
     '## What people use LiteLLM for',
     '',
-    ...USE_CASES.flatMap((u) => [
-      `### ${u.product}: ${u.problem}`,
-      '',
-      u.solution,
-      '',
-      ...visual(u.visual),
-      '',
-      `Guide: ${docUrl(u.to)}. Agent prompt: "${PROMPTS[u.prompt].title}", in ${SITE}/docs/agent_resources.md`,
-      '',
-    ]),
+    ...row(sdk),
+    ...row(gateway),
+    '### More from LiteLLM',
+    '',
+    ...PRODUCT_CARDS.map((c) => `- **${c.product}**: ${c.problem} ${c.text} Guide: ${c.to.startsWith('/blog/') ? SITE + c.to : docUrl(c.to)}. Agent prompt: "${PROMPTS[c.prompt].title}".`),
+    '',
+    ...rest.flatMap(row),
   ].join('\n');
 }
 

@@ -31,6 +31,10 @@ Paste one of these into Claude Code, Codex, Cursor, or any other coding agent. E
 
 <AgentPrompt id="enterprise" />
 
+<AgentPrompt id="liteadmin" />
+
+<AgentPrompt id="liteagents" />
+
 ## Docs for agents
 
 Every page on this site is also published as plain markdown, and two index files list every page in one request. Point an agent at `llms.txt` first; it lists every page with a one-line description and links to the markdown versions.
