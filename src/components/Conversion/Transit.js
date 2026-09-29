@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import PromptButton from './PromptButton';
+import {PRODUCTS} from './content';
 import {usePrefersReducedMotion} from './shared';
 import styles from './transit.module.css';
 
@@ -207,25 +208,17 @@ export function TransitDiagram({path}) {
 const MAP_LINES = [
   {
     id: 'gateway',
-    name: 'AI Gateway',
-    text: 'One OpenAI-compatible endpoint for every app, with virtual keys, budgets, spend logs, and guardrails.',
-    to: '/docs/simple_proxy',
-    prompt: 'gateway',
     d: 'M470 235 H900',
     stops: [
       [535, 235, 'Virtual keys', 'below', '/docs/proxy/virtual_keys'],
       [610, 235, 'Budgets', 'below', '/docs/proxy/users'],
       [685, 235, 'Spend logs', 'below', '/docs/proxy/cost_tracking'],
       [760, 235, 'Guardrails', 'below', '/docs/proxy/guardrails/quick_start'],
-      [835, 235, 'Load balancing', 'below', '/docs/proxy/load_balancing'],
+      [835, 235, 'Load balancing', 'above', '/docs/proxy/load_balancing'],
     ],
   },
   {
     id: 'tools',
-    name: 'Your apps and AI tools',
-    text: 'Any OpenAI or Anthropic SDK, plus Claude Code, Codex, and Cursor, point at the gateway.',
-    to: '/docs/proxy/client_setup/overview',
-    prompt: 'clients',
     d: 'M40 235 H370',
     terminus: [40, 235, 'Your apps', 'above', '/docs/proxy/client_setup/overview'],
     stops: [
@@ -236,10 +229,6 @@ const MAP_LINES = [
   },
   {
     id: 'sdk',
-    name: 'Python SDK',
-    text: 'A library for one Python app: completion() for 100+ providers, with routing, fallbacks, and cost per call.',
-    to: '/docs/',
-    prompt: 'sdk',
     d: 'M40 420 H790 L940 270',
     terminus: [40, 420, 'Python app', 'below', '/docs/'],
     stops: [
@@ -250,10 +239,6 @@ const MAP_LINES = [
   },
   {
     id: 'mcp',
-    name: 'MCP Gateway',
-    text: 'One endpoint for every MCP tool, with access set per key and team, and cost tracking.',
-    to: '/docs/mcp',
-    prompt: 'mcp',
     d: 'M455 185 L505 135 H850',
     terminus: [850, 135, 'MCP Gateway', 'above', '/docs/mcp'],
     stops: [
@@ -264,10 +249,6 @@ const MAP_LINES = [
   },
   {
     id: 'agents',
-    name: 'Agent Gateway (A2A)',
-    text: 'Invoke A2A agents through the gateway, with logs and per-team access.',
-    to: '/docs/a2a',
-    prompt: 'agents',
     d: 'M385 185 L335 135 H90',
     terminus: [90, 135, 'Agent Gateway', 'above', '/docs/a2a'],
     stops: [
@@ -277,33 +258,18 @@ const MAP_LINES = [
   },
   {
     id: 'autorouter',
-    name: 'Auto Router (add-on)',
-    text: 'Routes each request to the cheapest model that can answer it well.',
-    to: '/docs/auto_router/',
-    prompt: 'autorouter',
     d: 'M470 272 L533 335 H650',
     terminus: [650, 335, 'Auto Router', 'below', '/docs/auto_router/'],
     stops: [[575, 335, 'Setup', 'below', '/docs/auto_router/setup']],
   },
   {
     id: 'obs',
-    name: 'Observability',
-    text: 'Send logs and spend to Langfuse, Datadog, OpenTelemetry, and more.',
-    to: '/docs/proxy/logging',
-    prompt: 'observability',
     d: 'M685 235 L725 195 H840',
     terminus: [840, 195, 'OpenTelemetry', 'above', '/docs/observability/opentelemetry_integration'],
     stops: [[755, 195, 'Langfuse', 'above', '/docs/observability/langfuse_integration']],
   },
 ];
 
-const ENTERPRISE_ROW = {
-  id: 'enterprise',
-  name: 'Enterprise',
-  text: 'SSO, audit logs, delegated admins, and multi-region on the same gateway, with a license key.',
-  to: '/docs/enterprise',
-  prompt: 'enterprise',
-};
 
 function StopLabel({x, y, label, pos, to, bold}) {
   const ty = pos === 'above' ? y - 14 : y + 23;
@@ -352,8 +318,8 @@ export function SystemMap({source = 'docs-home'}) {
           <g className={clsx(styles.l_enterprise, active && active !== 'enterprise' && styles.dim)}>
             <rect className={styles.zone} x="350.5" y="160.5" width="140" height="156" rx="16" />
             <Link to="/docs/enterprise" className={styles.stopLink}>
-              <rect className={styles.tag} x="150" y="322" width="195" height="17" rx="4" />
-              <text className={styles.tagText} x="247.5" y="334" textAnchor="middle">
+              <rect className={styles.tag} x="175" y="322" width="170" height="17" rx="4" />
+              <text className={styles.tagText} x="260" y="334" textAnchor="middle">
                 Enterprise: SSO, audit, roles
               </text>
             </Link>
@@ -405,7 +371,7 @@ export function SystemMap({source = 'docs-home'}) {
       </div>
 
       <ul className={clsx('lite-cardgrid', styles.legend)}>
-        {[...MAP_LINES, ENTERPRISE_ROW].map((l) => (
+        {PRODUCTS.map((l) => (
           <li
             key={l.id}
             className={clsx('lite-cardgrid__cell', styles.legendRow, styles[`l_${l.id}`])}
@@ -426,4 +392,3 @@ export function SystemMap({source = 'docs-home'}) {
   );
 }
 
-export const SYSTEM_MAP_LINES = [...MAP_LINES, ENTERPRISE_ROW];

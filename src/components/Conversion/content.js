@@ -215,7 +215,21 @@ const TIERS = [
   },
 ];
 
+// Every product, as the system map on the docs home draws it. Each has a
+// guide and an agent prompt (PROMPTS above).
+const PRODUCTS = [
+  {id: 'gateway', name: 'AI Gateway', to: '/docs/simple_proxy', prompt: 'gateway', text: 'One OpenAI-compatible endpoint for every app, with virtual keys, budgets, spend logs, and guardrails.'},
+  {id: 'tools', name: 'Your apps and AI tools', to: '/docs/proxy/client_setup/overview', prompt: 'clients', text: 'Any OpenAI or Anthropic SDK, plus Claude Code, Codex, and Cursor, point at the gateway.'},
+  {id: 'sdk', name: 'Python SDK', to: '/docs/', prompt: 'sdk', text: 'A library for one Python app: completion() for 100+ providers, with routing, fallbacks, and cost per call.'},
+  {id: 'mcp', name: 'MCP Gateway', to: '/docs/mcp', prompt: 'mcp', text: 'One endpoint for every MCP tool, with access set per key and team, and cost tracking.'},
+  {id: 'agents', name: 'Agent Gateway (A2A)', to: '/docs/a2a', prompt: 'agents', text: 'Invoke A2A agents through the gateway, with logs and per-team access.'},
+  {id: 'autorouter', name: 'Auto Router (add-on)', to: '/docs/auto_router/', prompt: 'autorouter', text: 'Routes each request to the cheapest model that can answer it well.'},
+  {id: 'obs', name: 'Observability', to: '/docs/proxy/logging', prompt: 'observability', text: 'Send logs and spend to Langfuse, Datadog, OpenTelemetry, and more.'},
+  {id: 'enterprise', name: 'Enterprise', to: '/docs/enterprise', prompt: 'enterprise', text: 'SSO, audit logs, delegated admins, and multi-region on the same gateway, with a license key.'},
+];
+
 module.exports = {
+  PRODUCTS,
   ENTERPRISE_HERO,
   TIERS,
   DOCS,
