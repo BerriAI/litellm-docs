@@ -112,7 +112,7 @@ columns={3}
 items={[
   {
     icon: "🎓",
-    title: "Gateway Course",
+    title: "LiteLLM Academy",
     description: "Guided course on how the gateway handles requests, routing, access, and costs.",
     to: "https://litellm.ai/course",
   },
