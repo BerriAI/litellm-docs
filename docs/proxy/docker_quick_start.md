@@ -7,6 +7,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {AgentPrompt, InstallBox, NextSteps, OneClickDeploy, SalesBand} from '@site/src/components/Conversion';
+import Newsletter from '@site/src/components/Newsletter';
 
 # Quickstart
 
@@ -196,6 +197,8 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
   {icon: 'budget', title: 'Set budgets and limits', text: 'Per key, team, or tag, enforced on every request.', to: '/docs/proxy/users'},
   {icon: 'guardrails', title: 'Add guardrails', text: 'PII masking, prompt injection checks, and custom rules.', to: '/docs/proxy/guardrails/quick_start'},
 ]} />
+
+<Newsletter source="docker-quickstart" />
 
 The [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
 

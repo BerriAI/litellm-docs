@@ -118,6 +118,8 @@ function useCasesMarkdown() {
 }
 
 function expandComponent(tag) {
+  // Signup forms have no meaning in markdown
+  if (/^<Newsletter\b/.test(tag)) return '';
   let m = /^<AgentPrompt\b[^>]*\bid="([^"]+)"[^>]*\/>$/.exec(tag);
   if (m && PROMPTS[m[1]]) {
     const p = PROMPTS[m[1]];

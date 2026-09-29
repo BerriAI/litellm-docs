@@ -5,6 +5,7 @@ import {ThemeClassNames} from '@docusaurus/theme-common';
 import {useActivePlugin, useDoc} from '@docusaurus/plugin-content-docs/client';
 import Heading from '@theme/Heading';
 import MDXContent from '@theme/MDXContent';
+import Newsletter from '@site/src/components/Newsletter';
 import Head from '@docusaurus/Head';
 import styles from './styles.module.css';
 import actionStyles from './pageActions.module.css';
@@ -183,6 +184,7 @@ export default function DocItemContent({children}) {
         )
       )}
       <MDXContent>{children}</MDXContent>
+      {activePlugin?.pluginId === 'release-notes' && <Newsletter source="release-notes" />}
     </div>
   );
 }
