@@ -1,7 +1,7 @@
 import React, {useId, useState} from 'react';
 import clsx from 'clsx';
 import {PROMPTS} from './content';
-import {IconAgent, IconCheck, IconChevron, IconCopy} from './icons';
+import {IconAgent, IconCheck, IconCopy} from './icons';
 import {track, useCopy} from './shared';
 import styles from './styles.module.css';
 
@@ -38,20 +38,11 @@ export default function AgentPrompt({id, title, text, defaultOpen = false, compa
           {copied ? <IconCheck /> : <IconCopy />}
           <span>{copied ? 'Copied' : 'Copy prompt'}</span>
         </button>
-        <button
-          type="button"
-          className={clsx(styles.iconBtn, open && styles.iconBtnOpen)}
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls={bodyId}
-          aria-label={open ? 'Collapse prompt' : 'Expand prompt'}>
-          <IconChevron />
-        </button>
       </div>
       <div id={bodyId} className={clsx(styles.promptBody, open && styles.promptBodyOpen)}>
         <pre className={styles.promptText}>{body}</pre>
         {!open && (
-          <button type="button" className={styles.showMore} onClick={() => setOpen(true)}>
+          <button type="button" className={styles.showMore} onClick={() => setOpen(true)} aria-controls={bodyId}>
             Show full prompt
           </button>
         )}

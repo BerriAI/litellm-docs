@@ -2,18 +2,39 @@
 id: agent_resources
 title: Agent resources
 sidebar_label: Agent resources
-description: Copy-paste prompts, machine-readable docs, MCP, and skills for coding agents that set up and operate LiteLLM.
+description: Skills, markdown docs, prompts, MCP, and the lite CLI for coding agents that set up and run LiteLLM.
 ---
 
 import {AgentPrompt, Command, Tiles} from '@site/src/components/Conversion';
 
 # Agent resources
 
-Use this page to set up and run LiteLLM from a coding agent. It has prompts that tell the agent what to install and how to check the result, every docs page as markdown, and the MCP server and skills an agent uses to operate a running gateway.
+## Skills
 
-## Set up with an agent
+### Gateway management
 
-Paste one of these into Claude Code, Codex, Cursor, or any other coding agent. Each prompt tells the agent which pages to read first and how to prove the setup works before it reports back.
+[LiteLLM skills](https://github.com/BerriAI/litellm-skills): 21 Claude Code skills that create, change, and remove users, teams, API keys, organizations, models, MCP servers, and agents on a live gateway, plus `view-usage` for spend and tokens. They need the gateway URL and a proxy admin key.
+
+<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install.sh | sh" id="skill-litellm-skills" note="Installs into ~/.claude/skills. Then run /add-model, /add-user, or /view-usage." />
+
+### Auto Router
+
+Sets up the auto router end to end, from picking models to verifying routing decisions.
+
+<Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it to your agent's skills folder or paste it into the chat." />
+
+## Docs for agents
+
+| Resource | URL | Use it for |
+|---|---|---|
+| Index | [`/llms.txt`](https://docs.litellm.ai/llms.txt) | The map: every page, grouped by topic, with descriptions |
+| Full docs | [`/llms-full.txt`](https://docs.litellm.ai/llms-full.txt) | All docs pages as one markdown file, for long-context models |
+| Any page as markdown | Append `.md` to the page URL, for example [`/docs/proxy/docker_quick_start.md`](https://docs.litellm.ai/docs/proxy/docker_quick_start.md) | Reading one page without navigation or scripts |
+| Page menu | **Copy page** at the top of every docs page | Copying a page as markdown, or opening it in Claude or ChatGPT |
+
+Markdown pages include the full text of every prompt and install command on the rendered page.
+
+## Prompts
 
 <AgentPrompt id="gateway" />
 
@@ -35,22 +56,9 @@ Paste one of these into Claude Code, Codex, Cursor, or any other coding agent. E
 
 <AgentPrompt id="liteagents" />
 
-## Docs for agents
+## LiteAdmin MCP
 
-Every page on this site is also published as plain markdown, and two index files list every page in one request. Point an agent at `llms.txt` first; it lists every page with a one-line description and links to the markdown versions.
-
-| Resource | URL | Use it for |
-|---|---|---|
-| Index | [`/llms.txt`](https://docs.litellm.ai/llms.txt) | The map: every page, grouped by topic, with descriptions |
-| Full docs | [`/llms-full.txt`](https://docs.litellm.ai/llms-full.txt) | All docs pages as one markdown file, for long-context models |
-| Any page as markdown | Append `.md` to the page URL, for example [`/docs/proxy/docker_quick_start.md`](https://docs.litellm.ai/docs/proxy/docker_quick_start.md) | Reading one page without navigation or scripts |
-| Page menu | **Copy page** at the top of every docs page | Copying a page as markdown, or opening it in Claude or ChatGPT |
-
-Markdown pages include the full text of the prompts and install commands shown on the rendered page, so an agent reading `.md` sees the same instructions a person does.
-
-## Manage a running gateway from your agent
-
-[LiteAdmin MCP](./proxy/liteadmin_mcp.md) connects Claude, Codex, or any MCP client to your gateway, so you can ask your agent to create keys, add models, check spend, or look up a failing request. Use a personal admin key rather than the master key. For Claude Code:
+Manage a running gateway from Claude Code with a personal admin key, never the master key. The [LiteAdmin MCP guide](./proxy/liteadmin_mcp.md) covers Claude Desktop, Codex, and remote HTTP.
 
 <Command code={`claude mcp add --scope user --transport stdio litellm-admin \\
   --env LITELLM_BASE_URL=https://gateway.example.com \\
@@ -59,11 +67,9 @@ Markdown pages include the full text of the prompts and install commands shown o
   --from git+https://github.com/BerriAI/litellm-admin-mcp.git@main \\
   litellm-admin-mcp`} id="liteadmin-mcp" />
 
-The [LiteAdmin MCP guide](./proxy/liteadmin_mcp.md) has the Claude Desktop, Codex, and remote HTTP variants.
+## lite CLI
 
-## Run coding agents through LiteLLM
-
-The `lite` CLI signs in to your gateway and launches Claude Code or Codex with the gateway's URL and your key already set, so every agent request gets your budgets, logging, and guardrails.
+Launches Claude Code or Codex through your gateway, with its URL and your key already set.
 
 <Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh" id="lite-cli" note="Installs the lite client only. The gateway runs elsewhere." />
 
@@ -72,24 +78,6 @@ The `lite` CLI signs in to your gateway and launches Claude Code or Codex with t
   {icon: 'agent', title: 'Codex CLI', text: 'Add LiteLLM as a Codex model provider.', to: '/docs/proxy/client_setup/codex_cli'},
   {icon: 'gateway', title: 'Any client', text: 'The values every client needs: base URL, key, and model names.', to: '/docs/proxy/client_setup/overview'},
 ]} />
-
-## Skills
-
-Skills are plain-text instructions an agent loads on demand, so it can do a specific job without you pasting a long prompt each time.
-
-### Gateway management skills
-
-[LiteLLM skills](https://github.com/BerriAI/litellm-skills) is a set of 21 skills for running a live gateway from Claude Code. They create, change, and remove users, teams, API keys, organizations, models, MCP servers, and agents, and `view-usage` reports daily spend and tokens by user, team, organization, or model. Each skill calls your gateway's management API, so it needs the gateway URL and a proxy admin key; a virtual key limited to model calls is not enough.
-
-<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install.sh | sh" id="skill-litellm-skills" note="Clones the skills into ~/.claude/skills. Then try /add-model, /add-user, or /view-usage in Claude Code." />
-
-For the same management tasks from Claude Desktop or Codex, or without installing anything locally, use [LiteAdmin MCP](./proxy/liteadmin_mcp.md) instead.
-
-### Auto Router skill
-
-The auto router skill sets up LiteLLM's auto router end to end, from picking models to verifying routing decisions:
-
-<Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it into your agent's skills folder, or paste it into the chat." />
 
 ## LiteLLM at a glance
 
