@@ -19,7 +19,7 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
-const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, PRODUCTS, USE_CASES} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
