@@ -256,7 +256,8 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
       code: `curl http://localhost:4000/v1/chat/completions \\
   -H "Authorization: Bearer sk-<virtual-key>" \\
   -H "Content-Type: application/json" \\
-  -d '{"model": "${M.openai_large}", "messages": [{"role": "user", "content": "Hello"}]}'`,
+  -d '{"model": "${M.openai_large}",
+       "messages": [{"role": "user", "content": "Hello"}]}'`,
     },
   },
   {
