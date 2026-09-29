@@ -22,9 +22,7 @@ import HeroDark from './hero-dark.png';
   style={{width: '100%'}}
 />
 
-Connecting an app to LiteLLM is a small part of running a gateway. You also need to know which models a key can call, how a deployment is chosen, what happens when it fails, and where usage is recorded.
-
-The [LiteLLM gateway course](https://litellm.ai/course) walks through those decisions in order. It is for developers and platform teams that deploy LiteLLM, and contributors who want to understand the code before opening a pull request.
+The [LiteLLM gateway course](https://litellm.ai/course) walks you through how the gateway, Router, and SDK work together. We built it for developers and platform teams deploying LiteLLM, and contributors who want to understand the code before opening a pull request.
 
 {/* truncate */}
 
@@ -32,34 +30,30 @@ The [LiteLLM gateway course](https://litellm.ai/course) walks through those deci
 
 The first lessons follow a support app that sends a question to a model called `support-chat`. The gateway checks the caller's access. The Router chooses a deployment. The SDK translates the call into the provider's format.
 
-Later lessons build on that same app. You add access rules, compare routing choices, follow retries and fallbacks, and see how costs and logs are recorded. This gives each feature a place in a request you already understand.
+Later lessons build on that same app. You add access rules, compare routing choices, follow retries and fallbacks, and see how costs and logs are recorded.
 
-In [Follow one request](https://litellm.ai/course#/lesson/request-lifetime), you can switch between an allowed request, a denied model, and a blocked answer. The diagram shows where each request stops. Denying model access stops the request before the provider is called. Blocking a generated answer happens after the provider has done billable work.
+In [Follow one request](https://litellm.ai/course#/lesson/request-lifetime), you can switch between an allowed request, a denied model, and a blocked answer. Select a scenario to see which steps run and where the request stops.
 
-![The course's request-flow example with Answer blocked selected. The provider has generated an answer, then a response check blocks delivery. The explanation states that blocking delivery does not undo generation or its cost.](./request-stops.png)
-
-These examples let you compare behavior without a running gateway or provider credentials. They illustrate the request flow; they do not send live model requests.
+![Request flow with Answer blocked selected. The provider generates an answer before a response check blocks delivery.](./request-stops.png)
 
 ## Understand the deployment you run
 
-For teams operating LiteLLM, the course connects individual settings to the system around them. Virtual keys and teams determine access. Routing and fallbacks determine where a request can go. Budgets, rate limits, and content checks place different limits on that work.
+For platform teams, the lessons cover everyday decisions: how to give a team access to models, set a budget, choose fallbacks, and investigate a failed request.
 
-The operations lessons then explain what changes when you run more than one gateway worker. Each worker has its own memory. Redis can coordinate shared counters and caches, while PostgreSQL stores durable records. Adding workers does not increase a provider's quota.
+The operations chapters explain how gateway workers, Redis, and PostgreSQL fit together. Other chapters cover streaming, caching, tools, and agents.
 
-The course also covers streaming, caching, tools, agents, and other request types. Each topic builds on the earlier lessons about requests and state. Use the [production guide](https://docs.litellm.ai/docs/proxy/prod) alongside the course when you are ready to configure your deployment.
+Use the [production guide](https://docs.litellm.ai/docs/proxy/prod) alongside the course when you configure your deployment.
 
 ## Find where a code change belongs
 
-Contributors need to know which part of LiteLLM owns a behavior. A provider request in the wrong format points toward an SDK adapter. An unexpected deployment choice points toward the Router. A permission error starts with the gateway's access checks.
+For contributors, the course helps you find where a change belongs. A provider request in the wrong format points toward an SDK adapter. An unexpected deployment choice points toward the Router. A permission error starts with the gateway's access checks.
 
 The lessons include **Why this exists** and **Where the code lives** sections. Open them to read the reason for a behavior and follow links to the relevant implementation, documentation, or tests.
 
-The final chapter applies that understanding to making and reviewing a change. For example, changing a field in the dashboard can also require changes to permissions, stored data, and the settings loaded by gateway workers. The course helps you follow that path and choose what to test. The [contribution guide](https://docs.litellm.ai/docs/extras/contributing_code) covers repository setup and the pull request process.
+The final chapter follows a change across the system, from a dashboard field to permissions, stored data, and the settings loaded by gateway workers. It shows you how to trace the behavior and choose what to test. The [contribution guide](https://docs.litellm.ai/docs/extras/contributing_code) covers repository setup and the pull request process.
 
 ## Take the course
 
 The course has 83 lessons in 15 chapters. Follow the lessons in order, or use the sidebar to return to a topic. Your progress is saved in your browser. No login is required.
-
-The current edition was reviewed on September 28, 2026, against LiteLLM 1.104.0. Code links point to the revision used for that review.
 
 **[Start the LiteLLM gateway course →](https://litellm.ai/course)**
