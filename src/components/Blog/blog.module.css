@@ -123,23 +123,25 @@
 
 /* ---------------------------------------------------------------- covers */
 
+/* Hero images are 1200 x 630 social cards with logos near the edges, so every
+   cover keeps that shape; a different frame crops the logos. */
 .cover {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--lite-radius-md, 12px);
   background: var(--b-surface);
   border: 1px solid var(--b-line);
 }
 .cover_lg {
-  aspect-ratio: 16 / 9;
-  border-radius: 16px;
+  aspect-ratio: 1200 / 630;
+  border-radius: var(--lite-radius-md, 16px);
 }
 .cover_md {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 1200 / 630;
 }
 .cover_sm {
-  aspect-ratio: 4 / 3;
-  border-radius: 8px;
+  aspect-ratio: 1200 / 630;
+  border-radius: var(--lite-radius-sm, 8px);
 }
 
 .coverImg {
@@ -244,7 +246,7 @@
    reads as cards and the missing image does not look like an empty box. */
 .cardText {
   padding: 1.25rem 1.3rem 1.2rem;
-  border-radius: 12px;
+  border-radius: var(--lite-radius-md, 12px);
   border: 1px solid var(--b-line-strong);
   background: var(--b-surface);
   transition: border-color 0.15s ease;
@@ -348,7 +350,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.42rem 0.8rem;
-  border-radius: 999px;
+  border-radius: var(--lite-radius-xs, 999px);
   border: 1px solid var(--b-line-strong);
   background: var(--b-page);
   color: var(--b-ink);
@@ -375,7 +377,7 @@
 .row:focus-visible {
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: 3px;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
 }
 
 .chipDot {
@@ -397,7 +399,7 @@
   flex: none;
   width: 14rem;
   padding: 0.5rem 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
   border: 1px solid var(--b-line-strong);
   background: var(--b-page);
   color: var(--b-ink);
@@ -526,7 +528,7 @@
 .catTag {
   justify-self: end;
   padding: 0.18rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--lite-radius-xs, 999px);
   border: 1px solid color-mix(in srgb, var(--cat) 40%, var(--b-line));
   color: var(--cat);
   font-size: 0.74rem;

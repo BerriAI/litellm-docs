@@ -9,7 +9,7 @@ import styles from './styles.module.css';
 // optional link to the doc that backs the claim.
 export function Tiles({items, columns = 3, size = 'md'}) {
   return (
-    <div className={clsx(styles.tiles, size === 'lg' && styles.tilesLg)} style={{'--cv-cols': columns}}>
+    <div className={clsx('lite-cardgrid', styles.tiles, size === 'lg' && styles.tilesLg)} style={{'--cv-cols': columns}}>
       {items.map(({icon, title, text, to}) => {
         const Icon = ICONS[icon];
         const inner = (
@@ -24,11 +24,11 @@ export function Tiles({items, columns = 3, size = 'md'}) {
           </>
         );
         return to ? (
-          <Link key={title} to={to} className={clsx(styles.tile, styles.tileLink)}>
+          <Link key={title} to={to} className={clsx('lite-cardgrid__cell', styles.tile, styles.tileLink)}>
             {inner}
           </Link>
         ) : (
-          <div key={title} className={styles.tile}>
+          <div key={title} className={clsx('lite-cardgrid__cell', styles.tile)}>
             {inner}
           </div>
         );

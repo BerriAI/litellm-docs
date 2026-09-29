@@ -4,7 +4,7 @@
   --cv-ink: var(--ifm-font-color-base);
   --cv-muted: var(--ifm-color-emphasis-700);
   --cv-line: var(--ifm-color-emphasis-300);
-  --cv-page: var(--ifm-background-color);
+  --cv-page: var(--lite-page, var(--ifm-background-color));
   --cv-surface: var(--ifm-background-surface-color, var(--ifm-background-color));
   --cv-tint: color-mix(in srgb, var(--ifm-color-primary) 7%, var(--cv-page));
   --cv-tint-strong: color-mix(in srgb, var(--ifm-color-primary) 13%, var(--cv-page));
@@ -60,11 +60,13 @@
   margin: 1.75rem 0 0;
   padding: 0;
 }
-.proof li {
+/* li + li repeats the selector so Infima's .markdown li + li margin loses */
+.proof li,
+.proof li + li {
   margin: 0;
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--cv-line);
-  border-radius: 999px;
+  border-radius: var(--lite-radius-xs, 999px);
   font-size: 0.85rem;
   font-weight: 550;
   color: var(--cv-muted);
@@ -102,10 +104,10 @@
   margin-top: -1px;
 }
 .slab:first-child {
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--lite-radius-lg, 16px) var(--lite-radius-lg, 16px) 0 0;
 }
 .slab:last-child {
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--lite-radius-lg, 16px) var(--lite-radius-lg, 16px);
 }
 .stackShown .slab {
   opacity: 1;
@@ -126,9 +128,11 @@
 .slabOn {
   z-index: 1;
   border-color: var(--cv-accent);
-  background:
+  background: var(
+    --lite-band-bg,
     radial-gradient(100% 160% at 0% 0%, var(--cv-tint-strong) 0%, transparent 65%),
-    var(--cv-surface);
+    var(--cv-surface)
+  );
   box-shadow: 0 0 0 1px var(--cv-accent);
 }
 
@@ -144,12 +148,14 @@
   width: 52px;
   height: 52px;
   flex: none;
-  border-radius: 12px;
+  border-radius: var(--lite-radius-sm, 12px);
   background: var(--cv-tint);
   color: var(--cv-ink);
 }
 .slabOn .slabIcon {
-  background: var(--cv-page);
+  --cv-accent: var(--lite-icon-on-accent, var(--ifm-color-primary));
+  background: var(--lite-icon-on-bg, var(--cv-page));
+  color: var(--lite-icon-on-fg, var(--cv-ink));
 }
 
 .slabName {
@@ -175,13 +181,20 @@
   flex-wrap: wrap;
   gap: 0.45rem;
 }
-.slabItems li {
+.slabItems li,
+.slabItems li + li {
   margin: 0;
+}
+/* Chips are links inside list items; themes that underline links in lists
+   should not reach them. */
+.hero .proof li a,
+.stack .slabItems li a {
+  text-decoration: none;
 }
 .slabItems a {
   display: inline-block;
   padding: 0.35rem 0.7rem;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-xs, 8px);
   border: 1px solid var(--cv-line);
   background: var(--cv-page);
   color: var(--cv-ink);
@@ -204,7 +217,7 @@
   bottom: -0.7rem;
   z-index: 2;
   padding: 0.1rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--lite-radius-xs, 999px);
   background: var(--cv-page);
   border: 1px solid var(--cv-line);
   font-size: 0.72rem;

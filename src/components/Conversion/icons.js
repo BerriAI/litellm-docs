@@ -24,8 +24,9 @@ function Svg({children, size = 24, title, ...rest}) {
   );
 }
 
-const A = {stroke: 'var(--cv-accent)'};
-const AF = {fill: 'var(--cv-accent)', stroke: 'none'};
+// The fallback lets the icons work outside the conversion components too.
+const A = {stroke: 'var(--cv-accent, var(--ifm-color-primary))'};
+const AF = {fill: 'var(--cv-accent, var(--ifm-color-primary))', stroke: 'none'};
 
 // A curly brace with a spark inside: code that calls models.
 export const IconSdk = (p) => (
@@ -176,6 +177,88 @@ export const IconMarkdown = (p) => (
   </Svg>
 );
 
+// Text lines arriving one after another, the newest still being written.
+export const IconStream = (p) => (
+  <Svg {...p}>
+    <path d="M4 6h16M4 10.5h12M4 15h8" />
+    <path d="M15 15h1.5M19 15h1" style={A} />
+    <path d="M4 19.5h5" style={A} />
+  </Svg>
+);
+
+// A wrench over a function call's parentheses: tools the model can call.
+export const IconTools = (p) => (
+  <Svg {...p}>
+    <path d="M7 4c-2 2-2 14 0 16M17 4c2 2 2 14 0 16" />
+    <path d="M14.5 8.5a2.5 2.5 0 0 0-3.3 3.1L8.8 14a1 1 0 0 0 1.4 1.4l2.4-2.4a2.5 2.5 0 0 0 3.1-3.3l-1.4 1.4-1.4-1.4z" style={A} />
+  </Svg>
+);
+
+// One request splitting into two routes, one of them the fallback.
+export const IconRoute = (p) => (
+  <Svg {...p}>
+    <circle cx="5" cy="12" r="2" />
+    <path d="M7 12h4c2 0 3-5 6-5h2M11 12c2 0 3 5 6 5h2" />
+    <circle cx="19.5" cy="7" r="1.5" />
+    <circle cx="19.5" cy="17" r="1.5" style={A} />
+  </Svg>
+);
+
+// A key with a small tag: a virtual key with its own settings.
+export const IconKey = (p) => (
+  <Svg {...p}>
+    <circle cx="7.5" cy="12" r="4" />
+    <path d="M11.5 12H21M18 12v3M15 12v2" />
+    <circle cx="7.5" cy="12" r="1.3" style={AF} />
+  </Svg>
+);
+
+// A log with one highlighted line: request logs and spend data.
+export const IconLogs = (p) => (
+  <Svg {...p}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="2" />
+    <path d="M7 8h10M7 16h7" />
+    <path d="M7 12h10" style={A} strokeWidth="2" />
+  </Svg>
+);
+
+// Several provider tiles, one of them chosen.
+export const IconProviders = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+    <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" />
+    <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" style={A} />
+  </Svg>
+);
+
+// A graduation cap: the guided course.
+export const IconCourse = (p) => (
+  <Svg {...p}>
+    <path d="M2.5 9L12 4.5 21.5 9 12 13.5z" />
+    <path d="M6.5 11v4.5c1.5 1.5 3.4 2.2 5.5 2.2s4-.7 5.5-2.2V11" />
+    <path d="M21.5 9v5.5" style={A} />
+  </Svg>
+);
+
+// An open book: reference guides.
+export const IconGuides = (p) => (
+  <Svg {...p}>
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z" />
+    <path d="M12 6.5v13" style={A} />
+  </Svg>
+);
+
+// Numbered steps down a page: tutorials.
+export const IconSteps = (p) => (
+  <Svg {...p}>
+    <path d="M10 6h10M10 12h10M10 18h7" />
+    <circle cx="5" cy="6" r="1.6" style={AF} />
+    <circle cx="5" cy="12" r="1.6" />
+    <circle cx="5" cy="18" r="1.6" />
+  </Svg>
+);
+
 export const IconCopy = (p) => (
   <Svg size={16} {...p}>
     <rect x="9" y="9" width="12" height="12" rx="2" />
@@ -217,4 +300,13 @@ export const ICONS = {
   spend: IconSpend,
   agent: IconAgent,
   markdown: IconMarkdown,
+  stream: IconStream,
+  tools: IconTools,
+  route: IconRoute,
+  key: IconKey,
+  logs: IconLogs,
+  providers: IconProviders,
+  course: IconCourse,
+  guides: IconGuides,
+  steps: IconSteps,
 };

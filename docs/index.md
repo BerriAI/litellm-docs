@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
 import {AgentPrompt, InstallBox, PathFinder} from '@site/src/components/Conversion';
 
-**LiteLLM** gives you one OpenAI-format interface to 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more), as a Python SDK you import or a self-hosted AI Gateway every app and teammate can share.
+**LiteLLM** gives you one OpenAI-format interface to 100+ LLMs (OpenAI, Anthropic, Gemini Enterprise Agent Platform, Bedrock, and more), as a Python SDK you import or a self-hosted AI Gateway every app and teammate can share.
 
 <PathFinder source="docs-index" />
 
@@ -63,7 +63,7 @@ print(response.choices[0].message.content)
 ```
 
 </TabItem>
-<TabItem value="vertex" label="Vertex AI">
+<TabItem value="vertex" label="Agent Platform">
 
 ```python
 from litellm import completion

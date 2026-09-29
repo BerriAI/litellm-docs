@@ -18,7 +18,7 @@
   --cv-line: var(--ifm-color-emphasis-300);
   --cv-hair: var(--ifm-color-emphasis-200);
   --cv-surface: var(--ifm-background-surface-color, var(--ifm-background-color));
-  --cv-page: var(--ifm-background-color);
+  --cv-page: var(--lite-page, var(--ifm-background-color));
   --cv-tint: color-mix(in srgb, var(--ifm-color-primary) 7%, var(--cv-page));
   --cv-tint-strong: color-mix(in srgb, var(--ifm-color-primary) 14%, var(--cv-page));
   /* Commands use the same surface as every other code block on the site. */
@@ -38,7 +38,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
   font-weight: 600;
   font-size: 0.9rem;
   line-height: 1;
@@ -51,13 +51,13 @@
 .btnPrimary {
   padding: 0.75rem 1.1rem;
   background: var(--ifm-color-primary);
-  color: var(--ifm-color-primary-contrast-foreground, #fff);
+  color: var(--lite-on-primary, #fff);
   border: 1px solid var(--ifm-color-primary);
 }
 .btnPrimary:hover {
   background: var(--ifm-color-primary-dark);
   border-color: var(--ifm-color-primary-dark);
-  color: var(--ifm-color-primary-contrast-foreground, #fff);
+  color: var(--lite-on-primary, #fff);
   text-decoration: none;
 }
 
@@ -110,7 +110,7 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
   border: 1px solid transparent;
   background: transparent;
   color: var(--cv-muted);
@@ -142,7 +142,7 @@
   position: relative;
   background: var(--cv-term-bg);
   border: 1px solid var(--cv-term-edge);
-  border-radius: 10px;
+  border-radius: var(--lite-radius-md, 10px);
   padding: 1rem 5.5rem 1rem 1.1rem;
   color: var(--cv-term-ink);
   font-family: var(--cv-mono);
@@ -193,7 +193,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.35rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--lite-radius-sm, 6px);
   border: 1px solid var(--cv-term-edge);
   background: var(--cv-term-bg);
   color: var(--cv-term-ink);
@@ -221,7 +221,7 @@
 .install {
   margin: 1.5rem 0 2rem;
   border: 1px solid var(--cv-line);
-  border-radius: 14px;
+  border-radius: var(--lite-radius-lg, 14px);
   background: var(--cv-surface);
   overflow: hidden;
 }
@@ -339,7 +339,7 @@
   margin: 1rem 0 1.5rem;
   padding: 0.9rem 1.1rem;
   border: 1px solid var(--cv-line);
-  border-radius: 12px;
+  border-radius: var(--lite-radius-md, 12px);
   background: var(--ifm-background-surface-color, var(--ifm-background-color));
 }
 .oneClickCopy {
@@ -385,7 +385,7 @@
 .prompt {
   margin: 1.25rem 0 1.75rem;
   border: 1px solid var(--cv-line);
-  border-radius: 12px;
+  border-radius: var(--lite-radius-lg, 12px);
   background: var(--cv-surface);
   overflow: hidden;
 }
@@ -407,7 +407,7 @@
   width: 32px;
   height: 32px;
   flex: none;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
   background: var(--cv-tint);
   color: var(--cv-ink);
 }
@@ -474,7 +474,7 @@
   bottom: 0.45rem;
   transform: translateX(-50%);
   padding: 0.3rem 0.8rem;
-  border-radius: 999px;
+  border-radius: var(--lite-radius-xs, 999px);
   border: 1px solid var(--cv-line);
   background: var(--cv-page);
   color: var(--cv-ink);
@@ -493,10 +493,12 @@
   margin: 1.5rem 0 2.5rem;
   padding: 1.5rem;
   border: 1px solid var(--cv-line);
-  border-radius: 18px;
-  background:
+  border-radius: var(--lite-radius-lg, 18px);
+  background: var(
+    --lite-panel-bg,
     radial-gradient(120% 80% at 100% 0%, var(--cv-tint) 0%, transparent 60%),
-    var(--cv-surface);
+    var(--cv-surface)
+  );
 }
 
 .pf .pfQuestion {
@@ -523,7 +525,7 @@
   align-items: start;
   text-align: left;
   padding: 0.9rem 1rem;
-  border-radius: 12px;
+  border-radius: var(--lite-radius-md, 12px);
   border: 1px solid var(--cv-line);
   background: var(--cv-page);
   color: var(--cv-ink);
@@ -546,12 +548,14 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: var(--lite-radius-sm, 10px);
   background: var(--cv-tint);
   color: var(--cv-ink);
 }
 .pfOptionOn .pfOptionIcon {
-  background: var(--cv-page);
+  --cv-accent: var(--lite-icon-on-accent, var(--ifm-color-primary));
+  background: var(--lite-icon-on-bg, var(--cv-page));
+  color: var(--lite-icon-on-fg, var(--cv-ink));
 }
 
 .pfOptionLabel {
@@ -608,7 +612,7 @@
 }
 
 .pfDiagram {
-  border-radius: 14px;
+  border-radius: var(--lite-radius-md, 14px);
   border: 1px solid var(--cv-hair);
   background: var(--cv-page);
   padding: 0.5rem;
@@ -731,7 +735,7 @@
   font-family: var(--cv-mono);
   font-size: 12px;
   font-weight: 600;
-  fill: var(--ifm-color-primary-contrast-foreground, #fff);
+  fill: var(--lite-on-primary, #fff);
 }
 
 .dgRing {
@@ -808,7 +812,7 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 1.1rem 1.15rem 1.2rem;
-  border-radius: 12px;
+  border-radius: var(--lite-radius-md, 12px);
   border: 1px solid var(--cv-line);
   background: var(--cv-surface);
   color: var(--cv-ink);
@@ -829,7 +833,7 @@
   width: 44px;
   height: 44px;
   margin-bottom: 0.35rem;
-  border-radius: 10px;
+  border-radius: var(--lite-radius-sm, 10px);
   background: var(--cv-tint);
   color: var(--cv-ink);
 }
@@ -848,12 +852,12 @@
 
 .tilesLg .tile {
   padding: 1.5rem 1.5rem 1.6rem;
-  border-radius: 16px;
+  border-radius: var(--lite-radius-md, 16px);
 }
 .tilesLg .tileIcon {
   width: 60px;
   height: 60px;
-  border-radius: 14px;
+  border-radius: var(--lite-radius-sm, 14px);
   margin-bottom: 0.6rem;
 }
 .tilesLg .tileTitle {
@@ -873,11 +877,13 @@
   gap: 1.5rem;
   margin: 2.5rem 0;
   padding: 1.6rem 1.75rem;
-  border-radius: 16px;
+  border-radius: var(--lite-radius-lg, 16px);
   border: 1px solid var(--cv-accent);
-  background:
+  background: var(
+    --lite-band-bg,
     radial-gradient(90% 140% at 0% 100%, var(--cv-tint-strong) 0%, transparent 70%),
-    var(--cv-surface);
+    var(--cv-surface)
+  );
 }
 
 .bandCopy {
@@ -912,7 +918,7 @@
   height: min(820px, calc(100vh - 48px));
   padding: 0;
   border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 16px;
+  border-radius: var(--lite-radius-lg, 16px);
   background: var(--ifm-background-color);
 }
 .dialog::backdrop {
@@ -929,7 +935,7 @@
   right: 10px;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--lite-radius-sm, 8px);
   border: 0;
   background: var(--ifm-background-color);
   font-size: 1.5rem;
@@ -948,7 +954,7 @@
 @media (max-width: 700px) {
   .pf {
     padding: 1.1rem;
-    border-radius: 14px;
+    border-radius: var(--lite-radius-lg, 14px);
   }
   .pfOptions {
     grid-template-columns: 1fr;

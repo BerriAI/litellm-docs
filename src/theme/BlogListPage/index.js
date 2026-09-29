@@ -207,7 +207,7 @@ export default function BlogListPage(props) {
                 </button>
               </p>
             ) : (
-              <div className={styles.grid}>
+              <div className={clsx('lite-cardgrid', styles.grid)}>
                 {results.map((item) => (
                   <PostCard key={item.content.metadata.permalink} item={item} />
                 ))}
@@ -245,7 +245,7 @@ export default function BlogListPage(props) {
                       ))}
                     </div>
                   ) : (
-                    <div className={clsx(styles.grid, count === 4 && styles.grid4)}>
+                    <div className={clsx('lite-cardgrid', styles.grid, count === 4 && styles.grid4)}>
                       {posts.map((item) => (
                         <PostCard key={item.content.metadata.permalink} item={item} />
                       ))}

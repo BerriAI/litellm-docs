@@ -78,7 +78,7 @@ export default function PostCard({item, variant = 'card'}) {
 
   const feature = variant === 'feature';
   return (
-    <Link to={post.permalink} className={clsx(styles.card, feature && styles.cardFeature, !image && styles.cardText)}>
+    <Link to={post.permalink} className={clsx(!feature && 'lite-cardgrid__cell', styles.card, feature && styles.cardFeature, !image && styles.cardText)}>
       <Cover image={image} size={feature ? 'lg' : 'md'} />
       <span className={styles.cardBody}>
         <span className={clsx(styles.catText, styles[`cat_${category.id}`])}>{category.label}</span>

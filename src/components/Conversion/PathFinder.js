@@ -31,7 +31,7 @@ const PATHS = [
 // Diagram: apps on the left, providers on the right, and what sits between
 // them for each path. Geometry is in one 560 x 300 viewBox.
 
-const PROVIDERS = ['OpenAI', 'Anthropic', 'Bedrock', 'Vertex AI', '100+ more'];
+const PROVIDERS = ['OpenAI', 'Anthropic', 'Bedrock', 'Agent Platform', '100+ more'];
 const PY = [28, 86, 144, 202, 260]; // provider box tops, 36 tall
 const PX = 440; // provider box left
 const APP_W = 150;

@@ -9,7 +9,7 @@ const POPULAR = [
   {icon: 'gateway', title: 'Gateway quickstart', text: 'Docker + Postgres, admin UI, first virtual key in five minutes.', to: '/docs/proxy/docker_quick_start'},
   {icon: 'sdk', title: 'SDK quickstart', text: 'uv add litellm, then call any provider with completion().', to: '/docs/'},
   {icon: 'agent', title: 'Connect Claude Code and Codex', text: 'Point coding agents and any OpenAI SDK at your gateway.', to: '/docs/proxy/client_setup/overview'},
-  {icon: 'mcp', title: 'Providers', text: 'OpenAI, Anthropic, Bedrock, Vertex AI, Azure, and 100+ more.', to: '/docs/providers'},
+  {icon: 'mcp', title: 'Providers', text: 'OpenAI, Anthropic, Bedrock, Agent Platform, Azure, and 100+ more.', to: '/docs/providers'},
   {icon: 'budget', title: 'Keys, budgets, and spend', text: 'Virtual keys with limits per key, team, and tag.', to: '/docs/proxy/virtual_keys'},
   {icon: 'regions', title: 'Deploy to production', text: 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure.', to: '/docs/proxy/deploy'},
 ];
@@ -26,7 +26,7 @@ export default function Home() {
         <header className={styles.hero}>
           <h1 className={styles.title}>One API for every model, in your code or behind your own gateway.</h1>
           <p className={styles.lead}>
-            LiteLLM is an open-source Python SDK and a self-hosted AI Gateway. Call OpenAI, Anthropic, Bedrock, Vertex AI, and 100+ other
+            LiteLLM is an open-source Python SDK and a self-hosted AI Gateway. Call OpenAI, Anthropic, Bedrock, Gemini Enterprise Agent Platform, and 100+ other
             providers in the OpenAI format, with keys, budgets, spend tracking, and fallbacks built in.
           </p>
         </header>
