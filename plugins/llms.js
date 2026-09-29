@@ -488,9 +488,17 @@ module.exports = function llmsPlugin(context) {
           const header =
             `# ${clean(m.title)}\n\n> ${day(m.date)}${authors ? `, by ${authors}` : ''}. ${categoryOf(m.tags).label}. ` +
             `Source: ${SITE}${m.permalink}. All posts: ${SITE}/blog.md\n\n`;
-          const target = mdPath(outDir, m.permalink);
-          await fs.promises.mkdir(path.dirname(target), {recursive: true});
-          await fs.promises.writeFile(target, body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body);
+          const meta = frontMatter({
+            title: clean(m.title),
+            url: m.permalink,
+            canonical_url: `${SITE}${m.permalink}`,
+            type: 'blog',
+            date: day(m.date),
+            category: categoryOf(m.tags).label,
+            authors: (m.authors || []).map((a) => a.name).filter(Boolean),
+            summary: m.description ? oneLine(m.description, 240) : null,
+          });
+          await writeMd(m.permalink, meta + (body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body));
         }),
       );
       if (blogPosts.length) {
@@ -534,6 +542,10 @@ module.exports = function llmsPlugin(context) {
       sitemap.push('', '## Release notes', '');
       for (const d of [...releaseNotes].sort((a, b) => b.permalink.localeCompare(a.permalink, undefined, {numeric: true}))) {
         sitemap.push(`- [${clean(d.title)}](${mdUrl(d.permalink)})`);
+      }
+      if (blogPosts.length) {
+        sitemap.push('', '## Blog', '');
+        for (const m of blogPosts) sitemap.push(`- [${clean(m.title)}](${mdUrl(m.permalink)})`);
       }
       await fs.promises.writeFile(path.join(outDir, 'sitemap.md'), sitemap.join('\n') + '\n');
     },
