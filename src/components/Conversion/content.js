@@ -294,25 +294,29 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   },
 ];
 
-// After the SDK and gateway rows, the rest of the products as a grid of
-// cards: the problem, one line on the fix, and one hint (a snippet or an
-// example) instead of a larger visual.
+// After the SDK and gateway rows: what else runs on or with the gateway,
+// in three themed pairs. Each card says what the product does, then shows
+// it with one small text visual.
+const CARD_GROUPS = [
+  {title: 'Tools and agents', ids: ['mcp', 'agents']},
+  {title: 'Choose models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Run it from your terminal or your agent', ids: ['tools', 'liteadmin']},
+];
+
 const PRODUCT_CARDS = [
-  {
-    id: 'autorouter',
-    product: 'Auto Router (add-on)',
-    problem: 'Easy prompts go to your most expensive model.',
-    text: 'Routes each request to the cheapest model that can answer it well, with no change to your app.',
-    hint: 'Fix a typo: small model. Plan a migration: frontier model.',
-    to: '/docs/auto_router/',
-    prompt: 'autorouter',
-  },
   {
     id: 'mcp',
     product: 'MCP Gateway',
-    problem: 'Every app wires up its own MCP servers and credentials.',
-    text: 'Add MCP servers to the gateway once, reach every tool through one endpoint, and choose which keys and teams can use each server.',
-    hint: 'GitHub: search team only. Jira: everyone.',
+    problem: 'Serve every MCP tool from one endpoint.',
+    text: 'Add MCP servers to the gateway once instead of wiring them into every app, and choose which keys and teams can use each server.',
+    visual: {
+      type: 'table',
+      head: ['MCP server', 'Search team', 'Support team'],
+      rows: [
+        ['GitHub', 'allowed', 'no access'],
+        ['Jira', 'allowed', 'allowed'],
+      ],
+    },
     to: '/docs/mcp',
     prompt: 'mcp',
   },
@@ -321,37 +325,74 @@ const PRODUCT_CARDS = [
     product: 'Agent Gateway',
     problem: 'Route agent-to-agent calls through the gateway.',
     text: 'Register your A2A agents on the gateway, so every call to them uses a virtual key, shows up in your logs with its cost, and is limited to the teams you allow.',
-    hint: 'POST /a2a/{agent_id}',
-    mono: true,
+    visual: {
+      type: 'lines',
+      lines: [
+        ['POST /a2a/support-agent', 'search-team', 'logged'],
+        ['POST /a2a/billing-agent', 'search-team', 'not allowed'],
+      ],
+    },
     to: '/docs/a2a',
     prompt: 'agents',
   },
   {
-    id: 'tools',
-    product: 'lite CLI',
-    problem: 'Your team runs Claude Code and Codex on personal API keys.',
-    text: 'The lite CLI signs in to your gateway and launches Claude Code or Codex through it, so budgets, logs, and guardrails apply per person.',
-    hint: 'lite claude',
-    mono: true,
-    to: '/docs/proxy/client_setup/overview',
-    prompt: 'clients',
+    id: 'autorouter',
+    product: 'Auto Router (add-on)',
+    problem: 'Send each request to the cheapest model that can answer it.',
+    text: 'Easy prompts stop going to your most expensive model, with no change to your app.',
+    visual: {
+      type: 'table',
+      head: ['Request', 'Routed to'],
+      rows: [
+        ['Fix the typo in this sentence', 'a small, cheap model'],
+        ['Plan a zero-downtime migration', 'a frontier model'],
+      ],
+    },
+    to: '/docs/auto_router/',
+    prompt: 'autorouter',
   },
   {
     id: 'liteagents',
     product: 'LiteAgents (preview)',
-    problem: 'Trying another agent harness means rewriting your agent.',
-    text: 'Switch between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode by changing one field, keeping your tools and MCP connections.',
-    hint: 'harness="claude-sdk"',
-    mono: true,
+    problem: 'Switch agent harnesses without rewriting your agent.',
+    text: 'Move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode by changing one field. Your tools and MCP connections stay.',
+    visual: {
+      type: 'code',
+      lang: 'python',
+      code: `ProfileOptions(
+    harness="deepagents",  # or "claude-sdk", "codex", "pydantic-ai"
+    model="my-model",
+)`,
+    },
     to: '/blog/liteagents-sdk',
     prompt: 'liteagents',
   },
   {
+    id: 'tools',
+    product: 'lite CLI',
+    problem: 'Run Claude Code and Codex through your gateway.',
+    text: 'Instead of personal API keys, the lite CLI signs in to your gateway and launches the tool through it, so budgets, logs, and guardrails apply per person.',
+    visual: {
+      type: 'code',
+      lang: 'bash',
+      code: `lite login    # sign in to your gateway
+lite claude   # Claude Code, through the gateway`,
+    },
+    to: '/docs/proxy/management_cli',
+    prompt: 'clients',
+  },
+  {
     id: 'liteadmin',
     product: 'LiteAdmin MCP',
-    problem: 'Managing the gateway means clicking through the admin UI.',
+    problem: 'Manage the gateway by asking your agent.',
     text: 'Connect Claude or Codex to your gateway and ask it to create keys, add models, manage teams and budgets, or look up a failing request.',
-    hint: '"Create a key for the search team with a $200 budget"',
+    visual: {
+      type: 'chat',
+      lines: [
+        ['You', 'Create a key for the search team with a $200 monthly budget.'],
+        ['Claude', 'Done. The key belongs to team search, with a $200 budget per month.'],
+      ],
+    },
     to: '/docs/proxy/liteadmin_mcp',
     prompt: 'liteadmin',
   },
@@ -373,6 +414,7 @@ module.exports = {
   PRODUCTS,
   USE_CASES,
   PRODUCT_CARDS,
+  CARD_GROUPS,
   ENTERPRISE_HERO,
   TIERS,
   DOCS,

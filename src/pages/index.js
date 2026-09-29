@@ -2,7 +2,7 @@ import React from 'react';
 import Layout from '@theme/Layout';
 import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
-import {PathFinder, SalesBand, Tiles, UseCases} from '@site/src/components/Conversion';
+import {AgentBand, PathFinder, SalesBand, Tiles, UseCases} from '@site/src/components/Conversion';
 import styles from './index.module.css';
 
 const POPULAR = [
@@ -33,17 +33,14 @@ export default function Home() {
 
         <PathFinder source="docs-home" />
 
+        <AgentBand source="docs-home" />
+
         <UseCases source="docs-home" />
 
         <section className={styles.section}>
           <h2 className={styles.h2}>Most-read guides</h2>
           <Tiles items={POPULAR} columns={3} />
         </section>
-
-        <p className={styles.agentNote}>
-          Setting up with a coding agent? Every section above has a prompt to copy, and every docs page is published as markdown: start from{' '}
-          <Link to="https://docs.litellm.ai/llms.txt">llms.txt</Link> or see <Link to="/docs/agent_resources">Agent resources</Link>.
-        </p>
 
         <SalesBand source="docs-home" />
       </main>

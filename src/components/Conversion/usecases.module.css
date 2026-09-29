@@ -104,9 +104,63 @@
 }
 
 /* The rest of the products as a grid of cards */
+.built {
+  margin-top: 3rem;
+}
 .moreTitle {
-  margin: 2.5rem 0 1rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.3rem;
+}
+.moreLead {
+  margin: 0 0 1.5rem;
+  max-width: 46rem;
+  color: var(--ifm-color-emphasis-800);
+}
+.group + .group {
+  margin-top: 1.75rem;
+}
+.groupTitle {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ifm-heading-color);
+}
+.cardVisual {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+}
+.cardVisual .code {
+  font-size: 0.78rem;
+}
+
+/* A two-message exchange with an agent */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-lg, 12px);
+  background: var(--lite-page, var(--ifm-background-surface-color));
+  font-size: 0.82rem;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-width: 88%;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--lite-radius-md, 10px);
+  background: var(--ifm-color-emphasis-100);
+}
+.msgYou {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--ifm-color-primary) 10%, transparent);
+}
+.who {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--ifm-color-emphasis-700);
 }
 .cards {
   display: grid;
@@ -135,17 +189,6 @@
   line-height: 1.55;
   color: var(--ifm-color-emphasis-800);
 }
-.hint {
-  margin: 0.2rem 0 0;
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--lite-radius-xs, 6px);
-  background: color-mix(in srgb, var(--ifm-color-primary) 6%, transparent);
-  font-size: 0.8rem;
-  color: var(--ifm-color-emphasis-800);
-}
-.hintMono {
-  font-family: var(--ifm-font-family-monospace);
-}
 .cardActions {
   display: flex;
   flex-wrap: wrap;
@@ -171,5 +214,50 @@
 @media (max-width: 860px) {
   .item {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Coding-agent panel above the product sections */
+.agentBand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem 1.25rem;
+  align-items: center;
+  margin: 2.5rem 0 0;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 30%, transparent);
+  border-radius: var(--lite-radius-lg, 14px);
+  background: color-mix(in srgb, var(--ifm-color-primary) 6%, var(--lite-page, var(--ifm-background-surface-color)));
+}
+.agentIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--lite-radius-sm, 10px);
+  background: var(--ifm-color-primary);
+  color: var(--lite-on-primary, #fff);
+  --cv-accent: var(--lite-on-primary, #fff);
+}
+.agentTitle {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+.agentText {
+  margin: 0;
+  color: var(--ifm-color-emphasis-800);
+  line-height: 1.55;
+}
+.agentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+@media (max-width: 860px) {
+  .agentBand {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .agentActions {
+    grid-column: 1 / -1;
   }
 }

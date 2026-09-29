@@ -4,7 +4,7 @@ import Link from '@docusaurus/Link';
 import CodeBlock from '@theme/CodeBlock';
 import PromptButton from './PromptButton';
 import SalesButton from './SalesButton';
-import {PRODUCT_CARDS, USE_CASES} from './content';
+import {CARD_GROUPS, PRODUCT_CARDS, USE_CASES} from './content';
 import {track} from './shared';
 import cv from './styles.module.css';
 import styles from './usecases.module.css';
@@ -39,6 +39,18 @@ function Visual({v}) {
                 {c}
               </span>
             ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (v.type === 'chat') {
+    return (
+      <div className={styles.chat}>
+        {v.lines.map(([who, text]) => (
+          <div key={who} className={clsx(styles.msg, who === 'You' && styles.msgYou)}>
+            <span className={styles.who}>{who}</span>
+            <span>{text}</span>
           </div>
         ))}
       </div>
@@ -88,9 +100,11 @@ function Card({c, source}) {
   return (
     <article className={clsx('lite-cardgrid__cell', styles.card)} id={`use-${c.id}`}>
       <p className={styles.product}>{c.product}</p>
-      <h3 className={styles.cardProblem}>{c.problem}</h3>
+      <h4 className={styles.cardProblem}>{c.problem}</h4>
       <p className={styles.cardText}>{c.text}</p>
-      <p className={clsx(styles.hint, c.mono && styles.hintMono)}>{c.hint}</p>
+      <div className={styles.cardVisual}>
+        <Visual v={c.visual} />
+      </div>
       <div className={styles.cardActions}>
         <Link className={styles.cardLink} to={c.to} onClick={() => track('docs_use_case_cta', {id: c.id, source})}>
           Read the guide
@@ -112,10 +126,21 @@ export default function UseCases({source = 'docs-home'}) {
         <Row u={sdk} source={source} />
         <Row u={gateway} source={source} />
       </div>
-      <h3 className={styles.moreTitle}>More from LiteLLM</h3>
-      <div className={clsx('lite-cardgrid', styles.cards)}>
-        {PRODUCT_CARDS.map((c) => (
-          <Card key={c.id} c={c} source={source} />
+      <div className={styles.built}>
+        <h3 className={styles.moreTitle}>Built on the gateway</h3>
+        <p className={styles.moreLead}>
+          Once your apps call the gateway, the same deployment can serve MCP tools and agents, pick the right model for each request, and be
+          run from your terminal or by your coding agent.
+        </p>
+        {CARD_GROUPS.map((g) => (
+          <div key={g.title} className={styles.group}>
+            <p className={styles.groupTitle}>{g.title}</p>
+            <div className={clsx('lite-cardgrid', styles.cards)}>
+              {g.ids.map((id) => (
+                <Card key={id} c={PRODUCT_CARDS.find((c) => c.id === id)} source={source} />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
       <div className={clsx(styles.list, styles.listEnd)}>

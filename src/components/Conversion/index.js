@@ -8,3 +8,4 @@ export {Tiles, SalesBand, NextSteps} from './Tiles';
 export {default as PromptButton} from './PromptButton';
 export {SystemMap, TransitDiagram} from './Transit';
 export {default as UseCases} from './UseCases';
+export {default as AgentBand} from './AgentBand';

@@ -19,7 +19,7 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
-const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
@@ -79,6 +79,7 @@ function useCasesMarkdown() {
   const visual = (v) => {
     if (v.type === 'code') return ['```' + v.lang, v.code, '```'];
     if (v.type === 'table') return [`| ${v.head.join(' | ')} |`, `| ${v.head.map(() => '---').join(' | ')} |`, ...v.rows.map((r) => `| ${r.join(' | ')} |`)];
+    if (v.type === 'chat') return v.lines.map(([who, text]) => `> **${who}:** ${text}`);
     return v.lines.map((l) => `- ${l.join(', ')}`);
   };
   const row = (u) => [
@@ -97,10 +98,19 @@ function useCasesMarkdown() {
     '',
     ...row(sdk),
     ...row(gateway),
-    '### More from LiteLLM',
+    '### Built on the gateway',
     '',
-    ...PRODUCT_CARDS.map((c) => `- **${c.product}**: ${c.problem} ${c.text} Guide: ${c.to.startsWith('/blog/') ? SITE + c.to : docUrl(c.to)}. Agent prompt: "${PROMPTS[c.prompt].title}".`),
+    'Once your apps call the gateway, the same deployment can serve MCP tools and agents, pick the right model for each request, and be run from your terminal or by your coding agent.',
     '',
+    ...CARD_GROUPS.flatMap((g) => [
+      `#### ${g.title}`,
+      '',
+      ...g.ids.flatMap((id) => {
+        const c = PRODUCT_CARDS.find((x) => x.id === id);
+        const guide = c.to.startsWith('/blog/') ? SITE + c.to : docUrl(c.to);
+        return [`**${c.product}: ${c.problem}** ${c.text}`, '', ...visual(c.visual), '', `Guide: ${guide}. Agent prompt: "${PROMPTS[c.prompt].title}", in ${SITE}/docs/agent_resources.md`, ''];
+      }),
+    ]),
     ...rest.flatMap(row),
   ].join('\n');
 }
