@@ -586,6 +586,7 @@
 }
 .pfDiagram {
   grid-area: diagram;
+  min-width: 0;
 }
 .pfSide {
   grid-area: side;
@@ -606,7 +607,7 @@
 
 @container (max-width: 620px) {
   .pfStage {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'diagram' 'side' 'main';
   }
 }
@@ -972,6 +973,10 @@
 }
 
 @media (max-width: 700px) {
+  .pfStage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'diagram' 'side' 'main';
+  }
   .pf {
     padding: 1.1rem;
     border-radius: var(--lite-radius-lg, 14px);
