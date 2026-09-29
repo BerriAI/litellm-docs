@@ -218,7 +218,9 @@
   z-index: 2;
   padding: 0.1rem 0.55rem;
   border-radius: var(--lite-radius-xs, 999px);
-  background: var(--cv-page);
+  /* The slabs it straddles are --cv-surface; the page colour can be
+     transparent (Infima's light theme), which lets the border show through. */
+  background: var(--cv-surface);
   border: 1px solid var(--cv-line);
   font-size: 0.72rem;
   color: var(--cv-muted);
