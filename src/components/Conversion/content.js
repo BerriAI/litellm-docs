@@ -224,7 +224,6 @@ const PRODUCTS = [
   {id: 'mcp', name: 'MCP Gateway', to: '/docs/mcp', prompt: 'mcp', text: 'One endpoint for every MCP tool, with access set per key and team, and cost tracking.'},
   {id: 'agents', name: 'Agent Gateway (A2A)', to: '/docs/a2a', prompt: 'agents', text: 'Invoke A2A agents through the gateway, with logs and per-team access.'},
   {id: 'autorouter', name: 'Auto Router (add-on)', to: '/docs/auto_router/', prompt: 'autorouter', text: 'Routes each request to the cheapest model that can answer it well.'},
-  {id: 'obs', name: 'Observability', to: '/docs/proxy/logging', prompt: 'observability', text: 'Send logs and spend to Langfuse, Datadog, OpenTelemetry, and more.'},
   {id: 'enterprise', name: 'Enterprise', to: '/docs/enterprise', prompt: 'enterprise', text: 'SSO, audit logs, delegated admins, and multi-region on the same gateway, with a license key.'},
 ];
 

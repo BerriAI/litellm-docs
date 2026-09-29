@@ -262,12 +262,6 @@ const MAP_LINES = [
     terminus: [650, 335, 'Auto Router', 'below', '/docs/auto_router/'],
     stops: [[575, 335, 'Setup', 'below', '/docs/auto_router/setup']],
   },
-  {
-    id: 'obs',
-    d: 'M685 235 L725 195 H840',
-    terminus: [840, 195, 'OpenTelemetry', 'above', '/docs/observability/opentelemetry_integration'],
-    stops: [[755, 195, 'Langfuse', 'above', '/docs/observability/langfuse_integration']],
-  },
 ];
 
 
@@ -306,7 +300,7 @@ export function SystemMap({source = 'docs-home'}) {
           className={clsx(styles.svg, styles.mapSvg)}
           viewBox="0 95 1000 375"
           role="img"
-          aria-label="LiteLLM system map. Your apps and AI tools feed the AI Gateway, which reaches 100+ providers through virtual keys, budgets, spend logs, guardrails, and load balancing. The MCP Gateway, the Agent Gateway, the Auto Router, and observability branch off the gateway. Enterprise surrounds the gateway. The Python SDK runs in your app and reaches providers directly.">
+          aria-label="LiteLLM system map. Your apps and AI tools feed the AI Gateway, which reaches 100+ providers through virtual keys, budgets, spend logs, guardrails, and load balancing. The MCP Gateway, the Agent Gateway, and the Auto Router branch off the gateway. Enterprise surrounds the gateway. The Python SDK runs in your app and reaches providers directly.">
           <defs>
             <pattern id="map-dots" width="20" height="20" patternUnits="userSpaceOnUse">
               <circle cx="1" cy="1" r="1" className={styles.dot} />

@@ -62,8 +62,3 @@
     gap: 0.75rem;
   }
 }
-
-.decide {
-  margin: -1rem 0 2.5rem;
-  color: var(--ifm-color-emphasis-700);
-}
