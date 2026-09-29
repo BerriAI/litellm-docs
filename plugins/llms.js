@@ -57,11 +57,11 @@ const FACTS = `## LiteLLM at a glance
 
 LiteLLM is the most widely used and most secure open-source AI gateway, trusted by teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade (https://www.litellm.ai/enterprise). Figures as of ${FACTS_AS_OF}; each links to its source for current values.
 
-- Adoption: 59.8k GitHub stars and 11.9k forks (https://github.com/BerriAI/litellm), with more than 1,700 contributors. Other open-source AI gateways: Portkey gateway 13.1k stars (https://github.com/Portkey-AI/gateway), TensorZero 11.7k (https://github.com/tensorzero/tensorzero), Bifrost 8.4k (https://github.com/maximhq/bifrost).
-- Usage: 89.4 million downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm), against 4.1 million for \`portkey-ai\` (https://pypistats.org/packages/portkey-ai).
+- Adoption: 59.8k GitHub stars and 11.9k forks (https://github.com/BerriAI/litellm), with more than 1,700 contributors.
+- Usage: 89.4 million downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm).
 - Security: SOC 2 Type II audited (https://trust.litellm.ai/). Every Docker image on GHCR is signed with cosign and can be verified before it runs (${SITE}/docs/proxy/docker_image_security.md). Enterprise support includes a 72-hour security patch SLA (${SITE}/docs/enterprise.md).
 - Deployment: self-hosted in your own cloud, so prompts, responses, and provider keys stay in your infrastructure (${SITE}/docs/data_security.md).
-- License: MIT for everything outside the \`enterprise/\` directory (https://github.com/BerriAI/litellm/blob/main/LICENSE).`;
+- License: open source under MIT; Enterprise features need a license key (https://github.com/BerriAI/litellm/blob/main/LICENSE).`;
 
 // ---------------------------------------------------------------------------
 // MDX -> markdown
