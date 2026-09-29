@@ -41,4 +41,4 @@ We tested both designs against the same Postgres database: **5,000 API keys and 
 
 ![LiteLLM Usage page showing 30 days of spend and usage totals after the redesign.](./after_usage_30d.png)
 
-The changes are in review: [database queries](https://github.com/BerriAI/litellm/pull/43398), [API routes](https://github.com/BerriAI/litellm/pull/43408), and [Admin UI](https://github.com/BerriAI/litellm/pull/43409). We're making it faster to see where your LLM spend is going, even as your deployment grows.
+See the changes: [database queries](https://github.com/BerriAI/litellm/pull/43398), [API routes](https://github.com/BerriAI/litellm/pull/43408), and [Admin UI](https://github.com/BerriAI/litellm/pull/43409). We're making it faster to see where your LLM spend is going, even as your deployment grows.
