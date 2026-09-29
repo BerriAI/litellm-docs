@@ -4,7 +4,7 @@ title: "Making the AI Gateway Usage Page Fast at Any Number of API Keys"
 date: 2026-09-30T09:00:00
 authors:
   - yassin
-description: "How we made LiteLLM's AI Gateway usage dashboard load in constant time by moving totals, search, export and rankings from the browser into the database. Before and after numbers inside."
+description: "How we made LiteLLM's AI Gateway usage dashboard load in seconds at any number of API keys by moving totals, search, export and rankings from the browser into the database. Before and after numbers inside."
 tags: [performance, admin-ui, postgres, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
@@ -55,8 +55,6 @@ We measured both designs against the same Postgres database: 5,000 API keys, 50 
 
 The "before" pages did not finish. Every run was still paging when we stopped it at 90 seconds, or showed $0 because the first request failed. To get a real number we let a few runs go with no time limit. The Usage page took 379 to 386 seconds for 30 days and about 34 minutes for 90 days, moved 1.3 to 3.8 GB into the browser, and pushed the JavaScript heap past 2 GB.
 
-<!-- BENCHMARK: entity rows (Team, Tag, Organization, Customer) are pending the entity rollup key-bound fix and a re-run; do not publish with TBD -->
-
 | Page | Metric | Before | After |
 |---|---|---|---|
 | Usage (30 days) | time to totals | 379 to 386 s (uncapped runs) | 3.2 s |
@@ -67,14 +65,16 @@ The "before" pages did not finish. Every run was still paging when we stopped it
 | User Usage (90 days) | time to totals | not finished in 90 s | 13.8 s |
 | Agent Usage (90 days) | time to totals | not finished in 90 s | 12.6 s |
 | Cache leakage card (30 days) | time to ranking | not finished in 90 s | 3.6 s |
-| Team Usage (90 days) | time to totals | not finished in 90 s | TBD |
-| Tag Usage (90 days) | time to totals | not finished in 90 s | TBD |
-| Organization Usage (90 days) | time to totals | not finished in 90 s | TBD |
-| Customer Usage (90 days) | time to totals | not finished in 90 s | TBD |
+| Team Usage (90 days) | time to totals | not finished in 90 s | 17.3 s |
+| Tag Usage (90 days) | time to totals | not finished in 90 s | 15.8 s |
+| Organization Usage (90 days) | time to totals | not finished in 90 s | 15.0 s |
+| Customer Usage (90 days) | time to totals | not finished in 90 s | 15.6 s |
+| Entity pages (30 days) | time to totals | not finished in 90 s | 5.5 to 6.3 s |
+| Entity pages (90 days) | peak browser heap | not finished in 90 s | 120 to 160 MB |
 
 Where both sides finished, total spend and total tokens matched the database to the cent on before and after. The redesign changes how the numbers are computed, not what they are.
 
-The benchmark also caught a bug in the new code: the per-entity breakdown on the Team, Tag, Organization and Customer pages still listed every key under each entity, so those responses were 100 to 390 MB and the Customer page ran out of memory at 90 days. We fixed the rollup so each entity's breakdown only lists keys from the same top N the page already shows, and the response carries each entity's full key count so the page can say "top 100 of 1,200". Proving that fix on a live proxy found one more: two queries ranking the same keys could disagree on ties, because floating point sums change with scan order. Ranking now uses exact numeric sums. The entity rows above come from the re-run on the fixed build.
+The benchmark also caught a bug in the new code: the per-entity breakdown on the Team, Tag, Organization and Customer pages still listed every key under each entity, so those responses were 100 to 390 MB and the Customer page ran out of memory at 90 days. We fixed the rollup so each entity's breakdown only lists keys from the same top N the page already shows, and the response carries each entity's full key count so the page can say "top 100 of 1,200". Proving that fix on a live proxy found one more: two queries ranking the same keys could disagree on ties, because floating point sums change with scan order. Ranking now uses exact numeric sums. The entity rows above come from the re-run on the fixed build: entity responses fell from 100 to 390 MB to 19 to 69 MB, every breakdown holds at most 100 keys, and the Customer page at 90 days went from never finishing to 15.6 seconds.
 
 Here is the same Usage page, same database, same 30 day range. The timing overlay in the corner is from the benchmark harness. Before: 386 seconds, 315 requests, 1.3 GB, 2 GB heap. After: 3.2 seconds, 4 requests, 17 MB, 65 MB heap.
 
@@ -118,7 +118,7 @@ Yes. Ships in LiteLLM OSS (Apache 2.0) by default from the release that includes
 
 ## Conclusion
 
-A reliable AI Gateway has to stay usable at scale, and that includes the pages that tell you what you are spending. Moving the work from the browser to the database made the usage page load in constant time and made every number on it complete. This is how AI Gateway infrastructure should behave when a tenant grows from hundreds of keys to tens of thousands.
+A reliable AI Gateway has to stay usable at scale, and that includes the pages that tell you what you are spending. Moving the work from the browser to the database took the usage page from minutes to seconds, with load time no longer tied to the number of keys, and made every number on it complete. This is how AI Gateway infrastructure should behave when a tenant grows from hundreds of keys to tens of thousands.
 For teams with strict uptime and compliance requirements, [LiteLLM Enterprise](https://litellm.ai/enterprise) provides the additional controls needed for regulated production environments.
 
 ## Recommended Reading
