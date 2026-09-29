@@ -14,6 +14,7 @@ items={[
   {
     title: "LiteLLM Academy",
     description: "Get started with our interactive course. Learn the fundamentals every platform admin needs, from gateway setup and access control to routing and observability.",
+    ctaLabel: "Get started",
     to: "https://litellm.ai/course",
   },
 ]}
