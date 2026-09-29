@@ -217,47 +217,23 @@
   }
 }
 
-/* Coding-agent panel above the product sections */
+/* One quiet line for readers using a coding agent */
 .agentBand {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 1rem 1.25rem;
+  display: flex;
   align-items: center;
-  margin: 2.5rem 0 0;
-  padding: 1.25rem 1.4rem;
-  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 30%, transparent);
-  border-radius: var(--lite-radius-lg, 14px);
-  background: color-mix(in srgb, var(--ifm-color-primary) 6%, var(--lite-page, var(--ifm-background-surface-color)));
-}
-.agentIcon {
-  display: inline-grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--lite-radius-sm, 10px);
-  background: var(--ifm-color-primary);
-  color: var(--lite-on-primary, #fff);
-  --cv-accent: var(--lite-on-primary, #fff);
-}
-.agentTitle {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
+  gap: 0.6rem;
+  margin: 1.75rem 0 0;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-md, 10px);
+  color: var(--ifm-color-primary);
 }
 .agentText {
   margin: 0;
+  font-size: 0.92rem;
   color: var(--ifm-color-emphasis-800);
-  line-height: 1.55;
 }
-.agentActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-@media (max-width: 860px) {
-  .agentBand {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .agentActions {
-    grid-column: 1 / -1;
-  }
+.agentText strong {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
 }

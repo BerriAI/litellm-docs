@@ -75,7 +75,19 @@ The `lite` CLI signs in to your gateway and launches Claude Code or Codex with t
 
 ## Skills
 
-Skills are plain-text instructions an agent loads on demand. The auto router skill sets up LiteLLM's auto router end to end, from picking models to verifying routing decisions:
+Skills are plain-text instructions an agent loads on demand, so it can do a specific job without you pasting a long prompt each time.
+
+### Gateway management skills
+
+[LiteLLM skills](https://github.com/BerriAI/litellm-skills) is a set of 21 skills for running a live gateway from Claude Code. They create, change, and remove users, teams, API keys, organizations, models, MCP servers, and agents, and `view-usage` reports daily spend and tokens by user, team, organization, or model. Each skill calls your gateway's management API, so it needs the gateway URL and a proxy admin key; a virtual key limited to model calls is not enough.
+
+<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install.sh | sh" id="skill-litellm-skills" note="Clones the skills into ~/.claude/skills. Then try /add-model, /add-user, or /view-usage in Claude Code." />
+
+For the same management tasks from Claude Desktop or Codex, or without installing anything locally, use [LiteAdmin MCP](./proxy/liteadmin_mcp.md) instead.
+
+### Auto Router skill
+
+The auto router skill sets up LiteLLM's auto router end to end, from picking models to verifying routing decisions:
 
 <Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it into your agent's skills folder, or paste it into the chat." />
 
