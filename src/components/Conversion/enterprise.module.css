@@ -94,6 +94,7 @@
   align-items: center;
   padding: 1.25rem 1.4rem;
   border: 1px solid var(--cv-line);
+  border-radius: var(--lite-radius-md, 14px);
   background: var(--cv-surface);
   opacity: 0;
   transform: translateY(14px);
@@ -101,19 +102,22 @@
   transition-delay: calc(var(--i) * 140ms);
 }
 .slab + .slab {
-  margin-top: -1px;
-}
-.slab:first-child {
-  border-radius: var(--lite-radius-lg, 16px) var(--lite-radius-lg, 16px) 0 0;
-}
-.slab:last-child {
-  border-radius: 0 0 var(--lite-radius-lg, 16px) var(--lite-radius-lg, 16px);
+  margin-top: 0.5rem;
 }
 .stackShown .slab {
   opacity: 1;
   transform: none;
 }
 
+
+/* Each tier sits a little further in, so the stack narrows toward the base
+   layer the others build on. */
+.slab_gateway {
+  margin-inline: 0.9rem;
+}
+.slab_sdk {
+  margin-inline: 1.8rem;
+}
 
 .slabOn {
   z-index: 1;

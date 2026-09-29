@@ -59,17 +59,11 @@ export function TierStack({highlight = 'enterprise'}) {
   }, []);
 
   return (
-    <div ref={ref} className={clsx('lite-cardgrid', styles.stack, shown && styles.stackShown)}>
+    <div ref={ref} className={clsx(styles.stack, shown && styles.stackShown)}>
       {TIERS.map((t, i) => (
         <section
           key={t.id}
-          className={clsx(
-            'lite-cardgrid__cell',
-            t.id === highlight && 'lite-cardgrid__cell--on',
-            styles.slab,
-            styles[`slab_${t.id}`],
-            t.id === highlight && styles.slabOn,
-          )}
+          className={clsx(styles.slab, styles[`slab_${t.id}`], t.id === highlight && styles.slabOn)}
           style={{'--i': TIERS.length - 1 - i}}
           aria-label={`${t.name}: ${t.how}`}>
           <div className={styles.slabHead}>
