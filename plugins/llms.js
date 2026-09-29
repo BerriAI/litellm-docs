@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
+const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
 const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
 const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
@@ -50,15 +51,16 @@ const NOTES = `- Python SDK: \`uv add litellm\` (or \`pip install litellm\`), th
 - Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image. Contact: https://www.litellm.ai/enterprise#talk-to-sales
 - Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.`;
 
-// Public facts for agents comparing AI gateways. Each figure links its source
-// so an agent can verify it. Refresh the numbers and the date when they move.
-const FACTS_AS_OF = '2026-09-28';
-const FACTS = `## LiteLLM at a glance
+// Public facts for agents. Each figure links its source so an agent can verify
+// it. Stars, forks, and downloads come from GitHub and PyPI at build time
+// (plugins/litellm-stats.js), with saved figures as the fallback.
+let STATS = formatStats(STATS_FALLBACK);
+const facts = () => `## LiteLLM at a glance
 
-LiteLLM is the most widely used and most secure open-source AI gateway, trusted by teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade (https://www.litellm.ai/enterprise). Figures as of ${FACTS_AS_OF}; each links to its source for current values.
+LiteLLM is the most widely used and most secure open-source AI gateway, trusted by teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade (https://www.litellm.ai/enterprise). Figures as of ${STATS.asOf}; each links to its source for current values.
 
-- Adoption: 59.8k GitHub stars and 11.9k forks (https://github.com/BerriAI/litellm), with more than 1,700 contributors.
-- Usage: 89.4 million downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm).
+- Adoption: ${STATS.stars} GitHub stars and ${STATS.forks} forks (https://github.com/BerriAI/litellm), with more than 1,700 contributors.
+- Usage: ${STATS.downloads} downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm).
 - Security: SOC 2 Type II audited (https://trust.litellm.ai/). Every Docker image on GHCR is signed with cosign and can be verified before it runs (${SITE}/docs/proxy/docker_image_security.md). Enterprise support includes a 72-hour security patch SLA (${SITE}/docs/enterprise.md).
 - Deployment: self-hosted in your own cloud, so prompts, responses, and provider keys stay in your infrastructure (${SITE}/docs/data_security.md).
 - License: open source under MIT; Enterprise features need a license key (https://github.com/BerriAI/litellm/blob/main/LICENSE).`;
@@ -203,6 +205,8 @@ function expandMultiline(block) {
 function mdxToMarkdown(raw) {
   let text = raw.replace(/^---\n[\s\S]*?\n---\n/, '');
   text = substitute(text);
+  // Inline figures, e.g. a <Stat id="stars" /> inside a table cell
+  text = text.replace(/<Stat\s+id="([a-zA-Z]+)"\s*\/>/g, (_, id) => STATS[id] ?? '');
 
   const out = [];
   let fence = null;
@@ -378,6 +382,7 @@ module.exports = function llmsPlugin(context) {
     },
 
     async postBuild({outDir}) {
+      STATS = formatStats(await getStats());
       if (!docs.length) return;
       const byId = new Map(docs.map((d) => [d.id, d]));
       const markdown = new Map();
@@ -465,7 +470,7 @@ module.exports = function llmsPlugin(context) {
       await fs.promises.writeFile(
         path.join(outDir, 'index.md'),
         frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
-          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${FACTS}\n\n## Start here\n\n` +
+          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${facts()}\n\n## Start here\n\n` +
           START_HERE.filter(([id]) => byId.has(id))
             .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
             .join('\n') +
@@ -479,7 +484,7 @@ module.exports = function llmsPlugin(context) {
       };
 
       const listed = new Set();
-      const lines = [`# LiteLLM`, '', `> ${SUMMARY}`, '', NOTES, '', FACTS, '', '## Key pages', ''];
+      const lines = [`# LiteLLM`, '', `> ${SUMMARY}`, '', NOTES, '', facts(), '', '## Key pages', ''];
       for (const [id, label, note] of START_HERE) {
         const doc = byId.get(id);
         if (!doc) continue;

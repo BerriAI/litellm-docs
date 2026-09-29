@@ -95,6 +95,7 @@ const config = {
     }),
     require('./plugins/optimize-images'),
     require('./plugins/rust-migration-posts'),
+    require('./plugins/litellm-stats'),
     require('./plugins/llms'),
     [
       '@docusaurus/plugin-client-redirects',
@@ -430,7 +431,8 @@ const config = {
       image: 'img/docusaurus-social-card.png',
       docs: {
         sidebar: {
-          hideable: true,
+          // No collapse-sidebar toggle at the bottom of the sidebar
+          hideable: false,
         },
       },
       navbar: {
