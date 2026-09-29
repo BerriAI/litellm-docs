@@ -51,26 +51,36 @@ We did not want another environment variable. The number of keys a page shows is
 
 ## Before and after numbers
 
-We measured both designs against the same Postgres database: 5,000+ API keys, 50 teams, 20 tags, 5 organizations, 100 customers, 90 days of history, and several million daily rows. Each page was loaded five times with a cold browser cache on each side, and we report the median. "Before" is the unbounded design that shipped through v1.104. "After" is the redesigned stack.
+We measured both designs against the same Postgres database: 5,000 API keys, 50 teams, 20 tags, 5 organizations, 100 customers, 500 users, 91 days of history, and about 4.9 million daily rows. Both proxies ran a production UI build with an 18 GB memory limit. Each page was loaded five times with a cold browser cache on each side, and we report the median. "Before" is the unbounded design that shipped through v1.104. "After" is the redesigned stack.
 
-<!-- BENCHMARK: fill from the benchmark session report. Keep median values, add p95 in parentheses if the spread is wide -->
+The "before" pages did not finish. Every run was still paging when we stopped it at 90 seconds, or showed $0 because the first request failed. To get a real number we let a few runs go with no time limit. The Usage page took 379 to 386 seconds for 30 days and about 34 minutes for 90 days, moved 1.3 to 3.8 GB into the browser, and pushed the JavaScript heap past 2 GB.
+
+<!-- BENCHMARK: entity rows (Team, Tag, Organization, Customer) are pending the entity rollup key-bound fix and a re-run; do not publish with TBD -->
 
 | Page | Metric | Before | After |
 |---|---|---|---|
-| Usage (30 days) | time to totals | TBD | TBD |
-| Usage (30 days) | requests / bytes | TBD | TBD |
-| Usage (90 days) | time to totals | TBD | TBD |
-| Team Usage (90 days) | time to totals | TBD | TBD |
-| Tag Usage (90 days) | time to totals | TBD | TBD |
-| Organization Usage (90 days) | time to totals | TBD | TBD |
-| Customer Usage (90 days) | time to totals | TBD | TBD |
-| User Usage (90 days) | time to totals | TBD | TBD |
-| Cache leakage card | time to ranking | TBD | TBD |
-| All pages | browser heap (JSHeapUsedSize) | TBD | TBD |
+| Usage (30 days) | time to totals | 379 to 386 s (uncapped runs) | 3.2 s |
+| Usage (30 days) | usage requests / bytes | 315 / 1.3 GB | 4 / 17 MB |
+| Usage (30 days) | peak browser heap | 2.0 GB | 65 MB |
+| Usage (90 days) | time to totals | about 34 min (uncapped run) | 10.0 s |
+| Usage (90 days) | usage requests / bytes | 914 / 3.8 GB | 4 / 51 MB |
+| User Usage (90 days) | time to totals | not finished in 90 s | 13.8 s |
+| Agent Usage (90 days) | time to totals | not finished in 90 s | 12.6 s |
+| Cache leakage card (30 days) | time to ranking | not finished in 90 s | 3.6 s |
+| Team Usage (90 days) | time to totals | not finished in 90 s | TBD |
+| Tag Usage (90 days) | time to totals | not finished in 90 s | TBD |
+| Organization Usage (90 days) | time to totals | not finished in 90 s | TBD |
+| Customer Usage (90 days) | time to totals | not finished in 90 s | TBD |
 
-On every page, total spend, total requests and total tokens were identical between before and after. The redesign changes how the numbers are computed, not what they are.
+Where both sides finished, total spend and total tokens matched the database to the cent on before and after. The redesign changes how the numbers are computed, not what they are.
 
-<!-- BENCHMARK: side-by-side screenshots of the Usage page, before on the left, after on the right -->
+The benchmark also caught a bug in the new code: the per-entity breakdown on the Team, Tag, Organization and Customer pages still listed every key under each entity, so those responses were 100 to 390 MB and the Customer page ran out of memory at 90 days. We fixed the rollup so it only lists the top N keys per entity, the same bound the top-level list uses, and the entity rows above come from the re-run on the fixed build.
+
+Here is the same Usage page, same database, same 30 day range. The timing overlay in the corner is from the benchmark harness. Before: 386 seconds, 315 requests, 1.3 GB, 2 GB heap. After: 3.2 seconds, 4 requests, 17 MB, 65 MB heap.
+
+![Before: Usage page on the old design, 386 seconds, 315 requests, 1.3 GB transferred](./before_usage_30d.png)
+
+![After: Usage page on the new design, 3.2 seconds, 4 requests, 17 MB transferred](./after_usage_30d.png)
 
 ## What this means for a production-grade AI Gateway
 
