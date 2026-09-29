@@ -39,6 +39,6 @@ For 90 days of usage, time to totals fell from **about 34 minutes to 10 seconds*
 
 We tested both designs against the same Postgres database: **5,000 API keys and 4.9 million daily rows across 91 days**. Both used production UI builds. New timings are medians of five runs with a cold browser cache; old timings come from runs allowed to finish beyond our 90-second cutoff. These measurements track time to visible totals.
 
-See the original [before](./before_usage_30d.png) and [after](./after_usage_30d.png) benchmark screenshots.
+![LiteLLM Usage page showing 30 days of spend and usage totals after the redesign.](./after_usage_30d.png)
 
 The changes are in review: [database queries](https://github.com/BerriAI/litellm/pull/43398), [API routes](https://github.com/BerriAI/litellm/pull/43408), and [Admin UI](https://github.com/BerriAI/litellm/pull/43409). We're making it faster to see where your LLM spend is going, even as your deployment grows.

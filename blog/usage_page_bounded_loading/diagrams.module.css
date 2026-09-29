@@ -1,6 +1,4 @@
 .figure {
-  --diagram-bg: #fff;
-  --diagram-subtle: #f6f8fb;
   --diagram-border: #dce3eb;
   --diagram-text: #172b43;
   --diagram-muted: #53667c;
@@ -14,8 +12,6 @@
 }
 
 :global([data-theme='dark']) .figure {
-  --diagram-bg: #1c2430;
-  --diagram-subtle: #232e3c;
   --diagram-border: #3c4a5c;
   --diagram-text: #e5edf6;
   --diagram-muted: #afbdd0;
@@ -29,7 +25,7 @@
   padding: 1.25rem 1.5rem 0.5rem;
   border: 1px solid var(--diagram-border);
   border-radius: 16px;
-  background: var(--diagram-bg);
+  background: transparent;
 }
 
 .resultHeading {
@@ -141,12 +137,11 @@
   padding: 1.15rem;
   border: 1px solid var(--diagram-border);
   border-radius: 14px;
-  background: var(--diagram-subtle);
+  background: transparent;
 }
 
 .after {
   border-color: var(--diagram-teal-border);
-  background: var(--diagram-teal-bg);
 }
 
 .flowLabel {
@@ -182,7 +177,7 @@
   margin: 0 !important;
   border: 1px solid var(--diagram-border);
   border-radius: 8px;
-  background: var(--diagram-bg);
+  background: transparent;
 }
 
 .after .stage { border-color: var(--diagram-teal-border); }
