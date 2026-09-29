@@ -74,7 +74,7 @@ The "before" pages did not finish. Every run was still paging when we stopped it
 
 Where both sides finished, total spend and total tokens matched the database to the cent on before and after. The redesign changes how the numbers are computed, not what they are.
 
-The benchmark also caught a bug in the new code: the per-entity breakdown on the Team, Tag, Organization and Customer pages still listed every key under each entity, so those responses were 100 to 390 MB and the Customer page ran out of memory at 90 days. We fixed the rollup so it only lists the top N keys per entity, the same bound the top-level list uses, and the entity rows above come from the re-run on the fixed build.
+The benchmark also caught a bug in the new code: the per-entity breakdown on the Team, Tag, Organization and Customer pages still listed every key under each entity, so those responses were 100 to 390 MB and the Customer page ran out of memory at 90 days. We fixed the rollup so each entity's breakdown only lists keys from the same top N the page already shows, and the response carries each entity's full key count so the page can say "top 100 of 1,200". Proving that fix on a live proxy found one more: two queries ranking the same keys could disagree on ties, because floating point sums change with scan order. Ranking now uses exact numeric sums. The entity rows above come from the re-run on the fixed build.
 
 Here is the same Usage page, same database, same 30 day range. The timing overlay in the corner is from the benchmark harness. Before: 386 seconds, 315 requests, 1.3 GB, 2 GB heap. After: 3.2 seconds, 4 requests, 17 MB, 65 MB heap.
 
