@@ -3,8 +3,17 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import SalesButton from './SalesButton';
 import {IconAudit, IconBudget, IconEnterprise, IconGateway, IconRegions, IconRoles, IconSdk, IconSpend, IconSso, IconSupport} from './icons';
-import {track, usePrefersReducedMotion} from './shared';
+import PromptButton from './PromptButton';
+import {TransitDiagram} from './Transit';
+import {track} from './shared';
 import styles from './styles.module.css';
+
+// One line over the map, saying what the drawing shows for each answer.
+const CAPTIONS = {
+  sdk: 'Your app calls every provider itself, through the SDK.',
+  gateway: 'Every app calls one gateway; the gateway calls every provider.',
+  enterprise: 'The same gateway, inside a zone your identity provider controls.',
+};
 
 const PATHS = [
   {
@@ -26,149 +35,6 @@ const PATHS = [
     hint: 'Hundreds of users, an identity provider, and a security review',
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Diagram: apps on the left, providers on the right, and what sits between
-// them for each path. Geometry is in one 560 x 300 viewBox.
-
-const PROVIDERS = ['OpenAI', 'Anthropic', 'Bedrock', 'Agent Platform', '100+ more'];
-const PY = [28, 86, 144, 202, 260]; // provider box tops, 36 tall
-const PX = 440; // provider box left
-const APP_W = 150;
-const GW = {x: 222, y: 84, w: 132, h: 132};
-const GW_MID = GW.y + GW.h / 2;
-
-const APPS = {
-  sdk: [{label: 'Your Python app', y: 132}],
-  gateway: [
-    {label: 'Python service', y: 46},
-    {label: 'Node.js app', y: 132},
-    {label: 'Claude Code', y: 218},
-  ],
-  enterprise: [
-    {label: 'Search team', y: 46},
-    {label: 'Support team', y: 132},
-    {label: 'Every employee', y: 218},
-  ],
-};
-
-const curve = (x1, y1, x2, y2) => {
-  const mx = (x1 + x2) / 2;
-  return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
-};
-
-function Flow({d, dur, begin, reduced}) {
-  return (
-    <>
-      <path d={d} className={styles.dgLine} pathLength="1" />
-      {!reduced && (
-        <circle r="3.2" className={styles.dgDot}>
-          <animateMotion dur={dur} begin={begin} repeatCount="indefinite" path={d} />
-        </circle>
-      )}
-    </>
-  );
-}
-
-function Diagram({path, titleId}) {
-  const reduced = usePrefersReducedMotion();
-  const apps = APPS[path];
-  const direct = path === 'sdk';
-  const ent = path === 'enterprise';
-
-  return (
-    <svg className={styles.diagram} viewBox="0 0 560 300" role="img" aria-labelledby={titleId}>
-      <title id={titleId}>
-        {direct
-          ? 'Your app calls every provider directly through the LiteLLM SDK.'
-          : ent
-            ? 'Every team and employee reaches every provider through one LiteLLM Gateway with SSO, audit logs, roles, and regions around it.'
-            : 'Several apps reach every provider through one LiteLLM Gateway that issues keys and tracks spend.'}
-      </title>
-
-      {/* flows are keyed by path so they redraw on every change */}
-      <g key={path} className={styles.dgFlows}>
-        {direct
-          ? PY.map((py, i) => (
-              <Flow
-                key={i}
-                d={curve(16 + APP_W, 150, PX, py + 18)}
-                dur="2.6s"
-                begin={`${i * 0.45}s`}
-                reduced={reduced}
-              />
-            ))
-          : [
-              ...apps.map((a, i) => (
-                <Flow key={`a${i}`} d={curve(16 + APP_W, a.y + 18, GW.x, GW_MID)} dur="1.6s" begin={`${i * 0.5}s`} reduced={reduced} />
-              )),
-              ...PY.map((py, i) => (
-                <Flow key={`p${i}`} d={curve(GW.x + GW.w, GW_MID, PX, py + 18)} dur="1.6s" begin={`${0.8 + i * 0.35}s`} reduced={reduced} />
-              )),
-            ]}
-      </g>
-
-      {/* apps */}
-      {apps.map((a) => (
-        <g key={`${path}-${a.label}`} className={styles.dgAppIn}>
-          <rect x="16" y={a.y} width={APP_W} height="36" rx="8" className={styles.dgApp} />
-          <text x="30" y={a.y + 23} className={styles.dgText}>
-            {a.label}
-          </text>
-          {direct && (
-            <>
-              <rect x={16 + APP_W - 62} y={a.y + 44} width="62" height="24" rx="6" className={styles.dgChipStrong} />
-              <text x={16 + APP_W - 31} y={a.y + 60} textAnchor="middle" className={styles.dgChipTextStrong}>
-                litellm
-              </text>
-            </>
-          )}
-        </g>
-      ))}
-
-      {/* gateway */}
-      <g className={clsx(styles.dgGateway, direct && styles.dgHidden)}>
-        <rect x={GW.x - 16} y={GW.y - 30} width={GW.w + 32} height={GW.h + 60} rx="18" className={clsx(styles.dgRing, !ent && styles.dgHidden)} />
-        {ent &&
-          [
-            ['SSO', GW.x - 4, GW.y - 30],
-            ['Audit log', GW.x + 58, GW.y - 30],
-            ['Roles', GW.x - 4, GW.y + GW.h + 30],
-            ['Regions', GW.x + 60, GW.y + GW.h + 30],
-          ].map(([label, x, y]) => (
-            <g key={label} className={styles.dgAppIn}>
-              <rect x={x} y={y - 11} width={label.length * 7.4 + 18} height="22" rx="11" className={styles.dgPill} />
-              <text x={x + 9} y={y + 4.5} className={styles.dgPillText}>
-                {label}
-              </text>
-            </g>
-          ))}
-        <rect x={GW.x} y={GW.y} width={GW.w} height={GW.h} rx="14" className={styles.dgGw} />
-        <text x={GW.x + GW.w / 2} y={GW.y + 26} textAnchor="middle" className={styles.dgGwTitle}>
-          LiteLLM Gateway
-        </text>
-        {['Virtual keys', 'Budgets', 'Spend logs'].map((c, i) => (
-          <g key={c}>
-            <rect x={GW.x + 14} y={GW.y + 40 + i * 28} width={GW.w - 28} height="22" rx="6" className={styles.dgChip} />
-            <text x={GW.x + GW.w / 2} y={GW.y + 55 + i * 28} textAnchor="middle" className={styles.dgChipText}>
-              {c}
-            </text>
-          </g>
-        ))}
-      </g>
-
-      {/* providers */}
-      {PROVIDERS.map((p, i) => (
-        <g key={p}>
-          <rect x={PX} y={PY[i]} width="104" height="36" rx="8" className={clsx(styles.dgProvider, i === 4 && styles.dgProviderMore)} />
-          <text x={PX + 52} y={PY[i] + 23} textAnchor="middle" className={styles.dgText}>
-            {p}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-}
 
 // ---------------------------------------------------------------------------
 
@@ -315,7 +181,13 @@ export default function PathFinder({
       </div>
       <div className={styles.pfStage}>
         <div className={styles.pfDiagram}>
-          <Diagram path={path} titleId={`${baseId}-dg`} />
+          <div className={styles.pfDiagramHead}>
+            <span className={styles.pfDiagramCaption}>{CAPTIONS[path]}</span>
+            <PromptButton id={path} source={`${source}-pathfinder`} />
+          </div>
+          <div className={styles.pfDiagramScroll}>
+            <TransitDiagram path={path} />
+          </div>
         </div>
         <div key={`${path}-side`} className={clsx(styles.pfPanel, styles.pfSide)}>
           {action.side}

@@ -576,10 +576,10 @@
 
 .pfStage {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   grid-template-areas:
-    'diagram side'
-    'main main';
+    'diagram diagram'
+    'side main';
   gap: 1.25rem 1.5rem;
   align-items: center;
   margin-top: 1.25rem;
@@ -609,6 +609,26 @@
     grid-template-columns: 1fr;
     grid-template-areas: 'diagram' 'side' 'main';
   }
+}
+
+.pfDiagramHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.5rem 0.6rem;
+}
+.pfDiagramCaption {
+  font-size: 0.88rem;
+  font-weight: 550;
+  color: var(--cv-muted);
+}
+/* On a phone the map keeps its size and scrolls sideways */
+.pfDiagramScroll {
+  overflow-x: auto;
+}
+.pfDiagramScroll > svg {
+  min-width: 560px;
 }
 
 .pfDiagram {
@@ -965,8 +985,9 @@
   .pfOptionOn .pfOptionHint {
     display: block;
   }
-  .pfDiagram {
-    display: none;
+  .pfDiagramHead {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .tiles {
     grid-template-columns: 1fr;

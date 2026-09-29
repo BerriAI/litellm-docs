@@ -2,7 +2,7 @@ import React from 'react';
 import Layout from '@theme/Layout';
 import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
-import {AgentPrompt, PathFinder, SalesBand, Tiles} from '@site/src/components/Conversion';
+import {AgentPrompt, SalesBand, SystemMap, Tiles} from '@site/src/components/Conversion';
 import styles from './index.module.css';
 
 const POPULAR = [
@@ -31,7 +31,11 @@ export default function Home() {
           </p>
         </header>
 
-        <PathFinder source="docs-home" />
+        <SystemMap source="docs-home" />
+
+        <p className={styles.decide}>
+          Not sure which you need? <Link to="/docs/">Answer one question</Link> and the docs point you to the SDK, the gateway, or Enterprise.
+        </p>
 
         <section className={styles.section}>
           <h2 className={styles.h2}>Most-read guides</h2>

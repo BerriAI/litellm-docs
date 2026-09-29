@@ -50,6 +50,45 @@ const PROMPTS = {
 4. Codex: follow codex_cli.md to add a litellm provider to ~/.codex/config.toml. Show me the change before writing it.
 5. Verify: send one request from each tool and confirm it appears under Logs at <url>/ui.`,
   },
+  enterprise: {
+    title: 'Evaluate LiteLLM Enterprise on my gateway',
+    text: `Help me evaluate LiteLLM Enterprise on my own LiteLLM Gateway. First read ${DOCS}/docs/enterprise.md and ${DOCS}/docs/learn/enterprise_quickstart.md. Then:
+1. Check whether a gateway is already running (GET <url>/health/readiness). If not, set one up first by following ${DOCS}/docs/proxy/docker_quick_start.md.
+2. Ask me for the trial license key. Add it as LITELLM_LICENSE in the gateway's environment (.env for Docker Compose) without printing it, and restart the gateway.
+3. Ask which identity provider we use (Okta, Entra ID, Google, or another OIDC or SAML provider) and walk me through ${DOCS}/docs/proxy/admin_ui_sso.md for it. Show me every config change before writing it.
+4. Verify: sign in to <url>/ui through SSO, then confirm the audit log records an admin action.
+If I do not have a license yet, stop and point me to ${SALES_URL}.`,
+  },
+  mcp: {
+    title: 'Put my MCP servers behind the LiteLLM Gateway',
+    text: `Help me serve MCP tools through my LiteLLM Gateway. First read ${DOCS}/docs/mcp.md and ${DOCS}/docs/mcp_control.md. Ask me for the gateway URL and a key with admin rights, and which MCP servers I want to add.
+1. Add each MCP server to the gateway the way mcp.md describes, keeping any server credentials in environment variables, never in files.
+2. Limit which keys and teams can use each server, following mcp_control.md.
+3. Connect one client (Claude Code, Cursor, or my app) to the gateway's MCP endpoint with a virtual key. Show me each config change before writing it.
+4. Verify: list the tools through the gateway and call one of them.`,
+  },
+  agents: {
+    title: 'Route my A2A agents through the LiteLLM Gateway',
+    text: `Help me put my A2A agents behind my LiteLLM Gateway. First read ${DOCS}/docs/a2a.md, ${DOCS}/docs/a2a_agent_card.md, and ${DOCS}/docs/a2a_agent_permissions.md. Ask me for the gateway URL, a key with admin rights, and the agents I want to add.
+1. Register each agent on the gateway as a2a.md describes.
+2. Decide with me which teams and keys may call each agent, and set that up following a2a_agent_permissions.md.
+3. Verify: invoke one agent through the gateway with a virtual key, then confirm the request shows up under Logs at <url>/ui.`,
+  },
+  autorouter: {
+    title: 'Try the LiteLLM Auto Router',
+    text: `Help me try the LiteLLM Auto Router, a paid add-on for the LiteLLM Gateway. First read ${DOCS}/docs/auto_router/index.md, then setup.md and recommended_configurations.md in the same folder.
+1. Check that a gateway is running and ask me for its URL and an admin key.
+2. Recommend a starting configuration from recommended_configurations.md for the models I already have, and explain the trade-off before changing anything.
+3. Follow setup.md to add the router, showing me each config change before writing it.
+4. Verify: send three requests of different difficulty and show me which model answered each and what each cost.`,
+  },
+  observability: {
+    title: 'Send my gateway logs to my observability tool',
+    text: `Help me send LiteLLM Gateway logs and spend to our observability tool. First read ${DOCS}/docs/proxy/logging.md. Ask me which tool we use (Langfuse, Datadog, OpenTelemetry, or another listed there) and for the gateway URL.
+1. Follow the section for that tool in logging.md. Put every credential in environment variables, never in config files, and show me each change before writing it.
+2. Restart the gateway if the change needs it.
+3. Verify: send one request through the gateway and show me where it appears in the tool.`,
+  },
 };
 
 const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
