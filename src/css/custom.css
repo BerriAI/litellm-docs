@@ -962,11 +962,15 @@ video {
 }
 
 .blog-wrapper article .markdown a {
-  color: #0ea5e9;
   text-decoration: none;
 }
 
-.blog-wrapper article .markdown a:hover {
+/* Button links keep Infima's theme-aware foreground and interaction styles. */
+.blog-wrapper article .markdown a:not(.button) {
+  color: #0ea5e9;
+}
+
+.blog-wrapper article .markdown a:not(.button):hover {
   text-decoration: underline;
 }
 
@@ -1023,7 +1027,7 @@ video {
 
 
 
-[data-theme='dark'].blog-wrapper article .markdown a {
+[data-theme='dark'].blog-wrapper article .markdown a:not(.button) {
   color: #38bdf8;
 }
 
