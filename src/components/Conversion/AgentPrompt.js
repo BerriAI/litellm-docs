@@ -41,11 +41,14 @@ export default function AgentPrompt({id, title, text, defaultOpen = false, compa
       </div>
       <div id={bodyId} className={clsx(styles.promptBody, open && styles.promptBodyOpen)}>
         <pre className={styles.promptText}>{body}</pre>
-        {!open && (
-          <button type="button" className={styles.showMore} onClick={() => setOpen(true)} aria-controls={bodyId}>
-            Show full prompt
-          </button>
-        )}
+        <button
+          type="button"
+          className={clsx(styles.showMore, open && styles.showLess)}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls={bodyId}>
+          {open ? 'Show less' : 'Show full prompt'}
+        </button>
       </div>
     </div>
   );

@@ -482,6 +482,13 @@
   font-weight: 600;
   cursor: pointer;
 }
+/* Expanded: the button sits under the text instead of over the fade */
+.showLess {
+  position: static;
+  display: block;
+  margin: 0.25rem auto 0.75rem;
+  transform: none;
+}
 .showMore:hover {
   border-color: var(--cv-accent);
   color: var(--cv-accent);
