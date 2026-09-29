@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
-const {PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
@@ -101,6 +101,9 @@ function expandComponent(tag) {
     ].join('\n');
   }
   if (/^<Command\b/.test(tag)) return commandMarkdown(tag);
+  if (/^<OneClickDeploy\b/.test(tag)) {
+    return `Deploy to the cloud in one click: ${ONE_CLICK.map(([name, url]) => `[${name}](${url})`).join(' or ')}. Use your deployment's URL in place of http://localhost:4000.\n`;
+  }
   if (/^<EnterpriseFeature\b/.test(tag)) {
     if (/\sfree\b/.test(tag)) {
       return '> **Free Enterprise feature.** Available in the `litellm[proxy]` package and every `litellm` Docker image; no Enterprise license is required.\n';

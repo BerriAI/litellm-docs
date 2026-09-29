@@ -254,7 +254,7 @@ function actionFor(path, source, links) {
     main: (
       <div className={styles.pfLinks}>
         <SalesButton source={`${source}-pathfinder`} />
-        <SalesButton kind="trial" variant="secondary" source={`${source}-pathfinder`} />
+        <span className={styles.salesNote}>Includes a free 30-day trial</span>
         <Link className={styles.textLink} to="/docs/enterprise">
           Compare open source and Enterprise
         </Link>

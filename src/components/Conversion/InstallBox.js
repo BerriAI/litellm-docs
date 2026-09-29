@@ -1,12 +1,17 @@
 import React, {useId, useState} from 'react';
 import Link from '@docusaurus/Link';
+import {useLocation} from '@docusaurus/router';
 import {INSTALLS, ONE_CLICK} from './content';
 import Command from './Command';
 import {track} from './shared';
 import styles from './styles.module.css';
 
+// Hidden when it would point back at the page the box is on (the quickstart's
+// own install box linked to itself).
 function MoreLink({to, label}) {
-  if (!to) return null;
+  const {pathname} = useLocation();
+  const strip = (p) => p.split('#')[0].replace(/\/$/, '');
+  if (!to || (!/^https?:/.test(to) && strip(to) === strip(pathname))) return null;
   const external = /^https?:/.test(to);
   return (
     <Link to={to} className={styles.installMore} {...(external ? {target: '_blank', rel: 'noopener noreferrer'} : {})}>
@@ -29,7 +34,6 @@ export default function InstallBox({variant = 'gateway', title}) {
     <div className={styles.install}>
       <div className={styles.installHead}>
         <span className={styles.installTitle}>{title || config.title}</span>
-        <span className={styles.installRec}>Recommended: {primary.label}</span>
       </div>
       <div className={styles.installPanel}>
         <Command code={primary.code} id={`${variant}:${primary.id}`} />

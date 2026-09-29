@@ -8,6 +8,7 @@ import {ENTERPRISE_HERO, TIERS as TIER_DATA} from './content';
 const TIER_ICONS = {enterprise: IconEnterprise, gateway: IconGateway, sdk: IconSdk};
 const TIERS = TIER_DATA.map((t) => ({...t, Icon: TIER_ICONS[t.id]}));
 import styles from './enterprise.module.css';
+import shared from './styles.module.css';
 
 export function EnterpriseHero({source = 'enterprise-page'}) {
   return (
@@ -17,7 +18,7 @@ export function EnterpriseHero({source = 'enterprise-page'}) {
       <p className={styles.heroText}>{ENTERPRISE_HERO.text}</p>
       <div className={styles.heroActions}>
         <SalesButton source={source} />
-        <SalesButton kind="trial" variant="secondary" source={source} />
+        <span className={shared.salesNote}>Includes a free 30-day trial</span>
       </div>
       <ul className={styles.proof}>
         <li>

@@ -21,11 +21,12 @@
   --cv-page: var(--ifm-background-color);
   --cv-tint: color-mix(in srgb, var(--ifm-color-primary) 7%, var(--cv-page));
   --cv-tint-strong: color-mix(in srgb, var(--ifm-color-primary) 14%, var(--cv-page));
-  --cv-term-bg: #0b1233;
-  --cv-term-edge: #1c2657;
-  --cv-term-ink: #e6e9ff;
-  --cv-term-dim: #8f98c9;
-  --cv-term-accent: #9fabff;
+  /* Commands use the same surface as every other code block on the site. */
+  --cv-term-bg: var(--prism-background-color, var(--ifm-pre-background));
+  --cv-term-edge: var(--ifm-color-emphasis-200);
+  --cv-term-ink: var(--prism-color, var(--ifm-pre-color));
+  --cv-term-dim: var(--ifm-color-emphasis-600);
+  --cv-term-accent: var(--ifm-color-emphasis-500);
   --cv-mono: var(--ifm-font-family-monospace);
 }
 
@@ -90,6 +91,12 @@
 }
 [data-theme='dark'] .btnDone {
   color: var(--ifm-color-success-lighter, #57d78a);
+}
+
+.salesNote {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
 }
 
 .textLink {
@@ -188,7 +195,7 @@
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
   border: 1px solid var(--cv-term-edge);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--cv-term-bg);
   color: var(--cv-term-ink);
   font-family: var(--ifm-font-family-base);
   font-size: 0.75rem;
@@ -197,13 +204,16 @@
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .termCopy:hover {
-  background: rgba(159, 171, 255, 0.14);
-  border-color: var(--cv-term-accent);
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
 }
 .termCopyDone,
 .termCopyDone:hover {
-  color: #7ee2a8;
-  border-color: #3f8f63;
+  color: var(--ifm-color-success-dark);
+  border-color: currentColor;
+}
+[data-theme='dark'] .termCopyDone {
+  color: var(--ifm-color-success-lighter);
 }
 
 /* ------------------------------------------------------------ install box */
@@ -229,11 +239,6 @@
   font-weight: 700;
   font-size: 0.98rem;
   color: var(--cv-ink);
-}
-
-.installRec {
-  font-size: 0.8rem;
-  color: var(--cv-faint);
 }
 
 .installPanel {
@@ -322,6 +327,46 @@
 }
 .installAltHead span {
   color: var(--cv-muted);
+}
+
+.oneClick {
+  --cv-line: var(--ifm-color-emphasis-300);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--cv-line);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color, var(--ifm-background-color));
+}
+.oneClickCopy {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.oneClick .oneClickTitle {
+  margin: 0 0 0.15rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.oneClick .oneClickText {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+}
+.oneClickBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: none;
+}
+.oneClickBadges img {
+  display: block;
+  height: 32px;
+  width: auto;
 }
 
 .mobileHint {

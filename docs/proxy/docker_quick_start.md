@@ -6,7 +6,7 @@ description: Start LiteLLM with one command or one click and go from zero to you
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import {AgentPrompt, InstallBox, NextSteps, SalesBand} from '@site/src/components/Conversion';
+import {AgentPrompt, InstallBox, NextSteps, OneClickDeploy, SalesBand} from '@site/src/components/Conversion';
 
 # Quickstart
 
@@ -22,21 +22,13 @@ If you use Claude Code, Codex, or Cursor, you can paste this prompt instead. The
 
 The Docker Compose command above brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and lands in your working directory, so you can read it before starting it and pin a release tag afterwards.
 
-Prefer a hosted instance? Deploy the same stack in one click, then use your deployment's URL wherever this guide says `http://localhost:4000`.
+<OneClickDeploy source="docker-quickstart" />
 
-<div style={{display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', margin: '0 0 1.25rem'}}>
-  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="36" /></a>
-  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="36" /></a>
-</div>
+:::warning[Keep the two generated keys]
+`LITELLM_MASTER_KEY` is the root credential for the gateway. It authorizes every management API call, doubles as the Admin UI password by default, and the proxy refuses to start without it. Treat it like a root password: keep it out of source control and rotate it if it leaks.
 
-<details>
-<summary>What the two generated keys do</summary>
-
-`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement.
-
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the `.env` file: changing the salt key later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate. On a 1-click deploy, set both in the provider's environment.
-
-</details>
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI and cannot be rotated in place, so keep the `.env` file. Changing the salt key later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate. On a 1-click deploy, set both in the provider's environment.
+:::
 
 ## 2. Log in to the Admin UI
 

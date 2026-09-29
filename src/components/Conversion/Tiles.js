@@ -38,7 +38,7 @@ export function Tiles({items, columns = 3, size = 'md'}) {
 }
 
 // Closing call to action for enterprise-minded readers.
-export function SalesBand({title, text, source = 'docs', trial = true}) {
+export function SalesBand({title, text, source = 'docs'}) {
   return (
     <aside className={styles.band}>
       <div className={styles.bandCopy}>
@@ -50,7 +50,7 @@ export function SalesBand({title, text, source = 'docs', trial = true}) {
       </div>
       <div className={styles.bandActions}>
         <SalesButton source={source} />
-        {trial && <SalesButton kind="trial" variant="secondary" source={source} />}
+        <span className={styles.salesNote}>Includes a free 30-day trial</span>
       </div>
     </aside>
   );

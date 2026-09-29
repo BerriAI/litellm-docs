@@ -26,7 +26,7 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
   {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '#professional-support'},
 ]} />
 
-<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Start a 30-day trial with a full license, or talk to the team about your rollout, security review, and procurement through AWS or Azure Marketplace." />
+<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout, security review, and procurement through AWS or Azure Marketplace, and start a 30-day trial with a full license." />
 
 ## Who is Enterprise for?
 
