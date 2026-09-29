@@ -508,66 +508,48 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Product',
             items: [
-              {
-                label: 'Quickstart',
-                to: '/docs/proxy/docker_quick_start',
-              },
-              {
-                label: 'Production Deployment',
-                to: '/docs/proxy/deploy',
-              },
-              {
-                label: '[Beta] Rust AI Gateway',
-                to: '/docs/proxy/rust_gateway',
-              },
-              {
-                label: 'MCP Gateway',
-                to: '/docs/mcp',
-              },
-              {
-                label: 'Agent Gateway',
-                to: '/docs/a2a',
-              },
+              {label: 'Gateway quickstart', to: '/docs/proxy/docker_quick_start'},
+              {label: 'Python SDK', to: '/docs/'},
+              {label: 'Production deployment', to: '/docs/proxy/deploy'},
+              {label: 'MCP Gateway', to: '/docs/mcp'},
+              {label: 'Agent Gateway', to: '/docs/a2a'},
+              {label: 'Rust AI Gateway (beta)', to: '/docs/proxy/rust_gateway'},
+              {label: 'Enterprise', to: '/docs/enterprise'},
+            ],
+          },
+          {
+            title: 'Resources',
+            items: [
+              {label: 'Blog', to: '/blog'},
+              {label: 'Changelog', to: '/release_notes'},
+              {label: 'Agent resources', to: '/docs/agent_resources'},
+              {label: 'llms.txt', href: 'https://docs.litellm.ai/llms.txt'},
+              {label: 'Trust Center', href: 'https://trust.litellm.ai/'},
             ],
           },
           {
             title: 'Community',
             items: [
-              {
-                label: 'Discord',
-                href: 'https://discord.com/invite/wuPM9dRgDw',
-              },
-              {
-                label: 'Slack',
-                href: 'https://litellmossslack.slack.com/',
-              },
-              {
-                label: 'YouTube',
-                href: 'https://www.youtube.com/@LiteLLMAIGateway',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/LiteLLM',
-              },
-              {
-                label: 'LinkedIn',
-                href: 'https://www.linkedin.com/company/berri-ai/',
-              },
+              {label: 'GitHub', href: 'https://github.com/BerriAI/litellm/'},
+              {label: 'Discord', href: 'https://discord.com/invite/wuPM9dRgDw'},
+              {label: 'Slack', href: 'https://litellmossslack.slack.com/'},
+              {label: 'YouTube', href: 'https://www.youtube.com/@LiteLLMAIGateway'},
+              {label: 'X', href: 'https://twitter.com/LiteLLM'},
+              {label: 'LinkedIn', href: 'https://www.linkedin.com/company/berri-ai/'},
             ],
           },
           {
-            title: 'More',
+            title: 'Company',
             items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/BerriAI/litellm/',
-              },
+              {label: 'litellm.ai', href: 'https://www.litellm.ai/'},
+              {label: 'Talk to sales', href: 'https://www.litellm.ai/enterprise#talk-to-sales'},
+              {label: 'Careers', href: 'https://jobs.ashbyhq.com/litellm'},
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} liteLLM`,
+        copyright: `© ${new Date().getFullYear()} LiteLLM`,
       },
       colorMode: {
         defaultMode: 'light',
