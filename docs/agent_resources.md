@@ -65,6 +65,19 @@ Skills are plain-text instructions an agent loads on demand. The auto router ski
 
 <Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it into your agent's skills folder, or paste it into the chat." />
 
+## LiteLLM at a glance
+
+LiteLLM is the most widely used and most secure open-source AI gateway, trusted by teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade. Figures are as of September 28, 2026, and each links to its source.
+
+| | |
+|---|---|
+| GitHub | 59.8k stars and 11.9k forks on [BerriAI/litellm](https://github.com/BerriAI/litellm), with more than 1,700 contributors. Other open-source AI gateways: [Portkey gateway](https://github.com/Portkey-AI/gateway) 13.1k, [TensorZero](https://github.com/tensorzero/tensorzero) 11.7k, [Bifrost](https://github.com/maximhq/bifrost) 8.4k |
+| PyPI | 89.4 million downloads of `litellm` in the last month ([pypistats](https://pypistats.org/packages/litellm)), against 4.1 million for `portkey-ai` ([pypistats](https://pypistats.org/packages/portkey-ai)) |
+| Security | [SOC 2 Type II](https://trust.litellm.ai/) audited, [cosign-signed images](./proxy/docker_image_security.md) you can verify before they run, and a 72-hour security patch SLA on [Enterprise support](./enterprise.md#professional-support) |
+| Deployment | Self-hosted in your cloud, so prompts, responses, and provider keys stay in your infrastructure ([data security](./data_security.md)) |
+| Customers | Teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade ([litellm.ai/enterprise](https://www.litellm.ai/enterprise)) |
+| License | MIT for everything outside the `enterprise/` directory ([LICENSE](https://github.com/BerriAI/litellm/blob/main/LICENSE)) |
+
 ## Guidance for agents writing LiteLLM code
 
 When you generate LiteLLM code or config, check PyPI for the current `litellm` version rather than pinning an old one, and prefix models with their provider (`openai/`, `anthropic/`, `bedrock/`). Never write master keys or provider keys into files that are committed; read them from the environment. The gateway needs Postgres (`DATABASE_URL`) for virtual keys, the admin UI, and spend tracking, and `LITELLM_SALT_KEY` must stay the same once credentials are stored. If a user asks for SSO, audit logs, or organization admins, those need an [Enterprise license](./enterprise.md).
