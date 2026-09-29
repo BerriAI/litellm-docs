@@ -190,7 +190,7 @@ export function TransitDiagram({path}) {
           <Tag x={244.5} y={96} label="SSO" />
           <Tag x={360} y={60.5} label="Audit log" />
           <Tag x={360} y={300.5} label="Roles" />
-          <Tag x={476.5} y={272} label="Regions" />
+          <Tag x={476.5} y={117} label="Regions" />
         </g>
       )}
 
@@ -213,11 +213,11 @@ const MAP_LINES = [
     prompt: 'gateway',
     d: 'M470 235 H900',
     stops: [
-      [540, 235, 'Virtual keys', 'below', '/docs/proxy/virtual_keys'],
-      [620, 235, 'Budgets', 'below', '/docs/proxy/users'],
-      [700, 235, 'Spend logs', 'below', '/docs/proxy/cost_tracking'],
-      [780, 235, 'Guardrails', 'below', '/docs/proxy/guardrails/quick_start'],
-      [858, 235, 'Load balancing', 'below', '/docs/proxy/load_balancing'],
+      [535, 235, 'Virtual keys', 'below', '/docs/proxy/virtual_keys'],
+      [610, 235, 'Budgets', 'below', '/docs/proxy/users'],
+      [685, 235, 'Spend logs', 'below', '/docs/proxy/cost_tracking'],
+      [760, 235, 'Guardrails', 'below', '/docs/proxy/guardrails/quick_start'],
+      [835, 235, 'Load balancing', 'below', '/docs/proxy/load_balancing'],
     ],
   },
   {
@@ -291,9 +291,9 @@ const MAP_LINES = [
     text: 'Send logs and spend to Langfuse, Datadog, OpenTelemetry, and more.',
     to: '/docs/proxy/logging',
     prompt: 'observability',
-    d: 'M700 235 L740 195 H840',
+    d: 'M685 235 L725 195 H840',
     terminus: [840, 195, 'OpenTelemetry', 'above', '/docs/observability/opentelemetry_integration'],
-    stops: [[765, 195, 'Langfuse', 'above', '/docs/observability/langfuse_integration']],
+    stops: [[755, 195, 'Langfuse', 'above', '/docs/observability/langfuse_integration']],
   },
 ];
 
@@ -338,7 +338,7 @@ export function SystemMap({source = 'docs-home'}) {
       <div className={styles.mapScroll}>
         <svg
           className={clsx(styles.svg, styles.mapSvg)}
-          viewBox="0 0 1000 470"
+          viewBox="0 95 1000 375"
           role="img"
           aria-label="LiteLLM system map. Your apps and AI tools feed the AI Gateway, which reaches 100+ providers through virtual keys, budgets, spend logs, guardrails, and load balancing. The MCP Gateway, the Agent Gateway, the Auto Router, and observability branch off the gateway. Enterprise surrounds the gateway. The Python SDK runs in your app and reaches providers directly.">
           <defs>
@@ -346,15 +346,15 @@ export function SystemMap({source = 'docs-home'}) {
               <circle cx="1" cy="1" r="1" className={styles.dot} />
             </pattern>
           </defs>
-          <rect width="1000" height="470" fill="url(#map-dots)" />
+          <rect y="95" width="1000" height="375" fill="url(#map-dots)" />
 
           {/* Enterprise zone around the interchange */}
           <g className={clsx(styles.l_enterprise, active && active !== 'enterprise' && styles.dim)}>
             <rect className={styles.zone} x="350.5" y="160.5" width="140" height="156" rx="16" />
             <Link to="/docs/enterprise" className={styles.stopLink}>
-              <rect className={styles.tag} x="178" y="322" width="167" height="17" rx="4" />
-              <text className={styles.tagText} x="261.5" y="334" textAnchor="middle">
-                Enterprise: SSO, audit, roles, regions
+              <rect className={styles.tag} x="150" y="322" width="195" height="17" rx="4" />
+              <text className={styles.tagText} x="247.5" y="334" textAnchor="middle">
+                Enterprise: SSO, audit, roles
               </text>
             </Link>
           </g>
