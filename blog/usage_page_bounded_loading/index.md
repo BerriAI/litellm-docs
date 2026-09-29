@@ -27,11 +27,11 @@ More keys and more history meant more requests, more data, and more work in the 
 
 ## What we changed
 
-**Postgres now does the aggregation.** The page receives complete totals and the top 100 keys by default, instead of downloading every key's history to calculate them.
+**Postgres now does the aggregation.** The page receives calculated totals and usage breakdowns, instead of downloading every key's history to calculate them.
 
 <UsageDataFlow />
 
-Totals still include **all keys** in the selected range. Search and CSV export run on the server, so keys outside the displayed top 100 remain accessible. Per-model rankings are computed for that model, rather than taken from the overall top-key list.
+Totals still include **all keys** in the selected range. You can still search for any virtual key and export complete usage data to CSV.
 
 ## The results hold up over longer ranges
 

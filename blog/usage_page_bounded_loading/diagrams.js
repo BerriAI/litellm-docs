@@ -30,7 +30,7 @@ const flows = [
     title: 'Calculate, then download',
     stages: [
       {label: 'Database', detail: 'Aggregate across all keys'},
-      {label: 'Transfer', detail: 'Totals + top 100 keys'},
+      {label: 'Transfer', detail: 'Totals and usage breakdowns'},
       {label: 'Browser', detail: 'Display the results'},
     ],
   },
