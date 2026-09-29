@@ -10,6 +10,8 @@ legacy aliases. `cost_per_second` takes precedence, followed by `input_cost_per_
 `output_cost_per_second`; the resolved rate is charged once, not added. Transcription, speech and video continue to use
 `input_cost_per_second` and `output_cost_per_second`
 
+`cost_per_second` needs v1.105.0 or later. On earlier versions, use `input_cost_per_second`
+
 ```python
 # !uv add boto3 
 from litellm import completion, completion_cost 
