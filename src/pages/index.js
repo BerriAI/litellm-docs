@@ -5,13 +5,6 @@ import Link from '@docusaurus/Link';
 import {AgentBand, PathFinder, SalesBand, Tiles, UseCases} from '@site/src/components/Conversion';
 import styles from './index.module.css';
 
-const PROOF = [
-  ['59.8k GitHub stars', 'https://github.com/BerriAI/litellm'],
-  ['89M downloads a month', 'https://pypistats.org/packages/litellm'],
-  ['SOC 2 Type II', 'https://trust.litellm.ai/'],
-  ['Trusted by Netflix, Okta, Ramp, and NASA', '/docs/enterprise'],
-];
-
 const POPULAR = [
   {icon: 'gateway', title: 'Gateway quickstart', text: 'Docker + Postgres, admin UI, first virtual key in five minutes.', to: '/docs/proxy/docker_quick_start'},
   {icon: 'sdk', title: 'SDK quickstart', text: 'uv add litellm, then call any provider with completion().', to: '/docs/'},
@@ -36,14 +29,6 @@ export default function Home() {
             One API for every model, in your Python code or behind your own gateway. Call OpenAI, Anthropic, Bedrock, Gemini Enterprise Agent
             Platform, and 100+ other providers in the OpenAI format, with keys, budgets, spend tracking, and fallbacks built in.
           </p>
-          {/* Figures match the facts block in plugins/llms.js; update both together */}
-          <ul className={styles.proof}>
-            {PROOF.map(([label, href]) => (
-              <li key={label}>
-                <Link to={href}>{label}</Link>
-              </li>
-            ))}
-          </ul>
         </header>
 
         <PathFinder source="docs-home" />

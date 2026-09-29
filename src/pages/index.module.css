@@ -27,33 +27,6 @@
   color: var(--ifm-color-emphasis-700);
 }
 
-.proof {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.25rem 0 0;
-  padding: 0;
-}
-.proof li,
-.proof li + li {
-  margin: 0;
-}
-.proof a {
-  display: inline-block;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: var(--lite-radius-xs, 999px);
-  font-size: 0.85rem;
-  font-weight: 550;
-  color: var(--ifm-color-emphasis-800);
-  text-decoration: none;
-}
-.proof a:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
-}
-
 .section {
   margin-top: 3rem;
 }
