@@ -4,7 +4,7 @@ import Link from '@docusaurus/Link';
 import SalesButton from './SalesButton';
 import {IconAudit, IconBudget, IconEnterprise, IconGateway, IconRegions, IconRoles, IconSdk, IconSpend, IconSso, IconSupport} from './icons';
 import PromptButton from './PromptButton';
-import {TransitDiagram} from './Transit';
+import {TransitDiagram, TransitTall} from './Transit';
 import {track} from './shared';
 import styles from './styles.module.css';
 
@@ -186,8 +186,11 @@ export default function PathFinder({
           <div className={styles.pfDiagramHead}>
             <span className={styles.pfDiagramCaption}>{CAPTIONS[path]}</span>
           </div>
-          <div className={styles.pfDiagramScroll}>
+          <div className={styles.pfDiagramWide}>
             <TransitDiagram path={path} />
+          </div>
+          <div className={styles.pfDiagramTall}>
+            <TransitTall path={path} />
           </div>
         </div>
         <div key={`${path}-side`} className={clsx(styles.pfPanel, styles.pfSide)}>

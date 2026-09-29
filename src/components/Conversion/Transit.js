@@ -218,6 +218,136 @@ export function TransitDiagram({path}) {
   );
 }
 
+// The same three answers for a phone: apps across the top, the interchange
+// in the middle, and providers as stops on one line running down the page.
+
+// The vertical twin of route(): down, one 45-degree run, down.
+function vroute(x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const a = Math.abs(dx);
+  const h = y2 - y1;
+  if (a < 0.5) return `M${x1} ${y1} V${y2}`;
+  if (a >= h - 4) return `M${x1} ${y1} L${x2} ${y2}`;
+  const ya = y1 + (h - a) / 2;
+  return `M${x1} ${y1} V${ya} L${x2} ${ya + a} V${y2}`;
+}
+
+const T_HUB = {x: 125, y: 190, s: 110};
+const T_APPS_X = [62, 180, 298];
+const T_PROV_Y = [410, 450, 490, 530, 570];
+const T_TRUNK_X = 30;
+
+export function TransitTall({path}) {
+  const reduced = usePrefersReducedMotion();
+  const direct = path === 'sdk';
+  const ent = path === 'enterprise';
+  const hubCx = T_HUB.x + T_HUB.s / 2;
+  const exitY = T_HUB.y + T_HUB.s - 20;
+  const inbound = direct ? [`M${hubCx} 64 V${T_HUB.y}`] : T_APPS_X.map((x, i) => vroute(x, 64, hubCx + (i - 1) * 15, T_HUB.y));
+  const trunk = `M${T_HUB.x} ${exitY} H${T_TRUNK_X + 10} Q${T_TRUNK_X} ${exitY} ${T_TRUNK_X} ${exitY + 10} V${T_PROV_Y[3]}`;
+  const trunkMore = `M${T_TRUNK_X} ${T_PROV_Y[3]} V${T_PROV_Y[4]}`;
+  const chips = CHIPS[direct ? 'sdk' : 'gateway'];
+  const chipsW = chips.reduce((a, [, w]) => a + w, 0) + (chips.length - 1) * 6;
+  let chipX = hubCx - chipsW / 2;
+  const labels = direct ? ['Your Python app'] : APPS[path];
+
+  return (
+    <svg className={styles.svg} viewBox="0 0 360 590" role="img" aria-label={TITLES[path]}>
+      <defs>
+        <pattern id="tr-dots-tall" width="18" height="18" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" className={styles.dot} />
+        </pattern>
+      </defs>
+      <rect width="360" height="590" fill="url(#tr-dots-tall)" />
+
+      {direct && (
+        <g className={styles.fadeIn}>
+          <rect className={styles.zone} x="6.5" y="8.5" width="347" height="358" rx="18" />
+          <text className={styles.zoneText} x="20" y="84">
+            Your Python process
+          </text>
+        </g>
+      )}
+      {ent && (
+        <g className={styles.fadeIn}>
+          <rect className={styles.zone} x="40.5" y="160.5" width="280" height="212" rx="18" />
+          <text className={styles.zoneText} x="52" y="180">
+            Your organization
+          </text>
+        </g>
+      )}
+
+      <g key={path}>
+        {inbound.map((d, i) => (
+          <path key={`in${i}`} d={d} className={clsx(styles.line, styles.draw)} pathLength="1" />
+        ))}
+        <path d={trunk} className={clsx(styles.line, styles.draw)} pathLength="1" />
+        <path d={trunkMore} className={clsx(styles.line, styles.lineMore)} pathLength="1" />
+        {!reduced && (
+          <g className={styles.cars}>
+            {inbound.map((d, i) => (
+              <Car key={`c${i}`} d={d} dur="1.8s" begin={`${0.8 + i * 0.6}s`} />
+            ))}
+            <Car d={trunk} dur="3s" begin="1.6s" />
+          </g>
+        )}
+      </g>
+
+      <g className={styles.fadeIn}>
+        {labels.map((label, i) => {
+          const cx = direct ? hubCx : T_APPS_X[i];
+          const w = direct ? 150 : 110;
+          return (
+            <g key={label}>
+              <rect className={styles.box} x={cx - w / 2 + 0.5} y="20.5" width={w} height="34" rx="6" />
+              <text className={styles.boxTextSm} x={cx} y="42" textAnchor="middle">
+                {label}
+              </text>
+              <rect className={styles.stn} x={cx - 5.5} y="52.5" width="11" height="11" rx="3" />
+            </g>
+          );
+        })}
+        <rect className={styles.hub} x={T_HUB.x + 0.5} y={T_HUB.y + 0.5} width={T_HUB.s} height={T_HUB.s} rx="13" />
+        <Monogram x={T_HUB.x + 27} y={T_HUB.y + 27} size={56} />
+        <text className={styles.hubLabel} x={hubCx} y={T_HUB.y + T_HUB.s + 22} textAnchor="middle">
+          {direct ? 'LiteLLM SDK' : 'LiteLLM Gateway'}
+        </text>
+        {chips.map(([label, w]) => {
+          const x = chipX;
+          chipX += w + 6;
+          return (
+            <g key={label}>
+              <rect className={styles.chip} x={x + 0.5} y={T_HUB.y + T_HUB.s + 34.5} width={w} height="20" rx="4" />
+              <text className={styles.chipText} x={x + w / 2} y={T_HUB.y + T_HUB.s + 48} textAnchor="middle">
+                {label}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+
+      {ent && (
+        <g className={styles.fadeIn}>
+          <Tag x={92} y={160.5} label="SSO" />
+          <Tag x={268} y={160.5} label="Audit log" />
+          <Tag x={180} y={372.5} label="Roles" />
+          <Tag x={320.5} y={300} label="Regions" />
+        </g>
+      )}
+
+      {PROVIDERS.map((p, j) => (
+        <g key={p}>
+          <rect className={clsx(styles.stn, j === 4 && styles.stnMore)} x={T_TRUNK_X - 5.5} y={T_PROV_Y[j] - 5.5} width="11" height="11" rx="3" />
+          <rect className={clsx(styles.box, j === 4 && styles.boxMore)} x="48.5" y={T_PROV_Y[j] - 15.5} width="300" height="31" rx="6" />
+          <text className={clsx(styles.boxTextSm, j === 4 && styles.boxTextMore)} x="62" y={T_PROV_Y[j] + 4.5}>
+            {p}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // The system map: every LiteLLM product as a line, meeting at the gateway.
 

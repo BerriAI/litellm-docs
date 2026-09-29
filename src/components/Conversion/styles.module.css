@@ -624,12 +624,19 @@
   font-weight: 550;
   color: var(--cv-muted);
 }
-/* On a phone the map keeps its size and scrolls sideways */
-.pfDiagramScroll {
-  overflow-x: auto;
+/* Phones get the vertical map; wider screens the horizontal one */
+.pfDiagramTall {
+  display: none;
+  max-width: 420px;
+  margin: 0 auto;
 }
-.pfDiagramScroll > svg {
-  min-width: 560px;
+@media (max-width: 620px) {
+  .pfDiagramWide {
+    display: none;
+  }
+  .pfDiagramTall {
+    display: block;
+  }
 }
 
 .pfDiagram {
