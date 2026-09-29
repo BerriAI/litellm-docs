@@ -24,8 +24,8 @@ const CATEGORIES = [
   },
   {
     id: 'incidents',
-    label: 'Security and incidents',
-    blurb: 'Incident reports, security fixes, and compliance.',
+    label: 'Security',
+    blurb: 'Security updates, compliance, and how we keep the gateway safe.',
     tags: ['incident-report', 'security', 'compliance'],
   },
   {

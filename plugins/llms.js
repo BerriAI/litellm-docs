@@ -513,7 +513,7 @@ module.exports = function llmsPlugin(context) {
           index.push('', `## ${cat.label}`, '', cat.blurb, '', ...posts.map(postLine));
         }
         await fs.promises.writeFile(path.join(outDir, 'blog.md'), index.join('\n') + '\n');
-        lines.push('', '## Blog', '', `- [All blog posts by category](${SITE}/blog.md): Model launches, Auto Router, gateway features, engineering, and incident reports`);
+        lines.push('', '## Blog', '', `- [All blog posts by category](${SITE}/blog.md): Model launches, Auto Router, gateway features, engineering, and security`);
         lines.push(...blogPosts.slice(0, 15).map(postLine));
       }
 
