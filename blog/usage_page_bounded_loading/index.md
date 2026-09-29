@@ -11,7 +11,7 @@ hide_table_of_contents: true
 
 import { PerformanceResults, UsageDataFlow } from './diagrams';
 
-We're making LiteLLM faster, starting with the pages you use to track spend.
+This week, we made the LiteLLM Usage page roughly 120x faster.
 
 With 5,000 API keys, our Usage page took **over six minutes** to show 30 days of totals. We redesigned how it loads data and brought that down to **3.2 seconds** in our benchmark. That's roughly **120x faster**.
 
