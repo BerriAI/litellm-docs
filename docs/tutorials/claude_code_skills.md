@@ -1,99 +1,71 @@
 # LiteLLM Skills
 
-[litellm-skills](https://github.com/BerriAI/litellm-skills) is a collection of [Agent Skills](https://agentskills.io) for managing a live LiteLLM proxy. Install them once and any agent that supports the Agent Skills standard (Claude Code, OpenCode, OpenClaw, etc.) can create users, teams, keys, models, MCP servers, agents, and query usage, all by running `curl` commands against your proxy.
+[litellm-skills](https://github.com/BerriAI/litellm-skills) is a set of [Agent Skills](https://agentskills.io) that teach coding agents to run, connect to, and administer a LiteLLM proxy. Once installed, Claude Code, Codex, OpenCode, Cursor, or any agent that reads `SKILL.md` can stand up a gateway, point itself or other tools at it, and manage keys, users, teams, models, MCP servers, agents, guardrails, budgets, and spend by calling the proxy's HTTP API with `curl`.
 
 ## Install
+
+In Claude Code, add the repo as a plugin marketplace and install the plugin:
+
+```
+/plugin marketplace add BerriAI/litellm-skills
+/plugin install litellm@litellm
+```
+
+For other agents, use the [skills CLI](https://github.com/vercel-labs/skills):
+
+```bash
+npx skills add BerriAI/litellm-skills
+```
+
+Or clone the repo and symlink every skill into `~/.claude/skills`. Set `SKILLS_DIR` to install into a different agent's skills directory; re-running the script updates the skills and removes links left by older versions.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install.sh | sh
 ```
 
-## Requirements
+Then export your proxy's URL and a key so every skill can find them:
 
-- `curl` installed
-- A running LiteLLM proxy (local or remote)
-- A proxy admin key, not a virtual key scoped to `llm_api_routes`
+```bash
+export LITELLM_BASE_URL=https://litellm.example.com
+export LITELLM_API_KEY=sk-...
+```
 
-## Available Skills
+Admin skills need a proxy admin key (a team admin key works inside its own team). `litellm-connect` only needs a regular [virtual key](../proxy/virtual_keys.md).
 
-### Users
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-user` | Create a user — email, role, budget, model access |
-| `/update-user` | Update budget, role, or models for an existing user |
-| `/delete-user` | Delete one or more users |
-
-### Teams
+## Available skills
 
 | Skill | What it does |
 |-------|-------------|
-| `/add-team` | Create a team with budget and model limits |
-| `/update-team` | Update budget, models, or rate limits |
-| `/delete-team` | Delete one or more teams |
+| `litellm-setup` | Runs a proxy with Docker Compose, `docker run`, or uv, with Postgres and a safe master key and salt key |
+| `litellm-connect` | Points Claude Code, Codex, Gemini CLI, OpenCode, Cursor, the OpenAI and Anthropic SDKs, and MCP clients at the gateway |
+| `litellm-doctor` | Checks health and version and explains 401, 403, 422, 429, and 500 responses, including why a key cannot call a model |
+| `litellm-keys` | Creates, updates, rotates, blocks, and deletes virtual keys with budgets, rate limits, and model access |
+| `litellm-users` | Creates, updates, invites, and deletes users, including bulk onboarding and offboarding |
+| `litellm-teams` | Manages teams, members, per-member budgets, and team model access |
+| `litellm-orgs` | Manages organizations and org admins (Enterprise) |
+| `litellm-models` | Adds, tests, updates, pauses, and deletes models, plus reusable credentials, access groups, and fallbacks |
+| `litellm-mcp` | Registers, tests, and updates MCP servers (HTTP, SSE, stdio, OAuth), builds toolsets, and grants MCP access |
+| `litellm-agents` | Registers A2A agents, tests them, controls access, and uses the kill switch |
+| `litellm-guardrails` | Creates guardrails, attaches them to teams, keys, or tags through policies, and tests them |
+| `litellm-budgets` | Manages reusable budgets and customer budgets and finds who is close to their limit |
+| `litellm-usage` | Reports spend, tokens, and requests by user, team, org, key, tag, model, customer, or agent |
 
-### API Keys
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-key` | Generate a key scoped to a user, team, budget, and expiry |
-| `/update-key` | Update budget, models, or expiry |
-| `/delete-key` | Delete by key value or alias |
-
-### Organizations
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-org` | Create an org with budget and model access |
-| `/delete-org` | Delete one or more orgs |
-
-### Models
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-model` | Add any provider (OpenAI, Azure, Anthropic, Bedrock, Ollama…) and test it |
-| `/update-model` | Rotate credentials or swap the underlying deployment |
-| `/delete-model` | Remove a model |
-
-### MCP Servers
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-mcp` | Register an MCP server (SSE, HTTP, or stdio) |
-| `/update-mcp` | Update URL, credentials, or allowed tools |
-| `/delete-mcp` | Remove an MCP server |
-
-### Agents
-
-| Skill | What it does |
-|-------|-------------|
-| `/add-agent` | Create an agent backed by a model and optional MCP servers |
-| `/update-agent` | Swap the model or update description and limits |
-| `/delete-agent` | Remove an agent |
-
-### Usage
-
-| Skill | What it does |
-|-------|-------------|
-| `/view-usage` | Daily spend and token activity — by user, team, org, or model |
+The skills are written against LiteLLM v1.103 and name the version where recent behavior changed, so the agent can tell when a proxy is too old for a feature. Features that need an Enterprise license, such as organizations, key tags, guardrails on keys, and key regeneration, are marked in the skill.
 
 ## How it works
 
-When you invoke a skill, the agent asks for your `LITELLM_BASE_URL` and admin key, collects the fields needed for that operation, runs the `curl`, and shows the result. For example:
+You don't need to name a skill. Ask for the outcome and the agent picks the right one, collects what it needs, runs the `curl` calls, and verifies the result. For example, "give the billing agent a key that can only call gpt-5.5, capped at $50 a month" loads `litellm-keys`, creates a key with `models`, `max_budget`, and `budget_duration`, and shows the secret once. "Hook up our GitHub MCP server" loads `litellm-mcp`, registers the server with the right transport and credentials, and lists its tools to confirm it works. "Set up Claude Code to use our gateway" loads `litellm-connect`, checks which models your key can reach, and prints the environment variables to paste.
 
-```
-/add-model
-```
-→ Agent asks: provider, public name, credentials. Adds the model, runs a test completion, reports pass/fail.
+Destructive operations (deleting keys, users, teams, orgs, models, or MCP servers) always show what will be affected, including cascades such as a team's keys, and wait for confirmation. Where a reversible option exists, like blocking a key or pausing a model, the skill offers it first.
 
-```
-/view-usage
-```
-→ Agent asks: date range (defaults to current month), optional team/model filter. Prints a table of daily requests, tokens, and spend.
+## Upgrading from the v1 skills
+
+The first release shipped one skill per action (`/add-key`, `/update-key`, `/delete-key`, and so on). Each area is now a single skill that covers every action, so `/add-key` becomes `/litellm-keys`. Re-run `install.sh` and it removes the old links.
 
 ## Related
 
 - [litellm-skills on GitHub](https://github.com/BerriAI/litellm-skills)
-- [Virtual Keys](../proxy/virtual_keys.md) — managing API keys on the proxy
-- [Team-based routing](../proxy/team_based_routing.md) — setting up teams
-- [Model Management](../proxy/model_management.md) — adding models via config or API
+- [Virtual Keys](../proxy/virtual_keys.md)
+- [Model Management](../proxy/model_management.md)
+- [Claude Code with LiteLLM](../proxy/client_setup/claude_code.md)
+- [MCP Gateway](../mcp.md)
